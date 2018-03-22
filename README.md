@@ -1,5 +1,5 @@
-# robot setup configurator
-**Welcome in the robot setup configurator**
+# Jetson Easy setup configurator
+**Welcome in the Jetson setup configurator**
 
 The idea of this project is automatically update and setup your [NVIDIA][NVIDIA] [JetsonTX1][NVIDIA Jetson TX2] or [JetsonTX2][NVIDIA Jetson TX2] embbeded board to work with [ROS][ROS] and install all standard required drivers.
 
