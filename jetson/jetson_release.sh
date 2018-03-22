@@ -52,5 +52,13 @@ JETSON_L4T_REVISION=$(echo $JETSON_L4T_STRING | cut -f 2 -d ',' | sed 's/\ REVIS
 # Write Jetson description
 JETSON_L4T="$JETSON_L4T_RELEASE.$JETSON_L4T_REVISION"
 
-
+# Write version of jetpack installed
+case $JETSON_L4T in
+    "28.2") 
+            JETSON_JETPACK="3.2" ;;
+    "28.1") 
+            JETSON_JETPACK="3.1" ;;
+    *)
+       JETSON_JETPACK="UNKNOWN" ;;
+esac
 
