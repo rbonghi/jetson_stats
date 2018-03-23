@@ -27,6 +27,40 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Jetson script to install Jetson clock service
-# Reference
+# description: Jetson script to install Jetson clock service
+# Reference:
 # https://devtalk.nvidia.com/default/topic/1000657/script-for-maximum-clockspeeds-and-performence/
+
+# Source function library.
+. /etc/init.d/functions
+
+start() {
+    # code to start app comes here 
+    # example: daemon program_name &
+}
+
+stop() {
+    # code to stop app comes here 
+    # example: killproc program_name
+}
+
+case "$1" in 
+    start)
+       start
+       ;;
+    stop)
+       stop
+       ;;
+    restart)
+       stop
+       start
+       ;;
+    status)
+       # code to check status of app comes here 
+       # example: status program_name
+       ;;
+    *)
+       echo "Usage: $0 {start|stop|status|restart}"
+esac
+
+exit 0 
