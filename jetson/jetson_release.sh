@@ -29,36 +29,47 @@
 
 # NVIDIA Identify version 
 # reference: https://devtalk.nvidia.com/default/topic/1014424/jetson-tx2/identifying-tx1-and-tx2-at-runtime/
-case $(cat /sys/module/tegra_fuse/parameters/tegra_chip_id) in
-    64)
-        JETSON_BOARD="TK1" ;;
-    33)
-        JETSON_BOARD="TX1" ;;
-    24)
-        JETSON_BOARD="TX2" ;;
-    *)
-        JETSON_BOARD="UNKNOWN" ;;
-esac
-JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
+
+if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
+    case $(cat /sys/module/tegra_fuse/parameters/tegra_chip_id) in
+        64)
+            JETSON_BOARD="TK1" ;;
+        33)
+            JETSON_BOARD="TX1" ;;
+        24)
+            JETSON_BOARD="TX2" ;;
+        *)
+            JETSON_BOARD="UNKNOWN" ;;
+    esac
+    JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
+    
+    #Print Jetson version
+    echo "$JETSON_DESCRIPTION"
+fi
 
 # NVIDIA Jetson version
 # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
-JETSON_L4T_STRING=$(head -n 1 /etc/nv_tegra_release)
+if [ -f /etc/nv_tegra_release ]; then
+    JETSON_L4T_STRING=$(head -n 1 /etc/nv_tegra_release)
 
-# Load release and revision
-JETSON_L4T_RELEASE=$(echo $JETSON_L4T_STRING | cut -f 1 -d ',' | sed 's/\# R//g' | cut -d ' ' -f1)
-JETSON_L4T_REVISION=$(echo $JETSON_L4T_STRING | cut -f 2 -d ',' | sed 's/\ REVISION: //g' | cut -d. -f1)
+    # Load release and revision
+    JETSON_L4T_RELEASE=$(echo $JETSON_L4T_STRING | cut -f 1 -d ',' | sed 's/\# R//g' | cut -d ' ' -f1)
+    JETSON_L4T_REVISION=$(echo $JETSON_L4T_STRING | cut -f 2 -d ',' | sed 's/\ REVISION: //g' | cut -d. -f1)
 
-# Write Jetson description
-JETSON_L4T="$JETSON_L4T_RELEASE.$JETSON_L4T_REVISION"
+    # Write Jetson description
+    JETSON_L4T="$JETSON_L4T_RELEASE.$JETSON_L4T_REVISION"
 
-# Write version of jetpack installed
-case $JETSON_L4T in
-    "28.2") 
-            JETSON_JETPACK="3.2" ;;
-    "28.1") 
-            JETSON_JETPACK="3.1" ;;
-    *)
-       JETSON_JETPACK="UNKNOWN" ;;
-esac
+    # Write version of jetpack installed
+    case $JETSON_L4T in
+        "28.2") 
+                JETSON_JETPACK="3.2" ;;
+        "28.1") 
+                JETSON_JETPACK="3.1" ;;
+        *)
+           JETSON_JETPACK="UNKNOWN" ;;
+    esac
+    
+    #Print Jetson version
+    echo "$JETSON_JETPACK (L4T $JETSON_L4T)"
+fi
 
