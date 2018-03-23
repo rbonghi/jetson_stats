@@ -70,6 +70,6 @@ if [ -f /etc/nv_tegra_release ]; then
     esac
     
     #Print Jetson version
-    echo "$JETSON_JETPACK [L4T $JETSON_L4T]"
+    echo "Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
 fi
 
