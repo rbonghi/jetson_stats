@@ -73,3 +73,13 @@ if [ -f /etc/nv_tegra_release ]; then
     echo "Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
 fi
 
+# Read CUDA version
+if [ -f /usr/local/cuda/version.txt ]; then
+    JETSON_CUDA=$(cat /usr/local/cuda/version.txt | sed 's/\CUDA Version //g')
+    
+    #Print Jetson version
+    echo "CUDA $JETSON_CUDA"
+fi
+
+# TODO Add Visionworks
+
