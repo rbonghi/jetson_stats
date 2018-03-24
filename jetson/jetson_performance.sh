@@ -41,6 +41,7 @@
 source /etc/jetson_easy/jetson_variables
 
 JETSON_PERFORMANCE_WAIT_TIME=60
+JETSON_EASY_FOLDER="/etc/jetson_easy"
 
 status()
 {
@@ -57,6 +58,7 @@ start()
 {
     # Check which version is L4T is loaded
     # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
+    # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
     if [ $(echo $JETSON_L4T'>28.1' | bc -l) -eq 1 ]
     then
         # Time from boot 
@@ -71,18 +73,35 @@ start()
         fi
     fi
     
-    # Store configuration
-    
-    # if Jetson TX2 change type of performance
-    
-    # Launch ./jetson_clock.sh
-    
+    if [ ! -f /tmp/jetson_performance_run ]
+    then
+        # check if exist l4t_dfs.conf otherwhise delete
+        if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ] ; then sudo rm $JETSON_EASY_FOLDER/l4t_dfs.conf ; fi
+        # Store jetson_clock configuration
+        sudo $HOME/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf    
+        # if Jetson TX2 change type of performance
+        if [ $JETSON_BOARD == "TX2" ] || [ $JETSON_BOARD == "iTX2" ]
+        then
+            echo "TX2 Change config"
+        fi
+        # Launch ./jetson_clock.sh
+        sudo $HOME/jetson_clocks.sh
+        # Write a file to check the system has running
+        sudo touch /tmp/jetson_performance_run
+    else
+        echo "Service has running"
+    fi
 }
 
 stop()
 {
-    # code to stop app comes here 
-    # example: killproc program_name
+    # restore jetson_clock configuration
+    sudo $HOME/jetson_clocks.sh --restore $JETSON_EASY_FOLDER/l4t_dfs.conf 
+    # Delete the configuration
+    sudo rm $JETSON_EASY_FOLDER/l4t_dfs.conf 
+    # Write a file to check the system has running
+    sudo rm /tmp/jetson_performance_run
+    
     echo "STOP"
 }
 
@@ -118,12 +137,20 @@ case "$1" in
     uninstall)
         uninstall
         ;;
-    -h|help)
-        # Help
-        echo "This is the help!"
-        ;;
     *)
-        echo "Usage: $0 {start|stop|status|restart|install|uninstall|help}"
+        if [ $JETSON_BOARD == "TX2" ] || [ $JETSON_BOARD == "TX2" ]
+        then
+            echo "Usage: $0 [options] [type]"
+        else
+            echo "Usage: $0 [options]"
+        fi
+        echo "  options,"
+        echo "  --start      |"
+        echo "  --stop       |"
+        echo "  --status     |"
+        echo "  --restart    |"
+        echo "  --install    |"
+        echo "  --uninstall  |"
 esac
 
 exit 0 
