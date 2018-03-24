@@ -57,14 +57,61 @@ if [ -f /etc/nv_tegra_release ]; then
     JETSON_L4T="$JETSON_L4T_RELEASE.$JETSON_L4T_REVISION"
 
     # Write version of jetpack installed
-    case $JETSON_L4T in
-        "28.2") 
-                JETSON_JETPACK="3.2" ;;
-        "28.1") 
-                JETSON_JETPACK="3.1" ;;
-        *)
-           JETSON_JETPACK="UNKNOWN" ;;
-    esac
+    if [ "$JETSON_BOARD" = "iTX2" ]
+    then 
+        case $JETSON_L4T in
+            "28.2") 
+                    JETSON_JETPACK="3.2" ;;
+            *)
+               JETSON_JETPACK="UNKNOWN" ;;
+        esac        
+    elif [ "$JETSON_BOARD" = "TX2" ]
+    then
+        case $JETSON_L4T in
+            "28.2") 
+                    JETSON_JETPACK="3.2" ;;
+            "28.1") 
+                    JETSON_JETPACK="3.1" ;;
+            "27.1") 
+                    JETSON_JETPACK="3.0" ;;
+            *)
+               JETSON_JETPACK="UNKNOWN" ;;
+        esac
+    elif [ "$JETSON_BOARD" = "TX1" ]
+    then
+        case $JETSON_L4T in
+            "28.2") 
+                    JETSON_JETPACK="3.2" ;;
+            "28.1") 
+                    JETSON_JETPACK="3.1" ;;
+            "24.2.1") 
+                    JETSON_JETPACK="3.0 or 2.3.1" ;;
+            "24.2") 
+                    JETSON_JETPACK="2.3" ;;
+            "24.1") 
+                    JETSON_JETPACK="2.2.1 or 2.2" ;;
+            "23.2") 
+                    JETSON_JETPACK="2.1" ;;
+            "23.1") 
+                    JETSON_JETPACK="2.0" ;;
+            *)
+               JETSON_JETPACK="UNKNOWN" ;;
+        esac
+    elif [ "$JETSON_BOARD" ="TK1" ]
+    then
+        case $JETSON_L4T in
+            "21.5") 
+                    JETSON_JETPACK="2.3.1 or 2.3" ;;
+            "21.4") 
+                    JETSON_JETPACK="2.2 or 2.1 or 2.0 or DP 1.2" ;;
+            "21.3") 
+                    JETSON_JETPACK="DP 1.1" ;;
+            "21.2") 
+                    JETSON_JETPACK="DP 1.0" ;;
+            *)
+               JETSON_JETPACK="UNKNOWN" ;;
+        esac
+    fi
 fi
 
 # Read CUDA version
