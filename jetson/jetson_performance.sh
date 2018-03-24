@@ -30,6 +30,23 @@
 # description: Jetson script to install Jetson clock service
 # Reference:
 # https://devtalk.nvidia.com/default/topic/1000657/script-for-maximum-clockspeeds-and-performence/
+# 60sec delay only for release befor 28.1
+# https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
+
+# Load environment variables:
+# - JETSON_BOARD
+# - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
+# - JETSON_DESCRIPTION
+# - JETSON_CUDA
+source /etc/jetson_easy/jetson_variables
+
+status()
+{
+    echo "HELLOOOO!"
+    echo "$JETSON_BOARD"
+    echo "$(awk '{print int($1/3600)":"int(($1%3600)/60)":"int($1%60)}' /proc/uptime)"
+    #echo $(awk /proc/uptime)
+}
 
 start()
 {
@@ -69,8 +86,7 @@ case "$1" in
         start
         ;;
     status)
-        # code to check status of app comes here 
-        # example: status program_name
+        status
         ;;
     install)
         finstall

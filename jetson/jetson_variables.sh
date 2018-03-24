@@ -27,20 +27,50 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Load environment variables:
-# - JETSON_BOARD
-# - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
-# - JETSON_DESCRIPTION
-# - JETSON_CUDA
-source /etc/jetson_easy/jetson_variables
+# NVIDIA Identify version 
+# reference: https://devtalk.nvidia.com/default/topic/1014424/jetson-tx2/identifying-tx1-and-tx2-at-runtime/
 
-#Print Jetson version
-echo "$JETSON_DESCRIPTION"
-#Print Jetson version
-echo "Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
-#Print Jetson version
-echo "CUDA $JETSON_CUDA"
+if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
+    case $(cat /sys/module/tegra_fuse/parameters/tegra_chip_id) in
+        64)
+            JETSON_BOARD="TK1" ;;
+        33)
+            JETSON_BOARD="TX1" ;;
+        24)
+            JETSON_BOARD="TX2" ;;
+        *)
+            JETSON_BOARD="UNKNOWN" ;;
+    esac
+    JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
+fi
 
-exit 0
+# NVIDIA Jetson version
+# reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
+if [ -f /etc/nv_tegra_release ]; then
+    JETSON_L4T_STRING=$(head -n 1 /etc/nv_tegra_release)
 
+    # Load release and revision
+    JETSON_L4T_RELEASE=$(echo $JETSON_L4T_STRING | cut -f 1 -d ',' | sed 's/\# R//g' | cut -d ' ' -f1)
+    JETSON_L4T_REVISION=$(echo $JETSON_L4T_STRING | cut -f 2 -d ',' | sed 's/\ REVISION: //g' | cut -d. -f1)
+
+    # Write Jetson description
+    JETSON_L4T="$JETSON_L4T_RELEASE.$JETSON_L4T_REVISION"
+
+    # Write version of jetpack installed
+    case $JETSON_L4T in
+        "28.2") 
+                JETSON_JETPACK="3.2" ;;
+        "28.1") 
+                JETSON_JETPACK="3.1" ;;
+        *)
+           JETSON_JETPACK="UNKNOWN" ;;
+    esac
+fi
+
+# Read CUDA version
+if [ -f /usr/local/cuda/version.txt ]; then
+    JETSON_CUDA=$(cat /usr/local/cuda/version.txt | sed 's/\CUDA Version //g')
+fi
+
+# TODO Add Visionworks
 
