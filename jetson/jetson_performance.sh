@@ -29,9 +29,14 @@
 
 # description: Jetson script to install Jetson clock service
 # Reference:
+# 1 - Maximum speed
 # https://devtalk.nvidia.com/default/topic/1000657/script-for-maximum-clockspeeds-and-performence/
-# 60sec delay only for release befor 28.1
+# 2 - 60sec delay only for release befor 28.1
 # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
+# 3 - NVPModel for NVIDIA Jetson TX2
+# http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
+# https://devblogs.nvidia.com/jetson-tx2-delivers-twice-intelligence-edge/
+# https://devblogs.nvidia.com/jetpack-doubles-jetson-inference-perf/
 
 # Load environment variables:
 # - JETSON_BOARD
@@ -41,68 +46,86 @@
 source /etc/jetson_easy/jetson_variables
 
 JETSON_PERFORMANCE_WAIT_TIME=60
+JETSON_PERFORMANCE_CHECK_FILE=/tmp/jetson_performance_run
 JETSON_EASY_FOLDER="/etc/jetson_easy"
 
 status()
 {
-    echo "Status"
-    echo "$JETSON_BOARD"
-    echo "$(awk '{print int($1/3600)":"int(($1%3600)/60)":"int($1%60)}' /proc/uptime)"
-    
-    local TEST=$(sudo $HOME/jetson_clocks.sh --show)
-    
-    echo $TEST | sed -e 1b -e '$!d'
+    if [ $JETSON_BOARD != "TK1" ]
+    then
+        if [ -f $JETSON_PERFORMANCE_CHECK_FILE ]
+        then
+            echo "[Service running] jetson_clock.sh --show:"
+        else
+            echo "[Service stopped] jetson_clock.sh --show:"
+        fi
+        # Show status of the NVIDIA Jetson
+        sudo $HOME/jetson_clocks.sh --show
+    else
+        echo "Implementation for NVIDIA Jetson TK1 coming soon"
+    fi
 }
 
 start()
 {
-    # Check which version is L4T is loaded
-    # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
-    # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
-    if [ $(echo $JETSON_L4T'>28.1' | bc -l) -eq 1 ]
+    if [ $JETSON_BOARD != "TK1" ]
     then
-        # Time from boot 
-        local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
-        # Wait a minute from boot before start
-        if [ $(echo $BOOT_TIME'<'$((JETSON_PERFORMANCE_WAIT_TIME+1)) | bc -l) -eq 1 ] 
+        # Check which version is L4T is loaded
+        # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
+        # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
+        if [ $(echo $JETSON_L4T'>28.1' | bc -l) -eq 1 ]
         then
-            local TIME_TO_WAIT=$(echo $((JETSON_PERFORMANCE_WAIT_TIME+1))'-'$BOOT_TIME | bc)
-            echo "Time to wait=$TIME_TO_WAIT"
-            # Sleep for other time
-            sleep $TIME_TO_WAIT
+            # Time from boot 
+            local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
+            # Wait a minute from boot before start
+            if [ $(echo $BOOT_TIME'<'$((JETSON_PERFORMANCE_WAIT_TIME+1)) | bc -l) -eq 1 ] 
+            then
+                local TIME_TO_WAIT=$(echo $((JETSON_PERFORMANCE_WAIT_TIME+1))'-'$BOOT_TIME | bc)
+                echo "Time to wait=$TIME_TO_WAIT"
+                # Sleep for other time
+                sleep $TIME_TO_WAIT
+            fi
         fi
-    fi
-    
-    if [ ! -f /tmp/jetson_performance_run ]
-    then
-        # check if exist l4t_dfs.conf otherwhise delete
-        if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ] ; then sudo rm $JETSON_EASY_FOLDER/l4t_dfs.conf ; fi
-        # Store jetson_clock configuration
-        sudo $HOME/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf    
-        # if Jetson TX2 change type of performance
-        if [ $JETSON_BOARD == "TX2" ] || [ $JETSON_BOARD == "iTX2" ]
+        
+        if [ ! -f $JETSON_PERFORMANCE_CHECK_FILE ]
         then
-            echo "TX2 Change config"
+            # check if exist l4t_dfs.conf otherwhise delete
+            if [ ! -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
+            then
+                # Store jetson_clock configuration
+                sudo $HOME/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf
+            fi
+            # if Jetson TX2 change type of performance
+            if [ $JETSON_BOARD == "TX2" ] || [ $JETSON_BOARD == "iTX2" ]
+            then
+                echo "TX2 Change config"
+            fi
+            # Launch ./jetson_clock.sh
+            sudo $HOME/jetson_clocks.sh
+            # Write a file to check the system has running
+            sudo touch $JETSON_PERFORMANCE_CHECK_FILE
+        else
+            echo "Service has running"
         fi
-        # Launch ./jetson_clock.sh
-        sudo $HOME/jetson_clocks.sh
-        # Write a file to check the system has running
-        sudo touch /tmp/jetson_performance_run
     else
-        echo "Service has running"
+        echo "Implementation for NVIDIA Jetson TK1 coming soon"
     fi
 }
 
 stop()
 {
-    # restore jetson_clock configuration
-    sudo $HOME/jetson_clocks.sh --restore $JETSON_EASY_FOLDER/l4t_dfs.conf 
-    # Delete the configuration
-    sudo rm $JETSON_EASY_FOLDER/l4t_dfs.conf 
-    # Write a file to check the system has running
-    sudo rm /tmp/jetson_performance_run
-    
-    echo "STOP"
+    if [ $JETSON_BOARD != "TK1" ]
+    then
+        # restore jetson_clock configuration
+        sudo $HOME/jetson_clocks.sh --restore $JETSON_EASY_FOLDER/l4t_dfs.conf
+        # Write a file to check the system has running
+        if [ -f $JETSON_PERFORMANCE_CHECK_FILE ]
+        then
+            sudo rm $JETSON_PERFORMANCE_CHECK_FILE
+        fi
+    else
+        echo "Implementation for NVIDIA Jetson TK1 coming soon"
+    fi
 }
 
 finstall()
@@ -138,17 +161,17 @@ case "$1" in
         uninstall
         ;;
     *)
-        if [ $JETSON_BOARD == "TX2" ] || [ $JETSON_BOARD == "TX2" ]
+        if [ $JETSON_BOARD == "TX2" ] || [ $JETSON_BOARD == "iTX2" ]
         then
             echo "Usage: $0 [options] [type]"
         else
             echo "Usage: $0 [options]"
         fi
         echo "  options,"
-        echo "  --start      |"
-        echo "  --stop       |"
-        echo "  --status     |"
-        echo "  --restart    |"
+        echo "  --start      | Run jetson_clock.sh and set the performance at max value"
+        echo "  --stop       | Stop the jetson_clock.sh and restore the old configuration"
+        echo "  --status     | Show the status of the system"
+        echo "  --restart    | Restart the system"
         echo "  --install    |"
         echo "  --uninstall  |"
 esac
