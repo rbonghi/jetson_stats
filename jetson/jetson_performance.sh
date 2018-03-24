@@ -1,4 +1,19 @@
-#!/bin/bash
+#!/bin/sh
+# kFreeBSD do not accept scripts as interpreters, using #!/bin/sh and sourcing.
+if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
+    set "$0" "$@"; INIT_D_SCRIPT_SOURCED=true . /lib/init/init-d-script
+fi
+### BEGIN INIT INFO
+# Provides:          jetson_performance
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Script to use the jetson_clock.sh like service
+# Description:       Script to use the jetson_clock.sh like service.
+#                    For NVIDIA Jetson TX2 is controlled the NVP model.
+### END INIT INFO
+
 # Copyright (C) 2018, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
 #
@@ -27,7 +42,8 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# description: Jetson script to install Jetson clock service
+# Author: Raffaello Bonghi <raffaello@rnext.it>
+
 # Reference:
 # 1 - Maximum speed
 # https://devtalk.nvidia.com/default/topic/1000657/script-for-maximum-clockspeeds-and-performence/
@@ -38,12 +54,15 @@
 # https://devblogs.nvidia.com/jetson-tx2-delivers-twice-intelligence-edge/
 # https://devblogs.nvidia.com/jetpack-doubles-jetson-inference-perf/
 
+. /lib/lsb/init-functions
+. /lib/init/vars.sh
+
 # Load environment variables:
 # - JETSON_BOARD
 # - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
 # - JETSON_DESCRIPTION
 # - JETSON_CUDA
-source /etc/jetson_easy/jetson_variables
+. /etc/jetson_easy/jetson_variables
 
 JETSON_PERFORMANCE_WAIT_TIME=60
 JETSON_PERFORMANCE_CHECK_FILE=/tmp/jetson_performance_run
@@ -60,7 +79,7 @@ status()
             echo "[Service stopped] jetson_clock.sh --show:"
         fi
         # Show status of the NVIDIA Jetson
-        sudo $HOME/jetson_clocks.sh --show
+        sudo $JETSON_EASY_FOLDER/jetson_clocks.sh --show
     else
         echo "Implementation for NVIDIA Jetson TK1 coming soon"
     fi
@@ -92,18 +111,20 @@ start()
             # check if exist l4t_dfs.conf otherwhise delete
             if [ ! -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
             then
+                echo "Store the jetson_clock.sh configuration"
                 # Store jetson_clock configuration
-                sudo $HOME/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf
+                sudo $JETSON_EASY_FOLDER/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf
             fi
             # if Jetson TX2 change type of performance
-            if [ $JETSON_BOARD == "TX2" ] || [ $JETSON_BOARD == "iTX2" ]
+            if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
             then
                 echo "TX2 Change config"
             fi
             # Launch ./jetson_clock.sh
-            sudo $HOME/jetson_clocks.sh
+            sudo $JETSON_EASY_FOLDER/jetson_clocks.sh
             # Write a file to check the system has running
             sudo touch $JETSON_PERFORMANCE_CHECK_FILE
+            echo "Service run at max performance"
         else
             echo "Service has running"
         fi
@@ -116,12 +137,21 @@ stop()
 {
     if [ $JETSON_BOARD != "TK1" ]
     then
-        # restore jetson_clock configuration
-        sudo $HOME/jetson_clocks.sh --restore $JETSON_EASY_FOLDER/l4t_dfs.conf
+        if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
+        then
+            # restore jetson_clock configuration
+            sudo $JETSON_EASY_FOLDER/jetson_clocks.sh --restore $JETSON_EASY_FOLDER/l4t_dfs.conf
+        fi
+        
         # Write a file to check the system has running
         if [ -f $JETSON_PERFORMANCE_CHECK_FILE ]
         then
             sudo rm $JETSON_PERFORMANCE_CHECK_FILE
+        fi
+        # Restore old Jetson configuration
+        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
+        then
+            echo "TX2 Change config"
         fi
     else
         echo "Implementation for NVIDIA Jetson TK1 coming soon"
@@ -130,14 +160,46 @@ stop()
 
 finstall()
 {
-    # installing script
-    echo "Install"
+    if [ ! -f "/etc/init.d/jetson_performance" ]
+    then
+        # Copy the service in /etc/init.d/
+        cp $JETSON_EASY_FOLDER/jetson_performance.sh "/etc/init.d/jetson_performance"
+    fi
+    # Add symbolic link of jetson_clock
+    if [ ! -f $JETSON_EASY_FOLDER/jetson_clocks.sh ]
+    then
+        sudo ln -s $HOME/jetson_clocks.sh $JETSON_EASY_FOLDER/jetson_clocks.sh
+    fi
+    # Install the service
+    sudo update-rc.d jetson_performance defaults
+    # Run the service
+    sudo service jetson_performance start
 }
 
 uninstall()
 {
-    # Uninstalling script
-    echo "Uninstall"
+    echo -n "Are you really sure you want to uninstall this service? That cannot be undone. [yes|No] "
+    local SURE
+    read SURE
+    if [ "$SURE" = "yes" ]; then
+        # stop the service
+        stop
+        # Remove configuration
+        if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
+        then
+            echo "Remove the jetson_clock.sh configuration"
+            sudo rm $JETSON_EASY_FOLDER/l4t_dfs.conf
+        fi
+        # Remove symbolic link
+        sudo rm $JETSON_EASY_FOLDER/jetson_clocks.sh
+        # Remove the service
+        sudo update-rc.d -f jetson_performance remove
+        # Remove the service from /etc/init.d
+        if [ -f "/etc/init.d/jetson_performance" ]
+        then
+            sudo rm "/etc/init.d/jetson_performance"
+        fi
+    fi
 }
 
 case "$1" in 
@@ -161,19 +223,19 @@ case "$1" in
         uninstall
         ;;
     *)
-        if [ $JETSON_BOARD == "TX2" ] || [ $JETSON_BOARD == "iTX2" ]
+        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
         then
             echo "Usage: $0 [options] [type]"
         else
             echo "Usage: $0 [options]"
         fi
         echo "  options,"
-        echo "  --start      | Run jetson_clock.sh and set the performance at max value"
-        echo "  --stop       | Stop the jetson_clock.sh and restore the old configuration"
-        echo "  --status     | Show the status of the system"
-        echo "  --restart    | Restart the system"
-        echo "  --install    |"
-        echo "  --uninstall  |"
+        echo "  start      | Run jetson_clock.sh and set the performance at max value"
+        echo "  stop       | Stop the jetson_clock.sh and restore the old configuration"
+        echo "  status     | Show the status of the system"
+        echo "  restart    | Restart the system"
+        echo "  install    | Link jetson_clock.sh and add service in list"
+        echo "  uninstall  | Uninstall the script and remove the configuration"
 esac
 
 exit 0 
