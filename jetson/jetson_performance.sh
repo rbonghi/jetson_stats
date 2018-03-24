@@ -40,19 +40,43 @@
 # - JETSON_CUDA
 source /etc/jetson_easy/jetson_variables
 
+JETSON_PERFORMANCE_WAIT_TIME=60
+
 status()
 {
-    echo "HELLOOOO!"
+    echo "Status"
     echo "$JETSON_BOARD"
     echo "$(awk '{print int($1/3600)":"int(($1%3600)/60)":"int($1%60)}' /proc/uptime)"
-    #echo $(awk /proc/uptime)
+    
+    local TEST=$(sudo $HOME/jetson_clocks.sh --show)
+    
+    echo $TEST | sed -e 1b -e '$!d'
 }
 
 start()
 {
-    # code to start app comes here 
-    # example: daemon program_name &
-    echo "START"
+    # Check which version is L4T is loaded
+    # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
+    if [ $(echo $JETSON_L4T'>28.1' | bc -l) -eq 1 ]
+    then
+        # Time from boot 
+        local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
+        # Wait a minute from boot before start
+        if [ $(echo $BOOT_TIME'<'$((JETSON_PERFORMANCE_WAIT_TIME+1)) | bc -l) -eq 1 ] 
+        then
+            local TIME_TO_WAIT=$(echo $((JETSON_PERFORMANCE_WAIT_TIME+1))'-'$BOOT_TIME | bc)
+            echo "Time to wait=$TIME_TO_WAIT"
+            # Sleep for other time
+            sleep $TIME_TO_WAIT
+        fi
+    fi
+    
+    # Store configuration
+    
+    # if Jetson TX2 change type of performance
+    
+    # Launch ./jetson_clock.sh
+    
 }
 
 stop()
