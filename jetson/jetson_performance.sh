@@ -78,6 +78,11 @@ status()
         else
             echo "[Service stopped] jetson_clock.sh --show:"
         fi
+        # Show NVP model loaded at this time
+        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
+        then
+            sudo nvpmodel -q
+        fi
         # Show status of the NVIDIA Jetson
         sudo $JETSON_EASY_FOLDER/jetson_clocks.sh --show
     else
@@ -92,7 +97,7 @@ start()
         # Check which version is L4T is loaded
         # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
         # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
-        if [ $(echo $JETSON_L4T'>28.1' | bc -l) -eq 1 ]
+        if [ $(echo $JETSON_L4T'<28.1' | bc -l) -eq 1 ]
         then
             # Time from boot 
             local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
@@ -100,9 +105,10 @@ start()
             if [ $(echo $BOOT_TIME'<'$((JETSON_PERFORMANCE_WAIT_TIME+1)) | bc -l) -eq 1 ] 
             then
                 local TIME_TO_WAIT=$(echo $((JETSON_PERFORMANCE_WAIT_TIME+1))'-'$BOOT_TIME | bc)
-                echo "Time to wait=$TIME_TO_WAIT"
+                echo "Wait from boot other $TIME_TO_WAIT sec..."
                 # Sleep for other time
                 sleep $TIME_TO_WAIT
+                echo "...done!"
             fi
         fi
         
@@ -118,7 +124,9 @@ start()
             # if Jetson TX2 change type of performance
             if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
             then
-                echo "TX2 Change config"
+                echo "Set configuration in max performance"
+                # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
+                sudo nvpmodel -m 0
             fi
             # Launch ./jetson_clock.sh
             sudo $JETSON_EASY_FOLDER/jetson_clocks.sh
@@ -151,7 +159,9 @@ stop()
         # Restore old Jetson configuration
         if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
         then
-            echo "TX2 Change config"
+            echo "Change configuration in default mode"
+            # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
+            sudo nvpmodel -m 1
         fi
     else
         echo "Implementation for NVIDIA Jetson TK1 coming soon"
@@ -178,28 +188,25 @@ finstall()
 
 uninstall()
 {
-    echo -n "Are you really sure you want to uninstall this service? That cannot be undone. [yes|No] "
-    local SURE
-    read SURE
-    if [ "$SURE" = "yes" ]; then
-        # stop the service
-        stop
-        # Remove configuration
-        if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
-        then
-            echo "Remove the jetson_clock.sh configuration"
-            sudo rm $JETSON_EASY_FOLDER/l4t_dfs.conf
-        fi
-        # Remove symbolic link
-        sudo rm $JETSON_EASY_FOLDER/jetson_clocks.sh
-        # Remove the service
-        sudo update-rc.d -f jetson_performance remove
-        # Remove the service from /etc/init.d
-        if [ -f "/etc/init.d/jetson_performance" ]
-        then
-            sudo rm "/etc/init.d/jetson_performance"
-        fi
+    # stop the service
+    stop
+    # Remove configuration
+    if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
+    then
+        echo "Remove the jetson_clock.sh configuration"
+        sudo rm $JETSON_EASY_FOLDER/l4t_dfs.conf
     fi
+    # Remove symbolic link
+    sudo rm $JETSON_EASY_FOLDER/jetson_clocks.sh
+    # Remove the service
+    sudo update-rc.d -f jetson_performance remove
+    # Remove the service from /etc/init.d
+    if [ -f "/etc/init.d/jetson_performance" ]
+    then
+        sudo rm "/etc/init.d/jetson_performance"
+    fi
+    # Update service list
+    sudo systemctl daemon-reload
 }
 
 case "$1" in 
