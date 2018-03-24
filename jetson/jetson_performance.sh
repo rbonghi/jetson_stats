@@ -188,8 +188,12 @@ finstall()
 
 uninstall()
 {
-    # stop the service
-    stop
+    # Stop the service
+    if service --status-all | grep -Fq 'jetson_performance'; then
+        sudo service jetson_performance stop
+    else
+        stop
+    fi
     # Remove configuration
     if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
     then
