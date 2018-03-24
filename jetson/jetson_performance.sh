@@ -31,36 +31,59 @@
 # Reference:
 # https://devtalk.nvidia.com/default/topic/1000657/script-for-maximum-clockspeeds-and-performence/
 
-# Source function library.
-. /etc/init.d/functions
-
-start() {
+start()
+{
     # code to start app comes here 
     # example: daemon program_name &
+    echo "START"
 }
 
-stop() {
+stop()
+{
     # code to stop app comes here 
     # example: killproc program_name
+    echo "STOP"
+}
+
+finstall()
+{
+    # installing script
+    echo "Install"
+}
+
+uninstall()
+{
+    # Uninstalling script
+    echo "Uninstall"
 }
 
 case "$1" in 
     start)
-       start
-       ;;
+        start
+        ;;
     stop)
-       stop
-       ;;
+        stop
+        ;;
     restart)
-       stop
-       start
-       ;;
+        stop
+        start
+        ;;
     status)
-       # code to check status of app comes here 
-       # example: status program_name
-       ;;
+        # code to check status of app comes here 
+        # example: status program_name
+        ;;
+    install)
+        finstall
+        ;;
+    uninstall)
+        uninstall
+        ;;
+    -h|help)
+        # Help
+        echo "This is the help!"
+        ;;
     *)
-       echo "Usage: $0 {start|stop|status|restart}"
+        echo "Usage: $0 {start|stop|status|restart|install|uninstall|help}"
 esac
 
 exit 0 
