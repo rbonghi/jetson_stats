@@ -10,9 +10,9 @@ The main script is called `biddibi_boddibi_boo.sh` and you can setup in one shot
   Update, upgrade and distribution upgrade the [NVIDIA Jetson][NVIDIA Jetson] in only one shot
 
 * **Install Jetson release and performance service**
-  * [**jetson_variables**](jetson_variables) - This script generate the easy environment variables to know which is your Hardware version of the Jetson and which Jetpack you have already installed
-  * [**jetson_release**](jetson_release) - The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
-  * [**jetson_performance**](jetson_performance) - This service load `jetson_clock.sh` has a linux service
+  * [**jetson_variables**](https://github.com/rbonghi/jetson_easy/wiki/jetson_variables) - This script generate the easy environment variables to know which is your Hardware version of the Jetson and which Jetpack you have already installed
+  * [**jetson_release**](https://github.com/rbonghi/jetson_easy/wiki/jetson_release) - The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
+  * [**jetson_performance**](https://github.com/rbonghi/jetson_easy/wiki/jetson_performance) - This service load `jetson_clock.sh` has a linux service
 * Set hostname
 * Install [ROS][ROS]
 * **[COMING SOON]** Install USB and ACM driver
