@@ -168,51 +168,6 @@ stop()
     fi
 }
 
-finstall()
-{
-    if [ ! -f "/etc/init.d/jetson_performance" ]
-    then
-        # Copy the service in /etc/init.d/
-        cp $JETSON_EASY_FOLDER/jetson_performance.sh "/etc/init.d/jetson_performance"
-    fi
-    # Add symbolic link of jetson_clock
-    if [ ! -f $JETSON_EASY_FOLDER/jetson_clocks.sh ]
-    then
-        sudo ln -s $HOME/jetson_clocks.sh $JETSON_EASY_FOLDER/jetson_clocks.sh
-    fi
-    # Install the service
-    sudo update-rc.d jetson_performance defaults
-    # Run the service
-    sudo service jetson_performance start
-}
-
-uninstall()
-{
-    # Stop the service
-    if service --status-all | grep -Fq 'jetson_performance'; then
-        sudo service jetson_performance stop
-    else
-        stop
-    fi
-    # Remove configuration
-    if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
-    then
-        echo "Remove the jetson_clock.sh configuration"
-        sudo rm $JETSON_EASY_FOLDER/l4t_dfs.conf
-    fi
-    # Remove symbolic link
-    sudo rm $JETSON_EASY_FOLDER/jetson_clocks.sh
-    # Remove the service
-    sudo update-rc.d -f jetson_performance remove
-    # Remove the service from /etc/init.d
-    if [ -f "/etc/init.d/jetson_performance" ]
-    then
-        sudo rm "/etc/init.d/jetson_performance"
-    fi
-    # Update service list
-    sudo systemctl daemon-reload
-}
-
 case "$1" in 
     start)
         start
@@ -227,12 +182,6 @@ case "$1" in
     status)
         status
         ;;
-    install)
-        finstall
-        ;;
-    uninstall)
-        uninstall
-        ;;
     *)
         if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
         then
@@ -245,8 +194,6 @@ case "$1" in
         echo "  stop       | Stop the jetson_clock.sh and restore the old configuration"
         echo "  status     | Show the status of the system"
         echo "  restart    | Restart the system"
-        echo "  install    | Link jetson_clock.sh and add service in list"
-        echo "  uninstall  | Uninstall the script and remove the configuration"
 esac
 
 exit 0 
