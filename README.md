@@ -3,6 +3,10 @@
 
 The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [TK1, TX1, TX2, iTX2] embedded board without wait a lot of time.
 
+[Official website](http://rnext.it/project/jetson-easy/)
+
+[Wiki](https://github.com/rbonghi/jetson_easy/wiki)
+
 The main script is called `biddibi_boddibi_boo.sh` and you can setup in one shot all your board. The shell script execute:
 
 * **Update & Distribution upgrade & Upgrade**
