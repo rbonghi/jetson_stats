@@ -53,6 +53,8 @@ fi
 # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
 # https://devblogs.nvidia.com/jetson-tx2-delivers-twice-intelligence-edge/
 # https://devblogs.nvidia.com/jetpack-doubles-jetson-inference-perf/
+# 4- Enable/disable service
+# https://askubuntu.com/questions/19320/how-to-enable-or-disable-services
 
 . /lib/lsb/init-functions
 . /lib/init/vars.sh
@@ -79,7 +81,7 @@ status()
             echo "[Service stopped] jetson_clock.sh --show:"
         fi
         # Show NVP model loaded at this time
-        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
+        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ]
         then
             sudo nvpmodel -q
         fi
@@ -122,7 +124,7 @@ start()
                 sudo $JETSON_EASY_FOLDER/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf
             fi
             # if Jetson TX2 change type of performance
-            if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
+            if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ]
             then
                 echo "Set configuration in max performance"
                 # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
@@ -157,7 +159,7 @@ stop()
             sudo rm $JETSON_PERFORMANCE_CHECK_FILE
         fi
         # Restore old Jetson configuration
-        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
+        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ]
         then
             echo "Change configuration in default mode"
             # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
@@ -183,7 +185,7 @@ case "$1" in
         status
         ;;
     *)
-        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "iTX2" ]
+        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ]
         then
             echo "Usage: $0 [options] [type]"
         else

@@ -58,7 +58,7 @@ if [ -f /etc/nv_tegra_release ]; then
 
     # Write version of jetpack installed
     # https://developer.nvidia.com/embedded/jetpack-archive
-    if [ "$JETSON_BOARD" = "iTX2" ]
+    if [ "$JETSON_BOARD" = "TX2i" ]
     then 
         case $JETSON_L4T in
             "28.2") 
