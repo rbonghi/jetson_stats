@@ -28,7 +28,9 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # NVIDIA Identify version 
-# reference: https://devtalk.nvidia.com/default/topic/1014424/jetson-tx2/identifying-tx1-and-tx2-at-runtime/
+# reference: 
+# https://devtalk.nvidia.com/default/topic/1014424/jetson-tx2/identifying-tx1-and-tx2-at-runtime/
+# https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 
 if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
     case $(cat /sys/module/tegra_fuse/parameters/tegra_chip_id) in
@@ -47,27 +49,28 @@ fi
 # NVIDIA Jetson version
 # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
 if [ -f /etc/nv_tegra_release ]; then
+    # L4T string
     JETSON_L4T_STRING=$(head -n 1 /etc/nv_tegra_release)
 
     # Load release and revision
     JETSON_L4T_RELEASE=$(echo $JETSON_L4T_STRING | cut -f 1 -d ',' | sed 's/\# R//g' | cut -d ' ' -f1)
     JETSON_L4T_REVISION=$(echo $JETSON_L4T_STRING | cut -f 2 -d ',' | sed 's/\ REVISION: //g' | cut -d. -f1)
-
+    # unset variable
+    unset JETSON_L4T_STRING
+    
     # Write Jetson description
     JETSON_L4T="$JETSON_L4T_RELEASE.$JETSON_L4T_REVISION"
 
     # Write version of jetpack installed
     # https://developer.nvidia.com/embedded/jetpack-archive
-    if [ "$JETSON_BOARD" = "TX2i" ]
-    then 
+    if [ "$JETSON_BOARD" = "TX2i" ] ; then 
         case $JETSON_L4T in
             "28.2") 
-                    JETSON_JETPACK="3.2" ;;
+               JETSON_JETPACK="3.2" ;;
             *)
                JETSON_JETPACK="UNKNOWN" ;;
         esac        
-    elif [ "$JETSON_BOARD" = "TX2" ]
-    then
+    elif [ "$JETSON_BOARD" = "TX2" ] ; then
         case $JETSON_L4T in
             "28.2") 
                     JETSON_JETPACK="3.2" ;;
@@ -78,8 +81,7 @@ if [ -f /etc/nv_tegra_release ]; then
             *)
                JETSON_JETPACK="UNKNOWN" ;;
         esac
-    elif [ "$JETSON_BOARD" = "TX1" ]
-    then
+    elif [ "$JETSON_BOARD" = "TX1" ] ; then
         case $JETSON_L4T in
             "28.2") 
                     JETSON_JETPACK="3.2" ;;
@@ -98,8 +100,7 @@ if [ -f /etc/nv_tegra_release ]; then
             *)
                JETSON_JETPACK="UNKNOWN" ;;
         esac
-    elif [ "$JETSON_BOARD" ="TK1" ]
-    then
+    elif [ "$JETSON_BOARD" ="TK1" ] ; then
         case $JETSON_L4T in
             "21.5") 
                     JETSON_JETPACK="2.3.1 or 2.3" ;;
@@ -112,6 +113,9 @@ if [ -f /etc/nv_tegra_release ]; then
             *)
                JETSON_JETPACK="UNKNOWN" ;;
         esac
+    else
+        # Unknown board
+        JETSON_JETPACK="UNKNOWN" ;;
     fi
 fi
 
@@ -120,5 +124,11 @@ if [ -f /usr/local/cuda/version.txt ]; then
     JETSON_CUDA=$(cat /usr/local/cuda/version.txt | sed 's/\CUDA Version //g')
 fi
 
-# TODO Add Visionworks
+# TODO Add enviroments variables:
+# - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
+# - GCID, BOARD, EABI
+# - cuDNN
+# - TensorRT
+# - OpenCV
+# - Visionworks
 
