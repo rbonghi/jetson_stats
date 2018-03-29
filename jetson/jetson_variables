@@ -115,7 +115,7 @@ if [ -f /etc/nv_tegra_release ]; then
         esac
     else
         # Unknown board
-        JETSON_JETPACK="UNKNOWN" ;;
+        JETSON_JETPACK="UNKNOWN"
     fi
 fi
 
