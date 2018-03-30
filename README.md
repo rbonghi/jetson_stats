@@ -11,7 +11,7 @@ If you want start with this toolkit you can write on the bash of your board:
 ```console
 nvidia@tegra-ubuntu:~$ https://github.com/rbonghi/jetson_easy.git
 nvidia@tegra-ubuntu:~$ cd jetson_easy
-nvidia@tegra-ubuntu:~$ ./biddibi_boddibi_boo.sh
+nvidia@tegra-ubuntu:~/jetson_easy$ ./biddibi_boddibi_boo.sh
 ```
 
 ## Biddibi Boddibi Boo
@@ -30,7 +30,7 @@ The main script is called `biddibi_boddibi_boo.sh` and you can setup in one shot
 
 The `biddibi_boddibi_boo.sh` run with an [easy user interface](#interactive-user-interface) or you can use the [silent mode](#command-line) and following a setup file the system will be installed automatically without other messages. If you want know all features you can write:
 ```console
-nvidia@tegra-ubuntu:~$ ./biddibi_boddibi_boo.sh -h
+nvidia@tegra-ubuntu:~/jetson_easy$ ./biddibi_boddibi_boo.sh -h
 Bibbibi Boddibi Boo is an automatic install for different type of modules.
 Usage:
 ./biddibi_boddibi_boo.sh [options]
@@ -53,7 +53,7 @@ Finally you can startup the installer and wait that **jetson_easy** complete the
 ### Command line
 Look like the Interactive user interface this command start the installer without show you any type of messages
 ```console
-nvidia@tegra-ubuntu:~$ ./biddibi_boddibi_boo.sh -s
+nvidia@tegra-ubuntu:~/jetson_easy$ ./biddibi_boddibi_boo.sh -s
 ```
 
 ## Jetson_performance, jetson_variables and jetson_release
