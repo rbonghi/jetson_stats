@@ -20,7 +20,7 @@ nvidia@tegra-ubuntu:~$ ./biddibi_boddibi_boo.sh
 
 The main script is called `biddibi_boddibi_boo.sh` and you can setup in one shot all your board. The system has different modules to control your automatic installation, the list follow:
 1. **Update & Distribution upgrade & Upgrade** Update, upgrade and distribution upgrade the [NVIDIA Jetson][NVIDIA Jetson] in only one shot
-2. [**Install Jetson release and performance service**](#Jetson_performance-jetson_variables-and-jetson_release) It's an automatic installer for [**Jetson_performance**][jetson_performance], [**jetson_variables**][jetson_variables] and [**jetson_release**][jetson_release]
+2. [**Install Jetson release and performance service**](#jetson_performance-jetson_variables-and-jetson_release) It's an automatic installer for [**Jetson_performance**][jetson_performance], [**jetson_variables**][jetson_variables] and [**jetson_release**][jetson_release]
 3. **Patch the NVIDIA Jetson from known errors** If your release of NVIDIA Jetson have errors or require a patch this module update and fix automatically
 4. **Kernel Update** This module fix the NVIDIA Jetson and add the common drivers (FTDI, ACM, etc...)
 5. **Set hostname** Update permantly the hostname of your board
