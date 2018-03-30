@@ -1,7 +1,5 @@
 # Jetson Easy setup configurator
-**Welcome in the Jetson setup configurator**
-
-Wisit the [Official website](http://rnext.it/project/jetson-easy/) or read the [Wiki](https://github.com/rbonghi/jetson_easy/wiki)
+**Welcome in the Jetson setup configurator** - Visit the [Official website](http://rnext.it/project/jetson-easy/) or read the [Wiki](https://github.com/rbonghi/jetson_easy/wiki)
 
 The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [TK1, TX1, TX2, TX2i] embedded board without wait a lot of time.
 
