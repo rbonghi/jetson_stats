@@ -7,7 +7,7 @@ The idea of this project is automatically update and setup your [NVIDIA Jetson][
 
 Main features:
 * [**Biddibi Boddibi Boo**](#biddibi-boddibi-boo) is an automatic  NVIDIA Jetson installer, from update&upgrade, patch the kernel or install [ROS][ROS]
-* The [**Jetson_performance**](#Jetson_performance-jetson_variables-and-jetson_release) is a service to control the performance of the board, [**jetson_variables**](#Jetson_performance-jetson_variables-and-jetson_release) add new environments variables and [**jetson_release**](#Jetson_performance-jetson_variables-and-jetson_release) show the information about the board.
+* The [**Jetson_performance**](#jetson_performance-jetson_variables-and-jetson_release) is a service to control the performance of the board, [**jetson_variables**](#jetson_performance-jetson_variables-and-jetson_release) add new environments variables and [**jetson_release**](#jetson_performance-jetson_variables-and-jetson_release) show the information about the board.
 
 If you want start with this toolkit you can write on the bash of your board:
 ```bash
