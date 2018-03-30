@@ -13,8 +13,7 @@ Main features:
 
 ![Biddibi Boddibi Boo Logo](http://rnext.it/wp-content/uploads/2018/03/biddibi_boddibi_boo.png)
 
-The main script is called `biddibi_boddibi_boo.sh` and you can setup in one shot all your board. The shell script execute:
-
+The main script is called `biddibi_boddibi_boo.sh` and you can setup in one shot all your board. The system has different modules to control your automatic installation, the list follow:
 1. **Update & Distribution upgrade & Upgrade** Update, upgrade and distribution upgrade the [NVIDIA Jetson][NVIDIA Jetson] in only one shot
 2. **Install Jetson release and performance service** It's an automatic installer for **Jetson_performance**, **jetson_variables** and **jetson_release**
 3. **Patch the NVIDIA Jetson from known errors** If your release of NVIDIA Jetson have errors or require a patch this module update and fix automatically
@@ -23,6 +22,35 @@ The main script is called `biddibi_boddibi_boo.sh` and you can setup in one shot
 6. **Install [ROS][ROS]** With this modules you install the release ROS in your board, add the workspace and set the ROS_MASTER_URI
 7. **Set git user.name and user.email** in your NVIDIA Jetson
 8. **Install standard packages** You can add in your NVIDIA Jetson the common packages (nano, htop, ... ) to ZED drivers (coming soon) and other...
+
+The `biddibi_boddibi_boo.sh` run with an easy user interface or you can use the silent mode installer
+```bash
+nvidia@tegra-ubuntu:~$ biddibi_boddibi_boo.sh
+```
+To know all feature you can use:
+```bash
+nvidia@tegra-ubuntu:~$ biddibi_boddibi_boo.sh -h
+Bibbibi Boddibi Boo is an automatic install for different type of modules.
+Usage:
+./biddibi_boddibi_boo.sh [options]
+options,
+   -h|--help   | This help
+   -s          | Launch the system in silent mode (Without GUI)
+   -c [file]   | Load configuration file from other reference [file]
+   -p [passwd] | Load password without any other request from the script
+   -r|--reboot | If required, force automatically the reboot
+```
+### Interactive user interface
+
+![Biddibi Boddibi Boo - page 1](http://rnext.it/wp-content/uploads/2018/03/page1.jpg)
+![Biddibi Boddibi Boo - page 2](http://rnext.it/wp-content/uploads/2018/03/page2.jpg)
+
+
+### Command line
+```bash
+nvidia@tegra-ubuntu:~$ biddibi_boddibi_boo.sh -s
+```
+
 
 ## Jetson_performance, jetson_variables and jetson_release
 
