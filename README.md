@@ -11,7 +11,7 @@ If you want start with this toolkit you can write on the bash of your board:
 ```bash
 nvidia@tegra-ubuntu:~$ https://github.com/rbonghi/jetson_easy.git
 nvidia@tegra-ubuntu:~$ cd jetson_easy
-nvidia@tegra-ubuntu:~$ biddibi_boddibi_boo.sh
+nvidia@tegra-ubuntu:~$ ./biddibi_boddibi_boo.sh
 ```
 
 ## Biddibi Boddibi Boo
@@ -65,7 +65,6 @@ nvidia@tegra-ubuntu:~$ biddibi_boddibi_boo.sh -s
 [jetson_variables]: https://github.com/rbonghi/jetson_easy/wiki/jetson_variables
 [jetson_release]: https://github.com/rbonghi/jetson_easy/wiki/jetson_release
 [jetson_performance]: https://github.com/rbonghi/jetson_easy/wiki/jetson_performance
-
 [NVIDIA]: https://www.nvidia.com/
 [NVIDIA Jetson]: http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html
 [ROS]: http://www.ros.org/
