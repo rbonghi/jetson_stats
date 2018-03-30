@@ -44,8 +44,10 @@ options,
 ### Interactive user interface
 When you launch the script you can read the information about your board, from user and hostname, release of the kernel to the NVIDIA Jetson hardware release if installed the version of [ROS][ROS]
 ![Biddibi Boddibi Boo - page 1](http://rnext.it/wp-content/uploads/2018/03/page1.jpg)
+
 In second menu you can setup your board and setup which type of installation you like. Finally you can save and store all infromation in a file and use same setup for the future.
 ![Biddibi Boddibi Boo - page 2](http://rnext.it/wp-content/uploads/2018/03/page2.jpg)
+
 Finally you can startup the installer and wait that **jetson_easy** complete the installation for you!
 
 ### Command line
