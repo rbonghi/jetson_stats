@@ -36,10 +36,12 @@ source /etc/jetson_easy/jetson_variables
 
 #Print Jetson version
 echo "$JETSON_DESCRIPTION"
-#Print Jetson version
+#Print Jetpack version
 echo "Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
-#Print Jetson version
+#Print Cuda version
 echo "CUDA $JETSON_CUDA"
+#Print OpenCv version
+echo "OpenCV $JETSON_OPENCV"
 
 exit 0
 

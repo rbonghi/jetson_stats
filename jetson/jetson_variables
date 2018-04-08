@@ -124,6 +124,9 @@ if [ -f /usr/local/cuda/version.txt ]; then
     JETSON_CUDA=$(cat /usr/local/cuda/version.txt | sed 's/\CUDA Version //g')
 fi
 
+# Read opencv version
+JETSON_OPENCV=$(pkg-config --modversion opencv)
+
 # TODO Add enviroments variables:
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 # - GCID, BOARD, EABI
