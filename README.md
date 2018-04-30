@@ -4,14 +4,14 @@
 The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [TK1, TX1, TX2, TX2i] embedded board without wait a lot of time.
 
 Main features:
-* [**Biddibi Boddibi Boo**](#biddibi-boddibi-boo) is an automatic  NVIDIA Jetson installer, from update&upgrade, patch the kernel or install [ROS][ROS]
+* [**Biddibi Boddibi Boo**](#biddibi-boddibi-boo) is an automatic and **REMOTE** NVIDIA Jetson installer, from update&upgrade, patch the kernel or install [ROS][ROS]
 * The [**Jetson_performance**](#jetson_performance-jetson_variables-and-jetson_release) is a service to control the performance of the board, [**jetson_variables**](#jetson_performance-jetson_variables-and-jetson_release) add new environments variables and [**jetson_release**](#jetson_performance-jetson_variables-and-jetson_release) show the information about the board.
 
-If you want start with this toolkit you can write on the bash of your board:
+If you want start with this toolkit you can write in your server bash:
 ```console
-nvidia@tegra-ubuntu:~$ https://github.com/rbonghi/jetson_easy.git
-nvidia@tegra-ubuntu:~$ cd jetson_easy
-nvidia@tegra-ubuntu:~/jetson_easy$ ./biddibi_boddibi_boo.sh
+ubuntu@server:~$ https://github.com/rbonghi/jetson_easy.git
+ubuntu@server:~$ cd jetson_easy
+ubuntu@server:~/jetson_easy$ ./biddibi_boddibi_boo.sh
 ```
 
 ## Biddibi Boddibi Boo
@@ -30,17 +30,27 @@ The main script is called `biddibi_boddibi_boo.sh` and you can setup in one shot
 
 The `biddibi_boddibi_boo.sh` run with an [easy user interface](#interactive-user-interface) or you can use the [silent mode](#command-line) and following a setup file the system will be installed automatically without other messages. If you want know all features you can write:
 ```console
-nvidia@tegra-ubuntu:~/jetson_easy$ ./biddibi_boddibi_boo.sh -h
+ubuntu@server:~/jetson_easy$ ./biddibi_boddibi_boo.sh -h
 Bibbibi Boddibi Boo is an automatic install for different type of modules.
 Usage:
 ./biddibi_boddibi_boo.sh [options]
 options,
-   -h|--help   | This help
-   -s          | Launch the system in silent mode (Without GUI)
-   -c [file]   | Load configuration file from other reference [file]
-   -p [passwd] | Load password without any other request from the script
-   -r|--reboot | If required, force automatically the reboot
+   -h|--help      | This help
+   --nogui        | Launch the system in silent mode (Without GUI)
+   -q|--quiet     | If required, force automatically the reboot
+   -c [file]      | Load configuration file from other reference [file]
+   -m [user@host] | Remote connection with NVIDIA Jetson host
+   -p [passwd]    | Load password without any other request from the script
 ```
+### Remote connection
+The Bibbibi Boddibi Boo script recognize if the script run on the NVIDIA Jetson or remotely and request the address and the password to connect on your board.
+
+![Biddibi Boddibi Boo - remote 3](http://rnext.it/wp-content/uploads/2018/04/remote3.jpg)
+
+After savind the remote configuration the script automatically connect on your board without write again the user and the password.
+
+![Biddibi Boddibi Boo - remote 1](http://rnext.it/wp-content/uploads/2018/04/remote1.jpg)
+
 ### Interactive user interface
 When you launch the script you can read the information about your board, from user and hostname, release of the kernel to the NVIDIA Jetson hardware release if installed the version of [ROS][ROS]
 ![Biddibi Boddibi Boo - page 1](http://rnext.it/wp-content/uploads/2018/03/page1.jpg)
@@ -53,7 +63,7 @@ Finally you can startup the installer and wait that **jetson_easy** complete the
 ### Command line
 Look like the Interactive user interface this command start the installer without show you any type of messages
 ```console
-nvidia@tegra-ubuntu:~/jetson_easy$ ./biddibi_boddibi_boo.sh -s
+nvidia@tegra-ubuntu:~/jetson_easy$ ./biddibi_boddibi_boo.sh -q
 ```
 
 ## Jetson_performance, jetson_variables and jetson_release
