@@ -11,10 +11,10 @@ AUTOMOUNT="N"
 function usage
 {
     echo "usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h]]"
-    echo "-d | --dir <directoryname>   Directory to place swapfile"
-    echo "-s | --size <gigabytes>"
-    echo "-a | --auto  Enable swap on boot in /etc/fstab "
-    echo "-h | --help  This message"
+    echo "  -d | --dir   <directoryname>   Directory to place swapfile"
+    echo "  -s | --size  <gigabytes>"
+    echo "  -a | --auto  Enable swap on boot in /etc/fstab "
+    echo "  -h | --help  This message"
 }
 
 while [ "$1" != "" ]; do
@@ -35,6 +35,16 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
+
+if [[ $EUID != 0 ]]; then
+    tput setaf 1
+    echo "Launch with sudo!"
+    tput sgr0
+    
+    usage
+    
+    exit 1
+fi
 
 echo "Creating Swapfile at: " $SWAPDIRECTORY
 echo "Swapfile Size: " $SWAPSIZE"G"
