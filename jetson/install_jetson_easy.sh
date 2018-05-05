@@ -46,6 +46,11 @@ else
     echo "Link jetson_release"
     #sudo cp $(pwd)/jetson/jetson_release.sh "$JETSON_BIN_FOLDER/jetson_release"
     sudo ln -s $JETSON_FOLDER/jetson_release.sh $JETSON_BIN_FOLDER/jetson_release
+
+    # Link jetson_swap
+    echo "Link jetson_swap"
+    #sudo cp $(pwd)/jetson/jetson_release.sh "$JETSON_BIN_FOLDER/jetson_release"
+    sudo ln -s $JETSON_FOLDER/jetson_swap.sh $JETSON_BIN_FOLDER/jetson_swap
     
     # Copy the service in /etc/init.d/
     if [ ! -f "/etc/init.d/jetson_performance" ]

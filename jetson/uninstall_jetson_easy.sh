@@ -73,6 +73,13 @@ then
     sudo rm "$JETSON_BIN_FOLDER/jetson_release"
 fi
 
+# Remove jetson_release link
+if [ -f "$JETSON_BIN_FOLDER/jetson_swap" ]
+then
+    echo "Remove jetson_swap link"
+    sudo rm "$JETSON_BIN_FOLDER/jetson_swap"
+fi
+
 # Remove jetson_easy folder
 if [ -d "$JETSON_FOLDER" ]; then
     # remove folder
