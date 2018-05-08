@@ -127,12 +127,12 @@ else
 fi
 
 # Read opencv version
-JETSON_OPENCV=$(pkg-config --modversion opencv)
-#if hash pkg-config --modversion opencv 2>/dev/null; then
-#    JETSON_OPENCV=$(pkg-config --modversion opencv)
-#else
-#    JETSON_OPENCV="NOT INSTALLED"
-#fi
+pkg-config --exists opencv
+if [ $? == "0" ] ; then
+    JETSON_OPENCV=$(pkg-config --modversion opencv)
+else
+    JETSON_OPENCV="NOT INSTALLED"
+fi
 
 # TODO Add enviroments variables:
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
