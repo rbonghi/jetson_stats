@@ -9,7 +9,7 @@ Main features:
 
 If you want start with this toolkit you can write in your server bash:
 ```console
-ubuntu@server:~$ https://github.com/rbonghi/jetson_easy.git
+ubuntu@server:~$ git clone https://github.com/rbonghi/jetson_easy.git
 ubuntu@server:~$ cd jetson_easy
 ubuntu@server:~/jetson_easy$ ./biddibi_boddibi_boo.sh
 ```
