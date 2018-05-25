@@ -5,10 +5,10 @@ if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
 fi
 ### BEGIN INIT INFO
 # Provides:          jetson_performance
-# Required-Start:    $remote_fs $syslog
-# Required-Stop:     $remote_fs $syslog
+# Required-Start:    $ALL
+# Required-Stop:     
 # Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Default-Stop:      
 # Short-Description: Script to use the jetson_clock.sh like service
 # Description:       Script to use the jetson_clock.sh like service.
 #                    For NVIDIA Jetson TX2 is controlled the NVP model.
