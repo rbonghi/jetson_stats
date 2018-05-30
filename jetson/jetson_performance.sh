@@ -104,6 +104,7 @@ start()
         # The service ondemand disabled doesn't improve the performance of the start-up
         # ----
         #if [ $(echo $JETSON_L4T'<28.1' | bc -l) -eq 1 ] ; then
+        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
             # Time from boot 
             local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
             # Wait a minute from boot before start
@@ -114,7 +115,7 @@ start()
                 sleep $TIME_TO_WAIT
                 echo "...done!"
             fi
-        #fi
+        fi
         
         if [ ! -f $JETSON_PERFORMANCE_CHECK_FILE ]
         then
