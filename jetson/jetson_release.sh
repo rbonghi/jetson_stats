@@ -42,6 +42,8 @@ echo "Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
 echo "CUDA $JETSON_CUDA"
 #Print OpenCv version
 echo "OpenCV $JETSON_OPENCV"
+#Print Jetson easy version
+echo "Jetson Easy v$JETSON_EASY_VERSION"
 
 exit 0
 
