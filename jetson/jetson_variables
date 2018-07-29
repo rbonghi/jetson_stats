@@ -72,7 +72,7 @@ if [ -f /etc/nv_tegra_release ]; then
     if [ "$JETSON_BOARD" = "TX2i" ] ; then 
         case $JETSON_L4T in
             "28.2.1") 
-               JETSON_JETPACK="3.2.1" ;;
+               JETSON_JETPACK="3.3 | 3.2.1" ;;
             "28.2") 
                JETSON_JETPACK="3.2" ;;
             *)
@@ -81,7 +81,7 @@ if [ -f /etc/nv_tegra_release ]; then
     elif [ "$JETSON_BOARD" = "TX2" ] ; then
         case $JETSON_L4T in
             "28.2.1") 
-                    JETSON_JETPACK="3.2.1" ;;
+                    JETSON_JETPACK="3.3 | 3.2.1" ;;
             "28.2") 
                     JETSON_JETPACK="3.2" ;;
             "28.1") 
@@ -98,11 +98,11 @@ if [ -f /etc/nv_tegra_release ]; then
             "28.1") 
                     JETSON_JETPACK="3.1" ;;
             "24.2.1") 
-                    JETSON_JETPACK="3.0 or 2.3.1" ;;
+                    JETSON_JETPACK="3.0 | 2.3.1" ;;
             "24.2") 
                     JETSON_JETPACK="2.3" ;;
             "24.1") 
-                    JETSON_JETPACK="2.2.1 or 2.2" ;;
+                    JETSON_JETPACK="2.2.1 | 2.2" ;;
             "23.2") 
                     JETSON_JETPACK="2.1" ;;
             "23.1") 
@@ -113,9 +113,9 @@ if [ -f /etc/nv_tegra_release ]; then
     elif [ "$JETSON_BOARD" ="TK1" ] ; then
         case $JETSON_L4T in
             "21.5") 
-                    JETSON_JETPACK="2.3.1 or 2.3" ;;
+                    JETSON_JETPACK="2.3.1 | 2.3" ;;
             "21.4") 
-                    JETSON_JETPACK="2.2 or 2.1 or 2.0 or DP 1.2" ;;
+                    JETSON_JETPACK="2.2 | 2.1 | 2.0 | DP 1.2" ;;
             "21.3") 
                     JETSON_JETPACK="DP 1.1" ;;
             "21.2") 
