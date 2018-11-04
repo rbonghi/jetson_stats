@@ -27,23 +27,41 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+red=`tput setaf 1`
+green=`tput setaf 2`
+reset=`tput sgr0`
+
 # Load environment variables:
 # - JETSON_BOARD
 # - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
 # - JETSON_DESCRIPTION
 # - JETSON_CUDA
 source /etc/jetson_easy/jetson_variables
+# Load NVP model status
+if [ "$JETSON_BOARD" = "Xavier" ] || [ "$JETSON_BOARD" = "TX2i" ] || [ "$JETSON_BOARD" = "TX2" ] ; then
+	NVPModel="$(nvpmodel -q 2>/dev/null | head -n 1)"
+	NVPModel_type="$(nvpmodel -q 2>/dev/null | sed -n 2p)"
+fi
 
 #Print Jetson version
-echo "$JETSON_DESCRIPTION"
-#Print Jetpack version
-echo "Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
+echo " - $JETSON_DESCRIPTION - Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
+#Print status NVPModel
+if [ "$JETSON_BOARD" = "Xavier" ] || [ "$JETSON_BOARD" = "TX2i" ] || [ "$JETSON_BOARD" = "TX2" ] ; then
+	echo "   * $NVPModel - Type: $NVPModel_type"
+fi
 #Print Cuda version
-echo "CUDA $JETSON_CUDA"
+echo "   * CUDA $JETSON_CUDA"
 #Print OpenCv version
-echo "OpenCV $JETSON_OPENCV"
+echo "   * OpenCV $JETSON_OPENCV"
+#Print status Jetson Performance service
+JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
+	echo " - Jetson Performance: ${green}$JE_PERFOMANCE_STATUS${reset}"
+else
+	echo " - Jetson Performance: ${red}$JE_PERFOMANCE_STATUS${reset}"
+fi
 #Print Jetson easy version
-echo "Jetson Easy v$JETSON_EASY_VERSION"
+echo " - Jetson Easy v$JETSON_EASY_VERSION"
 
 exit 0
 
