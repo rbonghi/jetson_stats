@@ -1,7 +1,7 @@
 # Jetson Easy setup configurator
 **Welcome in the Jetson setup configurator** - Visit the [Official website](http://rnext.it/project/jetson-easy/) or read the [Wiki](https://github.com/rbonghi/jetson_easy/wiki)
 
-The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [TK1, TX1, TX2, TX2i] embedded board without wait a lot of time.
+The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [Xavier, TX2i, TX2, TX1, TK1] embedded board without wait a lot of time.
 
 Main features:
 * [**Biddibi Boddibi Boo**](#biddibi-boddibi-boo) is an automatic and **REMOTE** NVIDIA Jetson installer, from update&upgrade, patch the kernel or install [ROS][ROS]
