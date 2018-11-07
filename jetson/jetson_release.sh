@@ -36,6 +36,7 @@ reset=`tput sgr0`
 # - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
 # - JETSON_DESCRIPTION
 # - JETSON_CUDA
+# - JETSON_OPENCV and JETSON_OPENCV_CUDA
 source /etc/jetson_easy/jetson_variables
 # Load NVP model status
 if [ "$JETSON_BOARD" = "Xavier" ] || [ "$JETSON_BOARD" = "TX2i" ] || [ "$JETSON_BOARD" = "TX2" ] ; then
@@ -44,15 +45,26 @@ if [ "$JETSON_BOARD" = "Xavier" ] || [ "$JETSON_BOARD" = "TX2i" ] || [ "$JETSON_
 fi
 
 #Print Jetson version
-echo " - $JETSON_DESCRIPTION - Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
+echo " - $JETSON_DESCRIPTION"
+# Print Jetpack and kernel
+echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
+# Print CUDA GPU architecture
+echo "   * CUDA GPU architecture $JETSON_CUDA_ARCH_BIN"
 #Print status NVPModel
 if [ "$JETSON_BOARD" = "Xavier" ] || [ "$JETSON_BOARD" = "TX2i" ] || [ "$JETSON_BOARD" = "TX2" ] ; then
 	echo "   * $NVPModel - Type: $NVPModel_type"
 fi
+
+# Libraries
+echo " - Libraries:"
 #Print Cuda version
 echo "   * CUDA $JETSON_CUDA"
-#Print OpenCv version
-echo "   * OpenCV $JETSON_OPENCV"
+#Print OpenCv version and cuda compiled
+if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
+    echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
+else
+	echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
+fi
 #Print status Jetson Performance service
 JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
 if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
