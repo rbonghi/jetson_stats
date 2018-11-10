@@ -28,7 +28,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Version of Jetson_easy
-JETSON_EASY_VERSION="0.5"
+JETSON_EASY_VERSION="1.1"
 
 # NVIDIA Identify version 
 # reference: 
@@ -43,10 +43,16 @@ if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
             JETSON_BOARD="TX1" ;;
         24)
             JETSON_BOARD="TX2" ;;
+        25)
+            JETSON_BOARD="Xavier" ;;
         *)
             JETSON_BOARD="UNKNOWN" ;;
     esac
-    JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
+    if [ "$JETSON_BOARD" = "Xavier" ] ; then
+        JETSON_DESCRIPTION="NVIDIA Jetson AGX $JETSON_BOARD"
+    else
+        JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
+    fi
 fi
 
 # NVIDIA Jetson version
@@ -69,7 +75,18 @@ if [ -f /etc/nv_tegra_release ]; then
 
     # Write version of jetpack installed
     # https://developer.nvidia.com/embedded/jetpack-archive
-    if [ "$JETSON_BOARD" = "TX2i" ] ; then 
+    if [ "$JETSON_BOARD" = "Xavier" ] ; then
+        case $JETSON_L4T in
+            "31.1.0") 
+                    JETSON_JETPACK="4.1.1" ;;
+            "31.0.2") 
+                    JETSON_JETPACK="4.1" ;;
+            "31.0.1") 
+                    JETSON_JETPACK="4.0" ;;
+            *)
+               JETSON_JETPACK="UNKNOWN" ;;
+        esac
+    elif [ "$JETSON_BOARD" = "TX2i" ] ; then 
         case $JETSON_L4T in
             "28.2.1") 
                JETSON_JETPACK="3.3 | 3.2.1" ;;
@@ -110,7 +127,7 @@ if [ -f /etc/nv_tegra_release ]; then
             *)
                JETSON_JETPACK="UNKNOWN" ;;
         esac
-    elif [ "$JETSON_BOARD" ="TK1" ] ; then
+    elif [ "$JETSON_BOARD" = "TK1" ] ; then
         case $JETSON_L4T in
             "21.5") 
                     JETSON_JETPACK="2.3.1 | 2.3" ;;
@@ -136,13 +153,61 @@ else
     JETSON_CUDA="NOT INSTALLED"
 fi
 
-# Read opencv version
-pkg-config --exists opencv
-if [ $? == "0" ] ; then
-    JETSON_OPENCV=$(pkg-config --modversion opencv)
+# Read from OpenCV if is installed CUDA
+opencv_read_cuda()
+{
+    # Red if use CUDA or not
+    local OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "Use Cuda" )
+    
+    if [[ !  -z  $OPENCV_VERSION_VERBOSE  ]] ; then
+        # Read status of CUDA
+        local OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':' )
+        # Remvoe all spaces
+        OPENCV_CUDA_FLAG=${OPENCV_CUDA_FLAG//[[:blank:]]/}
+        
+        if [ $OPENCV_CUDA_FLAG == "NO" ] ; then
+            # Set NO if cuda is not installed
+            JETSON_OPENCV_CUDA="NO"
+        else
+            # Set YES if cuda is installed
+            JETSON_OPENCV_CUDA="YES"
+        fi
+    else
+        # read NVIDIA CUDA version
+        OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "NVIDIA CUDA" )
+        # get information
+        local OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':')
+        OPENCV_CUDA_FLAG=${OPENCV_CUDA_FLAG//[[:blank:]]/}
+        
+        # Set YES if cuda is installed
+        JETSON_OPENCV_CUDA="YES"
+    fi
+}
+
+if hash opencv_version 2>/dev/null; then
+    JETSON_OPENCV="$(opencv_version)"
+    # Read information about cuda status
+    opencv_read_cuda
 else
     JETSON_OPENCV="NOT INSTALLED"
+    JETSON_OPENCV_CUDA="NO"
 fi
+
+# Write CUDA architecture
+# https://developer.nvidia.com/cuda-gpus
+# https://devtalk.nvidia.com/default/topic/988317/jetson-tx1/what-should-be-the-value-of-cuda_arch_bin/
+case $JETSON_BOARD in
+    "Xavier") 
+        JETSON_CUDA_ARCH_BIN="7.2" ;;
+    "TX2" | "TX2i") 
+        JETSON_CUDA_ARCH_BIN="6.2" ;;
+    "TX1")
+        JETSON_CUDA_ARCH_BIN="5.3" ;;
+    "TK1")
+        JETSON_CUDA_ARCH_BIN="3.2" ;;
+    * )
+        JETSON_CUDA_ARCH_BIN="NONE" ;;
+esac
 
 # TODO Add enviroments variables:
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
@@ -150,4 +215,3 @@ fi
 # - cuDNN
 # - TensorRT
 # - Visionworks
-

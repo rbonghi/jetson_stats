@@ -53,6 +53,8 @@ fi
 # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
 # https://devblogs.nvidia.com/jetson-tx2-delivers-twice-intelligence-edge/
 # https://devblogs.nvidia.com/jetpack-doubles-jetson-inference-perf/
+# 3a- NVPModel for NVIDIA Jetson Xavier
+# https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
 # 4- Enable/disable service
 # https://askubuntu.com/questions/19320/how-to-enable-or-disable-services
 
@@ -117,18 +119,15 @@ start()
             fi
         fi
         
-        if [ ! -f $JETSON_PERFORMANCE_CHECK_FILE ]
-        then
+        if [ ! -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
             # check if exist l4t_dfs.conf otherwhise delete
-            if [ ! -f $JETSON_EASY_FOLDER/l4t_dfs.conf ]
-            then
+            if [ ! -f $JETSON_EASY_FOLDER/l4t_dfs.conf ] ; then
                 echo "Store the jetson_clock.sh configuration"
                 # Store jetson_clock configuration
                 sudo $JETSON_EASY_FOLDER/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf
             fi
-            # if Jetson TX2 change type of performance
-            if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ]
-            then
+            # if Jetson Xavier/TX2 change type of performance
+	    if [ $JETSON_BOARD = "Xavier" ] || [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
                 echo "Set configuration in max performance"
                 # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
                 sudo nvpmodel -m 0
@@ -162,8 +161,11 @@ stop()
             sudo rm $JETSON_PERFORMANCE_CHECK_FILE
         fi
         # Restore old Jetson configuration
-        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ]
-        then
+        if [ $JETSON_BOARD = "Xavier" ] ; then
+            echo "Change configuration in default mode"
+            # https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
+            sudo nvpmodel -m 2
+        elif [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
             echo "Change configuration in default mode"
             # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
             sudo nvpmodel -m 1
