@@ -59,6 +59,12 @@ fi
 echo " - Libraries:"
 #Print Cuda version
 echo "   * CUDA $JETSON_CUDA"
+# Print cuDNN version
+echo "   * cuDNN $JETSON_CUDNN"
+# Print TensorRT version
+echo "   * TensorRT $JETSON_TENSORRT"
+# Print VisionWorks version
+echo "   * Visionworks $JETSON_VISIONWORKS"
 #Print OpenCv version and cuda compiled
 if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
     echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"

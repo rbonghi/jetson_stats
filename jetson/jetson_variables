@@ -28,7 +28,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Version of Jetson_easy
-JETSON_EASY_VERSION="1.1"
+JETSON_EASY_VERSION="1.2"
 
 # NVIDIA Identify version 
 # reference: 
@@ -209,9 +209,31 @@ case $JETSON_BOARD in
         JETSON_CUDA_ARCH_BIN="NONE" ;;
 esac
 
+# Extract cuDNN version
+if [ ! -z "$(dpkg -l | grep -m1 libcudnn)" ] ; then
+    JETSON_CUDNN=$(dpkg -l | grep -m1 "libcudnn")
+    JETSON_CUDNN=$(echo $JETSON_CUDNN | sed 's/.*libcudnn[0-9] \([^ ]*\).*/\1/' )
+else
+    JETSON_CUDNN="NOT INSTALLED"
+fi
+
+# Extract TensorRT version
+if [ ! -z "$(dpkg -l | grep -m1 tensorrt)" ] ; then
+    JETSON_TENSORRT=$(dpkg -l | grep -m1 "tensorrt")
+    JETSON_TENSORRT=$(echo $JETSON_TENSORRT | sed 's/.*tensorrt \([^ ]*\).*/\1/' )
+else
+    JETSON_TENSORRT="NOT INSTALLED"
+fi
+
+# Extract Visionworks version
+if [ ! -z "$(dpkg -l | grep -m1 libvisionworks)" ] ; then
+    JETSON_VISIONWORKS=$(dpkg -l | grep -m1 "libvisionworks")
+    JETSON_VISIONWORKS=$(echo $JETSON_VISIONWORKS | sed 's/.*libvisionworks \([^ ]*\).*/\1/' )
+else
+    JETSON_VISIONWORKS="NOT INSTALLED"
+fi
+
 # TODO Add enviroments variables:
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 # - GCID, BOARD, EABI
-# - cuDNN
-# - TensorRT
-# - Visionworks
+
