@@ -236,4 +236,8 @@ fi
 # TODO Add enviroments variables:
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 # - GCID, BOARD, EABI
+# - Serial number
+#   - https://devtalk.nvidia.com/default/topic/1027966/?comment=5228775
+#   - https://devtalk.nvidia.com/default/topic/1025409/?comment=5215412
+#   - https://devtalk.nvidia.com/default/topic/962956/?comment=5157258
 
