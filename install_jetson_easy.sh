@@ -30,7 +30,7 @@
 JETSON_FOLDER="/etc/jetson_easy"
 JETSON_BIN_FOLDER="/usr/local/bin"
 
-if [ -d "$JETSON_FOLDER" ]; then
+if [ -d "$JETSON_FOLDER" ] ; then
     # remove folder
     tput setaf 1
     echo "ERROR Folder $JETSON_FOLDER exist"
@@ -53,17 +53,23 @@ else
     sudo ln -s $JETSON_FOLDER/jetson_swap.sh $JETSON_BIN_FOLDER/jetson_swap
     
     # Copy the service in /etc/init.d/
-    if [ ! -f "/etc/init.d/jetson_performance" ]
-    then
+    if [ ! -f "/etc/init.d/jetson_performance" ] ; then
         echo "Copy the service in /etc/init.d/"
         sudo cp $JETSON_FOLDER/jetson_performance.sh "/etc/init.d/jetson_performance"
     fi
     # Add symbolic link of jetson_clock
-    if [ ! -f $JETSON_FOLDER/jetson_clocks.sh ]
-    then
+    if [ ! -f $JETSON_FOLDER/jetson_clocks.sh ] ; then
         echo "Link jetson_clock.sh"
         sudo ln -s $HOME/jetson_clocks.sh $JETSON_FOLDER/jetson_clocks.sh
     fi
+    
+    # Add in bash jetson_easy reference
+    if ! grep -Fxq "#Jetson STAT variables" /home/$USER/.bashrc ; then
+        echo "Add in bashrc jetson variables"
+        echo "#Jetson STAT variables" >> /home/$USER/.bashrc
+        echo "source /etc/jetson_easy/jetson_variables" >> /home/$USER/.bashrc
+    fi
+    
     # Install the service
     sudo update-rc.d jetson_performance defaults
     # Run the service

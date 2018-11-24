@@ -39,6 +39,13 @@ if service --status-all | grep -Fq 'jetson_performance'; then
     sudo service jetson_performance stop
 fi
 
+# Remove from bashrc jetsonstat variables
+if grep -Fxq "#Jetson STAT variables" /home/$USER/.bashrc ; then
+    echo "Remove Jetson STAT from bashrc"
+    sed -i '/#Jetson STAT variables/d' /home/$USER/.bashrc
+    sed -i '/source \/etc\/jetson_easy\/jetson_variables/d' /home/$USER/.bashrc
+fi
+
 # Remove configuration
 if [ -f $JETSON_FOLDER/l4t_dfs.conf ]
 then
