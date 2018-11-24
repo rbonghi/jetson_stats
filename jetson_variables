@@ -53,6 +53,9 @@ if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
     else
         JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
     fi
+    # Export variables
+    export JETSON_BOARD
+    export JETSON_DESCRIPTION
 fi
 
 # NVIDIA Jetson version
@@ -144,6 +147,12 @@ if [ -f /etc/nv_tegra_release ]; then
         # Unknown board
         JETSON_JETPACK="UNKNOWN"
     fi
+    # Export Release L4T
+    export JETSON_L4T_RELEASE
+    export JETSON_L4T_REVISION
+    export JETSON_L4T
+    # Export Jetson Jetpack installed
+    export JETSON_JETPACK
 fi
 
 # Read CUDA version
@@ -152,6 +161,8 @@ if [ -f /usr/local/cuda/version.txt ]; then
 else
     JETSON_CUDA="NOT INSTALLED"
 fi
+# Jetson CUDA version
+export JETSON_CUDA
 
 # Read from OpenCV if is installed CUDA
 opencv_read_cuda()
@@ -192,6 +203,9 @@ else
     JETSON_OPENCV="NOT INSTALLED"
     JETSON_OPENCV_CUDA="NO"
 fi
+# Opencv variables
+export JETSON_OPENCV
+export JETSON_OPENCV_CUDA
 
 # Write CUDA architecture
 # https://developer.nvidia.com/cuda-gpus
@@ -208,6 +222,8 @@ case $JETSON_BOARD in
     * )
         JETSON_CUDA_ARCH_BIN="NONE" ;;
 esac
+# Export Jetson CUDA ARCHITECTURE
+export JETSON_CUDA_ARCH_BIN
 
 # Extract cuDNN version
 if [ ! -z "$(dpkg -l | grep -m1 libcudnn)" ] ; then
@@ -216,6 +232,8 @@ if [ ! -z "$(dpkg -l | grep -m1 libcudnn)" ] ; then
 else
     JETSON_CUDNN="NOT INSTALLED"
 fi
+# Export NVIDIA CuDNN Library
+export JETSON_CUDNN
 
 # Extract TensorRT version
 if [ ! -z "$(dpkg -l | grep -m1 tensorrt)" ] ; then
@@ -224,6 +242,8 @@ if [ ! -z "$(dpkg -l | grep -m1 tensorrt)" ] ; then
 else
     JETSON_TENSORRT="NOT INSTALLED"
 fi
+# Export NVIDIA CuDNN TensorRT
+export JETSON_TENSORRT
 
 # Extract Visionworks version
 if [ ! -z "$(dpkg -l | grep -m1 libvisionworks)" ] ; then
@@ -232,12 +252,10 @@ if [ ! -z "$(dpkg -l | grep -m1 libvisionworks)" ] ; then
 else
     JETSON_VISIONWORKS="NOT INSTALLED"
 fi
+# Export NVIDIA CuDNN VisionWorks
+export JETSON_VISIONWORKS
 
 # TODO Add enviroments variables:
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 # - GCID, BOARD, EABI
-# - Serial number
-#   - https://devtalk.nvidia.com/default/topic/1027966/?comment=5228775
-#   - https://devtalk.nvidia.com/default/topic/1025409/?comment=5215412
-#   - https://devtalk.nvidia.com/default/topic/962956/?comment=5157258
 
