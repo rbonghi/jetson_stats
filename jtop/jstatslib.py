@@ -30,6 +30,42 @@
 
 import re
 
+def get_SWAP_status(text):
+    # SWAP X/Y (cached Z)
+    # X = Amount of SWAP in use in megabytes.
+    # Y = Total amount of SWAP available for applications.
+    # Z = Amount of SWAP cached in megabytes.
+    find_swap = re.search('SWAP (.+?)B \(cached (.+?)B\)', text)    
+    if find_swap is not None:
+        swap_string = find_swap.group()
+        swap_stat = re.findall("\d+", swap_string)
+        text = re.sub('SWAP (.+?)B \(cached (.+?)B\) ', '', text)
+        return {'used': float(swap_stat[0]), 
+                'total': float(swap_stat[1]),
+                'cached': int(swap_stat[2])
+               }, text
+    else:
+        return {}, text
+
+def get_IRAM_status(text):
+    # IRAM X/Y (lfb Z)
+    # IRAM is memory local to the video hardware engine.
+    # X = Amount of IRAM memory in use, in kilobytes.
+    # Y = Total amount of IRAM memory available.
+    # Z = Size of the largest free block.
+    find_iram = re.search('IRAM (.+?)B\(lfb (.+?)B\)', text)
+    # Find if IRAM is inside
+    if find_iram is not None:
+        iram_lfb_string = find_iram.group()
+        iram_stat = re.findall("\d+", iram_lfb_string)
+        text = re.sub('IRAM (.+?)B\(lfb (.+?)B\) ', '', text)
+        return {'used': float(iram_stat[0]), 
+                'total': float(iram_stat[1]),
+                'size': int(iram_stat[2])
+               }, text
+    else:
+        return {}, text
+    
 def get_RAM_status(text):
     # RAM X/Y (lfb NxZ)
     # Largest Free Block (lfb) is a statistic about the memory allocator. 
@@ -82,9 +118,19 @@ def get_CPU_status(text):
     
     return cpus, text
 
-def get_status(text, fan_level=0):
+def get_status(text, fan_level=0, nvpmodel=""):
     jetsonstats = {}
+    # Extract nvpmodel
+    if nvpmodel:
+        lines = nvpmodel.split("\n")
+        jetsonstats['NVPMODEL'] = {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
     jetsonstats['FAN'] = float(fan_level)/255.0 * 100.0
+    # Read SWAP status
+    swap_status, text = get_SWAP_status(text)
+    jetsonstats['SWAP'] = swap_status
+    # Read IRAM status
+    iram_status, text = get_IRAM_status(text)
+    jetsonstats['IRAM'] = iram_status
     # Read RAM status
     ram_status, text = get_RAM_status(text)
     jetsonstats['RAM'] = ram_status
@@ -127,8 +173,8 @@ def get_status(text, fan_level=0):
             # MTS fg X% bg Y%
             # X = Time spent in foreground tasks.
             # Y = Time spent in background tasks.
-            fg = other_values[idx+2]
-            bg = other_values[idx+4]
+            fg = float(other_values[idx+2].split("%")[0])
+            bg = float(other_values[idx+4].split("%")[0])
             jetsonstats['MTS'] = {'fg': fg, 'bg': bg}
             # extra increase counter
             idx += 4
@@ -139,20 +185,20 @@ def get_status(text, fan_level=0):
             info = data.split("@")
             name = info[0]
             value = info[1]
-            temperatures[name] = { 'value': value, 'unit': 'C', 'text': value }
+            temperatures[name] = { 'value': float(value.split("C")[0]), 'unit': 'C', 'text': value }
         else:
             # [VDD_name] X/Y
             # X = Current power consumption in milliwatts.
             # Y = Average power consumption in milliwatts.
             value = other_values[idx+1].split("/")
-            voltages[data] = {'current': value[0], 'average': value[1], 'text': other_values[idx+1].rstrip()+"mW", 'unit': 'mW'}
+            voltages[data] = {'current': int(value[0]), 'average': int(value[1]), 'unit': 'mW', 'text': other_values[idx+1].rstrip()+"mW"}
             # extra increase counter
             idx += 1
         # Update counter
         idx +=1
     
+    # Add Temperatures and voltages
     jetsonstats['temperatures'] = temperatures
     jetsonstats['voltages'] = voltages
-    jetsonstats['other'] = text
     
     return jetsonstats
