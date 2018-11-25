@@ -10,9 +10,9 @@ Main features:
 * [**jetson_performance**][jetson_performance] - This service load `jetson_clock.sh` has a linux service
 
 
-[jtop]: https://github.com/rbonghi/jetson_stat/wiki/jtop
-[jetson_variables]: https://github.com/rbonghi/jetson_stat/wiki/jetson_variables
-[jetson_release]: https://github.com/rbonghi/jetson_stat/wiki/jetson_release
-[jetson_performance]: https://github.com/rbonghi/jetson_stat/wiki/jetson_performance
+[jtop]: https://github.com/rbonghi/jetson_stats/wiki/jtop
+[jetson_variables]: https://github.com/rbonghi/jetson_stats/wiki/jetson_variables
+[jetson_release]: https://github.com/rbonghi/jetson_stats/wiki/jetson_release
+[jetson_performance]: https://github.com/rbonghi/jetson_stats/wiki/jetson_performance
 [NVIDIA]: https://www.nvidia.com/
 [NVIDIA Jetson]: http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html
