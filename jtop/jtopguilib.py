@@ -139,8 +139,8 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
 
 
 def make_gauge_from_percent(data):
-    gauge = {'name': data['name']}
-    if data["status"] != "OFF":
+    gauge = {'name': data['name'], 'status': data['status']}
+    if "ON" in data["status"]:
         gauge['value'] = int(data['idle'][-1])
     if data["status"] == "ON":
         freq = data['frequency'][-1]
@@ -186,7 +186,8 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
         # Show bracket linear gauge and label
         stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
         # Show bracket linear gauge and label
-        stdscr.addstr(offset, start + 7, "OFF", curses.color_pair(1))
+        status = gauge["status"] if "status" in gauge else "OFF"
+        stdscr.addstr(offset, start + 7, status, curses.color_pair(1))
 
 
 @check_curses
