@@ -92,17 +92,18 @@ def GPU(stdscr, jetson):
     size_x = [2, max_x - 10]
     size_y = [1, max_y * 2 // 3 - 1]
     # Read GPU status
-    gpu = jetson.stats["GR3D"]
-    # Draw the GPU chart
-    draw_chart(stdscr, size_x, size_y, gpu)
-    # Percent Gauge GPU
-    linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
-    # Temperature GPU
-    if "GPU" in jetson.stats['temperatures']:
-        plot_name_info(stdscr, max_y * 2 // 3 + 1, 2, "GPU Temp", jetson.stats['temperatures']['GPU']['text'])
-    # NVP Model
-    if jetson.nvpmodel:
-        plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode']))
+    if 'GR3D' in jetson.stats:
+        gpu = jetson.stats['GR3D']
+        # Draw the GPU chart
+        draw_chart(stdscr, size_x, size_y, gpu)
+        # Percent Gauge GPU
+        linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
+        # Temperature GPU
+        if "GPU" in jetson.stats['temperatures']:
+            plot_name_info(stdscr, max_y * 2 // 3 + 1, 2, "GPU Temp", jetson.stats['temperatures']['GPU']['text'])
+        # NVP Model
+        if jetson.nvpmodel:
+            plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode']))
 
 
 def all_info(stdscr, jetson):
@@ -124,7 +125,8 @@ def all_info(stdscr, jetson):
                  }
     linear_percent_gauge(stdscr, RAM_VALUE, width, offset=line_counter + 1)
     # EMC linear gauge info
-    linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['EMC']), width, offset=line_counter + 2)
+    if 'EMC' in jetson.stats:
+    	linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['EMC']), width, offset=line_counter + 2)
     # IRAM linear gauge info
     iram_status = jetson.stats['IRAM']
     if iram_status:
@@ -150,7 +152,8 @@ def all_info(stdscr, jetson):
     linear_percent_gauge(stdscr, SWAP_VALUE, width, offset=line_counter + 3)
     line_counter += 4
     # GPU linear gauge info
-    linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), width, offset=line_counter + 1)
+    if 'GR3D' in jetson.stats:
+        linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), width, offset=line_counter + 1)
     line_counter += 2
     # Status disk
     disk_status = jetson.disk
