@@ -43,7 +43,7 @@ import curses
 # Launch command
 import subprocess
 # read tegrastats
-from jtop.jstatslib import get_status
+from jstatslib import get_status
 # Systema and signal
 import signal, os, sys
 
@@ -228,6 +228,7 @@ if __name__ == "__main__":
     if os.getuid() != 0:
         print("Run with sudo")
         sys.exit(0)
+    print("Loading...")
     # Load command line controller
     stdscr = curses.initscr()
     curses.start_color()
@@ -239,7 +240,7 @@ if __name__ == "__main__":
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Open tegrastats
-    p = subprocess.Popen(['/home/nvidia/tegrastats', '--interval', '100'], stdout=subprocess.PIPE)
+    p = subprocess.Popen(['/etc/jetson_easy/tegrastats', '--interval', '100'], stdout=subprocess.PIPE)
     # launch reader
     try:
         while p.poll() is None:

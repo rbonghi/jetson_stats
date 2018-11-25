@@ -62,13 +62,20 @@ else
         echo "Link jetson_clock.sh"
         sudo ln -s $HOME/jetson_clocks.sh $JETSON_FOLDER/jetson_clocks.sh
     fi
-    
     # Add in bash jetson_easy reference
-    if ! grep -Fxq "#Jetson STAT variables" /home/$USER/.bashrc ; then
-        echo "Add in bashrc jetson variables"
-        echo "#Jetson STAT variables" >> /home/$USER/.bashrc
-        echo "source /etc/jetson_easy/jetson_variables" >> /home/$USER/.bashrc
+    if [ ! -f "/etc/profile.d/" ] ; then
+        echo "Copy the enviroments variables in /etc/profile.d/"
+        sudo cp $JETSON_FOLDER/jetson_env.sh "/etc/profile.d/jetson_env.sh"
     fi
+    
+    # Add symbolic link of tegrastats
+    if [ ! -f $JETSON_FOLDER/tegrastats ] ; then
+        echo "Link tegrastats"
+        sudo ln -s $HOME/tegrastats $JETSON_FOLDER/tegrastats
+    fi
+    # Link jetson_release
+    echo "Link jtop"
+    sudo ln -s $JETSON_FOLDER/jtop.sh $JETSON_BIN_FOLDER/jtop
     
     # Install the service
     sudo update-rc.d jetson_performance defaults

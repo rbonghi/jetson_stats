@@ -39,11 +39,25 @@ if service --status-all | grep -Fq 'jetson_performance'; then
     sudo service jetson_performance stop
 fi
 
+# Remove jetson_release link
+if [ -f "$JETSON_BIN_FOLDER/jtop" ]
+then
+    echo "Remove jtop link"
+    sudo rm "$JETSON_BIN_FOLDER/jtop"
+fi
+
+# Remove symbolic link
+if [ -f $JETSON_FOLDER/tegrastats ]
+then
+    echo "Remove tegrastats symbolic link"
+    sudo rm $JETSON_FOLDER/tegrastats
+fi
+
 # Remove from bashrc jetsonstat variables
-if grep -Fxq "#Jetson STAT variables" /home/$USER/.bashrc ; then
-    echo "Remove Jetson STAT from bashrc"
-    sed -i '/#Jetson STAT variables/d' /home/$USER/.bashrc
-    sed -i '/source \/etc\/jetson_easy\/jetson_variables/d' /home/$USER/.bashrc
+if [ -f "/etc/profile.d/jetson_env.sh" ]
+then
+    echo "Remove the enviroments variables from /etc/profile.d/"
+    sudo rm "/etc/profile.d/jetson_env.sh"
 fi
 
 # Remove configuration
