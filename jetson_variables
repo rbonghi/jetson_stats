@@ -237,7 +237,7 @@ export JETSON_CUDNN
 
 # Extract TensorRT version
 if [ ! -z "$(dpkg -l | grep -m1 tensorrt)" ] ; then
-    JETSON_TENSORRT=$(dpkg -l | grep -m1 "tensorrt")
+    JETSON_TENSORRT=$(dpkg -l | grep -m1 " tensorrt ")
     JETSON_TENSORRT=$(echo $JETSON_TENSORRT | sed 's/.*tensorrt \([^ ]*\).*/\1/' )
 else
     JETSON_TENSORRT="NOT INSTALLED"
