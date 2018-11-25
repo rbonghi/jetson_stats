@@ -1,5 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+# Copyright (C) 2018, Raffaello Bonghi <raffaello@rnext.it>
+# All rights reserved
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its 
+#    contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
+# BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re
 
@@ -20,17 +47,19 @@ def get_RAM_status(text):
     lfb_stat = re.findall("\d+", lfb_string)
     text = re.sub('RAM (.+?)\) ', '', text)
     return {
-        'RAM' : {'used': ram_stat[0], 'total': ram_stat[1]},
+        'RAM' : {'used': float(ram_stat[0]), 'total': float(ram_stat[1])},
         'lfb' : {'nblock': lfb_stat[0], 'size': lfb_stat[1]},
     }, text
 
-def get_value_processor(text):
-    if '@' in text:
+def get_value_processor(name, text):
+    if 'off' in text:
+        return {'name': name}
+    elif '@' in text:
         info = re.findall("\d+", text)
-        return {'idle': int(info[0]), 'frequency': int(info[1])}
+        return {'name': name, 'idle': float(info[0]), 'frequency': float(info[1])}
     else:
         info = re.findall("\d+", text)
-        return {'idle': info[0]}
+        return {'name': name, 'idle': info[0]}
     return text
 
 def get_CPU_status(text):
@@ -48,16 +77,14 @@ def get_CPU_status(text):
     cpu_string = cpu_string[cpu_string.find("[")+1:cpu_string.find("]")]
     text = re.sub('CPU (.+?)\] ', '', text)
     cpus = []
-    for cpu in cpu_string.split(","):
-        if 'off' in cpu:
-            cpus.append(cpu)
-        else:
-            cpus.append(get_value_processor(cpu))
+    for idx, cpu in enumerate(cpu_string.split(",")):
+            cpus.append(get_value_processor("CPU" + str(idx+1), cpu))
     
     return cpus, text
 
-def get_status(text):
+def get_status(text, fan_level=0):
     jetsonstats = {}
+    jetsonstats['FAN'] = float(fan_level)/255.0 * 100.0
     # Read RAM status
     ram_status, text = get_RAM_status(text)
     jetsonstats['RAM'] = ram_status
@@ -66,7 +93,7 @@ def get_status(text):
     jetsonstats['CPU'] = cpu_status
     
     temperatures = {}
-    volgates = {}
+    voltages = {}
     idx = 0
     other_values = text.split(" ")
     while idx < len(other_values):
@@ -77,7 +104,7 @@ def get_status(text):
             # through which all sysmem/carve-out/GART memory accesses go.
             # X = Percent of EMC memory bandwidth being used, relative to the current running frequency.
             # Y = EMC frequency in megahertz.
-            jetsonstats['EMC'] = get_value_processor(other_values[idx+1])
+            jetsonstats['EMC'] = get_value_processor("EMC", other_values[idx+1])
             # extra increase counter
             idx += 1
         elif 'APE' in data:
@@ -93,7 +120,7 @@ def get_status(text):
             # GR3D is the GPU engine.
             # X = Percent of the GR3D that is being used, relative to the current running frequency.
             # Y = GR3D frequency in megahertz
-            jetsonstats['GR3D'] = [get_value_processor(other_values[idx+1])]
+            jetsonstats['GR3D'] = get_value_processor("GPU", other_values[idx+1])
             # extra increase counter
             idx += 1
         elif 'MTS' in data:
@@ -112,20 +139,20 @@ def get_status(text):
             info = data.split("@")
             name = info[0]
             value = info[1]
-            temperatures[name] = value
+            temperatures[name] = { 'value': value, 'unit': 'C', 'text': value }
         else:
             # [VDD_name] X/Y
             # X = Current power consumption in milliwatts.
             # Y = Average power consumption in milliwatts.
             value = other_values[idx+1].split("/")
-            volgates[data] = {'current': value[0], 'average': value[1]}
+            voltages[data] = {'current': value[0], 'average': value[1], 'text': other_values[idx+1].rstrip()+"mW", 'unit': 'mW'}
             # extra increase counter
             idx += 1
         # Update counter
         idx +=1
     
     jetsonstats['temperatures'] = temperatures
-    jetsonstats['volgates'] = volgates
+    jetsonstats['voltages'] = voltages
     jetsonstats['other'] = text
     
     return jetsonstats
