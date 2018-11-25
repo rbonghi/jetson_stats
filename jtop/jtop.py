@@ -133,31 +133,38 @@ def plot_name_info(offset, start, name, value):
     stdscr.addstr(offset, start + len(name) + 2, value)
         
 def plot_other_info(offset, data, width, start=0):
+    counter = 0
     # APE frequency
-    plot_name_info(offset, start, "APE", str(jetsonstats['APE']) + "MHz")
+    plot_name_info(offset + counter, start, "APE", str(jetsonstats['APE']) + "MHz")
+    counter +=1
     # FAN status 
     FAN_VALUE = { 'name': 'FAN',
                   'value': int(jetsonstats['FAN']),
                 }
-    linear_percent_gauge(FAN_VALUE, width, offset=offset + 1, start= start)
+    linear_percent_gauge(FAN_VALUE, width, offset=offset + counter, start= start)
+    counter +=1
     # Plot MTS
-    stdscr.addstr(offset + 2, start, "MTS:", curses.A_BOLD)
-    MTS_FG = { 'name': ' FG',
-                  'value': int(jetsonstats['MTS']['fg']),
-                }
-    linear_percent_gauge(MTS_FG, width, offset=offset + 3, start= start)
-    MTS_BG = { 'name': ' BG',
-                  'value': int(jetsonstats['MTS']['bg']),
-                }
-    linear_percent_gauge(MTS_BG, width, offset=offset + 4, start= start)
+    if 'MTS' in jetsonstats:
+        stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
+        MTS_FG = { 'name': ' FG',
+                      'value': int(jetsonstats['MTS']['fg']),
+                    }
+        linear_percent_gauge(MTS_FG, width, offset=offset + counter + 1, start= start)
+        MTS_BG = { 'name': ' BG',
+                      'value': int(jetsonstats['MTS']['bg']),
+                    }
+        linear_percent_gauge(MTS_BG, width, offset=offset + counter + 2, start= start)
+        counter += 3
     # Model board information
-    stdscr.addstr(offset + 5, start, "Board info:", curses.A_BOLD)
-    plot_name_info(offset + 6, start + 2, "Name", os.environ["JETSON_BOARD"])
-    plot_name_info(offset + 7, start + 2, "Jetpack", os.environ["JETSON_JETPACK"])
-    plot_name_info(offset + 8, start + 2, "L4T", os.environ["JETSON_L4T"])
+    stdscr.addstr(offset + counter, start, "Board info:", curses.A_BOLD)
+    plot_name_info(offset + counter + 1, start + 2, "Name", os.environ["JETSON_BOARD"])
+    plot_name_info(offset + counter + 2, start + 2, "Jetpack", os.environ["JETSON_JETPACK"])
+    plot_name_info(offset + counter + 3, start + 2, "L4T", os.environ["JETSON_L4T"])
+    counter += 4
     # NVP Model
     if jetsonstats['NVPMODEL']:
-        plot_name_info(offset + 9, start, "NV Power", jetsonstats['NVPMODEL']['name'] + " - " + str(jetsonstats['NVPMODEL']['mode']))
+        plot_name_info(offset + counter, start, "NV Power", jetsonstats['NVPMODEL']['name'] + " - " + str(jetsonstats['NVPMODEL']['mode']))
+        counter += 1
 
 def refreshwindow(jetsonstats):
     """
