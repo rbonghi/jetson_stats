@@ -10,7 +10,7 @@ Main features:
 * [**jetson_performance**][jetson_performance] - This service load `jetson_clock.sh` has a linux service
 
 
-[top]: https://github.com/rbonghi/jetson_stat/wiki/jtop
+[jtop]: https://github.com/rbonghi/jetson_stat/wiki/jtop
 [jetson_variables]: https://github.com/rbonghi/jetson_stat/wiki/jetson_variables
 [jetson_release]: https://github.com/rbonghi/jetson_stat/wiki/jetson_release
 [jetson_performance]: https://github.com/rbonghi/jetson_stat/wiki/jetson_performance
