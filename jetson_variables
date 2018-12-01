@@ -28,7 +28,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Version of Jetson_easy
-JETSON_EASY_VERSION="1.4"
+JETSON_EASY_VERSION="1.4.1"
 
 # NVIDIA Identify version 
 # reference: 
