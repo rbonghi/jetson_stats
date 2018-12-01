@@ -58,8 +58,8 @@ fi
 # 4- Enable/disable service
 # https://askubuntu.com/questions/19320/how-to-enable-or-disable-services
 
-. /lib/lsb/init-functions
-. /lib/init/vars.sh
+ . /lib/lsb/init-functions
+ . /lib/init/vars.sh
 
 # Load environment variables:
 # - JETSON_BOARD
@@ -96,27 +96,22 @@ status()
 
 start()
 {
-    if [ $JETSON_BOARD != "TK1" ]
-    then
+    if [ $JETSON_BOARD != "TK1" ] ; then
         # Check which version is L4T is loaded
         # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
         # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
-        # ----
         # Temporary disabled to find a best way to start this service.
         # The service ondemand disabled doesn't improve the performance of the start-up
         # ----
-        #if [ $(echo $JETSON_L4T'<28.1' | bc -l) -eq 1 ] ; then
-        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
-            # Time from boot 
-            local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
-            # Wait a minute from boot before start
-            if [ $(echo $BOOT_TIME'<'$((JETSON_PERFORMANCE_WAIT_TIME+1)) | bc -l) -eq 1 ] ; then
-                local TIME_TO_WAIT=$(echo $((JETSON_PERFORMANCE_WAIT_TIME+1))'-'$BOOT_TIME | bc)
-                echo "Wait from boot other $TIME_TO_WAIT sec..."
-                # Sleep for other time
-                sleep $TIME_TO_WAIT
-                echo "...done!"
-            fi
+        # Time from boot 
+        local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
+        # Wait a minute from boot before start
+        if [ $(echo $BOOT_TIME'<'$((JETSON_PERFORMANCE_WAIT_TIME+1)) | bc -l) -eq 1 ] ; then
+            local TIME_TO_WAIT=$(echo $((JETSON_PERFORMANCE_WAIT_TIME+1))'-'$BOOT_TIME | bc)
+            echo "Wait from boot other $TIME_TO_WAIT sec..."
+            # Sleep for other time
+            sleep $TIME_TO_WAIT
+            echo "...done!"
         fi
         
         if [ ! -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
@@ -127,7 +122,7 @@ start()
                 sudo $JETSON_EASY_FOLDER/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf
             fi
             # if Jetson Xavier/TX2 change type of performance
-	    if [ $JETSON_BOARD = "Xavier" ] || [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
+            if [ $JETSON_BOARD = "Xavier" ] || [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
                 echo "Set configuration in max performance"
                 # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
                 sudo nvpmodel -m 0

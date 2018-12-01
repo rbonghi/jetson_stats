@@ -31,13 +31,26 @@ JETSON_FOLDER="/etc/jetson_easy"
 JETSON_BIN_FOLDER="/usr/local/bin"
 
 # Uninstall the service
-if service --status-all | grep -Fq 'jetson_performance'; then
+if [ $(systemctl is-active jetson_performance.service)=="active" ]; then
     tput setaf 1
     echo "Stop and jetson_performance service"
     tput sgr0
     # Stop the service
-    sudo service jetson_performance stop
+    sudo systemctl stop jetson_performance.service
 fi
+
+# Disable the service
+sudo systemctl disable jetson_performance.service
+
+# Remove the service from /etc/init.d
+if [ -f "/etc/systemd/system/jetson_performance.service" ]
+then
+    echo "Remove the service from /etc/systemd/system"
+    sudo rm "/etc/systemd/system/jetson_performance.service"
+fi
+
+# Update service list
+sudo systemctl daemon-reload
 
 # Remove jetson_release link
 if [ -f "$JETSON_BIN_FOLDER/jtop" ]
@@ -73,19 +86,6 @@ then
     echo "Remove jetson_clock symbolic link"
     sudo rm $JETSON_FOLDER/jetson_clocks.sh
 fi
-
-# Remove the service
-sudo update-rc.d -f jetson_performance remove
-
-# Remove the service from /etc/init.d
-if [ -f "/etc/init.d/jetson_performance" ]
-then
-    echo "Remove the service from /etc/init.d"
-    sudo rm "/etc/init.d/jetson_performance"
-fi
-
-# Update service list
-sudo systemctl daemon-reload
 
 # Remove jetson_release link
 if [ -f "$JETSON_BIN_FOLDER/jetson_release" ]

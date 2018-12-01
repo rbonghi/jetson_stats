@@ -52,10 +52,10 @@ else
     #sudo cp $(pwd)/jetson/jetson_swap.sh "$JETSON_BIN_FOLDER/jetson_swap"
     sudo ln -s $JETSON_FOLDER/jetson_swap.sh $JETSON_BIN_FOLDER/jetson_swap
     
-    # Copy the service in /etc/init.d/
-    if [ ! -f "/etc/init.d/jetson_performance" ] ; then
-        echo "Copy the service in /etc/init.d/"
-        sudo cp $JETSON_FOLDER/jetson_performance.sh "/etc/init.d/jetson_performance"
+    # Copy the service in /etc/systemd/system
+    if [ ! -f "/etc/systemd/system/jetson_performance.service" ] ; then
+        echo "Copy jetson_performance service in /etc/systemd/system/"
+        sudo cp $JETSON_FOLDER/jetson_performance.service "/etc/systemd/system/jetson_performance.service"
     fi
     # Add symbolic link of jetson_clock
     if [ ! -f $JETSON_FOLDER/jetson_clocks.sh ] ; then
@@ -77,8 +77,12 @@ else
     echo "Link jtop"
     sudo ln -s $JETSON_FOLDER/jtop.sh $JETSON_BIN_FOLDER/jtop
     
-    # Install the service
-    sudo update-rc.d jetson_performance defaults
+    # Update service list
+    sudo systemctl daemon-reload
+    
+    # Enable service
+    sudo systemctl enable jetson_performance.service
+    
     # Run the service
-    sudo service jetson_performance start
+    sudo systemctl start jetson_performance.service
 fi

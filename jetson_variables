@@ -168,37 +168,41 @@ export JETSON_CUDA
 opencv_read_cuda()
 {
     # Red if use CUDA or not
-    local OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "Use Cuda" )
-    
-    if [[ !  -z  $OPENCV_VERSION_VERBOSE  ]] ; then
+    OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "Use Cuda" )
+
+    if [ ! -z "$OPENCV_VERSION_VERBOSE" ]; then
         # Read status of CUDA
-        local OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':' )
-        # Remvoe all spaces
-        OPENCV_CUDA_FLAG=${OPENCV_CUDA_FLAG//[[:blank:]]/}
+        OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':' | cut -f2 -d ' ' )
         
-        if [ $OPENCV_CUDA_FLAG == "NO" ] ; then
+        if [ $OPENCV_CUDA_FLAG=="NO" ] ; then
             # Set NO if cuda is not installed
-            JETSON_OPENCV_CUDA="NO"
+	    echo "NO"
         else
             # Set YES if cuda is installed
-            JETSON_OPENCV_CUDA="YES"
+	    echo "YES"
         fi
+        # Remove variable
+        unset OPENCV_CUDA_FLAG
     else
         # read NVIDIA CUDA version
         OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "NVIDIA CUDA" )
         # get information
-        local OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':')
+        OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':')
         OPENCV_CUDA_FLAG=${OPENCV_CUDA_FLAG//[[:blank:]]/}
-        
+	# Remove variable
+        unset OPENCV_CUDA_FLAG
         # Set YES if cuda is installed
-        JETSON_OPENCV_CUDA="YES"
+	echo "YES"
     fi
+    # Remove variable
+    unset OPENCV_VERSION_VERBOSE
+    return
 }
 
 if hash opencv_version 2>/dev/null; then
     JETSON_OPENCV="$(opencv_version)"
     # Read information about cuda status
-    opencv_read_cuda
+    JETSON_OPENCV_CUDA=$(opencv_read_cuda)
 else
     JETSON_OPENCV="NOT INSTALLED"
     JETSON_OPENCV_CUDA="NO"
