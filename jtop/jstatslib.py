@@ -28,7 +28,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
+import re, os
 
 def get_SWAP_status(text):
     # SWAP X/Y (cached Z)
@@ -118,12 +118,32 @@ def get_CPU_status(text):
     
     return cpus, text
 
+def get_status_disk():
+    disk = os.statvfs("/var/")
+    # Evaluate the total space in GB
+    totalSpace = float(disk.f_bsize*disk.f_blocks)/1024/1024/1024
+    # Evaluate total used space in GB
+    totalUsedSpace = float(disk.f_bsize*(disk.f_blocks-disk.f_bfree))/1024/1024/1024
+    # Evaluate total available space in GB
+    totalAvailSpace = float(disk.f_bsize*disk.f_bfree)/1024/1024/1024
+    # Evaluate total non super-user space in GB
+    totalAvailSpaceNonRoot = float(disk.f_bsize*disk.f_bavail)/1024/1024/1024
+    return {'total'             : totalSpace,
+            'used'              : totalUsedSpace,
+            'available'         : totalAvailSpace,
+            'available_no_root' : totalAvailSpaceNonRoot
+           }
+    
+
 def get_status(text, fan_level=0, nvpmodel=""):
     jetsonstats = {}
+    # Read status disk
+    jetsonstats['DISK'] = get_status_disk()
     # Extract nvpmodel
     if nvpmodel:
         lines = nvpmodel.split("\n")
         jetsonstats['NVPMODEL'] = {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
+    # Read status fan
     jetsonstats['FAN'] = float(fan_level)/255.0 * 100.0
     # Read SWAP status
     swap_status, text = get_SWAP_status(text)

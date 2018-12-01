@@ -64,13 +64,13 @@ def make_gauge_from_percent(data):
             gauge['label'] = str(int(data['frequency'])) + "MHz"
     return gauge
     
-def linear_percent_gauge(gauge, max_bar, offset=0, start=0):
+def linear_percent_gauge(gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6):
     # Evaluate size withuout short name
     size_bar = max_bar - 8
     if 'value' in gauge:
         value = gauge['value']
         # Show short name linear gauge
-        stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(6))
+        stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(color_name))
         # Show bracket linear gauge and label and evaluate size withuout size labels and short name
         size_bar -= (len(gauge['label']) + 1) if 'label' in gauge else 0
         stdscr.addstr(offset, start + 5, "[" + " " * size_bar + "]", curses.A_BOLD)
@@ -78,14 +78,14 @@ def linear_percent_gauge(gauge, max_bar, offset=0, start=0):
             stdscr.addstr(offset, start + 5 + size_bar + 3, gauge['label'])
         # Show progress value linear gauge
         n_bar = int(float(value) * float(size_bar - 2) / 100.0)
-        progress_bar= "|" * n_bar
+        progress_bar= type_bar * n_bar
         stdscr.addstr(offset, start + 6, ("{n_bar:" + str(size_bar - 2) + "}").format(n_bar=progress_bar), curses.color_pair(2))
         # Show value inside linear gauge
         percent_label = gauge['percent'] if 'percent' in gauge else str(value) + "%"
         stdscr.addstr(offset, start + 6 + size_bar - len(percent_label), percent_label, curses.A_DIM)
     else:
         # Show short name linear gauge
-        stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(6))
+        stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(color_name))
         # Show bracket linear gauge and label
         stdscr.addstr(offset, start + 5, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
         # Show bracket linear gauge and label
@@ -158,9 +158,8 @@ def plot_other_info(offset, data, width, start=0):
     # Model board information
     stdscr.addstr(offset + counter, start, "Board info:", curses.A_BOLD)
     plot_name_info(offset + counter + 1, start + 2, "Name", os.environ["JETSON_BOARD"])
-    plot_name_info(offset + counter + 2, start + 2, "Jetpack", os.environ["JETSON_JETPACK"])
-    plot_name_info(offset + counter + 3, start + 2, "L4T", os.environ["JETSON_L4T"])
-    counter += 4
+    plot_name_info(offset + counter + 2, start + 2, "JP", os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]")
+    counter += 3
     # NVP Model
     if jetsonstats['NVPMODEL']:
         plot_name_info(offset + counter, start, "NV Power", jetsonstats['NVPMODEL']['name'] + " - " + str(jetsonstats['NVPMODEL']['mode']))
@@ -218,12 +217,22 @@ def refreshwindow(jetsonstats):
     # GPU linear gauge info
     linear_percent_gauge(make_gauge_from_percent(jetsonstats['GR3D']), width, offset=line_counter + 1)
     line_counter += 2
+    # Status disk
+    #line_counter += 1
+    disk_status = jetsonstats['DISK']
+    DISK_STATUS = { 'name': "Dsk", 
+                  'value': int(float(disk_status['used'])/float(disk_status['total']) * 100.0),
+                  'percent': "{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
+                }
+    linear_percent_gauge(DISK_STATUS, width, offset=line_counter, type_bar="#", color_name=3)
+    
     
     column_width = int(float(width - 4)/3.0)
+    line_counter += 1
     # Add temperatures and voltages
-    plot_other_info(line_counter + 1, jetsonstats, column_width, start=1)
-    plot_temperatures(line_counter + 1, jetsonstats['temperatures'], start=2 + column_width)
-    plot_voltages(line_counter + 1, jetsonstats['voltages'], start= 2 + 2*column_width)
+    plot_other_info(line_counter, jetsonstats, column_width, start=1)
+    plot_temperatures(line_counter, jetsonstats['temperatures'], start=2 + column_width)
+    plot_voltages(line_counter, jetsonstats['voltages'], start= 2 + 2*column_width)
     # Close option menu
     stdscr.addstr(height-1, 0, ("{0:<" + str(width-1) + "}").format("CTRL-C to close"), curses.A_REVERSE)
     # Refresh page
@@ -243,6 +252,9 @@ if __name__ == "__main__":
     curses.cbreak()
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+    curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)
+    curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
     curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
