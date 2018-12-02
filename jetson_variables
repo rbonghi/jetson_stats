@@ -28,7 +28,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Version of Jetson_easy
-JETSON_EASY_VERSION="1.4.1"
+JETSON_EASY_VERSION="1.4.2"
 
 # NVIDIA Identify version 
 # reference: 
@@ -159,7 +159,7 @@ fi
 if [ -f /usr/local/cuda/version.txt ]; then
     JETSON_CUDA=$(cat /usr/local/cuda/version.txt | sed 's/\CUDA Version //g')
 else
-    JETSON_CUDA="NOT INSTALLED"
+    JETSON_CUDA="NOT_INSTALLED"
 fi
 # Jetson CUDA version
 export JETSON_CUDA
@@ -204,7 +204,7 @@ if hash opencv_version 2>/dev/null; then
     # Read information about cuda status
     JETSON_OPENCV_CUDA=$(opencv_read_cuda)
 else
-    JETSON_OPENCV="NOT INSTALLED"
+    JETSON_OPENCV="NOT_INSTALLED"
     JETSON_OPENCV_CUDA="NO"
 fi
 # Opencv variables
@@ -234,7 +234,7 @@ if [ ! -z "$(dpkg -l | grep -m1 libcudnn)" ] ; then
     JETSON_CUDNN=$(dpkg -l | grep -m1 "libcudnn")
     JETSON_CUDNN=$(echo $JETSON_CUDNN | sed 's/.*libcudnn[0-9] \([^ ]*\).*/\1/' )
 else
-    JETSON_CUDNN="NOT INSTALLED"
+    JETSON_CUDNN="NOT_INSTALLED"
 fi
 # Export NVIDIA CuDNN Library
 export JETSON_CUDNN
@@ -244,7 +244,7 @@ if [ ! -z "$(dpkg -l | grep -m1 tensorrt)" ] ; then
     JETSON_TENSORRT=$(dpkg -l | grep -m1 " tensorrt ")
     JETSON_TENSORRT=$(echo $JETSON_TENSORRT | sed 's/.*tensorrt \([^ ]*\).*/\1/' )
 else
-    JETSON_TENSORRT="NOT INSTALLED"
+    JETSON_TENSORRT="NOT_INSTALLED"
 fi
 # Export NVIDIA CuDNN TensorRT
 export JETSON_TENSORRT
@@ -254,7 +254,7 @@ if [ ! -z "$(dpkg -l | grep -m1 libvisionworks)" ] ; then
     JETSON_VISIONWORKS=$(dpkg -l | grep -m1 "libvisionworks")
     JETSON_VISIONWORKS=$(echo $JETSON_VISIONWORKS | sed 's/.*libvisionworks \([^ ]*\).*/\1/' )
 else
-    JETSON_VISIONWORKS="NOT INSTALLED"
+    JETSON_VISIONWORKS="NOT_INSTALLED"
 fi
 # Export NVIDIA CuDNN VisionWorks
 export JETSON_VISIONWORKS
