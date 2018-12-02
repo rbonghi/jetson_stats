@@ -135,7 +135,7 @@ def get_status_disk():
            }
     
 
-def get_status(text, fan_level=0, nvpmodel=""):
+def get_status(text, fan_level=None, nvpmodel=""):
     jetsonstats = {}
     # Read status disk
     jetsonstats['DISK'] = get_status_disk()
@@ -144,7 +144,8 @@ def get_status(text, fan_level=0, nvpmodel=""):
         lines = nvpmodel.split("\n")
         jetsonstats['NVPMODEL'] = {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
     # Read status fan
-    jetsonstats['FAN'] = float(fan_level)/255.0 * 100.0
+    if fan_level is not None:
+        jetsonstats['FAN'] = float(fan_level)/255.0 * 100.0
     # Read SWAP status
     swap_status, text = get_SWAP_status(text)
     jetsonstats['SWAP'] = swap_status

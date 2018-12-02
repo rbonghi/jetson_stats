@@ -99,7 +99,10 @@ def plot_CPUs(offest, list_cpus, width):
         off_idx = idx - len(list_cpus)/2 if idx >= len(list_cpus)/2 and len(list_cpus) > 4 else idx
         # Plot the linear gauge
         linear_percent_gauge(make_gauge_from_percent(cpu), max_bar, offest+off_idx, start)
-    return offest + idx/2 + 1
+    if len(list_cpus) > 4:
+        return offest + idx/2 + 1
+    else:
+        return offest + idx + 1
 
 def plot_dictionary(offset, data, name, start=0):
     # Plot title
@@ -137,12 +140,13 @@ def plot_other_info(offset, data, width, start=0):
     # APE frequency
     plot_name_info(offset + counter, start, "APE", str(jetsonstats['APE']) + "MHz")
     counter +=1
-    # FAN status 
-    FAN_VALUE = { 'name': 'FAN',
-                  'value': int(jetsonstats['FAN']),
-                }
-    linear_percent_gauge(FAN_VALUE, width, offset=offset + counter, start= start)
-    counter +=1
+    # FAN status
+    if 'FAN' in jetsonstats:
+        FAN_VALUE = { 'name': 'FAN',
+                      'value': int(jetsonstats['FAN']),
+                    }
+        linear_percent_gauge(FAN_VALUE, width, offset=offset + counter, start= start)
+        counter +=1
     # Plot MTS
     if 'MTS' in jetsonstats:
         stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
@@ -161,7 +165,7 @@ def plot_other_info(offset, data, width, start=0):
     plot_name_info(offset + counter + 2, start + 2, "JP", os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]")
     counter += 3
     # NVP Model
-    if jetsonstats['NVPMODEL']:
+    if 'NVPMODEL' in jetsonstats:
         plot_name_info(offset + counter, start, "NV Power", jetsonstats['NVPMODEL']['name'] + " - " + str(jetsonstats['NVPMODEL']['mode']))
         counter += 1
 
@@ -227,12 +231,17 @@ def refreshwindow(jetsonstats):
     linear_percent_gauge(DISK_STATUS, width, offset=line_counter, type_bar="#", color_name=3)
     
     
-    column_width = int(float(width - 4)/3.0)
+    split = 1.0
+    split += 1.0 if jetsonstats['temperatures'] else 0.0
+    split += 1.0 if jetsonstats['voltages'] else 0.0
+    column_width = int(float(width - 4)/split)
     line_counter += 1
     # Add temperatures and voltages
     plot_other_info(line_counter, jetsonstats, column_width, start=1)
-    plot_temperatures(line_counter, jetsonstats['temperatures'], start=2 + column_width)
-    plot_voltages(line_counter, jetsonstats['voltages'], start= 2 + 2*column_width)
+    if jetsonstats['temperatures']:
+        plot_temperatures(line_counter, jetsonstats['temperatures'], start=2 + column_width)
+    if jetsonstats['voltages']:
+        plot_voltages(line_counter, jetsonstats['voltages'], start= 2 + 2*column_width)
     # Close option menu
     stdscr.addstr(height-1, 0, ("{0:<" + str(width-1) + "}").format("CTRL-C to close"), curses.A_REVERSE)
     # Refresh page
@@ -266,8 +275,11 @@ if __name__ == "__main__":
             # This blocks until it receives a newline.
             tegrastats_stream = p.stdout.readline().decode("utf-8")
             # read status from fan
-            fan_status_p = subprocess.Popen(['cat', '/sys/kernel/debug/tegra_fan/target_pwm'], stdout=subprocess.PIPE)
-            fan_level = int(fan_status_p.communicate()[0])
+            if os.path.isfile('/sys/kernel/debug/tegra_fan/target_pwm'):
+                fan_status_p = subprocess.Popen(['cat', '/sys/kernel/debug/tegra_fan/target_pwm'], stdout=subprocess.PIPE)
+                fan_level = int(fan_status_p.communicate()[0])
+            else:
+                fan_level = None
             # Rad nvpmodel to know the status of the board
             try:
                 nvpmodel_p = subprocess.Popen(['nvpmodel', '-q'], stdout=subprocess.PIPE)
