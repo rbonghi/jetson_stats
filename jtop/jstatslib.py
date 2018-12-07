@@ -114,7 +114,11 @@ def get_CPU_status(text):
     text = re.sub('CPU (.+?)\] ', '', text)
     cpus = []
     for idx, cpu in enumerate(cpu_string.split(",")):
-            cpus.append(get_value_processor("CPU" + str(idx+1), cpu))
+            cpu_status = get_value_processor("CPU" + str(idx+1), cpu)
+            f = open('/sys/devices/system/cpu/cpu'+ str(idx) + '/cpufreq/scaling_governor','r')
+            cpu_status['governor'] = f.read()[:-1]
+            f.close()
+            cpus.append(cpu_status)
     
     return cpus, text
 

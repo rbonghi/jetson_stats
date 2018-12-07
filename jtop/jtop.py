@@ -98,7 +98,10 @@ def plot_CPUs(offest, list_cpus, width):
         start = max_bar + 1 if idx >= len(list_cpus)/2 and len(list_cpus) > 4 else 0
         off_idx = idx - len(list_cpus)/2 if idx >= len(list_cpus)/2 and len(list_cpus) > 4 else idx
         # Plot the linear gauge
-        linear_percent_gauge(make_gauge_from_percent(cpu), max_bar, offest+off_idx, start)
+        gauge = make_gauge_from_percent(cpu)
+        if 'value' in gauge:
+            gauge["percent"] = cpu['governor'] + " - " + str(gauge['value']) + "%"
+        linear_percent_gauge(gauge, max_bar, offest+off_idx, start)
     if len(list_cpus) > 4:
         return offest + idx/2 + 1
     else:
