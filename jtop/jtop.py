@@ -77,12 +77,17 @@ def linear_percent_gauge(gauge, max_bar, offset=0, start=0, type_bar="|", color_
         if 'label' in gauge:
             stdscr.addstr(offset, start + 5 + size_bar + 3, gauge['label'])
         # Show progress value linear gauge
-        n_bar = int(float(value) * float(size_bar - 2) / 100.0)
+        n_bar = int(float(value) * float(size_bar) / 100.0)
         progress_bar= type_bar * n_bar
-        stdscr.addstr(offset, start + 6, ("{n_bar:" + str(size_bar - 2) + "}").format(n_bar=progress_bar), curses.color_pair(2))
-        # Show value inside linear gauge
+        # Build progress barr string
+        str_progress_bar = ("{n_bar:" + str(size_bar) + "}").format(n_bar=progress_bar)
         percent_label = gauge['percent'] if 'percent' in gauge else str(value) + "%"
-        stdscr.addstr(offset, start + 6 + size_bar - len(percent_label), percent_label, curses.A_DIM)
+        str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
+        # Split string in green and grey part
+        green_part = str_progress_bar[:n_bar]
+        grey_part = str_progress_bar[n_bar:]
+        stdscr.addstr(offset, start + 6, green_part, curses.color_pair(2))
+        stdscr.addstr(offset, start + 6 + size_bar - len(grey_part), grey_part, curses.A_DIM)
     else:
         # Show short name linear gauge
         stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(color_name))
