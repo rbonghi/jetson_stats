@@ -261,7 +261,8 @@ if __name__ == "__main__":
     if os.getuid() != 0:
         print("Run with sudo")
         sys.exit(0)
-    print("Loading...")
+    sys.stdout.write('Loading...')
+    sys.stdout.flush()
     # Load command line controller
     stdscr = curses.initscr()
     curses.start_color()
