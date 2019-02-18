@@ -94,11 +94,18 @@ then
     sudo rm "$JETSON_BIN_FOLDER/jetson_release"
 fi
 
-# Remove jetson_release link
+# Remove jetson_swap link
 if [ -f "$JETSON_BIN_FOLDER/jetson_swap" ]
 then
     echo "Remove jetson_swap link"
     sudo rm "$JETSON_BIN_FOLDER/jetson_swap"
+fi
+
+# Remove jetson-docker link
+if [ -f "$JETSON_BIN_FOLDER/jetson-docker" ]
+then
+    echo "Remove jetson-docker link"
+    sudo rm "$JETSON_BIN_FOLDER/jetson-docker"
 fi
 
 # Remove jetson_easy folder

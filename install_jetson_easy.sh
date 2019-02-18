@@ -47,6 +47,12 @@ else
     #sudo cp $(pwd)/jetson/jetson_release.sh "$JETSON_BIN_FOLDER/jetson_release"
     sudo ln -s $JETSON_FOLDER/jetson_release.sh $JETSON_BIN_FOLDER/jetson_release
 
+    # Link jetson_docker
+    # Thanks from @JasonAtNvidia
+    echo "Link jetson-docker"
+    #sudo cp $(pwd)/jetson/jetson-docker.sh "$JETSON_BIN_FOLDER/jetson-docker"
+    sudo ln -s $JETSON_FOLDER/jetson-docker $JETSON_BIN_FOLDER/jetson-docker
+
     # Link jetson_swap
     echo "Link jetson_swap"
     #sudo cp $(pwd)/jetson/jetson_swap.sh "$JETSON_BIN_FOLDER/jetson_swap"
