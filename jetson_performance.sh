@@ -70,7 +70,7 @@ fi
 
 JETSON_PERFORMANCE_WAIT_TIME=60
 JETSON_PERFORMANCE_CHECK_FILE=/tmp/jetson_performance_run
-JETSON_EASY_FOLDER="/etc/jetson_easy"
+JETSON_CONFIG_FOLDER="/tmp"
 
 nvpmodel_run() {
     if hash nvpmodel 2>/dev/null; then
@@ -80,18 +80,16 @@ nvpmodel_run() {
 
 status()
 {
-    if [ $JETSON_BOARD != "TK1" ]
-    then
-        if [ -f $JETSON_PERFORMANCE_CHECK_FILE ]
-        then
-            echo "[Service running] jetson_clock.sh --show:"
+    if [ $JETSON_BOARD != "TK1" ] ; then
+        if [ -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
+            echo "[Service running] jetson_clock --show:"
         else
-            echo "[Service stopped] jetson_clock.sh --show:"
+            echo "[Service stopped] jetson_clock --show:"
         fi
         # Show NVP model loaded at this time
         nvpmodel_run -q
         # Show status of the NVIDIA Jetson
-        sudo $JETSON_EASY_FOLDER/jetson_clocks.sh --show
+        sudo /usr/bin/jetson_clocks --show
     else
         echo "Implementation for NVIDIA Jetson TK1 coming soon"
     fi
@@ -122,13 +120,13 @@ start()
             if [ ! -f $JETSON_EASY_FOLDER/l4t_dfs.conf ] ; then
                 echo "Store the jetson_clock.sh configuration"
                 # Store jetson_clock configuration
-                sudo /usr/bin/jetson_clocks.sh --store $JETSON_EASY_FOLDER/l4t_dfs.conf
+                sudo /usr/bin/jetson_clocks --store $JETSON_EASY_FOLDER/l4t_dfs.conf
             fi
             # if Jetson for max performance
             echo "Set configuration in max performance"
             nvpmodel_run -m 0
-            # Launch ./jetson_clock.sh
-            sudo /usr/bin/jetson_clocks.sh
+            # Launch jetson_clock
+            sudo /usr/bin/jetson_clocks
             # Write a file to check the system has running
             sudo touch $JETSON_PERFORMANCE_CHECK_FILE
             echo "Service run at max performance"
@@ -136,7 +134,7 @@ start()
             echo "Service has running"
         fi
     else
-        echo "Implementation for NVIDIA Jetson TK1 coming soon"
+        echo "Implementation not available for NVIDIA Jetson TK1"
     fi
 }
 
@@ -145,7 +143,7 @@ stop()
     if [ $JETSON_BOARD != "TK1" ] ; then
         if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ] ; then
             # restore jetson_clock configuration
-            sudo /usr/bin/jetson_clocks.sh --restore $JETSON_EASY_FOLDER/l4t_dfs.conf
+            sudo /usr/bin/jetson_clocks --restore $JETSON_EASY_FOLDER/l4t_dfs.conf
         fi
         
         # Write a file to check the system has running
@@ -157,13 +155,13 @@ stop()
             echo "Change configuration in default mode"
             # https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
             nvpmodel_run -m 2
-        elif [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
+        else
             echo "Change configuration in default mode"
             # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
             nvpmodel_run -m 1
         fi
     else
-        echo "Implementation for NVIDIA Jetson TK1 coming soon"
+        echo "Implementation not available for NVIDIA Jetson TK1"
     fi
 }
 
