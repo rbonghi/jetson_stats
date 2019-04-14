@@ -1,7 +1,7 @@
 # Jetson stats 
 **Welcome in the Jetson setup configurator** - Visit the [Official website](http://rnext.it/project/jetson-easy/) or read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki)
 
-The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [Xavier, TX2i, TX2, TX1, TK1] embedded board without wait a lot of time.
+The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1, TK1] embedded board without wait a lot of time.
 
 ## [**jtop**][jtop] 
 A Dynamic interface where is showed the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
