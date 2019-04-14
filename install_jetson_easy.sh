@@ -27,8 +27,165 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-JETSON_FOLDER="/etc/jetson_easy"
-JETSON_BIN_FOLDER="/usr/local/bin"
+BIN_FOLDER="/usr/local/bin"
+
+installer()
+{
+    local JETSON_FOLDER=$1
+
+    echo " - Installing jetson_stats on $JETSON_FOLDER"
+    # Copy folder
+    if [ ! -d $JETSON_FOLDER ]; then
+        echo "   * Make folder $JETSON_FOLDER"
+        sudo mkdir $JETSON_FOLDER
+    fi
+    echo "   * Copy to $JETSON_FOLDER"
+    sudo cp -r * $JETSON_FOLDER
+    
+    # Add symbolic link of jetson_clock for old jetpacks
+    if [ ! -f /usr/bin/jetson_clocks ]; then
+        echo "   * Link jetson_clocks to /usr/bin/ folder"
+        sudo ln -s $HOME/jetson_clocks.sh /usr/bin/jetson_clocks
+    fi
+    
+    # Add symbolic link of tegrastats for old jetpacks
+    if [ ! -f /usr/bin/tegrastats ]; then
+        echo "   * Link tegrastats"
+        sudo ln -s $HOME/tegrastats /usr/bin/tegrastats
+    fi
+    
+    #--- Link and installing jetson_stats scripts ---#
+    
+    # Link jetson_release
+    if [[ ! -L "$BIN_FOLDER/jetson_release" ]]; then 
+        echo "   * Link jetson_release"
+        #sudo cp $(pwd)/jetson/jetson_release.sh "$BIN_FOLDER/jetson_release"
+        sudo ln -s $JETSON_FOLDER/jetson_release.sh $BIN_FOLDER/jetson_release
+    fi
+    
+    # Link jetson_docker
+    # Thanks from @JasonAtNvidia
+    if [[ ! -L "$BIN_FOLDER/jetson-docker" ]]; then 
+        echo "   * Link jetson-docker"
+        #sudo cp $(pwd)/jetson/jetson-docker.sh "$BIN_FOLDER/jetson-docker"
+        sudo ln -s $JETSON_FOLDER/jetson-docker $BIN_FOLDER/jetson-docker
+    fi
+    # Link jetson_swap
+    if [[ ! -L "$BIN_FOLDER/jetson_swap" ]]; then 
+        echo "   * Link jetson_swap"
+        #sudo cp $(pwd)/jetson/jetson_swap.sh "$BIN_FOLDER/jetson_swap"
+        sudo ln -s $JETSON_FOLDER/jetson_swap.sh $BIN_FOLDER/jetson_swap
+    fi
+    # Copy the service in /etc/systemd/system
+    if [ ! -f "/etc/systemd/system/jetson_performance.service" ] ; then
+        echo "   * Copy jetson_performance service in /etc/systemd/system/"
+        sudo cp $JETSON_FOLDER/jetson_performance.service "/etc/systemd/system/jetson_performance.service"
+    fi
+    
+    # Add in bash jetson_easy reference
+    if [ ! -f "/etc/profile.d/" ] ; then
+        echo "   * Copy the enviroments variables in /etc/profile.d/"
+        sudo cp $JETSON_FOLDER/jetson_env.sh "/etc/profile.d/jetson_env.sh"
+    fi
+
+    # Link jetson_release
+    if [[ ! -L "$BIN_FOLDER/jtop" ]]; then
+        echo "   * Link jtop"
+        sudo ln -s $JETSON_FOLDER/jtop.sh $BIN_FOLDER/jtop
+    fi
+    
+    # Update service list
+    sudo systemctl daemon-reload
+}
+
+usage()
+{
+	if [ "$1" != "" ]; then
+    	tput setaf 1
+		echo "$1"
+		tput sgr0
+	fi
+	
+    echo "Jetson_stats, Installer for nvidia top and different information modules."
+    echo "Usage:"
+    echo "$0 [options]"
+    echo "options,"
+    echo "   -h|--help    | This help"
+    echo "   -s|--silent  | Run jetson_stats in silent mode"
+    echo "   -f|--folder  | Change default install folder"
+    echo "   -auto        | Run at start-up jetson performance"
+}
+
+main()
+{
+    local SKIP_ASK=true
+    local AUTO_START=false
+    local JETSON_FOLDER="/etc/jetson_easy"
+    
+	# Decode all information from startup
+    while [ -n "$1" ]; do
+        case "$1" in
+            -f|--folder)
+                JETSON_FOLDER=$2
+                shift 1
+                ;;
+            -s|--silent)
+                SKIP_ASK=false
+                ;;
+            -auto)
+                AUTO_START=true
+                ;;
+            -h|--help)
+                # Load help
+                usage
+                exit 0
+                ;;
+            *)
+                usage "[ERROR] Unknown option: $1"
+                exit 1
+            ;;
+        esac
+            shift 1
+    done
+    
+    if [[ `id -u` -ne 0 ]] ; then 
+        tput setaf 1
+        echo "Please run as root"
+        tput sgr0
+        exit 1
+    fi
+	
+    while $SKIP_ASK; do
+        read -p "Do you wish to install jetson_stats? [Y/n] " yn
+            case $yn in
+                [Yy]* ) # Break and install jetson_stats 
+                        break;;
+                [Nn]* ) exit;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+    
+    # Run installer
+    installer $JETSON_FOLDER
+    
+    if $AUTO_START ; then
+        tput setaf 4
+        echo " - Enable and start jetson_performance"
+        tput sgr0
+        # Enable service
+        sudo systemctl enable jetson_performance.service
+        # Run the service
+        sudo systemctl start jetson_performance.service
+    fi
+    
+    tput setaf 2
+    echo "DONE!"
+    tput sgr0
+}
+
+main $@
+exit 0
+
 
 if [ -d "$JETSON_FOLDER" ] ; then
     # remove folder
@@ -83,8 +240,7 @@ else
     echo "Link jtop"
     sudo ln -s $JETSON_FOLDER/jtop.sh $JETSON_BIN_FOLDER/jtop
     
-    # Update service list
-    sudo systemctl daemon-reload
+
     
     # Enable service
     sudo systemctl enable jetson_performance.service

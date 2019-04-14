@@ -28,7 +28,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Version of Jetson_easy
-JETSON_EASY_VERSION="1.4.4"
+JETSON_EASY_VERSION="1.5.0"
 
 # NVIDIA Identify version 
 # reference: 
@@ -50,6 +50,8 @@ if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
     esac
     if [ "$JETSON_BOARD" = "Xavier" ] ; then
         JETSON_DESCRIPTION="NVIDIA Jetson AGX $JETSON_BOARD"
+    elif [ "$JETSON_BOARD" = "TX1" ] ; then
+        JETSON_DESCRIPTION="NVIDIA Jetson TX1/Nano"
     else
         JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
     fi
@@ -113,6 +115,8 @@ if [ -f /etc/nv_tegra_release ]; then
         esac
     elif [ "$JETSON_BOARD" = "TX1" ] ; then
         case $JETSON_L4T in
+            "32.1.0" ) 
+                    JETSON_JETPACK="4.2" ;;
             "28.2" | "28.2.0" ) 
                     JETSON_JETPACK="3.2" ;;
             "28.1") 

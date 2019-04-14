@@ -277,7 +277,7 @@ if __name__ == "__main__":
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Open tegrastats
-    p = subprocess.Popen(['/etc/jetson_easy/tegrastats', '--interval', '100'], stdout=subprocess.PIPE)
+    p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', '100'], stdout=subprocess.PIPE)
     # launch reader
     try:
         while p.poll() is None:
