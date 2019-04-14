@@ -169,7 +169,7 @@ def plot_other_info(offset, data, width, start=0):
         counter += 3
     # Model board information
     stdscr.addstr(offset + counter, start, "Board info:", curses.A_BOLD)
-    plot_name_info(offset + counter + 1, start + 2, "Name", os.environ["JETSON_BOARD"])
+    plot_name_info(offset + counter + 1, start + 2, "Name", os.environ["JETSON_TYPE"])
     plot_name_info(offset + counter + 2, start + 2, "JP", os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]")
     counter += 3
     # NVP Model

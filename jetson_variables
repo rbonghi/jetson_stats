@@ -49,14 +49,17 @@ if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
             JETSON_BOARD="UNKNOWN" ;;
     esac
     if [ "$JETSON_BOARD" = "Xavier" ] ; then
-        JETSON_DESCRIPTION="NVIDIA Jetson AGX $JETSON_BOARD"
+        JETSON_TYPE="AGX Xavier"
     elif [ "$JETSON_BOARD" = "TX1" ] ; then
-        JETSON_DESCRIPTION="NVIDIA Jetson TX1/Nano"
+        JETSON_TYPE="NANO/TX1"
     else
-        JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_BOARD"
+        JETSON_TYPE="$JETSON_BOARD"
     fi
+    # Make Jetson Description
+    JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_TYPE"
     # Export variables
     export JETSON_BOARD
+    export JETSON_TYPE
     export JETSON_DESCRIPTION
 fi
 
