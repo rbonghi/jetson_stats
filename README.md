@@ -9,7 +9,7 @@ To use all tools inside the jetson_stats you can run `install_jetson_stats.sh`, 
 ubuntu@server:~/jetson_stats$ ./install_jetson_stats.sh -h
 Jetson_stats, Installer for nvidia top and different information modules.
 Usage:
-./biddibi_boddibi_boo.sh [options]
+./install_jetson_stats.sh [options]
 options,
    -h|--help    | This help
    -s|--silent  | Run jetson_stats in silent mode
@@ -38,8 +38,6 @@ The command show the status and all information about your [NVIDIA Jetson][NVIDI
 
 ## [**jetson_performance**][jetson_performance]
 This service load `jetson_clock.sh` has a linux service
-
-
 
 [jtop]: https://github.com/rbonghi/jetson_stats/wiki/jtop
 [jetson_variables]: https://github.com/rbonghi/jetson_stats/wiki/jetson_variables
