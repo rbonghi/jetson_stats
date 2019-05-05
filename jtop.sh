@@ -29,4 +29,4 @@
 
 . /etc/jetson_easy/jetson_variables
 
-python jtop/jtop.py $@
+python /etc/jetson_easy/jtop/jtop.py $@
