@@ -33,19 +33,18 @@ import re, os
 import subprocess
 #Threading
 from threading  import Thread
-from Queue import Queue, Empty
+from collections import deque
 
 class Tegrastats(Thread):
     """
         Subprocess read:
         https://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python/4896288#4896288
     """
-    def __init__(self, interval=100):
+    def __init__(self, interval=500):
         Thread.__init__(self)
         interval = str(interval)
         self.p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', interval], stdout=subprocess.PIPE)
-        self.q = Queue()
-        self.stop = False
+        self.q = deque(maxlen=2)
 
     def run(self):
         try:
@@ -53,25 +52,25 @@ class Tegrastats(Thread):
                 # Read line process output
                 line = self.p.stdout.readline()
                 # Decode line in UTF-8
-                tegrastats_stream = line.decode("utf-8")
-                # Add in queue
-                self.q.put(tegrastats_stream)
+                tegrastats_data = line.decode("utf-8")
+                # Add in deque
+                self.q.appendleft(tegrastats_data)
         except SystemExit as e:
             print(e)
-        # If require to stop, the process will be killed
-        if self.stop:
-            self.p.kill()
+        except AttributeError as e:
+            print(e)
             
     def read(self):
-        try:
-            #line = q.get_nowait() # or q.get(timeout=.1)
-            tegrastats_stream = self.q.get_nowait()
-            return get_status(tegrastats_stream)
-        except Empty:
-            return {}
+        # Wait the deque not empty
+        while not self.q:
+            pass
+        # Pop first string read
+        tegrastats_data = self.q.pop()
+        # Return dictionary parsed
+        return get_status(tegrastats_data)
             
     def close(self):
-        self.stop = True
+        self.p.kill()
           
     def __enter__(self):
         # Start himself like file
