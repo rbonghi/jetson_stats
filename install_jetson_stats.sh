@@ -189,7 +189,7 @@ usage()
     echo "   -h|--help    | This help"
     echo "   -s|--silent  | Run jetson_stats in silent mode"
     echo "   -i|--inst    | Change default install folder"
-    echo "   -f|--force   | Run at start-up jetson performance"
+    echo "   -f|--force   | Force install all tools"
     echo "   -auto        | Run at start-up jetson performance"
     echo "   -uninstall   | Run the uninstaller"
 }
