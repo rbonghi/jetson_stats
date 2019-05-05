@@ -29,7 +29,58 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re, os
+# Launch command
+import subprocess
+#Threading
+from threading  import Thread
+from collections import deque
 
+class Tegrastats(Thread):
+    """
+        Subprocess read:
+        https://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python/4896288#4896288
+    """
+    def __init__(self, interval=500):
+        Thread.__init__(self)
+        interval = str(interval)
+        self.p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', interval], stdout=subprocess.PIPE)
+        self.q = deque(maxlen=2)
+
+    def run(self):
+        try:
+            while self.p.poll() is None:
+                # Read line process output
+                line = self.p.stdout.readline()
+                # Decode line in UTF-8
+                tegrastats_data = line.decode("utf-8")
+                # Add in deque
+                self.q.appendleft(tegrastats_data)
+        except SystemExit as e:
+            print(e)
+        except AttributeError as e:
+            print(e)
+            
+    def read(self):
+        # Wait the deque not empty
+        while not self.q:
+            pass
+        # Pop first string read
+        tegrastats_data = self.q.pop()
+        # Return dictionary parsed
+        return get_status(tegrastats_data)
+            
+    def close(self):
+        self.p.kill()
+          
+    def __enter__(self):
+        # Start himself like file
+        self.daemon = True
+        self.start()
+        return self
+            
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        
 def get_SWAP_status(text):
     # SWAP X/Y (cached Z)
     # X = Amount of SWAP in use in megabytes.
@@ -139,15 +190,33 @@ def get_status_disk():
            }
     
 
-def get_status(text, fan_level=None, nvpmodel=""):
+def get_nvpmodel():
+    # Read nvpmodel to know the status of the board
+    try:
+        nvpmodel_p = subprocess.Popen(['nvpmodel', '-q'], stdout=subprocess.PIPE)
+        return nvpmodel_p.communicate()[0]
+    except:
+        return ""
+
+def get_fanstatus(file_fan):
+    # Read status from fan
+    if os.path.isfile(file_fan):
+        fan_status_p = subprocess.Popen(['cat', file_fan], stdout=subprocess.PIPE)
+        return int(fan_status_p.communicate()[0])
+    else:
+        return None
+
+def get_status(text, file_fan='/sys/kernel/debug/tegra_fan/target_pwm'):
     jetsonstats = {}
     # Read status disk
     jetsonstats['DISK'] = get_status_disk()
     # Extract nvpmodel
+    nvpmodel = get_nvpmodel()
     if nvpmodel:
         lines = nvpmodel.split("\n")
         jetsonstats['NVPMODEL'] = {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
     # Read status fan
+    fan_level = get_fanstatus(file_fan)
     if fan_level is not None:
         jetsonstats['FAN'] = float(fan_level)/255.0 * 100.0
     # Read SWAP status
@@ -227,3 +296,5 @@ def get_status(text, fan_level=None, nvpmodel=""):
     jetsonstats['voltages'] = voltages
     
     return jetsonstats
+    
+#EOF
