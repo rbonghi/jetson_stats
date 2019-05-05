@@ -35,13 +35,14 @@ import os
 
 def make_gauge_from_percent(data):
     gauge = {'name': data['name']}
-    if 'idle' in data:
-        gauge['value'] = int(data['idle'])
+    if data["status"] == "ON":
+        gauge['value'] = int(data['idle'][-1])
     if 'frequency' in data:
-        if data['frequency'] >= 1000:
-            gauge['label'] = "{0:2.1f}GHz".format(data['frequency']/1000.0)
+        freq = data['frequency'][-1]
+        if freq >= 1000:
+            gauge['label'] = "{0:2.1f}GHz".format(freq/1000.0)
         else:
-            gauge['label'] = str(int(data['frequency'])) + "MHz"
+            gauge['label'] = str(int(freq)) + "MHz"
     return gauge
     
 def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6):
@@ -126,12 +127,12 @@ def plot_name_info(stdscr, offset, start, name, value):
 def plot_other_info(stdscr, offset, data, width, start=0):
     counter = 0
     # APE frequency
-    plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
+    plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE'][-1]) + "MHz")
     counter +=1
     # FAN status
     if 'FAN' in data:
         FAN_VALUE = { 'name': 'FAN',
-                      'value': int(data['FAN']),
+                      'value': int(data['FAN'][-1]),
                     }
         linear_percent_gauge(stdscr, FAN_VALUE, width, offset=offset + counter, start= start)
         counter +=1

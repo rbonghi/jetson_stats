@@ -138,13 +138,13 @@ if __name__ == "__main__":
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Open tegrastats reader and run the curses wrapper
-    with Tegrastats(args.refresh) as tegra:
+    with Tegrastats(interval=args.refresh) as tegra:
         if args.server:
             while True:
                 # Read tegra stats
                 stat = tegra.read()
                 # TODO: Convert print to server post
-                if stat: print(stat)
+                #if stat: print(stat)
                 # Sleep before send new stat
                 time.sleep(1)
         else:

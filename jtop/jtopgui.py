@@ -46,9 +46,9 @@ def all_info(stdscr, jetsonstats):
     ram_status = jetsonstats['RAM']['RAM']
     lfb_status = jetsonstats['RAM']['lfb']
     RAM_VALUE = { 'name': "Mem", 
-                  'value': int(float(ram_status['used'])/float(ram_status['total']) * 100.0),
+                  'value': int(ram_status['used'][-1]/float(ram_status['total']) * 100.0),
                   'label': "(lfb " + str(lfb_status['nblock']) + "x" + str(lfb_status['size']) + "MB)",
-                  'percent': "{0:2.1f}GB/{1:2.1f}GB".format(ram_status['used']/1000.0, ram_status['total']/1000.0),
+                  'percent': "{0:2.1f}GB/{1:2.1f}GB".format(ram_status['used'][-1]/1000.0, ram_status['total']/1000.0),
                 }
     linear_percent_gauge(stdscr, RAM_VALUE, width, offset=line_counter + 1)
     # EMC linear gauge info
@@ -58,18 +58,20 @@ def all_info(stdscr, jetsonstats):
     if iram_status:
         line_counter += 1
         IRAM_VALUE = { 'name': "Imm", 
-                      'value': int(float(iram_status['used'])/float(iram_status['total']) * 100.0),
+                      'value': int(iram_status['used'][-1]/float(iram_status['total']) * 100.0),
                       'label': "(lfb " + str(iram_status['size']) + "MB)",
-                      'percent': "{0:2.1f}GB/{1:2.1f}GB".format(iram_status['used']/1000.0, iram_status['total']/1000.0),
+                      'percent': "{0:2.1f}GB/{1:2.1f}GB".format(iram_status['used'][-1]/1000.0, 
+                                                                iram_status['total']/1000.0),
                     }
         linear_percent_gauge(stdscr, IRAM_VALUE, width, offset=line_counter + 2)
     # SWAP linear gauge info
     swap_status = jetsonstats['SWAP']
     if swap_status:
         SWAP_VALUE = { 'name': "Swp", 
-                       'value': int(float(swap_status['used'])/float(swap_status['total']) * 100.0),
+                       'value': int(swap_status['used'][-1]/float(swap_status['total']) * 100.0),
                        'label': "(cached " + str(swap_status['cached']) + "MB)",
-                       'percent': "{0:2.1f}GB/{1:2.1f}GB".format(swap_status['used']/1000.0, swap_status['total']/1000.0),
+                       'percent': "{0:2.1f}GB/{1:2.1f}GB".format(swap_status['used'][-1]/1000.0, 
+                                                                 swap_status['total']/1000.0),
                     }
     else:
         SWAP_VALUE = {'name': "Swp"}
