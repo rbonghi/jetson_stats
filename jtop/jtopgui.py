@@ -113,15 +113,16 @@ class Menu:
                 page(self.stdscr, stat)
         
     def increase(self):
-        self.set(self.n_page + 1)
+        idx = self.n_page + 1
+        self.set(idx + 1)
         
     def decrease(self):
-        self.set(self.n_page - 1)
+        idx = self.n_page + 1
+        self.set(idx - 1)
         
     def set(self, idx):
-        idx = idx - 1
-        if idx < len(self.pages) and idx >= 0:
-            self.n_page = idx
+        if idx <= len(self.pages) and idx > 0:
+            self.n_page = idx - 1
 
     def menu(self):
         height, width = self.stdscr.getmaxyx()
