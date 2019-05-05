@@ -90,7 +90,9 @@ def main(stdscr):
     # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
     stdscr.nodelay(1)
     # Initialization Menu
-    pages = jtopgui.Menu(stdscr, [ {"name":"All", "func":jtopgui.all_info} ])
+    pages = jtopgui.Menu(stdscr, [ {"name":"All", "func":jtopgui.all_info}, 
+                                   {"name":"GPU"}, 
+                                   {"name":"Sensors"} ])
     # Here is the loop of our program, we keep clearing and redrawing in this loop
     while True:
         # First, clear the screen
