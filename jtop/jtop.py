@@ -144,7 +144,7 @@ if __name__ == "__main__":
                 # Read tegra stats
                 stat = tegra.read()
                 # TODO: Convert print to server post
-                #if stat: print(stat)
+                print(stat)
                 # Sleep before send new stat
                 time.sleep(1)
         else:

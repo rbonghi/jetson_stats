@@ -53,8 +53,9 @@ class Tegrastats(Thread):
         self.ram = deque(max_record * [0], maxlen=max_record)
         self.cpus = {}
         self.emc = Tegrastats.initProcess("EMC", max_record)
-        self.ape = deque(max_record * [0], maxlen=max_record)
         self.gpu = Tegrastats.initProcess("GPU", max_record)
+        self.temperatures = {}
+        self.voltages = {}
 
     def run(self):
         try:
@@ -118,99 +119,6 @@ class Tegrastats(Thread):
                 'frequency': max_record * [0.0],
                 'status': "OFF",
         }
-        
-    def decode(self, text, file_fan='/sys/kernel/debug/tegra_fan/target_pwm'):
-        jetsonstats = {}
-        # Read status disk
-        jetsonstats['DISK'] = get_status_disk()
-        # Extract nvpmodel
-        nvpmodel = get_nvpmodel()
-        if nvpmodel:
-            lines = nvpmodel.split("\n")
-            jetsonstats['NVPMODEL'] = {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
-        # Read status fan
-        fan_level = get_fanstatus(file_fan)
-        if fan_level is not None:
-            self.fan.append(float(fan_level)/255.0 * 100.0)
-            jetsonstats['FAN'] = list(self.fan)
-        # Read SWAP status
-        swap_status, text = self.SWAP(text)
-        jetsonstats['SWAP'] = swap_status
-        # Read IRAM status
-        iram_status, text = self.IRAM(text)
-        jetsonstats['IRAM'] = iram_status
-        # Read RAM status
-        ram_status, text = self.RAM(text)
-        jetsonstats['RAM'] = ram_status
-        # Read CPU status
-        text = self.CPU(text)
-        jetsonstats['CPU'] = list(self.cpus.values())
-        
-        temperatures = {}
-        voltages = {}
-        idx = 0
-        other_values = text.split(" ")
-        while idx < len(other_values):
-            data = other_values[idx]
-            if 'EMC' in data:
-                # EMC X%@Y
-                # EMC is the external memory controller, 
-                # through which all sysmem/carve-out/GART memory accesses go.
-                # X = Percent of EMC memory bandwidth being used, relative to the current running frequency.
-                # Y = EMC frequency in megahertz.
-                self.emc = Tegrastats.updateProcess(other_values[idx+1], self.emc)
-                jetsonstats['EMC'] = self.emc
-                # extra increase counter
-                idx += 1
-            elif 'APE' in data:
-                # APE Y
-                # APE is the audio processing engine. 
-                # The APE subsystem consists of ADSP (Cortex®-A9 CPU), mailboxes, AHUB, ADMA, etc.
-                # Y = APE frequency in megahertz.
-                self.ape.append(other_values[idx+1])
-                jetsonstats['APE'] = list(self.ape)
-                # extra increase counter
-                idx += 1
-            elif 'GR3D' in data:
-                # GR3D X%@Y
-                # GR3D is the GPU engine.
-                # X = Percent of the GR3D that is being used, relative to the current running frequency.
-                # Y = GR3D frequency in megahertz
-                self.gpu = Tegrastats.updateProcess(other_values[idx+1], self.gpu)
-                jetsonstats['GR3D'] = self.gpu
-                # extra increase counter
-                idx += 1
-            elif 'MTS' in data:
-                # MTS fg X% bg Y%
-                # X = Time spent in foreground tasks.
-                # Y = Time spent in background tasks.
-                fg = float(other_values[idx+2].split("%")[0])
-                bg = float(other_values[idx+4].split("%")[0])
-                jetsonstats['MTS'] = {'fg': fg, 'bg': bg}
-                # extra increase counter
-                idx += 4
-            elif '@' in data:
-                # [temp name] C
-                # [temp name] is one of the names under the nodes
-                # /sys/devices/virtual/thermal/thermal_zoneX/type.
-                info = data.split("@")
-                name = info[0]
-                value = info[1]
-                temperatures[name] = { 'value': float(value.split("C")[0]), 'unit': 'C', 'text': value }
-            else:
-                # [VDD_name] X/Y
-                # X = Current power consumption in milliwatts.
-                # Y = Average power consumption in milliwatts.
-                value = other_values[idx+1].split("/")
-                voltages[data] = {'current': int(value[0]), 'average': int(value[1]), 'unit': 'mW', 'text': other_values[idx+1].rstrip()+"mW"}
-                # extra increase counter
-                idx += 1
-            # Update counter
-            idx +=1
-        # Add Temperatures and voltages
-        jetsonstats['temperatures'] = temperatures
-        jetsonstats['voltages'] = voltages
-        return jetsonstats
         
     def SWAP(self, text):
         # SWAP X/Y (cached Z)
@@ -299,6 +207,122 @@ class Tegrastats(Thread):
             # Update status CPU
             self.cpus[idx] = cpu_status
         return text
+        
+    def decode(self, text):
+        jetsonstats = {}
+        # Read status disk
+        jetsonstats['DISK'] = get_status_disk()
+        # Extract nvpmodel
+        nvpmodel = get_nvpmodel()
+        if nvpmodel:
+            lines = nvpmodel.split("\n")
+            jetsonstats['NVPMODEL'] = {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
+        # Read status fan
+        fan_level = get_fanstatus('/sys/kernel/debug/tegra_fan/target_pwm')
+        if fan_level is not None:
+            self.fan.append(float(fan_level)/255.0 * 100.0)
+            jetsonstats['FAN'] = list(self.fan)
+        # Read SWAP status
+        swap_status, text = self.SWAP(text)
+        jetsonstats['SWAP'] = swap_status
+        # Read IRAM status
+        iram_status, text = self.IRAM(text)
+        jetsonstats['IRAM'] = iram_status
+        # Read RAM status
+        ram_status, text = self.RAM(text)
+        jetsonstats['RAM'] = ram_status
+        # Read CPU status
+        text = self.CPU(text)
+        jetsonstats['CPU'] = list(self.cpus.values())
+        
+        idx = 0
+        other_values = text.split(" ")
+        while idx < len(other_values):
+            data = other_values[idx]
+            if 'EMC' in data:
+                # EMC X%@Y
+                # EMC is the external memory controller, 
+                # through which all sysmem/carve-out/GART memory accesses go.
+                # X = Percent of EMC memory bandwidth being used, relative to the current running frequency.
+                # Y = EMC frequency in megahertz.
+                self.emc = Tegrastats.updateProcess(other_values[idx+1], self.emc)
+                jetsonstats['EMC'] = self.emc
+                # extra increase counter
+                idx += 1
+            elif 'APE' in data:
+                # APE Y
+                # APE is the audio processing engine. 
+                # The APE subsystem consists of ADSP (Cortex®-A9 CPU), mailboxes, AHUB, ADMA, etc.
+                # Y = APE frequency in megahertz.
+                jetsonstats['APE'] = other_values[idx+1]
+                # extra increase counter
+                idx += 1
+            elif 'GR3D' in data:
+                # GR3D X%@Y
+                # GR3D is the GPU engine.
+                # X = Percent of the GR3D that is being used, relative to the current running frequency.
+                # Y = GR3D frequency in megahertz
+                self.gpu = Tegrastats.updateProcess(other_values[idx+1], self.gpu)
+                jetsonstats['GR3D'] = self.gpu
+                # extra increase counter
+                idx += 1
+            elif 'MTS' in data:
+                # MTS fg X% bg Y%
+                # X = Time spent in foreground tasks.
+                # Y = Time spent in background tasks.
+                fg = float(other_values[idx+2].split("%")[0])
+                bg = float(other_values[idx+4].split("%")[0])
+                jetsonstats['MTS'] = {'fg': fg, 'bg': bg}
+                # extra increase counter
+                idx += 4
+            elif '@' in data:
+                # [temp name] C
+                # [temp name] is one of the names under the nodes
+                # /sys/devices/virtual/thermal/thermal_zoneX/type.
+                info = data.split("@")
+                name = info[0]
+                value = info[1]
+                # Read from dictionary temperature or initialize it
+                if name in self.temperatures:
+                    temp = self.temperatures[name]
+                else:
+                    temp = { 'value': self.max_record * [0.0], 'unit': 'C' }
+                # Remove last measured temp
+                temp['value'].pop(0)
+                # Add new value
+                temp['value'].append(float(value.split("C")[0]))
+                # Update text value
+                temp['text'] = value
+                # Store temperature value
+                self.temperatures[name] = temp
+            else:
+                # [VDD_name] X/Y
+                # X = Current power consumption in milliwatts.
+                # Y = Average power consumption in milliwatts.
+                value = other_values[idx+1].split("/")
+                # Read from dictionary temperature or initialize it
+                if data in self.voltages:
+                    volt = self.voltages[data]
+                else:
+                    volt = {'current': self.max_record * [0.0], 'average': self.max_record * [0.0], 'unit': 'mW'}
+                # Remove last measure
+                volt['current'].pop(0)
+                volt['average'].pop(0)
+                # Add new value
+                volt['current'].append(float(value[0]))
+                volt['average'].append(float(value[1]))
+                # Update text value
+                volt['text'] = other_values[idx+1].rstrip()+"mW"
+                # Store temperature value
+                self.voltages[data] = volt
+                # extra increase counter
+                idx += 1
+            # Update counter
+            idx +=1
+        # Add Temperatures and voltages
+        jetsonstats['temperatures'] = self.temperatures
+        jetsonstats['voltages'] = self.voltages
+        return jetsonstats
 
 def get_status_disk():
     disk = os.statvfs("/var/")

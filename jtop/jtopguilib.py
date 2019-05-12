@@ -109,7 +109,7 @@ def plot_temperatures(stdscr, offset, data, start=0):
     stdscr.addstr(offset, start, " {0:<10} {1}".format("[Sensor]", "[Temp]"), curses.A_BOLD)
     counter = 1
     for key, value in data.items():
-        stdscr.addstr(offset + counter, start, "{0:<10} {1:>4.2f}{2}".format(key, value['value'], value['unit']))
+        stdscr.addstr(offset + counter, start, "{0:<10} {1:>4.2f}{2}".format(key, value['value'][-1], value['unit']))
         counter += 1
         
 def plot_voltages(stdscr, offset, data, start=0):
@@ -117,7 +117,7 @@ def plot_voltages(stdscr, offset, data, start=0):
     stdscr.addstr(offset, start, " {0:<10} {1}".format("[Power]", " [Cur/Avr]"), curses.A_BOLD)
     counter = 1
     for key, value in data.items():
-        stdscr.addstr(offset + counter, start, "{0:<10} {1:^4}mW/{2:^4}mW".format(key, value['current'], value['average']))
+        stdscr.addstr(offset + counter, start, "{0:<10} {1:^4}mW/{2:^4}mW".format(key, value['current'][-1], value['average'][-1]))
         counter += 1
         
 def plot_name_info(stdscr, offset, start, name, value):
