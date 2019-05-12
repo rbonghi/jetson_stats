@@ -139,11 +139,11 @@ def plot_other_info(stdscr, offset, data, width, start=0):
     if 'MTS' in data:
         stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
         MTS_FG = { 'name': ' FG',
-                      'value': int(jetsonstats['MTS']['fg']),
+                      'value': int(data['MTS']['fg']),
                     }
         linear_percent_gauge(stdscr, MTS_FG, width, offset=offset + counter + 1, start= start)
         MTS_BG = { 'name': ' BG',
-                      'value': int(jetsonstats['MTS']['bg']),
+                      'value': int(data['MTS']['bg']),
                     }
         linear_percent_gauge(stdscr, MTS_BG, width, offset=offset + counter + 2, start= start)
         counter += 3
