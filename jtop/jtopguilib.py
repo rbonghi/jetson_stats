@@ -32,16 +32,62 @@
 import curses
 # System
 import os
+from math import floor, ceil
+
+def draw_chart(stdscr, size_x, size_y, value, line="*"):
+    # Get Max value and unit from value to draw
+    max_val = 100 if "max_val" not in value else value["max_val"]
+    unit ="%" if "max_val" not in value else value["unit"]
+    # Evaluate Diplay X, and Y size
+    displayX = size_x[1] - size_x[0] + 1
+    displayY = size_y[1] - size_y[0] - 1
+    
+    val = float(displayX - 2) / float(len(value["idle"]))
+    points = []
+    for n in value["idle"]:
+        points += [n] * int(ceil(val))
+    # Plot chart shape and labels
+    for point in range(displayY):
+        #value = max_val / float(displayY) * float(displayY-point-1)
+        value = max_val / float(displayY-1) * float(displayY-point-1) 
+        try:
+            #stdscr.addstr(1 + size_y[0] + point, size_x[0], "|")
+            stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
+            stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2, 
+                            "{value:3d}{unit}".format(value=int(value), unit=unit), curses.A_BOLD)
+        except:
+            pass
+    for point in range(displayX):
+        try:
+            #stdscr.addstr(size_y[0], size_x[0] + point, "-")
+            stdscr.addstr(size_y[1], size_x[0] + point, "-")
+        except:
+            pass
+    # Plot values
+    delta = displayX - len(points)
+    for idx, point in enumerate(points):
+        if delta + idx >= size_x[0]:
+            x_val = (delta + idx + 1)
+        else:
+            x_val = -1
+        y_val = size_y[1] - 1 - ( (float(displayY-1) / max_val) * point )
+        try:
+            stdscr.addstr( int(y_val), x_val, line, curses.color_pair(2))
+        except:
+            pass
+    # Debug value
+    #stdscr.addstr( 5, 5, "{}".format(delta), curses.color_pair(1))
 
 def make_gauge_from_percent(data):
     gauge = {'name': data['name']}
-    if 'idle' in data:
-        gauge['value'] = int(data['idle'])
+    if data["status"] == "ON":
+        gauge['value'] = int(data['idle'][-1])
     if 'frequency' in data:
-        if data['frequency'] >= 1000:
-            gauge['label'] = "{0:2.1f}GHz".format(data['frequency']/1000.0)
+        freq = data['frequency'][-1]
+        if freq >= 1000:
+            gauge['label'] = "{0:2.1f}GHz".format(freq/1000.0)
         else:
-            gauge['label'] = str(int(data['frequency'])) + "MHz"
+            gauge['label'] = str(int(freq)) + "MHz"
     return gauge
     
 def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6):
@@ -108,7 +154,7 @@ def plot_temperatures(stdscr, offset, data, start=0):
     stdscr.addstr(offset, start, " {0:<10} {1}".format("[Sensor]", "[Temp]"), curses.A_BOLD)
     counter = 1
     for key, value in data.items():
-        stdscr.addstr(offset + counter, start, "{0:<10} {1:>4.2f}{2}".format(key, value['value'], value['unit']))
+        stdscr.addstr(offset + counter, start, "{0:<10} {1:>4.2f}{2}".format(key, value['value'][-1], value['unit']))
         counter += 1
         
 def plot_voltages(stdscr, offset, data, start=0):
@@ -116,7 +162,7 @@ def plot_voltages(stdscr, offset, data, start=0):
     stdscr.addstr(offset, start, " {0:<10} {1}".format("[Power]", " [Cur/Avr]"), curses.A_BOLD)
     counter = 1
     for key, value in data.items():
-        stdscr.addstr(offset + counter, start, "{0:<10} {1:^4}mW/{2:^4}mW".format(key, value['current'], value['average']))
+        stdscr.addstr(offset + counter, start, "{0:<10} {1:^4}mW/{2:^4}mW".format(key, int(value['current'][-1]), int(value['average'][-1])))
         counter += 1
         
 def plot_name_info(stdscr, offset, start, name, value):
@@ -126,12 +172,12 @@ def plot_name_info(stdscr, offset, start, name, value):
 def plot_other_info(stdscr, offset, data, width, start=0):
     counter = 0
     # APE frequency
-    plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
+    plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE'][-1]) + "MHz")
     counter +=1
     # FAN status
     if 'FAN' in data:
         FAN_VALUE = { 'name': 'FAN',
-                      'value': int(data['FAN']),
+                      'value': int(data['FAN'][-1]),
                     }
         linear_percent_gauge(stdscr, FAN_VALUE, width, offset=offset + counter, start= start)
         counter +=1
@@ -139,11 +185,11 @@ def plot_other_info(stdscr, offset, data, width, start=0):
     if 'MTS' in data:
         stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
         MTS_FG = { 'name': ' FG',
-                      'value': int(jetsonstats['MTS']['fg']),
+                      'value': int(data['MTS']['fg']),
                     }
         linear_percent_gauge(stdscr, MTS_FG, width, offset=offset + counter + 1, start= start)
         MTS_BG = { 'name': ' BG',
-                      'value': int(jetsonstats['MTS']['bg']),
+                      'value': int(data['MTS']['bg']),
                     }
         linear_percent_gauge(stdscr, MTS_BG, width, offset=offset + counter + 2, start= start)
         counter += 3

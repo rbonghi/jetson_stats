@@ -90,7 +90,11 @@ def main(stdscr):
     # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
     stdscr.nodelay(1)
     # Initialization Menu
-    pages = jtopgui.Menu(stdscr, [ {"name":"All", "func":jtopgui.all_info} ])
+    pages = jtopgui.Menu(stdscr, [ {"name":"All", "func": jtopgui.all_info}, 
+                                   {"name":"GPU", "func": jtopgui.GPU}, 
+                                 ], init_page=0)
+    # Start with selected page
+    pages.set(args.page)
     # Here is the loop of our program, we keep clearing and redrawing in this loop
     while True:
         # First, clear the screen
@@ -103,8 +107,6 @@ def main(stdscr):
         stat = tegra.read()
         # Draw pages
         pages.draw(stat)
-        # Draw menu
-        pages.menu()
         # Draw the screen
         stdscr.refresh()
         # Set a timeout and read keystroke
@@ -131,18 +133,19 @@ if __name__ == "__main__":
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--server', help='Run jtop json server', action="store_true", default=False)
     parser.add_argument('-p', dest="port", help='Set server port', default='5555')
+    parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
     # Parse arguments
     args = parser.parse_args()
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Open tegrastats reader and run the curses wrapper
-    with Tegrastats(args.refresh) as tegra:
+    with Tegrastats(interval=args.refresh) as tegra:
         if args.server:
             while True:
                 # Read tegra stats
                 stat = tegra.read()
                 # TODO: Convert print to server post
-                if stat: print(stat)
+                print(stat)
                 # Sleep before send new stat
                 time.sleep(1)
         else:
