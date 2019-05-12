@@ -40,12 +40,13 @@ class Tegrastats(Thread):
         Subprocess read:
         https://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python/4896288#4896288
     """
-    def __init__(self, interval=500, max_record=10):
+    def __init__(self, interval=500, time=10.0):
         Thread.__init__(self)
-        interval = str(interval)
+        self.jetsonstats = {}
+        
+        max_record = int( float(time) * ( float(1 / float(interval)) * 1000.0) )
         self.max_record = max_record
-        self.p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', interval], stdout=subprocess.PIPE)
-        self.q = deque(maxlen=2)
+        self.p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', str(interval)], stdout=subprocess.PIPE)
         # Sensors deque list
         self.fan = deque(max_record * [0], maxlen=max_record)
         self.swap = deque(max_record * [0], maxlen=max_record)
@@ -64,8 +65,8 @@ class Tegrastats(Thread):
                 line = self.p.stdout.readline()
                 # Decode line in UTF-8
                 tegrastats_data = line.decode("utf-8")
-                # Add in deque
-                self.q.appendleft(tegrastats_data)
+                # Decode and store
+                self.jetsonstats = self.decode(tegrastats_data)
         except SystemExit as e:
             print(e)
         except AttributeError as e:
@@ -73,12 +74,10 @@ class Tegrastats(Thread):
             
     def read(self):
         # Wait the deque not empty
-        while not self.q:
+        while not self.jetsonstats:
             pass
-        # Pop first string read
-        tegrastats_data = self.q.pop()
         # Return dictionary parsed
-        return self.decode(tegrastats_data)
+        return self.jetsonstats
             
     def close(self):
         self.p.kill()

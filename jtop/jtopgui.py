@@ -30,11 +30,37 @@
 
 from jtopguilib import *
 
+def GPU(stdscr, jetsonstats):
+    """
+        Draw a plot with GPU payload
+    """
+    # Screen size
+    max_y, max_x = stdscr.getmaxyx()
+    
+    size_x = [ 2, max_x - 10 ]
+    size_y = [ 2, max_y * 2//3 - 2 ]
+    
+    gpu = {
+        "idle": [ 0.0, 10.0, 50.0, 100.0, 80.0, 50.0, 40.0, 70.0, 90.0, 5.0 ],
+        }
+    gpu = jetsonstats["GR3D"]
+    # Draw the GPU chart
+    draw_chart(stdscr, size_x, size_y, gpu)
+    # Percent Gauge GPU
+    linear_percent_gauge(stdscr, make_gauge_from_percent(jetsonstats['GR3D']), max_x // 2, offset=max_y * 2//3, start=2)
+    # Temperature GPU
+    if "GPU" in jetsonstats['temperatures']:
+        plot_name_info(stdscr, max_y * 2//3 + 1, 2, "GPU Temp", jetsonstats['temperatures']['GPU']['text'])
+    # NVP Model
+    if 'NVPMODEL' in jetsonstats:
+        plot_name_info(stdscr, max_y * 2//3 + 2, 2, "NV Power", jetsonstats['NVPMODEL']['name'] + " - " + str(jetsonstats['NVPMODEL']['mode']))
+    
+
 def all_info(stdscr, jetsonstats):
     """
         Update screen with values
     """
-    # Clear screen
+    # Screen size
     height, width = stdscr.getmaxyx()
 
     line_counter = 2
@@ -103,16 +129,18 @@ def all_info(stdscr, jetsonstats):
 
 class Menu:
 
-    def __init__(self, stdscr, pages):
+    def __init__(self, stdscr, pages, init_page=0):
         self.stdscr = stdscr
         self.pages = pages
-        self.n_page = 0
+        self.n_page = init_page
         
     def draw(self, stat):
         if "func" in self.pages[self.n_page]:
             page = self.pages[self.n_page]["func"]
             if page is not None:
                 page(self.stdscr, stat)
+        # Draw menu
+        self.menu()
         
     def increase(self):
         idx = self.n_page + 1
