@@ -172,7 +172,7 @@ def plot_name_info(stdscr, offset, start, name, value):
 def plot_other_info(stdscr, offset, data, width, start=0):
     counter = 0
     # APE frequency
-    plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE'][-1]) + "MHz")
+    plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
     counter +=1
     # FAN status
     if 'FAN' in data:
