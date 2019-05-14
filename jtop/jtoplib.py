@@ -108,7 +108,7 @@ class Tegrastats(Thread):
             info = re.findall("\d+", text)
             status['idle'].append(float(info[0]))
             status['frequency'].append(0.0)
-            status['status'] = "ON"
+            status['status'] = "ON-SIMPLE"
         return status
         
     @staticmethod

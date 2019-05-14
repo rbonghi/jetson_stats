@@ -80,9 +80,9 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
 
 def make_gauge_from_percent(data):
     gauge = {'name': data['name']}
-    if data["status"] == "ON":
+    if data["status"] != "OFF":
         gauge['value'] = int(data['idle'][-1])
-    if 'frequency' in data:
+    if data["status"] == "ON":
         freq = data['frequency'][-1]
         if freq >= 1000:
             gauge['label'] = "{0:2.1f}GHz".format(freq/1000.0)
@@ -172,8 +172,9 @@ def plot_name_info(stdscr, offset, start, name, value):
 def plot_other_info(stdscr, offset, data, width, start=0):
     counter = 0
     # APE frequency
-    plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
-    counter +=1
+    if 'APE' in data:
+        plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
+        counter +=1
     # FAN status
     if 'FAN' in data:
         FAN_VALUE = { 'name': 'FAN',

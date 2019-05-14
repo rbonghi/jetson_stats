@@ -45,7 +45,7 @@ import signal, os, sys
 # control command line
 import curses
 # Launch command
-import subprocess
+import subprocess as sp
 # Tegrastats objext reader
 from jtoplib import Tegrastats
 # GUI jtop interface
@@ -100,7 +100,10 @@ def main(stdscr):
         # First, clear the screen
         stdscr.erase()
         # Write head of the jtop
-        stdscr.addstr(0, 0, "jtop - Raffaello Bonghi", curses.A_BOLD)
+        head_string = "jtop - Raffaello Bonghi"
+        stdscr.addstr(0, 0, head_string, curses.A_BOLD)
+        if os.getuid() != 0:
+            stdscr.addstr(0, len(head_string) + 1, "- RUN WITH SUDO", curses.color_pair(1))
         stdscr.addstr(1, 0, os.environ["JETSON_DESCRIPTION"] + " - Jetpack " + os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]", curses.A_BOLD)
         
         # Read status tegra
@@ -122,12 +125,13 @@ def main(stdscr):
             pages.set(num)
         elif key == ord('q') or key == ord('Q'):
             break
+
+def import_os_variables(SOURCE, PATTERN="JETSON_"):
+    proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE)
+    source_env = {tup[0].strip(): tup[1].strip() for tup in map(lambda s: s.strip().split('=', 1), proc.stdout)}
+    return { k: v for k, v in source_env.items() if PATTERN in k }
         
 if __name__ == "__main__":
-    # Check if the system work in sudo
-    if os.getuid() != 0:
-        print("Run with sudo")
-        sys.exit(0)
     # Add arg parser
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility that runs on the terminal')
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
@@ -138,6 +142,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
+    # Load all Jetson variables
+    for k, v in import_os_variables('../jetson_variables').items():
+        os.environ[k] = v
     # Open tegrastats reader and run the curses wrapper
     with Tegrastats(interval=args.refresh) as tegra:
         if args.server:
