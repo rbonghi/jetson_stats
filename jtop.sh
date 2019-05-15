@@ -27,6 +27,4 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-. /etc/jetson_easy/jetson_variables
-
-python /etc/jetson_easy/jtop/jtop.py $@
+python jtop/jtop.py $@

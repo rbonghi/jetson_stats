@@ -42,6 +42,8 @@
 import re, argparse, time
 # System and signal
 import signal, os, sys
+# Logging
+import logging
 # control command line
 import curses
 # Launch command
@@ -132,6 +134,14 @@ def import_os_variables(SOURCE, PATTERN="JETSON_"):
     return { k: v for k, v in source_env.items() if PATTERN in k }
         
 if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', 
+                            format='%(name)s - %(levelname)s - %(message)s')
+    logging.debug('This is a debug message')
+    logging.info('This is an info message')
+    logging.warning('This is a warning message')
+    logging.error('This is an error message')
+    logging.critical('This is a critical message')
     # Add arg parser
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility that runs on the terminal')
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
@@ -143,7 +153,7 @@ if __name__ == "__main__":
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Load all Jetson variables
-    for k, v in import_os_variables('../jetson_variables').items():
+    for k, v in import_os_variables('jetson_variables').items():
         os.environ[k] = v
     # Open tegrastats reader and run the curses wrapper
     with Tegrastats(interval=args.refresh) as tegra:

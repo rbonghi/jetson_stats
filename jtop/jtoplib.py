@@ -29,6 +29,8 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re, os
+# Logging
+import logging
 # Launch command
 import subprocess
 #Threading
@@ -343,15 +345,21 @@ def get_nvpmodel():
     # Read nvpmodel to know the status of the board
     try:
         nvpmodel_p = subprocess.Popen(['nvpmodel', '-q'], stdout=subprocess.PIPE)
-        return nvpmodel_p.communicate()[0]
-    except:
+        query = nvpmodel_p.communicate()[0]
+        logging.debug('nvqmodel status %s', query)
+        return query
+    except Exception as e:
+        logging.error("Exception occurred", exc_info=True)
         return ""
 
 def get_fanstatus(file_fan):
     # Read status from fan
     if os.path.isfile(file_fan):
         fan_status_p = subprocess.Popen(['cat', file_fan], stdout=subprocess.PIPE)
-        return int(fan_status_p.communicate()[0])
+        query = fan_status_p.communicate()[0]
+        logging.debug('fan status status %s', query)
+        return int(query)
     else:
+        logging.error("Exception occurred", exc_info=True)
         return None    
 #EOF
