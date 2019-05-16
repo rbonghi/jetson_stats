@@ -134,22 +134,19 @@ def import_os_variables(SOURCE, PATTERN="JETSON_"):
     return { k: v for k, v in source_env.items() if PATTERN in k }
         
 if __name__ == "__main__":
-
-    logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', 
-                            format='%(name)s - %(levelname)s - %(message)s')
-    logging.debug('This is a debug message')
-    logging.info('This is an info message')
-    logging.warning('This is a warning message')
-    logging.error('This is an error message')
-    logging.critical('This is a critical message')
     # Add arg parser
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility that runs on the terminal')
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--server', help='Run jtop json server', action="store_true", default=False)
     parser.add_argument('-p', dest="port", help='Set server port', default='5555')
+    parser.add_argument('--debug', dest="debug", help='Run in debug mode', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
     # Parse arguments
     args = parser.parse_args()
+    # Set logging level
+    log_level = logging.DEBUG if args.debug else logging.WARNING
+    logging.basicConfig(level=log_level, filename='jtop.log', filemode='w', 
+                            format='%(name)s - %(levelname)s - %(message)s')
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Load all Jetson variables

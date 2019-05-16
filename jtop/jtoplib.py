@@ -37,6 +37,9 @@ import subprocess
 from threading  import Thread
 from collections import deque
 
+# Create logger for jplotlib
+logger = logging.getLogger(__name__)
+
 class Tegrastats(Thread):
     """
         Subprocess read:
@@ -349,7 +352,7 @@ def get_nvpmodel():
         logging.debug('nvqmodel status %s', query)
         return query
     except Exception as e:
-        logging.error("Exception occurred", exc_info=True)
+        logger.error("Exception occurred", exc_info=True)
         return ""
 
 def get_fanstatus(file_fan):
@@ -360,6 +363,6 @@ def get_fanstatus(file_fan):
         logging.debug('fan status status %s', query)
         return int(query)
     else:
-        logging.error("Exception occurred", exc_info=True)
+        logger.error("Fan not connected")
         return None    
 #EOF
