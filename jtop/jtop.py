@@ -105,7 +105,7 @@ def main(stdscr):
         head_string = "jtop - Raffaello Bonghi"
         stdscr.addstr(0, 0, head_string, curses.A_BOLD)
         if os.getuid() != 0:
-            stdscr.addstr(0, len(head_string) + 1, "- RUN WITH SUDO", curses.color_pair(1))
+            stdscr.addstr(0, len(head_string) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))
         stdscr.addstr(1, 0, os.environ["JETSON_DESCRIPTION"] + " - Jetpack " + os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]", curses.A_BOLD)
         
         # Read status tegra
