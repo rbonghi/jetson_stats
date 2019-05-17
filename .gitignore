@@ -1,4 +1,5 @@
-
+# log file
+*.log
+# Python files
 *.pyc
-
 .ipynb_checkpoints

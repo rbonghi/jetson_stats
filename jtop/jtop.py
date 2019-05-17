@@ -129,9 +129,13 @@ def main(stdscr):
             break
 
 def import_os_variables(SOURCE, PATTERN="JETSON_"):
-    proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE)
-    source_env = {tup[0].strip(): tup[1].strip() for tup in map(lambda s: s.strip().split('=', 1), proc.stdout)}
-    return { k: v for k, v in source_env.items() if PATTERN in k }
+    if os.path.isfile(SOURCE):
+        proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE)
+        source_env = {tup[0].strip(): tup[1].strip() for tup in map(lambda s: s.strip().split('=', 1), proc.stdout)}
+        return { k: v for k, v in source_env.items() if PATTERN in k }
+    else:
+        logging.error("File does not exist")
+        return {}
         
 if __name__ == "__main__":
     # Add arg parser
@@ -139,18 +143,18 @@ if __name__ == "__main__":
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--server', help='Run jtop json server', action="store_true", default=False)
     parser.add_argument('-p', dest="port", help='Set server port', default='5555')
-    parser.add_argument('--debug', dest="debug", help='Run in debug mode', action="store_true", default=False)
+    parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
     # Parse arguments
     args = parser.parse_args()
     # Set logging level
-    log_level = logging.DEBUG if args.debug else logging.WARNING
-    logging.basicConfig(level=log_level, filename='jtop.log', filemode='w', 
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, filename='jtop.log', filemode='w', 
                             format='%(name)s - %(levelname)s - %(message)s')
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Load all Jetson variables
-    for k, v in import_os_variables('jetson_variables').items():
+    for k, v in import_os_variables('/etc/jetson_easy/jetson_variables').items():
         os.environ[k] = v
     # Open tegrastats reader and run the curses wrapper
     with Tegrastats(interval=args.refresh) as tegra:

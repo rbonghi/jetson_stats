@@ -40,11 +40,26 @@ from collections import deque
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
+def get_nvpmodel():
+    # Read nvpmodel to know the status of the board
+    try:
+        nvpmodel_p = subprocess.Popen(['nvpmodel', '-q'], stdout=subprocess.PIPE)
+        query = nvpmodel_p.communicate()[0]
+        logger.debug('nvqmodel status %s', query)
+        lines = query.split("\n")
+        return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
+    except Exception as e:
+        logger.error("Exception occurred", exc_info=True)
+        return {}
+
 class Tegrastats(Thread):
     """
         Subprocess read:
         https://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python/4896288#4896288
     """
+    
+    LIST_FANS = ['/sys/kernel/debug/tegra_fan/target_pwm', '/sys/devices/pwm-fan/target_pwm' ]
+    
     def __init__(self, interval=500, time=10.0):
         Thread.__init__(self)
         self.jetsonstats = {}
@@ -53,7 +68,6 @@ class Tegrastats(Thread):
         self.max_record = max_record
         self.p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', str(interval)], stdout=subprocess.PIPE)
         # Sensors deque list
-        self.fan = deque(max_record * [0], maxlen=max_record)
         self.swap = deque(max_record * [0], maxlen=max_record)
         self.iram = deque(max_record * [0], maxlen=max_record)
         self.ram = deque(max_record * [0], maxlen=max_record)
@@ -62,6 +76,13 @@ class Tegrastats(Thread):
         self.gpu = Tegrastats.initProcess("GPU", max_record)
         self.temperatures = {}
         self.voltages = {}
+        # Find all fans availables
+        self.fans = {}
+        for fan in Tegrastats.LIST_FANS:
+            if os.path.isfile(fan):
+                self.fans[fan] = deque(max_record * [0], maxlen=max_record)
+        #self.list_fans = [ fan for fan in Tegrastats.LIST_FANS if os.path.isfile(fan) ]
+        #self.fans = [ deque(max_record * [0], maxlen=max_record) ] * len(self.list_fans)
 
     def run(self):
         try:
@@ -212,6 +233,18 @@ class Tegrastats(Thread):
             self.cpus[idx] = cpu_status
         return text
         
+    def getFans(self):
+        # Read status from fan
+        list_values = []
+        for file_fan in self.fans:
+            fan_status_p = subprocess.Popen(['cat', file_fan], stdout=subprocess.PIPE)
+            query = fan_status_p.communicate()[0]
+            logger.debug('{} status status {}'.format(file_fan, query))
+            fan_level = int(query)
+            self.fans[file_fan].append(float(fan_level)/255.0 * 100.0)
+            list_values += [ list(self.fans[file_fan]) ]
+        return list_values
+        
     def decode(self, text):
         jetsonstats = {}
         # Read status disk
@@ -219,13 +252,11 @@ class Tegrastats(Thread):
         # Extract nvpmodel
         nvpmodel = get_nvpmodel()
         if nvpmodel:
-            lines = nvpmodel.split("\n")
-            jetsonstats['NVPMODEL'] = {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
+            jetsonstats['NVPMODEL'] = nvpmodel
         # Read status fan
-        fan_level = get_fanstatus('/sys/kernel/debug/tegra_fan/target_pwm')
-        if fan_level is not None:
-            self.fan.append(float(fan_level)/255.0 * 100.0)
-            jetsonstats['FAN'] = list(self.fan)
+        fans_level = self.getFans()
+        if fans_level:
+            jetsonstats['FAN'] = fans_level
         # Read SWAP status
         swap_status, text = self.SWAP(text)
         jetsonstats['SWAP'] = swap_status
@@ -342,27 +373,5 @@ def get_status_disk():
             'used'              : totalUsedSpace,
             'available'         : totalAvailSpace,
             'available_no_root' : totalAvailSpaceNonRoot
-           }
-
-def get_nvpmodel():
-    # Read nvpmodel to know the status of the board
-    try:
-        nvpmodel_p = subprocess.Popen(['nvpmodel', '-q'], stdout=subprocess.PIPE)
-        query = nvpmodel_p.communicate()[0]
-        logging.debug('nvqmodel status %s', query)
-        return query
-    except Exception as e:
-        logger.error("Exception occurred", exc_info=True)
-        return ""
-
-def get_fanstatus(file_fan):
-    # Read status from fan
-    if os.path.isfile(file_fan):
-        fan_status_p = subprocess.Popen(['cat', file_fan], stdout=subprocess.PIPE)
-        query = fan_status_p.communicate()[0]
-        logging.debug('fan status status %s', query)
-        return int(query)
-    else:
-        logger.error("Fan not connected")
-        return None    
+           }   
 #EOF

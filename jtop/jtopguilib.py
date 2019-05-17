@@ -177,11 +177,12 @@ def plot_other_info(stdscr, offset, data, width, start=0):
         counter +=1
     # FAN status
     if 'FAN' in data:
-        FAN_VALUE = { 'name': 'FAN',
-                      'value': int(data['FAN'][-1]),
-                    }
-        linear_percent_gauge(stdscr, FAN_VALUE, width, offset=offset + counter, start= start)
-        counter +=1
+        for fan in data['FAN']:
+            FAN_VALUE = { 'name': 'FAN',
+                          'value': int(fan[-1]),
+                        }
+            linear_percent_gauge(stdscr, FAN_VALUE, width, offset=offset + counter, start= start)
+            counter +=1
     # Plot MTS
     if 'MTS' in data:
         stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
