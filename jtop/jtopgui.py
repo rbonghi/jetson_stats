@@ -30,26 +30,26 @@
 
 from jtopguilib import *
 
-INFO_BOARD = \
-    [ { "name": os.environ["JETSON_DESCRIPTION"] },
-      { "name": "Board", "info": os.environ["JETSON_BOARD"] },
-      { "name": "Jetpack", "info": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]" },
-      { "name": "GPU Arch", "info": os.environ["JETSON_CUDA_ARCH_BIN"] },
-      { "name": "Libraries" },
-      { "name": "CUDA", "info": os.environ["JETSON_CUDA"] },
-      { "name": "cuDNN", "info": os.environ["JETSON_CUDA"] },
-      { "name": "CUDA", "info": os.environ["JETSON_CUDNN"] },
-      { "name": "TensorRT", "info": os.environ["JETSON_TENSORRT"] },
-      { "name": "VisionWorks", "info": os.environ["JETSON_VISIONWORKS"] },
-      { "name": "OpenCV", "info": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"] },
-    ]
-
 def Variables(stdscr, jetsonstats):
     """
         Write all enviroment variables
     """
     # Screen size
     max_y, max_x = stdscr.getmaxyx()
+    
+    INFO_BOARD = \
+        [ { "name": os.environ["JETSON_DESCRIPTION"] },
+          { "name": "Board", "info": os.environ["JETSON_BOARD"] },
+          { "name": "Jetpack", "info": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]" },
+          { "name": "GPU Arch", "info": os.environ["JETSON_CUDA_ARCH_BIN"] },
+          { "name": "Libraries" },
+          { "name": "CUDA", "info": os.environ["JETSON_CUDA"] },
+          { "name": "cuDNN", "info": os.environ["JETSON_CUDA"] },
+          { "name": "CUDA", "info": os.environ["JETSON_CUDNN"] },
+          { "name": "TensorRT", "info": os.environ["JETSON_TENSORRT"] },
+          { "name": "VisionWorks", "info": os.environ["JETSON_VISIONWORKS"] },
+          { "name": "OpenCV", "info": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"] },
+        ]
     
     posx = 2
     start_pos = 3
