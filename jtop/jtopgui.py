@@ -157,7 +157,7 @@ def all_info(stdscr, jetsonstats):
     if jetsonstats['voltages']:
         plot_voltages(stdscr, line_counter, jetsonstats['voltages'], start= 2 + 2*column_width)
 
-class Menu:
+class JTOPGUI:
 
     def __init__(self, stdscr, pages, init_page=0):
         self.stdscr = stdscr

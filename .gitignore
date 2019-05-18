@@ -1,3 +1,6 @@
+# pyp installer and venv
+*.egg-info
+venv/
 # log file
 *.log
 # Python files

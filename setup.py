@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 # Copyright (C) 2018, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
 #
@@ -27,4 +28,32 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-python /etc/jetson_easy/jtop/jtop.py $@
+import setuptools
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name="jtop",
+    version="1.6.0",
+    author="Raffaello Bonghi",
+    author_email="raffaello@rnext.it",
+    description="Interactive system-monitor process viewer for nvidia Jetson Nano, AGX Xavier, TX2, TX1",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/rbonghi/jetson_stats",
+    packages=setuptools.find_packages(),
+    
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    # The following provide a command called `jtop`
+    entry_points={
+        'console_scripts': [
+            'jtop=jtop.__main__:main',
+        ],
+    },
+)
+#EOF
