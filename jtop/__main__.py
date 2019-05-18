@@ -167,7 +167,7 @@ def main():
         if args.server:
             while True:
                 # Read tegra stats
-                stat = tegra.read()
+                stat = tegra.read
                 # TODO: Convert print to server post
                 print(stat)
                 # Sleep before send new stat

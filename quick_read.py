@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2018, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
@@ -27,4 +28,18 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .jtop import Tegrastats
+import jtop
+import time
+
+if __name__ == "__main__":
+
+    print("Simple Tegrastats reader")
+
+    with jtop.Tegrastats() as tegra:
+        while True:
+            # Read tegra stats
+            stat = tegra.read
+            print(tegra.read)
+            # Sleep before send new stat
+            time.sleep(1)
+#EOF
