@@ -53,10 +53,14 @@ from .jtop import Tegrastats
 # GUI jtop interface
 from .jtopgui import JTOPGUI, all_info, GPU, Variables
 
+# Create logger for jplotlib
+logger = logging.getLogger(__name__)
+
 def signal_handler(sig, frame):
     """
         Close the system when catch SIGIN (CTRL-C)
     """
+    logger.info("Close with CTRL-C")
     tegra.close()
     sys.exit(0)
     
@@ -155,7 +159,8 @@ def main():
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Load all Jetson variables
-    for k, v in import_os_variables('/etc/jetson_easy/jetson_variables').items():
+    for k, v in import_os_variables('/opt/jetson_stats/jetson_variables').items():
+        logger.debug("New Enviroment variable {}:{}".format(k, v))
         os.environ[k] = v
     # Open tegrastats reader and run the curses wrapper
     with Tegrastats(interval=args.refresh) as tegra:

@@ -1,8 +1,10 @@
-# pyp installer and venv
-*.egg-info
-venv/
+# Compiled python modules.
+*.pyc
+# Setuptools distribution folder.
+/dist/
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
 # log file
 *.log
-# Python files
-*.pyc
-.ipynb_checkpoints
+# Test virtual environment
+venv/

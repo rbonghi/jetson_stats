@@ -28,6 +28,15 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Reference:
+# 1. https://packaging.python.org
+# 2. https://julien.danjou.info/starting-your-first-python-project/
+# 3. https://medium.com/@trstringer/the-easy-and-nice-way-to-do-cli-apps-in-python-5d9964dc950d
+# 4. https://chriswarrick.com/blog/2014/09/15/python-apps-the-right-way-entry_points-and-scripts/
+# 5. https://python-packaging.readthedocs.io
+# 6. https://github.com/pypa/sampleproject
+# 7. https://pypi.org/classifiers/
+
 import setuptools
 
 with open("README.md", "r") as fh:
@@ -45,15 +54,35 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 2.7",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
+        "Operating System :: POSIX :: Linux", 
+        "Topic :: Software Development :: Embedded Systems",
+        "Topic :: Software Development :: Debuggers", 
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: User Interfaces",
+        "Topic :: System :: Hardware",
+        "Topic :: System :: Logging",
+        "Topic :: System :: Monitoring",
+        "Topic :: System :: Operating System",
+        "Topic :: System :: Operating System Kernels",
+        "Topic :: System :: Shells",
+        "Topic :: System :: Systems Administration",
+        "Topic :: Terminals",
+        ],
+    # Add jetson_variables in /opt/jetson_stats
+    # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
+    data_files=[('/opt/jetson_stats', ['scripts/jetson_variables']),
+                ('/opt/jetson_stats', ['scripts/jetson-performance.sh']),
+               ],
+    # Install extra scripts
+    scripts=['scripts/jetson-docker', 
+             'scripts/jetson-swap',
+             'scripts/jetson-release', 
+            ],
     # The following provide a command called `jtop`
     entry_points={
-        'console_scripts': [
-            'jtop=jtop.__main__:main',
-        ],
+        'console_scripts': [ 'jtop=jtop.__main__:main' ],
     },
 )
 #EOF
