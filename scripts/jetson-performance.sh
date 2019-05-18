@@ -73,7 +73,11 @@ JETSON_PERFORMANCE_WAIT_TIME=60
 JETSON_PERFORMANCE_CHECK_FILE=/tmp/jetson_performance_run
 JETSON_CONFIG_FOLDER="/tmp"
 
-JETSON_CLOCK_SCRIPT=/usr/bin/jetson_clocks
+if [ -f /usr/bin/jetson_clocks ] ; then
+    JETSON_CLOCK_SCRIPT=/usr/bin/jetson_clocks
+else
+    JETSON_CLOCK_SCRIPT=/home/nvidia/jetson_clocks.sh
+fi
 
 nvpmodel_run() {
     if hash nvpmodel 2>/dev/null; then

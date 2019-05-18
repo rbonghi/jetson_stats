@@ -37,10 +37,20 @@
 # 6. https://github.com/pypa/sampleproject
 # 7. https://pypi.org/classifiers/
 
-import setuptools
+import setuptools, os, sys
+
+if os.getuid() != 0:
+    print("Require sudo, please use:\n\nsudo -H pip install jetson_stats")
+    sys.exit(1)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
+    
+def install_packages():
+    return [('/opt/jetson_stats', ['scripts/jetson_variables', 
+                                   'scripts/jetson-performance.sh']),
+            ('/etc/profile.d', ['scripts/jetson_env.sh']),
+           ]
 
 setuptools.setup(
     name="jtop",
@@ -72,10 +82,7 @@ setuptools.setup(
         ],
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('/opt/jetson_stats', ['scripts/jetson_variables', 
-                                       'scripts/jetson-performance.sh']),
-                ('/etc/profile.d', ['scripts/jetson_env.sh']),
-               ],
+    data_files=install_packages(),
     # Install extra scripts
     scripts=['scripts/jetson-docker', 
              'scripts/jetson-swap',

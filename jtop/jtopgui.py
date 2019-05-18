@@ -164,6 +164,9 @@ class JTOPGUI:
         self.n_page = init_page
         
     def draw(self, stat):
+        # Write head of the jtop
+        self.header()
+        # Write page selected
         if "func" in self.pages[self.n_page]:
             page = self.pages[self.n_page]["func"]
             if page is not None:
@@ -182,6 +185,13 @@ class JTOPGUI:
     def set(self, idx):
         if idx <= len(self.pages) and idx > 0:
             self.n_page = idx - 1
+            
+    def header(self):
+        head_string = "jtop - Raffaello Bonghi"
+        self.stdscr.addstr(0, 0, head_string, curses.A_BOLD)
+        if os.getuid() != 0:
+            self.stdscr.addstr(0, len(head_string) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))
+        self.stdscr.addstr(1, 0, os.environ["JETSON_DESCRIPTION"] + " - Jetpack " + os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]", curses.A_BOLD)
 
     def menu(self):
         height, width = self.stdscr.getmaxyx()
