@@ -119,13 +119,16 @@ class Tegrastats(Thread):
         # Return dictionary parsed
         return self._jetsonstats
             
+    def open(self):
+        # Start himself like file
+        self.daemon = True
+        self.start()
+            
     def close(self):
         self.p.kill()
           
     def __enter__(self):
-        # Start himself like file
-        self.daemon = True
-        self.start()
+        self.open()
         return self
             
     def __exit__(self, exc_type, exc_val, exc_tb):

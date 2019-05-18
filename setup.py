@@ -48,11 +48,11 @@ setuptools.setup(
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor process viewer for nvidia Jetson Nano, AGX Xavier, TX2, TX1",
+    license='LICENSE',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/rbonghi/jetson_stats",
     packages=setuptools.find_packages(),
-    
     classifiers=[
         "Programming Language :: Python :: 2.7",
         "License :: OSI Approved :: MIT License",
