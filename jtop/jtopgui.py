@@ -30,6 +30,39 @@
 
 from jtopguilib import *
 
+INFO_BOARD = \
+    [ { "name": os.environ["JETSON_DESCRIPTION"] },
+      { "name": "Board", "info": os.environ["JETSON_BOARD"] },
+      { "name": "Jetpack", "info": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]" },
+      { "name": "GPU Arch", "info": os.environ["JETSON_CUDA_ARCH_BIN"] },
+      { "name": "Libraries" },
+      { "name": "CUDA", "info": os.environ["JETSON_CUDA"] },
+      { "name": "cuDNN", "info": os.environ["JETSON_CUDA"] },
+      { "name": "CUDA", "info": os.environ["JETSON_CUDNN"] },
+      { "name": "TensorRT", "info": os.environ["JETSON_TENSORRT"] },
+      { "name": "VisionWorks", "info": os.environ["JETSON_VISIONWORKS"] },
+      { "name": "OpenCV", "info": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"] },
+    ]
+
+def Variables(stdscr, jetsonstats):
+    """
+        Write all enviroment variables
+    """
+    # Screen size
+    max_y, max_x = stdscr.getmaxyx()
+    
+    posx = 2
+    start_pos = 3
+    
+    for idx, info in enumerate(INFO_BOARD):
+        # Board info
+        if "info" in info:
+            stdscr.addstr(start_pos+idx, posx+2, "* " + info["name"] + ":")
+            stdscr.addstr(start_pos+idx, posx+18, info["info"], curses.A_BOLD)
+        else:
+            stdscr.addstr(start_pos+idx, posx, "- " + info["name"], curses.A_BOLD)
+    
+
 def GPU(stdscr, jetsonstats):
     """
         Draw a plot with GPU payload
@@ -40,9 +73,6 @@ def GPU(stdscr, jetsonstats):
     size_x = [ 2, max_x - 10 ]
     size_y = [ 2, max_y * 2//3 - 2 ]
     
-    gpu = {
-        "idle": [ 0.0, 10.0, 50.0, 100.0, 80.0, 50.0, 40.0, 70.0, 90.0, 5.0 ],
-        }
     gpu = jetsonstats["GR3D"]
     # Draw the GPU chart
     draw_chart(stdscr, size_x, size_y, gpu)

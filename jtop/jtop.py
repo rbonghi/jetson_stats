@@ -92,8 +92,9 @@ def main(stdscr):
     # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
     stdscr.nodelay(1)
     # Initialization Menu
-    pages = jtopgui.Menu(stdscr, [ {"name":"All", "func": jtopgui.all_info}, 
-                                   {"name":"GPU", "func": jtopgui.GPU}, 
+    pages = jtopgui.Menu(stdscr, [ {"name":"ALL",  "func": jtopgui.all_info}, 
+                                   {"name":"GPU",  "func": jtopgui.GPU}, 
+                                   {"name":"INFO", "func": jtopgui.Variables},
                                  ], init_page=0)
     # Start with selected page
     pages.set(args.page)
