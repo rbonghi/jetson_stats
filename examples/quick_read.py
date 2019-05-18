@@ -38,7 +38,6 @@ if __name__ == "__main__":
     with jtop.Tegrastats() as tegra:
         while True:
             # Read tegra stats
-            stat = tegra.read
             print(tegra.read)
             # Sleep before send new stat
             time.sleep(1)

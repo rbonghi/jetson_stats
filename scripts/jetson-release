@@ -78,8 +78,6 @@ if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
 else
 	echo " - Jetson Performance: ${red}$JE_PERFOMANCE_STATUS${reset}"
 fi
-#Print Jetson easy version
-echo " - Jetson Easy v$JETSON_EASY_VERSION"
 
 exit 0
 

@@ -61,16 +61,19 @@ fi
  . /lib/lsb/init-functions
  . /lib/init/vars.sh
 
+JETSON_STATS_FOLDER=/opt/jetson_stats
 # Load environment variables:
 # - JETSON_BOARD
 # - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
 # - JETSON_DESCRIPTION
 # - JETSON_CUDA
-. /etc/jetson_easy/jetson_variables
+. $JETSON_STATS_FOLDER/jetson_variables
 
 JETSON_PERFORMANCE_WAIT_TIME=60
 JETSON_PERFORMANCE_CHECK_FILE=/tmp/jetson_performance_run
 JETSON_CONFIG_FOLDER="/tmp"
+
+JETSON_CLOCK_SCRIPT=/usr/bin/jetson_clocks
 
 nvpmodel_run() {
     if hash nvpmodel 2>/dev/null; then
@@ -80,88 +83,76 @@ nvpmodel_run() {
 
 status()
 {
-    if [ $JETSON_BOARD != "TK1" ] ; then
-        if [ -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
-            echo "[Service running] jetson_clock --show:"
-        else
-            echo "[Service stopped] jetson_clock --show:"
-        fi
-        # Show NVP model loaded at this time
-        nvpmodel_run -q
-        # Show status of the NVIDIA Jetson
-        sudo /usr/bin/jetson_clocks --show
+    if [ -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
+        echo "[Service running] jetson_clock --show:"
     else
-        echo "Implementation for NVIDIA Jetson TK1 coming soon"
+        echo "[Service stopped] jetson_clock --show:"
     fi
+    # Show NVP model loaded at this time
+    nvpmodel_run -q
+    # Show status of the NVIDIA Jetson
+    sudo $JETSON_CLOCK_SCRIPT --show
 }
 
 start()
 {
-    if [ $JETSON_BOARD != "TK1" ] ; then
-        # Check which version is L4T is loaded
-        # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
-        # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
-        # Temporary disabled to find a best way to start this service.
-        # The service ondemand disabled doesn't improve the performance of the start-up
-        # ----
-        # Time from boot 
-        local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
-        # Wait a minute from boot before start
-        if [ $(echo $BOOT_TIME'<'$((JETSON_PERFORMANCE_WAIT_TIME+1)) | bc -l) -eq 1 ] ; then
-            local TIME_TO_WAIT=$(echo $((JETSON_PERFORMANCE_WAIT_TIME+1))'-'$BOOT_TIME | bc)
-            echo "Wait from boot other $TIME_TO_WAIT sec..."
-            # Sleep for other time
-            sleep $TIME_TO_WAIT
-            echo "...done!"
+    # Check which version is L4T is loaded
+    # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
+    # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
+    # Temporary disabled to find a best way to start this service.
+    # The service ondemand disabled doesn't improve the performance of the start-up
+    # ----
+    # Time from boot 
+    local BOOT_TIME=$(cat /proc/uptime | cut -f1 -d " ")
+    # Wait a minute from boot before start
+    if [ $(echo $BOOT_TIME'<'$((JETSON_PERFORMANCE_WAIT_TIME+1)) | bc -l) -eq 1 ] ; then
+        local TIME_TO_WAIT=$(echo $((JETSON_PERFORMANCE_WAIT_TIME+1))'-'$BOOT_TIME | bc)
+        echo "Wait from boot other $TIME_TO_WAIT sec..."
+        # Sleep for other time
+        sleep $TIME_TO_WAIT
+        echo "...done!"
+    fi
+    
+    if [ ! -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
+        # check if exist l4t_dfs.conf otherwhise delete
+        if [ ! -f $JETSON_STATS_FOLDER/l4t_dfs.conf ] ; then
+            echo "Store the jetson_clock.sh configuration"
+            # Store jetson_clock configuration
+            sudo $JETSON_CLOCK_SCRIPT --store $JETSON_STATS_FOLDER/l4t_dfs.conf
         fi
-        
-        if [ ! -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
-            # check if exist l4t_dfs.conf otherwhise delete
-            if [ ! -f $JETSON_EASY_FOLDER/l4t_dfs.conf ] ; then
-                echo "Store the jetson_clock.sh configuration"
-                # Store jetson_clock configuration
-                sudo /usr/bin/jetson_clocks --store $JETSON_EASY_FOLDER/l4t_dfs.conf
-            fi
-            # if Jetson for max performance
-            echo "Set configuration in max performance"
-            nvpmodel_run -m 0
-            # Launch jetson_clock
-            sudo /usr/bin/jetson_clocks
-            # Write a file to check the system has running
-            sudo touch $JETSON_PERFORMANCE_CHECK_FILE
-            echo "Service run at max performance"
-        else
-            echo "Service has running"
-        fi
+        # if Jetson for max performance
+        echo "Set configuration in max performance"
+        nvpmodel_run -m 0
+        # Launch jetson_clock
+        sudo $JETSON_CLOCK_SCRIPT
+        # Write a file to check the system has running
+        sudo touch $JETSON_PERFORMANCE_CHECK_FILE
+        echo "Service run at max performance"
     else
-        echo "Implementation not available for NVIDIA Jetson TK1"
+        echo "Service has running"
     fi
 }
 
 stop()
 {
-    if [ $JETSON_BOARD != "TK1" ] ; then
-        if [ -f $JETSON_EASY_FOLDER/l4t_dfs.conf ] ; then
-            # restore jetson_clock configuration
-            sudo /usr/bin/jetson_clocks --restore $JETSON_EASY_FOLDER/l4t_dfs.conf
-        fi
-        
-        # Write a file to check the system has running
-        if [ -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
-            sudo rm $JETSON_PERFORMANCE_CHECK_FILE
-        fi
-        # Restore old Jetson configuration
-        if [ $JETSON_BOARD = "Xavier" ] ; then
-            echo "Change configuration in default mode"
-            # https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
-            nvpmodel_run -m 2
-        else
-            echo "Change configuration in default mode"
-            # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
-            nvpmodel_run -m 1
-        fi
+    if [ -f $JETSON_STATS_FOLDER/l4t_dfs.conf ] ; then
+        # restore jetson_clock configuration
+        sudo $JETSON_CLOCK_SCRIPT --restore $JETSON_STATS_FOLDER/l4t_dfs.conf
+    fi
+    
+    # Write a file to check the system has running
+    if [ -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
+        sudo rm $JETSON_PERFORMANCE_CHECK_FILE
+    fi
+    # Restore old Jetson configuration
+    if [ $JETSON_BOARD = "Xavier" ] ; then
+        echo "Change configuration in default mode"
+        # https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
+        nvpmodel_run -m 2
     else
-        echo "Implementation not available for NVIDIA Jetson TK1"
+        echo "Change configuration in default mode"
+        # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
+        nvpmodel_run -m 1
     fi
 }
 
@@ -180,8 +171,7 @@ case "$1" in
         status
         ;;
     *)
-        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ]
-        then
+        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
             echo "Usage: $0 [options] [type]"
         else
             echo "Usage: $0 [options]"

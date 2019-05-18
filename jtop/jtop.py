@@ -62,6 +62,7 @@ class Tegrastats(Thread):
     """
     # List of available fan
     LIST_FANS = ['/sys/kernel/debug/tegra_fan/target_pwm', '/sys/devices/pwm-fan/target_pwm' ]
+    TEGRASTATS = [ '/usr/bin/tegrastats', '/home/nvidia/tegrastats' ]
     
     def __init__(self, interval=500, time=10.0):
         Thread.__init__(self)
@@ -85,7 +86,16 @@ class Tegrastats(Thread):
         # Initialize jetson stats
         self._jetsonstats = {}
         # Start process tegrastats
-        self.p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', str(interval)], stdout=subprocess.PIPE)
+        tegrastats_file = ""
+        for f_tegra in Tegrastats.TEGRASTATS:
+            if os.path.isfile(f_tegra):
+                logger.info("Load tegrastats {}".format(f_tegra))
+                tegrastats_file = f_tegra
+                break
+        if tegrastats_file:
+            self.p = subprocess.Popen([tegrastats_file, '--interval', str(interval)], stdout=subprocess.PIPE)
+        else:
+            logger.error("Tegrastats not in list!")
 
     def run(self):
         try:

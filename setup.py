@@ -72,8 +72,9 @@ setuptools.setup(
         ],
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('/opt/jetson_stats', ['scripts/jetson_variables']),
-                ('/opt/jetson_stats', ['scripts/jetson-performance.sh']),
+    data_files=[('/opt/jetson_stats', ['scripts/jetson_variables', 
+                                       'scripts/jetson-performance.sh']),
+                ('/etc/profile.d', ['scripts/jetson_env.sh']),
                ],
     # Install extra scripts
     scripts=['scripts/jetson-docker', 

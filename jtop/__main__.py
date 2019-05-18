@@ -159,9 +159,11 @@ def main():
     # Catch SIGINT (CTRL-C)
     signal.signal(signal.SIGINT, signal_handler)
     # Load all Jetson variables
-    for k, v in import_os_variables('/opt/jetson_stats/jetson_variables').items():
-        logger.debug("New Enviroment variable {}:{}".format(k, v))
-        os.environ[k] = v
+    if "JETSON_BOARD" not in os.environ:
+        logger.info("Load jetson variables from script")
+        for k, v in import_os_variables('/opt/jetson_stats/jetson_variables').items():
+            logger.debug("New Enviroment variable {}:{}".format(k, v))
+            os.environ[k] = v
     # Open tegrastats reader and run the curses wrapper
     with Tegrastats(interval=args.refresh) as tegra:
         if args.server:

@@ -61,7 +61,6 @@ def Variables(stdscr, jetsonstats):
             stdscr.addstr(start_pos+idx, posx+18, info["info"], curses.A_BOLD)
         else:
             stdscr.addstr(start_pos+idx, posx, "- " + info["name"], curses.A_BOLD)
-    
 
 def GPU(stdscr, jetsonstats):
     """
