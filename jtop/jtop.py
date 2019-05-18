@@ -110,7 +110,7 @@ def main(stdscr):
         stdscr.addstr(1, 0, os.environ["JETSON_DESCRIPTION"] + " - Jetpack " + os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]", curses.A_BOLD)
         
         # Read status tegra
-        stat = tegra.read()
+        stat = tegra.read
         # Draw pages
         pages.draw(stat)
         # Draw the screen

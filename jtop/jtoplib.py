@@ -56,17 +56,18 @@ class Tegrastats(Thread):
     """
         Subprocess read:
         https://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python/4896288#4896288
+        
+        Property
+        https://www.programiz.com/python-programming/property
     """
-    
+    # List of available fan
     LIST_FANS = ['/sys/kernel/debug/tegra_fan/target_pwm', '/sys/devices/pwm-fan/target_pwm' ]
     
     def __init__(self, interval=500, time=10.0):
         Thread.__init__(self)
-        self.jetsonstats = {}
-        
+        # Initialize number max records to record
         max_record = int( float(time) * ( float(1 / float(interval)) * 1000.0) )
         self.max_record = max_record
-        self.p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', str(interval)], stdout=subprocess.PIPE)
         # Sensors deque list
         self.swap = deque(max_record * [0], maxlen=max_record)
         self.iram = deque(max_record * [0], maxlen=max_record)
@@ -81,8 +82,10 @@ class Tegrastats(Thread):
         for fan in Tegrastats.LIST_FANS:
             if os.path.isfile(fan):
                 self.fans[fan] = deque(max_record * [0], maxlen=max_record)
-        #self.list_fans = [ fan for fan in Tegrastats.LIST_FANS if os.path.isfile(fan) ]
-        #self.fans = [ deque(max_record * [0], maxlen=max_record) ] * len(self.list_fans)
+        # Initialize jetson stats
+        self._jetsonstats = {}
+        # Start process tegrastats
+        self.p = subprocess.Popen(['/usr/bin/tegrastats', '--interval', str(interval)], stdout=subprocess.PIPE)
 
     def run(self):
         try:
@@ -92,18 +95,19 @@ class Tegrastats(Thread):
                 # Decode line in UTF-8
                 tegrastats_data = line.decode("utf-8")
                 # Decode and store
-                self.jetsonstats = self.decode(tegrastats_data)
+                self._jetsonstats = self.decode(tegrastats_data)
         except SystemExit as e:
-            print(e)
+            logger.error("System exit", exc_info=True)
         except AttributeError as e:
-            print(e)
-            
+            logger.error("Attribute error", exc_info=True)
+    
+    @property
     def read(self):
         # Wait the deque not empty
-        while not self.jetsonstats:
+        while not self._jetsonstats:
             pass
         # Return dictionary parsed
-        return self.jetsonstats
+        return self._jetsonstats
             
     def close(self):
         self.p.kill()

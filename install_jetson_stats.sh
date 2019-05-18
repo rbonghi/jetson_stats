@@ -127,7 +127,7 @@ installer()
     if [[ ! -L "$BIN_FOLDER/jetson_release" ]]; then 
         echo "   * Link jetson_release"
         #sudo cp $(pwd)/jetson/jetson_release.sh "$BIN_FOLDER/jetson_release"
-        sudo ln -s $JETSON_FOLDER/jetson_release.sh $BIN_FOLDER/jetson_release
+        sudo ln -s $JETSON_FOLDER/scripts/jetson_release.sh $BIN_FOLDER/jetson_release
     fi
     
     # Link jetson_docker
@@ -135,13 +135,13 @@ installer()
     if [[ ! -L "$BIN_FOLDER/jetson-docker" ]]; then 
         echo "   * Link jetson-docker"
         #sudo cp $(pwd)/jetson/jetson-docker.sh "$BIN_FOLDER/jetson-docker"
-        sudo ln -s $JETSON_FOLDER/jetson-docker $BIN_FOLDER/jetson-docker
+        sudo ln -s $JETSON_FOLDER/scripts/jetson-docker $BIN_FOLDER/jetson-docker
     fi
     # Link jetson_swap
     if [[ ! -L "$BIN_FOLDER/jetson_swap" ]]; then 
         echo "   * Link jetson_swap"
         #sudo cp $(pwd)/jetson/jetson_swap.sh "$BIN_FOLDER/jetson_swap"
-        sudo ln -s $JETSON_FOLDER/jetson_swap.sh $BIN_FOLDER/jetson_swap
+        sudo ln -s $JETSON_FOLDER/scripts/jetson_swap.sh $BIN_FOLDER/jetson_swap
     fi
     
     # Uninstall the service
@@ -155,20 +155,20 @@ installer()
     # Copy the service in /etc/systemd/system
     if [ ! -f "/etc/systemd/system/jetson_performance.service" ] || $FORCE_INSTALL ; then
         echo "   * Copy jetson_performance service in /etc/systemd/system/"
-        sudo cp $JETSON_FOLDER/jetson_performance.service "/etc/systemd/system/jetson_performance.service"
+        sudo cp $JETSON_FOLDER/scripts/jetson_performance.service "/etc/systemd/system/jetson_performance.service"
     fi
     
     # Add in bash jetson_easy reference
     if [ ! -f "/etc/profile.d/jetson_env.sh" ] || $FORCE_INSTALL ; then
         echo "   * Copy jetson_env.sh in /etc/profile.d/"
-        sudo cp $JETSON_FOLDER/jetson_env.sh "/etc/profile.d/jetson_env.sh"
+        sudo cp $JETSON_FOLDER/scripts/jetson_env.sh "/etc/profile.d/jetson_env.sh"
     fi
 
     # Link jetson_release
-    if [[ ! -L "$BIN_FOLDER/jtop" ]]; then
-        echo "   * Link jtop"
-        sudo ln -s $JETSON_FOLDER/jtop.sh $BIN_FOLDER/jtop
-    fi
+    #if [[ ! -L "$BIN_FOLDER/jtop" ]]; then
+    #    echo "   * Link jtop"
+    #    sudo ln -s $JETSON_FOLDER/jtop.sh $BIN_FOLDER/jtop
+    #fi
     
     # Update service list
     sudo systemctl daemon-reload
@@ -200,7 +200,7 @@ main()
     local AUTO_START=false
     local FORCE_INSTALL=false
     local START_UNINSTALL=false
-    local JETSON_FOLDER="/etc/jetson_easy"
+    local JETSON_FOLDER="/opt/jetson_stats"
     
 	# Decode all information from startup
     while [ -n "$1" ]; do
