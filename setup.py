@@ -64,16 +64,16 @@ def install_packages():
     # Run the uninstaller before to copy all scripts
     proc = sp.call(['./install.sh', '-s', '--uninstall'])
     # Return the list of all script to install
-    return [('/opt/jetson_stats', [ path.join(here, 'scripts/jetson_variables'), 
-                                    path.join(here, 'scripts/jetson_performance.sh') ]),
-            ('/etc/profile.d', [ path.join(here, 'scripts/jetson_env.sh') ]),
-            ('/etc/systemd/system', [ path.join(here, 'scripts/jetson_performance.service') ]),
+    return [('/opt/jetson_stats', [ 'scripts/jetson_variables', 
+                                    'scripts/jetson_performance.sh' ]),
+            ('/etc/profile.d', [ 'scripts/jetson_env.sh' ]),
+            ('/etc/systemd/system', [ 'scripts/jetson_performance.service' ]),
            ]
 
 # Configuration setup module
 setup(
     name="jetson-stats",
-    version="1.6.3-beta1",
+    version="1.6.3-beta2",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",
@@ -88,7 +88,7 @@ setup(
         "Bug Reports": (project_homepage + "/issues"),
         "Source": (project_homepage + "/tree/master")
     },
-    packages=find_packages(exclude=['examples', 'scripts', 'tests' ]), # Required
+    packages=find_packages(exclude=[ 'examples', 'scripts', 'tests' ]), # Required
     keywords=(
         "jetson_stats jtop python system-monitor docker \
          nvidia Jetson Nano Xavier TX2 TX1 process viewer"
