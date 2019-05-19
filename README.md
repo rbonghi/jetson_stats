@@ -4,19 +4,20 @@
 The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1, TK1] embedded board without wait a lot of time.
 
 ## Install
-To use all tools inside the jetson_stats you can run `install_jetson_stats.sh`, and follow the prompt. Other option are available following the help
-```console
-ubuntu@server:~/jetson_stats$ ./install_jetson_stats.sh -h
-Jetson_stats, Installer for nvidia top and different information modules.
-Usage:
-./install_jetson_stats.sh [options]
-options,
-   -h|--help    | This help
-   -s|--silent  | Run jetson_stats in silent mode
-   -i|--inst    | Change default install folder
-   -f|--force   | Force install all tools
-   -auto        | Run at start-up jetson performance
-   -uninstall   | Run the uninstaller
+
+```elm
+sudo -H pip install jetson-stats
+```
+**🚀 That's it! 🚀** 
+
+There are not require other information to use your jetson stats
+
+## Update the jetson-stats version
+
+Now update your system monitor is easier then before.
+
+```elm
+sudo -H pip install -U jetson-stats
 ```
 
 ## [**jtop**][jtop] 
