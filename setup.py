@@ -64,15 +64,16 @@ def install_packages():
     # Run the uninstaller before to copy all scripts
     proc = sp.call(['./install.sh', '-s', '--uninstall'])
     # Return the list of all script to install
-    return [('/opt/jetson_stats', ['scripts/jetson_variables', 
-                                   'scripts/jetson_performance.sh']),
-            ('/etc/profile.d', ['scripts/jetson_env.sh']),
-            ('/etc/systemd/system', ['scripts/jetson_performance.service']),
+    return [('/opt/jetson_stats', [ path.join(here, 'scripts/jetson_variables'), 
+                                    path.join(here, 'scripts/jetson_performance.sh') ]),
+            ('/etc/profile.d', [ path.join(here, 'scripts/jetson_env.sh') ]),
+            ('/etc/systemd/system', [ path.join(here, 'scripts/jetson_performance.service') ]),
            ]
 
+# Configuration setup module
 setup(
     name="jetson-stats",
-    version="1.6.2-beta1",
+    version="1.6.3-beta1",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",
@@ -130,11 +131,7 @@ setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('/opt/jetson_stats', [ path.join(here, 'scripts/jetson_variables'), 
-                                        path.join(here, 'scripts/jetson_performance.sh') ]),
-                ('/etc/profile.d', [ path.join(here, 'scripts/jetson_env.sh') ]),
-                ('/etc/systemd/system', [ path.join(here, 'scripts/jetson_performance.service') ]),
-               ],
+    data_files=install_packages(),
     # Install extra scripts
     scripts=['scripts/jetson-docker', 
              'scripts/jetson-swap',
