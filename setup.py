@@ -36,6 +36,7 @@
 # 5. https://python-packaging.readthedocs.io
 # 6. https://github.com/pypa/sampleproject
 # 7. https://pypi.org/classifiers/
+# 8. https://stackoverflow.com/questions/20288711/post-install-script-with-python-setuptools
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
