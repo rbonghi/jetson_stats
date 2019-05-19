@@ -10,7 +10,9 @@ deploy:
   user: rbonghi
   password:
     secure: qEbC7TleqRAQFkMVa7n8AxQGO1kFB1efaDpUpd43kU4Gw8ppVXV5Id9Jj//RN1GdxN+NSJlu82h2PpLvVZibO58uEaNlZYpZqwp13yyjiET3vItBM584IHIiI2L92Ic6UI2OpPzifumvMbGD0d+MyArvioKE/SijprY4qlJ0Tjw5FOxqfPpv6ALho/HMivi0xkeB/7s7Urdzd/cP4pemr+wEAzrNBGwjFej7Q6KnvpE9/VIrL1a7Boiirbcmkb67+ex+cf5O+1SJg7tWreabisIddyMmmaGV3YVGAy6ZyjIGsgBIhjxNVLawYlm+13gbq0cUzMYeiAA3njBhtCjwwDU9zpuj/XLy3TWy+nbtUFXATldNvAMrd6jC5OnEynQKngU0HnsE1Oxru/JpguAf3lxi9Bq95xVQgOyikfOvRc8NCwYQiFMuP6F/MwmzHzYEFH+o+oBIpzUFvgB9coI1MR5NARijTyrHZJ2GrjvnVVm3dramtQvdjbvZC7TieM1m0QadWkFOuLxjr29FUND2NzjR3nw6FSjyRXQ5UsN1GVQgQRzxlGfvAt93IZ4Ai6aZrNf8dtI79ySsbFo9kISmGUOSD+9svy+vKI4cWGZvybGpRm/2Rq3mKhJc+WAThgI3GcCBNji/+sxu0oT1iZOMRRZliOjQzhBpcXyJaKzSQHo=
-
+  on:
+    all_branches: true
+    
 notifications:
   email:
     recipients:
