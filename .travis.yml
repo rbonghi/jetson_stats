@@ -3,6 +3,8 @@ sudo: true
 language: python
 cache: pip
 
+install: sudo -H pip install .
+
 deploy:
   provider: pypi
   user: rbonghi
