@@ -39,6 +39,7 @@
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
+from setuptools.command.install import install
 from os import path
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
@@ -47,6 +48,7 @@ from os import path
 from io import open
 # Launch command
 import subprocess as sp
+import shlex
 import os, sys
 
 if os.getuid() != 0:
@@ -59,21 +61,21 @@ project_homepage = "https://github.com/rbonghi/jetson_stats"
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
-    
-def install_packages():
-    # Run the uninstaller before to copy all scripts
-    proc = sp.call(['./install.sh', '-s', '--uninstall'])
-    # Return the list of all script to install
-    return [('/opt/jetson_stats', [ 'scripts/jetson_variables', 
-                                    'scripts/jetson_performance.sh' ]),
-            ('/etc/profile.d', [ 'scripts/jetson_env.sh' ]),
-            ('/etc/systemd/system', [ 'scripts/jetson_performance.service' ]),
-           ]
+
+class InstallCommand(install):
+    """Installation mode."""
+    def run(self):
+        # Run the uninstaller before to copy all scripts
+        sp.call(shlex.split('./install.sh -s --uninstall'))
+        # Run the default installation script
+        install.run(self)
+        # Run the restart all services before to close the installer
+        sp.call(shlex.split('./install.sh -s'))
 
 # Configuration setup module
 setup(
     name="jetson-stats",
-    version="1.6.4",
+    version="1.6.5",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",
@@ -131,12 +133,19 @@ setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=install_packages(),
+    data_files=[('/opt/jetson_stats', [ 'scripts/jetson_variables', 
+                                        'scripts/jetson_performance.sh' ]),
+                ('/etc/profile.d', [ 'scripts/jetson_env.sh' ]),
+                ('/etc/systemd/system', [ 'scripts/jetson_performance.service' ]),
+               ],
     # Install extra scripts
     scripts=['scripts/jetson-docker', 
              'scripts/jetson-swap',
              'scripts/jetson-release', 
             ],
+    cmdclass={
+        'install': InstallCommand,
+    },
     # The following provide a command called `jtop`
     entry_points={
         'console_scripts': [ 'jtop=jtop.__main__:main' ],
