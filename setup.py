@@ -38,6 +38,8 @@
 # 7. https://pypi.org/classifiers/
 
 import setuptools, os, sys
+# Launch command
+import subprocess as sp
 
 if os.getuid() != 0:
     print("Require sudo, please use:\n\nsudo -H pip install jetson_stats")
@@ -49,9 +51,13 @@ with open("README.md", "r") as fh:
 project_homepage = "https://github.com/rbonghi/jetson_stats"
     
 def install_packages():
+    # Run the uninstaller before to copy all scripts
+    proc = sp.call(['./install.sh', '-s', '--uninstall'])
+    # Return the list of all script to install
     return [('/opt/jetson_stats', ['scripts/jetson_variables', 
-                                   'scripts/jetson-performance.sh']),
+                                   'scripts/jetson_performance.sh']),
             ('/etc/profile.d', ['scripts/jetson_env.sh']),
+            ('/etc/systemd/system', ['scripts/jetson_performance.service']),
            ]
 
 setuptools.setup(

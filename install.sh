@@ -31,7 +31,6 @@ BIN_FOLDER="/usr/local/bin"
 
 uninstaller_bin()
 {
-    echo " - Remove binaries"
     # Remove the service from /etc/init.d
     if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
         # Uninstall the service
@@ -50,15 +49,19 @@ uninstaller_bin()
     # Update service list
     sudo systemctl daemon-reload
 
-    # Remove jetson_release link
-    if [ -f "$BIN_FOLDER/jtop" ] ; then
-        echo "   * Remove jtop link"
-        sudo rm "$BIN_FOLDER/jtop"
-    fi
     # Remove from bashrc jetsonstat variables
     if [ -f "/etc/profile.d/jetson_env.sh" ] ; then
         echo "   * Remove the jetson_env.sh from /etc/profile.d/"
         sudo rm "/etc/profile.d/jetson_env.sh"
+    fi
+}
+
+uninstaller_old_bin()
+{
+    # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jtop" ] ; then
+        echo "   * Remove jtop link"
+        sudo rm "$BIN_FOLDER/jtop"
     fi
     
     # Remove jetson_release link
@@ -91,13 +94,9 @@ uninstaller()
         sudo rm $JETSON_FOLDER/l4t_dfs.conf
     fi
 
-    # Remove jetson_easy folder
-    if [ -d "$JETSON_FOLDER" ] ; then
-        # remove folder
-        echo "   * Remove jetson_easy folder"
-        sudo rm -r $JETSON_FOLDER
-    fi
-    
+    # remove folder
+    echo "   * Remove jetson_easy folder"
+    sudo rm -r $JETSON_FOLDER
 }
 
 installer()
@@ -132,8 +131,8 @@ usage()
     echo "   -s|--silent  | Run jetson_stats in silent mode"
     echo "   -i|--inst    | Change default install folder"
     echo "   -f|--force   | Force install all tools"
+    echo "   --uninstall  | Run the uninstaller"
     echo "   -auto        | Run at start-up jetson performance"
-    echo "   -uninstall   | Run the uninstaller"
 }
 
 main()
@@ -160,7 +159,7 @@ main()
             -auto)
                 AUTO_START=true
                 ;;
-            -uninstall)
+            --uninstall)
                 START_UNINSTALL=true
                 ;;
             -h|--help)
@@ -201,11 +200,14 @@ main()
     if $START_UNINSTALL ; then
         # Run uninstaller binaries
         uninstaller_bin
-        # Remove configuration standard
-        uninstaller $JETSON_FOLDER
         # remove old configurations
         if [ -d /etc/jetson_easy ] ; then
+            uninstaller_old_bin
             uninstaller /etc/jetson_easy
+        fi
+        # Remove configuration standard
+        if [ -d "$JETSON_FOLDER" ] ; then
+            uninstaller $JETSON_FOLDER
         fi
     else
         # Run installer
