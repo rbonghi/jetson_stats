@@ -61,7 +61,7 @@ def install_packages():
            ]
 
 setuptools.setup(
-    name="jtop",
+    name="jetson_stats",
     version="1.6.0",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",

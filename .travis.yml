@@ -3,7 +3,11 @@ sudo: true
 language: python
 cache: pip
 
-script: sudo -H python setup.py sdist
+# Remove this line if you want use the default command:
+# pip install -r requirements.txt
+install: true
+
+script: sudo -H python setup.py sdist bdist_wheel
 
 deploy:
   provider: pypi
