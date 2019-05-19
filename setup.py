@@ -37,7 +37,14 @@
 # 6. https://github.com/pypa/sampleproject
 # 7. https://pypi.org/classifiers/
 
-import setuptools, os, sys
+# Always prefer setuptools over distutils
+from setuptools import setup, find_packages
+from os import path
+# io.open is needed for projects that support Python 2.7
+# It ensures open() defaults to text mode with universal newlines,
+# and accepts an argument to specify the text encoding
+# Python 3 only projects can skip this import
+from io import open
 # Launch command
 import subprocess as sp
 
@@ -45,10 +52,12 @@ if os.getuid() != 0:
     print("Require sudo, please use:\n\nsudo -H pip install jetson-stats")
     sys.exit(1)
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-    
+here = path.abspath(path.dirname(__file__))
 project_homepage = "https://github.com/rbonghi/jetson_stats"
+
+# Get the long description from the README file
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
     
 def install_packages():
     # Run the uninstaller before to copy all scripts
@@ -60,7 +69,7 @@ def install_packages():
             ('/etc/systemd/system', ['scripts/jetson_performance.service']),
            ]
 
-setuptools.setup(
+setup(
     name="jetson-stats",
     version="1.6.2",
     author="Raffaello Bonghi",
@@ -77,7 +86,7 @@ setuptools.setup(
         "Bug Reports": (project_homepage + "/issues"),
         "Source": (project_homepage + "/tree/master")
     },
-    packages=setuptools.find_packages(exclude=['examples', 'scripts', 'tests' ]), # Required
+    packages=find_packages(exclude=['examples', 'scripts', 'tests' ]), # Required
     keywords=(
         "jetson_stats jtop python system-monitor docker \
          nvidia Jetson Nano Xavier TX2 TX1 process viewer"
@@ -120,10 +129,10 @@ setuptools.setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('/opt/jetson_stats', ['scripts/jetson_variables', 
-                                       'scripts/jetson_performance.sh']),
-                ('/etc/profile.d', ['scripts/jetson_env.sh']),
-                ('/etc/systemd/system', ['scripts/jetson_performance.service']),
+    data_files=[('/opt/jetson_stats', [ path.join(here, 'scripts/jetson_variables'), 
+                                        path.join(here, 'scripts/jetson_performance.sh') ]),
+                ('/etc/profile.d', [ path.join(here, 'scripts/jetson_env.sh') ]),
+                ('/etc/systemd/system', [ path.join(here, 'scripts/jetson_performance.service') ]),
                ],
     # Install extra scripts
     scripts=['scripts/jetson-docker', 
