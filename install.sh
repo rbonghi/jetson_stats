@@ -29,33 +29,6 @@
 
 BIN_FOLDER="/usr/local/bin"
 
-uninstaller_bin()
-{
-    # Remove the service from /etc/init.d
-    if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
-        # Uninstall the service
-        if [ $(systemctl is-active jetson_performance.service) = "active" ] ; then
-            tput setaf 1
-            echo "   * Stop and jetson_performance service"
-            tput sgr0
-            # Stop the service
-            sudo systemctl stop jetson_performance.service
-        fi
-        # Disable the service
-        sudo systemctl disable jetson_performance.service
-        echo "   * Remove the service from /etc/systemd/system"
-        sudo rm "/etc/systemd/system/jetson_performance.service"
-    fi
-    # Update service list
-    sudo systemctl daemon-reload
-
-    # Remove from bashrc jetsonstat variables
-    if [ -f "/etc/profile.d/jetson_env.sh" ] ; then
-        echo "   * Remove the jetson_env.sh from /etc/profile.d/"
-        sudo rm "/etc/profile.d/jetson_env.sh"
-    fi
-}
-
 uninstaller_old_bin()
 {
     # Remove jetson_release link
@@ -83,6 +56,43 @@ uninstaller_old_bin()
     fi
 }
 
+disable_service()
+{
+    # Remove the service from /etc/init.d
+    if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
+        # Uninstall the service
+        if [ $(systemctl is-active jetson_performance.service) = "active" ] ; then
+            tput setaf 1
+            echo "   * Stop and jetson_performance service"
+            tput sgr0
+            # Stop the service
+            sudo systemctl stop jetson_performance.service
+        fi
+        # Disable the service
+        echo "   * Disable service from /etc/systemd/system"
+        sudo systemctl disable jetson_performance.service
+    fi
+}
+
+uninstaller_bin()
+{
+    # Remove the service from /etc/init.d
+    if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
+        # Remove service
+        sudo systemctl disable jetson_performance.service
+        echo "   * Remove the service from /etc/systemd/system"
+        sudo rm "/etc/systemd/system/jetson_performance.service"
+    fi
+    # Update service list
+    sudo systemctl daemon-reload
+
+    # Remove from bashrc jetsonstat variables
+    if [ -f "/etc/profile.d/jetson_env.sh" ] ; then
+        echo "   * Remove the jetson_env.sh from /etc/profile.d/"
+        sudo rm "/etc/profile.d/jetson_env.sh"
+    fi
+}
+
 uninstaller()
 {
     local JETSON_FOLDER=$1
@@ -101,18 +111,14 @@ uninstaller()
 
 installer()
 {
-    local JETSON_FOLDER=$1
-    local FORCE_INSTALL=$2
+    local FORCE_INSTALL=$1
     
     # Launch installer pip
     if $FORCE_INSTALL ; then
-        sudo -H pip install . --upgrade
+        sudo -H pip -U install .
     else
         sudo -H pip install .
     fi
-    
-    # Update service list
-    sudo systemctl daemon-reload
 }
 
 usage()
@@ -133,6 +139,7 @@ usage()
     echo "   -f|--force   | Force install all tools"
     echo "   --uninstall  | Run the uninstaller"
     echo "   -auto        | Run at start-up jetson performance"
+    echo "   -pip         | Install this repository with pip"
 }
 
 main()
@@ -142,6 +149,7 @@ main()
     local FORCE_INSTALL=false
     local START_UNINSTALL=false
     local JETSON_FOLDER="/opt/jetson_stats"
+    local INSTALL_THIS_FOLDER=false
     
 	# Decode all information from startup
     while [ -n "$1" ]; do
@@ -156,11 +164,14 @@ main()
             -f|--force)
                 FORCE_INSTALL=true
                 ;;
-            -auto)
-                AUTO_START=true
-                ;;
             --uninstall)
                 START_UNINSTALL=true
+                ;;
+            -auto)s
+                AUTO_START=true
+                ;;
+            -pip)
+                INSTALL_THIS_FOLDER=true
                 ;;
             -h|--help)
                 # Load help
@@ -199,7 +210,7 @@ main()
     
     if $START_UNINSTALL ; then
         # Run uninstaller binaries
-        uninstaller_bin
+        disable_service
         # remove old configurations
         if [ -d /etc/jetson_easy ] ; then
             uninstaller_old_bin
@@ -207,11 +218,17 @@ main()
         fi
         # Remove configuration standard
         if [ -d "$JETSON_FOLDER" ] ; then
+            uninstaller_bin
             uninstaller $JETSON_FOLDER
         fi
     else
-        # Run installer
-        installer $JETSON_FOLDER $FORCE_INSTALL
+        if $INSTALL_THIS_FOLDER ; then
+            # Run installer
+            installer $FORCE_INSTALL
+        fi
+        
+        # Update service list
+        sudo systemctl daemon-reload
         
         if $AUTO_START ; then
             tput setaf 4
