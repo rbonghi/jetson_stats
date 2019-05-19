@@ -39,6 +39,7 @@
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
+from setuptools.command.install import install
 from os import path
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
@@ -47,6 +48,7 @@ from os import path
 from io import open
 # Launch command
 import subprocess as sp
+import shlex
 import os, sys
 
 if os.getuid() != 0:
@@ -64,16 +66,16 @@ class InstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        proc = sp.call(['./install.sh', '-s', '--uninstall'])
+        sp.call(shlex.split('./install.sh -s --uninstall'))
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        proc = sp.call(['./install.sh', '-s'])
+        sp.call(shlex.split('./install.sh -s'))
 
 # Configuration setup module
 setup(
     name="jetson-stats",
-    version="1.6.3",
+    version="1.6.5",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",
@@ -142,7 +144,7 @@ setup(
              'scripts/jetson-release', 
             ],
     cmdclass={
-        'install': PostInstallCommand,
+        'install': InstallCommand,
     },
     # The following provide a command called `jtop`
     entry_points={

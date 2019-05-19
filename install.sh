@@ -149,7 +149,7 @@ main()
     local FORCE_INSTALL=false
     local START_UNINSTALL=false
     local JETSON_FOLDER="/opt/jetson_stats"
-    local INSTALL_THIS_FOLDER=false
+    local THIS_FOLDER=false
     
 	# Decode all information from startup
     while [ -n "$1" ]; do
@@ -171,7 +171,7 @@ main()
                 AUTO_START=true
                 ;;
             -pip)
-                INSTALL_THIS_FOLDER=true
+                THIS_FOLDER=true
                 ;;
             -h|--help)
                 # Load help
@@ -209,20 +209,35 @@ main()
     done
     
     if $START_UNINSTALL ; then
+        tput setaf 3
+        echo "Uninstaller jetson-stats"
+        tput sgr0
+    
         # Run uninstaller binaries
         disable_service
+        
         # remove old configurations
         if [ -d /etc/jetson_easy ] ; then
             uninstaller_old_bin
             uninstaller /etc/jetson_easy
         fi
-        # Remove configuration standard
-        if [ -d "$JETSON_FOLDER" ] ; then
-            uninstaller_bin
-            uninstaller $JETSON_FOLDER
+        
+        if $THIS_FOLDER ; then
+            # Remove configuration standard
+            if [ -d "$JETSON_FOLDER" ] ; then
+                uninstaller_bin
+                uninstaller $JETSON_FOLDER
+            fi
         fi
     else
-        if $INSTALL_THIS_FOLDER ; then
+        # ---------------------------------------------------------------
+        #                INSTALLER
+        # ---------------------------------------------------------------
+        tput setaf 3
+        echo "Installer jetson-stats"
+        tput sgr0
+        
+        if $THIS_FOLDER ; then
             # Run installer
             installer $FORCE_INSTALL
         fi
