@@ -62,7 +62,7 @@ def install_packages():
 
 setuptools.setup(
     name="jetson-stats",
-    version="1.6.0",
+    version="1.6.1",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",
