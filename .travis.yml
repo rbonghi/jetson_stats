@@ -3,7 +3,7 @@ sudo: true
 language: python
 cache: pip
 
-script: sudo -H pip install .
+script: sudo -H python setup.py sdist
 
 deploy:
   provider: pypi
