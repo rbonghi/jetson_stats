@@ -71,12 +71,12 @@ class InstallCommand(install):
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./install.sh -s'))
+        sp.call(shlex.split('./install.sh -s -bin'))
 
 # Configuration setup module
 setup(
     name="jetson-stats",
-    version="1.6.5",
+    version="1.6.6",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",

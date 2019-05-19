@@ -121,6 +121,23 @@ installer()
     fi
 }
 
+installer_bin()
+{
+    local JETSON_FOLDER=$1
+    
+    sudo mkdir -p "$1" 
+    
+    echo "   * Copy jetson_variables and jetson_performance"
+    sudo cp "scripts/jetson_variables" "/opt/jetson_stats/jetson_variables"
+    sudo cp "scripts/jetson_performance.sh" "/opt/jetson_stats/jetson_performance.sh"
+    
+    echo "   * Copy jetson_env.sh in /etc/profile.d/"
+    sudo cp "scripts/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
+    
+    echo "   * Copy jetson_variables and other scripts"
+    sudo cp "scripts/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+}
+
 usage()
 {
 	if [ "$1" != "" ]; then
@@ -150,6 +167,7 @@ main()
     local START_UNINSTALL=false
     local JETSON_FOLDER="/opt/jetson_stats"
     local THIS_FOLDER=false
+    local INSTALL_BIN=false
     
 	# Decode all information from startup
     while [ -n "$1" ]; do
@@ -167,7 +185,10 @@ main()
             --uninstall)
                 START_UNINSTALL=true
                 ;;
-            -auto)s
+            -bin)
+                INSTALL_BIN=true
+                ;;
+            -auto)
                 AUTO_START=true
                 ;;
             -pip)
@@ -242,6 +263,9 @@ main()
             installer $FORCE_INSTALL
         fi
         
+        if $INSTALL_BIN ; then
+            installer_bin $JETSON_FOLDER
+        fi
         # Update service list
         sudo systemctl daemon-reload
         
