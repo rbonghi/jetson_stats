@@ -1,4 +1,4 @@
-# Jetson stats 
+# Jetson stats [![Build Status](https://travis-ci.org/rbonghi/jetson_stats.svg?branch=master)](https://travis-ci.org/rbonghi/jetson_stats)
 **Welcome in the Jetson setup configurator** - Visit the [Official website](http://rnext.it/project/jetson-easy/) or read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki)
 
 The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1, TK1] embedded board without wait a lot of time.
@@ -21,8 +21,28 @@ sudo -H pip install -U jetson-stats
 ```
 
 ## [**jtop**][jtop] 
-A Dynamic interface where is showed the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
+It is a system monitoring utility that runs on the terminal and see realtime on your prompt the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
 
+You can run the jtop with (Suggested to run with **sudo**)
+```elm
+sudo jtop
+```
+Other options are availables with `-h` option:
+```console
+nvidia@jetson-nano:~/$ sudo jtop -h
+usage: jtop [-h] [-r REFRESH] [--server] [-p PORT] [--debug] [--page PAGE]
+
+jtop is system monitoring utility that runs on the terminal
+
+optional arguments:
+  -h, --help   show this help message and exit
+  -r REFRESH   refresh interval
+  --server     Run jtop json server
+  -p PORT      Set server port
+  --debug      Run with debug logger
+  --page PAGE  Open fix page
+```
+The prompt interface will be show like this image:
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jtop.png)
 
 ## [**jetson-docker**][jetson_docker]
