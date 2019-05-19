@@ -47,6 +47,7 @@ from os import path
 from io import open
 # Launch command
 import subprocess as sp
+import os, sys
 
 if os.getuid() != 0:
     print("Require sudo, please use:\n\nsudo -H pip install jetson-stats")
