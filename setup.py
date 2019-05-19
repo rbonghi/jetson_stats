@@ -77,7 +77,7 @@ setuptools.setup(
         "Bug Reports": (project_homepage + "/issues"),
         "Source": (project_homepage + "/tree/master")
     },
-    packages=setuptools.find_packages(exclude=['examples', 'scripts']), # Required
+    packages=setuptools.find_packages(exclude=['examples', 'scripts', 'tests' ]), # Required
     keywords=(
         "jetson_stats jtop python system-monitor docker \
          nvidia Jetson Nano Xavier TX2 TX1 process viewer"
