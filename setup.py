@@ -62,7 +62,7 @@ def install_packages():
 
 setuptools.setup(
     name="jetson-stats",
-    version="1.6.1",
+    version="1.6.2",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",
@@ -120,7 +120,11 @@ setuptools.setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=install_packages(),
+    data_files=[('/opt/jetson_stats', ['scripts/jetson_variables', 
+                                       'scripts/jetson_performance.sh']),
+                ('/etc/profile.d', ['scripts/jetson_env.sh']),
+                ('/etc/systemd/system', ['scripts/jetson_performance.service']),
+               ],
     # Install extra scripts
     scripts=['scripts/jetson-docker', 
              'scripts/jetson-swap',
