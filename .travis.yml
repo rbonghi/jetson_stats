@@ -7,7 +7,7 @@ cache: pip
 # pip install -r requirements.txt
 install: true
 
-script: sudo -H python setup.py sdist bdist_wheel
+script: sudo -H python setup.py sdist
 
 deploy:
   provider: pypi

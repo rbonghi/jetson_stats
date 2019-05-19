@@ -42,7 +42,7 @@ import setuptools, os, sys
 import subprocess as sp
 
 if os.getuid() != 0:
-    print("Require sudo, please use:\n\nsudo -H pip install jetson_stats")
+    print("Require sudo, please use:\n\nsudo -H pip install jetson-stats")
     sys.exit(1)
 
 with open("README.md", "r") as fh:
@@ -61,7 +61,7 @@ def install_packages():
            ]
 
 setuptools.setup(
-    name="jetson_stats",
+    name="jetson-stats",
     version="1.6.0",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
