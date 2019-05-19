@@ -39,7 +39,7 @@ def Variables(stdscr, jetsonstats):
     
     INFO_BOARD = \
         [ { "name": os.environ["JETSON_DESCRIPTION"] },
-          { "name": "Board", "info": os.environ["JETSON_BOARD"] },
+          { "name": "Board", "info": os.environ["JETSON_TYPE"] },
           { "name": "Jetpack", "info": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]" },
           { "name": "GPU Arch", "info": os.environ["JETSON_CUDA_ARCH_BIN"] },
           { "name": "Libraries" },
