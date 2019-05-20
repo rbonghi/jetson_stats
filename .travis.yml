@@ -1,13 +1,22 @@
+
 dist: xenial
 sudo: true
 language: python
-cache: pip
 
-# Remove this line if you want use the default command:
-# pip install -r requirements.txt
-install: true
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=py27
+    - python: 3.4
+      env: TOXENV=py34
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py36
 
-script: sudo -H python setup.py sdist
+install: pip install tox
+
+script: sudo tox
 
 deploy:
   provider: pypi

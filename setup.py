@@ -1,31 +1,30 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# Copyright (C) 2018, Raffaello Bonghi <raffaello@rnext.it>
+# Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
 # are met:
 #
-# 1. Redistributions of source code must retain the above copyright 
+# 1. Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
-# 3. Neither the name of the copyright holder nor the names of its 
-#    contributors may be used to endorse or promote products derived 
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived
 #    from this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
-# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
-# BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+# BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
 # FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 # SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
-# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
-# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Reference:
@@ -50,18 +49,23 @@ from io import open
 # Launch command
 import subprocess as sp
 import shlex
-import os, sys
+import os
+import sys
+
 
 if os.getuid() != 0:
     print("Require sudo, please use:\n\nsudo -H pip install jetson-stats")
     sys.exit(1)
 
+
 here = path.abspath(path.dirname(__file__))
 project_homepage = "https://github.com/rbonghi/jetson_stats"
+
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+
 
 class InstallCommand(install):
     """Installation mode."""
@@ -72,6 +76,7 @@ class InstallCommand(install):
         install.run(self)
         # Run the restart all services before to close the installer
         sp.call(shlex.split('./install.sh -s -bin'))
+
 
 # Configuration setup module
 setup(
@@ -91,40 +96,37 @@ setup(
         "Bug Reports": (project_homepage + "/issues"),
         "Source": (project_homepage + "/tree/master")
     },
-    packages=find_packages(exclude=[ 'examples', 'scripts', 'tests' ]), # Required
-    keywords=(
-        "jetson_stats jtop python system-monitor docker \
-         nvidia Jetson Nano Xavier TX2 TX1 process viewer"
-    ),
-    classifiers=[
-        # Development status
-        'Development Status :: 4 - Beta',
-        # Audiencence and topics
-        'Intended Audience :: Developers',
-        "Topic :: Software Development :: Embedded Systems",
-        "Topic :: Software Development :: Debuggers", 
-        "Topic :: Software Development :: Libraries",
-        "Topic :: Software Development :: User Interfaces",
-        "Topic :: System :: Hardware",
-        "Topic :: System :: Logging",
-        "Topic :: System :: Monitoring",
-        "Topic :: System :: Operating System",
-        "Topic :: System :: Operating System Kernels",
-        "Topic :: System :: Shells",
-        "Topic :: System :: Systems Administration",
-        "Topic :: Terminals",
-        # License
-        "License :: OSI Approved :: MIT License",
-        # Programming and Operative system
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Operating System :: POSIX :: Linux", 
-        ],
+    packages=find_packages(exclude=['examples', 'scripts', 'tests']),  # Required
+    keywords=("jetson_stats jtop python system-monitor docker \
+               nvidia Jetson Nano Xavier TX2 TX1 process viewer"
+              ),
+    classifiers=["Development Status :: 4 - Beta",
+                 # Audiencence and topics
+                 "Intended Audience :: Developers",
+                 "Topic :: Software Development :: Embedded Systems",
+                 "Topic :: Software Development :: Debuggers",
+                 "Topic :: Software Development :: Libraries",
+                 "Topic :: Software Development :: User Interfaces",
+                 "Topic :: System :: Hardware",
+                 "Topic :: System :: Logging",
+                 "Topic :: System :: Monitoring",
+                 "Topic :: System :: Operating System",
+                 "Topic :: System :: Operating System Kernels",
+                 "Topic :: System :: Shells",
+                 "Topic :: System :: Systems Administration",
+                 "Topic :: Terminals",
+                 # License
+                 "License :: OSI Approved :: MIT License",
+                 # Programming and Operative system
+                 "Programming Language :: Python :: 2",
+                 "Programming Language :: Python :: 2.7",
+                 "Programming Language :: Python :: 3",
+                 "Programming Language :: Python :: 3.4",
+                 "Programming Language :: Python :: 3.5",
+                 "Programming Language :: Python :: 3.6",
+                 "Programming Language :: Python :: 3.7",
+                 "Operating System :: POSIX :: Linux",
+                 ],
     # Requisites
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
@@ -134,22 +136,17 @@ setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('/opt/jetson_stats', [ 'scripts/jetson_variables', 
-                                        'scripts/jetson_performance.sh' ]),
-                ('/etc/profile.d', [ 'scripts/jetson_env.sh' ]),
-                ('/etc/systemd/system', [ 'scripts/jetson_performance.service' ]),
-               ],
+    data_files=[('/opt/jetson_stats', ['scripts/jetson_variables', 'scripts/jetson_performance.sh']),
+                ('/etc/profile.d', ['scripts/jetson_env.sh']),
+                ('/etc/systemd/system', ['scripts/jetson_performance.service']),
+                ],
     # Install extra scripts
-    scripts=['scripts/jetson-docker', 
+    scripts=['scripts/jetson-docker',
              'scripts/jetson-swap',
-             'scripts/jetson-release', 
-            ],
-    cmdclass={
-        'install': InstallCommand,
-    },
+             'scripts/jetson-release',
+             ],
+    cmdclass={'install': InstallCommand},
     # The following provide a command called `jtop`
-    entry_points={
-        'console_scripts': [ 'jtop=jtop.__main__:main' ],
-    },
+    entry_points={'console_scripts': ['jtop=jtop.__main__:main']},
 )
-#EOF
+# EOF

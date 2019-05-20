@@ -6,3 +6,9 @@ include LICENSE
 
 # Include script installer
 include install.sh
+
+# Include the data files
+recursive-include scripts *
+
+# Include examples files
+recursive-include examples *.py
