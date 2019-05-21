@@ -16,8 +16,6 @@ matrix:
     - python: 3.7
       env: TOXENV=py37
 
-before_install: deactivate
-
 install: sudo apt-get install tox
 
 # Install emulators tegrastats and nvpmodel
@@ -25,7 +23,7 @@ before_script:
 - sudo cp tests/tegrastats /usr/bin/
 - sudo cp tests/nvpmodel /usr/bin/
 
-script: sudo tox -v
+script: sudo tox
 
 deploy:
   provider: pypi
