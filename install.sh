@@ -155,8 +155,8 @@ usage()
     echo "   -i|--inst    | Change default install folder"
     echo "   -f|--force   | Force install all tools"
     echo "   --uninstall  | Run the uninstaller"
-    echo "   -bin         | Install this binaries fiels"
-    echo "   -pip         | Install this repository with pip"
+    echo "   -no-bin      | NOT Install this binaries fiels"
+    echo "   -no-pip      | NOT Install this repository with pip"
     echo "   -test        | Install test files"
     echo "   -auto        | Run at start-up jetson performance"
 
@@ -189,7 +189,7 @@ main()
             --uninstall)
                 START_UNINSTALL=true
                 ;;
-            -bin)
+            -no-bin)
                 INSTALL_BIN=false
                 ;;
             -test)
@@ -198,7 +198,7 @@ main()
             -auto)
                 AUTO_START=true
                 ;;
-            -pip)
+            -np-pip)
                 THIS_FOLDER=false
                 ;;
             -h|--help)
