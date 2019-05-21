@@ -27,6 +27,43 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import jtop
 
-def test_success():
+
+def test_open():
+    # Initialize object
+    tegra = jtop.Tegrastats()
+    # Open data
+    tegra.open()
+    # Close connection
+    tegra.close()
     assert True
+
+
+def test_read():
+    # Load tegracontroller
+    with jtop.Tegrastats() as tegra:
+        for x in range(5):
+            stat = tegra.read
+            # Check if is correctly written the variable
+            assert "RAM" in stat
+            variable = stat["RAM"]
+            assert "RAM" in variable
+            variable = stat["RAM"]["RAM"]
+            # Check if ram["used"] is a list
+            assert isinstance(variable["used"], list)
+            # Check if last value is the same send
+            assert variable["used"][-1] == 4722
+
+
+def test_nvp():
+    # Load tegracontroller
+    with jtop.Tegrastats() as tegra:
+        for x in range(5):
+            stat = tegra.read
+            # Check NVPmodel
+            assert "NVPMODEL" in stat
+            # Chek values
+            assert stat["NVPMODEL"]["name"] == "TEST"
+            assert stat["NVPMODEL"]["mode"] == 0
+# EOF

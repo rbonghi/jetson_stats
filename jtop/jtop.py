@@ -47,6 +47,7 @@ def get_nvpmodel():
     try:
         nvpmodel_p = subprocess.Popen(['nvpmodel', '-q'], stdout=subprocess.PIPE)
         query = nvpmodel_p.communicate()[0]
+        # Log value
         logger.debug('nvqmodel status %s', query)
         lines = query.split("\n")
         return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
@@ -65,6 +66,9 @@ class Tegrastats(Thread):
     # List of available fan
     LIST_FANS = ['/sys/kernel/debug/tegra_fan/target_pwm', '/sys/devices/pwm-fan/target_pwm']
     TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
+
+    class TegrastatsException(Exception):
+        pass
 
     def __init__(self, interval=500, time=10.0):
         Thread.__init__(self)
@@ -94,10 +98,12 @@ class Tegrastats(Thread):
                 logger.info("Load tegrastats {}".format(f_tegra))
                 tegrastats_file = f_tegra
                 break
+        # Launch subprocess or raise and exception
         if tegrastats_file:
             self.p = subprocess.Popen([tegrastats_file, '--interval', str(interval)], stdout=subprocess.PIPE)
         else:
             logger.error("Tegrastats not in list!")
+            raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
 
     def run(self):
         try:
@@ -245,8 +251,12 @@ class Tegrastats(Thread):
                 cpu_status = Tegrastats.initProcess(name, self.max_record)
             cpu_status = Tegrastats.updateProcess(cpu, cpu_status)
             # Update status governor
-            with open('/sys/devices/system/cpu/cpu' + str(idx) + '/cpufreq/scaling_governor', 'r') as f:
-                cpu_status['governor'] = f.read()[:-1]
+            governor_name = '/sys/devices/system/cpu/cpu' + str(idx) + '/cpufreq/scaling_governor'
+            if os.path.isfile(governor_name):
+                with open(governor_name, 'r') as f:
+                    cpu_status['governor'] = f.read()[:-1]
+            else:
+                cpu_status['governor'] = ""
             # Update status CPU
             self.cpus[idx] = cpu_status
         return text

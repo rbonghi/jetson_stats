@@ -1,0 +1,43 @@
+#!/bin/bash
+# Emulator for NVIDIA Jetson nvpmodel
+
+usage()
+{
+	if [ "$1" != "" ]; then
+    	tput setaf 1
+		echo "$1"
+		tput sgr0
+	fi
+	
+    echo "nvpmodel, Emulator of NVIDIA Jetsons"
+    echo "Usage:"
+    echo "$0 [options]"
+    echo "options,"
+    echo "   -h|--help    | This help"
+    echo "   -q           | Query status"
+}
+
+
+main()
+{
+	# Decode all information from startup
+    while [ -n "$1" ]; do
+        case "$1" in
+            -q)
+                echo "NVP model: TEST"
+                echo "0"
+                exit 0
+                ;;
+            *)
+                usage "[ERROR] Unknown option: $1"
+                exit 1
+            ;;
+        esac
+            shift 1
+    done
+}
+
+main $@
+exit 0
+
+# EOF

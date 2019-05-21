@@ -2,6 +2,11 @@
 dist: xenial
 sudo: true
 language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
 
 matrix:
   include:
@@ -15,6 +20,11 @@ matrix:
       env: TOXENV=py36
 
 install: sudo pip install tox
+
+# Install emulators tegrastats and nvpmodel
+before_script:
+- sudo cp tests/tegrastats /usr/bin/
+- sudo cp tests/nvpmodel /usr/bin/
 
 script: sudo tox
 

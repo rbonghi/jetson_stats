@@ -54,11 +54,15 @@ if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
     fi
     # Make Jetson Description
     JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_TYPE"
-    # Export variables
-    export JETSON_BOARD
-    export JETSON_TYPE
-    export JETSON_DESCRIPTION
+else
+    JETSON_BOARD="NO-BOARD"
+    JETSON_TYPE="PC"
+    JETSON_DESCRIPTION="PC computer"
 fi
+# Export variables
+export JETSON_BOARD
+export JETSON_TYPE
+export JETSON_DESCRIPTION
 
 # NVIDIA Jetson version
 # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
@@ -151,13 +155,18 @@ if [ -f /etc/nv_tegra_release ]; then
         # Unknown board
         JETSON_JETPACK="UNKNOWN"
     fi
-    # Export Release L4T
-    export JETSON_L4T_RELEASE
-    export JETSON_L4T_REVISION
-    export JETSON_L4T
-    # Export Jetson Jetpack installed
-    export JETSON_JETPACK
+else
+    JETSON_L4T_RELEASE="N"
+    JETSON_L4T_REVISION="N.N"
+    JETSON_L4T="$JETSON_L4T_RELEASE.$JETSON_L4T_REVISION"
+    JETSON_JETPACK="N.N.N"
 fi
+# Export Release L4T
+export JETSON_L4T_RELEASE
+export JETSON_L4T_REVISION
+export JETSON_L4T
+# Export Jetson Jetpack installed
+export JETSON_JETPACK
 
 # Read CUDA version
 if [ -f /usr/local/cuda/version.txt ]; then
