@@ -38,7 +38,7 @@ jobs:
 #      python: "3.7"
 #      env: TOXENV=py37
     - stage: test to PyPI
-      before_deploy: sudo -H python setup.py sdist
+      script: sudo -H python setup.py sdist
       deploy:
         provider: pypi
         skip_cleanup: true
@@ -52,7 +52,7 @@ jobs:
           branch:
               - develop
     - stage: deploy to PyPI
-      before_deploy: sudo -H python setup.py sdist
+      script: sudo -H python setup.py sdist
       deploy:
         provider: pypi
         skip_cleanup: true
