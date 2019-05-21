@@ -67,7 +67,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 
-class InstallCommand(install):
+class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
@@ -145,7 +145,7 @@ setup(
              'scripts/jetson-swap',
              'scripts/jetson-release',
              ],
-    cmdclass={'install': InstallCommand},
+    cmdclass={'install': PostInstallCommand},
     # The following provide a command called `jtop`
     entry_points={'console_scripts': ['jtop=jtop.__main__:main']},
 )

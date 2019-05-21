@@ -25,7 +25,7 @@ before_script:
 - sudo cp tests/tegrastats /usr/bin/
 - sudo cp tests/nvpmodel /usr/bin/
 
-script: sudo tox
+script: sudo tox -v
 
 deploy:
   provider: pypi
