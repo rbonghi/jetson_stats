@@ -75,7 +75,7 @@ class InstallCommand(install):
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./install.sh -s -pip'))
+        sp.call(shlex.split('./install.sh -s -bin -pip'))
 
 
 # Configuration setup module
@@ -134,6 +134,11 @@ setup(
     # Zip safe configuration
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
     zip_safe=False,
+    # Force to include package data
+    # Reference:
+    # - https://github.com/pypa/sampleproject/issues/30
+    # - https://stackoverflow.com/questions/38117149/setuptools-sdist-ignore-data-files
+    include_package_data=True,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
     data_files=[('/opt/jetson_stats', ['scripts/jetson_variables', 'scripts/jetson_performance.sh']),
