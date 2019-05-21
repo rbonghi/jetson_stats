@@ -49,7 +49,8 @@ def get_nvpmodel():
         query = nvpmodel_p.communicate()[0]
         # Log value
         logger.debug('nvqmodel status %s', query)
-        lines = query.split("\n")
+        # Decode lines and split
+        lines = query.decode("utf-8").split("\n")
         return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
     except Exception:
         logger.error("Exception occurred", exc_info=True)
