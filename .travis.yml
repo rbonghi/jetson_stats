@@ -18,7 +18,7 @@ matrix:
 
 before_install: deactivate
 
-install: sudo pip install tox
+install: sudo apt-get install tox
 
 # Install emulators tegrastats and nvpmodel
 before_script:
