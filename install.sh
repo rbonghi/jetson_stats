@@ -198,7 +198,7 @@ main()
             -auto)
                 AUTO_START=true
                 ;;
-            -np-pip)
+            -no-pip)
                 THIS_FOLDER=false
                 ;;
             -h|--help)
