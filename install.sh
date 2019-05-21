@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2018, Raffaello Bonghi <raffaello@rnext.it>
+# Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
 #
 # Redistribution and use in source and binary forms, with or without
@@ -115,9 +115,9 @@ installer()
     
     # Launch installer pip
     if $FORCE_INSTALL ; then
-        sudo -H pip -U install .
+        sudo -H pip install -U -e .
     else
-        sudo -H pip install .
+        sudo -H pip install -e .
     fi
 }
 
@@ -155,8 +155,11 @@ usage()
     echo "   -i|--inst    | Change default install folder"
     echo "   -f|--force   | Force install all tools"
     echo "   --uninstall  | Run the uninstaller"
-    echo "   -auto        | Run at start-up jetson performance"
+    echo "   -bin         | Install this binaries fiels"
     echo "   -pip         | Install this repository with pip"
+    echo "   -test        | Install test files"
+    echo "   -auto        | Run at start-up jetson performance"
+
 }
 
 main()
@@ -166,8 +169,9 @@ main()
     local FORCE_INSTALL=false
     local START_UNINSTALL=false
     local JETSON_FOLDER="/opt/jetson_stats"
-    local THIS_FOLDER=false
-    local INSTALL_BIN=false
+    local THIS_FOLDER=true
+    local INSTALL_BIN=true
+    local TEST_FILES=false
     
 	# Decode all information from startup
     while [ -n "$1" ]; do
@@ -186,13 +190,16 @@ main()
                 START_UNINSTALL=true
                 ;;
             -bin)
-                INSTALL_BIN=true
+                INSTALL_BIN=false
+                ;;
+            -test)
+                TEST_FILES=true
                 ;;
             -auto)
                 AUTO_START=true
                 ;;
             -pip)
-                THIS_FOLDER=true
+                THIS_FOLDER=false
                 ;;
             -h|--help)
                 # Load help
@@ -250,6 +257,18 @@ main()
                 uninstaller $JETSON_FOLDER
             fi
         fi
+        
+        if $TEST_FILES ; then
+            # Remove files
+            if [ -f /usr/bin/tegrastats ] || $FORCE_INSTALL ; then
+                echo " - Remove /usr/bin/tegrastats"
+                sudo rm /usr/bin/tegrastats
+            fi
+            if [ -f /usr/bin/nvpmodel ] || $FORCE_INSTALL ; then
+            echo " - Remove /usr/bin/nvpmodel"
+                sudo cp /usr/bin/nvpmodel
+            fi
+        fi
     else
         # ---------------------------------------------------------------
         #                INSTALLER
@@ -266,6 +285,23 @@ main()
         if $INSTALL_BIN ; then
             installer_bin $JETSON_FOLDER
         fi
+        
+        if $TEST_FILES ; then
+            # Copy files
+            if [ ! -f /usr/bin/tegrastats ] || $FORCE_INSTALL ; then
+                echo " - Copy emulation tegrastats in /usr/bin/"
+                sudo cp tests/tegrastats /usr/bin/
+            else
+                echo " - Already exist tegrastats in /usr/bin/"
+            fi
+            if [ ! -f /usr/bin/nvpmodel ] || $FORCE_INSTALL ; then
+            echo " - Copy emulation nvpmodel in /usr/bin/"
+                sudo cp tests/nvpmodel /usr/bin/
+            else
+                echo " - Already exist nvpmodel in /usr/bin/"
+            fi
+        fi
+        
         # Update service list
         sudo systemctl daemon-reload
         

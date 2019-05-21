@@ -75,7 +75,7 @@ class InstallCommand(install):
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./install.sh -s -bin'))
+        sp.call(shlex.split('./install.sh -s -pip'))
 
 
 # Configuration setup module

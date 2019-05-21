@@ -47,10 +47,8 @@ import sys
 import logging
 # control command line
 import curses
-# Launch command
-import subprocess as sp
 # Tegrastats objext reader
-from .jtop import Tegrastats
+from .jtop import Tegrastats, import_os_variables
 # GUI jtop interface
 from .jtopgui import JTOPGUI, all_info, GPU, Variables
 
@@ -125,16 +123,6 @@ def gui(stdscr, args, tegra):
             pages.set(num)
         elif key == ord('q') or key == ord('Q'):
             break
-
-
-def import_os_variables(SOURCE, PATTERN="JETSON_"):
-    if os.path.isfile(SOURCE):
-        proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE)
-        source_env = {tup[0].strip(): tup[1].strip() for tup in map(lambda s: s.strip().split('=', 1), proc.stdout)}
-        return {k: v for k, v in source_env.items() if PATTERN in k}
-    else:
-        logging.error("File does not exist")
-        return {}
 
 
 def main():

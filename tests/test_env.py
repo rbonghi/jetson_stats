@@ -27,7 +27,22 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# flake8: noqa
 
-from .jtop import Tegrastats
-from .jtop import import_os_variables
+from jtop import import_os_variables
+
+
+def test_load():
+    JETSONS = import_os_variables('/opt/jetson_stats/jetson_variables')
+    assert len(JETSONS) > 0
+
+
+def test_env():
+    JETSONS = import_os_variables('/opt/jetson_stats/jetson_variables')
+    # Check contain JETSON_BOARD
+    assert "JETSON_BOARD" in JETSONS
+    # Check contain JETSON_L4T
+    assert "JETSON_L4T" in JETSONS
+    # Check contain JETSON_CUDA
+    assert "JETSON_CUDA" in JETSONS
+
+# EOF

@@ -33,7 +33,7 @@ import os
 # Logging
 import logging
 # Launch command
-import subprocess
+import subprocess as sp
 # Threading
 from threading import Thread
 from collections import deque
@@ -42,10 +42,26 @@ from collections import deque
 logger = logging.getLogger(__name__)
 
 
+def import_os_variables(SOURCE, PATTERN="JETSON_"):
+    if os.path.isfile(SOURCE):
+        proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE)
+        # Load variables
+        source_env = {}
+        for tup in map(lambda s: s.decode("utf-8").strip().split('=', 1), proc.stdout):
+            name = tup[0].strip()
+            value = tup[1].strip()
+            if PATTERN in name:
+                source_env[name] = value
+        return source_env
+    else:
+        logging.error("File does not exist")
+        return {}
+
+
 def get_nvpmodel():
     # Read nvpmodel to know the status of the board
     try:
-        nvpmodel_p = subprocess.Popen(['nvpmodel', '-q'], stdout=subprocess.PIPE)
+        nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
         query = nvpmodel_p.communicate()[0]
         # Log value
         logger.debug('nvqmodel status %s', query)
@@ -101,7 +117,7 @@ class Tegrastats(Thread):
                 break
         # Launch subprocess or raise and exception
         if tegrastats_file:
-            self.p = subprocess.Popen([tegrastats_file, '--interval', str(interval)], stdout=subprocess.PIPE)
+            self.p = sp.Popen([tegrastats_file, '--interval', str(interval)], stdout=sp.PIPE)
         else:
             logger.error("Tegrastats not in list!")
             raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
@@ -266,7 +282,7 @@ class Tegrastats(Thread):
         # Read status from fan
         list_values = []
         for file_fan in self.fans:
-            fan_status_p = subprocess.Popen(['cat', file_fan], stdout=subprocess.PIPE)
+            fan_status_p = sp.Popen(['cat', file_fan], stdout=sp.PIPE)
             query = fan_status_p.communicate()[0]
             logger.debug('{} status status {}'.format(file_fan, query))
             fan_level = int(query)
