@@ -12,3 +12,9 @@ recursive-include scripts *
 
 # Include examples files
 recursive-include examples *.py
+
+# Force to include package data
+# Reference:
+# - https://github.com/pypa/sampleproject/issues/30
+# - https://stackoverflow.com/questions/38117149/setuptools-sdist-ignore-data-files
+include_package_data=True
