@@ -14,6 +14,9 @@ before_script:
 
 script: sudo tox
 
+after_success:
+  - coveralls
+
 stages:
     - name: test
     - name: test to PyPI

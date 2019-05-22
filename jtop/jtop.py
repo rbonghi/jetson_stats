@@ -141,16 +141,6 @@ class Tegrastats(Thread):
         # Wait the deque not empty
         while not self._jetsonstats:
             pass
-        # Read status disk
-        self._jetsonstats['DISK'] = get_status_disk()
-        # Extract nvpmodel
-        nvpmodel = get_nvpmodel()
-        if nvpmodel:
-            self._jetsonstats['NVPMODEL'] = nvpmodel
-        # Read status fan
-        fans_level = self.getFans()
-        if fans_level:
-            self._jetsonstats['FAN'] = fans_level
         # Return dictionary parsed
         return self._jetsonstats
 
@@ -302,6 +292,16 @@ class Tegrastats(Thread):
 
     def decode(self, text):
         jetsonstats = {}
+        # Read status disk
+        jetsonstats['DISK'] = get_status_disk()
+        # Extract nvpmodel
+        nvpmodel = get_nvpmodel()
+        if nvpmodel:
+            jetsonstats['NVPMODEL'] = nvpmodel
+        # Read status fan
+        fans_level = self.getFans()
+        if fans_level:
+            jetsonstats['FAN'] = fans_level
         # Read SWAP status
         swap_status, text = self.SWAP(text)
         jetsonstats['SWAP'] = swap_status

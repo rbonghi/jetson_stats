@@ -34,7 +34,7 @@ from .jtopguilib import plot_voltages, plot_temperatures, plot_other_info, linea
 
 def Variables(stdscr, jetsonstats):
     """
-        Write all enviroment variables
+        Write all environment variables
     """
     # Screen size
     max_y, max_x = stdscr.getmaxyx()
@@ -55,7 +55,7 @@ def Variables(stdscr, jetsonstats):
     # Position information
     posx = 2
     start_pos = 3
-    # Loop build informations
+    # Loop build information
     for idx, info in enumerate(INFO_BOARD):
         # Board info
         if "info" in info:
@@ -142,7 +142,7 @@ def all_info(stdscr, jetsonstats):
                    'percent': "{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
                    }
     linear_percent_gauge(stdscr, DISK_STATUS, width, offset=line_counter, type_bar="#", color_name=3)
-    # Last part of informations
+    # Last part of information
     split = 1.0
     split += 1.0 if jetsonstats['temperatures'] else 0.0
     split += 1.0 if jetsonstats['voltages'] else 0.0
