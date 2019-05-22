@@ -29,7 +29,7 @@
 
 import os
 import curses
-from jtopguilib import plot_voltages, plot_temperatures, plot_other_info, linear_percent_gauge, make_gauge_from_percent, plot_CPUs, plot_name_info, draw_chart
+from .jtopguilib import plot_voltages, plot_temperatures, plot_other_info, linear_percent_gauge, make_gauge_from_percent, plot_CPUs, plot_name_info, draw_chart
 
 
 def Variables(stdscr, jetsonstats):
