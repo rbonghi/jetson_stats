@@ -37,7 +37,7 @@ reset=`tput sgr0`
 # - JETSON_DESCRIPTION
 # - JETSON_CUDA
 # - JETSON_OPENCV and JETSON_OPENCV_CUDA
-source /etc/jetson_easy/jetson_variables
+source /opt/jetson_stats/jetson_variables
 # Load NVP model status
 if [ "$JETSON_BOARD" = "Xavier" ] || [ "$JETSON_BOARD" = "TX2i" ] || [ "$JETSON_BOARD" = "TX2" ] ; then
 	NVPModel="$(nvpmodel -q 2>/dev/null | head -n 1)"
