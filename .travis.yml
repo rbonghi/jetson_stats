@@ -60,7 +60,7 @@ jobs:
         on:
           repo: rbonghi/jetson_stats
           branch:
-              - develop
+              - test
     - stage: deploy to PyPI
       script: sudo -H python setup.py sdist
       deploy:
