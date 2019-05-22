@@ -40,9 +40,7 @@
 import argparse
 import time
 # System and signal
-import signal
 import os
-import sys
 # Logging
 import logging
 # control command line
@@ -115,8 +113,6 @@ def gui(stdscr, args, tegra):
             break
 
 
-
-
 def main():
     # Add arg parser
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility that runs on the terminal')
@@ -157,6 +153,7 @@ def main():
         except KeyboardInterrupt:
             # Catch keyboard interrupt and close
             logger.info("Close with CTRL-C")
+
 
 if __name__ == "__main__":
     main()
