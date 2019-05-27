@@ -29,7 +29,17 @@
 
 import os
 import curses
-from .jtopguilib import plot_voltages, plot_temperatures, plot_other_info, linear_percent_gauge, make_gauge_from_percent, plot_CPUs, plot_name_info, draw_chart
+# Graphics elements
+from .jtopguilib import (check_curses,
+                         linear_percent_gauge,
+                         make_gauge_from_percent,
+                         plot_name_info,
+                         draw_chart)
+# Menu GUI pages
+from .jtopguimenu import (plot_voltages,
+                          plot_temperatures,
+                          plot_other_info,
+                          plot_CPUs)
 
 
 def Variables(stdscr, jetsonstats):
@@ -186,6 +196,7 @@ class JTOPGUI:
         if idx <= len(self.pages) and idx > 0:
             self.n_page = idx - 1
 
+    @check_curses
     def header(self):
         head_string = "jtop - Raffaello Bonghi"
         self.stdscr.addstr(0, 0, head_string, curses.A_BOLD)
@@ -194,6 +205,7 @@ class JTOPGUI:
         board_info = os.environ["JETSON_DESCRIPTION"] + " - Jetpack " + os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"
         self.stdscr.addstr(1, 0, board_info, curses.A_BOLD)
 
+    @check_curses
     def menu(self):
         height, width = self.stdscr.getmaxyx()
         # Set background for all menu line

@@ -32,8 +32,22 @@ import curses
 # System
 import os
 from math import ceil
+# Functions and decorators
+from functools import wraps
 
 
+def check_curses(func):
+    """ Check curses write """
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except curses.error:
+            pass
+    return wrapped
+
+
+@check_curses
 def draw_chart(stdscr, size_x, size_y, value, line="*"):
     # Get Max value and unit from value to draw
     max_val = 100 if "max_val" not in value else value["max_val"]
@@ -48,18 +62,12 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
     # Plot chart shape and labels
     for point in range(displayY):
         value = max_val / float(displayY - 1) * float(displayY - point - 1)
-        try:
-            stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
-            stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
-                          "{value:3d}{unit}".format(value=int(value), unit=unit),
-                          curses.A_BOLD)
-        except curses.error:
-            pass
+        stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
+        stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
+                      "{value:3d}{unit}".format(value=int(value), unit=unit),
+                      curses.A_BOLD)
     for point in range(displayX):
-        try:
-            stdscr.addstr(size_y[1], size_x[0] + point, "-")
-        except curses.error:
-            pass
+        stdscr.addstr(size_y[1], size_x[0] + point, "-")
     # Plot values
     delta = displayX - len(points)
     for idx, point in enumerate(points):
@@ -68,10 +76,7 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
         else:
             x_val = -1
         y_val = size_y[1] - 1 - ((float(displayY - 1) / max_val) * point)
-        try:
-            stdscr.addstr(int(y_val), x_val, line, curses.color_pair(2))
-        except curses.error:
-            pass
+        stdscr.addstr(int(y_val), x_val, line, curses.color_pair(2))
     # Debug value
     # stdscr.addstr( 5, 5, "{}".format(delta), curses.color_pair(1))
 
@@ -89,6 +94,7 @@ def make_gauge_from_percent(data):
     return gauge
 
 
+@check_curses
 def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6):
     # Evaluate size withuout short name
     size_bar = max_bar - 8
@@ -122,23 +128,7 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
         stdscr.addstr(offset, start + 7, "OFF", curses.color_pair(1))
 
 
-def plot_CPUs(stdscr, offest, list_cpus, width):
-    max_bar = int(float(width) / 2.0)
-    for idx, cpu in enumerate(list_cpus):
-        # Split in double list
-        start = max_bar + 1 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 0
-        off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
-        # Plot the linear gauge
-        gauge = make_gauge_from_percent(cpu)
-        if 'value' in gauge:
-            gauge["percent"] = cpu['governor'] + " - " + str(gauge['value']) + "%"
-        linear_percent_gauge(stdscr, gauge, max_bar, offest + off_idx, start)
-    if len(list_cpus) > 4:
-        return offest + idx / 2 + 1
-    else:
-        return offest + idx + 1
-
-
+@check_curses
 def plot_dictionary(stdscr, offset, data, name, start=0):
     # Plot title
     stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
@@ -151,76 +141,8 @@ def plot_dictionary(stdscr, offset, data, name, start=0):
         counter += 1
 
 
-def plot_temperatures(stdscr, offset, data, start=0):
-    # Plot title
-    stdscr.addstr(offset, start, " {0:<10} {1}".format("[Sensor]", "[Temp]"), curses.A_BOLD)
-    counter = 1
-    for key, value in data.items():
-        try:
-            stdscr.addstr(offset + counter, start,
-                          "{0:<10} {1:>4.2f}{2}".format(key, value['value'][-1],
-                                                        value['unit']))
-            counter += 1
-        except curses.error:
-            pass
-
-
-def plot_voltages(stdscr, offset, data, start=0):
-    # Plot title
-    stdscr.addstr(offset, start, " {0:<10} {1}".format("[Power]", " [Cur/Avr]"), curses.A_BOLD)
-    counter = 1
-    for key, value in data.items():
-        try:
-            stdscr.addstr(offset + counter, start,
-                          "{0:<10} {1:^4}mW/{2:^4}mW".format(key, int(value['current'][-1]),
-                                                             int(value['average'][-1]))
-                          )
-            counter += 1
-        except curses.error:
-            pass
-
-
+@check_curses
 def plot_name_info(stdscr, offset, start, name, value):
     stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
     stdscr.addstr(offset, start + len(name) + 2, value)
-
-
-def plot_other_info(stdscr, offset, data, width, start=0):
-    counter = 0
-    # APE frequency
-    if 'APE' in data:
-        plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
-        counter += 1
-    # FAN status
-    if 'FAN' in data:
-        for fan in data['FAN']:
-            FAN_VALUE = {'name': 'FAN',
-                         'value': int(fan[-1]),
-                         }
-            linear_percent_gauge(stdscr, FAN_VALUE, width,
-                                 offset=offset + counter, start=start)
-            counter += 1
-    # Plot MTS
-    if 'MTS' in data:
-        stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
-        MTS_FG = {'name': ' FG',
-                  'value': int(data['MTS']['fg']),
-                  }
-        linear_percent_gauge(stdscr, MTS_FG, width,
-                             offset=offset + counter + 1, start=start)
-        MTS_BG = {'name': ' BG',
-                  'value': int(data['MTS']['bg']),
-                  }
-        linear_percent_gauge(stdscr, MTS_BG, width,
-                             offset=offset + counter + 2, start=start)
-        counter += 3
-    # Model board information
-    stdscr.addstr(offset + counter, start, "Board info:", curses.A_BOLD)
-    plot_name_info(stdscr, offset + counter + 1, start + 2, "Name", os.environ["JETSON_TYPE"])
-    plot_name_info(stdscr, offset + counter + 2, start + 2, "JP", os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]")
-    counter += 3
-    # NVP Model
-    if 'NVPMODEL' in data:
-        str_nvp = data['NVPMODEL']['name'] + " - " + str(data['NVPMODEL']['mode'])
-        plot_name_info(stdscr, offset + counter, start, "NV Power", str_nvp)
-        counter += 1
+# EOF
