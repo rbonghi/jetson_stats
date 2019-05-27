@@ -27,6 +27,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 # control command line
 import curses
 # System
@@ -35,8 +36,7 @@ import os
 from .jtopguilib import (check_curses,
                          linear_percent_gauge,
                          make_gauge_from_percent,
-                         plot_name_info,
-                         draw_chart)
+                         plot_name_info)
 
 
 def plot_CPUs(stdscr, offest, list_cpus, width):
@@ -55,7 +55,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
     else:
         return offest + idx + 1
 
-  
+
 @check_curses
 def plot_temperatures(stdscr, offset, data, start=0):
     # Plot title
@@ -121,3 +121,4 @@ def plot_other_info(stdscr, offset, data, width, start=0):
         str_nvp = data['NVPMODEL']['name'] + " - " + str(data['NVPMODEL']['mode'])
         plot_name_info(stdscr, offset + counter, start, "NV Power", str_nvp)
         counter += 1
+# EOF

@@ -29,11 +29,20 @@
 
 # control command line
 import curses
-# System
-import os
 from math import ceil
 # Functions and decorators
 from functools import wraps
+
+
+def check_size_page(func):
+    """ Check curses minimum size page """
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except curses.error:
+            pass
+    return wrapped
 
 
 def check_curses(func):
