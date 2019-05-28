@@ -92,7 +92,9 @@ def plot_voltages(stdscr, offset, data, start=0):
 
 @check_curses
 def plot_other_info(stdscr, offset, data, width, start=0):
-    counter = 0
+    # Title menu
+    stdscr.addstr(offset, start, "{:^20}".format("[Info]"), curses.A_BOLD)
+    counter = 1
     # Model board information
     if "UPT" in data:
         uptime_string = strfdelta(timedelta(seconds=data["UPT"]), "{days} days {hours}:{minutes}:{seconds}")
@@ -130,4 +132,11 @@ def plot_other_info(stdscr, offset, data, width, start=0):
         str_nvp = data['NVPMODEL']['name'] + " - " + str(data['NVPMODEL']['mode'])
         plot_name_info(stdscr, offset + counter, start, "NV Power", str_nvp)
         counter += 1
+    # IP address and Hostname
+    if 'IP' in data:
+        plot_name_info(stdscr, offset + counter, start, "Hostname", data["IP"]["hostname"])
+        counter += 1
+        for name, ip in data["IP"]["interfaces"].items():
+            plot_name_info(stdscr, offset + counter, start, " " + name, ip)
+            counter += 1
 # EOF
