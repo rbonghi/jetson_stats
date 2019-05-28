@@ -28,15 +28,24 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from datetime import timedelta
 # control command line
 import curses
-# System
-import os
 # Graphics elements
 from .jtopguilib import (check_curses,
                          linear_percent_gauge,
                          make_gauge_from_percent,
                          plot_name_info)
+
+
+def strfdelta(tdelta, fmt):
+    """ Print delta time
+        - https://stackoverflow.com/questions/8906926/formatting-python-timedelta-objects
+    """
+    d = {"days": tdelta.days}
+    d["hours"], rem = divmod(tdelta.seconds, 3600)
+    d["minutes"], d["seconds"] = divmod(rem, 60)
+    return fmt.format(**d)
 
 
 def plot_CPUs(stdscr, offest, list_cpus, width):
@@ -84,9 +93,10 @@ def plot_voltages(stdscr, offset, data, start=0):
 @check_curses
 def plot_other_info(stdscr, offset, data, width, start=0):
     counter = 0
-    # APE frequency
-    if 'APE' in data:
-        plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
+    # Model board information
+    if "UPT" in data:
+        uptime_string = strfdelta(timedelta(seconds=data["UPT"]), "{days} days {hours}:{minutes}:{seconds}")
+        plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
         counter += 1
     # FAN status
     if 'FAN' in data:
@@ -111,11 +121,10 @@ def plot_other_info(stdscr, offset, data, width, start=0):
         linear_percent_gauge(stdscr, MTS_BG, width,
                              offset=offset + counter + 2, start=start)
         counter += 3
-    # Model board information
-    stdscr.addstr(offset + counter, start, "Board info:", curses.A_BOLD)
-    plot_name_info(stdscr, offset + counter + 1, start + 2, "Name", os.environ["JETSON_TYPE"])
-    plot_name_info(stdscr, offset + counter + 2, start + 2, "JP", os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]")
-    counter += 3
+    # APE frequency
+    if 'APE' in data:
+        plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
+        counter += 1
     # NVP Model
     if 'NVPMODEL' in data:
         str_nvp = data['NVPMODEL']['name'] + " - " + str(data['NVPMODEL']['mode'])
