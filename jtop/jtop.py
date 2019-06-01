@@ -59,7 +59,7 @@ def import_os_variables(SOURCE, PATTERN="JETSON_"):
                 source_env[name] = value
         return source_env
     else:
-        logging.error("File does not exist")
+        logger.error("File does not exist")
         return {}
 
 

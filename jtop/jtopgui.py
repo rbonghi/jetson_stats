@@ -42,6 +42,7 @@ from .jtopguimenu import (plot_voltages,
                           plot_CPUs)
 
 
+@check_curses
 def Variables(stdscr, jetsonstats):
     """
         Write all environment variables

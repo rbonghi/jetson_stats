@@ -70,13 +70,20 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
         points += [n] * int(ceil(val))
     # Plot chart shape and labels
     for point in range(displayY):
-        value = max_val / float(displayY - 1) * float(displayY - point - 1)
-        stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
-        stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
-                      "{value:3d}{unit}".format(value=int(value), unit=unit),
-                      curses.A_BOLD)
+        if displayY - point != 1:
+            value = max_val / float(displayY - 1) * float(displayY - point - 1)
+            try:
+                stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
+                stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
+                              "{value:3d}{unit}".format(value=int(value), unit=unit),
+                              curses.A_BOLD)
+            except curses.error:
+                pass
     for point in range(displayX):
-        stdscr.addstr(size_y[1], size_x[0] + point, "-")
+        try:
+            stdscr.addstr(size_y[1], size_x[0] + point, "-")
+        except curses.error:
+            pass
     # Plot values
     delta = displayX - len(points)
     for idx, point in enumerate(points):
@@ -85,7 +92,10 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
         else:
             x_val = -1
         y_val = size_y[1] - 1 - ((float(displayY - 1) / max_val) * point)
-        stdscr.addstr(int(y_val), x_val, line, curses.color_pair(2))
+        try:
+            stdscr.addstr(int(y_val), x_val, line, curses.color_pair(2))
+        except curses.error:
+            pass
     # Debug value
     # stdscr.addstr( 5, 5, "{}".format(delta), curses.color_pair(1))
 
@@ -118,16 +128,17 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
             stdscr.addstr(offset, start + 5 + size_bar + 3, gauge['label'])
         # Show progress value linear gauge
         n_bar = int(float(value) * float(size_bar) / 100.0)
-        progress_bar = type_bar * n_bar
-        # Build progress barr string
-        str_progress_bar = ("{n_bar:" + str(size_bar) + "}").format(n_bar=progress_bar)
-        percent_label = gauge['percent'] if 'percent' in gauge else str(value) + "%"
-        str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
-        # Split string in green and grey part
-        green_part = str_progress_bar[:n_bar]
-        grey_part = str_progress_bar[n_bar:]
-        stdscr.addstr(offset, start + 6, green_part, curses.color_pair(2))
-        stdscr.addstr(offset, start + 6 + size_bar - len(grey_part), grey_part, curses.A_DIM)
+        if n_bar > 0:
+            progress_bar = type_bar * n_bar
+            # Build progress barr string
+            str_progress_bar = ("{n_bar:" + str(size_bar) + "}").format(n_bar=progress_bar)
+            percent_label = gauge['percent'] if 'percent' in gauge else str(value) + "%"
+            str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
+            # Split string in green and grey part
+            green_part = str_progress_bar[:n_bar]
+            grey_part = str_progress_bar[n_bar:]
+            stdscr.addstr(offset, start + 6, green_part, curses.color_pair(2))
+            stdscr.addstr(offset, start + 6 + size_bar - len(grey_part), grey_part, curses.A_DIM)
     else:
         # Show short name linear gauge
         stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(color_name))
