@@ -39,8 +39,8 @@ from .jtopguilib import (check_curses,
 # Menu GUI pages
 from .jtopguimenu import (strfdelta,
                           plot_voltages,
+                          compact_info,
                           plot_temperatures,
-                          plot_other_info,
                           plot_CPUs)
 
 
@@ -168,12 +168,13 @@ def all_info(stdscr, jetson):
     split += 1.0 if jetson.stats['voltages'] else 0.0
     column_width = int(float(width - 4) / split)
     line_counter += 1
-    # Add temperatures and voltages
-    plot_other_info(stdscr, line_counter, jetson, column_width, start=1)
-    if jetson.stats['temperatures']:
-        plot_temperatures(stdscr, line_counter, jetson.stats['temperatures'], start=2 + column_width)
-    if jetson.stats['voltages']:
-        plot_voltages(stdscr, line_counter, jetson.stats['voltages'], start=2 + 2 * column_width)
+    # List of all mini menu
+    mini_menu = [compact_info, plot_temperatures, plot_voltages]
+    # Evaluate column width
+    column_width = int(float(width) / len(mini_menu))
+    for idx, mini in enumerate(mini_menu):
+        # Run mini page
+        mini(stdscr, idx * column_width, line_counter, column_width, jetson)
 
 
 class JTOPGUI:

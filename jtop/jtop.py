@@ -477,7 +477,7 @@ class Tegrastats(Thread):
                 # [temp name] is one of the names under the nodes
                 # /sys/devices/virtual/thermal/thermal_zoneX/type.
                 info = data.split("@")
-                name = info[0]
+                name = info[0].strip()
                 value = info[1]
                 # Read from dictionary temperature or initialize it
                 if name in self.temperatures:

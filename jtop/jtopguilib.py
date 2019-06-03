@@ -115,20 +115,21 @@ def make_gauge_from_percent(data):
 @check_curses
 def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6):
     # Evaluate size withuout short name
-    size_bar = max_bar - 8
+    name_size = len(gauge['name'])
+    size_bar = max_bar - name_size - 4
+    # Show short name linear gauge
+    stdscr.addstr(offset, start, ("{short_name:" + str(name_size) + "}").format(short_name=gauge['name']), curses.color_pair(color_name))
     if 'value' in gauge:
         # Check if the list of value is list or value
         if isinstance(gauge['value'], list):
             value = gauge['value'][-1]
         else:
             value = gauge['value']
-        # Show short name linear gauge
-        stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(color_name))
         # Show bracket linear gauge and label and evaluate size withuout size labels and short name
         size_bar -= (len(gauge['label']) + 1) if 'label' in gauge else 0
-        stdscr.addstr(offset, start + 5, "[" + " " * size_bar + "]", curses.A_BOLD)
+        stdscr.addstr(offset, start + name_size + 1, "[" + " " * size_bar + "]", curses.A_BOLD)
         if 'label' in gauge:
-            stdscr.addstr(offset, start + 5 + size_bar + 3, gauge['label'])
+            stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, gauge['label'])
         # Show progress value linear gauge
         n_bar = int(float(value) * float(size_bar) / 100.0)
         if n_bar > 0:
@@ -140,13 +141,11 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
             # Split string in green and grey part
             green_part = str_progress_bar[:n_bar]
             grey_part = str_progress_bar[n_bar:]
-            stdscr.addstr(offset, start + 6, green_part, curses.color_pair(2))
-            stdscr.addstr(offset, start + 6 + size_bar - len(grey_part), grey_part, curses.A_DIM)
+            stdscr.addstr(offset, start + name_size + 2, green_part, curses.color_pair(2))
+            stdscr.addstr(offset, start + name_size + 2 + size_bar - len(grey_part), grey_part, curses.A_DIM)
     else:
-        # Show short name linear gauge
-        stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(color_name))
         # Show bracket linear gauge and label
-        stdscr.addstr(offset, start + 5, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
+        stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
         # Show bracket linear gauge and label
         stdscr.addstr(offset, start + 7, "OFF", curses.color_pair(1))
 

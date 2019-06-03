@@ -40,7 +40,7 @@ from .jtopguilib import (check_curses,
 
 
 def plot_CPUs(stdscr, offest, list_cpus, width):
-    max_bar = int(float(width) / 2.0)
+    max_bar = int(float(width - 2) / 2.0)
     for idx, cpu in enumerate(list_cpus):
         # Split in double list
         start = max_bar + 1 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 0
@@ -57,61 +57,57 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
 
 
 @check_curses
-def plot_temperatures(stdscr, offset, data, start=0):
+def plot_temperatures(stdscr, start, offset, width, jetson):
     # Plot title
-    stdscr.addstr(offset, start, " {0:<10} {1}".format("[Sensor]", "[Temp]"), curses.A_BOLD)
-    counter = 1
-    for key, value in data.items():
-        stdscr.addstr(offset + counter, start,
-                      "{0:<10} {1:>4.2f}{2}".format(key, value['value'][-1],
-                                                    value['unit']))
-        counter += 1
+    stdscr.addstr(offset, start, ("{name:<7} {val:^8}").format(name="[Sensor]", val="[Temp]"), curses.A_BOLD)
+    # Plot name and temperatures
+    for idx, temp in enumerate(jetson.stats['temperatures']):
+        value = jetson.stats['temperatures'][temp]
+        stdscr.addstr(offset + idx + 1, start,
+                      ("{name:<7} {val:8.2f}{unit}").format(name=temp, val=value['value'][-1], unit=value['unit']))
 
 
 @check_curses
-def plot_voltages(stdscr, offset, data, start=0):
+def plot_voltages(stdscr, start, offset, width, jetson):
     # Plot title
-    stdscr.addstr(offset, start, " {0:<10} {1}".format("[Power]", " [Cur/Avr]"), curses.A_BOLD)
-    counter = 1
-    for key, value in data.items():
-        stdscr.addstr(offset + counter, start,
-                      "{0:<10} {1:^4}mW/{2:^4}mW".format(key, int(value['current'][-1]),
-                                                         int(value['average'][-1]))
-                      )
-        counter += 1
+    stdscr.addstr(offset, start, "{name} {val}".format(name="[Power]", val="[Cur/Avr]"), curses.A_BOLD)
+    # Plot voltages
+    for idx, volt in enumerate(jetson.stats['voltages']):
+        value = jetson.stats['voltages'][volt]
+        stdscr.addstr(offset + idx + 1, start,
+                      ("{name:<10} {curr}/{avg}").format(name=volt, curr=int(value['current'][-1]), avg=int(value['average'][-1])))
 
 
 @check_curses
-def plot_other_info(stdscr, offset, jetson, width, start=0):
+def compact_info(stdscr, start, offset, width, jetson):
     # Title menu
-    stdscr.addstr(offset, start, "{:^20}".format("[Info]"), curses.A_BOLD)
+    stdscr.addstr(offset, start, ("{name: ^" + str(width) + "}").format(name="[info]"), curses.A_BOLD)
     counter = 1
     # Model board information
     uptime_string = strfdelta(timedelta(seconds=jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
     plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
     counter += 1
-    # Plot MTS
-    if 'MTS' in jetson.stats:
-        stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
-        MTS_FG = {'name': ' FG',
-                  'value': int(jetson.stats['MTS']['fg']),
-                  }
-        linear_percent_gauge(stdscr, MTS_FG, width,
-                             offset=offset + counter + 1, start=start)
-        MTS_BG = {'name': ' BG',
-                  'value': int(jetson.stats['MTS']['bg']),
-                  }
-        linear_percent_gauge(stdscr, MTS_BG, width,
-                             offset=offset + counter + 2, start=start)
-        counter += 3
-    # APE frequency
-    if 'APE' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
-        counter += 1
     # NVP Model
     if jetson.nvpmodel:
         str_nvp = jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode'])
         plot_name_info(stdscr, offset + counter, start, "NV Power", str_nvp)
+        counter += 1
+    # Plot MTS
+    if 'MTS' in jetson.stats:
+        MTS_FG = {'name': 'MTS FG',
+                  'value': int(jetson.stats['MTS']['fg']),
+                  }
+        linear_percent_gauge(stdscr, MTS_FG, width,
+                             offset=offset + counter, start=start)
+        MTS_BG = {'name': 'MTS BG',
+                  'value': int(jetson.stats['MTS']['bg']),
+                  }
+        linear_percent_gauge(stdscr, MTS_BG, width,
+                             offset=offset + counter + 1, start=start)
+        counter += 2
+    # APE frequency
+    if 'APE' in jetson.stats:
+        plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
         counter += 1
     # IP address and Hostname
     if jetson.local_interfaces:
