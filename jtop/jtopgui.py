@@ -48,10 +48,10 @@ def Variables(stdscr, jetson):
         Write all environment variables
     """
     # Screen size
-    max_y, max_x = stdscr.getmaxyx()
+    height, width = stdscr.getmaxyx()
     # Position information
     posx = 2
-    start_pos = 3
+    start_pos = 2
     # Loop build information
     for idx, info in enumerate(jetson.board):
         # Board info
@@ -60,6 +60,9 @@ def Variables(stdscr, jetson):
             stdscr.addstr(start_pos + idx, posx + 18, info["info"], curses.A_BOLD)
         else:
             stdscr.addstr(start_pos + idx, posx, "- " + info["name"], curses.A_BOLD)
+    # Author information
+    plot_name_info(stdscr, start_pos, width - 30, "Author", "Raffaello Bonghi")
+    plot_name_info(stdscr, start_pos + 1, width - 30, "email", "raffaello@rnext.it")
 
 
 def GPU(stdscr, jetson):
@@ -91,7 +94,7 @@ def all_info(stdscr, jetson):
     """
     # Screen size
     height, width = stdscr.getmaxyx()
-    line_counter = 2
+    line_counter = 1
     # Plot Status CPU
     line_counter = plot_CPUs(stdscr, line_counter, jetson.stats['CPU'], width)
     # RAM linear gauge info
@@ -197,12 +200,10 @@ class JTOPGUI:
 
     @check_curses
     def header(self):
-        head_string = "jtop - Raffaello Bonghi"
-        self.stdscr.addstr(0, 0, head_string, curses.A_BOLD)
-        if os.getuid() != 0:
-            self.stdscr.addstr(0, len(head_string) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))
         board_info = os.environ["JETSON_DESCRIPTION"] + " - Jetpack " + os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"
-        self.stdscr.addstr(1, 0, board_info, curses.A_BOLD)
+        self.stdscr.addstr(0, 0, board_info, curses.A_BOLD)
+        if os.getuid() != 0:
+            self.stdscr.addstr(0, len(board_info) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))
 
     @check_curses
     def menu(self):
