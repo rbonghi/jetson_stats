@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
@@ -169,10 +168,10 @@ class Tegrastats(Thread):
         self.temperatures = {}
         self.voltages = {}
         # Find all fans availables
-        self.fans = {}
+        self.qfans = {}
         for fan in Tegrastats.LIST_FANS:
             if os.path.isfile(fan):
-                self.fans[fan] = deque(max_record * [0], maxlen=max_record)
+                self.qfans[fan] = deque(max_record * [0], maxlen=max_record)
         # Initialize jetson stats
         self._jetsonstats = {}
         # Start process tegrastats
@@ -204,7 +203,58 @@ class Tegrastats(Thread):
             logger.error("Attribute error", exc_info=True)
 
     @property
-    def read(self):
+    def fans(self):
+        list_values = []
+        for file_fan in self.qfans:
+            list_values += [list(self.qfans[file_fan])]
+        return list_values
+
+    @property
+    def disk(self):
+        disk = os.statvfs("/var/")
+        # Evaluate the total space in GB
+        totalSpace = float(disk.f_bsize * disk.f_blocks) / 1024 / 1024 / 1024
+        # Evaluate total used space in GB
+        totalUsedSpace = float(disk.f_bsize * (disk.f_blocks - disk.f_bfree)) / 1024 / 1024 / 1024
+        # Evaluate total available space in GB
+        totalAvailSpace = float(disk.f_bsize * disk.f_bfree) / 1024 / 1024 / 1024
+        # Evaluate total non super-user space in GB
+        totalAvailSpaceNonRoot = float(disk.f_bsize * disk.f_bavail) / 1024 / 1024 / 1024
+        return {'total': totalSpace,
+                'used': totalUsedSpace,
+                'available': totalAvailSpace,
+                'available_no_root': totalAvailSpaceNonRoot
+                }
+
+    @property
+    def uptime(self):
+        return get_uptime()
+
+    @property
+    def nvpmodel(self):
+        return get_nvpmodel()
+
+    @property
+    def local_interfaces(self):
+        return get_local_interfaces()
+
+    @property
+    def board(self):
+        return [{"name": os.environ["JETSON_DESCRIPTION"]},
+                {"name": "Board", "info": os.environ["JETSON_TYPE"]},
+                {"name": "Jetpack", "info": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"},
+                {"name": "GPU Arch", "info": os.environ["JETSON_CUDA_ARCH_BIN"]},
+                {"name": "Libraries"},
+                {"name": "CUDA", "info": os.environ["JETSON_CUDA"]},
+                {"name": "cuDNN", "info": os.environ["JETSON_CUDA"]},
+                {"name": "CUDA", "info": os.environ["JETSON_CUDNN"]},
+                {"name": "TensorRT", "info": os.environ["JETSON_TENSORRT"]},
+                {"name": "VisionWorks", "info": os.environ["JETSON_VISIONWORKS"]},
+                {"name": "OpenCV", "info": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"]},
+                ]
+
+    @property
+    def stats(self):
         # Wait the deque not empty
         while not self._jetsonstats:
             pass
@@ -254,7 +304,7 @@ class Tegrastats(Thread):
                 'status': "OFF",
                 }
 
-    def SWAP(self, text):
+    def _SWAP(self, text):
         # SWAP X/Y (cached Z)
         # X = Amount of SWAP in use in megabytes.
         # Y = Total amount of SWAP available for applications.
@@ -272,7 +322,7 @@ class Tegrastats(Thread):
         else:
             return {}, text
 
-    def IRAM(self, text):
+    def _IRAM(self, text):
         # IRAM X/Y (lfb Z)
         # IRAM is memory local to the video hardware engine.
         # X = Amount of IRAM memory in use, in kilobytes.
@@ -292,7 +342,7 @@ class Tegrastats(Thread):
         else:
             return {}, text
 
-    def RAM(self, text):
+    def _RAM(self, text):
         # RAM X/Y (lfb NxZ)
         # Largest Free Block (lfb) is a statistic about the memory allocator.
         # It refers to the largest contiguous block of physical memory
@@ -313,7 +363,7 @@ class Tegrastats(Thread):
                 'lfb': {'nblock': lfb_stat[0], 'size': lfb_stat[1]},
                 }, text
 
-    def CPU(self, text):
+    def _CPU(self, text):
         # CPU [X%,Y%, , ]@Z
         # or
         # CPU [X%@Z, Y%@Z,...]
@@ -345,45 +395,19 @@ class Tegrastats(Thread):
             self.cpus[idx] = cpu_status
         return text
 
-    def getFans(self):
-        # Read status from fan
-        list_values = []
-        for file_fan in self.fans:
-            fan_status_p = sp.Popen(['cat', file_fan], stdout=sp.PIPE)
-            query = fan_status_p.communicate()[0]
-            logger.debug('{} status status {}'.format(file_fan, query))
-            fan_level = int(query)
-            self.fans[file_fan].append(float(fan_level) / 255.0 * 100.0)
-            list_values += [list(self.fans[file_fan])]
-        return list_values
-
     def decode(self, text):
         jetsonstats = {}
-        # Uptime
-        jetsonstats['UPT'] = get_uptime()
-        # IP and Hostname
-        jetsonstats['IP'] = get_local_interfaces()
-        # Read status disk
-        jetsonstats['DISK'] = get_status_disk()
-        # Extract nvpmodel
-        nvpmodel = get_nvpmodel()
-        if nvpmodel:
-            jetsonstats['NVPMODEL'] = nvpmodel
-        # Read status fan
-        fans_level = self.getFans()
-        if fans_level:
-            jetsonstats['FAN'] = fans_level
         # Read SWAP status
-        swap_status, text = self.SWAP(text)
+        swap_status, text = self._SWAP(text)
         jetsonstats['SWAP'] = swap_status
         # Read IRAM status
-        iram_status, text = self.IRAM(text)
+        iram_status, text = self._IRAM(text)
         jetsonstats['IRAM'] = iram_status
         # Read RAM status
-        ram_status, text = self.RAM(text)
+        ram_status, text = self._RAM(text)
         jetsonstats['RAM'] = ram_status
         # Read CPU status
-        text = self.CPU(text)
+        text = self._CPU(text)
         jetsonstats['CPU'] = list(self.cpus.values())
         # Start while loop to decode
         idx = 0
@@ -475,20 +499,12 @@ class Tegrastats(Thread):
         jetsonstats['voltages'] = self.voltages
         return jetsonstats
 
-
-def get_status_disk():
-    disk = os.statvfs("/var/")
-    # Evaluate the total space in GB
-    totalSpace = float(disk.f_bsize * disk.f_blocks) / 1024 / 1024 / 1024
-    # Evaluate total used space in GB
-    totalUsedSpace = float(disk.f_bsize * (disk.f_blocks - disk.f_bfree)) / 1024 / 1024 / 1024
-    # Evaluate total available space in GB
-    totalAvailSpace = float(disk.f_bsize * disk.f_bfree) / 1024 / 1024 / 1024
-    # Evaluate total non super-user space in GB
-    totalAvailSpaceNonRoot = float(disk.f_bsize * disk.f_bavail) / 1024 / 1024 / 1024
-    return {'total': totalSpace,
-            'used': totalUsedSpace,
-            'available': totalAvailSpace,
-            'available_no_root': totalAvailSpaceNonRoot
-            }
+    def _fan_status(self):
+        # Read status from fan
+        for file_fan in self.qfans:
+            fan_status_p = sp.Popen(['cat', file_fan], stdout=sp.PIPE)
+            query = fan_status_p.communicate()[0]
+            logger.debug('{} status status {}'.format(file_fan, query))
+            fan_level = int(query)
+            self.qfans[file_fan].append(float(fan_level) / 255.0 * 100.0)
 # EOF

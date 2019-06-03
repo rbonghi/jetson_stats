@@ -32,24 +32,42 @@ import jtop
 
 def test_open():
     # Initialize object
-    tegra = jtop.Tegrastats()
+    jetson = jtop.Tegrastats()
     # Open data
-    tegra.open()
+    jetson.open()
     # Close connection
-    tegra.close()
+    jetson.close()
     assert True
 
 
-def test_read():
+def test_disk():
     # Load tegracontroller
-    with jtop.Tegrastats() as tegra:
+    with jtop.Tegrastats() as jetson:
         for x in range(5):
-            stat = tegra.read
+            disk = jetson.disk
+            # Check type
+            assert isinstance(disk, dict)
+
+
+def test_fans():
+    # Load tegracontroller
+    with jtop.Tegrastats() as jetson:
+        for x in range(5):
+            fans = jetson.fans
+            if fans:
+                assert isinstance(fans, list)
+            assert True
+
+
+def test_stats():
+    # Load tegracontroller
+    with jtop.Tegrastats() as jetson:
+        for x in range(5):
             # Check if is correctly written the variable
-            assert "RAM" in stat
-            variable = stat["RAM"]
+            assert "RAM" in jetson.stats
+            variable = jetson.stats["RAM"]
             assert "RAM" in variable
-            variable = stat["RAM"]["RAM"]
+            variable = jetson.stats["RAM"]["RAM"]
             # Check if ram["used"] is a list
             assert isinstance(variable["used"], list)
             # Check if last value is the same send
@@ -58,12 +76,10 @@ def test_read():
 
 def test_nvp():
     # Load tegracontroller
-    with jtop.Tegrastats() as tegra:
+    with jtop.Tegrastats() as jetson:
         for x in range(5):
-            stat = tegra.read
-            # Check NVPmodel
-            assert "NVPMODEL" in stat
+            nvpmodel = jetson.nvpmodel
             # Chek values
-            assert stat["NVPMODEL"]["name"] == "TEST"
-            assert stat["NVPMODEL"]["mode"] == 0
+            assert nvpmodel["name"] == "TEST"
+            assert nvpmodel["mode"] == 0
 # EOF

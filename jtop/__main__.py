@@ -92,10 +92,8 @@ def gui(stdscr, args, tegra):
     while True:
         # First, clear the screen
         stdscr.erase()
-        # Read status tegra
-        stat = tegra.read
         # Draw pages
-        pages.draw(stat)
+        pages.draw(tegra)
         # Draw the screen
         stdscr.refresh()
         # Set a timeout and read keystroke
@@ -142,7 +140,7 @@ def main():
             if args.server:
                 while True:
                     # Read tegra stats
-                    stat = tegra.read
+                    stat = tegra.stats
                     # TODO: Convert print to server post
                     print(stat)
                     # Sleep before send new stat

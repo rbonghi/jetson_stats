@@ -43,31 +43,17 @@ from .jtopguimenu import (plot_voltages,
 
 
 @check_curses
-def Variables(stdscr, jetsonstats):
+def Variables(stdscr, jetson):
     """
         Write all environment variables
     """
     # Screen size
     max_y, max_x = stdscr.getmaxyx()
-    # Status board
-    INFO_BOARD = \
-        [{"name": os.environ["JETSON_DESCRIPTION"]},
-         {"name": "Board", "info": os.environ["JETSON_TYPE"]},
-         {"name": "Jetpack", "info": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"},
-         {"name": "GPU Arch", "info": os.environ["JETSON_CUDA_ARCH_BIN"]},
-         {"name": "Libraries"},
-         {"name": "CUDA", "info": os.environ["JETSON_CUDA"]},
-         {"name": "cuDNN", "info": os.environ["JETSON_CUDA"]},
-         {"name": "CUDA", "info": os.environ["JETSON_CUDNN"]},
-         {"name": "TensorRT", "info": os.environ["JETSON_TENSORRT"]},
-         {"name": "VisionWorks", "info": os.environ["JETSON_VISIONWORKS"]},
-         {"name": "OpenCV", "info": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"]},
-         ]
     # Position information
     posx = 2
     start_pos = 3
     # Loop build information
-    for idx, info in enumerate(INFO_BOARD):
+    for idx, info in enumerate(jetson.board):
         # Board info
         if "info" in info:
             stdscr.addstr(start_pos + idx, posx + 2, "* " + info["name"] + ":")
@@ -76,7 +62,7 @@ def Variables(stdscr, jetsonstats):
             stdscr.addstr(start_pos + idx, posx, "- " + info["name"], curses.A_BOLD)
 
 
-def GPU(stdscr, jetsonstats):
+def GPU(stdscr, jetson):
     """
         Draw a plot with GPU payload
     """
@@ -86,20 +72,20 @@ def GPU(stdscr, jetsonstats):
     size_x = [2, max_x - 10]
     size_y = [2, max_y * 2 // 3 - 2]
     # Read GPU status
-    gpu = jetsonstats["GR3D"]
+    gpu = jetson.stats["GR3D"]
     # Draw the GPU chart
     draw_chart(stdscr, size_x, size_y, gpu)
     # Percent Gauge GPU
-    linear_percent_gauge(stdscr, make_gauge_from_percent(jetsonstats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
+    linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
     # Temperature GPU
-    if "GPU" in jetsonstats['temperatures']:
-        plot_name_info(stdscr, max_y * 2 // 3 + 1, 2, "GPU Temp", jetsonstats['temperatures']['GPU']['text'])
+    if "GPU" in jetson.stats['temperatures']:
+        plot_name_info(stdscr, max_y * 2 // 3 + 1, 2, "GPU Temp", jetson.stats['temperatures']['GPU']['text'])
     # NVP Model
-    if 'NVPMODEL' in jetsonstats:
-        plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", jetsonstats['NVPMODEL']['name'] + " - " + str(jetsonstats['NVPMODEL']['mode']))
+    if jetson.nvpmodel:
+        plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode']))
 
 
-def all_info(stdscr, jetsonstats):
+def all_info(stdscr, jetson):
     """
         Update screen with values
     """
@@ -107,10 +93,10 @@ def all_info(stdscr, jetsonstats):
     height, width = stdscr.getmaxyx()
     line_counter = 2
     # Plot Status CPU
-    line_counter = plot_CPUs(stdscr, line_counter, jetsonstats['CPU'], width)
+    line_counter = plot_CPUs(stdscr, line_counter, jetson.stats['CPU'], width)
     # RAM linear gauge info
-    ram_status = jetsonstats['RAM']['RAM']
-    lfb_status = jetsonstats['RAM']['lfb']
+    ram_status = jetson.stats['RAM']['RAM']
+    lfb_status = jetson.stats['RAM']['lfb']
     RAM_VALUE = {'name': "Mem",
                  'value': int(ram_status['used'][-1] / float(ram_status['total']) * 100.0),
                  'label': "(lfb " + str(lfb_status['nblock']) + "x" + str(lfb_status['size']) + "MB)",
@@ -118,9 +104,9 @@ def all_info(stdscr, jetsonstats):
                  }
     linear_percent_gauge(stdscr, RAM_VALUE, width, offset=line_counter + 1)
     # EMC linear gauge info
-    linear_percent_gauge(stdscr, make_gauge_from_percent(jetsonstats['EMC']), width, offset=line_counter + 2)
+    linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['EMC']), width, offset=line_counter + 2)
     # IRAM linear gauge info
-    iram_status = jetsonstats['IRAM']
+    iram_status = jetson.stats['IRAM']
     if iram_status:
         line_counter += 1
         IRAM_VALUE = {'name': "Imm",
@@ -131,7 +117,7 @@ def all_info(stdscr, jetsonstats):
                       }
         linear_percent_gauge(stdscr, IRAM_VALUE, width, offset=line_counter + 2)
     # SWAP linear gauge info
-    swap_status = jetsonstats['SWAP']
+    swap_status = jetson.stats['SWAP']
     if swap_status:
         SWAP_VALUE = {'name': "Swp",
                       'value': int(swap_status['used'][-1] / float(swap_status['total']) * 100.0),
@@ -144,10 +130,10 @@ def all_info(stdscr, jetsonstats):
     linear_percent_gauge(stdscr, SWAP_VALUE, width, offset=line_counter + 3)
     line_counter += 4
     # GPU linear gauge info
-    linear_percent_gauge(stdscr, make_gauge_from_percent(jetsonstats['GR3D']), width, offset=line_counter + 1)
+    linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), width, offset=line_counter + 1)
     line_counter += 2
     # Status disk
-    disk_status = jetsonstats['DISK']
+    disk_status = jetson.disk
     DISK_STATUS = {'name': "Dsk",
                    'value': int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
                    'percent': "{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
@@ -155,16 +141,16 @@ def all_info(stdscr, jetsonstats):
     linear_percent_gauge(stdscr, DISK_STATUS, width, offset=line_counter, type_bar="#", color_name=3)
     # Last part of information
     split = 1.0
-    split += 1.0 if jetsonstats['temperatures'] else 0.0
-    split += 1.0 if jetsonstats['voltages'] else 0.0
+    split += 1.0 if jetson.stats['temperatures'] else 0.0
+    split += 1.0 if jetson.stats['voltages'] else 0.0
     column_width = int(float(width - 4) / split)
     line_counter += 1
     # Add temperatures and voltages
-    plot_other_info(stdscr, line_counter, jetsonstats, column_width, start=1)
-    if jetsonstats['temperatures']:
-        plot_temperatures(stdscr, line_counter, jetsonstats['temperatures'], start=2 + column_width)
-    if jetsonstats['voltages']:
-        plot_voltages(stdscr, line_counter, jetsonstats['voltages'], start=2 + 2 * column_width)
+    plot_other_info(stdscr, line_counter, jetson, column_width, start=1)
+    if jetson.stats['temperatures']:
+        plot_temperatures(stdscr, line_counter, jetson.stats['temperatures'], start=2 + column_width)
+    if jetson.stats['voltages']:
+        plot_voltages(stdscr, line_counter, jetson.stats['voltages'], start=2 + 2 * column_width)
 
 
 class JTOPGUI:

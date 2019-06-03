@@ -91,18 +91,17 @@ def plot_voltages(stdscr, offset, data, start=0):
 
 
 @check_curses
-def plot_other_info(stdscr, offset, data, width, start=0):
+def plot_other_info(stdscr, offset, jetson, width, start=0):
     # Title menu
     stdscr.addstr(offset, start, "{:^20}".format("[Info]"), curses.A_BOLD)
     counter = 1
     # Model board information
-    if "UPT" in data:
-        uptime_string = strfdelta(timedelta(seconds=data["UPT"]), "{days} days {hours}:{minutes}:{seconds}")
-        plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
-        counter += 1
+    uptime_string = strfdelta(timedelta(seconds=jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
+    plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
+    counter += 1
     # FAN status
-    if 'FAN' in data:
-        for fan in data['FAN']:
+    if jetson.fans:
+        for fan in jetson.fans:
             FAN_VALUE = {'name': 'FAN',
                          'value': int(fan[-1]),
                          }
@@ -110,33 +109,33 @@ def plot_other_info(stdscr, offset, data, width, start=0):
                                  offset=offset + counter, start=start)
             counter += 1
     # Plot MTS
-    if 'MTS' in data:
+    if 'MTS' in jetson.stats:
         stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
         MTS_FG = {'name': ' FG',
-                  'value': int(data['MTS']['fg']),
+                  'value': int(jetson.stats['MTS']['fg']),
                   }
         linear_percent_gauge(stdscr, MTS_FG, width,
                              offset=offset + counter + 1, start=start)
         MTS_BG = {'name': ' BG',
-                  'value': int(data['MTS']['bg']),
+                  'value': int(jetson.stats['MTS']['bg']),
                   }
         linear_percent_gauge(stdscr, MTS_BG, width,
                              offset=offset + counter + 2, start=start)
         counter += 3
     # APE frequency
-    if 'APE' in data:
-        plot_name_info(stdscr, offset + counter, start, "APE", str(data['APE']) + "MHz")
+    if 'APE' in jetson.stats:
+        plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
         counter += 1
     # NVP Model
-    if 'NVPMODEL' in data:
-        str_nvp = data['NVPMODEL']['name'] + " - " + str(data['NVPMODEL']['mode'])
+    if jetson.nvpmodel:
+        str_nvp = jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode'])
         plot_name_info(stdscr, offset + counter, start, "NV Power", str_nvp)
         counter += 1
     # IP address and Hostname
-    if 'IP' in data:
-        plot_name_info(stdscr, offset + counter, start, "Hostname", data["IP"]["hostname"])
+    if jetson.local_interfaces:
+        plot_name_info(stdscr, offset + counter, start, "Hostname", jetson.local_interfaces["hostname"])
         counter += 1
-        for name, ip in data["IP"]["interfaces"].items():
+        for name, ip in jetson.local_interfaces["interfaces"].items():
             plot_name_info(stdscr, offset + counter, start, " " + name, ip)
             counter += 1
 # EOF
