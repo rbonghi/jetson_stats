@@ -33,19 +33,10 @@ from datetime import timedelta
 import curses
 # Graphics elements
 from .jtopguilib import (check_curses,
+                         strfdelta,
                          linear_percent_gauge,
                          make_gauge_from_percent,
                          plot_name_info)
-
-
-def strfdelta(tdelta, fmt):
-    """ Print delta time
-        - https://stackoverflow.com/questions/8906926/formatting-python-timedelta-objects
-    """
-    d = {"days": tdelta.days}
-    d["hours"], rem = divmod(tdelta.seconds, 3600)
-    d["minutes"], d["seconds"] = divmod(rem, 60)
-    return fmt.format(**d)
 
 
 def plot_CPUs(stdscr, offest, list_cpus, width):
@@ -99,15 +90,6 @@ def plot_other_info(stdscr, offset, jetson, width, start=0):
     uptime_string = strfdelta(timedelta(seconds=jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
     plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
     counter += 1
-    # FAN status
-    if jetson.fans:
-        for fan in jetson.fans:
-            FAN_VALUE = {'name': 'FAN',
-                         'value': int(fan[-1]),
-                         }
-            linear_percent_gauge(stdscr, FAN_VALUE, width,
-                                 offset=offset + counter, start=start)
-            counter += 1
     # Plot MTS
     if 'MTS' in jetson.stats:
         stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)

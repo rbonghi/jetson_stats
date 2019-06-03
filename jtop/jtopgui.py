@@ -29,6 +29,7 @@
 
 import os
 import curses
+from datetime import timedelta
 # Graphics elements
 from .jtopguilib import (check_curses,
                          linear_percent_gauge,
@@ -36,7 +37,8 @@ from .jtopguilib import (check_curses,
                          plot_name_info,
                          draw_chart)
 # Menu GUI pages
-from .jtopguimenu import (plot_voltages,
+from .jtopguimenu import (strfdelta,
+                          plot_voltages,
                           plot_temperatures,
                           plot_other_info,
                           plot_CPUs)
@@ -52,6 +54,10 @@ def Variables(stdscr, jetson):
     # Position information
     posx = 2
     start_pos = 2
+    # Up time
+    uptime_string = strfdelta(timedelta(seconds=jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
+    plot_name_info(stdscr, start_pos, posx, "- Up Time", uptime_string)
+    start_pos += 1
     # Loop build information
     for idx, info in enumerate(jetson.board):
         # Board info
@@ -60,6 +66,15 @@ def Variables(stdscr, jetson):
             stdscr.addstr(start_pos + idx, posx + 18, info["info"], curses.A_BOLD)
         else:
             stdscr.addstr(start_pos + idx, posx, "- " + info["name"], curses.A_BOLD)
+    # IP address and Hostname
+    if jetson.local_interfaces:
+        plot_name_info(stdscr, start_pos + idx + 1, posx, "- Hostname", jetson.local_interfaces["hostname"])
+        stdscr.addstr(start_pos + idx + 2, posx, "- Interfaces", curses.A_BOLD)
+        idx += 3
+        for name, ip in jetson.local_interfaces["interfaces"].items():
+            stdscr.addstr(start_pos + idx, posx + 2, "* " + name + ":")
+            stdscr.addstr(start_pos + idx, posx + 18, ip, curses.A_BOLD)
+            idx += 1
     # Author information
     plot_name_info(stdscr, start_pos, width - 30, "Author", "Raffaello Bonghi")
     plot_name_info(stdscr, start_pos + 1, width - 30, "email", "raffaello@rnext.it")
@@ -132,6 +147,11 @@ def all_info(stdscr, jetson):
         SWAP_VALUE = {'name': "Swp"}
     linear_percent_gauge(stdscr, SWAP_VALUE, width, offset=line_counter + 3)
     line_counter += 4
+    # FAN status
+    for fan in jetson.fans:
+        linear_percent_gauge(stdscr, fan, width,
+                             offset=line_counter)
+        line_counter += 1
     # GPU linear gauge info
     linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), width, offset=line_counter + 1)
     line_counter += 2

@@ -45,6 +45,16 @@ def check_curses(func):
     return wrapped
 
 
+def strfdelta(tdelta, fmt):
+    """ Print delta time
+        - https://stackoverflow.com/questions/8906926/formatting-python-timedelta-objects
+    """
+    d = {"days": tdelta.days}
+    d["hours"], rem = divmod(tdelta.seconds, 3600)
+    d["minutes"], d["seconds"] = divmod(rem, 60)
+    return fmt.format(**d)
+
+
 @check_curses
 def draw_chart(stdscr, size_x, size_y, value, line="*"):
     # Get Max value and unit from value to draw
@@ -107,7 +117,11 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
     # Evaluate size withuout short name
     size_bar = max_bar - 8
     if 'value' in gauge:
-        value = gauge['value']
+        # Check if the list of value is list or value
+        if isinstance(gauge['value'], list):
+            value = gauge['value'][-1]
+        else:
+            value = gauge['value']
         # Show short name linear gauge
         stdscr.addstr(offset, start + 0, ("{short_name:4}").format(short_name=gauge['name']), curses.color_pair(color_name))
         # Show bracket linear gauge and label and evaluate size withuout size labels and short name

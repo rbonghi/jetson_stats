@@ -135,8 +135,30 @@ def get_local_interfaces():
             elif isinstance(netaddr, str):
                 full_addr.append(str(ord(netaddr)))
         ip_dict[name] = '.'.join(full_addr)
-
+    # Remove loopback interface is in list
+    if 'lo' in ip_dict:
+        del ip_dict['lo']
     return {"hostname": hostname, "interfaces": ip_dict}
+
+
+class Fan():
+
+    def __init__(self, path, max_record):
+        self.path = path
+        self.fan = deque(max_record * [0], maxlen=max_record)
+
+    def update(self):
+        fan_status_p = sp.Popen(['cat', self.path], stdout=sp.PIPE)
+        query, _ = fan_status_p.communicate()
+        logger.debug('{} status status {}'.format(self.path, query))
+        fan_level = int(query)
+        self.fan.append(float(fan_level) / 255.0 * 100.0)
+
+    @property
+    def status(self):
+        return {'name': 'FAN',
+                'value': list(self.qfans),
+                }
 
 
 class Tegrastats(Thread):
@@ -171,7 +193,7 @@ class Tegrastats(Thread):
         self.qfans = {}
         for fan in Tegrastats.LIST_FANS:
             if os.path.isfile(fan):
-                self.qfans[fan] = deque(max_record * [0], maxlen=max_record)
+                self.qfans[fan] = Fan(fan, max_record)
         # Initialize jetson stats
         self._jetsonstats = {}
         # Start process tegrastats
@@ -204,10 +226,7 @@ class Tegrastats(Thread):
 
     @property
     def fans(self):
-        list_values = []
-        for file_fan in self.qfans:
-            list_values += [list(self.qfans[file_fan])]
-        return list_values
+        return [fan.read for fan in self.qfans]
 
     @property
     def disk(self):
@@ -397,6 +416,9 @@ class Tegrastats(Thread):
 
     def decode(self, text):
         jetsonstats = {}
+        # Update status from fan
+        for file_fan in self.qfans:
+            file_fan.update()
         # Read SWAP status
         swap_status, text = self._SWAP(text)
         jetsonstats['SWAP'] = swap_status
@@ -498,13 +520,4 @@ class Tegrastats(Thread):
         jetsonstats['temperatures'] = self.temperatures
         jetsonstats['voltages'] = self.voltages
         return jetsonstats
-
-    def _fan_status(self):
-        # Read status from fan
-        for file_fan in self.qfans:
-            fan_status_p = sp.Popen(['cat', file_fan], stdout=sp.PIPE)
-            query = fan_status_p.communicate()[0]
-            logger.debug('{} status status {}'.format(file_fan, query))
-            fan_level = int(query)
-            self.qfans[file_fan].append(float(fan_level) / 255.0 * 100.0)
 # EOF
