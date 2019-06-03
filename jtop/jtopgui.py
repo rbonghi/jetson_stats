@@ -169,21 +169,33 @@ def all_info(stdscr, jetsonstats):
 
 class JTOPGUI:
 
+    SIZE = {"width": 50, "height": 20}
+
     def __init__(self, stdscr, pages, init_page=0):
         self.stdscr = stdscr
         self.pages = pages
         self.n_page = init_page
 
     def draw(self, stat):
-        # Write head of the jtop
-        self.header()
-        # Write page selected
-        if "func" in self.pages[self.n_page]:
-            page = self.pages[self.n_page]["func"]
-            if page is not None:
-                page(self.stdscr, stat)
-        # Draw menu
-        self.menu()
+        # Screen size
+        height, width = self.stdscr.getmaxyx()
+        if width >= JTOPGUI.SIZE["width"] and height >= JTOPGUI.SIZE["height"]:
+            # Write head of the jtop
+            self.header()
+            # Write page selected
+            if "func" in self.pages[self.n_page]:
+                page = self.pages[self.n_page]["func"]
+                if page is not None:
+                    page(self.stdscr, stat)
+            # Draw menu
+            self.menu()
+        else:
+            # Warning window size small
+            string_warning = "Change size window!"
+            try:
+                self.stdscr.addstr(height / 2 - 1, (width - len(string_warning)) / 2, string_warning, curses.A_BOLD)
+            except curses.error:
+                pass
 
     def increase(self):
         idx = self.n_page + 1
