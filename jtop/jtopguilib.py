@@ -108,7 +108,7 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
         points += [n] * int(ceil(val))
     # Plot chart shape and labels
     for point in range(displayY):
-        if displayY - point != 1:
+        if displayY != point:
             value = max_val / float(displayY - 1) * float(displayY - point - 1)
             try:
                 stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")

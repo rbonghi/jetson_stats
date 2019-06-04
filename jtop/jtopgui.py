@@ -90,7 +90,7 @@ def GPU(stdscr, jetson):
     max_y, max_x = stdscr.getmaxyx()
     # Evaluate size chart
     size_x = [2, max_x - 10]
-    size_y = [2, max_y * 2 // 3 - 2]
+    size_y = [1, max_y * 2 // 3 - 1]
     # Read GPU status
     gpu = jetson.stats["GR3D"]
     # Draw the GPU chart
