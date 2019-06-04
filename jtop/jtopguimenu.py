@@ -62,7 +62,7 @@ def plot_temperatures(stdscr, start, offset, width, jetson):
     # Plot title
     stdscr.addstr(offset, start, ("{name:<9} {val:^8}").format(name="[Sensor]", val="[Temp]"), curses.A_BOLD)
     # Plot name and temperatures
-    for idx, temp in enumerate(jetson.stats['temperatures']):
+    for idx, temp in enumerate(sorted(jetson.stats['temperatures'])):
         value = jetson.stats['temperatures'][temp]
         stdscr.addstr(offset + idx + 1, start,
                       ("{name:<7} {val:8.2f}{unit}").format(name=temp, val=value['value'][-1], unit=value['unit']))
@@ -73,7 +73,7 @@ def plot_voltages(stdscr, start, offset, width, jetson):
     # Plot title
     stdscr.addstr(offset, start, "{name:<10} [Cur]  [Avr]".format(name="[Power/mV]"), curses.A_BOLD)
     # Plot voltages
-    for idx, volt in enumerate(jetson.stats['voltages']):
+    for idx, volt in enumerate(sorted(jetson.stats['voltages'])):
         value = jetson.stats['voltages'][volt]
         stdscr.addstr(offset + idx + 1, start,
                       ("{name:<10} {curr: <6} {avg: <6}").format(name=volt, curr=int(value['current'][-1]), avg=int(value['average'][-1])))
