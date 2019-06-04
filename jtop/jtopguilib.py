@@ -182,11 +182,11 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
             grey_part = str_progress_bar[n_bar:]
             stdscr.addstr(offset, start + name_size + 2, green_part, curses.color_pair(2))
             stdscr.addstr(offset, start + name_size + 2 + size_bar - len(grey_part), grey_part, curses.A_DIM)
-        else:
-            # Show bracket linear gauge and label
-            stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
-            # Show bracket linear gauge and label
-            stdscr.addstr(offset, start + 7, "OFF", curses.color_pair(1))
+    else:
+        # Show bracket linear gauge and label
+        stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
+        # Show bracket linear gauge and label
+        stdscr.addstr(offset, start + 7, "OFF", curses.color_pair(1))
 
 
 @check_curses
