@@ -31,7 +31,8 @@ import os
 import curses
 from datetime import timedelta
 # Graphics elements
-from .jtopguilib import (check_curses,
+from .jtopguilib import (check_size,
+                         check_curses,
                          linear_percent_gauge,
                          make_gauge_from_percent,
                          plot_name_info,
@@ -78,7 +79,7 @@ def Variables(stdscr, jetson):
             idx += 1
     # Author information
     plot_name_info(stdscr, start_pos, width - 30, "Author", "Raffaello Bonghi")
-    plot_name_info(stdscr, start_pos + 1, width - 30, "email", "raffaello@rnext.it")
+    plot_name_info(stdscr, start_pos + 1, width - 30, "e-mail", "raffaello@rnext.it")
 
 
 def GPU(stdscr, jetson):
@@ -175,33 +176,22 @@ def all_info(stdscr, jetson):
 
 class JTOPGUI:
 
-    SIZE = {"width": 50, "height": 20}
-
     def __init__(self, stdscr, pages, init_page=0):
         self.stdscr = stdscr
         self.pages = pages
         self.n_page = init_page
 
+    @check_size(20, 50)
     def draw(self, stat):
-        # Screen size
-        height, width = self.stdscr.getmaxyx()
-        if width >= JTOPGUI.SIZE["width"] and height >= JTOPGUI.SIZE["height"]:
-            # Write head of the jtop
-            self.header()
-            # Write page selected
-            if "func" in self.pages[self.n_page]:
-                page = self.pages[self.n_page]["func"]
-                if page is not None:
-                    page(self.stdscr, stat)
-            # Draw menu
-            self.menu()
-        else:
-            # Warning window size small
-            string_warning = "Change size window!"
-            try:
-                self.stdscr.addstr(height / 2 - 1, (width - len(string_warning)) / 2, string_warning, curses.A_BOLD)
-            except curses.error:
-                pass
+        # Write head of the jtop
+        self.header()
+        # Write page selected
+        if "func" in self.pages[self.n_page]:
+            page = self.pages[self.n_page]["func"]
+            if page is not None:
+                page(self.stdscr, stat)
+        # Draw menu
+        self.menu()
 
     def increase(self):
         idx = self.n_page + 1
