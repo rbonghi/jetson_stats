@@ -35,10 +35,22 @@ if __name__ == "__main__":
 
     print("Simple Tegrastats reader")
 
-    with jtop.Tegrastats() as tegra:
+    with jtop.Tegrastats() as jetson:
         while True:
             # Read tegra stats
-            print(tegra.read)
+            print(jetson.stats)
+            # Status disk
+            print(jetson.disk)
+            # Status fans
+            print(jetson.fans)
+            # uptime
+            print(jetson.uptime)
+            # nvpmodel
+            print(jetson.nvpmodel)
+            # local interfaces
+            print(jetson.local_interfaces)
+            # boards
+            print(jetson.boards)
             # Sleep before send new stat
             time.sleep(1)
 # EOF

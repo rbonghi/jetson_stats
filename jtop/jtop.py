@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
@@ -37,6 +36,11 @@ import subprocess as sp
 # Threading
 from threading import Thread
 from collections import deque
+# Socket and IP information
+import socket
+import fcntl
+import struct
+import array
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
@@ -44,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 def import_os_variables(SOURCE, PATTERN="JETSON_"):
     if os.path.isfile(SOURCE):
+        logger.info("Open source file {}".format(SOURCE))
         proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE)
         # Load variables
         source_env = {}
@@ -54,7 +59,7 @@ def import_os_variables(SOURCE, PATTERN="JETSON_"):
                 source_env[name] = value
         return source_env
     else:
-        logging.error("File does not exist")
+        logger.error("File does not exist")
         return {}
 
 
@@ -71,6 +76,90 @@ def get_nvpmodel():
     except Exception:
         logger.error("Exception occurred", exc_info=True)
         return {}
+
+
+def get_uptime():
+    """ Read uptime system
+        http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
+    """
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+    return uptime_seconds
+
+
+def get_local_interfaces():
+    """ Returns a dictionary of name:ip key value pairs.
+        - Reference:
+           * http://code.activestate.com/recipes/439093/#c1
+           * https://gist.github.com/pklaus/289646
+    """
+    # Max possible bytes for interface result.  Will truncate if more than 4096 characters to describe interfaces.
+    MAX_BYTES = 4096
+    # We're going to make a blank byte array to operate on.  This is our fill char.
+    FILL_CHAR = b'\0'
+    # Command defined in ioctl.h for the system operation for get iface list
+    # Defined at https://code.woboq.org/qt5/include/bits/ioctls.h.html under
+    # /* Socket configuration controls. */ section.
+    SIOCGIFCONF = 0x8912
+    # Read hostname
+    hostname = socket.gethostname()
+    # Make a dgram socket to use as our file descriptor that we'll operate on.
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Make a byte array with our fill character.
+    names = array.array('B', MAX_BYTES * FILL_CHAR)
+    # Get the address of our names byte array for use in our struct.
+    names_address, names_length = names.buffer_info()
+    # Create a mutable byte buffer to store the data in
+    mutable_byte_buffer = struct.pack('iL', MAX_BYTES, names_address)
+    # mutate our mutable_byte_buffer with the results of get_iface_list.
+    # NOTE: mutated_byte_buffer is just a reference to mutable_byte_buffer - for the sake of clarity we've defined them as
+    # separate variables, however they are the same address space - that's how fcntl.ioctl() works since the mutate_flag=True
+    # by default.
+    mutated_byte_buffer = fcntl.ioctl(sock.fileno(), SIOCGIFCONF, mutable_byte_buffer)
+    # Get our max_bytes of our mutated byte buffer that points to the names variable address space.
+    max_bytes_out, names_address_out = struct.unpack('iL', mutated_byte_buffer)
+    # Convert names to a bytes array - keep in mind we've mutated the names array, so now our bytes out should represent
+    # the bytes results of the get iface list ioctl command.
+    namestr = names.tostring()
+    # Each entry is 40 bytes long.  The first 16 bytes are the name string.
+    # the 20-24th bytes are IP address octet strings in byte form - one for each byte.
+    # Don't know what 17-19 are, or bytes 25:40.
+    ip_dict = {}
+    for i in range(0, max_bytes_out, 40):
+        name = namestr[i: i + 16].split(FILL_CHAR, 1)[0]
+        name = name.decode('utf-8')
+        ip_bytes = namestr[i + 20:i + 24]
+        full_addr = []
+        for netaddr in ip_bytes:
+            if isinstance(netaddr, int):
+                full_addr.append(str(netaddr))
+            elif isinstance(netaddr, str):
+                full_addr.append(str(ord(netaddr)))
+        ip_dict[name] = '.'.join(full_addr)
+    # Remove loopback interface is in list
+    if 'lo' in ip_dict:
+        del ip_dict['lo']
+    return {"hostname": hostname, "interfaces": ip_dict}
+
+
+class Fan():
+
+    def __init__(self, path, max_record):
+        self.path = path
+        self.fan = deque(max_record * [0], maxlen=max_record)
+
+    def update(self):
+        fan_status_p = sp.Popen(['cat', self.path], stdout=sp.PIPE)
+        query, _ = fan_status_p.communicate()
+        logger.debug('{} status status {}'.format(self.path, query))
+        fan_level = float(query) / 255.0 * 100.0
+        self.fan.append(int(fan_level))
+
+    @property
+    def status(self):
+        return {'name': 'FAN',
+                'value': list(self.fan),
+                }
 
 
 class Tegrastats(Thread):
@@ -102,10 +191,10 @@ class Tegrastats(Thread):
         self.temperatures = {}
         self.voltages = {}
         # Find all fans availables
-        self.fans = {}
+        self.qfans = []
         for fan in Tegrastats.LIST_FANS:
             if os.path.isfile(fan):
-                self.fans[fan] = deque(max_record * [0], maxlen=max_record)
+                self.qfans += [Fan(fan, max_record)]
         # Initialize jetson stats
         self._jetsonstats = {}
         # Start process tegrastats
@@ -137,7 +226,55 @@ class Tegrastats(Thread):
             logger.error("Attribute error", exc_info=True)
 
     @property
-    def read(self):
+    def fans(self):
+        return [fan.status for fan in self.qfans]
+
+    @property
+    def disk(self):
+        disk = os.statvfs("/var/")
+        # Evaluate the total space in GB
+        totalSpace = float(disk.f_bsize * disk.f_blocks) / 1024 / 1024 / 1024
+        # Evaluate total used space in GB
+        totalUsedSpace = float(disk.f_bsize * (disk.f_blocks - disk.f_bfree)) / 1024 / 1024 / 1024
+        # Evaluate total available space in GB
+        totalAvailSpace = float(disk.f_bsize * disk.f_bfree) / 1024 / 1024 / 1024
+        # Evaluate total non super-user space in GB
+        totalAvailSpaceNonRoot = float(disk.f_bsize * disk.f_bavail) / 1024 / 1024 / 1024
+        return {'total': totalSpace,
+                'used': totalUsedSpace,
+                'available': totalAvailSpace,
+                'available_no_root': totalAvailSpaceNonRoot
+                }
+
+    @property
+    def uptime(self):
+        return get_uptime()
+
+    @property
+    def nvpmodel(self):
+        return get_nvpmodel()
+
+    @property
+    def local_interfaces(self):
+        return get_local_interfaces()
+
+    @property
+    def board(self):
+        return [{"name": os.environ["JETSON_DESCRIPTION"]},
+                {"name": "Board", "info": os.environ["JETSON_TYPE"]},
+                {"name": "Jetpack", "info": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"},
+                {"name": "GPU Arch", "info": os.environ["JETSON_CUDA_ARCH_BIN"]},
+                {"name": "Libraries"},
+                {"name": "CUDA", "info": os.environ["JETSON_CUDA"]},
+                {"name": "cuDNN", "info": os.environ["JETSON_CUDA"]},
+                {"name": "CUDA", "info": os.environ["JETSON_CUDNN"]},
+                {"name": "TensorRT", "info": os.environ["JETSON_TENSORRT"]},
+                {"name": "VisionWorks", "info": os.environ["JETSON_VISIONWORKS"]},
+                {"name": "OpenCV", "info": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"]},
+                ]
+
+    @property
+    def stats(self):
         # Wait the deque not empty
         while not self._jetsonstats:
             pass
@@ -187,7 +324,7 @@ class Tegrastats(Thread):
                 'status': "OFF",
                 }
 
-    def SWAP(self, text):
+    def _SWAP(self, text):
         # SWAP X/Y (cached Z)
         # X = Amount of SWAP in use in megabytes.
         # Y = Total amount of SWAP available for applications.
@@ -205,7 +342,7 @@ class Tegrastats(Thread):
         else:
             return {}, text
 
-    def IRAM(self, text):
+    def _IRAM(self, text):
         # IRAM X/Y (lfb Z)
         # IRAM is memory local to the video hardware engine.
         # X = Amount of IRAM memory in use, in kilobytes.
@@ -225,7 +362,7 @@ class Tegrastats(Thread):
         else:
             return {}, text
 
-    def RAM(self, text):
+    def _RAM(self, text):
         # RAM X/Y (lfb NxZ)
         # Largest Free Block (lfb) is a statistic about the memory allocator.
         # It refers to the largest contiguous block of physical memory
@@ -246,7 +383,7 @@ class Tegrastats(Thread):
                 'lfb': {'nblock': lfb_stat[0], 'size': lfb_stat[1]},
                 }, text
 
-    def CPU(self, text):
+    def _CPU(self, text):
         # CPU [X%,Y%, , ]@Z
         # or
         # CPU [X%@Z, Y%@Z,...]
@@ -278,41 +415,22 @@ class Tegrastats(Thread):
             self.cpus[idx] = cpu_status
         return text
 
-    def getFans(self):
-        # Read status from fan
-        list_values = []
-        for file_fan in self.fans:
-            fan_status_p = sp.Popen(['cat', file_fan], stdout=sp.PIPE)
-            query = fan_status_p.communicate()[0]
-            logger.debug('{} status status {}'.format(file_fan, query))
-            fan_level = int(query)
-            self.fans[file_fan].append(float(fan_level) / 255.0 * 100.0)
-            list_values += [list(self.fans[file_fan])]
-        return list_values
-
     def decode(self, text):
         jetsonstats = {}
-        # Read status disk
-        jetsonstats['DISK'] = get_status_disk()
-        # Extract nvpmodel
-        nvpmodel = get_nvpmodel()
-        if nvpmodel:
-            jetsonstats['NVPMODEL'] = nvpmodel
-        # Read status fan
-        fans_level = self.getFans()
-        if fans_level:
-            jetsonstats['FAN'] = fans_level
+        # Update status from fan
+        for fan in self.qfans:
+            fan.update()
         # Read SWAP status
-        swap_status, text = self.SWAP(text)
+        swap_status, text = self._SWAP(text)
         jetsonstats['SWAP'] = swap_status
         # Read IRAM status
-        iram_status, text = self.IRAM(text)
+        iram_status, text = self._IRAM(text)
         jetsonstats['IRAM'] = iram_status
         # Read RAM status
-        ram_status, text = self.RAM(text)
+        ram_status, text = self._RAM(text)
         jetsonstats['RAM'] = ram_status
         # Read CPU status
-        text = self.CPU(text)
+        text = self._CPU(text)
         jetsonstats['CPU'] = list(self.cpus.values())
         # Start while loop to decode
         idx = 0
@@ -360,7 +478,7 @@ class Tegrastats(Thread):
                 # [temp name] is one of the names under the nodes
                 # /sys/devices/virtual/thermal/thermal_zoneX/type.
                 info = data.split("@")
-                name = info[0]
+                name = info[0].strip()
                 value = info[1]
                 # Read from dictionary temperature or initialize it
                 if name in self.temperatures:
@@ -403,21 +521,4 @@ class Tegrastats(Thread):
         jetsonstats['temperatures'] = self.temperatures
         jetsonstats['voltages'] = self.voltages
         return jetsonstats
-
-
-def get_status_disk():
-    disk = os.statvfs("/var/")
-    # Evaluate the total space in GB
-    totalSpace = float(disk.f_bsize * disk.f_blocks) / 1024 / 1024 / 1024
-    # Evaluate total used space in GB
-    totalUsedSpace = float(disk.f_bsize * (disk.f_blocks - disk.f_bfree)) / 1024 / 1024 / 1024
-    # Evaluate total available space in GB
-    totalAvailSpace = float(disk.f_bsize * disk.f_bfree) / 1024 / 1024 / 1024
-    # Evaluate total non super-user space in GB
-    totalAvailSpaceNonRoot = float(disk.f_bsize * disk.f_bavail) / 1024 / 1024 / 1024
-    return {'total': totalSpace,
-            'used': totalUsedSpace,
-            'available': totalAvailSpace,
-            'available_no_root': totalAvailSpaceNonRoot
-            }
 # EOF
