@@ -125,6 +125,8 @@ def main():
     if args.debug:
         logging.basicConfig(level=logging.DEBUG, filename='jtop.log', filemode='w',
                             format='%(name)s - %(levelname)s - %(message)s')
+    else:
+        logging.basicConfig()
     # Load all Jetson variables
     if "JETSON_BOARD" not in os.environ:
         logger.info("Load jetson variables from script")
@@ -132,7 +134,7 @@ def main():
             logger.debug("New Enviroment variable {}:{}".format(k, v))
             os.environ[k] = v
     # Open tegrastats reader and run the curses wrapper
-    with Tegrastats(interval=args.refresh) as tegra:
+    with Tegrastats(interval=args.refresh) as jetson:
         try:
             # Run jtop in two different modes:
             # - Server mode
@@ -140,14 +142,14 @@ def main():
             if args.server:
                 while True:
                     # Read tegra stats
-                    stat = tegra.stats
+                    stat = jetson.stats
                     # TODO: Convert print to server post
                     print(stat)
                     # Sleep before send new stat
                     time.sleep(1)
             else:
                 # Call the curses wrapper
-                curses.wrapper(gui, args, tegra)
+                curses.wrapper(gui, args, jetson)
         except KeyboardInterrupt:
             # Catch keyboard interrupt and close
             logger.info("Close with CTRL-C")

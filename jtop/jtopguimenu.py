@@ -87,6 +87,10 @@ def compact_info(stdscr, start, offset, width, jetson):
     uptime_string = strfdelta(timedelta(seconds=jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
     plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
     counter += 1
+    # FAN status
+    for fan in jetson.fans:
+        linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
+    counter += 1
     # NVP Model
     if jetson.nvpmodel:
         str_nvp = jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode'])
@@ -94,26 +98,20 @@ def compact_info(stdscr, start, offset, width, jetson):
         counter += 1
     # Plot MTS
     if 'MTS' in jetson.stats:
-        MTS_FG = {'name': 'MTS FG',
+        stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
+        MTS_FG = {'name': ' FG',
                   'value': int(jetson.stats['MTS']['fg']),
                   }
         linear_percent_gauge(stdscr, MTS_FG, width,
-                             offset=offset + counter, start=start)
-        MTS_BG = {'name': 'MTS BG',
+                             offset=offset + counter + 1, start=start)
+        MTS_BG = {'name': ' BG',
                   'value': int(jetson.stats['MTS']['bg']),
                   }
         linear_percent_gauge(stdscr, MTS_BG, width,
-                             offset=offset + counter + 1, start=start)
-        counter += 2
+                             offset=offset + counter + 2, start=start)
+        counter += 3
     # APE frequency
     if 'APE' in jetson.stats:
         plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
         counter += 1
-    # IP address and Hostname
-    if jetson.local_interfaces:
-        plot_name_info(stdscr, offset + counter, start, "Hostname", jetson.local_interfaces["hostname"])
-        counter += 1
-        for name, ip in jetson.local_interfaces["interfaces"].items():
-            plot_name_info(stdscr, offset + counter, start, " " + name, ip)
-            counter += 1
 # EOF

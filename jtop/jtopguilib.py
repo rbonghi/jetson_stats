@@ -132,7 +132,7 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
             stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, gauge['label'])
         # Show progress value linear gauge
         n_bar = int(float(value) * float(size_bar) / 100.0)
-        if n_bar > 0:
+        if n_bar >= 0:
             progress_bar = type_bar * n_bar
             # Build progress barr string
             str_progress_bar = ("{n_bar:" + str(size_bar) + "}").format(n_bar=progress_bar)

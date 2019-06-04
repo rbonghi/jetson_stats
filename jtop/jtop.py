@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 def import_os_variables(SOURCE, PATTERN="JETSON_"):
     if os.path.isfile(SOURCE):
+        logger.info("Open source file {}".format(SOURCE))
         proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE)
         # Load variables
         source_env = {}
@@ -151,13 +152,13 @@ class Fan():
         fan_status_p = sp.Popen(['cat', self.path], stdout=sp.PIPE)
         query, _ = fan_status_p.communicate()
         logger.debug('{} status status {}'.format(self.path, query))
-        fan_level = int(query)
-        self.fan.append(float(fan_level) / 255.0 * 100.0)
+        fan_level = float(query) / 255.0 * 100.0
+        self.fan.append(int(fan_level))
 
     @property
     def status(self):
         return {'name': 'FAN',
-                'value': list(self.qfans),
+                'value': list(self.fan),
                 }
 
 
@@ -190,10 +191,10 @@ class Tegrastats(Thread):
         self.temperatures = {}
         self.voltages = {}
         # Find all fans availables
-        self.qfans = {}
+        self.qfans = []
         for fan in Tegrastats.LIST_FANS:
             if os.path.isfile(fan):
-                self.qfans[fan] = Fan(fan, max_record)
+                self.qfans += [Fan(fan, max_record)]
         # Initialize jetson stats
         self._jetsonstats = {}
         # Start process tegrastats
@@ -226,7 +227,7 @@ class Tegrastats(Thread):
 
     @property
     def fans(self):
-        return [fan.read for fan in self.qfans]
+        return [fan.status for fan in self.qfans]
 
     @property
     def disk(self):
@@ -417,8 +418,8 @@ class Tegrastats(Thread):
     def decode(self, text):
         jetsonstats = {}
         # Update status from fan
-        for file_fan in self.qfans:
-            file_fan.update()
+        for fan in self.qfans:
+            fan.update()
         # Read SWAP status
         swap_status, text = self._SWAP(text)
         jetsonstats['SWAP'] = swap_status

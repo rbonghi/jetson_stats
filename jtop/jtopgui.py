@@ -54,6 +54,7 @@ def Variables(stdscr, jetson):
     # Position information
     posx = 2
     start_pos = 2
+    spacing = 20
     # Up time
     uptime_string = strfdelta(timedelta(seconds=jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
     plot_name_info(stdscr, start_pos, posx, "- Up Time", uptime_string)
@@ -63,7 +64,7 @@ def Variables(stdscr, jetson):
         # Board info
         if "info" in info:
             stdscr.addstr(start_pos + idx, posx + 2, "* " + info["name"] + ":")
-            stdscr.addstr(start_pos + idx, posx + 18, info["info"], curses.A_BOLD)
+            stdscr.addstr(start_pos + idx, posx + spacing, info["info"], curses.A_BOLD)
         else:
             stdscr.addstr(start_pos + idx, posx, "- " + info["name"], curses.A_BOLD)
     # IP address and Hostname
@@ -73,7 +74,7 @@ def Variables(stdscr, jetson):
         idx += 3
         for name, ip in jetson.local_interfaces["interfaces"].items():
             stdscr.addstr(start_pos + idx, posx + 2, "* " + name + ":")
-            stdscr.addstr(start_pos + idx, posx + 18, ip, curses.A_BOLD)
+            stdscr.addstr(start_pos + idx, posx + spacing, ip, curses.A_BOLD)
             idx += 1
     # Author information
     plot_name_info(stdscr, start_pos, width - 30, "Author", "Raffaello Bonghi")
@@ -147,11 +148,6 @@ def all_info(stdscr, jetson):
         SWAP_VALUE = {'name': "Swp"}
     linear_percent_gauge(stdscr, SWAP_VALUE, width, offset=line_counter + 3)
     line_counter += 4
-    # FAN status
-    for fan in jetson.fans:
-        linear_percent_gauge(stdscr, fan, width,
-                             offset=line_counter)
-        line_counter += 1
     # GPU linear gauge info
     linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), width, offset=line_counter + 1)
     line_counter += 2
@@ -243,4 +239,7 @@ class JTOPGUI:
             position += 3
         # Add close option menu
         self.stdscr.addstr(height - 1, position, "Q to close", curses.A_REVERSE)
+        # Author name
+        name_author = "Raffaello Bonghi"
+        self.stdscr.addstr(height - 1, width - len(name_author), name_author, curses.A_REVERSE)
 # EOF
