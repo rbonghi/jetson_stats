@@ -39,11 +39,12 @@ from .jtopguilib import (check_curses,
                          plot_name_info)
 
 
+@check_curses
 def plot_CPUs(stdscr, offest, list_cpus, width):
-    max_bar = int(float(width - 2) / 2.0)
+    max_bar = int(float(width) / 2.0)
     for idx, cpu in enumerate(list_cpus):
         # Split in double list
-        start = max_bar + 1 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 0
+        start = max_bar if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 0
         off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
         # Plot the linear gauge
         gauge = make_gauge_from_percent(cpu)
@@ -59,7 +60,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
 @check_curses
 def plot_temperatures(stdscr, start, offset, width, jetson):
     # Plot title
-    stdscr.addstr(offset, start, ("{name:<7} {val:^8}").format(name="[Sensor]", val="[Temp]"), curses.A_BOLD)
+    stdscr.addstr(offset, start, ("{name:<9} {val:^8}").format(name="[Sensor]", val="[Temp]"), curses.A_BOLD)
     # Plot name and temperatures
     for idx, temp in enumerate(jetson.stats['temperatures']):
         value = jetson.stats['temperatures'][temp]
@@ -70,12 +71,12 @@ def plot_temperatures(stdscr, start, offset, width, jetson):
 @check_curses
 def plot_voltages(stdscr, start, offset, width, jetson):
     # Plot title
-    stdscr.addstr(offset, start, "{name} {val}".format(name="[Power]", val="[Cur/Avr]"), curses.A_BOLD)
+    stdscr.addstr(offset, start, "{name:<10} [Cur]  [Avr]".format(name="[Power/mV]"), curses.A_BOLD)
     # Plot voltages
     for idx, volt in enumerate(jetson.stats['voltages']):
         value = jetson.stats['voltages'][volt]
         stdscr.addstr(offset + idx + 1, start,
-                      ("{name:<10} {curr}/{avg}").format(name=volt, curr=int(value['current'][-1]), avg=int(value['average'][-1])))
+                      ("{name:<10} {curr: <6} {avg: <6}").format(name=volt, curr=int(value['current'][-1]), avg=int(value['average'][-1])))
 
 
 @check_curses
