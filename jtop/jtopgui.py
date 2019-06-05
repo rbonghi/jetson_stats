@@ -126,7 +126,7 @@ def all_info(stdscr, jetson):
     linear_percent_gauge(stdscr, RAM_VALUE, width, offset=line_counter + 1)
     # EMC linear gauge info
     if 'EMC' in jetson.stats:
-    	linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['EMC']), width, offset=line_counter + 2)
+        linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['EMC']), width, offset=line_counter + 2)
     # IRAM linear gauge info
     iram_status = jetson.stats['IRAM']
     if iram_status:

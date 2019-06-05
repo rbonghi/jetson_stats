@@ -186,8 +186,8 @@ class Tegrastats(Thread):
         self.iram = deque(max_record * [0], maxlen=max_record)
         self.ram = deque(max_record * [0], maxlen=max_record)
         self.cpus = {}
-        self.emc = Tegrastats.initProcess("EMC", max_record)
-        self.gpu = Tegrastats.initProcess("GPU", max_record)
+        self.emc = Tegrastats.initProcess("EMC", max_record, status="REQUIRE SUDO")
+        self.gpu = Tegrastats.initProcess("GPU", max_record, status="REQUIRE SUDO")
         self.temperatures = {}
         self.voltages = {}
         # Find all fans availables
@@ -316,11 +316,11 @@ class Tegrastats(Thread):
         return status
 
     @staticmethod
-    def initProcess(name, max_record):
+    def initProcess(name, max_record, status="OFF"):
         return {'name': name,
                 'idle': max_record * [0.0],
                 'frequency': max_record * [0.0],
-                'status': "OFF",
+                'status': status,
                 }
 
     def _SWAP(self, text):
@@ -443,7 +443,6 @@ class Tegrastats(Thread):
                 # X = Percent of EMC memory bandwidth being used, relative to the current running frequency.
                 # Y = EMC frequency in megahertz.
                 self.emc = Tegrastats.updateProcess(other_values[idx + 1], self.emc)
-                jetsonstats['EMC'] = self.emc
                 # extra increase counter
                 idx += 1
             elif 'APE' in data:
@@ -460,7 +459,6 @@ class Tegrastats(Thread):
                 # X = Percent of the GR3D that is being used, relative to the current running frequency.
                 # Y = GR3D frequency in megahertz
                 self.gpu = Tegrastats.updateProcess(other_values[idx + 1], self.gpu)
-                jetsonstats['GR3D'] = self.gpu
                 # extra increase counter
                 idx += 1
             elif 'MTS' in data:
@@ -516,6 +514,10 @@ class Tegrastats(Thread):
                 idx += 1
             # Update counter
             idx += 1
+        # EMC status
+        jetsonstats['EMC'] = self.emc
+        # Add GPU status
+        jetsonstats['GR3D'] = self.gpu
         # Add Temperatures and voltages
         jetsonstats['temperatures'] = self.temperatures
         jetsonstats['voltages'] = self.voltages
