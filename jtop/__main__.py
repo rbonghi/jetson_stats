@@ -115,8 +115,6 @@ def main():
     # Add arg parser
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility that runs on the terminal')
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
-    parser.add_argument('--server', help='Run jtop json server', action="store_true", default=False)
-    parser.add_argument('-p', dest="port", help='Set server port', default='5555')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
     # Parse arguments
@@ -137,14 +135,11 @@ def main():
     with Tegrastats(interval=args.refresh) as jetson:
         try:
             # Run jtop in two different modes:
-            # - Server mode
+            # - Debug mode
             # - GUI mode
-            if args.server:
+            if args.debug:
                 while True:
-                    # Read tegra stats
-                    stat = jetson.stats
-                    # TODO: Convert print to server post
-                    print(stat)
+                    print(jetson.stats)
                     # Sleep before send new stat
                     time.sleep(1)
             else:
