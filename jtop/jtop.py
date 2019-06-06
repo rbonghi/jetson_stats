@@ -246,6 +246,11 @@ class Tegrastats(Thread):
                 'available_no_root': totalAvailSpaceNonRoot
                 }
 
+    def jetson_clock_status(self):
+        p = sp.Popen(['systemctl', 'is-active', 'jetson_performance.service'], stdout=sp.PIPE)
+        out, _ = p.communicate()
+        return out.strip()
+
     @property
     def uptime(self):
         return get_uptime()

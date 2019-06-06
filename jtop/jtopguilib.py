@@ -29,6 +29,8 @@
 
 # control command line
 import curses
+from curses.textpad import rectangle
+# Math functions
 from math import ceil
 # Functions and decorators
 from functools import wraps
@@ -92,6 +94,26 @@ def strfdelta(tdelta, fmt):
     d["hours"], rem = divmod(tdelta.seconds, 3600)
     d["minutes"], d["seconds"] = divmod(rem, 60)
     return fmt.format(**d)
+
+
+@check_curses
+def box_status(stdscr, x, y, name, status=False, color=curses.A_REVERSE):
+    # Draw background rectangle
+    rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
+    # Default status
+    status = color if status else curses.A_NORMAL
+    # Write letter
+    stdscr.addstr(y + 1, x + 2, name, status)
+
+
+@check_curses
+def box_keyboard(stdscr, x, y, letter, key):
+    # Draw background rectangle
+    rectangle(stdscr, y, x, y + 2, x + 4)
+    # Default status
+    status = curses.A_NORMAL if key != ord(letter) else curses.A_REVERSE
+    # Write letter
+    stdscr.addstr(y + 1, x + 2, letter, status)
 
 
 @check_curses

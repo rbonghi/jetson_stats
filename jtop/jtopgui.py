@@ -33,6 +33,8 @@ from datetime import timedelta
 # Graphics elements
 from .jtopguilib import (check_size,
                          check_curses,
+                         box_keyboard,
+                         box_status,
                          linear_percent_gauge,
                          make_gauge_from_percent,
                          plot_name_info,
@@ -46,7 +48,7 @@ from .jtopguimenu import (strfdelta,
 
 
 @check_curses
-def Variables(stdscr, jetson):
+def Variables(stdscr, jetson, key):
     """
         Write all environment variables
     """
@@ -82,7 +84,24 @@ def Variables(stdscr, jetson):
     plot_name_info(stdscr, start_pos + 1, width - 30, "e-mail", "raffaello@rnext.it")
 
 
-def GPU(stdscr, jetson):
+@check_curses
+def CTRL(stdscr, jetson, key):
+    """ Control board, check status jetson_clock and change NVP model """
+    # Screen size
+    height, width = stdscr.getmaxyx()
+    # Position information
+    posx = 2
+    start_pos = 2
+    stdscr.addstr(start_pos, posx, "jetson_clock controller", curses.A_BOLD)
+    # button start/stop jetson clock
+    box_keyboard(stdscr, start_pos, posx + 1, "x", key)
+    # Read status jetson_clock
+    status = jetson.jetson_clock_status()
+    status_box = True if status == "active" else False
+    box_status(stdscr, start_pos + 5, posx + 1, status, status_box)
+
+
+def GPU(stdscr, jetson, key):
     """
         Draw a plot with GPU payload
     """
@@ -106,7 +125,7 @@ def GPU(stdscr, jetson):
             plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode']))
 
 
-def all_info(stdscr, jetson):
+def all_info(stdscr, jetson, key):
     """
         Update screen with values
     """
@@ -183,16 +202,17 @@ class JTOPGUI:
         self.stdscr = stdscr
         self.pages = pages
         self.n_page = init_page
+        self.key = -1
 
     @check_size(20, 50)
-    def draw(self, stat):
+    def draw(self, jetson):
         # Write head of the jtop
         self.header()
         # Write page selected
         if "func" in self.pages[self.n_page]:
             page = self.pages[self.n_page]["func"]
             if page is not None:
-                page(self.stdscr, stat)
+                page(self.stdscr, jetson, self.key)
         # Draw menu
         self.menu()
 
@@ -235,4 +255,19 @@ class JTOPGUI:
         # Author name
         name_author = "Raffaello Bonghi"
         self.stdscr.addstr(height - 1, width - len(name_author), name_author, curses.A_REVERSE)
+
+    def keyboard(self):
+        self.key = self.stdscr.getch()
+        # keyboard check list
+        if self.key == curses.KEY_LEFT:
+            self.decrease()
+        elif self.key == curses.KEY_RIGHT:
+            self.increase()
+        elif self.key in [ord(str(n)) for n in range(10)]:
+            num = int(chr(self.key))
+            self.set(num)
+        elif self.key == ord('q') or self.key == ord('Q'):
+            # keyboard check quit button
+            return True
+        return False
 # EOF
