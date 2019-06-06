@@ -265,17 +265,16 @@ class Tegrastats(Thread):
 
     @property
     def board(self):
-        return [{"name": os.environ["JETSON_DESCRIPTION"]},
-                {"name": "Board", "info": os.environ["JETSON_TYPE"]},
-                {"name": "Jetpack", "info": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"},
-                {"name": "GPU Arch", "info": os.environ["JETSON_CUDA_ARCH_BIN"]},
-                {"name": "Libraries"},
-                {"name": "CUDA", "info": os.environ["JETSON_CUDA"]},
-                {"name": "cuDNN", "info": os.environ["JETSON_CUDNN"]},
-                {"name": "TensorRT", "info": os.environ["JETSON_TENSORRT"]},
-                {"name": "VisionWorks", "info": os.environ["JETSON_VISIONWORKS"]},
-                {"name": "OpenCV", "info": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"]},
-                ]
+        board = {"name": os.environ["JETSON_DESCRIPTION"],
+                 "type": os.environ["JETSON_TYPE"],
+                 "jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]",
+                 "GPU-arch": os.environ["JETSON_CUDA_ARCH_BIN"]}
+        libraries = {"CUDA": os.environ["JETSON_CUDA"],
+                     "cuDNN": os.environ["JETSON_CUDNN"],
+                     "TensorRT": os.environ["JETSON_TENSORRT"],
+                     "VisionWorks": os.environ["JETSON_VISIONWORKS"],
+                     "OpenCV": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"]}
+        return {"board": board, "libraries": libraries}
 
     @property
     def stats(self):

@@ -50,7 +50,7 @@ if __name__ == "__main__":
             # local interfaces
             print(jetson.local_interfaces)
             # boards
-            print(jetson.boards)
+            print(jetson.board)
             # Sleep before send new stat
             time.sleep(1)
 # EOF

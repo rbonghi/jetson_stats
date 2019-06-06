@@ -63,13 +63,20 @@ def Variables(stdscr, jetson, key):
     plot_name_info(stdscr, start_pos, posx, "- Up Time", uptime_string)
     start_pos += 1
     # Loop build information
-    for idx, info in enumerate(jetson.board):
-        # Board info
-        if "info" in info:
-            stdscr.addstr(start_pos + idx, posx + 2, "* " + info["name"] + ":")
-            stdscr.addstr(start_pos + idx, posx + spacing, info["info"], curses.A_BOLD)
-        else:
-            stdscr.addstr(start_pos + idx, posx, "- " + info["name"], curses.A_BOLD)
+    idx = 0
+    # Board info
+    stdscr.addstr(start_pos + idx, posx, "- Board:", curses.A_BOLD)
+    for name, info in jetson.board["board"].items():
+        stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
+        stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
+        idx += 1
+    # Libraries info
+    stdscr.addstr(start_pos + idx + 1, posx, "- Libraries:", curses.A_BOLD)
+    idx += 1
+    for name, info in jetson.board["libraries"].items():
+        stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
+        stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
+        idx += 1
     # IP address and Hostname
     if jetson.local_interfaces:
         plot_name_info(stdscr, start_pos + idx + 1, posx, "- Hostname", jetson.local_interfaces["hostname"])
