@@ -27,12 +27,12 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import jtop
+from jtop import jtop
 
 
 def test_open():
     # Initialize object
-    jetson = jtop.Tegrastats()
+    jetson = jtop()
     # Open data
     jetson.open()
     # Close connection
@@ -42,7 +42,7 @@ def test_open():
 
 def test_disk():
     # Load tegracontroller
-    with jtop.Tegrastats() as jetson:
+    with jtop() as jetson:
         for x in range(5):
             disk = jetson.disk
             # Check type
@@ -51,7 +51,7 @@ def test_disk():
 
 def test_fans():
     # Load tegracontroller
-    with jtop.Tegrastats() as jetson:
+    with jtop() as jetson:
         for x in range(5):
             fans = jetson.fans
             if fans:
@@ -61,7 +61,7 @@ def test_fans():
 
 def test_stats():
     # Load tegracontroller
-    with jtop.Tegrastats() as jetson:
+    with jtop() as jetson:
         for x in range(5):
             # Check if is correctly written the variable
             assert "RAM" in jetson.stats
@@ -76,7 +76,7 @@ def test_stats():
 
 def test_nvp():
     # Load tegracontroller
-    with jtop.Tegrastats() as jetson:
+    with jtop() as jetson:
         for x in range(5):
             nvpmodel = jetson.nvpmodel
             # Chek values

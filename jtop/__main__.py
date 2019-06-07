@@ -39,14 +39,12 @@
 """
 import argparse
 import time
-# System and signal
-import os
 # Logging
 import logging
 # control command line
 import curses
 # Tegrastats objext reader
-from .jtop import Tegrastats, import_os_variables
+from .jtop import jtop
 # GUI jtop interface
 from .jtopgui import JTOPGUI, all_info, GPU, CTRL, Variables
 
@@ -119,14 +117,8 @@ def main():
                             format='%(name)s - %(levelname)s - %(message)s')
     else:
         logging.basicConfig()
-    # Load all Jetson variables
-    if "JETSON_BOARD" not in os.environ:
-        logger.info("Load jetson variables from script")
-        for k, v in import_os_variables('/opt/jetson_stats/jetson_variables').items():
-            logger.debug("New Enviroment variable {}:{}".format(k, v))
-            os.environ[k] = v
     # Open tegrastats reader and run the curses wrapper
-    with Tegrastats(interval=args.refresh) as jetson:
+    with jtop(interval=args.refresh) as jetson:
         try:
             # Run jtop in two different modes:
             # - Debug mode

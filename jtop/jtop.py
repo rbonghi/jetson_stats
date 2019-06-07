@@ -162,7 +162,7 @@ class Fan():
                 }
 
 
-class Tegrastats(Thread):
+class jtop(Thread):
     """
         - Subprocess read:
         https://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python/4896288#4896288
@@ -170,14 +170,21 @@ class Tegrastats(Thread):
         https://www.programiz.com/python-programming/property
     """
     # List of available fan
+    JTOP_FOLDER = '/opt/jetson_stats/'
     LIST_FANS = ['/sys/kernel/debug/tegra_fan/target_pwm', '/sys/devices/pwm-fan/target_pwm']
     TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 
-    class TegrastatsException(Exception):
+    class jtopException(Exception):
         pass
 
     def __init__(self, interval=500, time=10.0):
         Thread.__init__(self)
+        # Load all Jetson variables
+        if "JETSON_BOARD" not in os.environ:
+            logger.info("Load jetson variables from script")
+            for k, v in import_os_variables(jtop.JTOP_FOLDER + 'jetson_variables').items():
+                logger.debug("New Enviroment variable {}:{}".format(k, v))
+                os.environ[k] = v
         # Initialize number max records to record
         max_record = int(float(time) * (float(1 / float(interval)) * 1000.0))
         self.max_record = max_record
@@ -186,20 +193,20 @@ class Tegrastats(Thread):
         self.iram = deque(max_record * [0], maxlen=max_record)
         self.ram = deque(max_record * [0], maxlen=max_record)
         self.cpus = {}
-        self.emc = Tegrastats.initProcess("EMC", max_record, status="REQUIRE SUDO")
-        self.gpu = Tegrastats.initProcess("GPU", max_record, status="REQUIRE SUDO")
+        self.emc = jtop.initProcess("EMC", max_record, status="REQUIRE SUDO")
+        self.gpu = jtop.initProcess("GPU", max_record, status="REQUIRE SUDO")
         self.temperatures = {}
         self.voltages = {}
         # Find all fans availables
         self.qfans = []
-        for fan in Tegrastats.LIST_FANS:
+        for fan in jtop.LIST_FANS:
             if os.path.isfile(fan):
                 self.qfans += [Fan(fan, max_record)]
         # Initialize jetson stats
         self._jetsonstats = {}
         # Start process tegrastats
         tegrastats_file = ""
-        for f_tegra in Tegrastats.TEGRASTATS:
+        for f_tegra in jtop.TEGRASTATS:
             if os.path.isfile(f_tegra):
                 logger.info("Load tegrastats {}".format(f_tegra))
                 tegrastats_file = f_tegra
@@ -209,7 +216,7 @@ class Tegrastats(Thread):
             self.p = sp.Popen([tegrastats_file, '--interval', str(interval)], stdout=sp.PIPE)
         else:
             logger.error("Tegrastats not in list!")
-            raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
+            raise jtop.TegrastatsException("Tegrastats is not available on this hardware")
 
     def run(self):
         try:
@@ -405,8 +412,8 @@ class Tegrastats(Thread):
             if idx in self.cpus:
                 cpu_status = self.cpus[idx]
             else:
-                cpu_status = Tegrastats.initProcess(name, self.max_record)
-            cpu_status = Tegrastats.updateProcess(cpu, cpu_status)
+                cpu_status = jtop.initProcess(name, self.max_record)
+            cpu_status = jtop.updateProcess(cpu, cpu_status)
             # Update status governor
             governor_name = '/sys/devices/system/cpu/cpu' + str(idx) + '/cpufreq/scaling_governor'
             if os.path.isfile(governor_name):
@@ -446,7 +453,7 @@ class Tegrastats(Thread):
                 # through which all sysmem/carve-out/GART memory accesses go.
                 # X = Percent of EMC memory bandwidth being used, relative to the current running frequency.
                 # Y = EMC frequency in megahertz.
-                self.emc = Tegrastats.updateProcess(other_values[idx + 1], self.emc)
+                self.emc = jtop.updateProcess(other_values[idx + 1], self.emc)
                 # extra increase counter
                 idx += 1
             elif 'APE' in data:
@@ -462,7 +469,7 @@ class Tegrastats(Thread):
                 # GR3D is the GPU engine.
                 # X = Percent of the GR3D that is being used, relative to the current running frequency.
                 # Y = GR3D frequency in megahertz
-                self.gpu = Tegrastats.updateProcess(other_values[idx + 1], self.gpu)
+                self.gpu = jtop.updateProcess(other_values[idx + 1], self.gpu)
                 # extra increase counter
                 idx += 1
             elif 'MTS' in data:

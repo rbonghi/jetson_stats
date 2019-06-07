@@ -28,14 +28,14 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import jtop
+from jtop import jtop
 import time
 
 if __name__ == "__main__":
 
     print("Simple Tegrastats reader")
 
-    with jtop.Tegrastats() as jetson:
+    with jtop() as jetson:
         while True:
             # Read tegra stats
             print(jetson.stats)

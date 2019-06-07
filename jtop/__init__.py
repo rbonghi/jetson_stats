@@ -29,5 +29,5 @@
 
 # flake8: noqa
 
-from .jtop import Tegrastats
+from .jtop import jtop
 from .jtop import import_os_variables
