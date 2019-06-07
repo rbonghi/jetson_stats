@@ -474,6 +474,21 @@ class Tegrastats(Thread):
                 jetsonstats['MTS'] = {'fg': fg, 'bg': bg}
                 # extra increase counter
                 idx += 4
+            elif 'MSENC' in data:
+                # MSENC Y
+                # Y = MSENC frequency in megahertz.
+                # MSENC is the video hardware encoding engine.
+                jetsonstats['MSENC'] = int(other_values[idx + 1])
+                # extra increase counter
+                idx += 1
+            elif 'NVDEC' in data:
+                # NVDEC Y
+                # Y = NVDEC frequency in megahertz.
+                # NVDEC is the video hardware decoding engine.
+                # It is shown only when hardware decoder/encoder engine is used.
+                jetsonstats['NVDEC'] = int(other_values[idx + 1])
+                # extra increase counter
+                idx += 1
             elif '@' in data:
                 # [temp name] C
                 # [temp name] is one of the names under the nodes

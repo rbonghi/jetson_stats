@@ -115,4 +115,18 @@ def compact_info(stdscr, start, offset, width, jetson):
     if 'APE' in jetson.stats:
         plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
         counter += 1
+    # MSENC frequency
+    stdscr.addstr(offset + counter, start, "HW engine:", curses.A_BOLD)
+    counter += 1
+    if 'MSENC' in jetson.stats:
+        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['MSENC']) + "MHz")
+    else:
+        plot_name_info(stdscr, offset + counter, start, " ENC", "NOT RUNNING")
+    counter += 1
+    # NVDEC frequency
+    if 'NVDEC' in jetson.stats:
+        plot_name_info(stdscr, offset + counter, start, " DEC", str(jetson.stats['NVDEC']) + "MHz")
+    else:
+        plot_name_info(stdscr, offset + counter, start, " DEC", "NOT RUNNING")
+    counter += 1
 # EOF
