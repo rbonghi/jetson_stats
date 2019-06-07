@@ -63,19 +63,31 @@ def import_os_variables(SOURCE, PATTERN="JETSON_"):
         return {}
 
 
-def get_nvpmodel():
-    # Read nvpmodel to know the status of the board
-    try:
-        nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
-        query = nvpmodel_p.communicate()[0]
-        # Log value
-        logger.debug('nvqmodel status %s', query)
-        # Decode lines and split
-        lines = query.decode("utf-8").split("\n")
-        return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
-    except Exception:
-        logger.error("Exception occurred", exc_info=True)
-        return {}
+class nvpmodel():
+
+    def set(self, level):
+        """ Set nvpmodel to a new status """
+        try:
+            nvpmodel_p = sp.Popen(['nvpmodel', '-m', level], stdout=sp.PIPE)
+            return True
+        except Exception:
+            logger.error("Exception occurred", exc_info=True)
+            return False
+
+    @property
+    def status(self):
+        """ Read nvpmodel to know the status of the board """
+        try:
+            nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
+            query = nvpmodel_p.communicate()[0]
+            # Log value
+            logger.debug('nvqmodel status %s', query)
+            # Decode lines and split
+            lines = query.decode("utf-8").split("\n")
+            return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
+        except Exception:
+            logger.error("Exception occurred", exc_info=True)
+            return {}
 
 
 def get_uptime():
@@ -197,6 +209,8 @@ class jtop(Thread):
         self.gpu = jtop.initProcess("GPU", max_record, status="REQUIRE SUDO")
         self.temperatures = {}
         self.voltages = {}
+        # Initialize NVP model
+        self.nvp = nvpmodel()
         # Find all fans availables
         self.qfans = []
         for fan in jtop.LIST_FANS:
@@ -264,7 +278,7 @@ class jtop(Thread):
 
     @property
     def nvpmodel(self):
-        return get_nvpmodel()
+        return self.nvp.status
 
     @property
     def local_interfaces(self):
