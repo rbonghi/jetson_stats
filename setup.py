@@ -85,7 +85,7 @@ setup(
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Nano, AGX Xavier, TX1, TX2]",
-    license='LICENSE',
+    license='MIT',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=project_homepage,
