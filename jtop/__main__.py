@@ -105,7 +105,7 @@ def gui(stdscr, args, jetson):
 
 def main():
     # Add arg parser
-    parser = argparse.ArgumentParser(description='jtop is system monitoring utility that runs on the terminal')
+    parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs in the terminal')
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
@@ -133,7 +133,7 @@ def main():
                 curses.wrapper(gui, args, jetson)
         except KeyboardInterrupt:
             # Catch keyboard interrupt and close
-            logger.info("Close with CTRL-C")
+            logger.info("Closed with CTRL-C")
 
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ import sys
 
 
 if os.getuid() != 0:
-    print("Require sudo, please use:\n\nsudo -H pip install jetson-stats")
+    print("Require super user")
     sys.exit(1)
 
 
@@ -84,7 +84,7 @@ setup(
     version="1.6.10",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
-    description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",
+    description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Nano, AGX Xavier, TX1, TX2]",
     license='LICENSE',
     long_description=long_description,
     long_description_content_type="text/markdown",
