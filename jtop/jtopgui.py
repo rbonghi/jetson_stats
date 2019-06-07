@@ -214,7 +214,7 @@ class JTOPGUI:
     @check_size(20, 50)
     def draw(self, jetson):
         # Write head of the jtop
-        self.header()
+        self.header(jetson)
         # Write page selected
         if "func" in self.pages[self.n_page]:
             page = self.pages[self.n_page]["func"]
@@ -236,8 +236,9 @@ class JTOPGUI:
             self.n_page = idx - 1
 
     @check_curses
-    def header(self):
-        board_info = os.environ["JETSON_DESCRIPTION"] + " - Jetpack " + os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"
+    def header(self, jetson):
+        board = jetson.board["board"]
+        board_info = board["name"] + " - Jetpack " + board["jetpack"]
         self.stdscr.addstr(0, 0, board_info, curses.A_BOLD)
         if os.getuid() != 0:
             self.stdscr.addstr(0, len(board_info) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))
