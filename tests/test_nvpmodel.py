@@ -27,40 +27,38 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-import os
-# Logging
-import logging
-# Launch command
-import subprocess as sp
-from collections import deque
-
-# Create logger for jplotlib
-logger = logging.getLogger(__name__)
+from jtop import NVPmodel
 
 
-class Fan():
+def test_initialization():
+    # Test board not in list
+    nvp = NVPmodel("NotInListBoard")
+    assert isinstance(nvp.modes, list)
+    # Test board in list
+    nvp = NVPmodel("NO-BOARD")
+    assert isinstance(nvp.modes, list)
 
-    class FanException(Exception):
-        pass
 
-    def __init__(self, path, interval, time):
-        # Initialize number max records to record
-        max_record = int(float(time) * (float(1 / float(interval)) * 1000.0))
-        self.path = path
-        self.fan = deque(max_record * [0], maxlen=max_record)
-        if not os.path.isfile(path):
-            raise Fan.FanException("Fan does not exist")
+def test_nvp_good():
+    # Initialize NVPmodel
+    nvp = NVPmodel("NO-BOARD")
+    status = nvp.status
+    # Check result is a dictionary
+    assert isinstance(status, dict)
+    # Chek values
+    assert "Name" in status
+    assert status["Name"] == "Test mode"
 
-    def update(self):
-        fan_status_p = sp.Popen(['cat', self.path], stdout=sp.PIPE)
-        query, _ = fan_status_p.communicate()
-        logger.debug('{} status status {}'.format(self.path, query))
-        fan_level = float(query) / 255.0 * 100.0
-        self.fan.append(int(fan_level))
 
-    @property
-    def status(self):
-        return {'name': 'FAN',
-                'value': list(self.fan),
-                }
+def test_nvp_wrong():
+    # Initialize NVPmodel
+    nvp = NVPmodel("NotInListBoard")
+    status = nvp.status
+    # Check result is a dictionary
+    assert isinstance(status, dict)
+    # Chek values
+    if not status:
+        assert True
+    else:
+        assert False
+# EOF

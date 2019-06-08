@@ -30,4 +30,10 @@
 # flake8: noqa
 
 from .jtop import jtop
-from .jtop import import_os_variables
+# Import extra controllers
+from .core import Tegrastats
+from .core import Fan
+from .core import NVPmodel
+# Import os variable importer
+from .core import import_os_variables
+# EOF

@@ -27,64 +27,54 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from jtop import jtop
+from jtop import Tegrastats
+
+
+def test_wrong_open():
+    # Initialize object
+    tegra = Tegrastats('wrong_path', 100, 1.0)
+    try:
+        # Open data
+        tegra.open()
+        assert False
+    except Tegrastats.TegrastatsException:
+        assert True
 
 
 def test_open():
     # Initialize object
-    jetson = jtop()
+    tegra = Tegrastats('/usr/bin/tegrastats', 100, 1.0)
     # Open data
-    jetson.open()
+    tegra.open()
     # Close connection
-    jetson.close()
+    tegra.close()
     assert True
 
 
-def test_disk():
-    # Load tegracontroller
-    with jtop() as jetson:
-        for x in range(5):
-            disk = jetson.disk
-            # Check type
-            assert isinstance(disk, dict)
-
-
-def test_fans():
-    # Load tegracontroller
-    with jtop() as jetson:
-        for x in range(5):
-            fans = jetson.fans
-            if fans:
-                assert isinstance(fans, list)
-            assert True
+def check_tegra(tegra):
+    # Check if is correctly written the variable
+    assert "RAM" in tegra.stats
+    variable = tegra.stats["RAM"]
+    assert "RAM" in variable
+    variable = tegra.stats["RAM"]["RAM"]
+    # Check if ram["used"] is a list
+    assert isinstance(variable["used"], list)
+    # Check if last value is the same send
+    assert variable["used"][-1] == 4722
 
 
 def test_stats():
     # Load tegracontroller
-    with jtop() as jetson:
-        for x in range(5):
-            # Check if is correctly written the variable
-            assert "RAM" in jetson.stats
-            variable = jetson.stats["RAM"]
-            assert "RAM" in variable
-            variable = jetson.stats["RAM"]["RAM"]
-            # Check if ram["used"] is a list
-            assert isinstance(variable["used"], list)
-            # Check if last value is the same send
-            assert variable["used"][-1] == 4722
+    with Tegrastats('/usr/bin/tegrastats', 100, 1.0) as tegra:
+        # Check tegra stats
+        check_tegra(tegra)
 
 
-def test_nvp():
-    # Load tegracontroller
-    with jtop() as jetson:
-        for x in range(5):
-            nvpmodel = jetson.nvpmodel
-            # Check result is a dictionary
-            assert isinstance(nvpmodel, dict)
-            # Chek values
-            if nvpmodel:
-                assert "Name" in nvpmodel
-                assert nvpmodel["Name"] == "Test mode"
-            else:
-                assert True
+def test_stats_callback():
+    # Initialize object
+    tegra = Tegrastats('/usr/bin/tegrastats', 100, 1.0)
+    # Open data
+    tegra.open(check_tegra)
+    # Close connection
+    tegra.close()
 # EOF

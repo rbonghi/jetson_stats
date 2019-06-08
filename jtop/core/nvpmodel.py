@@ -73,11 +73,12 @@ class NVPmodel():
         if self.board:
             logger.info("This board {} does not have NVP Model".format(self.board))
 
+    @property
     def modes(self):
         if self.board:
             return NVPmodel.BOARDS[self.board]
         else:
-            return {}
+            return []
 
     def set(self, level):
         """ Set nvpmodel to a new status """

@@ -27,40 +27,34 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-import os
-# Logging
-import logging
-# Launch command
-import subprocess as sp
-from collections import deque
-
-# Create logger for jplotlib
-logger = logging.getLogger(__name__)
+from jtop import jtop
 
 
-class Fan():
+def test_open():
+    # Initialize object
+    jetson = jtop()
+    # Open data
+    jetson.open()
+    # Close connection
+    jetson.close()
+    assert True
 
-    class FanException(Exception):
-        pass
 
-    def __init__(self, path, interval, time):
-        # Initialize number max records to record
-        max_record = int(float(time) * (float(1 / float(interval)) * 1000.0))
-        self.path = path
-        self.fan = deque(max_record * [0], maxlen=max_record)
-        if not os.path.isfile(path):
-            raise Fan.FanException("Fan does not exist")
-
-    def update(self):
-        fan_status_p = sp.Popen(['cat', self.path], stdout=sp.PIPE)
-        query, _ = fan_status_p.communicate()
-        logger.debug('{} status status {}'.format(self.path, query))
-        fan_level = float(query) / 255.0 * 100.0
-        self.fan.append(int(fan_level))
-
-    @property
-    def status(self):
-        return {'name': 'FAN',
-                'value': list(self.fan),
-                }
+def test_all():
+    # Load tegracontroller
+    with jtop() as jetson:
+        # Read tegra stats
+        assert isinstance(jetson.stats, dict)
+        # Status disk
+        assert isinstance(jetson.disk, dict)
+        # Status fans
+        assert isinstance(jetson.fans, list)
+        # uptime
+        assert isinstance(jetson.uptime, float)
+        # nvpmodel
+        assert isinstance(jetson.nvpmodel, dict)
+        # local interfaces
+        assert isinstance(jetson.local_interfaces, dict)
+        # boards
+        assert isinstance(jetson.board, dict)
+# EOF
