@@ -141,10 +141,10 @@ def main():
             # - GUI mode
             if args.server:
                 while True:
-                    # Read tegra stats
-                    stat = jetson.stats
+                    # Read tegra nvpmodel
+                    print(jetson.nvpmodel)
                     # TODO: Convert print to server post
-                    print(stat)
+                    print(jetson.stats)
                     # Sleep before send new stat
                     time.sleep(1)
             else:

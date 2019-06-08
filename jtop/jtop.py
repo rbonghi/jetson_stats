@@ -67,14 +67,14 @@ def get_nvpmodel():
     # Read nvpmodel to know the status of the board
     try:
         nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
-        query = nvpmodel_p.communicate()[0]
+        out, _ = nvpmodel_p.communicate()
         # Log value
-        logger.debug('nvqmodel status %s', query)
+        logger.debug('nvqmodel status %s', out)
         # Decode lines and split
-        lines = query.decode("utf-8").split("\n")
+        lines = out.decode("utf-8").split("\n")
         return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
-    except Exception:
-        logger.error("Exception occurred", exc_info=True)
+    except OSError as e:
+        logger.info("NVPModel Exception occurred {}".format(e), exc_info=True)
         return {}
 
 
