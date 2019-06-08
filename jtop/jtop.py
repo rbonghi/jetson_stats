@@ -67,10 +67,14 @@ class jtop():
         # Initialize NVP model
         self.nvp = NVPmodel(os.environ["JETSON_BOARD"])
         # Find all fans availables
-        self.qfans = []
-        for fan in jtop.LIST_FANS:
-            if os.path.isfile(fan):
-                self.qfans += [Fan(fan, interval, time)]
+        self.qfan = None
+        for path in jtop.LIST_FANS:
+            try:
+                self.qfan = Fan(path, interval, time)
+                logger.info("Fan {} loaded!".format(path))
+                break
+            except Fan.FanException:
+                logger.info("Fan {} not loaded".format(path))
         # Start process tegrastats
         tegrastats_file = ""
         for f_tegra in jtop.TEGRASTATS:
@@ -83,8 +87,11 @@ class jtop():
         self.tegrastats = Tegrastats(tegrastats_file, interval, time)
 
     @property
-    def fans(self):
-        return [fan.status for fan in self.qfans]
+    def fan(self):
+        if self.qfan is not None:
+            return self.qfan.status
+        else:
+            return None
 
     @property
     def disk(self):

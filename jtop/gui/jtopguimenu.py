@@ -89,7 +89,8 @@ def compact_info(stdscr, start, offset, width, jetson):
     plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
     counter += 1
     # FAN status
-    for fan in jetson.fans:
+    fan = jetson.fan
+    if fan is not None:
         linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
     counter += 1
     # NVP Model

@@ -48,7 +48,7 @@ def test_all():
         # Status disk
         assert isinstance(jetson.disk, dict)
         # Status fans
-        assert isinstance(jetson.fans, list)
+        assert jetson.fan is None
         # uptime
         assert isinstance(jetson.uptime, float)
         # nvpmodel
