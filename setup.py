@@ -39,6 +39,7 @@
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
+from setuptools.command.develop import develop
 from setuptools.command.install import install
 from os import path
 # io.open is needed for projects that support Python 2.7
@@ -74,6 +75,17 @@ class PostInstallCommand(install):
         sp.call(shlex.split('./install.sh -s --uninstall'))
         # Run the default installation script
         install.run(self)
+        # Run the restart all services before to close the installer
+        sp.call(shlex.split('./install.sh -s -no-pip'))
+
+
+class PostDevelopCommand(develop):
+    """Post-installation for development mode."""
+    def run(self):
+        # Run the uninstaller before to copy all scripts
+        sp.call(shlex.split('./install.sh -s --uninstall'))
+        # Run the default installation script
+        develop.run(self)
         # Run the restart all services before to close the installer
         sp.call(shlex.split('./install.sh -s -no-pip'))
 
@@ -145,7 +157,8 @@ setup(
              'scripts/jetson-swap',
              'scripts/jetson-release',
              ],
-    cmdclass={'install': PostInstallCommand},
+    cmdclass={'develop': PostDevelopCommand,
+              'install': PostInstallCommand},
     # The following provide a command called `jtop`
     entry_points={'console_scripts': ['jtop=jtop.__main__:main']},
 )
