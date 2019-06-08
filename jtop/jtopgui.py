@@ -128,8 +128,9 @@ def GPU(stdscr, jetson, key):
         if "GPU" in jetson.stats['temperatures']:
             plot_name_info(stdscr, max_y * 2 // 3 + 1, 2, "GPU Temp", jetson.stats['temperatures']['GPU']['text'])
         # NVP Model
-        if jetson.nvpmodel:
-            plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode']))
+        nvpmodel = jetson.nvpmodel
+        if nvpmodel:
+            plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", nvpmodel['Name'])
 
 
 def all_info(stdscr, jetson, key):

@@ -93,9 +93,9 @@ def compact_info(stdscr, start, offset, width, jetson):
         linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
     counter += 1
     # NVP Model
-    if jetson.nvpmodel:
-        str_nvp = jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode'])
-        plot_name_info(stdscr, offset + counter, start, "NV Power", str_nvp)
+    nvpmodel = jetson.nvpmodel
+    if nvpmodel:
+        plot_name_info(stdscr, offset + counter, start, "NV Power", nvpmodel["Name"])
         counter += 1
     # Plot MTS
     if 'MTS' in jetson.stats:

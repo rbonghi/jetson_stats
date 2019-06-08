@@ -64,29 +64,76 @@ def import_os_variables(SOURCE, PATTERN="JETSON_"):
 
 
 class nvpmodel():
+    """
+        This controller read the status from your NVIDIA Jetson and you can control
+        performance and status.
+        It is available for NVIDIA Jetson TX2, Jetson AGX Xavier, Jetson Nano
+        Boards reference:
+        * TX2: https://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
+        * AGX Xavier: https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
+        * Nano: https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/
+    """
+    BOARDS = {"NO-BOARD": [{"Name": "Test mode"}],
+              "TX2": [{"Name": 'Max-N'},
+                      {"Name": 'Max-Q'},
+                      {"Name": 'Max-P Core-All'},
+                      {"Name": 'Max-P ARM'},
+                      {"Name": 'Max-P Denver'}],
+              "Xavier": [{"Name": 'Max-N', "Power": 'N/A'},
+                         {"Name": 'Mode-10W', "Power": '10W'},
+                         {"Name": 'Mode-15W', "Power": '15W'},
+                         {"Name": 'Mode-30W-All', "Power": '30W'},
+                         {"Name": 'Mode-30W-6CORE', "Power": '30W'},
+                         {"Name": 'Mode-30W-4CORE', "Power": '30W'},
+                         {"Name": 'Mode-30W-2CORE', "Power": '30W'}],
+              "NANO": [{"Name": 'Max-N', "Power": '20W'},
+                       {"Name": 'Mode-1', "Power": '5W'}]}
+
+    def __init__(self, board):
+        self.board = ""
+        # Find name board from board list
+        for name in nvpmodel.BOARDS.keys():
+            if board.lower() in name.lower():
+                self.board = name
+                logger.info("Board found: {}".format(self.board))
+                break
+        if self.board:
+            logger.info("This board {} does not have NVP Model".format(self.board))
+
+    def modes(self):
+        if self.board:
+            return nvpmodel.BOARDS[self.board]
+        else:
+            return {}
 
     def set(self, level):
         """ Set nvpmodel to a new status """
-        try:
-            nvpmodel_p = sp.Popen(['nvpmodel', '-m', level], stdout=sp.PIPE)
-            return True
-        except Exception:
-            logger.error("Exception occurred", exc_info=True)
+        if self.board:
+            try:
+                sp.Popen(['nvpmodel', '-m', level], stdout=sp.PIPE)
+                return True
+            except OSError:
+                logger.info("NVP Model does not exist")
+        else:
             return False
 
     @property
     def status(self):
         """ Read nvpmodel to know the status of the board """
-        try:
-            nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
-            query = nvpmodel_p.communicate()[0]
-            # Log value
-            logger.debug('nvqmodel status %s', query)
-            # Decode lines and split
-            lines = query.decode("utf-8").split("\n")
-            return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
-        except Exception:
-            logger.error("Exception occurred", exc_info=True)
+        if self.board:
+            try:
+                nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
+                out, _ = nvpmodel_p.communicate()
+                # Log value
+                logger.debug('nvqmodel status %s', out)
+                # Decode lines and split
+                lines = out.decode("utf-8").split("\n")
+                # Return the mode type
+                return nvpmodel.BOARDS[self.board][int(lines[1])]
+                #return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
+            except OSError:
+                logger.info("NVP Model does not exist")
+        else:
             return {}
 
 
@@ -210,7 +257,7 @@ class jtop(Thread):
         self.temperatures = {}
         self.voltages = {}
         # Initialize NVP model
-        self.nvp = nvpmodel()
+        self.nvp = nvpmodel(os.environ["JETSON_BOARD"])
         # Find all fans availables
         self.qfans = []
         for fan in jtop.LIST_FANS:
