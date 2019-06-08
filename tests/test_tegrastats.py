@@ -79,7 +79,12 @@ def test_nvp():
     with jtop() as jetson:
         for x in range(5):
             nvpmodel = jetson.nvpmodel
+            # Check result is a dictionary
+            assert isinstance(nvpmodel, dict)
             # Chek values
-            assert nvpmodel["name"] == "TEST"
-            assert nvpmodel["mode"] == 0
+            if nvpmodel:
+                assert "Name" in nvpmodel
+                assert nvpmodel["Name"] == "Test mode"
+            else:
+                assert True
 # EOF

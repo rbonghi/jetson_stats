@@ -129,8 +129,9 @@ class nvpmodel():
                 # Decode lines and split
                 lines = out.decode("utf-8").split("\n")
                 # Return the mode type
-                return nvpmodel.BOARDS[self.board][int(lines[1])]
-                #return {'name': lines[0].split(": ")[1], 'mode': int(lines[1])}
+                # Name mode: lines[0].split(": ")[1]
+                mode_num = int(lines[1])
+                return nvpmodel.BOARDS[self.board][mode_num]
             except OSError:
                 logger.info("NVP Model does not exist")
         else:
