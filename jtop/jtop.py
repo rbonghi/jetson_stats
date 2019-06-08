@@ -54,7 +54,7 @@ class jtop():
     """
     # List of available fan
     JTOP_FOLDER = '/opt/jetson_stats/'
-    LIST_FANS = ['/sys/kernel/debug/tegra_fan/target_pwm', '/sys/devices/pwm-fan/target_pwm']
+    LIST_FANS = ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']
     TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 
     def __init__(self, interval=500, time=10.0):

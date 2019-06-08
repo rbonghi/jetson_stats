@@ -49,15 +49,41 @@ class Fan():
         max_record = int(float(time) * (float(1 / float(interval)) * 1000.0))
         self.path = path
         self.fan = deque(max_record * [0], maxlen=max_record)
-        if not os.path.isfile(path):
+        # Check exist path
+        if not os.path.isdir(path):
             raise Fan.FanException("Fan does not exist")
+        # Max value PWM
+        if os.path.isfile(self.path + "pwm_cap"):
+            self.pwm_max = int(self.read_status("pwm_cap"))
+        else:
+            self.pwm_max = 255
+        # PWM RPM table
+        if os.path.isfile(self.path + "pwm_rpm_table"):
+            pwm_rpm_table = self.read_status("pwm_rpm_table")
+            for line in pwm_rpm_table.split("\n"):
+                line = [ val.strip() for val in line.split(",")]
+                # print(line)
+        # Step time
+        if os.path.isfile(self.path + "step_time"):
+            self.step_time = int(self.read_status("step_time"))
+        else:
+            self.step_time = 0
+        # Control temperature
+        if os.path.isfile(self.path + "temp_control"):
+            self.temp_control = int(self.read_status("temp_control"))
+
+    def read_status(self, file_read):
+        status = sp.Popen(['cat', self.path + file_read], stdout=sp.PIPE)
+        query, _ = status.communicate()
+        return query
 
     def update(self):
-        fan_status_p = sp.Popen(['cat', self.path], stdout=sp.PIPE)
-        query, _ = fan_status_p.communicate()
-        logger.debug('{} status status {}'.format(self.path, query))
-        fan_level = float(query) / 255.0 * 100.0
+        # Read PWM
+        fan_level = float(self.read_status("target_pwm")) / 255.0 * 100.0
+        logger.debug('{} status PWM'.format(self.path, fan_level))
         self.fan.append(int(fan_level))
+        # Read current
+        self.read_status("cur_pwm")
 
     @property
     def status(self):
