@@ -61,7 +61,7 @@ class Fan():
         if os.path.isfile(self.path + "pwm_rpm_table"):
             pwm_rpm_table = self.read_status("pwm_rpm_table")
             for line in pwm_rpm_table.split("\n"):
-                line = [ val.strip() for val in line.split(",")]
+                line = [val.strip() for val in line.split(",")]
                 # print(line)
         # Step time
         if os.path.isfile(self.path + "step_time"):
