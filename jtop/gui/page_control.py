@@ -28,25 +28,24 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import curses
-# Import gui test
-from jtop.gui import JTOPGUI, all_info, GPU, Variables
+# Graphics elements
+from .jtopguilib import (check_curses,
+                         box_keyboard,
+                         box_status)
 
 
-def openGUI(stdscr):
-    # Initialization Menu
-    pages = JTOPGUI(stdscr, [{"name": "ALL", "func": all_info},
-                             {"name": "GPU", "func": GPU},
-                             {"name": "INFO", "func": Variables},
-                             ])
-    return pages
-
-
-def test_openGUI():
-    # Load command line controller
-    stdscr = curses.initscr()
-    # Open JTOPGUI
-    pages = openGUI(stdscr)
-    # Start with selected page
-    pages.set(0)
-    assert True
-# EOF
+@check_curses
+def CTRL(stdscr, jetson, key):
+    """ Control board, check status jetson_clock and change NVP model """
+    # Screen size
+    height, width = stdscr.getmaxyx()
+    # Position information
+    posx = 2
+    start_pos = 2
+    stdscr.addstr(start_pos, posx, "jetson_clock controller", curses.A_BOLD)
+    # button start/stop jetson clock
+    box_keyboard(stdscr, start_pos, posx + 1, "x", key)
+    # Read status jetson_clock
+    status = jetson.jetson_clock_status()
+    status_box = True if status == "active" else False
+    box_status(stdscr, start_pos + 5, posx + 1, status, status_box)

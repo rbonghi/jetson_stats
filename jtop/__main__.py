@@ -46,7 +46,7 @@ import curses
 # Tegrastats objext reader
 from .jtop import jtop
 # GUI jtop interface
-from .jtopgui import JTOPGUI, all_info, GPU, CTRL, Variables
+from .gui import JTOPGUI, all_info, GPU, CTRL, Variables
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)

@@ -27,26 +27,10 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import curses
-# Import gui test
-from jtop.gui import JTOPGUI, all_info, GPU, Variables
+# flake8: noqa
 
-
-def openGUI(stdscr):
-    # Initialization Menu
-    pages = JTOPGUI(stdscr, [{"name": "ALL", "func": all_info},
-                             {"name": "GPU", "func": GPU},
-                             {"name": "INFO", "func": Variables},
-                             ])
-    return pages
-
-
-def test_openGUI():
-    # Load command line controller
-    stdscr = curses.initscr()
-    # Open JTOPGUI
-    pages = openGUI(stdscr)
-    # Start with selected page
-    pages.set(0)
-    assert True
-# EOF
+from .page_variables import Variables
+from .page_control import CTRL
+from .page_gpu import GPU
+from .page_all_info import all_info
+from .jtopgui import JTOPGUI
