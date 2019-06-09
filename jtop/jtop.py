@@ -145,8 +145,8 @@ class jtop():
         # Update status
         self._stats = stats
         # Update status from fan
-        for fan in self.qfans:
-            fan.update()
+        if self.fan is not None:
+            self.fan.update()
 
     def __enter__(self):
         self.open()

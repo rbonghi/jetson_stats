@@ -112,10 +112,12 @@ class Tegrastats(Thread):
                 # Decode line in UTF-8
                 tegrastats_data = line.decode("utf-8")
                 # Decode and store
-                self._jetsonstats = self.decode(tegrastats_data)
+                stats = self.decode(tegrastats_data)
                 # If callback is defined after each decode will be send the updates by function
                 if self.callback is not None:
-                    self.callback(self._jetsonstats)
+                    self.callback(stats)
+                else:
+                    self._jetsonstats = stats
         except SystemExit:
             logger.error("System exit", exc_info=True)
         except AttributeError:
