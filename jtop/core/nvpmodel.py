@@ -94,14 +94,14 @@ class NVPmodel():
         except OSError:
             logger.info("NVP Model does not exist")
             return False
-            
-    def increase():
+
+    def increase(self):
         if self.num + 1 < len(self.modes):
             return self.set(self.num + 1)
         else:
             return False
 
-    def decrease():
+    def decrease(self):
         if self.num - 1 >= 0:
             return self.set(self.num - 1)
         else:

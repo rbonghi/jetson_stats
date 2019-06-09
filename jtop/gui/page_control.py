@@ -55,7 +55,7 @@ def CTRL(stdscr, jetson, key):
     if nvpmodel is not None:
         stdscr.addstr(start_pos + 5, posx + 4, "NVP model", curses.A_BOLD)
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
-        lines = box_list(stdscr, start_pos, posx + 7, mode_names, nvpmodel.num, max_width=60)
+        box_list(stdscr, start_pos, posx + 7, mode_names, nvpmodel.num, max_width=60)
         # Draw background rectangle
         # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
 # EOF

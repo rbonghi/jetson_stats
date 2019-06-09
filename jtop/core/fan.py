@@ -98,8 +98,8 @@ class Fan():
     @property
     def status(self):
         fan = {'name': 'FAN',
-                'status': self.qstatus
-                }
+               'status': self.qstatus
+               }
         if self.qstatus == 'ON':
             fan['value'] = list(self.fan)
         return fan
