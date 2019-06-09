@@ -497,7 +497,7 @@ class Tegrastats(Thread):
                 # NVDEC is the video hardware decoding engine.
                 # Shown only when hardware decoder / encoder engine is used.
                 # NVDEC frequency in MHz
-                jetsonstats['NVDEC'] = float(other_values[idx+1])
+                jetsonstats['NVDEC'] = float(other_values[idx + 1])
                 idx += 1
             else:
                 # [VDD_name] X/Y
