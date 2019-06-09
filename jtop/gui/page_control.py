@@ -31,7 +31,8 @@ import curses
 # Graphics elements
 from .jtopguilib import (check_curses,
                          box_keyboard,
-                         box_status)
+                         box_status,
+                         box_list)
 
 
 @check_curses
@@ -49,3 +50,10 @@ def CTRL(stdscr, jetson, key):
     status = jetson.jetson_clock_status()
     status_box = True if status == "active" else False
     box_status(stdscr, start_pos + 5, posx + 1, status, status_box)
+    # Build NVP model list
+    nvpmodel = jetson.nvpmodel
+    if nvpmodel is not None:
+        stdscr.addstr(start_pos + 6, posx + 4, "NVP model", curses.A_BOLD)
+        mode_names = [mode["Name"] for mode in nvpmodel.modes]
+        box_list(stdscr, start_pos, posx + 7, mode_names, nvpmodel.num)
+# EOF

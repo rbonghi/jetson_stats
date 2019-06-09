@@ -52,7 +52,7 @@ def test_all():
         # uptime
         assert isinstance(jetson.uptime, float)
         # nvpmodel
-        assert isinstance(jetson.nvpmodel, dict)
+        assert jetson.nvpmodel is not None
         # local interfaces
         assert isinstance(jetson.local_interfaces, dict)
         # boards

@@ -27,33 +27,23 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Graphics elements
-from .jtopguilib import (linear_percent_gauge,
-                         make_gauge_from_percent,
-                         plot_name_info,
-                         draw_chart)
+# Logging
+import logging
+# Launch command
+import subprocess as sp
+
+# Create logger for jplotlib
+logger = logging.getLogger(__name__)
 
 
-def GPU(stdscr, jetson, key):
-    """
-        Draw a plot with GPU payload
-    """
-    # Screen size
-    max_y, max_x = stdscr.getmaxyx()
-    # Evaluate size chart
-    size_x = [2, max_x - 10]
-    size_y = [1, max_y * 2 // 3 - 1]
-    # Read GPU status
-    if 'GR3D' in jetson.stats:
-        gpu = jetson.stats['GR3D']
-        # Draw the GPU chart
-        draw_chart(stdscr, size_x, size_y, gpu)
-        # Percent Gauge GPU
-        linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
-        # Temperature GPU
-        if "GPU" in jetson.stats['temperatures']:
-            plot_name_info(stdscr, max_y * 2 // 3 + 1, 2, "GPU Temp", jetson.stats['temperatures']['GPU']['text'])
-        # NVP Model
-        nvpmodel = jetson.nvpmodel
-        if nvpmodel is not None:
-            plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", nvpmodel.mode)
+class JetsonClock():
+
+    def __init__(self):
+        pass
+
+    def status(self):
+        p = sp.Popen(['systemctl', 'is-active', 'jetson_performance.service'], stdout=sp.PIPE)
+        out, _ = p.communicate()
+        return out.strip()
+
+# EOF

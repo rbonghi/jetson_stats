@@ -46,7 +46,9 @@ class NVPmodel():
         * AGX Xavier: https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
         * Nano: https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/
     """
-    BOARDS = {"NO-BOARD": [{"Name": "Test mode"}],
+    BOARDS = {"PC": [{"Name": "Test-A"},
+                     {"Name": "Test-X alpha"},
+                     {"Name": "Test-QW beta"}],
               "TX2": [{"Name": 'Max-N'},
                       {"Name": 'Max-Q'},
                       {"Name": 'Max-P Core-All'},
@@ -62,6 +64,9 @@ class NVPmodel():
               "NANO": [{"Name": 'Max-N', "Power": '20W'},
                        {"Name": 'Mode-1', "Power": '5W'}]}
 
+    class NVPmodelException(Exception):
+        pass
+
     def __init__(self, board):
         self.board = ""
         # Find name board from board list
@@ -70,44 +75,38 @@ class NVPmodel():
                 self.board = name
                 logger.info("Board found: {}".format(self.board))
                 break
-        if self.board:
+        if not self.board:
             logger.info("This board {} does not have NVP Model".format(self.board))
+            raise NVPmodel.NVPmodelException("NVPmodel does not exist for this board {}".format(board))
+        # Initialize mode and num
+        self.update()
 
     @property
     def modes(self):
-        if self.board:
-            return NVPmodel.BOARDS[self.board]
-        else:
-            return []
+        return NVPmodel.BOARDS[self.board]
 
     def set(self, level):
         """ Set nvpmodel to a new status """
-        if self.board:
-            try:
-                sp.Popen(['nvpmodel', '-m', level], stdout=sp.PIPE)
-                return True
-            except OSError:
-                logger.info("NVP Model does not exist")
-        else:
+        try:
+            sp.Popen(['nvpmodel', '-m', level], stdout=sp.PIPE)
+            return True
+        except OSError:
+            logger.info("NVP Model does not exist")
             return False
 
-    @property
-    def status(self):
+    def update(self):
         """ Read nvpmodel to know the status of the board """
-        if self.board:
-            try:
-                nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
-                out, _ = nvpmodel_p.communicate()
-                # Log value
-                logger.debug('nvqmodel status %s', out)
-                # Decode lines and split
-                lines = out.decode("utf-8").split("\n")
-                # Return the mode type
-                # Name mode: lines[0].split(": ")[1]
-                mode_num = int(lines[1])
-                return NVPmodel.BOARDS[self.board][mode_num]
-            except OSError:
-                logger.info("NVP Model does not exist")
-        else:
-            return {}
+        try:
+            nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
+            out, _ = nvpmodel_p.communicate()
+            # Log value
+            logger.debug('nvqmodel status %s', out)
+            # Decode lines and split
+            lines = out.decode("utf-8").split("\n")
+            # Return the mode type
+            # Name mode: NVPmodel.BOARDS[self.board][self.num]
+            self.mode = str(lines[0].split(": ")[1])
+            self.num = int(lines[1])
+        except OSError:
+            logger.info("NVP Model does not exist")
 # EOF

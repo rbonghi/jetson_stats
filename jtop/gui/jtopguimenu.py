@@ -95,8 +95,8 @@ def compact_info(stdscr, start, offset, width, jetson):
     counter += 1
     # NVP Model
     nvpmodel = jetson.nvpmodel
-    if nvpmodel:
-        plot_name_info(stdscr, offset + counter, start, "NV Power", nvpmodel["Name"])
+    if nvpmodel is not None:
+        plot_name_info(stdscr, offset + counter, start, "NV Power", nvpmodel.mode)
         counter += 1
     # Plot MTS
     if 'MTS' in jetson.stats:

@@ -65,7 +65,10 @@ class jtop():
                 logger.debug("New Enviroment variable {}:{}".format(k, v))
                 os.environ[k] = v
         # Initialize NVP model
-        self.nvp = NVPmodel(os.environ["JETSON_TYPE"])
+        try:
+            self.nvp = NVPmodel(os.environ["JETSON_TYPE"])
+        except NVPmodel.NVPmodelException:
+            self.nvp = None
         # Find all fans availables
         self.qfan = None
         for path in jtop.LIST_FANS:
@@ -108,7 +111,7 @@ class jtop():
 
     @property
     def nvpmodel(self):
-        return self.nvp.status
+        return self.nvp
 
     @property
     def local_interfaces(self):
@@ -144,6 +147,9 @@ class jtop():
     def reader(self, stats):
         # Update status
         self._stats = stats
+        # Update nvpmodel
+        if self.nvp is not None:
+            self.nvp.update()
         # Update status from fan
         if self.qfan is not None:
             self.qfan.update()

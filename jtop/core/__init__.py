@@ -32,7 +32,9 @@
 from .nvpmodel import NVPmodel
 from .tegrastats import Tegrastats
 from .fan import Fan
+from .jetson_clock import JetsonClock
 from .common import (import_os_variables,
                      get_uptime,
                      status_disk,
                      get_local_interfaces)
+# EOF

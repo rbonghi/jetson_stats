@@ -117,6 +117,15 @@ def box_keyboard(stdscr, x, y, letter, key):
 
 
 @check_curses
+def box_list(stdscr, x, y, data, selected):
+    len_prev = 0
+    for idx, name in enumerate(data):
+        status = True if selected == idx else False
+        box_status(stdscr, x + len_prev, y, name, status=status)
+        len_prev += len(name) + 4
+
+
+@check_curses
 def draw_chart(stdscr, size_x, size_y, value, line="*"):
     # Get Max value and unit from value to draw
     max_val = 100 if "max_val" not in value else value["max_val"]

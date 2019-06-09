@@ -34,6 +34,7 @@ from .jtop import jtop
 from .core import Tegrastats
 from .core import Fan
 from .core import NVPmodel
+from .core import JetsonClock
 # Import os variable importer
 from .core import import_os_variables
 # EOF

@@ -30,35 +30,25 @@
 from jtop import NVPmodel
 
 
-def test_initialization():
-    # Test board not in list
-    nvp = NVPmodel("NotInListBoard")
-    assert isinstance(nvp.modes, list)
-    # Test board in list
-    nvp = NVPmodel("NO-BOARD")
-    assert isinstance(nvp.modes, list)
-
-
 def test_nvp_good():
     # Initialize NVPmodel
-    nvp = NVPmodel("NO-BOARD")
-    status = nvp.status
-    # Check result is a dictionary
-    assert isinstance(status, dict)
+    nvp = NVPmodel("PC")
     # Chek values
-    assert "Name" in status
-    assert status["Name"] == "Test mode"
+    assert isinstance(nvp.mode, str)
+    assert isinstance(nvp.num, int)
 
 
 def test_nvp_wrong():
     # Initialize NVPmodel
-    nvp = NVPmodel("NotInListBoard")
-    status = nvp.status
-    # Check result is a dictionary
-    assert isinstance(status, dict)
-    # Chek values
-    if not status:
-        assert True
-    else:
+    try:
+        NVPmodel("NotInListBoard")
         assert False
+    except NVPmodel.NVPmodelException:
+        assert True
+
+
+def test_initialization():
+    # Test board in list
+    nvp = NVPmodel("PC")
+    assert isinstance(nvp.modes, list)
 # EOF
