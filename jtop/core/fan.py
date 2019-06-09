@@ -71,6 +71,14 @@ class Fan():
         # Control temperature
         if os.path.isfile(self.path + "temp_control"):
             self.temp_control = int(self.read_status("temp_control"))
+        # Status FAN
+        if os.getuid() == 0:
+            if os.path.isfile(self.path + "target_pwm"):
+                self.qstatus = 'ON'
+            else:
+                self.qstatus = 'OFF'
+        else:
+            self.qstatus = 'REQUIRE SUDO'
 
     def read_status(self, file_read):
         status = sp.Popen(['cat', self.path + file_read], stdout=sp.PIPE)
@@ -79,14 +87,19 @@ class Fan():
 
     def update(self):
         # Read PWM
-        fan_level = float(self.read_status("target_pwm")) / 255.0 * 100.0
-        logger.debug('{} status PWM {}'.format(self.path, fan_level))
-        self.fan.append(fan_level)
+        if os.path.isfile(self.path + "target_pwm"):
+            fan_level = float(self.read_status("target_pwm")) / 255.0 * 100.0
+            logger.debug('{} status PWM {}'.format(self.path, fan_level))
+            self.fan.append(int(fan_level))
         # Read current
-        self.read_status("cur_pwm")
+        if os.path.isfile(self.path + "cur_pwm"):
+            self.read_status("cur_pwm")
 
     @property
     def status(self):
-        return {'name': 'FAN',
-                'value': list(self.fan),
+        fan = {'name': 'FAN',
+                'status': self.qstatus
                 }
+        if self.qstatus == 'ON':
+            fan['value'] = list(self.fan)
+        return fan

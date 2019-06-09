@@ -117,12 +117,18 @@ def box_keyboard(stdscr, x, y, letter, key):
 
 
 @check_curses
-def box_list(stdscr, x, y, data, selected):
+def box_list(stdscr, x, y, data, selected, max_width=-1):
     len_prev = 0
+    line = 0
+    skip_line = False if max_width == -1 else True
     for idx, name in enumerate(data):
         status = True if selected == idx else False
-        box_status(stdscr, x + len_prev, y, name, status=status)
+        if skip_line and len_prev + len(name) + 4 >= max_width:
+            line += 3
+            len_prev = 0
+        box_status(stdscr, x + len_prev, y + line, name, status=status)
         len_prev += len(name) + 4
+    return line
 
 
 @check_curses

@@ -89,9 +89,22 @@ class NVPmodel():
         """ Set nvpmodel to a new status """
         try:
             sp.Popen(['nvpmodel', '-m', level], stdout=sp.PIPE)
+            self.num = level
             return True
         except OSError:
             logger.info("NVP Model does not exist")
+            return False
+            
+    def increase():
+        if self.num + 1 < len(self.modes):
+            return self.set(self.num + 1)
+        else:
+            return False
+
+    def decrease():
+        if self.num - 1 >= 0:
+            return self.set(self.num - 1)
+        else:
             return False
 
     def update(self):
