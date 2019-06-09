@@ -80,8 +80,8 @@ class Fan():
     def update(self):
         # Read PWM
         fan_level = float(self.read_status("target_pwm")) / 255.0 * 100.0
-        logger.debug('{} status PWM'.format(self.path, fan_level))
-        self.fan.append(int(fan_level))
+        logger.debug('{} status PWM {}'.format(self.path, fan_level))
+        self.fan.append(fan_level)
         # Read current
         self.read_status("cur_pwm")
 

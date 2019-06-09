@@ -65,7 +65,7 @@ class jtop():
                 logger.debug("New Enviroment variable {}:{}".format(k, v))
                 os.environ[k] = v
         # Initialize NVP model
-        self.nvp = NVPmodel(os.environ["JETSON_BOARD"])
+        self.nvp = NVPmodel(os.environ["JETSON_TYPE"])
         # Find all fans availables
         self.qfan = None
         for path in jtop.LIST_FANS:
@@ -145,8 +145,8 @@ class jtop():
         # Update status
         self._stats = stats
         # Update status from fan
-        if self.fan is not None:
-            self.fan.update()
+        if self.qfan is not None:
+            self.qfan.update()
 
     def __enter__(self):
         self.open()

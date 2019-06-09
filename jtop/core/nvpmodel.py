@@ -66,7 +66,7 @@ class NVPmodel():
         self.board = ""
         # Find name board from board list
         for name in NVPmodel.BOARDS.keys():
-            if board.lower() in name.lower():
+            if name.lower() in board.lower():
                 self.board = name
                 logger.info("Board found: {}".format(self.board))
                 break
