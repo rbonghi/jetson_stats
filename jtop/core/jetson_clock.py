@@ -46,4 +46,9 @@ class JetsonClock():
         out, _ = p.communicate()
         return out.strip()
 
+    def enabled(self):
+        p = sp.Popen(['systemctl', 'is-enabled', 'jetson_performance.service'], stdout=sp.PIPE)
+        out, _ = p.communicate()
+        return out.strip()
+
 # EOF
