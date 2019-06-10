@@ -27,7 +27,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Emulator for NVIDIA Jetson nvpmodel
+# Emulator for NVIDIA Jetson jetson_clock
 
 usage()
 {
@@ -37,37 +37,39 @@ usage()
 		tput sgr0
 	fi
 	
-    echo "nvpmodel, Emulator of NVIDIA Jetsons"
+    echo "jetson_clock, Emulator of NVIDIA Jetsons"
     echo "Usage:"
     echo "$0 [options]"
     echo "options,"
     echo "   -h|--help    | This help"
-    echo "   -q           | Query status"
+    echo "   --show       | Show the status of jetson_clock"
+    echo "   --restore    | Restore status jetson"
+    echo "   --store      | Store status jetson"
 }
 
-set_level()
+show()
 {
-    if [ "$EUID" -ne 0 ] ; then
-      echo "Please run as root"
-      exit 1
-    fi
+    echo "Show status jetson_clock"
 }
 
 main()
 {
-    local level=0
+    local conf=""
 	# Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
-            -m) 
-                level=$2
-                shift 1
-                set_level
+            --show)
+                show
                 exit 0
                 ;;
-            -q)
-                echo "NVP model: TEST"
-                echo "$level"
+            --restore)
+                conf=$2
+                shift 1
+                exit 0
+                ;;
+            --store)
+                conf=$2
+                shift 1
                 exit 0
                 ;;
             -h|--help)
@@ -82,9 +84,9 @@ main()
             shift 1
     done
     
-    if [[ $# -eq 0 ]] ; then
-        echo 'nvpmodel emulator'
-        exit 0
+    if [ "$EUID" -ne 0 ] ; then
+      echo "Please run as root"
+      exit 1
     fi
 }
 

@@ -56,6 +56,10 @@ main()
                 INTERVAL=$2
                 shift 1
                 ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
             *)
                 usage "[ERROR] Unknown option: $1"
                 exit 1
