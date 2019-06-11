@@ -45,17 +45,23 @@ def CTRL(stdscr, jetson, key):
     start_pos = 2
     stdscr.addstr(start_pos, posx, "jetson_clock controller", curses.A_BOLD)
     # button start/stop jetson clock
-    box_keyboard(stdscr, start_pos, posx + 1, "x", key)
+    box_keyboard(stdscr, start_pos, posx + 1, "a", key)
     # Read status jetson_clock
     status = jetson.jetson_clock.status
     status_box = True if status == "active" else False
-    box_status(stdscr, start_pos + 5, posx + 1, status, status_box)
+    box_status(stdscr, start_pos + 5, posx + 1, status.capitalize(), status_box)
+    # button start/stop jetson clock
+    box_keyboard(stdscr, start_pos, posx + 4, "e", key)
+    # Read status jetson_clock
+    enabled = jetson.jetson_clock.enable
+    enabled_box = True if enabled == "enabled" else False
+    box_status(stdscr, start_pos + 5, posx + 4, enabled.capitalize(), enabled_box)
     # Build NVP model list
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:
-        stdscr.addstr(start_pos + 5, posx + 4, "NVP model", curses.A_BOLD)
+        stdscr.addstr(start_pos + 8, posx, "NVP model", curses.A_BOLD)
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
-        box_list(stdscr, start_pos, posx + 7, mode_names, nvpmodel.num, max_width=60)
+        box_list(stdscr, start_pos, posx + 9, mode_names, nvpmodel.num, max_width=40)
         # Draw background rectangle
         # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
 # EOF

@@ -38,24 +38,33 @@ logger = logging.getLogger(__name__)
 
 class JetsonClock:
 
+    def __init__(self, service='jetson_performance'):
+        self.service = service
+
     @property
     def status(self):
-        p = sp.Popen(['systemctl', 'is-active', 'jetson_performance.service'], stdout=sp.PIPE)
+        p = sp.Popen(['systemctl', 'is-active', self.service + '.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
         return out.strip()
 
     @status.setter
     def status(self, value):
-        pass
+        if value != "start" or value != "stop":
+            raise Exception("Wrong status")
+        p = sp.Popen(['systemctl', value, self.service + '.service'], stdout=sp.PIPE)
+        out, _ = p.communicate()
 
     @property
-    def enabled(self):
-        p = sp.Popen(['systemctl', 'is-enabled', 'jetson_performance.service'], stdout=sp.PIPE)
+    def enable(self):
+        p = sp.Popen(['systemctl', 'is-enabled', self.service + '.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
         return out.strip()
 
-    @enabled.setter
-    def enabled(self, value):
-        pass
+    @enable.setter
+    def enable(self, value):
+        if value != "enable" or value != "disable":
+            raise Exception("Wrong status")
+        p = sp.Popen(['systemctl', value, self.service + '.service'], stdout=sp.PIPE)
+        out, _ = p.communicate()
 
 # EOF

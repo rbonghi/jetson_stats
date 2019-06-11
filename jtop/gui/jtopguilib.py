@@ -114,6 +114,8 @@ def box_keyboard(stdscr, x, y, letter, key):
     status = curses.A_NORMAL if key != ord(letter) else curses.A_REVERSE
     # Write letter
     stdscr.addstr(y + 1, x + 2, letter, status)
+    # Return the status of key
+    return True if key == ord(letter) else False
 
 
 @check_curses
