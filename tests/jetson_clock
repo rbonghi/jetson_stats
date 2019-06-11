@@ -37,14 +37,16 @@ usage()
 		tput sgr0
 	fi
 	
-    echo "jetson_clock, Emulator of NVIDIA Jetsons"
+    echo "jetson_clock, EMULATOR of NVIDIA Jetsons"
+    echo "Maximize jetson performance by setting static max frequency to CPU, GPU and EMC clocks."
     echo "Usage:"
     echo "$0 [options]"
     echo "options,"
-    echo "   -h|--help    | This help"
-    echo "   --show       | Show the status of jetson_clock"
-    echo "   --restore    | Restore status jetson"
-    echo "   --store      | Store status jetson"
+    echo "   -h|--help        | This help"
+    echo "   --show           | display current settings"
+    echo "   --restore [file] | restore current settings to a file (default: ${HOME}/l4t_dfs.conf)"
+    echo "   --store [file]   | store current settings to a file (default: ${HOME}/l4t_dfs.conf)"
+    echo "run jetson_clocks.sh without any option to set static max frequency to CPU, GPU and EMC clocks."
 }
 
 show()
