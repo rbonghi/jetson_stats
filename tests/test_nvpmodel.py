@@ -38,15 +38,6 @@ def test_nvp_good():
     assert isinstance(nvp.num, int)
 
 
-def test_nvp_wrong():
-    # Initialize NVPmodel
-    try:
-        NVPmodel("NotInListBoard")
-        assert False
-    except NVPmodel.NVPmodelException:
-        assert True
-
-
 def test_initialization():
     # Test board in list
     nvp = NVPmodel("PC")

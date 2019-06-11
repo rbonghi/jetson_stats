@@ -368,6 +368,26 @@ NVPM VERB:
 EOF
 }
 
+show_verbose_test()
+{
+cat << EOF
+NVPM VERB: PARAM TYPE=CLOCK NAME=CVNAS
+NVPM VERB: MAX_FREQ /sys/kernel/nvpmodel_emc_cap/nafll_cvnas
+NVPM VERB: 
+NVPM VERB: POWER_MODEL: ID=0 NAME=MAXTEST
+NVPM VERB: CPU_ONLINE CORE_0 1
+NVPM VERB: 
+NVPM VERB: POWER_MODEL: ID=1 NAME=TEST
+NVPM VERB: CPU_ONLINE CORE_0 1
+NVPM VERB: 
+NVPM VERB: POWER_MODEL: ID=2 NAME=MINTEST
+NVPM VERB: CPU_ONLINE CORE_0 1
+NVPM VERB: 
+NVPM VERB: POWER_MODEL: ID=3 NAME=MIN_MAX_TEST
+NVPM VERB: CPU_ONLINE CORE_0 1
+EOF
+}
+
 set_level()
 {
     if [ "$EUID" -ne 0 ] ; then
@@ -426,7 +446,7 @@ main()
     fi
     
     if $PARSE && $VERBOSE ; then
-        show_verbose_xavier
+        show_verbose_test
     fi
 }
 

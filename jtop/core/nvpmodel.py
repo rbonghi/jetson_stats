@@ -71,8 +71,8 @@ class NVPmodel():
                     pm = {"ID": int(match.group(1)), "Name": match.group(2)}
                     self.board += [pm]
         except OSError:
-            logger.info("This board {} does not have NVP Model".format(self.board))
-            raise NVPmodel.NVPmodelException("NVPmodel does not exist for this board {}".format(board))
+            logger.info("This board {} does not have NVP Model".format(type_board))
+            raise NVPmodel.NVPmodelException("NVPmodel does not exist for this board {}".format(type_board))
         # Initialize mode and num
         self.update()
 
