@@ -36,6 +36,7 @@ import subprocess as sp
 from .core import NVPmodel
 from .core import Tegrastats
 from .core import Fan
+from .core import JetsonClock
 from .core import (import_os_variables,
                    get_uptime,
                    status_disk,
@@ -64,6 +65,8 @@ class jtop():
             for k, v in import_os_variables(jtop.JTOP_FOLDER + 'jetson_variables').items():
                 logger.debug("New Enviroment variable {}:{}".format(k, v))
                 os.environ[k] = v
+        # Initialize jetson_clock controller
+        self.jc = JetsonClock()
         # Initialize NVP model
         try:
             self.nvp = NVPmodel(os.environ["JETSON_TYPE"])
@@ -100,10 +103,9 @@ class jtop():
     def disk(self):
         return status_disk()
 
-    def jetson_clock_status(self):
-        p = sp.Popen(['systemctl', 'is-active', 'jetson_performance.service'], stdout=sp.PIPE)
-        out, _ = p.communicate()
-        return out.strip()
+    @property
+    def jetson_clock(self):
+        return self.jc
 
     @property
     def uptime(self):

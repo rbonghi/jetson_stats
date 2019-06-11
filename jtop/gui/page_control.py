@@ -47,7 +47,7 @@ def CTRL(stdscr, jetson, key):
     # button start/stop jetson clock
     box_keyboard(stdscr, start_pos, posx + 1, "x", key)
     # Read status jetson_clock
-    status = jetson.jetson_clock_status()
+    status = jetson.jetson_clock.status
     status_box = True if status == "active" else False
     box_status(stdscr, start_pos + 5, posx + 1, status, status_box)
     # Build NVP model list

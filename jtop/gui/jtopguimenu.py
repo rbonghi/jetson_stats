@@ -94,8 +94,9 @@ def compact_info(stdscr, start, offset, width, jetson):
         linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
     counter += 1
     # Jetson clock status
-    jc_status = jetson.jetson_clock_status()
-    plot_name_info(stdscr, offset + counter, start, "Jetson Clock", jc_status)
+    jc_status = jetson.jetson_clock.status
+    color = curses.color_pair(2) if jc_status == "active" else curses.color_pair(1)
+    plot_name_info(stdscr, offset + counter, start, "Jetson Clock", jc_status, color)
     counter += 1
     # NVP Model
     nvpmodel = jetson.nvpmodel

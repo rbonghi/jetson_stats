@@ -41,11 +41,13 @@ class JetsonClock():
     def __init__(self):
         pass
 
+    @property
     def status(self):
         p = sp.Popen(['systemctl', 'is-active', 'jetson_performance.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
         return out.strip()
 
+    @property
     def enabled(self):
         p = sp.Popen(['systemctl', 'is-enabled', 'jetson_performance.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
