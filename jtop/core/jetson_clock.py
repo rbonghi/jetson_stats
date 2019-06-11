@@ -36,10 +36,7 @@ import subprocess as sp
 logger = logging.getLogger(__name__)
 
 
-class JetsonClock():
-
-    def __init__(self):
-        pass
+class JetsonClock:
 
     @property
     def status(self):
@@ -47,10 +44,18 @@ class JetsonClock():
         out, _ = p.communicate()
         return out.strip()
 
+    @status.setter
+    def status(self, value):
+        pass
+
     @property
     def enabled(self):
         p = sp.Popen(['systemctl', 'is-enabled', 'jetson_performance.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
         return out.strip()
+
+    @enabled.setter
+    def enabled(self, value):
+        pass
 
 # EOF

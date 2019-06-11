@@ -30,8 +30,6 @@
 import os
 # Logging
 import logging
-# Launch command
-import subprocess as sp
 
 from .core import NVPmodel
 from .core import Tegrastats
