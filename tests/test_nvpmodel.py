@@ -42,4 +42,11 @@ def test_initialization():
     # Test board in list
     nvp = NVPmodel("PC")
     assert isinstance(nvp.modes, list)
+
+
+def test_mode():
+    # Test board in list
+    nvp = NVPmodel("PC")
+    assert nvp.mode == nvp.modes[nvp.num]["Name"]
+    assert nvp.num == nvp.modes[nvp.num]["ID"]
 # EOF

@@ -400,6 +400,7 @@ main()
 {
     local PARSE=false
     local VERBOSE=false
+    local name="MAXTEST"
     local level=0
     
     
@@ -423,7 +424,7 @@ main()
                 exit 0
                 ;;
             -q)
-                echo "NVP model: TEST"
+                echo "NVP model: $name"
                 echo "$level"
                 exit 0
                 ;;
