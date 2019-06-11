@@ -27,6 +27,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import re
 # Logging
 import logging
 # Launch command
@@ -46,36 +47,30 @@ class NVPmodel():
         * AGX Xavier: https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
         * Nano: https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/
     """
-    BOARDS = {"PC": [{"Name": "Test-A"},
-                     {"Name": "Test-X alpha"},
-                     {"Name": "Test-QW beta"}],
-              "TX2": [{"Name": 'Max-N'},
-                      {"Name": 'Max-Q'},
-                      {"Name": 'Max-P Core-All'},
-                      {"Name": 'Max-P ARM'},
-                      {"Name": 'Max-P Denver'}],
-              "Xavier": [{"Name": 'Max-N', "Power": 'N/A'},
-                         {"Name": 'Mode-10W', "Power": '10W'},
-                         {"Name": 'Mode-15W', "Power": '15W'},
-                         {"Name": 'Mode-30W-All', "Power": '30W'},
-                         {"Name": 'Mode-30W-6CORE', "Power": '30W'},
-                         {"Name": 'Mode-30W-4CORE', "Power": '30W'},
-                         {"Name": 'Mode-30W-2CORE', "Power": '30W'}],
-              "NANO": [{"Name": 'Max-N', "Power": '20W'},
-                       {"Name": 'Mode-1', "Power": '5W'}]}
+    REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
 
     class NVPmodelException(Exception):
         pass
 
-    def __init__(self, board):
-        self.board = ""
-        # Find name board from board list
-        for name in NVPmodel.BOARDS.keys():
-            if name.lower() in board.lower():
-                self.board = name
-                logger.info("Board found: {}".format(self.board))
-                break
-        if not self.board:
+    def __init__(self, type_board):
+        self.type_board = type_board
+        try:
+            nvpmodel_p = sp.Popen(['nvpmodel', '-p', '--verbose'], stdout=sp.PIPE)
+            out, _ = nvpmodel_p.communicate()
+            # Log value
+            logger.debug('nvqmodel status %s', out)
+            # Decode lines
+            lines = out.decode("utf-8")
+            # Read all lines and extract modes
+            self.board = []
+            for line in lines.split("\n"):
+                # Search configuration NVPmodel
+                match = NVPmodel.REGEXP.search(line)
+                # if match extract name and number
+                if match:
+                    pm = {"ID": int(match.group(1)), "Name": match.group(2)}
+                    self.board += [pm]
+        except OSError:
             logger.info("This board {} does not have NVP Model".format(self.board))
             raise NVPmodel.NVPmodelException("NVPmodel does not exist for this board {}".format(board))
         # Initialize mode and num
@@ -83,7 +78,7 @@ class NVPmodel():
 
     @property
     def modes(self):
-        return NVPmodel.BOARDS[self.board]
+        return self.board
 
     def set(self, level):
         """ Set nvpmodel to a new status """
@@ -117,7 +112,6 @@ class NVPmodel():
             # Decode lines and split
             lines = out.decode("utf-8").split("\n")
             # Return the mode type
-            # Name mode: NVPmodel.BOARDS[self.board][self.num]
             self.mode = str(lines[0].split(": ")[1])
             self.num = int(lines[1])
         except OSError:
