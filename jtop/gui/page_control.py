@@ -32,7 +32,8 @@ import curses
 from .jtopguilib import (check_curses,
                          box_keyboard,
                          box_status,
-                         box_list)
+                         box_list,
+                         draw_chart)
 
 
 @check_curses
@@ -45,23 +46,46 @@ def CTRL(stdscr, jetson, key):
     start_pos = 2
     stdscr.addstr(start_pos, posx, "jetson_clock controller", curses.A_BOLD)
     # button start/stop jetson clock
-    box_keyboard(stdscr, start_pos, posx + 1, "a", key)
+    status_key_active = box_keyboard(stdscr, start_pos, posx + 1, "a", key)
     # Read status jetson_clock
     status = jetson.jetson_clock.status
     status_box = True if status == "active" else False
     box_status(stdscr, start_pos + 5, posx + 1, status.capitalize(), status_box)
+    # Write the new jetson_clock status
+    if status_key_active and status == "inactive":
+        jetson.jetson_clock.status = "start"
+    elif status_key_active and status == "active":
+        jetson.jetson_clock.status = "stop"
     # button start/stop jetson clock
-    box_keyboard(stdscr, start_pos, posx + 4, "e", key)
+    status_key_enable = box_keyboard(stdscr, start_pos, posx + 4, "e", key)
     # Read status jetson_clock
     enabled = jetson.jetson_clock.enable
-    enabled_box = True if enabled == "enabled" else False
+    enabled_box = True if enabled in "enabled" else False
     box_status(stdscr, start_pos + 5, posx + 4, enabled.capitalize(), enabled_box)
+    # Write the new jetson_clock status
+    if status_key_enable and not enabled_box:
+        jetson.jetson_clock.enable = "enable"
+    elif status_key_enable and enabled_box:
+        jetson.jetson_clock.enable = "disable"
     # Build NVP model list
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:
         stdscr.addstr(start_pos + 8, posx, "NVP model", curses.A_BOLD)
+        box_keyboard(stdscr, start_pos + 10, posx + 7, "-", key)
+        box_keyboard(stdscr, start_pos + 15, posx + 7, "+", key)
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
-        box_list(stdscr, start_pos, posx + 9, mode_names, nvpmodel.num, max_width=40)
+        box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, max_width=40)
         # Draw background rectangle
         # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
+    # Add plot fan status
+    fan = jetson.fan
+    if fan is not None:
+        # Fan chart name
+        stdscr.addstr(start_pos, posx + 40, "FAN speed", curses.A_BOLD)
+        # Evaluate size chart
+        size_x = [posx + 40, width - 10]
+        size_y = [3, height * 2 // 3 - 1]
+        gpu = jetson.stats['GR3D']
+        # Draw the GPU chart
+        draw_chart(stdscr, size_x, size_y, gpu)
 # EOF

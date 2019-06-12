@@ -49,8 +49,8 @@ class JetsonClock:
 
     @status.setter
     def status(self, value):
-        if value != "start" or value != "stop":
-            raise Exception("Wrong status")
+        #if value != "start" or value != "stop":
+        #    raise Exception("Wrong status")
         p = sp.Popen(['systemctl', value, self.service + '.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
 
