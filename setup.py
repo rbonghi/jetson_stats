@@ -55,7 +55,7 @@ import sys
 
 
 if os.getuid() != 0:
-    print("Require super user")
+    print("\nRequire super user")
     sys.exit(1)
 
 

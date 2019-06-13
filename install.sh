@@ -274,11 +274,11 @@ main()
                 echo " - /usr/bin/nvpmodel does not exist"
             fi
             # Remove jetson_clock
-            if [ -f /usr/bin/jetson_clock ] ; then
-            echo " - Remove /usr/bin/jetson_clock"
-                sudo rm /usr/bin/jetson_clock
+            if [ -f /usr/bin/jetson_clocks ] ; then
+            echo " - Remove /usr/bin/jetson_clocks"
+                sudo rm /usr/bin/jetson_clocks
             else
-                echo " - /usr/bin/jetson_clock does not exist"
+                echo " - /usr/bin/jetson_clocks does not exist"
             fi
         fi
     else
@@ -320,11 +320,11 @@ main()
                 echo " - Already exist nvpmodel in /usr/bin/"
             fi
             # jetson_clock
-            if [ ! -f /usr/bin/jetson_clock ] || $FORCE_INSTALL ; then
-            echo " - Copy emulation jetson_clock in /usr/bin/"
-                sudo cp tests/jetson_clock /usr/bin/
+            if [ ! -f /usr/bin/jetson_clocks ] || $FORCE_INSTALL ; then
+            echo " - Copy emulation jetson_clocks in /usr/bin/"
+                sudo cp tests/jetson_clocks /usr/bin/
             else
-                echo " - Already exist jetson_clock in /usr/bin/"
+                echo " - Already exist jetson_clocks in /usr/bin/"
             fi
         fi
         

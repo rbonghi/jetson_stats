@@ -60,13 +60,13 @@ def CTRL(stdscr, jetson, key):
     status_key_enable = box_keyboard(stdscr, start_pos, posx + 4, "e", key)
     # Read status jetson_clock
     enabled = jetson.jetson_clock.enable
-    enabled_box = True if enabled in "enabled" else False
-    box_status(stdscr, start_pos + 5, posx + 4, enabled.capitalize(), enabled_box)
+    enabled_box = "Enable" if enabled else "Disable"
+    box_status(stdscr, start_pos + 5, posx + 4, enabled_box, enabled)
     # Write the new jetson_clock status
-    if status_key_enable and not enabled_box:
-        jetson.jetson_clock.enable = "enable"
-    elif status_key_enable and enabled_box:
-        jetson.jetson_clock.enable = "disable"
+    if status_key_enable and not enabled:
+        jetson.jetson_clock.enable = True
+    elif status_key_enable and enabled:
+        jetson.jetson_clock.enable = False
     # Build NVP model list
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:

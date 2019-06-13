@@ -36,10 +36,11 @@ import subprocess as sp
 logger = logging.getLogger(__name__)
 
 
-class JetsonClock:
+class JetsonClock(object):
 
     def __init__(self, service='jetson_performance'):
         self.service = service
+        self.last_status = ""
 
     @property
     def status(self):
@@ -49,22 +50,26 @@ class JetsonClock:
 
     @status.setter
     def status(self, value):
-        if value != "start" or value != "stop":
-            raise Exception("Wrong status")
-        p = sp.Popen(['systemctl', value, self.service + '.service'], stdout=sp.PIPE)
-        out, _ = p.communicate()
+        if value != "start" and value != "stop":
+            raise Exception("Wrong status: {}".format(value))
+        p = sp.Popen(['systemctl', value, self.service + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
+        _, err = p.communicate()
+        self.last_status = err
 
     @property
     def enable(self):
         p = sp.Popen(['systemctl', 'is-enabled', self.service + '.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
-        return out.strip()
+        enable_val = True if out.strip() == "enabled" else False
+        return enable_val
 
     @enable.setter
     def enable(self, value):
-        if value != "enable" or value != "disable":
-            raise Exception("Wrong status")
-        p = sp.Popen(['systemctl', value, self.service + '.service'], stdout=sp.PIPE)
-        out, _ = p.communicate()
+        if not isinstance(value, bool):
+            raise Exception("Use a boolean")
+        enable_val = "enable" if value else "disable"
+        p = sp.Popen(['systemctl', enable_val, self.service + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
+        _, err = p.communicate()
+        self.last_status = err
 
 # EOF
