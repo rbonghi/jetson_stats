@@ -28,7 +28,6 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from jtop import JetsonClocks
-import time
 
 
 def test_init_jc():
@@ -43,42 +42,29 @@ def test_read_status():
     assert isinstance(jc.status, str)
 
 
+def status_check(var_status, new_status):
+    var_status = new_status
+    # Wait a second
+    while var_status != new_status:
+        pass
+    # Check the status is the same
+    assert var_status == new_status
+
+
 def test_set_start():
     # Initialize JetsonClocks
     jc = JetsonClocks()
-    start = True
-    # Start JetsonClocks
-    jc.start = start
-    # Wait a second
-    time.sleep(1)
-    # Check the status is the same
-    assert jc.start == start
-    # Check stop
-    start = False
-    # Start JetsonClocks
-    jc.start = start
-    # Wait a second
-    time.sleep(1)
-    # Check the status is the same
-    assert jc.start == start
+    # check status True
+    status_check(jc.start, True)
+    # Check status False
+    status_check(jc.start, False)
 
 
 def test_set_enable():
     # Initialize JetsonClocks
     jc = JetsonClocks()
-    new_enable = True
-    # Enable JetsonClocks
-    jc.enable = new_enable
-    # Wait a second
-    time.sleep(1)
-    # Check enable is the same
-    assert jc.enable == new_enable
-    # Check disable
-    new_enable = False
-    # Disable JetsonClocks
-    jc.enable = new_enable
-    # Wait a second
-    time.sleep(1)
-    # Check enable is the same
-    assert jc.enable == new_enable
+    # check status True
+    status_check(jc.enable, True)
+    # Check status False
+    status_check(jc.enable, False)
 # EOF
