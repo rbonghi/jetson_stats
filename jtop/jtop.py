@@ -51,6 +51,10 @@ class jtop():
         * NVP Model
         * Fan
     """
+
+    class JtopException(Exception):
+        pass
+
     # List of available fan
     JTOP_FOLDER = '/opt/jetson_stats/'
     LIST_FANS = ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']
@@ -86,6 +90,8 @@ class jtop():
                 logger.info("Load tegrastats {}".format(f_tegra))
                 tegrastats_file = f_tegra
                 break
+        if not tegrastats_file:
+            raise jtop.JtopException("Tegrastats is not availabe on this board")
         # Initialize Tegrastats controller
         self._stats = {}
         self.tegrastats = Tegrastats(tegrastats_file, interval, time)
@@ -143,7 +149,10 @@ class jtop():
         return self._stats
 
     def open(self):
-        self.tegrastats.open(self.reader)
+        try:
+            self.tegrastats.open(self.reader)
+        except Tegrastats.TegrastatsException as e:
+            raise jtop.JtopException(e)
 
     def close(self):
         self.tegrastats.close()

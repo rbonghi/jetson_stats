@@ -118,23 +118,26 @@ def main():
     else:
         logging.basicConfig()
     # Open tegrastats reader and run the curses wrapper
-    with jtop(interval=args.refresh) as jetson:
-        try:
-            # Run jtop in two different modes:
-            # - Debug mode
-            # - GUI mode
-            if args.debug:
-                while True:
-                    print(jetson.stats)
-                    # Sleep before send new stat
-                    time.sleep(1)
-            else:
-                # Call the curses wrapper
-                curses.wrapper(gui, args, jetson)
-        except KeyboardInterrupt:
-            # Catch keyboard interrupt and close
-            logger.info("Closed with CTRL-C")
-
+    try:
+        with jtop(interval=args.refresh) as jetson:
+            try:
+                # Run jtop in two different modes:
+                # - Debug mode
+                # - GUI mode
+                if args.debug:
+                    while True:
+                        print(jetson.stats)
+                        # Sleep before send new stat
+                        time.sleep(1)
+                else:
+                    # Call the curses wrapper
+                    curses.wrapper(gui, args, jetson)
+            except KeyboardInterrupt:
+                # Catch keyboard interrupt and close
+                logger.info("Closed with CTRL-C")
+    except jtop.JtopException as e:
+        # Print error and close
+        print(e)
 
 if __name__ == "__main__":
     main()
