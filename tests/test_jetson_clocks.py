@@ -27,14 +27,58 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# flake8: noqa
+from jtop import JetsonClocks
+import time
 
-from .jtop import jtop
-# Import extra controllers
-from .core import Tegrastats
-from .core import Fan
-from .core import NVPmodel
-from .core import JetsonClocks
-# Import os variable importer
-from .core import import_os_variables
+
+def test_init_jc():
+    # Initialize JetsonClocks
+    JetsonClocks()
+    assert True
+
+
+def test_read_status():
+    # Initialize JetsonClocks
+    jc = JetsonClocks()
+    assert isinstance(jc.status, str)
+
+
+def test_set_start():
+    # Initialize JetsonClocks
+    jc = JetsonClocks()
+    start = True
+    # Start JetsonClocks
+    jc.start = start
+    # Wait a second
+    time.sleep(1)
+    # Check the status is the same
+    assert jc.start == start
+    # Check stop
+    start = False
+    # Start JetsonClocks
+    jc.start = start
+    # Wait a second
+    time.sleep(1)
+    # Check the status is the same
+    assert jc.start == start
+
+
+def test_set_enable():
+    # Initialize JetsonClocks
+    jc = JetsonClocks()
+    new_enable = True
+    # Enable JetsonClocks
+    jc.enable = new_enable
+    # Wait a second
+    time.sleep(1)
+    # Check enable is the same
+    assert jc.enable == new_enable
+    # Check disable
+    new_enable = False
+    # Disable JetsonClocks
+    jc.enable = new_enable
+    # Wait a second
+    time.sleep(1)
+    # Check enable is the same
+    assert jc.enable == new_enable
 # EOF

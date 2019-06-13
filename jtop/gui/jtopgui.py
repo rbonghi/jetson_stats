@@ -27,7 +27,6 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
 import curses
 # Graphics elements
 from .jtopguilib import (check_size,
@@ -71,7 +70,7 @@ class JTOPGUI:
         board = jetson.board["board"]
         board_info = board["name"] + " - Jetpack " + board["jetpack"]
         self.stdscr.addstr(0, 0, board_info, curses.A_BOLD)
-        if os.getuid() != 0:
+        if jetson.userid != 0:
             self.stdscr.addstr(0, len(board_info) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))
 
     @check_curses

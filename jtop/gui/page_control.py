@@ -38,35 +38,35 @@ from .jtopguilib import (check_curses,
 
 @check_curses
 def CTRL(stdscr, jetson, key):
-    """ Control board, check status jetson_clock and change NVP model """
+    """ Control board, check status jetson_clocks and change NVP model """
     # Screen size
     height, width = stdscr.getmaxyx()
     # Position information
     posx = 2
     start_pos = 2
-    stdscr.addstr(start_pos, posx, "jetson_clock controller", curses.A_BOLD)
-    # button start/stop jetson clock
+    stdscr.addstr(start_pos, posx, "jetson_clocks controller", curses.A_BOLD)
+    # button start/stop jetson clocks
     status_key_active = box_keyboard(stdscr, start_pos, posx + 1, "a", key)
-    # Read status jetson_clock
-    status = jetson.jetson_clock.status
-    status_box = True if status == "active" else False
-    box_status(stdscr, start_pos + 5, posx + 1, status.capitalize(), status_box)
-    # Write the new jetson_clock status
-    if status_key_active and status == "inactive":
-        jetson.jetson_clock.status = "start"
-    elif status_key_active and status == "active":
-        jetson.jetson_clock.status = "stop"
-    # button start/stop jetson clock
+    # Read status jetson_clocks
+    start = jetson.jetson_clocks.start
+    status = jetson.jetson_clocks.status
+    box_status(stdscr, start_pos + 5, posx + 1, status.capitalize(), start)
+    # Write the new jetson_clocks status
+    if status_key_active and not start:
+        jetson.jetson_clocks.start = True
+    elif status_key_active and start:
+        jetson.jetson_clocks.start = False
+    # button start/stop jetson clocks
     status_key_enable = box_keyboard(stdscr, start_pos, posx + 4, "e", key)
-    # Read status jetson_clock
-    enabled = jetson.jetson_clock.enable
+    # Read status jetson_clocks
+    enabled = jetson.jetson_clocks.enable
     enabled_box = "Enable" if enabled else "Disable"
     box_status(stdscr, start_pos + 5, posx + 4, enabled_box, enabled)
-    # Write the new jetson_clock status
+    # Write the new jetson_clocks status
     if status_key_enable and not enabled:
-        jetson.jetson_clock.enable = True
+        jetson.jetson_clocks.enable = True
     elif status_key_enable and enabled:
-        jetson.jetson_clock.enable = False
+        jetson.jetson_clocks.enable = False
     # Build NVP model list
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:

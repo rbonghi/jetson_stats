@@ -34,7 +34,7 @@ import logging
 from .core import NVPmodel
 from .core import Tegrastats
 from .core import Fan
-from .core import JetsonClock
+from .core import JetsonClocks
 from .core import (import_os_variables,
                    get_uptime,
                    status_disk,
@@ -63,8 +63,8 @@ class jtop():
             for k, v in import_os_variables(jtop.JTOP_FOLDER + 'jetson_variables').items():
                 logger.debug("New Enviroment variable {}:{}".format(k, v))
                 os.environ[k] = v
-        # Initialize jetson_clock controller
-        self.jc = JetsonClock()
+        # Initialize jetson_clocks controller
+        self.jc = JetsonClocks()
         # Initialize NVP model
         try:
             self.nvp = NVPmodel(os.environ["JETSON_TYPE"])
@@ -91,6 +91,10 @@ class jtop():
         self.tegrastats = Tegrastats(tegrastats_file, interval, time)
 
     @property
+    def userid(self):
+        return os.getuid()
+
+    @property
     def fan(self):
         if self.qfan is not None:
             return self.qfan.status
@@ -102,7 +106,7 @@ class jtop():
         return status_disk()
 
     @property
-    def jetson_clock(self):
+    def jetson_clocks(self):
         return self.jc
 
     @property

@@ -52,19 +52,20 @@ def check_size(height_max, width_max):
                 size_window_width = "Width: " + str(width) + " >= " + str(width_max)
                 size_window_height = "Height: " + str(height) + " >= " + str(height_max)
                 try:
-                    self.stdscr.addstr(height / 2 - 2, (width - len(string_warning)) / 2, string_warning, curses.A_BOLD)
-                    self.stdscr.addstr(height / 2 - 1, (width - len(string_warning_msg)) / 2, string_warning_msg, curses.A_BOLD)
+                    height_c = int(height / 2)
+                    self.stdscr.addstr(height_c - 2, int((width - len(string_warning)) / 2), string_warning, curses.A_BOLD)
+                    self.stdscr.addstr(height_c - 1, int((width - len(string_warning_msg)) / 2), string_warning_msg, curses.A_BOLD)
                     # Show size window
                     if width < width_max:
-                        self.stdscr.addstr(height / 2, (width - len(size_window_width)) / 2, str(size_window_width), curses.color_pair(1))
+                        self.stdscr.addstr(height_c, int((width - len(size_window_width)) / 2), str(size_window_width), curses.color_pair(1))
                     else:
                         size_window_width = "Width OK!"
-                        self.stdscr.addstr(height / 2, (width - len(size_window_width)) / 2, size_window_width, curses.A_BOLD)
+                        self.stdscr.addstr(height_c, int((width - len(size_window_width)) / 2), size_window_width, curses.A_BOLD)
                     if height < height_max:
-                        self.stdscr.addstr(height / 2 + 1, (width - len(size_window_height)) / 2, str(size_window_height), curses.color_pair(1))
+                        self.stdscr.addstr(height_c + 1, int((width - len(size_window_height)) / 2), str(size_window_height), curses.color_pair(1))
                     else:
                         size_window_height = "Height OK!"
-                        self.stdscr.addstr(height / 2 + 1, (width - len(size_window_height)) / 2, str(size_window_height), curses.A_BOLD)
+                        self.stdscr.addstr(height_c + 1, int((width - len(size_window_height)) / 2), str(size_window_height), curses.A_BOLD)
                     # Set background for all menu line
                     self.stdscr.addstr(height - 1, 0, ("{0:<" + str(width - 1) + "}").format(" "), curses.A_REVERSE)
                     # Add close option menu

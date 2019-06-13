@@ -50,11 +50,11 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         gauge = make_gauge_from_percent(cpu)
         if 'value' in gauge:
             gauge["percent"] = cpu['governor'] + " - " + str(gauge['value']) + "%"
-        linear_percent_gauge(stdscr, gauge, max_bar, offest + off_idx, start)
+        linear_percent_gauge(stdscr, gauge, max_bar, int(offest + off_idx), start)
     if len(list_cpus) > 4:
-        return offest + idx / 2 + 1
+        return int(offest + idx / 2 + 1)
     else:
-        return offest + idx + 1
+        return int(offest + idx + 1)
 
 
 @check_curses
@@ -93,11 +93,18 @@ def compact_info(stdscr, start, offset, width, jetson):
     if fan is not None:
         linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
     counter += 1
-    # Jetson clock status
-    jc_status = jetson.jetson_clock.status
-    color = curses.color_pair(2) if jc_status == "active" else curses.color_pair(1)
-    plot_name_info(stdscr, offset + counter, start, "Jetson Clock", jc_status, color)
-    counter += 1
+    # Jetson clocks status
+    jc = jetson.jetson_clocks
+    if jc is not None:
+        jc_status = jc.status
+        if jc_status == "active":
+            color = curses.color_pair(2)
+        elif jc_status == "inactive" or "ing" in jc_status:
+            color = curses.A_NORMAL
+        else:
+            color = curses.color_pair(1)
+        plot_name_info(stdscr, offset + counter, start, "Jetson Clocks", jc_status, color)
+        counter += 1
     # NVP Model
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:
