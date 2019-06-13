@@ -45,34 +45,41 @@ def CTRL(stdscr, jetson, key):
     posx = 2
     start_pos = 2
     stdscr.addstr(start_pos, posx, "jetson_clocks controller", curses.A_BOLD)
-    # button start/stop jetson clocks
-    status_key_active = box_keyboard(stdscr, start_pos, posx + 1, "a", key)
+    if jetson.userid == 0:
+        # button start/stop jetson clocks
+        status_key_active = box_keyboard(stdscr, start_pos, posx + 1, "a", key)
     # Read status jetson_clocks
     start = jetson.jetson_clocks.start
     status = jetson.jetson_clocks.status
     box_status(stdscr, start_pos + 5, posx + 1, status.capitalize(), start)
-    # Write the new jetson_clocks status
-    if status_key_active and not start:
-        jetson.jetson_clocks.start = True
-    elif status_key_active and start:
-        jetson.jetson_clocks.start = False
-    # button start/stop jetson clocks
-    status_key_enable = box_keyboard(stdscr, start_pos, posx + 4, "e", key)
+    if jetson.userid == 0:
+        # Write the new jetson_clocks status
+        if status_key_active and not start:
+            jetson.jetson_clocks.start = True
+        elif status_key_active and start:
+            jetson.jetson_clocks.start = False
+    if jetson.userid == 0:
+        # button start/stop jetson clocks
+        status_key_enable = box_keyboard(stdscr, start_pos, posx + 4, "e", key)
     # Read status jetson_clocks
     enabled = jetson.jetson_clocks.enable
     enabled_box = "Enable" if enabled else "Disable"
     box_status(stdscr, start_pos + 5, posx + 4, enabled_box, enabled)
-    # Write the new jetson_clocks status
-    if status_key_enable and not enabled:
-        jetson.jetson_clocks.enable = True
-    elif status_key_enable and enabled:
-        jetson.jetson_clocks.enable = False
+    if jetson.userid == 0:
+        # Write the new jetson_clocks status
+        if status_key_enable and not enabled:
+            jetson.jetson_clocks.enable = True
+        elif status_key_enable and enabled:
+            jetson.jetson_clocks.enable = False
     # Build NVP model list
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:
         stdscr.addstr(start_pos + 8, posx, "NVP model", curses.A_BOLD)
-        box_keyboard(stdscr, start_pos + 10, posx + 7, "-", key)
-        box_keyboard(stdscr, start_pos + 15, posx + 7, "+", key)
+        if jetson.userid == 0:
+            # Draw keys to increase and decrease nvpmodel
+            box_keyboard(stdscr, start_pos + 10, posx + 7, "-", key)
+            box_keyboard(stdscr, start_pos + 15, posx + 7, "+", key)
+        # Write list of available modes
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
         box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, max_width=40)
         # Draw background rectangle
