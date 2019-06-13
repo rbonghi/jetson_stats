@@ -77,8 +77,12 @@ def CTRL(stdscr, jetson, key):
         stdscr.addstr(start_pos + 8, posx, "NVP model", curses.A_BOLD)
         if jetson.userid == 0:
             # Draw keys to increase and decrease nvpmodel
-            box_keyboard(stdscr, start_pos + 10, posx + 7, "-", key)
-            box_keyboard(stdscr, start_pos + 15, posx + 7, "+", key)
+            status_key_nvp_inc = box_keyboard(stdscr, start_pos + 10, posx + 7, "-", key)
+            status_key_nvp_dec = box_keyboard(stdscr, start_pos + 15, posx + 7, "+", key)
+            if status_key_nvp_inc:
+                nvpmodel.increase()
+            elif status_key_nvp_dec:
+                nvpmodel.decrease()
         # Write list of available modes
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
         box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, max_width=40)

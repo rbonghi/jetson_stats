@@ -83,7 +83,7 @@ class NVPmodel():
     def set(self, level):
         """ Set nvpmodel to a new status """
         try:
-            sp.Popen(['nvpmodel', '-m', level], stdout=sp.PIPE)
+            sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE)
             self.num = level
             return True
         except OSError:
