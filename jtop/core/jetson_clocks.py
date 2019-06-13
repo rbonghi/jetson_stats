@@ -46,7 +46,7 @@ class JetsonClocks(object):
     def status(self):
         p = sp.Popen(['systemctl', 'is-active', self.service + '.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
-        return str(out.strip().decode("utf-8"))
+        return str(out.decode("utf-8")).strip()
 
     @property
     def start(self):
@@ -66,7 +66,7 @@ class JetsonClocks(object):
     def enable(self):
         p = sp.Popen(['systemctl', 'is-enabled', self.service + '.service'], stdout=sp.PIPE)
         out, _ = p.communicate()
-        enable_val = True if out.strip().decode("utf-8") == "enabled" else False
+        enable_val = True if str(out.decode("utf-8")).strip() == "enabled" else False
         return enable_val
 
     @enable.setter
