@@ -390,9 +390,17 @@ EOF
 
 set_level()
 {
+    local level=$1
     if [ "$EUID" -ne 0 ] ; then
       echo "Please run as root"
       exit 1
+    fi
+    
+    if [ "$level" -ge "0" ] && [ "$level" -lt "4" ] ; then
+        echo "Save"
+        echo "$level" > /tmp/nvp_model_test
+    else
+        echo "NVPmodel $level does not exist"
     fi
 }
 
@@ -400,9 +408,12 @@ main()
 {
     local PARSE=false
     local VERBOSE=false
-    local name="MAXTEST"
+    local modes=("MAXTEST" "TEST" "MINTEST" "MIN_MAX_TEST")
     local level=0
-    
+    # Load level from temp file
+    if [ -f /tmp/nvp_model_test ] ; then
+        level=$(cat /tmp/nvp_model_test)
+    fi
     
     if [[ $# -eq 0 ]] ; then
         echo 'nvpmodel emulator'
@@ -420,11 +431,11 @@ main()
             -m) 
                 level=$2
                 shift 1
-                set_level
+                set_level $level
                 exit 0
                 ;;
             -q)
-                echo "NVP model: $name"
+                echo "NVP model: ${modes[level]}"
                 echo "$level"
                 exit 0
                 ;;

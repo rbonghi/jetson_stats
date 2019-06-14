@@ -71,7 +71,7 @@ class jtop():
         self.jc = JetsonClocks()
         # Initialize NVP model
         try:
-            self.nvp = NVPmodel(os.environ["JETSON_TYPE"])
+            self.nvp = NVPmodel(os.environ["JETSON_TYPE"], jetson_clocks=self.jc)
         except NVPmodel.NVPmodelException:
             self.nvp = None
         # Find all fans availables

@@ -52,8 +52,9 @@ class NVPmodel():
     class NVPmodelException(Exception):
         pass
 
-    def __init__(self, type_board):
+    def __init__(self, type_board, jetson_clocks=None):
         self.type_board = type_board
+        self.jetson_clocks = jetson_clocks
         try:
             nvpmodel_p = sp.Popen(['nvpmodel', '-p', '--verbose'], stdout=sp.PIPE)
             out, _ = nvpmodel_p.communicate()
@@ -83,8 +84,18 @@ class NVPmodel():
     def set(self, level):
         """ Set nvpmodel to a new status """
         try:
+            # Disable the jetson_clocks (only if is it active) before change NVPmodel level
+            if self.jetson_clocks is not None:
+                old_status = self.jetson_clocks.start
+                if old_status:
+                    self.jetson_clocks.start = False
+            # Set the new nvpmodel status
             sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE)
             self.num = level
+            # Enable again the jetson_clocks status
+            if self.jetson_clocks is not None:
+                if old_status:
+                    self.jetson_clocks.start = True
             return True
         except OSError:
             logger.info("NVP Model does not exist")

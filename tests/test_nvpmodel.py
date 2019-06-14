@@ -28,12 +28,13 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from jtop import NVPmodel
+from jtop import JetsonClocks
 
 
 def test_nvp_good():
     # Initialize NVPmodel
     nvp = NVPmodel("PC")
-    # Chek values
+    # Check values
     assert isinstance(nvp.mode, str)
     assert isinstance(nvp.num, int)
 
@@ -49,4 +50,38 @@ def test_mode():
     nvp = NVPmodel("PC")
     assert nvp.mode == nvp.modes[nvp.num]["Name"]
     assert nvp.num == nvp.modes[nvp.num]["ID"]
+
+
+def test_set_mode():
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC")
+    # Set value
+    assert nvp.set(0)
+
+
+def test_increase_mode():
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC")
+    # Set value
+    assert nvp.increase()
+
+
+def test_decrease_mode():
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC")
+    # Set value
+    assert nvp.decrease()
+
+
+def test_set_jc_mode():
+    # Load JetsonClocks controller
+    jc = JetsonClocks()
+    jc.start = True
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC", jetson_clocks=jc)
+    # Set value
+    set_status = nvp.set(0)
+    # stop jc
+    jc.start = False
+    assert set_status
 # EOF
