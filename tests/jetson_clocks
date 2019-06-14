@@ -56,6 +56,7 @@ show()
 
 main()
 {
+    local TIME_SLEEP=1
     local conf=""
 	# Decode all information from startup
     while [ -n "$1" ]; do
@@ -90,6 +91,9 @@ main()
       echo "Please run as root"
       exit 1
     fi
+    
+    # Go to sleep for an interval
+    sleep $TIME_SLEEP
 }
 
 main $@

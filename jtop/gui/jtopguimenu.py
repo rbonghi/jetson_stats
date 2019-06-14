@@ -92,23 +92,28 @@ def compact_info(stdscr, start, offset, width, jetson):
     fan = jetson.fan
     if fan is not None:
         linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
-    counter += 1
+        counter += 1
     # Jetson clocks status
     jc = jetson.jetson_clocks
     if jc is not None:
         jc_status = jc.status
         if jc_status == "active":
-            color = curses.color_pair(2)
-        elif jc_status == "inactive" or "ing" in jc_status:
-            color = curses.A_NORMAL
+            color = curses.color_pair(2)  # Running (Green)
+        elif jc_status == "inactive":
+            color = curses.A_NORMAL       # Normal (Green)
+        elif "ing" in jc_status:
+            color = curses.color_pair(3)  # Warning (Yellow)
         else:
-            color = curses.color_pair(1)
+            color = curses.color_pair(1)  # Error (Red)
+        # Show if JetsonClock is enabled or not
+        if jc.enable:
+            jc_status = "[" + jc_status + "]"
         plot_name_info(stdscr, offset + counter, start, "Jetson Clocks", jc_status, color)
         counter += 1
     # NVP Model
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:
-        plot_name_info(stdscr, offset + counter, start, "NV Power", nvpmodel.mode)
+        plot_name_info(stdscr, offset + counter, start, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
         counter += 1
     # Plot MTS
     if 'MTS' in jetson.stats:

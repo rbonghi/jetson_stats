@@ -30,7 +30,7 @@
 # flake8: noqa
 
 from .page_variables import Variables
-from .page_control import CTRL
+from .page_control import CTRL, CTRL_keyboard
 from .page_gpu import GPU
 from .page_all_info import all_info
 from .jtopgui import JTOPGUI

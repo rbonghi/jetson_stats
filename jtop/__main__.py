@@ -46,7 +46,7 @@ import curses
 # Tegrastats objext reader
 from .jtop import jtop
 # GUI jtop interface
-from .gui import JTOPGUI, all_info, GPU, CTRL, Variables
+from .gui import JTOPGUI, all_info, GPU, CTRL, CTRL_keyboard, Variables
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ def gui(stdscr, args, jetson):
     # Initialization Menu
     pages = JTOPGUI(stdscr, [{"name": "ALL", "func": all_info},
                              {"name": "GPU", "func": GPU},
-                             {"name": "Control", "func": CTRL},
+                             {"name": "CTRL", "func": CTRL, "key": CTRL_keyboard},
                              {"name": "INFO", "func": Variables},
                              ])
     # Start with selected page
@@ -99,7 +99,7 @@ def gui(stdscr, args, jetson):
         # Set a timeout and read keystroke
         stdscr.timeout(args.refresh)
         # Update status keyboard
-        if pages.keyboard():
+        if pages.keyboard(jetson):
             break
 
 

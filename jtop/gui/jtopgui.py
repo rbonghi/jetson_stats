@@ -94,7 +94,7 @@ class JTOPGUI:
         name_author = "Raffaello Bonghi"
         self.stdscr.addstr(height - 1, width - len(name_author), name_author, curses.A_REVERSE)
 
-    def keyboard(self):
+    def keyboard(self, jetson):
         self.key = self.stdscr.getch()
         # keyboard check list
         if self.key == curses.KEY_LEFT:
@@ -107,5 +107,11 @@ class JTOPGUI:
         elif self.key == ord('q') or self.key == ord('Q'):
             # keyboard check quit button
             return True
+        else:
+            # Run extra control for page if exist
+            for page in self.pages:
+                if "key" in page:
+                    # Run key controller
+                    page["key"](self.stdscr, jetson, self.key)
         return False
 # EOF

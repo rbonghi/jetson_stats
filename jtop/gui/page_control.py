@@ -47,45 +47,29 @@ def CTRL(stdscr, jetson, key):
     stdscr.addstr(start_pos, posx, "jetson_clocks controller", curses.A_BOLD)
     if jetson.userid == 0:
         # button start/stop jetson clocks
-        status_key_active = box_keyboard(stdscr, start_pos, posx + 1, "a", key)
+        box_keyboard(stdscr, start_pos, posx + 1, "a", key)
     # Read status jetson_clocks
     start = jetson.jetson_clocks.start
     status = jetson.jetson_clocks.status
     box_status(stdscr, start_pos + 5, posx + 1, status.capitalize(), start)
     if jetson.userid == 0:
-        # Write the new jetson_clocks status
-        if status_key_active and not start:
-            jetson.jetson_clocks.start = True
-        elif status_key_active and start:
-            jetson.jetson_clocks.start = False
-    if jetson.userid == 0:
         # button start/stop jetson clocks
-        status_key_enable = box_keyboard(stdscr, start_pos, posx + 4, "e", key)
+        box_keyboard(stdscr, start_pos, posx + 4, "e", key)
     # Read status jetson_clocks
     enabled = jetson.jetson_clocks.enable
     enabled_box = "Enable" if enabled else "Disable"
     box_status(stdscr, start_pos + 5, posx + 4, enabled_box, enabled)
-    if jetson.userid == 0:
-        # Write the new jetson_clocks status
-        if status_key_enable and not enabled:
-            jetson.jetson_clocks.enable = True
-        elif status_key_enable and enabled:
-            jetson.jetson_clocks.enable = False
     # Build NVP model list
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:
         stdscr.addstr(start_pos + 8, posx, "NVP model", curses.A_BOLD)
         if jetson.userid == 0:
             # Draw keys to increase and decrease nvpmodel
-            status_key_nvp_inc = box_keyboard(stdscr, start_pos + 10, posx + 7, "-", key)
-            status_key_nvp_dec = box_keyboard(stdscr, start_pos + 15, posx + 7, "+", key)
-            if status_key_nvp_inc:
-                nvpmodel.increase()
-            elif status_key_nvp_dec:
-                nvpmodel.decrease()
+            box_keyboard(stdscr, start_pos + 10, posx + 7, "-", key)
+            box_keyboard(stdscr, start_pos + 15, posx + 7, "+", key)
         # Write list of available modes
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
-        box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, max_width=40)
+        box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, max_width=40, numbers=True)
         # Draw background rectangle
         # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
     # Add plot fan status
@@ -99,4 +83,28 @@ def CTRL(stdscr, jetson, key):
         gpu = jetson.stats['GR3D']
         # Draw the GPU chart
         draw_chart(stdscr, size_x, size_y, gpu)
+
+
+def CTRL_keyboard(stdscr, jetson, key):
+    if jetson.userid == 0:
+        start = jetson.jetson_clocks.start
+        # Write the new jetson_clocks status
+        if key == ord('a') and not start:
+            jetson.jetson_clocks.start = True
+        elif key == ord('a') and start:
+            jetson.jetson_clocks.start = False
+        # Status enable
+        enabled = jetson.jetson_clocks.enable
+        # Write the new jetson_clocks status
+        if key == ord('e') and not enabled:
+            jetson.jetson_clocks.enable = True
+        elif key == ord('e') and enabled:
+            jetson.jetson_clocks.enable = False
+        # NVPmodel controller
+        nvpmodel = jetson.nvpmodel
+        if nvpmodel is not None:
+            if key == ord('+'):
+                nvpmodel.increase()
+            elif key == ord('-'):
+                nvpmodel.decrease()
 # EOF

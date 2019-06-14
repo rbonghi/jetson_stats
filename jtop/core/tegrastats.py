@@ -107,17 +107,19 @@ class Tegrastats(Thread):
     def run(self):
         try:
             while self.p.poll() is None:
-                # Read line process output
-                line = self.p.stdout.readline()
-                # Decode line in UTF-8
-                tegrastats_data = line.decode("utf-8")
-                # Decode and store
-                stats = self.decode(tegrastats_data)
-                # If callback is defined after each decode will be send the updates by function
-                if self.callback is not None:
-                    self.callback(stats)
-                else:
-                    self._jetsonstats = stats
+                out = self.p.stdout
+                if out is not None:
+                    # Read line process output
+                    line = out.readline()
+                    # Decode line in UTF-8
+                    tegrastats_data = line.decode("utf-8")
+                    # Decode and store
+                    stats = self.decode(tegrastats_data)
+                    # If callback is defined after each decode will be send the updates by function
+                    if self.callback is not None:
+                        self.callback(stats)
+                    else:
+                        self._jetsonstats = stats
         except SystemExit:
             logger.error("System exit", exc_info=True)
         except AttributeError:
@@ -209,15 +211,20 @@ class Tegrastats(Thread):
         # Y = Total amount of RAM available for applications.
         # N = The number of free blocks of this size.
         # Z = is the size of the largest free block.
-        ram_string = re.search(r'RAM (.+?)B', text).group()
-        lfb_string = re.search(r'\(lfb (.+?)\)', text).group()
-        ram_stat = re.findall(r"\d+", ram_string)
-        lfb_stat = re.findall(r"\d+", lfb_string)
-        text = re.sub(r'RAM (.+?)\) ', '', text)
-        self.ram.append(float(ram_stat[0]))
-        return {'RAM': {'used': list(self.ram), 'total': float(ram_stat[1])},
-                'lfb': {'nblock': lfb_stat[0], 'size': lfb_stat[1]},
-                }, text
+        ram_search = re.search(r'RAM (.+?)B', text)
+        lfb_search = re.search(r'\(lfb (.+?)\)', text)
+        if ram_search is not None and lfb_search is not None:
+            ram_string = ram_search.group()
+            lfb_string = lfb_search.group()
+            ram_stat = re.findall(r"\d+", ram_string)
+            lfb_stat = re.findall(r"\d+", lfb_string)
+            text = re.sub(r'RAM (.+?)\) ', '', text)
+            self.ram.append(float(ram_stat[0]))
+            return {'RAM': {'used': list(self.ram), 'total': float(ram_stat[1])},
+                    'lfb': {'nblock': lfb_stat[0], 'size': lfb_stat[1]},
+                    }, text
+        else:
+            return {}, text
 
     def _CPU(self, text):
         # CPU [X%,Y%, , ]@Z
@@ -230,26 +237,30 @@ class Tegrastats(Thread):
         # Y = Load statistics for each of the CPU cores relative to the
         #     current running frequency Z, or 'off' in case a core is currently powered down.
         # Z = CPU frequency in megahertz. Goes up or down dynamically depending on the CPU workload.
-        cpu_string = re.search(r'CPU (.+?)\]', text).group()
-        cpu_string = cpu_string[cpu_string.find("[") + 1:cpu_string.find("]")]
-        text = re.sub(r'CPU (.+?)\] ', '', text)
-        for idx, cpu in enumerate(cpu_string.split(",")):
-            name = "CPU" + str(idx + 1)
-            if idx in self.cpus:
-                cpu_status = self.cpus[idx]
-            else:
-                cpu_status = InitProcess(name, self.max_record)
-            cpu_status = UpdateProcess(cpu, cpu_status)
-            # Update status governor
-            governor_name = '/sys/devices/system/cpu/cpu' + str(idx) + '/cpufreq/scaling_governor'
-            if os.path.isfile(governor_name):
-                with open(governor_name, 'r') as f:
-                    cpu_status['governor'] = f.read()[:-1]
-            else:
-                cpu_status['governor'] = ""
-            # Update status CPU
-            self.cpus[idx] = cpu_status
-        return text
+        cpu_search = re.search(r'CPU (.+?)\]', text)
+        if cpu_search is not None:
+            cpu_string = cpu_search.group()
+            cpu_string = cpu_string[cpu_string.find("[") + 1:cpu_string.find("]")]
+            text = re.sub(r'CPU (.+?)\] ', '', text)
+            for idx, cpu in enumerate(cpu_string.split(",")):
+                name = "CPU" + str(idx + 1)
+                if idx in self.cpus:
+                    cpu_status = self.cpus[idx]
+                else:
+                    cpu_status = InitProcess(name, self.max_record)
+                cpu_status = UpdateProcess(cpu, cpu_status)
+                # Update status governor
+                governor_name = '/sys/devices/system/cpu/cpu' + str(idx) + '/cpufreq/scaling_governor'
+                if os.path.isfile(governor_name):
+                    with open(governor_name, 'r') as f:
+                        cpu_status['governor'] = f.read()[:-1]
+                else:
+                    cpu_status['governor'] = ""
+                # Update status CPU
+                self.cpus[idx] = cpu_status
+            return text
+        else:
+            return text
 
     def decode(self, text):
         jetsonstats = {}
@@ -339,7 +350,7 @@ class Tegrastats(Thread):
                 temp['text'] = value
                 # Store temperature value
                 self.temperatures[name] = temp
-            else:
+            elif idx + 1 < len(other_values):
                 # [VDD_name] X/Y
                 # X = Current power consumption in milliwatts.
                 # Y = Average power consumption in milliwatts.
