@@ -72,7 +72,7 @@ def CTRL(stdscr, jetson, key):
         box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, max_width=40, numbers=True)
     # Add plot fan status
     fan = jetson.fan
-    if fan is not None or True:
+    if fan is not None:
         # Fan chart name
         stdscr.addstr(start_pos, posx + 40, "FAN speed", curses.A_BOLD)
         # Evaluate size chart
