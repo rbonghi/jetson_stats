@@ -135,11 +135,13 @@ def box_list(stdscr, x, y, data, selected, max_width=-1, numbers=False):
         # Plot box
         box_status(stdscr, x + len_prev, y + line, str_name, status=status)
         len_prev += len(str_name) + 4
+    # Draw background rectangle
+    # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
     return line
 
 
 @check_curses
-def draw_chart(stdscr, size_x, size_y, value, line="*"):
+def draw_chart(stdscr, size_x, size_y, value, line="*", color=curses.A_NORMAL):
     # Get Max value and unit from value to draw
     max_val = 100 if "max_val" not in value else value["max_val"]
     unit = "%" if "max_val" not in value else value["unit"]
@@ -167,19 +169,14 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
         except curses.error:
             pass
     # Plot values
-    delta = displayX - len(points)
-    for idx, point in enumerate(points):
-        if delta + idx >= size_x[0]:
-            x_val = (delta + idx + 1)
-        else:
-            x_val = -1
-        y_val = size_y[1] - 1 - ((float(displayY - 1) / max_val) * point)
-        try:
-            stdscr.addstr(int(y_val), x_val, line, curses.color_pair(2))
-        except curses.error:
-            pass
-    # Debug value
-    # stdscr.addstr( 5, 5, "{}".format(delta), curses.color_pair(1))
+    for idx, point in enumerate(reversed(points)):
+        y_val = int((float(displayY - 1) / max_val) * point)
+        x_val = size_x[1] - 1 - idx
+        if x_val >= size_x[0]:
+            try:
+                stdscr.addstr(size_y[1] - 1 - y_val, x_val, line, color)
+            except curses.error:
+                pass
 
 
 def make_gauge_from_percent(data):

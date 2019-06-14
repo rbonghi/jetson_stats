@@ -39,7 +39,7 @@ from collections import deque
 logger = logging.getLogger(__name__)
 
 
-class Fan():
+class Fan(object):
 
     class FanException(Exception):
         pass

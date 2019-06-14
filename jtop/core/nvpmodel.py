@@ -74,6 +74,9 @@ class NVPmodel():
         except OSError:
             logger.info("This board {} does not have NVP Model".format(type_board))
             raise NVPmodel.NVPmodelException("NVPmodel does not exist for this board {}".format(type_board))
+        except AttributeError:
+            logger.info("Wrong open")
+            raise NVPmodel.NVPmodelException("Wrong open")
         # Initialize mode and num
         self.update()
 
@@ -99,6 +102,9 @@ class NVPmodel():
             return True
         except OSError:
             logger.info("NVP Model does not exist")
+            return False
+        except AttributeError:
+            logger.info("Wrong open")
             return False
 
     def increase(self):
@@ -127,4 +133,6 @@ class NVPmodel():
             self.num = int(lines[1])
         except OSError:
             logger.info("NVP Model does not exist")
+        except AttributeError:
+            logger.info("Wrong open")
 # EOF

@@ -27,6 +27,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import curses
 # Graphics elements
 from .jtopguilib import (linear_percent_gauge,
                          make_gauge_from_percent,
@@ -47,7 +48,7 @@ def GPU(stdscr, jetson, key):
     if 'GR3D' in jetson.stats:
         gpu = jetson.stats['GR3D']
         # Draw the GPU chart
-        draw_chart(stdscr, size_x, size_y, gpu)
+        draw_chart(stdscr, size_x, size_y, gpu, color=curses.color_pair(2))
         # Percent Gauge GPU
         linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
         # Temperature GPU

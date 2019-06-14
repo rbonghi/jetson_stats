@@ -70,38 +70,38 @@ def CTRL(stdscr, jetson, key):
         # Write list of available modes
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
         box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, max_width=40, numbers=True)
-        # Draw background rectangle
-        # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
     # Add plot fan status
     fan = jetson.fan
-    if fan is not None:
+    if fan is not None or True:
         # Fan chart name
         stdscr.addstr(start_pos, posx + 40, "FAN speed", curses.A_BOLD)
         # Evaluate size chart
         size_x = [posx + 40, width - 10]
-        size_y = [3, height * 2 // 3 - 1]
+        size_y = [3, height - 3]
         gpu = jetson.stats['GR3D']
         # Draw the GPU chart
-        draw_chart(stdscr, size_x, size_y, gpu)
+        draw_chart(stdscr, size_x, size_y, gpu, line="o", color=curses.color_pair(4))
 
 
 def CTRL_keyboard(stdscr, jetson, key):
     if jetson.userid == 0:
+        # Start jetson_clocks
         start = jetson.jetson_clocks.start
+        # Status enable
+        enabled = jetson.jetson_clocks.enable
+        # NVPmodel controller
+        nvpmodel = jetson.nvpmodel
         # Write the new jetson_clocks status
         if key == ord('a') and not start:
             jetson.jetson_clocks.start = True
         elif key == ord('a') and start:
             jetson.jetson_clocks.start = False
-        # Status enable
-        enabled = jetson.jetson_clocks.enable
         # Write the new jetson_clocks status
-        if key == ord('e') and not enabled:
+        elif key == ord('e') and not enabled:
             jetson.jetson_clocks.enable = True
         elif key == ord('e') and enabled:
             jetson.jetson_clocks.enable = False
-        # NVPmodel controller
-        nvpmodel = jetson.nvpmodel
+        # Enable nvpmodel control
         if nvpmodel is not None:
             if key == ord('+'):
                 nvpmodel.increase()
