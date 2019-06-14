@@ -78,9 +78,9 @@ def CTRL(stdscr, jetson, key):
         # Evaluate size chart
         size_x = [posx + 40, width - 10]
         size_y = [3, height - 3]
-        gpu = jetson.stats['GR3D']
+        fan_value = jetson.fan.status['value']
         # Draw the GPU chart
-        draw_chart(stdscr, size_x, size_y, gpu, line="o", color=curses.color_pair(4))
+        draw_chart(stdscr, size_x, size_y, fan_value, line="o", color=curses.color_pair(4))
 
 
 def CTRL_keyboard(stdscr, jetson, key):
