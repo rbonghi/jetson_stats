@@ -100,7 +100,7 @@ def compact_info(stdscr, start, offset, width, jetson):
         if jc_status == "active":
             color = curses.color_pair(2)  # Running (Green)
         elif jc_status == "inactive":
-            color = curses.A_NORMAL       # Normal (Green)
+            color = curses.A_NORMAL       # Normal (Grey)
         elif "ing" in jc_status:
             color = curses.color_pair(3)  # Warning (Yellow)
         else:

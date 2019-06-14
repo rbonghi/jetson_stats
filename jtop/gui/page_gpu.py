@@ -53,8 +53,24 @@ def GPU(stdscr, jetson, key):
         linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
         # Temperature GPU
         if "GPU" in jetson.stats['temperatures']:
-            plot_name_info(stdscr, max_y * 2 // 3 + 1, 2, "GPU Temp", jetson.stats['temperatures']['GPU']['text'])
+            plot_name_info(stdscr, max_y * 2 // 3, max_x // 2 + 4, "GPU Temp", jetson.stats['temperatures']['GPU']['text'])
+        # Jetson clocks status
+        jc = jetson.jetson_clocks
+        if jc is not None:
+            jc_status = jc.status
+            if jc_status == "active":
+                color = curses.color_pair(2)  # Running (Green)
+            elif jc_status == "inactive":
+                color = curses.A_NORMAL       # Normal (Grey)
+            elif "ing" in jc_status:
+                color = curses.color_pair(3)  # Warning (Yellow)
+            else:
+                color = curses.color_pair(1)  # Error (Red)
+            # Show if JetsonClock is enabled or not
+            if jc.enable:
+                jc_status = "[" + jc_status + "]"
+            plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "Jetson Clocks", jc_status, color)
         # NVP Model
         nvpmodel = jetson.nvpmodel
         if nvpmodel is not None:
-            plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "NV Power", nvpmodel.mode)
+            plot_name_info(stdscr, max_y * 2 // 3 + 3, 2, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)

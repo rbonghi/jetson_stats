@@ -40,6 +40,7 @@ class JTOPGUI:
         self.pages = pages
         self.n_page = init_page
         self.key = -1
+        self.old_key = -1
 
     @check_size(20, 50)
     def draw(self, jetson):
@@ -96,22 +97,25 @@ class JTOPGUI:
 
     def keyboard(self, jetson):
         self.key = self.stdscr.getch()
-        # keyboard check list
-        if self.key == curses.KEY_LEFT:
-            self.decrease()
-        elif self.key == curses.KEY_RIGHT:
-            self.increase()
-        elif self.key in [ord(str(n)) for n in range(10)]:
-            num = int(chr(self.key))
-            self.set(num)
-        elif self.key == ord('q') or self.key == ord('Q'):
-            # keyboard check quit button
-            return True
-        else:
-            # Run extra control for page if exist
-            for page in self.pages:
-                if "key" in page:
-                    # Run key controller
-                    page["key"](self.stdscr, jetson, self.key)
+        if self.old_key != self.key:
+            # keyboard check list
+            if self.key == curses.KEY_LEFT:
+                self.decrease()
+            elif self.key == curses.KEY_RIGHT:
+                self.increase()
+            elif self.key in [ord(str(n)) for n in range(10)]:
+                num = int(chr(self.key))
+                self.set(num)
+            elif self.key == ord('q') or self.key == ord('Q'):
+                # keyboard check quit button
+                return True
+            else:
+                # Run extra control for page if exist
+                for page in self.pages:
+                    if "key" in page:
+                        # Run key controller
+                        page["key"](self.stdscr, jetson, self.key)
+            # Store old value key
+            self.old_key = self.key
         return False
 # EOF
