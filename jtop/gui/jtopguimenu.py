@@ -94,7 +94,7 @@ def compact_info(stdscr, start, offset, width, jetson):
         linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
     else:
         stdscr.addstr(offset + counter, 0, "NO FAN", curses.color_pair(3))
-        counter += 1
+    counter += 1
     # Jetson clocks status
     jc = jetson.jetson_clocks
     if jc is not None:
