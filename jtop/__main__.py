@@ -37,6 +37,7 @@
     - https://docs.python.org/3.3/howto/curses.html#attributes-and-color
     - http://toilers.mines.edu/~jrosenth/101python/code/curses_plot/
 """
+import os
 import sys
 import argparse
 import time
@@ -51,6 +52,28 @@ from .gui import JTOPGUI, all_info, GPU, CTRL, CTRL_keyboard, Variables
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+
+
+def set_xterm_title(title):
+    '''
+    Set XTerm title using escape sequences.
+    By default, sets as 'Python' and the version number.
+    '''
+    # Make sure this terminal supports the OSC code (\33]),
+    # though not necessarily that it supports setting the title.
+    # If this check causes compatibility issues, you can add
+    # items to the tuple, or remove the check entirely.
+    if os.environ.get('TERM') in (
+            'xterm',
+            'xterm-color',
+            'xterm-256color',
+            'linux',
+            'screen',
+            'screen-256color',
+            'screen-bce',
+            ):
+        sys.stdout.write('\33]0;' + title + '\a')
+        sys.stdout.flush()
 
 
 # The easiest way to use curses is to use a wrapper around a main function
@@ -117,8 +140,7 @@ def main():
         logging.basicConfig()
     # Title script
     # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
-    sys.stdout.write(b'\33]0;jtop\a')
-    sys.stdout.flush()
+    set_xterm_title("jtop")
     # Open tegrastats reader and run the curses wrapper
     try:
         with jtop(interval=args.refresh) as jetson:
