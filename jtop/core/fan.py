@@ -46,16 +46,17 @@ class Fan(object):
 
     def __init__(self, path, interval, time):
         # Initialize number max records to record
-        max_record = int(float(time) * (float(1 / float(interval)) * 1000.0))
         self.path = path
+        # Check exist path
+        if not os.path.isdir(path):
+            raise Fan.FanException("Fan does not exist")
+        # Init variables
+        max_record = int(float(time) * (float(1 / float(interval)) * 1000.0))
         self.fan_ctrl = deque(max_record * [0], maxlen=max_record)
         self.fan_read = deque(max_record * [0], maxlen=max_record)
         self.rpm = deque(max_record * [0], maxlen=max_record)
         self.with_rpm = os.path.isfile(self.path + "rpm_measured")
         self.with_curr = os.path.isfile(self.path + "cur_pwm")
-        # Check exist path
-        if not os.path.isdir(path):
-            raise Fan.FanException("Fan does not exist")
         # Max value PWM
         if os.path.isfile(self.path + "pwm_cap"):
             self.pwm_max = int(self.read_status("pwm_cap"))
@@ -77,10 +78,7 @@ class Fan(object):
             self.temp_control = int(self.read_status("temp_control"))
         # Status FAN
         if os.getuid() == 0:
-            if os.path.isfile(self.path + "target_pwm"):
-                self.qstatus = 'ON'
-            else:
-                self.qstatus = 'OFF'
+            self.qstatus = 'ON' if os.path.isfile(self.path + "target_pwm") else 'OFF'
         else:
             self.qstatus = 'REQUIRE SUDO'
 
@@ -111,12 +109,11 @@ class Fan(object):
         fan = {'name': 'FAN',
                'status': self.qstatus
                }
-        if self.qstatus == 'ON':
-            if self.with_curr:
-                fan['value'] = list(self.fan_read)
-                fan['percent'] = str(self.fan_read[-1]) + "/" + str(self.fan_ctrl[-1]) + "%"
-            else:
-                fan['value'] = list(self.fan_ctrl)
+        if self.with_curr:
+            fan['value'] = list(self.fan_read)
+            fan['percent'] = str(self.fan_read[-1]) + "/" + str(self.fan_ctrl[-1]) + "%"
+        else:
+            fan['value'] = list(self.fan_ctrl)
         # TODO Improve RPM read
         # if self.with_rpm and self.rpm[-1] != 0:
         #     fan['label'] = str(self.rpm[-1]) + "RPM"

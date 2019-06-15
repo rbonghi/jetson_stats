@@ -37,6 +37,7 @@
     - https://docs.python.org/3.3/howto/curses.html#attributes-and-color
     - http://toilers.mines.edu/~jrosenth/101python/code/curses_plot/
 """
+import sys
 import argparse
 import time
 # Logging
@@ -89,7 +90,7 @@ def gui(stdscr, args, jetson):
     # Start with selected page
     pages.set(args.page)
     # Here is the loop of our program, we keep clearing and redrawing in this loop
-    while True:
+    while pages.keyboard(jetson):
         # First, clear the screen
         stdscr.erase()
         # Draw pages
@@ -98,9 +99,6 @@ def gui(stdscr, args, jetson):
         stdscr.refresh()
         # Set a timeout and read keystroke
         stdscr.timeout(args.refresh)
-        # Update status keyboard
-        if pages.keyboard(jetson):
-            break
 
 
 def main():
@@ -117,6 +115,10 @@ def main():
                             format='%(name)s - %(levelname)s - %(message)s')
     else:
         logging.basicConfig()
+    # Title script
+    # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
+    sys.stdout.write(b'\33]0;jtop\a')
+    sys.stdout.flush()
     # Open tegrastats reader and run the curses wrapper
     try:
         with jtop(interval=args.refresh) as jetson:

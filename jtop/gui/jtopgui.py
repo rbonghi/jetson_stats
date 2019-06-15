@@ -108,7 +108,7 @@ class JTOPGUI:
                 self.set(num)
             elif self.key == ord('q') or self.key == ord('Q'):
                 # keyboard check quit button
-                return True
+                return False
             else:
                 # Run extra control for page if exist
                 for page in self.pages:
@@ -117,5 +117,5 @@ class JTOPGUI:
                         page["key"](self.stdscr, jetson, self.key)
             # Store old value key
             self.old_key = self.key
-        return False
+        return True
 # EOF
