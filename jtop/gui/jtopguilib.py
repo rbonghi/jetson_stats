@@ -237,7 +237,7 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
         stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
         # Show bracket linear gauge and label
         status = gauge["status"] if "status" in gauge else "OFF"
-        stdscr.addstr(offset, start + 7, status, curses.color_pair(1))
+        stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(1))
 
 
 @check_curses
