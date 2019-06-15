@@ -49,7 +49,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         # Plot the linear gauge
         gauge = make_gauge_from_percent(cpu)
         if 'value' in gauge:
-            gauge["percent"] = "{gov} - {val: 3}%".format(gov=cpu['governor'], val=gauge['value'])
+            gauge["percent"] = "{gov} - {val: 3}%".format(gov=cpu['governor'].capitalize(), val=gauge['value'])
         linear_percent_gauge(stdscr, gauge, max_bar, int(offest + off_idx), start)
     if len(list_cpus) > 4:
         return int(offest + idx / 2 + 1)
