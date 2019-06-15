@@ -73,12 +73,14 @@ def CTRL(stdscr, jetson, key):
     # Add plot fan status
     fan = jetson.fan
     if fan is not None:
-        # Fan chart name
-        stdscr.addstr(start_pos, posx + 40, "FAN speed", curses.A_BOLD)
         # Evaluate size chart
         size_x = [posx + 40, width - 10]
-        size_y = [3, height - 3]
-        fan_value = jetson.fan.status['value']
+        size_y = [2, height - 3]
+        percent = fan['percent'] if 'percent' in fan else ""
+        fan_value = {'name': 'FAN speed',
+                     'idle': fan['value'],
+                     'percent': percent,
+                     }
         # Draw the GPU chart
         draw_chart(stdscr, size_x, size_y, fan_value, line="o", color=curses.color_pair(4))
 

@@ -155,11 +155,11 @@ def draw_chart(stdscr, size_x, size_y, value, line="*", color=curses.A_NORMAL):
     # Plot chart shape and labels
     for point in range(displayY):
         if displayY != point:
-            value = max_val / float(displayY - 1) * float(displayY - point - 1)
+            value_n = max_val / float(displayY - 1) * float(displayY - point - 1)
             try:
                 stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
                 stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
-                              "{value:3d}{unit}".format(value=int(value), unit=unit),
+                              "{value:3d}{unit}".format(value=int(value_n), unit=unit),
                               curses.A_BOLD)
             except curses.error:
                 pass
@@ -168,6 +168,11 @@ def draw_chart(stdscr, size_x, size_y, value, line="*", color=curses.A_NORMAL):
             stdscr.addstr(size_y[1], size_x[0] + point, "-")
         except curses.error:
             pass
+    # Text label
+    info_string = value["name"] if "name" in value else ""
+    stdscr.addstr(size_y[0], size_x[0], info_string, curses.A_BOLD)
+    if "percent" in value:
+        stdscr.addstr(size_y[0], size_x[0] + len(info_string) + 1, value["percent"], color)
     # Plot values
     for idx, point in enumerate(reversed(points)):
         y_val = int((float(displayY - 1) / max_val) * point)
