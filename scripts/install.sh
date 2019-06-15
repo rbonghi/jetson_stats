@@ -213,7 +213,14 @@ main()
         esac
             shift 1
     done
-    
+
+    if [ $(basename $(pwd)) == "scripts" ] ; then
+        tput setaf 1
+        echo "Please run in home project"
+        tput sgr0
+        exit 1
+    fi    
+
     if [[ `id -u` -ne 0 ]] ; then 
         tput setaf 1
         echo "Please run as root"
@@ -346,6 +353,7 @@ main()
     echo "DONE!"
     tput sgr0
 }
+
 
 main $@
 exit 0

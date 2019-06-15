@@ -72,22 +72,22 @@ class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./install.sh -s --uninstall'))
+        sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./install.sh -s -no-pip'))
+        sp.call(shlex.split('./scripts/install.sh -s -no-pip'))
 
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./install.sh -s --uninstall'))
+        sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./install.sh -s -no-pip'))
+        sp.call(shlex.split('./scripts/install.sh -s -no-pip'))
 
 
 # Configuration setup module
