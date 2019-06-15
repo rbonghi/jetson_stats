@@ -20,6 +20,7 @@ script: sudo tox
 stages:
     - name: test
     - name: test to PyPI
+      if: branch = test
     - name: deploy to PyPI
       if: type = push AND fork = false AND tag =~ ^\d+\.\d+\.\d+
   
