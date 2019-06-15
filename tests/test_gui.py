@@ -34,10 +34,10 @@ from jtop.gui import JTOPGUI, all_info, GPU, Variables
 
 def openGUI(stdscr):
     # Initialization Menu
-    pages = JTOPGUI(stdscr, [{"name": "ALL", "func": all_info},
-                             {"name": "GPU", "func": GPU},
-                             {"name": "INFO", "func": Variables},
-                             ])
+    pages = JTOPGUI(stdscr, 500, [{"name": "ALL", "func": all_info},
+                                  {"name": "GPU", "func": GPU},
+                                  {"name": "INFO", "func": Variables},
+                                  ])
     return pages
 
 

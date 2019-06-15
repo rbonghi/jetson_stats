@@ -35,15 +35,18 @@ from .jtopguilib import (check_size,
 
 class JTOPGUI:
 
-    def __init__(self, stdscr, pages, init_page=0):
+    def __init__(self, stdscr, refresh, pages, init_page=0):
         self.stdscr = stdscr
         self.pages = pages
         self.n_page = init_page
+        self.refresh = refresh
         self.key = -1
         self.old_key = -1
 
     @check_size(20, 50)
     def draw(self, jetson):
+        # First, clear the screen
+        self.stdscr.erase()
         # Write head of the jtop
         self.header(jetson)
         # Write page selected
@@ -53,6 +56,10 @@ class JTOPGUI:
                 page(self.stdscr, jetson, self.key)
         # Draw menu
         self.menu()
+        # Draw the screen
+        self.stdscr.refresh()
+        # Set a timeout and read keystroke
+        self.stdscr.timeout(self.refresh)
 
     def increase(self):
         idx = self.n_page + 1

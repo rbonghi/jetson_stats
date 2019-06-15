@@ -86,7 +86,7 @@ def gui(stdscr, args, jetson):
     # Additionally, we want to make it so that the user does not have to press
     # enter to send keys to our program, so here is how we get keys instantly
     curses.cbreak()
-    # Define pairing colorss
+    # Define pairing colors
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
@@ -104,23 +104,17 @@ def gui(stdscr, args, jetson):
     stdscr.nodelay(1)
     # Initialize key
     # Initialization Menu
-    pages = JTOPGUI(stdscr, [{"name": "ALL", "func": all_info},
-                             {"name": "GPU", "func": GPU},
-                             {"name": "CTRL", "func": CTRL, "key": CTRL_keyboard},
-                             {"name": "INFO", "func": Variables},
-                             ])
+    pages = JTOPGUI(stdscr, args.refresh, [{"name": "ALL", "func": all_info},
+                                           {"name": "GPU", "func": GPU},
+                                           {"name": "CTRL", "func": CTRL, "key": CTRL_keyboard},
+                                           {"name": "INFO", "func": Variables},
+                                           ])
     # Start with selected page
     pages.set(args.page)
     # Here is the loop of our program, we keep clearing and redrawing in this loop
     while pages.keyboard(jetson):
-        # First, clear the screen
-        stdscr.erase()
         # Draw pages
         pages.draw(jetson)
-        # Draw the screen
-        stdscr.refresh()
-        # Set a timeout and read keystroke
-        stdscr.timeout(args.refresh)
 
 
 def main():
