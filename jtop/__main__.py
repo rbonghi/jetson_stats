@@ -63,15 +63,14 @@ def set_xterm_title(title):
     # though not necessarily that it supports setting the title.
     # If this check causes compatibility issues, you can add
     # items to the tuple, or remove the check entirely.
-    if os.environ.get('TERM') in (
-            'xterm',
-            'xterm-color',
-            'xterm-256color',
-            'linux',
-            'screen',
-            'screen-256color',
-            'screen-bce',
-            ):
+    if os.environ.get('TERM') in ('xterm',
+                                  'xterm-color',
+                                  'xterm-256color',
+                                  'linux',
+                                  'screen',
+                                  'screen-256color',
+                                  'screen-bce',
+                                  ):
         sys.stdout.write('\33]0;' + title + '\a')
         sys.stdout.flush()
 
