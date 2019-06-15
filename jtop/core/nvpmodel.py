@@ -114,7 +114,7 @@ class NVPmodel():
             # Set the new nvpmodel status
             sep_nvp = sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
             out, _ = sep_nvp.communicate()
-            if "NVPM ERROR" in out:
+            if "NVPM ERROR" in out.decode("utf-8"):
                 self.board[level]["status"] = False
                 return False
             else:

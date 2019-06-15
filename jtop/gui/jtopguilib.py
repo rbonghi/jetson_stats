@@ -125,7 +125,6 @@ def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=Fals
     line = 0
     skip_line = False if max_width == -1 else True
     for idx, name in enumerate(data):
-        
         if status:
             color = curses.A_REVERSE if status[idx] else curses.color_pair(1)
             status_selected = True if selected == idx else not status[idx]

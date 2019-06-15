@@ -89,7 +89,6 @@ def all_info(stdscr, jetson, key):
     # SWAP linear gauge info
     swap_status = jetson.stats['SWAP']
     if swap_status:
-        
         SWAP_VALUE = {'name': "Swp",
                       'value': int(swap_status['used'][-1] / float(swap_status['total']) * 100.0),
                       'label': "(cached " + str(swap_status['cached']) + "MB)",

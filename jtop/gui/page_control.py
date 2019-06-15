@@ -73,7 +73,6 @@ def CTRL(stdscr, jetson, key):
         # Write list of available modes
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
         mode_status = [mode["status"] for mode in nvpmodel.modes]
-        #mode_status = [True, False, True, True, True, True, True, True]
         box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, status=mode_status, max_width=40, numbers=True)
     # Add plot fan status
     fan = jetson.fan
