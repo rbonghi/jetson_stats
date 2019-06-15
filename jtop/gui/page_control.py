@@ -47,18 +47,18 @@ def CTRL(stdscr, jetson, key):
     stdscr.addstr(start_pos, posx, "jetson_clocks controller", curses.A_BOLD)
     if jetson.userid == 0:
         # button start/stop jetson clocks
-        box_keyboard(stdscr, start_pos, posx + 1, "a", key)
+        box_keyboard(stdscr, start_pos - 1, posx + 1, "a", key)
     # Read status jetson_clocks
     start = jetson.jetson_clocks.start
     status = jetson.jetson_clocks.status
-    box_status(stdscr, start_pos + 5, posx + 1, status.capitalize(), start)
+    box_status(stdscr, start_pos + 4, posx + 1, status.capitalize(), start)
     if jetson.userid == 0:
         # button start/stop jetson clocks
-        box_keyboard(stdscr, start_pos, posx + 4, "e", key)
+        box_keyboard(stdscr, start_pos - 1, posx + 4, "e", key)
     # Read status jetson_clocks
     enabled = jetson.jetson_clocks.enable
     enabled_box = "Enable" if enabled else "Disable"
-    box_status(stdscr, start_pos + 5, posx + 4, enabled_box, enabled)
+    box_status(stdscr, start_pos + 4, posx + 4, enabled_box, enabled)
     # Build NVP model list
     nvpmodel = jetson.nvpmodel
     if nvpmodel is not None:
@@ -73,7 +73,7 @@ def CTRL(stdscr, jetson, key):
         # Write list of available modes
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
         mode_status = [mode["status"] for mode in nvpmodel.modes]
-        box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, status=mode_status, max_width=40, numbers=True)
+        box_list(stdscr, start_pos - 1, posx + 10, mode_names, nvpmodel.num, status=mode_status, max_width=42, numbers=True)
     # Add plot fan status
     fan = jetson.fan
     if fan is not None:
