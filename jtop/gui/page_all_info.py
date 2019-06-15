@@ -27,6 +27,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import curses
 # Graphics elements
 from .jtopguilib import (linear_percent_gauge,
                          make_gauge_from_percent)
@@ -46,6 +47,20 @@ def all_info(stdscr, jetson, key):
     line_counter = 1
     # Plot Status CPU
     line_counter = plot_CPUs(stdscr, line_counter, jetson.stats['CPU'], width)
+    # Plot MTS
+    if 'MTS' in jetson.stats:
+        line_counter += 1
+        stdscr.addstr(line_counter, 0, "MTS ", curses.color_pair(5))
+        MTS_FG = {'name': 'FG',
+                  'value': int(jetson.stats['MTS']['fg']),
+                  }
+        linear_percent_gauge(stdscr, MTS_FG, width // 2 - 2,
+                             offset=line_counter, start=4, color_name=5)
+        MTS_BG = {'name': 'BG',
+                  'value': int(jetson.stats['MTS']['bg']),
+                  }
+        linear_percent_gauge(stdscr, MTS_BG, width // 2 - 2,
+                             offset=line_counter, start=2 + width // 2, color_name=5)
     # RAM linear gauge info
     ram_status = jetson.stats['RAM']['RAM']
     lfb_status = jetson.stats['RAM']['lfb']
@@ -54,10 +69,12 @@ def all_info(stdscr, jetson, key):
                  'label': "(lfb " + str(lfb_status['nblock']) + "x" + str(lfb_status['size']) + "MB)",
                  'percent': "{0:2.1f}GB/{1:2.1f}GB".format(ram_status['used'][-1] / 1000.0, ram_status['total'] / 1000.0),
                  }
-    linear_percent_gauge(stdscr, RAM_VALUE, width, offset=line_counter + 1)
+    line_counter += 1
+    linear_percent_gauge(stdscr, RAM_VALUE, width, offset=line_counter)
     # EMC linear gauge info
     if 'EMC' in jetson.stats:
-        linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['EMC']), width, offset=line_counter + 2)
+        line_counter += 1
+        linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['EMC']), width, offset=line_counter)
     # IRAM linear gauge info
     iram_status = jetson.stats['IRAM']
     if iram_status:
@@ -68,10 +85,11 @@ def all_info(stdscr, jetson, key):
                       'percent': "{0:2.1f}GB/{1:2.1f}GB".format(iram_status['used'][-1] / 1000.0,
                                                                 iram_status['total'] / 1000.0),
                       }
-        linear_percent_gauge(stdscr, IRAM_VALUE, width, offset=line_counter + 2)
+        linear_percent_gauge(stdscr, IRAM_VALUE, width, offset=line_counter)
     # SWAP linear gauge info
     swap_status = jetson.stats['SWAP']
     if swap_status:
+        
         SWAP_VALUE = {'name': "Swp",
                       'value': int(swap_status['used'][-1] / float(swap_status['total']) * 100.0),
                       'label': "(cached " + str(swap_status['cached']) + "MB)",
@@ -80,9 +98,10 @@ def all_info(stdscr, jetson, key):
                       }
     else:
         SWAP_VALUE = {'name': "Swp"}
-    linear_percent_gauge(stdscr, SWAP_VALUE, width, offset=line_counter + 3)
-    line_counter += 4
+    line_counter += 1
+    linear_percent_gauge(stdscr, SWAP_VALUE, width, offset=line_counter)
     # GPU linear gauge info
+    line_counter += 1
     if 'GR3D' in jetson.stats:
         linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), width, offset=line_counter + 1)
     line_counter += 2

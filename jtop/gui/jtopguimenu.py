@@ -116,19 +116,19 @@ def compact_info(stdscr, start, offset, width, jetson):
         plot_name_info(stdscr, offset + counter, start, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
         counter += 1
     # Plot MTS
-    if 'MTS' in jetson.stats:
-        stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
-        MTS_FG = {'name': ' FG',
+    if 'MTS' in jetson.stats and False:
+        # stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
+        MTS_FG = {'name': 'MTS FG',
                   'value': int(jetson.stats['MTS']['fg']),
                   }
         linear_percent_gauge(stdscr, MTS_FG, width,
-                             offset=offset + counter + 1, start=start)
-        MTS_BG = {'name': ' BG',
+                             offset=offset + counter, start=start)
+        MTS_BG = {'name': 'MTS BG',
                   'value': int(jetson.stats['MTS']['bg']),
                   }
         linear_percent_gauge(stdscr, MTS_BG, width,
-                             offset=offset + counter + 2, start=start)
-        counter += 3
+                             offset=offset + counter + 1, start=start)
+        counter += 2
     # APE frequency
     if 'APE' in jetson.stats:
         plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
