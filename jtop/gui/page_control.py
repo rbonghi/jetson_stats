@@ -64,12 +64,17 @@ def CTRL(stdscr, jetson, key):
     if nvpmodel is not None:
         stdscr.addstr(start_pos + 8, posx, "NVP model", curses.A_BOLD)
         if jetson.userid == 0:
-            # Draw keys to increase and decrease nvpmodel
+            # Draw keys to decrease nvpmodel
             box_keyboard(stdscr, start_pos + 10, posx + 7, "-", key)
-            box_keyboard(stdscr, start_pos + 15, posx + 7, "+", key)
+            # Draw selected number
+            stdscr.addstr(start_pos + 8, posx + 16, str(nvpmodel.selected), curses.A_NORMAL)
+            # Draw keys to increase nvpmodel
+            box_keyboard(stdscr, start_pos + 18, posx + 7, "+", key)
         # Write list of available modes
         mode_names = [mode["Name"] for mode in nvpmodel.modes]
-        box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, max_width=40, numbers=True)
+        mode_status = [mode["status"] for mode in nvpmodel.modes]
+        #mode_status = [True, False, True, True, True, True, True, True]
+        box_list(stdscr, start_pos, posx + 10, mode_names, nvpmodel.num, status=mode_status, max_width=40, numbers=True)
     # Add plot fan status
     fan = jetson.fan
     if fan is not None:

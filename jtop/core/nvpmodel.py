@@ -32,9 +32,30 @@ import re
 import logging
 # Launch command
 import subprocess as sp
+# Functions and decorators
+from functools import wraps
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+
+
+def jetson_clocks_checks(func):
+    """ Enable and disable Jetson Clocks after NVP model change """
+    @wraps(func)
+    def wrapped(self, level):
+        # Disable the jetson_clocks (only if is it active) before change NVPmodel level
+        if self.jetson_clocks is not None:
+            old_status = self.jetson_clocks.start
+            if old_status:
+                self.jetson_clocks.start = False
+        status = func(self, level)
+        # Enable again the jetson_clocks status
+        if self.jetson_clocks is not None:
+            if old_status:
+                self.jetson_clocks.start = True
+        # Return status function
+        return status
+    return wrapped
 
 
 class NVPmodel():
@@ -69,7 +90,7 @@ class NVPmodel():
                 match = NVPmodel.REGEXP.search(line)
                 # if match extract name and number
                 if match:
-                    pm = {"ID": int(match.group(1)), "Name": match.group(2)}
+                    pm = {"ID": int(match.group(1)), "Name": match.group(2), "status": True}
                     self.board += [pm]
         except OSError:
             logger.info("This board {} does not have NVP Model".format(type_board))
@@ -79,27 +100,26 @@ class NVPmodel():
             raise NVPmodel.NVPmodelException("Wrong open")
         # Initialize mode and num
         self.update()
+        # Initialize with first configuration number
+        self.selected = self.num
 
     @property
     def modes(self):
         return self.board
 
+    @jetson_clocks_checks
     def set(self, level):
         """ Set nvpmodel to a new status """
         try:
-            # Disable the jetson_clocks (only if is it active) before change NVPmodel level
-            if self.jetson_clocks is not None:
-                old_status = self.jetson_clocks.start
-                if old_status:
-                    self.jetson_clocks.start = False
             # Set the new nvpmodel status
-            sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE)
-            self.num = level
-            # Enable again the jetson_clocks status
-            if self.jetson_clocks is not None:
-                if old_status:
-                    self.jetson_clocks.start = True
-            return True
+            sep_nvp = sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
+            out, _ = sep_nvp.communicate()
+            if "NVPM ERROR" in out:
+                self.board[level]["status"] = False
+                return False
+            else:
+                self.board[level]["status"] = True
+                return True
         except OSError:
             logger.info("NVP Model does not exist")
             return False
@@ -108,21 +128,23 @@ class NVPmodel():
             return False
 
     def increase(self):
-        if self.num + 1 < len(self.modes):
-            return self.set(self.num + 1)
+        if self.selected + 1 < len(self.modes):
+            self.selected += 1
+            return self.set(self.selected)
         else:
             return False
 
     def decrease(self):
-        if self.num - 1 >= 0:
-            return self.set(self.num - 1)
+        if self.selected - 1 >= 0:
+            self.selected -= 1
+            return self.set(self.selected)
         else:
             return False
 
     def update(self):
         """ Read nvpmodel to know the status of the board """
         try:
-            nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE)
+            nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE, stderr=sp.PIPE)
             out, _ = nvpmodel_p.communicate()
             # Log value
             logger.debug('nvqmodel status %s', out)

@@ -98,16 +98,6 @@ def strfdelta(tdelta, fmt):
 
 
 @check_curses
-def box_status(stdscr, x, y, name, status=False, color=curses.A_REVERSE):
-    # Draw background rectangle
-    rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
-    # Default status
-    status = color if status else curses.A_NORMAL
-    # Write letter
-    stdscr.addstr(y + 1, x + 2, name, status)
-
-
-@check_curses
 def box_keyboard(stdscr, x, y, letter, key):
     # Draw background rectangle
     rectangle(stdscr, y, x, y + 2, x + 4)
@@ -120,12 +110,27 @@ def box_keyboard(stdscr, x, y, letter, key):
 
 
 @check_curses
-def box_list(stdscr, x, y, data, selected, max_width=-1, numbers=False):
+def box_status(stdscr, x, y, name, status=False, color=curses.A_REVERSE):
+    # Draw background rectangle
+    rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
+    # Default status
+    status = color if status else curses.A_NORMAL
+    # Write letter
+    stdscr.addstr(y + 1, x + 2, name, status)
+
+
+@check_curses
+def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=False):
     len_prev = 0
     line = 0
     skip_line = False if max_width == -1 else True
     for idx, name in enumerate(data):
-        status = True if selected == idx else False
+        
+        if status:
+            color = curses.A_REVERSE if status[idx] else curses.color_pair(1)
+            status_selected = True if selected == idx else not status[idx]
+        else:
+            status_selected = True if selected == idx else False
         # Add number idx if required
         str_name = name if not numbers else str(idx) + " " + name
         # Find next position
@@ -133,7 +138,7 @@ def box_list(stdscr, x, y, data, selected, max_width=-1, numbers=False):
             line += 3
             len_prev = 0
         # Plot box
-        box_status(stdscr, x + len_prev, y + line, str_name, status=status)
+        box_status(stdscr, x + len_prev, y + line, str_name, status=status_selected, color=color)
         len_prev += len(str_name) + 4
     # Draw background rectangle
     # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
