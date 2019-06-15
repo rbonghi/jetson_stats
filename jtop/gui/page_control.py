@@ -82,10 +82,9 @@ def CTRL(stdscr, jetson, key):
         size_x = [posx + 40, width - 10]
         size_y = [2, height - 3]
         percent = fan['percent'] if 'percent' in fan else ""
-        fan_value = {'name': 'FAN speed',
-                     'idle': fan['value'],
-                     'percent': percent,
-                     }
+        fan_value = {'name': 'FAN speed', 'percent': percent}
+        # If exist value of fan add in fan value
+        fan_value['idle'] = fan['value'] if 'value' in fan else [0]
         # Draw the GPU chart
         draw_chart(stdscr, size_x, size_y, fan_value, line="o", color=curses.color_pair(4))
 

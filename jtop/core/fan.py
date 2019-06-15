@@ -57,6 +57,7 @@ class Fan(object):
         self.rpm = deque(max_record * [0], maxlen=max_record)
         self.with_rpm = os.path.isfile(self.path + "rpm_measured")
         self.with_curr = os.path.isfile(self.path + "cur_pwm")
+        self.with_target = os.path.isfile(self.path + "target_pwm")
         # Max value PWM
         if os.path.isfile(self.path + "pwm_cap"):
             self.pwm_max = int(self.read_status("pwm_cap"))
@@ -89,7 +90,7 @@ class Fan(object):
 
     def update(self):
         # Read PWM
-        if os.path.isfile(self.path + "target_pwm"):
+        if self.with_target:
             fan_level = float(self.read_status("target_pwm")) / 255.0 * 100.0
             logger.debug('{} status PWM CTRL {}'.format(self.path, fan_level))
             self.fan_ctrl.append(int(fan_level))
@@ -112,7 +113,7 @@ class Fan(object):
         if self.with_curr:
             fan['value'] = list(self.fan_read)
             fan['percent'] = str(self.fan_read[-1]) + "/" + str(self.fan_ctrl[-1]) + "%"
-        else:
+        elif self.with_target:
             fan['value'] = list(self.fan_ctrl)
         # TODO Improve RPM read
         # if self.with_rpm and self.rpm[-1] != 0:
