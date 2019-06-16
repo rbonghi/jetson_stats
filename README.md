@@ -1,7 +1,18 @@
 # Jetson stats [![Build Status](https://travis-ci.org/rbonghi/jetson_stats.svg?branch=master)](https://travis-ci.org/rbonghi/jetson_stats)
-**Welcome in the Jetson setup configurator** - Visit the [Official website](http://rnext.it/project/jetson-easy/) or read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki)
+**jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] embedded board without spend time. 
+* NVIDIA Jetson Nano
+* NVIDIA Jetson Xavier
+* NVIDIA Jetson TX2i
+* NVIDIA Jetson TX2
+* NVIDIA Jetson TX1
 
-The idea of this project is automatically update and setup your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1, TK1] embedded board without wait a lot of time.
+When you install jetson-stats are included:
+* [jtop](#jtop)
+* [jetson-release](#jetson-release)
+* [jetson-docker](#jetson-docker)
+* [jetson_variables](#jetson_variables)
+
+Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information
 
 ## Install
 
@@ -21,7 +32,10 @@ sudo -H pip install -U jetson-stats
 ```
 
 ## [**jtop**][jtop] 
-It is a system monitoring utility that runs on the terminal and see realtime on your prompt the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
+It is a system monitoring utility that runs on the terminal and see and **control** realtime the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
+
+The prompt interface will be show like this image:
+![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif)
 
 You can run the jtop with (Suggested to run with **sudo**)
 ```elm
@@ -37,28 +51,35 @@ jtop is system monitoring utility that runs on the terminal
 optional arguments:
   -h, --help   show this help message and exit
   -r REFRESH   refresh interval
-  --server     Run jtop json server
-  -p PORT      Set server port
   --debug      Run with debug logger
   --page PAGE  Open fix page
 ```
-The prompt interface will be show like this image:
-![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jtop.png)
 
-## [**jetson-docker**][jetson_docker]
-It is a bridge to use the NVIDIA core inside your doker container. This bridge share CUDA library, and all devices (nvmap and gpu) 
+# Controls
 
+To control the your NVIDIA Jetson are available this keyboard commands:
+* **a** Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)
+* **e** Enable/Disable jetson_clocks on board boot
+* **+** and **-** Increase and decrease the NVPmodel
+
+# Pages
+
+**jtop** have four different pages to control your NVIDIA Jetson:
+1. **ALL** Are collected all information about your board: CPUs status, Memory, *GPU*, disk, fan and all status about jetson_clocks, NVPmodel and other
+2. **GPU** A real time GPU history about your NVIDIA Jetson
+3. **CTRL** You can control the status of you
+4. **INFO** 
+
+## [**jetson-release**][jetson_release]
+The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
+
+![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png)
 ## [**jetson_variables**][jetson_variables]
 This script generate the easy environment variables to know which is your Hardware version of the Jetson and which Jetpack you have already installed
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
-## [**jetson_release**][jetson_release]
-The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
-
-![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png)
-
-## [**jetson_performance**][jetson_performance]
-This service load `jetson_clock.sh` has a linux service
+## [**jetson-docker**][jetson_docker]
+It is a bridge to use the NVIDIA core inside your doker container. This bridge share CUDA library, and all devices (nvmap and gpu)
 
 [jtop]: https://github.com/rbonghi/jetson_stats/wiki/jtop
 [jetson_variables]: https://github.com/rbonghi/jetson_stats/wiki/jetson_variables
