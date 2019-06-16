@@ -27,7 +27,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Emulator for NVIDIA Jetson tegrastats
+# Emulator for NVIDIA Jetson jetson_clock
 
 usage()
 {
@@ -37,24 +37,43 @@ usage()
 		tput sgr0
 	fi
 	
-    echo "tegrastats, Emulator of NVIDIA Jetsons"
+    echo "jetson_clock, EMULATOR of NVIDIA Jetsons"
+    echo "Maximize jetson performance by setting static max frequency to CPU, GPU and EMC clocks."
     echo "Usage:"
     echo "$0 [options]"
     echo "options,"
-    echo "   -h|--help    | This help"
-    echo "   --interval   | Frequency interval"
+    echo "   -h|--help        | This help"
+    echo "   --show           | display current settings"
+    echo "   --restore [file] | restore current settings to a file (default: ${HOME}/l4t_dfs.conf)"
+    echo "   --store [file]   | store current settings to a file (default: ${HOME}/l4t_dfs.conf)"
+    echo "run jetson_clocks.sh without any option to set static max frequency to CPU, GPU and EMC clocks."
+}
+
+show()
+{
+    echo "Show status jetson_clock"
 }
 
 main()
 {
-    local INTERVAL=500
-    
+    local TIME_SLEEP=1
+    local conf=""
 	# Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
-            --interval)
-                INTERVAL=$2
+            --show)
+                show
+                exit 0
+                ;;
+            --restore)
+                conf=$2
                 shift 1
+                exit 0
+                ;;
+            --store)
+                conf=$2
+                shift 1
+                exit 0
                 ;;
             -h|--help)
                 usage
@@ -68,17 +87,13 @@ main()
             shift 1
     done
     
-    # Evaluate time
-    INTERVAL=$(echo "scale=2; $INTERVAL/1000" | bc)
+    if [ "$EUID" -ne 0 ] ; then
+      echo "Please run as root"
+      exit 1
+    fi
     
-    while true; do 
-        # Generate random value for GPU
-        RAND_GPU=$(( $RANDOM % 100 + 0 ))
-        # Run example output for tegrastats
-        echo "RAM 4722/7844MB (lfb 1x512kB) CPU [55%@2035,14%@2034,27%@2034,55%@2035,47%@2035,45%@2035] EMC_FREQ 2%@1866 GR3D_FREQ $RAND_GPU%@1300 APE 150 MTS fg 0% bg 0% BCPU@45C MCPU@45C GPU@51C PLL@45C AO@47.5C Tboard@37C Tdiode@46.75C PMIC@100C thermal@46.4C VDD_IN 14025/14416 VDD_CPU 2209/2538 VDD_GPU 6854/6903 VDD_SOC 1371/1370 VDD_WIFI 19/19 VDD_DDR 2702/2702"
-        # Go to sleep for an interval
-        sleep $INTERVAL
-    done
+    # Go to sleep for an interval
+    sleep $TIME_SLEEP
 }
 
 main $@

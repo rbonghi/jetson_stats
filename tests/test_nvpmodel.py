@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
@@ -28,29 +27,61 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from jtop import jtop
-import time
+from jtop import NVPmodel
+from jtop import JetsonClocks
 
-if __name__ == "__main__":
 
-    print("Simple Tegrastats reader")
+def test_nvp_good():
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC")
+    # Check values
+    assert isinstance(nvp.mode, str)
+    assert isinstance(nvp.num, int)
 
-    with jtop() as jetson:
-        while True:
-            # Read tegra stats
-            print(jetson.stats)
-            # Status disk
-            print(jetson.disk)
-            # Status fans
-            print(jetson.fans)
-            # uptime
-            print(jetson.uptime)
-            # nvpmodel
-            print(jetson.nvpmodel)
-            # local interfaces
-            print(jetson.local_interfaces)
-            # boards
-            print(jetson.board)
-            # Sleep before send new stat
-            time.sleep(1)
+
+def test_initialization():
+    # Test board in list
+    nvp = NVPmodel("PC")
+    assert isinstance(nvp.modes, list)
+
+
+def test_mode():
+    # Test board in list
+    nvp = NVPmodel("PC")
+    assert nvp.mode == nvp.modes[nvp.num]["Name"]
+    assert nvp.num == nvp.modes[nvp.num]["ID"]
+
+
+def test_set_mode():
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC")
+    # Set value
+    assert nvp.set(0)
+
+
+def test_increase_mode():
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC")
+    # Set value
+    assert nvp.increase()
+
+
+def test_decrease_mode():
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC")
+    # Set value
+    assert nvp.decrease()
+
+
+def test_set_jc_mode():
+    # Load JetsonClocks controller
+    jc = JetsonClocks()
+    jc.start = True
+    # Initialize NVPmodel
+    nvp = NVPmodel("PC", jetson_clocks=jc)
+    # Set value
+    set_status = nvp.set(0)
+    # stop jc
+    jc.start = False
+    assert set_status
 # EOF

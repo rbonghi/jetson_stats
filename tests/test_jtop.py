@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
@@ -29,28 +28,33 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from jtop import jtop
-import time
 
-if __name__ == "__main__":
 
-    print("Simple Tegrastats reader")
+def test_open():
+    # Initialize object
+    jetson = jtop()
+    # Open data
+    jetson.open()
+    # Close connection
+    jetson.close()
+    assert True
 
+
+def test_all():
+    # Load tegracontroller
     with jtop() as jetson:
-        while True:
-            # Read tegra stats
-            print(jetson.stats)
-            # Status disk
-            print(jetson.disk)
-            # Status fans
-            print(jetson.fans)
-            # uptime
-            print(jetson.uptime)
-            # nvpmodel
-            print(jetson.nvpmodel)
-            # local interfaces
-            print(jetson.local_interfaces)
-            # boards
-            print(jetson.board)
-            # Sleep before send new stat
-            time.sleep(1)
+        # Read tegra stats
+        assert isinstance(jetson.stats, dict)
+        # Status disk
+        assert isinstance(jetson.disk, dict)
+        # Status fans
+        assert jetson.fan is None
+        # uptime
+        assert isinstance(jetson.uptime, float)
+        # nvpmodel
+        assert jetson.nvpmodel is not None
+        # local interfaces
+        assert isinstance(jetson.local_interfaces, dict)
+        # boards
+        assert isinstance(jetson.board, dict)
 # EOF

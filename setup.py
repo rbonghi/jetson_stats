@@ -39,6 +39,7 @@
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
+from setuptools.command.develop import develop
 from setuptools.command.install import install
 from os import path
 # io.open is needed for projects that support Python 2.7
@@ -54,7 +55,7 @@ import sys
 
 
 if os.getuid() != 0:
-    print("Require sudo, please use:\n\nsudo -H pip install jetson-stats")
+    print("\nRequire super user")
     sys.exit(1)
 
 
@@ -71,11 +72,22 @@ class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./install.sh -s --uninstall'))
+        sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./install.sh -s -no-pip'))
+        sp.call(shlex.split('./scripts/install.sh -s -no-pip'))
+
+
+class PostDevelopCommand(develop):
+    """Post-installation for development mode."""
+    def run(self):
+        # Run the uninstaller before to copy all scripts
+        sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
+        # Run the default installation script
+        develop.run(self)
+        # Run the restart all services before to close the installer
+        sp.call(shlex.split('./scripts/install.sh -s -no-pip'))
 
 
 # Configuration setup module
@@ -84,8 +96,8 @@ setup(
     version="1.6.13",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
-    description="Interactive system-monitor process viewer for NVIDIA Jetson Nano, AGX Xavier, TX2, TX1",
-    license='LICENSE',
+    description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Nano, AGX Xavier, TX1, TX2]",
+    license='MIT',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=project_homepage,
@@ -145,7 +157,8 @@ setup(
              'scripts/jetson-swap',
              'scripts/jetson-release',
              ],
-    cmdclass={'install': PostInstallCommand},
+    cmdclass={'develop': PostDevelopCommand,
+              'install': PostInstallCommand},
     # The following provide a command called `jtop`
     entry_points={'console_scripts': ['jtop=jtop.__main__:main']},
 )

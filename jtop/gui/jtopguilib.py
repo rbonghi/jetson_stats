@@ -29,6 +29,8 @@
 
 # control command line
 import curses
+from curses.textpad import rectangle
+# Math functions
 from math import ceil
 # Functions and decorators
 from functools import wraps
@@ -96,7 +98,54 @@ def strfdelta(tdelta, fmt):
 
 
 @check_curses
-def draw_chart(stdscr, size_x, size_y, value, line="*"):
+def box_keyboard(stdscr, x, y, letter, key):
+    # Draw background rectangle
+    rectangle(stdscr, y, x, y + 2, x + 4)
+    # Default status
+    status = curses.A_NORMAL if key != ord(letter) else curses.A_REVERSE
+    # Write letter
+    stdscr.addstr(y + 1, x + 2, letter, status)
+    # Return the status of key
+    return True if key == ord(letter) else False
+
+
+@check_curses
+def box_status(stdscr, x, y, name, status=False, color=curses.A_REVERSE):
+    # Draw background rectangle
+    rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
+    # Default status
+    status = color if status else curses.A_NORMAL
+    # Write letter
+    stdscr.addstr(y + 1, x + 2, name, status)
+
+
+@check_curses
+def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=False):
+    len_prev = 0
+    line = 0
+    skip_line = False if max_width == -1 else True
+    for idx, name in enumerate(data):
+        if status:
+            color = curses.A_REVERSE if status[idx] else curses.color_pair(1)
+            status_selected = True if selected == idx else not status[idx]
+        else:
+            status_selected = True if selected == idx else False
+        # Add number idx if required
+        str_name = name if not numbers else str(idx) + " " + name
+        # Find next position
+        if skip_line and len_prev + len(str_name) + 4 >= max_width:
+            line += 3
+            len_prev = 0
+        # Plot box
+        box_status(stdscr, x + len_prev, y + line, str_name, status=status_selected, color=color)
+        len_prev += len(str_name) + 4
+    # Draw background rectangle
+    # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
+    return line
+
+
+@check_curses
+def draw_chart(stdscr, size_x, size_y, value, line="*", color=curses.A_NORMAL):
     # Get Max value and unit from value to draw
     max_val = 100 if "max_val" not in value else value["max_val"]
     unit = "%" if "max_val" not in value else value["unit"]
@@ -110,11 +159,11 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
     # Plot chart shape and labels
     for point in range(displayY):
         if displayY != point:
-            value = max_val / float(displayY - 1) * float(displayY - point - 1)
+            value_n = max_val / float(displayY - 1) * float(displayY - point - 1)
             try:
                 stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
                 stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
-                              "{value:3d}{unit}".format(value=int(value), unit=unit),
+                              "{value:3d}{unit}".format(value=int(value_n), unit=unit),
                               curses.A_BOLD)
             except curses.error:
                 pass
@@ -123,25 +172,25 @@ def draw_chart(stdscr, size_x, size_y, value, line="*"):
             stdscr.addstr(size_y[1], size_x[0] + point, "-")
         except curses.error:
             pass
+    # Text label
+    info_string = value["name"] if "name" in value else ""
+    stdscr.addstr(size_y[0], size_x[0], info_string, curses.A_BOLD)
+    if "percent" in value:
+        stdscr.addstr(size_y[0], size_x[0] + len(info_string) + 1, value["percent"], color)
     # Plot values
-    delta = displayX - len(points)
-    for idx, point in enumerate(points):
-        if delta + idx >= size_x[0]:
-            x_val = (delta + idx + 1)
-        else:
-            x_val = -1
-        y_val = size_y[1] - 1 - ((float(displayY - 1) / max_val) * point)
-        try:
-            stdscr.addstr(int(y_val), x_val, line, curses.color_pair(2))
-        except curses.error:
-            pass
-    # Debug value
-    # stdscr.addstr( 5, 5, "{}".format(delta), curses.color_pair(1))
+    for idx, point in enumerate(reversed(points)):
+        y_val = int((float(displayY - 1) / max_val) * point)
+        x_val = size_x[1] - 1 - idx
+        if x_val >= size_x[0]:
+            try:
+                stdscr.addstr(size_y[1] - 1 - y_val, x_val, line, color)
+            except curses.error:
+                pass
 
 
 def make_gauge_from_percent(data):
-    gauge = {'name': data['name']}
-    if data["status"] != "OFF":
+    gauge = {'name': data['name'], 'status': data['status']}
+    if "ON" in data["status"]:
         gauge['value'] = int(data['idle'][-1])
     if data["status"] == "ON":
         freq = data['frequency'][-1]
@@ -187,7 +236,8 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
         # Show bracket linear gauge and label
         stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
         # Show bracket linear gauge and label
-        stdscr.addstr(offset, start + 7, "OFF", curses.color_pair(1))
+        status = gauge["status"] if "status" in gauge else "OFF"
+        stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(1))
 
 
 @check_curses
@@ -204,7 +254,7 @@ def plot_dictionary(stdscr, offset, data, name, start=0):
 
 
 @check_curses
-def plot_name_info(stdscr, offset, start, name, value):
+def plot_name_info(stdscr, offset, start, name, value, color=curses.A_NORMAL):
     stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
-    stdscr.addstr(offset, start + len(name) + 2, value)
+    stdscr.addstr(offset, start + len(name) + 2, value, color)
 # EOF

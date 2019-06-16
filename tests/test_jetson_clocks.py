@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
@@ -28,29 +27,44 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from jtop import jtop
-import time
+from jtop import JetsonClocks
 
-if __name__ == "__main__":
 
-    print("Simple Tegrastats reader")
+def test_init_jc():
+    # Initialize JetsonClocks
+    JetsonClocks()
+    assert True
 
-    with jtop() as jetson:
-        while True:
-            # Read tegra stats
-            print(jetson.stats)
-            # Status disk
-            print(jetson.disk)
-            # Status fans
-            print(jetson.fans)
-            # uptime
-            print(jetson.uptime)
-            # nvpmodel
-            print(jetson.nvpmodel)
-            # local interfaces
-            print(jetson.local_interfaces)
-            # boards
-            print(jetson.board)
-            # Sleep before send new stat
-            time.sleep(1)
+
+def test_read_status():
+    # Initialize JetsonClocks
+    jc = JetsonClocks()
+    assert isinstance(jc.status, str)
+
+
+def status_check(var_status, new_status):
+    var_status = new_status
+    # Wait a second
+    while var_status != new_status:
+        pass
+    # Check the status is the same
+    assert var_status == new_status
+
+
+def test_set_start():
+    # Initialize JetsonClocks
+    jc = JetsonClocks()
+    # check status True
+    status_check(jc.start, True)
+    # Check status False
+    status_check(jc.start, False)
+
+
+def test_set_enable():
+    # Initialize JetsonClocks
+    jc = JetsonClocks()
+    # check status True
+    status_check(jc.enable, True)
+    # Check status False
+    status_check(jc.enable, False)
 # EOF

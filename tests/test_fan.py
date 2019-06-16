@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
@@ -28,29 +27,14 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from jtop import jtop
-import time
+from jtop import Fan
 
-if __name__ == "__main__":
 
-    print("Simple Tegrastats reader")
-
-    with jtop() as jetson:
-        while True:
-            # Read tegra stats
-            print(jetson.stats)
-            # Status disk
-            print(jetson.disk)
-            # Status fans
-            print(jetson.fans)
-            # uptime
-            print(jetson.uptime)
-            # nvpmodel
-            print(jetson.nvpmodel)
-            # local interfaces
-            print(jetson.local_interfaces)
-            # boards
-            print(jetson.board)
-            # Sleep before send new stat
-            time.sleep(1)
+def test_wrong_open():
+    # Initialize object
+    try:
+        Fan('wrong_path', 100, 1.0)
+        assert False
+    except Fan.FanException:
+        assert True
 # EOF

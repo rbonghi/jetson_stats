@@ -10,11 +10,10 @@ fi
 # Default-Start:     2 3 4 5
 # Default-Stop:      
 # Short-Description: Script to use the jetson_clock.sh like service
-# Description:       Script to use the jetson_clock.sh like service.
-#                    For NVIDIA Jetson TX2 is controlled the NVP model.
+# Description:       Script to use the jetson_clock.sh like service and delay start up.
 ### END INIT INFO
 
-# Copyright (C) 2018, Raffaello Bonghi <raffaello@rnext.it>
+# Copyright (C) 2019, Raffaello Bonghi <raffaello@rnext.it>
 # All rights reserved
 #
 # Redistribution and use in source and binary forms, with or without
@@ -62,11 +61,7 @@ fi
  . /lib/init/vars.sh
 
 JETSON_STATS_FOLDER=/opt/jetson_stats
-# Load environment variables:
-# - JETSON_BOARD
-# - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
-# - JETSON_DESCRIPTION
-# - JETSON_CUDA
+# Load JETSON environment variables:
 . $JETSON_STATS_FOLDER/jetson_variables
 
 JETSON_PERFORMANCE_WAIT_TIME=60
@@ -75,15 +70,13 @@ JETSON_CONFIG_FOLDER="/tmp"
 
 if [ -f /usr/bin/jetson_clocks ] ; then
     JETSON_CLOCK_SCRIPT=/usr/bin/jetson_clocks
-else
+elif [ -f /home/nvidia/jetson_clocks.sh ] ; then
     JETSON_CLOCK_SCRIPT=/home/nvidia/jetson_clocks.sh
+else
+    echo "No jetson_clock script is availble in this board"
+    exit 1
 fi
 
-nvpmodel_run() {
-    if hash nvpmodel 2>/dev/null; then
-        sudo nvpmodel "$@"
-    fi
-}
 
 status()
 {
@@ -92,8 +85,6 @@ status()
     else
         echo "[Service stopped] jetson_clock --show:"
     fi
-    # Show NVP model loaded at this time
-    nvpmodel_run -q
     # Show status of the NVIDIA Jetson
     sudo $JETSON_CLOCK_SCRIPT --show
 }
@@ -124,9 +115,6 @@ start()
             # Store jetson_clock configuration
             sudo $JETSON_CLOCK_SCRIPT --store $JETSON_STATS_FOLDER/l4t_dfs.conf
         fi
-        # if Jetson for max performance
-        echo "Set configuration in max performance"
-        nvpmodel_run -m 0
         # Launch jetson_clock
         sudo $JETSON_CLOCK_SCRIPT
         # Write a file to check the system has running
@@ -148,16 +136,6 @@ stop()
     if [ -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
         sudo rm $JETSON_PERFORMANCE_CHECK_FILE
     fi
-    # Restore old Jetson configuration
-    if [ $JETSON_BOARD = "Xavier" ] ; then
-        echo "Change configuration in default mode"
-        # https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
-        nvpmodel_run -m 2
-    else
-        echo "Change configuration in default mode"
-        # http://www.jetsonhacks.com/2017/03/25/nvpmodel-nvidia-jetson-tx2-development-kit/
-        nvpmodel_run -m 1
-    fi
 }
 
 case "$1" in 
@@ -175,11 +153,7 @@ case "$1" in
         status
         ;;
     *)
-        if [ $JETSON_BOARD = "TX2" ] || [ $JETSON_BOARD = "TX2i" ] ; then
-            echo "Usage: $0 [options] [type]"
-        else
-            echo "Usage: $0 [options]"
-        fi
+        echo "Usage: $0 [options] [type]"
         echo "  options,"
         echo "  start      | Run jetson_clock.sh and set the performance at max value"
         echo "  stop       | Stop the jetson_clock.sh and restore the old configuration"

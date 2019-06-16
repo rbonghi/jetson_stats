@@ -213,7 +213,14 @@ main()
         esac
             shift 1
     done
-    
+
+    if [ $(basename $(pwd)) == "scripts" ] ; then
+        tput setaf 1
+        echo "Please run in home project"
+        tput sgr0
+        exit 1
+    fi    
+
     if [[ `id -u` -ne 0 ]] ; then 
         tput setaf 1
         echo "Please run as root"
@@ -245,12 +252,12 @@ main()
         disable_service
         
         # remove old configurations
-        if [ -d /etc/jetson_easy ] ; then
+        if [ -d /etc/jetson_easy ] && ! $TEST_FILES ; then
             uninstaller_old_bin
             uninstaller /etc/jetson_easy
         fi
         
-        if $THIS_FOLDER ; then
+        if $THIS_FOLDER && ! $TEST_FILES ; then
             # Remove configuration standard
             if [ -d "$JETSON_FOLDER" ] ; then
                 uninstaller_bin
@@ -259,14 +266,26 @@ main()
         fi
         
         if $TEST_FILES ; then
-            # Remove files
-            if [ -f /usr/bin/tegrastats ] || $FORCE_INSTALL ; then
+            # Remove tegrastats
+            if [ -f /usr/bin/tegrastats ] ; then
                 echo " - Remove /usr/bin/tegrastats"
                 sudo rm /usr/bin/tegrastats
+            else
+                echo " - /usr/bin/tegrastats does not exist"
             fi
-            if [ -f /usr/bin/nvpmodel ] || $FORCE_INSTALL ; then
+            # Remove nvpmodel
+            if [ -f /usr/bin/nvpmodel ] ; then
             echo " - Remove /usr/bin/nvpmodel"
-                sudo cp /usr/bin/nvpmodel
+                sudo rm /usr/bin/nvpmodel
+            else
+                echo " - /usr/bin/nvpmodel does not exist"
+            fi
+            # Remove jetson_clock
+            if [ -f /usr/bin/jetson_clocks ] ; then
+            echo " - Remove /usr/bin/jetson_clocks"
+                sudo rm /usr/bin/jetson_clocks
+            else
+                echo " - /usr/bin/jetson_clocks does not exist"
             fi
         fi
     else
@@ -277,28 +296,42 @@ main()
         echo "Installer jetson-stats"
         tput sgr0
         
-        if $THIS_FOLDER ; then
+        if $FORCE_INSTALL ; then
+            tput setaf 4
+            echo "Force install"
+            tput sgr0
+        fi
+        
+        if $THIS_FOLDER && ! $TEST_FILES ; then
             # Run installer
             installer $FORCE_INSTALL
         fi
         
-        if $INSTALL_BIN ; then
+        if $INSTALL_BIN && ! $TEST_FILES ; then
             installer_bin $JETSON_FOLDER
         fi
         
         if $TEST_FILES ; then
-            # Copy files
+            # tegrastats emulator
             if [ ! -f /usr/bin/tegrastats ] || $FORCE_INSTALL ; then
                 echo " - Copy emulation tegrastats in /usr/bin/"
                 sudo cp tests/tegrastats /usr/bin/
             else
                 echo " - Already exist tegrastats in /usr/bin/"
             fi
+            # nvpmodel emulator
             if [ ! -f /usr/bin/nvpmodel ] || $FORCE_INSTALL ; then
             echo " - Copy emulation nvpmodel in /usr/bin/"
                 sudo cp tests/nvpmodel /usr/bin/
             else
                 echo " - Already exist nvpmodel in /usr/bin/"
+            fi
+            # jetson_clock
+            if [ ! -f /usr/bin/jetson_clocks ] || $FORCE_INSTALL ; then
+            echo " - Copy emulation jetson_clocks in /usr/bin/"
+                sudo cp tests/jetson_clocks /usr/bin/
+            else
+                echo " - Already exist jetson_clocks in /usr/bin/"
             fi
         fi
         
@@ -320,6 +353,7 @@ main()
     echo "DONE!"
     tput sgr0
 }
+
 
 main $@
 exit 0

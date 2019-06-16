@@ -49,7 +49,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         # Plot the linear gauge
         gauge = make_gauge_from_percent(cpu)
         if 'value' in gauge:
-            gauge["percent"] = cpu['governor'] + " - " + str(gauge['value']) + "%"
+            gauge["percent"] = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=gauge['value'])
         linear_percent_gauge(stdscr, gauge, max_bar, int(offest + off_idx), start)
     if len(list_cpus) > 4:
         return int(offest + idx / 2 + 1)
@@ -89,30 +89,50 @@ def compact_info(stdscr, start, offset, width, jetson):
     plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
     counter += 1
     # FAN status
-    for fan in jetson.fans:
+    fan = jetson.fan
+    if fan is not None:
         linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
+    else:
+        stdscr.addstr(offset + counter, 0, "NO FAN", curses.color_pair(3))
     counter += 1
-    # NVP Model
-    if jetson.nvpmodel:
-        str_nvp = jetson.nvpmodel['name'] + " - " + str(jetson.nvpmodel['mode'])
-        plot_name_info(stdscr, offset + counter, start, "NV Power", str_nvp)
+    # Jetson clocks status
+    jc = jetson.jetson_clocks
+    if jc is not None:
+        jc_status = jc.status
+        if jc_status == "active":
+            color = curses.color_pair(2)  # Running (Green)
+        elif jc_status == "inactive":
+            color = curses.A_NORMAL       # Normal (Grey)
+        elif "ing" in jc_status:
+            color = curses.color_pair(3)  # Warning (Yellow)
+        else:
+            color = curses.color_pair(1)  # Error (Red)
+        # Show if JetsonClock is enabled or not
+        if jc.enable:
+            jc_status = "[" + jc_status + "]"
+        plot_name_info(stdscr, offset + counter, start, "Jetson Clocks", jc_status, color)
         counter += 1
-    # Plot MTS
-    if 'MTS' in jetson.stats:
-        stdscr.addstr(offset + counter, start, "MTS:", curses.A_BOLD)
-        MTS_FG = {'name': ' FG',
-                  'value': int(jetson.stats['MTS']['fg']),
-                  }
-        linear_percent_gauge(stdscr, MTS_FG, width,
-                             offset=offset + counter + 1, start=start)
-        MTS_BG = {'name': ' BG',
-                  'value': int(jetson.stats['MTS']['bg']),
-                  }
-        linear_percent_gauge(stdscr, MTS_BG, width,
-                             offset=offset + counter + 2, start=start)
-        counter += 3
+    # NVP Model
+    nvpmodel = jetson.nvpmodel
+    if nvpmodel is not None:
+        plot_name_info(stdscr, offset + counter, start, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
+        counter += 1
     # APE frequency
     if 'APE' in jetson.stats:
         plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
         counter += 1
+    # MSENC frequency
+    stdscr.addstr(offset + counter, start, "HW engine:", curses.A_BOLD)
+    counter += 1
+    if 'MSENC' in jetson.stats:
+        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['MSENC']) + "MHz")
+    else:
+        plot_name_info(stdscr, offset + counter, start, " ENC", "NOT RUNNING")
+    counter += 1
+    # NVDEC frequency
+    if 'NVDEC' in jetson.stats:
+        plot_name_info(stdscr, offset + counter, start, " DEC", str(jetson.stats['NVDEC']) + "MHz")
+    else:
+        plot_name_info(stdscr, offset + counter, start, " DEC", "NOT RUNNING")
+    counter += 1
 # EOF

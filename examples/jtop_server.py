@@ -30,27 +30,33 @@
 
 from jtop import jtop
 import time
+import socket
+import json
+
+HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
+PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 
 if __name__ == "__main__":
 
-    print("Simple Tegrastats reader")
+    print("Simple Tegrastats server")
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((HOST, PORT))
+    print("Open server jtop to {}:{}".format(HOST, PORT))
+    # Wait socket request
+    sock.listen()
+    conn, addr = sock.accept()
+    print("Connected to {}".format(conn))
 
     with jtop() as jetson:
-        while True:
-            # Read tegra stats
-            print(jetson.stats)
-            # Status disk
-            print(jetson.disk)
-            # Status fans
-            print(jetson.fans)
-            # uptime
-            print(jetson.uptime)
-            # nvpmodel
-            print(jetson.nvpmodel)
-            # local interfaces
-            print(jetson.local_interfaces)
-            # boards
-            print(jetson.board)
-            # Sleep before send new stat
-            time.sleep(1)
+        try:
+            while True:
+                # Read and convert in JSON the jetson stats
+                stats = json.dumps(jetson.stats)
+                # Send by socket
+                conn.send(stats.encode())
+                # Sleep before send new stat
+                time.sleep(1)
+        except Exception:
+            sock.close()
 # EOF

@@ -29,5 +29,12 @@
 
 # flake8: noqa
 
-from .jtop import Tegrastats
-from .jtop import import_os_variables
+from .jtop import jtop
+# Import extra controllers
+from .core import Tegrastats
+from .core import Fan
+from .core import NVPmodel
+from .core import JetsonClocks
+# Import os variable importer
+from .core import import_os_variables
+# EOF
