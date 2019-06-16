@@ -1,12 +1,5 @@
 # Jetson stats [![Build Status](https://travis-ci.org/rbonghi/jetson_stats.svg?branch=master)](https://travis-ci.org/rbonghi/jetson_stats)
-**jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] embedded board without spend time. 
-* NVIDIA Jetson Nano
-* NVIDIA Jetson Xavier
-* NVIDIA Jetson TX2i
-* NVIDIA Jetson TX2
-* NVIDIA Jetson TX1
-
-When you install jetson-stats are included:
+**jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1] embedded board. When you install jetson-stats are included:
 * [jtop](#jtop)
 * [jetson-release](#jetson-release)
 * [jetson-docker](#jetson-docker)
@@ -54,22 +47,17 @@ optional arguments:
   --debug      Run with debug logger
   --page PAGE  Open fix page
 ```
-
-# Controls
-
+### Controls
 To control the your NVIDIA Jetson are available this keyboard commands:
 * **a** Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)
 * **e** Enable/Disable jetson_clocks on board boot
 * **+** and **-** Increase and decrease the NVPmodel
-
-# Pages
-
+### Pages
 **jtop** have four different pages to control your NVIDIA Jetson:
 1. **ALL** Are collected all information about your board: CPUs status, Memory, *GPU*, disk, fan and all status about jetson_clocks, NVPmodel and other
 2. **GPU** A real time GPU history about your NVIDIA Jetson
 3. **CTRL** You can control the status of you
 4. **INFO** 
-
 ## [**jetson-release**][jetson_release]
 The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
 
