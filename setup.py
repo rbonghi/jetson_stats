@@ -93,7 +93,7 @@ class PostDevelopCommand(develop):
 # Configuration setup module
 setup(
     name="jetson-stats",
-    version="1.7.1",
+    version="1.7.2",
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Nano, AGX Xavier, TX1, TX2]",
