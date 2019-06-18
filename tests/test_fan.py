@@ -37,4 +37,13 @@ def test_wrong_open():
         assert False
     except Fan.FanException:
         assert True
+
+
+def test_open():
+    # Init fan
+    fan = Fan('tests/fan/', 100, 1.0)
+    # Update
+    fan.update()
+    # Read status fan
+    assert fan.fan_ctrl[-1] == 100
 # EOF
