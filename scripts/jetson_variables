@@ -281,10 +281,13 @@ export JETSON_VISIONWORKS
 # Serial number
 # https://devtalk.nvidia.com/default/topic/1055507/jetson-nano/nano-serial-number-/
 if [ -f /sys/firmware/devicetree/base/serial-number ]; then
-    JETSON_SERIAL_NUMBER=$(cat /sys/firmware/devicetree/base/serial-number)
+    JETSON_SERIAL_NUMBER=$(tr -d '\0' </sys/firmware/devicetree/base/serial-number)
 else
     JETSON_SERIAL_NUMBER="UNKNOWN"
 fi
+# Export NVIDIA Serial Number
+export JETSON_SERIAL_NUMBER
+
 # TODO Add enviroments variables:
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 # - GCID, BOARD, EABI
