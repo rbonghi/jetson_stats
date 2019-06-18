@@ -129,10 +129,11 @@ class jtop():
 
     @property
     def board(self):
-        board = {"name": os.environ["JETSON_DESCRIPTION"],
-                 "type": os.environ["JETSON_TYPE"],
-                 "jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]",
-                 "GPU-arch": os.environ["JETSON_CUDA_ARCH_BIN"]}
+        board = {"Name": os.environ["JETSON_DESCRIPTION"],
+                 "Type": os.environ["JETSON_TYPE"],
+                 "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]",
+                 "GPU-Arch": os.environ["JETSON_CUDA_ARCH_BIN"],
+                 "SN": os.environ["JETSON_SERIAL_NUMBER"]}
         libraries = {"CUDA": os.environ["JETSON_CUDA"],
                      "cuDNN": os.environ["JETSON_CUDNN"],
                      "TensorRT": os.environ["JETSON_TENSORRT"],

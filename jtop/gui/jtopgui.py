@@ -76,7 +76,7 @@ class JTOPGUI:
     @check_curses
     def header(self, jetson):
         board = jetson.board["board"]
-        board_info = board["name"] + " - Jetpack " + board["jetpack"]
+        board_info = board["Name"] + " - Jetpack " + board["Jetpack"]
         self.stdscr.addstr(0, 0, board_info, curses.A_BOLD)
         if jetson.userid != 0:
             self.stdscr.addstr(0, len(board_info) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))
