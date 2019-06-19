@@ -144,6 +144,78 @@ def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=Fals
     return line
 
 
+from collections import deque
+
+class Chart:
+
+    def __init__(self, stdscr, size_x, size_y, line="*", color=curses.A_NORMAL, time=10.0):
+        self.stdscr = stdscr
+        self.size_x = size_x
+        self.size_y = size_y
+        self.line = line
+        self.color = color
+        self.time = time
+        
+    def attach(self, param, interval=100, value_name='value'):
+        max_record = int(self.time * (float(1.0 / float(interval)) * 1000.0))
+        self.value = deque(max_record * [0], maxlen=max_record)
+        self.param = param
+        self.value_name = value_name
+
+    def update(self, stats):
+        """ Local update chart
+        """
+        parameter = stats[self.param]
+        # Get max value if is present
+        self.max_val = 100 if "max_val" not in parameter else parameter["max_val"]
+        # Get unit
+        self.unit = "%" if "max_val" not in parameter else parameter["unit"]
+        # Get name and build label
+        self.name = parameter["name"] if "name" in parameter else ""
+        # Get label
+        self.label = parameter["label"] if "label" in parameter else ""
+        # Append in list
+        self.value.append(parameter[self.value_name])
+
+    @check_curses
+    def draw(self):
+        # Evaluate Diplay X, and Y size
+        displayX = self.size_x[1] - self.size_x[0] + 1
+        displayY = self.size_y[1] - self.size_y[0] - 1
+        val = float(displayX - 2) / float(len(self.value))
+        points = []
+        for n in value["idle"]:
+            points += [n] * int(ceil(val))
+        # Plot chart shape and labels
+        for point in range(displayY):
+            if displayY != point:
+                value_n = self.max_val / float(displayY - 1) * float(displayY - point - 1)
+                try:
+                    self.stdscr.addstr(1 + self.size_y[0] + point, self.size_x[1], "-")
+                    self.stdscr.addstr(1 + self.size_y[0] + point, self.size_x[1] + 2,
+                                       "{value:3d}{unit}".format(value=int(value_n), unit=unit),
+                                       curses.A_BOLD)
+                except curses.error:
+                    pass
+        for point in range(displayX):
+            try:
+                self.stdscr.addstr(self.size_y[1], self.size_x[0] + point, "-")
+            except curses.error:
+                pass
+        # Text label
+        self.stdscr.addstr(self.size_y[0], self.size_x[0], self.name, curses.A_BOLD)
+        if self.label:
+            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, self.label, color)
+        # Plot values
+        for idx, point in enumerate(reversed(points)):
+            y_val = int((float(displayY - 1) / self.max_val) * point)
+            x_val = self.size_x[1] - 1 - idx
+            if x_val >= self.size_x[0]:
+                try:
+                    self.stdscr.addstr(self.size_y[1] - 1 - y_val, x_val, line, color)
+                except curses.error:
+                    pass
+                
 @check_curses
 def draw_chart(stdscr, size_x, size_y, value, line="*", color=curses.A_NORMAL):
     # Get Max value and unit from value to draw
