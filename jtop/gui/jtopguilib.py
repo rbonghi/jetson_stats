@@ -191,9 +191,9 @@ def draw_chart(stdscr, size_x, size_y, value, line="*", color=curses.A_NORMAL):
 def make_gauge_from_percent(data):
     gauge = {'name': data['name'], 'status': data['status']}
     if "ON" in data["status"]:
-        gauge['value'] = int(data['idle'][-1])
+        gauge['value'] = data['value']
     if data["status"] == "ON":
-        freq = data['frequency'][-1]
+        freq = data['frequency']
         if freq >= 1000:
             gauge['label'] = "{0:2.1f}GHz".format(freq / 1000.0)
         else:
@@ -210,10 +210,7 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
     stdscr.addstr(offset, start, ("{short_name:" + str(name_size) + "}").format(short_name=gauge['name']), curses.color_pair(color_name))
     if 'value' in gauge:
         # Check if the list of value is list or value
-        if isinstance(gauge['value'], list):
-            value = gauge['value'][-1]
-        else:
-            value = gauge['value']
+        value = gauge['value']
         # Show bracket linear gauge and label and evaluate size withuout size labels and short name
         size_bar -= (len(gauge['label']) + 1) if 'label' in gauge else 0
         stdscr.addstr(offset, start + name_size + 1, "[" + " " * size_bar + "]", curses.A_BOLD)

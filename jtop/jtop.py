@@ -94,7 +94,7 @@ class jtop():
             raise jtop.JtopException("Tegrastats is not availabe on this board")
         # Initialize Tegrastats controller
         self._stats = {}
-        self.tegrastats = Tegrastats(tegrastats_file, interval, time)
+        self.tegrastats = Tegrastats(tegrastats_file, interval)
 
     @property
     def userid(self):

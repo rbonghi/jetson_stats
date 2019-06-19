@@ -48,7 +48,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
         # Plot the linear gauge
         gauge = make_gauge_from_percent(cpu)
-        if 'value' in gauge:
+        if 'value' in gauge and 'governor' in gauge:
             gauge["percent"] = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=gauge['value'])
         linear_percent_gauge(stdscr, gauge, max_bar, int(offest + off_idx), start)
     if len(list_cpus) > 4:
@@ -65,7 +65,7 @@ def plot_temperatures(stdscr, start, offset, width, jetson):
     for idx, temp in enumerate(sorted(jetson.stats['temperatures'])):
         value = jetson.stats['temperatures'][temp]
         stdscr.addstr(offset + idx + 1, start,
-                      ("{name:<7} {val:8.2f}{unit}").format(name=temp, val=value['value'][-1], unit=value['unit']))
+                      ("{name:<7} {val:8.2f}{unit}").format(name=temp, val=value['value'], unit=value['unit']))
 
 
 @check_curses
@@ -76,7 +76,7 @@ def plot_voltages(stdscr, start, offset, width, jetson):
     for idx, volt in enumerate(sorted(jetson.stats['voltages'])):
         value = jetson.stats['voltages'][volt]
         stdscr.addstr(offset + idx + 1, start,
-                      ("{name:<10} {curr: <6} {avg: <6}").format(name=volt, curr=int(value['current'][-1]), avg=int(value['average'][-1])))
+                      ("{name:<10} {curr: <6} {avg: <6}").format(name=volt, curr=int(value['current']), avg=int(value['average'])))
 
 
 @check_curses

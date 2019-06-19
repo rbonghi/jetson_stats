@@ -32,7 +32,7 @@ from jtop import Tegrastats
 
 def test_wrong_open():
     # Initialize object
-    tegra = Tegrastats('wrong_path', 100, 1.0)
+    tegra = Tegrastats('wrong_path', 100)
     try:
         # Open data
         tegra.open()
@@ -43,7 +43,7 @@ def test_wrong_open():
 
 def test_open():
     # Initialize object
-    tegra = Tegrastats('/usr/bin/tegrastats', 100, 1.0)
+    tegra = Tegrastats('/usr/bin/tegrastats', 100)
     # Open data
     tegra.open()
     # Close connection
@@ -58,21 +58,21 @@ def check_tegra(tegra):
     assert "RAM" in variable
     variable = tegra.stats["RAM"]["RAM"]
     # Check if ram["used"] is a list
-    assert isinstance(variable["used"], list)
+    assert isinstance(variable["used"], int)
     # Check if last value is the same send
-    assert variable["used"][-1] == 4722
+    assert variable["used"] == 4722
 
 
 def test_stats():
     # Load tegracontroller
-    with Tegrastats('/usr/bin/tegrastats', 100, 1.0) as tegra:
+    with Tegrastats('/usr/bin/tegrastats', 100) as tegra:
         # Check tegra stats
         check_tegra(tegra)
 
 
 def test_stats_callback():
     # Initialize object
-    tegra = Tegrastats('/usr/bin/tegrastats', 100, 1.0)
+    tegra = Tegrastats('/usr/bin/tegrastats', 100)
     # Open data
     tegra.open(check_tegra)
     # Close connection
