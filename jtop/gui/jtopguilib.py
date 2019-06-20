@@ -30,6 +30,7 @@
 # control command line
 import curses
 from curses.textpad import rectangle
+from collections import deque
 # Math functions
 from math import ceil
 # Functions and decorators
@@ -144,28 +145,22 @@ def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=Fals
     return line
 
 
-from collections import deque
+class Chart(object):
 
-class Chart:
-
-    def __init__(self, stdscr, size_x, size_y, line="*", color=curses.A_NORMAL, time=10.0):
-        self.stdscr = stdscr
-        self.size_x = size_x
-        self.size_y = size_y
+    def __init__(self, param, interval, line="*", color=curses.A_NORMAL, time=10.0, value_name='value'):
         self.line = line
         self.color = color
         self.time = time
-        
-    def attach(self, param, interval=100, value_name='value'):
         max_record = int(self.time * (float(1.0 / float(interval)) * 1000.0))
         self.value = deque(max_record * [0], maxlen=max_record)
         self.param = param
         self.value_name = value_name
+        self._noData = True
 
-    def update(self, stats):
-        """ Local update chart
-        """
-        parameter = stats[self.param]
+    def update(self, jetson):
+        """ Local update chart """
+        self._noData = False
+        parameter = jetson.stats[self.param] if self.param in jetson.stats else {}
         # Get max value if is present
         self.max_val = 100 if "max_val" not in parameter else parameter["max_val"]
         # Get unit
@@ -175,89 +170,49 @@ class Chart:
         # Get label
         self.label = parameter["label"] if "label" in parameter else ""
         # Append in list
-        self.value.append(parameter[self.value_name])
+        if self.value_name in parameter:
+            self.value.append(parameter[self.value_name])
 
     @check_curses
-    def draw(self):
+    def draw(self, stdscr, size_x, size_y):
+        if self._noData:
+            return
         # Evaluate Diplay X, and Y size
-        displayX = self.size_x[1] - self.size_x[0] + 1
-        displayY = self.size_y[1] - self.size_y[0] - 1
+        displayX = size_x[1] - size_x[0] + 1
+        displayY = size_y[1] - size_y[0] - 1
         val = float(displayX - 2) / float(len(self.value))
         points = []
-        for n in value["idle"]:
+        for n in self.value:
             points += [n] * int(ceil(val))
         # Plot chart shape and labels
         for point in range(displayY):
             if displayY != point:
                 value_n = self.max_val / float(displayY - 1) * float(displayY - point - 1)
                 try:
-                    self.stdscr.addstr(1 + self.size_y[0] + point, self.size_x[1], "-")
-                    self.stdscr.addstr(1 + self.size_y[0] + point, self.size_x[1] + 2,
-                                       "{value:3d}{unit}".format(value=int(value_n), unit=unit),
-                                       curses.A_BOLD)
+                    stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
+                    stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
+                                  "{value:3d}{unit}".format(value=int(value_n), unit=self.unit),
+                                  curses.A_BOLD)
                 except curses.error:
                     pass
         for point in range(displayX):
             try:
-                self.stdscr.addstr(self.size_y[1], self.size_x[0] + point, "-")
+                stdscr.addstr(size_y[1], size_x[0] + point, "-")
             except curses.error:
                 pass
         # Text label
-        self.stdscr.addstr(self.size_y[0], self.size_x[0], self.name, curses.A_BOLD)
+        stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if self.label:
-            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, self.label, color)
+            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, self.label, self.color)
         # Plot values
         for idx, point in enumerate(reversed(points)):
             y_val = int((float(displayY - 1) / self.max_val) * point)
-            x_val = self.size_x[1] - 1 - idx
-            if x_val >= self.size_x[0]:
+            x_val = size_x[1] - 1 - idx
+            if x_val >= size_x[0]:
                 try:
-                    self.stdscr.addstr(self.size_y[1] - 1 - y_val, x_val, line, color)
+                    stdscr.addstr(size_y[1] - 1 - y_val, x_val, self.line, self.color)
                 except curses.error:
                     pass
-                
-@check_curses
-def draw_chart(stdscr, size_x, size_y, value, line="*", color=curses.A_NORMAL):
-    # Get Max value and unit from value to draw
-    max_val = 100 if "max_val" not in value else value["max_val"]
-    unit = "%" if "max_val" not in value else value["unit"]
-    # Evaluate Diplay X, and Y size
-    displayX = size_x[1] - size_x[0] + 1
-    displayY = size_y[1] - size_y[0] - 1
-    val = float(displayX - 2) / float(len(value["idle"]))
-    points = []
-    for n in value["idle"]:
-        points += [n] * int(ceil(val))
-    # Plot chart shape and labels
-    for point in range(displayY):
-        if displayY != point:
-            value_n = max_val / float(displayY - 1) * float(displayY - point - 1)
-            try:
-                stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
-                stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
-                              "{value:3d}{unit}".format(value=int(value_n), unit=unit),
-                              curses.A_BOLD)
-            except curses.error:
-                pass
-    for point in range(displayX):
-        try:
-            stdscr.addstr(size_y[1], size_x[0] + point, "-")
-        except curses.error:
-            pass
-    # Text label
-    info_string = value["name"] if "name" in value else ""
-    stdscr.addstr(size_y[0], size_x[0], info_string, curses.A_BOLD)
-    if "percent" in value:
-        stdscr.addstr(size_y[0], size_x[0] + len(info_string) + 1, value["percent"], color)
-    # Plot values
-    for idx, point in enumerate(reversed(points)):
-        y_val = int((float(displayY - 1) / max_val) * point)
-        x_val = size_x[1] - 1 - idx
-        if x_val >= size_x[0]:
-            try:
-                stdscr.addstr(size_y[1] - 1 - y_val, x_val, line, color)
-            except curses.error:
-                pass
 
 
 def make_gauge_from_percent(data):

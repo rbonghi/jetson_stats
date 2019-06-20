@@ -38,13 +38,14 @@ from .core import JetsonClocks
 from .core import (import_os_variables,
                    get_uptime,
                    status_disk,
-                   get_local_interfaces)
+                   get_local_interfaces,
+                   StatusObserver)
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
 
-class jtop():
+class jtop(StatusObserver):
     """
         JTOP is a complete controller of all systems in your NVIDIA Jetson
         * Tegrastats
@@ -61,12 +62,13 @@ class jtop():
     TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 
     def __init__(self, interval=500, time=10.0):
+        # Initialize observer
+        self._observers = set()
         # Load all Jetson variables
-        if "JETSON_BOARD" not in os.environ:
-            logger.info("Load jetson variables from script")
-            for k, v in import_os_variables(jtop.JTOP_FOLDER + 'jetson_variables').items():
-                logger.debug("New Enviroment variable {}:{}".format(k, v))
-                os.environ[k] = v
+        logger.info("Load jetson variables from script")
+        for k, v in import_os_variables(jtop.JTOP_FOLDER + 'jetson_variables').items():
+            logger.debug("New Enviroment variable {}:{}".format(k, v))
+            os.environ[k] = v
         # Initialize jetson_clocks controller
         self.jc = JetsonClocks()
         # Initialize NVP model
@@ -151,22 +153,33 @@ class jtop():
 
     def open(self):
         try:
-            self.tegrastats.open(self.reader)
+            self.tegrastats.open(self)
         except Tegrastats.TegrastatsException as e:
             raise jtop.JtopException(e)
 
     def close(self):
         self.tegrastats.close()
 
-    def reader(self, stats):
-        # Update status
-        self._stats = stats
+    def attach(self, observer):
+        self._observers.add(observer)
+
+    def detach(self, observer):
+        self._observers.discard(observer)
+
+    def update(self, stats):
         # Update nvpmodel
         if self.nvp is not None:
             self.nvp.update()
         # Update status from fan
         if self.qfan is not None:
             self.qfan.update()
+            # Add fan status
+            stats["FAN"] = self.qfan.status
+        # Update status
+        self._stats = stats
+        # Notifiy all observers
+        for observer in self._observers:
+            observer.update(self)
 
     def __enter__(self):
         self.open()

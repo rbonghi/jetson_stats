@@ -36,5 +36,6 @@ from .jetson_clocks import JetsonClocks
 from .common import (import_os_variables,
                      get_uptime,
                      status_disk,
-                     get_local_interfaces)
+                     get_local_interfaces,
+                     StatusObserver)
 # EOF

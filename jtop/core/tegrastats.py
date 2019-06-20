@@ -79,6 +79,8 @@ class Tegrastats(Thread):
         self.callback = None
         # Define Tegrastats process
         self.p = None
+        # Initialize observer
+        self._observers = set()
 
     def run(self):
         try:
@@ -91,11 +93,11 @@ class Tegrastats(Thread):
                     tegrastats_data = line.decode("utf-8")
                     # Decode and store
                     stats = self.decode(tegrastats_data)
-                    # If callback is defined after each decode will be send the updates by function
-                    if self.callback is not None:
-                        self.callback(stats)
-                    else:
-                        self._jetsonstats = stats
+                    # Update status jetson_stats
+                    self._jetsonstats = stats
+                    # Notifiy all observers
+                    for observer in self._observers:
+                        observer.update(stats)
         except SystemExit:
             logger.error("System exit", exc_info=True)
         except AttributeError:
@@ -109,6 +111,12 @@ class Tegrastats(Thread):
         # Return dictionary parsed
         return self._jetsonstats
 
+    def attach(self, observer):
+        self._observers.add(observer)
+
+    def detach(self, observer):
+        self._observers.discard(observer)
+
     def open(self, callback=None):
         try:
             # Launch subprocess or raise and exception
@@ -117,7 +125,8 @@ class Tegrastats(Thread):
             self.daemon = True
             self.start()
             # If callback is defined after each decode will be send the updates by function
-            self.callback = callback
+            if callback is not None:
+                self.attach(callback)
             return True
         except OSError:
             logger.error("Tegrastats not in list!")
@@ -223,7 +232,6 @@ class Tegrastats(Thread):
                 # Save temperature in dictionary
                 temperatures[name] = {'value': float(value.split("C")[0]),
                                       'unit': 'C'}
-                #                      'text': value}
             elif idx + 1 < len(other_values):
                 # [VDD_name] X/Y
                 # X = Current power consumption in milliwatts.
@@ -233,7 +241,6 @@ class Tegrastats(Thread):
                 voltages[data] = {'current': float(value[0]),
                                   'average': float(value[1]),
                                   'unit': 'mW'}
-                #                  'text': other_values[idx + 1].rstrip() + "mW"}
                 # extra increase counter
                 idx += 1
             # Update counter

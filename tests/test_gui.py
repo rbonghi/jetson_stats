@@ -28,25 +28,27 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import curses
+from jtop import jtop
 # Import gui test
-from jtop.gui import JTOPGUI, all_info, GPU, Variables
+from jtop.gui import JTOPGUI, ALL, GPU, CTRL, INFO
 
 
-def openGUI(stdscr):
+def openGUI(stdscr, jetson):
     # Initialization Menu
-    pages = JTOPGUI(stdscr, 500, [{"name": "ALL", "func": all_info},
-                                  {"name": "GPU", "func": GPU},
-                                  {"name": "INFO", "func": Variables},
-                                  ])
+    pages = JTOPGUI(stdscr, 500, jetson, [ALL, GPU, CTRL, INFO])
     return pages
 
 
 def test_openGUI():
     # Load command line controller
     stdscr = curses.initscr()
-    # Open JTOPGUI
-    pages = openGUI(stdscr)
-    # Start with selected page
-    pages.set(0)
+    # Initialize colors
+    curses.start_color()
+    # Run jtop
+    with jtop() as jetson:
+        # Open JTOPGUI
+        pages = openGUI(stdscr, jetson)
+        # Start with selected page
+        pages.set(0)
     assert True
 # EOF
