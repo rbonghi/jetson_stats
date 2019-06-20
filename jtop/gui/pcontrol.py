@@ -41,7 +41,7 @@ class CTRL(Page):
     def __init__(self, stdscr, jetson, refresh):
         super(CTRL, self).__init__("CTRL", stdscr, jetson, refresh)
         # Initialize FAN chart
-        self.chart_fan = Chart("FAN", refresh, color=curses.color_pair(2))
+        self.chart_fan = Chart("FAN", refresh, line="o", color=curses.color_pair(4), value_name="cpwm")
         # Attach the chart for every update from jtop
         jetson.attach(self.chart_fan)
 

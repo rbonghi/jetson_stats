@@ -80,7 +80,7 @@ class jtop(StatusObserver):
         self.qfan = None
         for path in jtop.LIST_FANS:
             try:
-                self.qfan = Fan(path, interval, time)
+                self.qfan = Fan(path)
                 logger.info("Fan {} loaded!".format(path))
                 break
             except Fan.FanException:

@@ -89,9 +89,10 @@ def compact_info(stdscr, start, offset, width, jetson):
     plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
     counter += 1
     # FAN status
-    fan = jetson.fan
-    if fan is not None:
-        linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
+    if "FAN" in jetson.stats:
+        fan = jetson.stats["FAN"]
+        fan['percent'] = str(fan["cpwm"]) + "/" + str(fan["tpwm"]) + "%"
+        linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start, value_name='cpwm')
     else:
         stdscr.addstr(offset + counter, 0, "NO FAN", curses.color_pair(3))
     counter += 1

@@ -229,15 +229,15 @@ def make_gauge_from_percent(data):
 
 
 @check_curses
-def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6):
+def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6, value_name='value'):
     # Evaluate size withuout short name
     name_size = len(gauge['name'])
     size_bar = max_bar - name_size - 4
     # Show short name linear gauge
     stdscr.addstr(offset, start, ("{short_name:" + str(name_size) + "}").format(short_name=gauge['name']), curses.color_pair(color_name))
-    if 'value' in gauge:
+    if value_name in gauge:
         # Check if the list of value is list or value
-        value = gauge['value']
+        value = gauge[value_name]
         # Show bracket linear gauge and label and evaluate size withuout size labels and short name
         size_bar -= (len(gauge['label']) + 1) if 'label' in gauge else 0
         stdscr.addstr(offset, start + name_size + 1, "[" + " " * size_bar + "]", curses.A_BOLD)
