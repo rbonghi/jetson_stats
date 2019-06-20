@@ -63,7 +63,7 @@ class Fan(object):
                 line = [val.strip() for val in line.split(",")]
                 # print(line)
         # Step time
-        self._status["step"] =int(self.read_status("step_time")) if os.path.isfile(self.path + "step_time") else 0
+        self._status["step"] = int(self.read_status("step_time")) if os.path.isfile(self.path + "step_time") else 0
         # Control temperature
         self._status["temp"] = int(self.read_status("temp_control")) if os.path.isfile(self.path + "temp_control") else 0
         # Status FAN
