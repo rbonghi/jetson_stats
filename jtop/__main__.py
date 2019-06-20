@@ -40,7 +40,6 @@
 import os
 import sys
 import argparse
-import time
 # Logging
 import logging
 # control command line

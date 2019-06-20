@@ -35,7 +35,7 @@ from jtop.gui import JTOPGUI, ALL, GPU, CTRL, INFO
 
 def openGUI(stdscr, jetson):
     # Initialization Menu
-    pages = JTOPGUI(stdscr, 500, jetson, [ALL, GPU, CTRL, INFO])
+    pages = JTOPGUI(stdscr, 500, jetson, [ALL, GPU, CTRL, INFO], start=False)
     return pages
 
 

@@ -61,22 +61,7 @@ class JTOPGUI:
     """
     COLORS = {"RED": 1, "GREEN": 2, "YELLOW": 3, "BLUE": 4, "MAGENTA": 5, "CYAN": 6}
 
-    def __init__(self, stdscr, refresh, jetson, pages, init_page=0):
-        # In this program, we don't want keystrokes echoed to the console,
-        # so we run this to disable that
-        curses.noecho()
-        # Additionally, we want to make it so that the user does not have to press
-        # enter to send keys to our program, so here is how we get keys instantly
-        curses.cbreak()
-        # Hide the cursor
-        curses.curs_set(0)
-        # Lastly, keys such as the arrow keys are sent as funny escape sequences to
-        # our program. We can make curses give us nicer values (such as curses.KEY_LEFT)
-        # so it is easier on us.
-        stdscr.keypad(True)
-        # Refreshing page curses loop
-        # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
-        stdscr.nodelay(1)
+    def __init__(self, stdscr, refresh, jetson, pages, init_page=0, start=True):
         # Define pairing colors
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -97,9 +82,25 @@ class JTOPGUI:
         self.key = -1
         self.old_key = -1
         # Run the GUI
-        self.run()
+        if start:
+            self.run()
 
     def run(self):
+        # In this program, we don't want keystrokes echoed to the console,
+        # so we run this to disable that
+        curses.noecho()
+        # Additionally, we want to make it so that the user does not have to press
+        # enter to send keys to our program, so here is how we get keys instantly
+        curses.cbreak()
+        # Hide the cursor
+        curses.curs_set(0)
+        # Lastly, keys such as the arrow keys are sent as funny escape sequences to
+        # our program. We can make curses give us nicer values (such as curses.KEY_LEFT)
+        # so it is easier on us.
+        self.stdscr.keypad(True)
+        # Refreshing page curses loop
+        # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
+        self.stdscr.nodelay(1)
         """ Here is the loop of our program, we keep clearing and redrawing in this loop """
         while self.keyboard():
             # Draw pages
