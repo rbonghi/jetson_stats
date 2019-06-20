@@ -135,7 +135,7 @@ class jtop(StatusObserver):
                  "Type": os.environ["JETSON_TYPE"],
                  "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]",
                  "GPU-Arch": os.environ["JETSON_CUDA_ARCH_BIN"],
-                 "SN": os.environ["JETSON_SERIAL_NUMBER"]}
+                 "SN": os.environ["JETSON_SERIAL_NUMBER"].upper()}
         libraries = {"CUDA": os.environ["JETSON_CUDA"],
                      "cuDNN": os.environ["JETSON_CUDNN"],
                      "TensorRT": os.environ["JETSON_TENSORRT"],
