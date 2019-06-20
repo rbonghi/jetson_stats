@@ -48,7 +48,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
         # Plot the linear gauge
         gauge = make_gauge_from_percent(cpu)
-        if 'value' in gauge and 'governor' in gauge:
+        if 'value' in gauge and 'governor' in cpu:
             gauge["percent"] = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=gauge['value'])
         linear_percent_gauge(stdscr, gauge, max_bar, int(offest + off_idx), start)
     if len(list_cpus) > 4:
@@ -91,8 +91,12 @@ def compact_info(stdscr, start, offset, width, jetson):
     # FAN status
     if "FAN" in jetson.stats:
         fan = jetson.stats["FAN"]
-        fan['percent'] = str(fan["cpwm"]) + "/" + str(fan["tpwm"]) + "%"
-        linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start, value_name='cpwm')
+        if 'cpwm' in fan:
+            fan['label'] = "T={target: >3}%".format(target=fan["tpwm"])
+            value = 'cpwm'
+        else:
+            value = 'tpwm'
+        linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start, value_name=value)
     else:
         stdscr.addstr(offset + counter, 0, "NO FAN", curses.color_pair(3))
     counter += 1
