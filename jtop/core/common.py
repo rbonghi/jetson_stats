@@ -41,10 +41,12 @@ import array
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+# Initialization abstract class
+# In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
+ABC = abc.ABCMeta('ABC', (object,), {})
 
 
-class StatusObserver(object):
-    __metaclass__ = abc.ABCMeta
+class StatusObserver(ABC):
 
     @abc.abstractmethod
     def update(self, stats):

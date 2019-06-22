@@ -32,10 +32,12 @@ import curses
 # Graphics elements
 from .jtopguilib import (check_size,
                          check_curses)
+# Initialization abstract class
+# In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
+ABC = abc.ABCMeta('ABC', (object,), {})
 
 
-class Page(object):
-    __metaclass__ = abc.ABCMeta
+class Page(ABC):
 
     def __init__(self, name, stdscr, jetson, refresh):
         self.name = name
