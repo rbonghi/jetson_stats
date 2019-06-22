@@ -56,16 +56,16 @@ def SWAP(text):
         Y = Total amount of SWAP available for applications.
         Z = Amount of SWAP cached in megabytes.
     """
-    swap = {}
     match = SWAP_RE.search(text)
     if match:
-        swap = {'use': int(match.group(1)),
+        return {'use': int(match.group(1)),
                 'tot': int(match.group(2)),
                 'unit': match.group(3),
                 # group 4 is an optional space
                 'cached': {'size': int(match.group(5)),
                            'unit': match.group(6)}}
-    return swap
+    else:
+        return {}
 
 
 def IRAM(text):
@@ -76,16 +76,16 @@ def IRAM(text):
         Y = Total amount of IRAM memory available.
         Z = Size of the largest free block.
     """
-    iram = {}
     match = IRAM_RE.search(text)
     if match:
-        iram = {'use': int(match.group(1)),
+        return {'use': int(match.group(1)),
                 'tot': int(match.group(2)),
                 'unit': match.group(3),
                 # group 4 is an optional space
                 'lfb': {'size': int(match.group(5)),
                         'unit': match.group(6)}}
-    return iram
+    else:
+        return {}
 
 
 def RAM(text):
@@ -101,18 +101,18 @@ def RAM(text):
         N = The number of free blocks of this size.
         Z = is the size of the largest free block.
     """
-    ram = {}
     match = RAM_RE.search(text)
     if match:
-        ram = {'use': int(match.group(1)),
-               'tot': int(match.group(2)),
-               'unit': match.group(3),
-               # group 4 is an optional space
-               'lfb': {'nblock': int(match.group(5)),
-                       'size': int(match.group(6)),
-                       'unit': match.group(7)}
-               }
-    return ram
+        return {'use': int(match.group(1)),
+                'tot': int(match.group(2)),
+                'unit': match.group(3),
+                # group 4 is an optional space
+                'lfb': {'nblock': int(match.group(5)),
+                        'size': int(match.group(6)),
+                        'unit': match.group(7)}
+                }
+    else:
+        return {}
 
 
 def MTS(text):
@@ -122,11 +122,11 @@ def MTS(text):
         X = Time spent in foreground tasks.
         Y = Time spent in background tasks.
     """
-    mts = {}
     match = MTS_RE.search(text)
     if match:
-        mts = {'fg': int(match.group(1)), 'bg': int(match.group(1))}
-    return mts
+        return {'fg': int(match.group(1)), 'bg': int(match.group(1))}
+    else:
+        return {}
 
 
 def VALS(text):
@@ -212,10 +212,7 @@ def TEMPS(text):
         X = Current temperature
         /sys/devices/virtual/thermal/thermal_zoneX/type.
     """
-    temp = {}
-    for name, val in re.findall(TEMP_RE, text):
-        temp[name] = float(val)
-    return temp
+    return {name: float(val) for name, val in re.findall(TEMP_RE, text)}
 
 
 def VOLTS(text):
@@ -225,8 +222,5 @@ def VOLTS(text):
         X = Current power consumption in milliwatts.
         Y = Average power consumption in milliwatts.
     """
-    volt = {}
-    for name, cur, avg in re.findall(VOLT_RE, text):
-        volt[name] = {'cur': int(cur), 'avg': int(avg)}
-    return volt
+    return {name: {'cur': int(cur), 'avg': int(avg)} for name, cur, avg in re.findall(VOLT_RE, text)}
 # EOF

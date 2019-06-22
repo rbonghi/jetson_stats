@@ -37,6 +37,7 @@
     - https://docs.python.org/3.3/howto/curses.html#attributes-and-color
     - http://toilers.mines.edu/~jrosenth/101python/code/curses_plot/
 """
+import re
 import os
 import sys
 import argparse
@@ -74,12 +75,23 @@ def set_xterm_title(title):
         sys.stdout.flush()
 
 
+def get_version():
+    # Load version package
+    here = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(here, "__init__.py")) as fp:
+        VERSION = (
+            re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S).match(fp.read()).group(1)
+        )
+    return VERSION
+
+
 def main():
     # Add arg parser
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs in the terminal')
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
+    parser.add_argument('-v', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
     # Set logging level

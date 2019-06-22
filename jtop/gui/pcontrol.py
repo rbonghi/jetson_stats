@@ -93,7 +93,7 @@ class CTRL(Page):
             if 'cpwm' in fan:
                 label = "{current: >3}% of {target: >3}%".format(current=fan.get("cpwm", 0), target=fan.get("tpwm", 0))
             else:
-                label = "Target: {target: >3}%".format(target=fan.get("tpwm",0 ))
+                label = "Target: {target: >3}%".format(target=fan.get("tpwm", 0))
             # Evaluate size chart
             size_x = [posx + 40, width - 10]
             size_y = [2, height - 3]
