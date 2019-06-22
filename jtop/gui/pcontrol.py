@@ -83,7 +83,7 @@ class CTRL(Page):
             mode_status = [mode["status"] for mode in nvpmodel.modes]
             box_list(self.stdscr, start_pos - 1, posx + 10, mode_names, nvpmodel.num, status=mode_status, max_width=42, numbers=True)
         # Add plot fan status
-        if 'FAN' is not self.jetson.stats:
+        if 'FAN' in self.jetson.stats:
             fan = self.jetson.stats['FAN']
             # Evaluate size chart
             size_x = [posx + 40, width - 10]
