@@ -50,7 +50,7 @@ class Fan(object):
         if not os.path.isdir(path):
             raise Fan.FanException("Fan does not exist")
         # Init status fan
-        self._status = {'name': 'FAN'}
+        self._status = {}
         self.isRPM = os.path.isfile(self.path + "rpm_measured")
         self.isCPWM = os.path.isfile(self.path + "cur_pwm")
         self.isTPWM = os.path.isfile(self.path + "target_pwm")

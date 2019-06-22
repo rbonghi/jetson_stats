@@ -165,8 +165,6 @@ class Chart(object):
         self.max_val = parameter.get("max_val", 100)
         # Get unit
         self.unit = parameter.get("unit", "%")
-        # Get name and build label
-        self.name = parameter.get("name", "")
         # Append in list
         if self.value_name in parameter:
             self.value.append(parameter[self.value_name])
@@ -199,9 +197,9 @@ class Chart(object):
             except curses.error:
                 pass
         # Text label
-        stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
+        stdscr.addstr(size_y[0], size_x[0], self.param, curses.A_BOLD)
         if label:
-            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label, self.color)
+            stdscr.addstr(size_y[0], size_x[0] + len(self.param) + 1, label, self.color)
         # Plot values
         for idx, point in enumerate(reversed(points)):
             y_val = int((float(displayY - 1) / self.max_val) * point)
