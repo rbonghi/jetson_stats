@@ -28,34 +28,50 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import curses
+from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import (linear_percent_gauge,
-                         make_gauge_from_percent,
-                         plot_name_info,
-                         draw_chart)
+from .jtopguilib import (plot_name_info,
+                         linear_gauge,
+                         label_freq,
+                         Chart)
 
 
-def GPU(stdscr, jetson, key):
-    """
-        Draw a plot with GPU payload
-    """
-    # Screen size
-    max_y, max_x = stdscr.getmaxyx()
-    # Evaluate size chart
-    size_x = [2, max_x - 10]
-    size_y = [1, max_y * 2 // 3 - 1]
-    # Read GPU status
-    if 'GR3D' in jetson.stats:
-        gpu = jetson.stats['GR3D']
+class GPU(Page):
+
+    def __init__(self, stdscr, jetson, refresh):
+        super(GPU, self).__init__("GPU", stdscr, jetson, refresh)
+        if 'GR3D' in jetson.stats:
+            # Initialize GPU chart
+            self.chart_gpu = Chart("GR3D", refresh, color=curses.color_pair(2))
+            # Attach the chart for every update from jtop
+            jetson.attach(self.chart_gpu)
+
+    def draw(self, key):
+        """
+            Draw a plot with GPU payload
+        """
+        # Screen size
+        max_y, max_x = self.stdscr.getmaxyx()
+        # Evaluate size chart
+        size_x = [2, max_x - 10]
+        size_y = [1, max_y * 2 // 3 - 1]
         # Draw the GPU chart
-        draw_chart(stdscr, size_x, size_y, gpu, color=curses.color_pair(2))
+        if 'GR3D' in self.jetson.stats:
+            self.chart_gpu.draw(self.stdscr, size_x, size_y)
         # Percent Gauge GPU
-        linear_percent_gauge(stdscr, make_gauge_from_percent(jetson.stats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
+        gpu = self.jetson.stats.get('GR3D', {})
+        linear_gauge(self.stdscr, offset=max_y * 2 // 3, start=2, size=max_x // 2,
+                     name='GPU',
+                     value=gpu.get('val', 0),
+                     label=label_freq(gpu),
+                     status='ON' if gpu else 'REQUIRE SUDO',
+                     color=curses.color_pair(6))
         # Temperature GPU
-        if "GPU" in jetson.stats['temperatures']:
-            plot_name_info(stdscr, max_y * 2 // 3, max_x // 2 + 4, "GPU Temp", jetson.stats['temperatures']['GPU']['text'])
+        if "GPU" in self.jetson.stats['TEMP']:
+            temp_gpu = self.jetson.stats['TEMP']['GPU']
+            plot_name_info(self.stdscr, max_y * 2 // 3, max_x // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
         # Jetson clocks status
-        jc = jetson.jetson_clocks
+        jc = self.jetson.jetson_clocks
         if jc is not None:
             jc_status = jc.status
             if jc_status == "active":
@@ -69,8 +85,8 @@ def GPU(stdscr, jetson, key):
             # Show if JetsonClock is enabled or not
             if jc.enable:
                 jc_status = "[" + jc_status + "]"
-            plot_name_info(stdscr, max_y * 2 // 3 + 2, 2, "Jetson Clocks", jc_status, color)
+            plot_name_info(self.stdscr, max_y * 2 // 3 + 2, 2, "Jetson Clocks", jc_status, color)
         # NVP Model
-        nvpmodel = jetson.nvpmodel
+        nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:
-            plot_name_info(stdscr, max_y * 2 // 3 + 3, 2, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
+            plot_name_info(self.stdscr, max_y * 2 // 3 + 3, 2, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)

@@ -31,16 +31,14 @@ jobs:
       python: "2.7"
       dist: xenial
       env: TOXENV=py27
-#    - stage: test
-#      python: "3.4"
-#      env: TOXENV=py34
     - stage: test
       python: "3.5"
       dist: xenial
       env: TOXENV=py35
-#    - stage: test
-#      python: "3.6"
-#      env: TOXENV=py36
+    - stage: test
+      python: "3.6"
+      dist: xenial
+      env: TOXENV=py36
 #    - stage: test
 #      python: "3.7"
 #      env: TOXENV=py37
@@ -49,9 +47,9 @@ jobs:
       dist: bionic
       env: TOXENV=py27
     - stage: test
-      python: "3.5"
+      python: "3.6"
       dist: bionic
-      env: TOXENV=py35
+      env: TOXENV=py36
     - stage: test to PyPI
       script: sudo -H python setup.py sdist
       deploy:

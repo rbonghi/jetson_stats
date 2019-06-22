@@ -27,7 +27,7 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
+import abc
 import os
 # Launch command
 import subprocess as sp
@@ -41,6 +41,16 @@ import array
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+# Initialization abstract class
+# In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
+ABC = abc.ABCMeta('ABC', (object,), {})
+
+
+class StatusObserver(ABC):
+
+    @abc.abstractmethod
+    def update(self, stats):
+        pass
 
 
 def import_os_variables(SOURCE, PATTERN="JETSON_"):

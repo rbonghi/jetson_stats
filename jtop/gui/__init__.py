@@ -29,8 +29,8 @@
 
 # flake8: noqa
 
-from .page_variables import Variables
-from .page_control import CTRL, CTRL_keyboard
-from .page_gpu import GPU
-from .page_all_info import all_info
+from .pinfo import INFO
+from .pcontrol import CTRL
+from .pgpu import GPU
+from .pall import ALL
 from .jtopgui import JTOPGUI

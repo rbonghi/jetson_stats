@@ -36,5 +36,8 @@ from .core import Fan
 from .core import NVPmodel
 from .core import JetsonClocks
 # Import os variable importer
-from .core import import_os_variables
+from .core import import_os_variables, StatusObserver
+
+__author__ = "Raffaello Bonghi <raffaello@rnext.it>"
+__version__ = "1.7.3"
 # EOF

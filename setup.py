@@ -52,6 +52,7 @@ import subprocess as sp
 import shlex
 import os
 import sys
+import re
 
 
 if os.getuid() != 0:
@@ -66,6 +67,14 @@ project_homepage = "https://github.com/rbonghi/jetson_stats"
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+
+# Load version package
+with open(os.path.join(here, "jtop", "__init__.py")) as fp:
+    VERSION = (
+        re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S).match(fp.read()).group(1)
+    )
+# Store version package
+version = VERSION
 
 
 class PostInstallCommand(install):
@@ -93,7 +102,7 @@ class PostDevelopCommand(develop):
 # Configuration setup module
 setup(
     name="jetson-stats",
-    version="1.7.2",
+    version=version,
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Nano, AGX Xavier, TX1, TX2]",

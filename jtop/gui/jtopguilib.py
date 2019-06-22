@@ -30,6 +30,7 @@
 # control command line
 import curses
 from curses.textpad import rectangle
+from collections import deque
 # Math functions
 from math import ceil
 # Functions and decorators
@@ -144,88 +145,104 @@ def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=Fals
     return line
 
 
-@check_curses
-def draw_chart(stdscr, size_x, size_y, value, line="*", color=curses.A_NORMAL):
-    # Get Max value and unit from value to draw
-    max_val = 100 if "max_val" not in value else value["max_val"]
-    unit = "%" if "max_val" not in value else value["unit"]
-    # Evaluate Diplay X, and Y size
-    displayX = size_x[1] - size_x[0] + 1
-    displayY = size_y[1] - size_y[0] - 1
-    val = float(displayX - 2) / float(len(value["idle"]))
-    points = []
-    for n in value["idle"]:
-        points += [n] * int(ceil(val))
-    # Plot chart shape and labels
-    for point in range(displayY):
-        if displayY != point:
-            value_n = max_val / float(displayY - 1) * float(displayY - point - 1)
+class Chart(object):
+
+    def __init__(self, param, interval, line="*", color=curses.A_NORMAL, time=10.0, value_name='val'):
+        self.line = line
+        self.color = color
+        self.time = time
+        max_record = int(self.time * (float(1.0 / float(interval)) * 1000.0))
+        self.value = deque(max_record * [0], maxlen=max_record)
+        self.param = param
+        self.value_name = value_name
+        self._noData = True
+
+    def update(self, jetson):
+        """ Local update chart """
+        self._noData = False
+        parameter = jetson.stats.get(self.param, {})
+        # Get max value if is present
+        self.max_val = parameter.get("max_val", 100)
+        # Get unit
+        self.unit = parameter.get("unit", "%")
+        # Append in list
+        if self.value_name in parameter:
+            self.value.append(parameter[self.value_name])
+
+    @check_curses
+    def draw(self, stdscr, size_x, size_y, label=""):
+        if self._noData:
+            return
+        # Evaluate Diplay X, and Y size
+        displayX = size_x[1] - size_x[0] + 1
+        displayY = size_y[1] - size_y[0] - 1
+        val = float(displayX - 2) / float(len(self.value))
+        points = []
+        for n in self.value:
+            points += [n] * int(ceil(val))
+        # Plot chart shape and labels
+        for point in range(displayY):
+            if displayY != point:
+                value_n = self.max_val / float(displayY - 1) * float(displayY - point - 1)
+                try:
+                    stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
+                    stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
+                                  "{value:3d}{unit}".format(value=int(value_n), unit=self.unit),
+                                  curses.A_BOLD)
+                except curses.error:
+                    pass
+        for point in range(displayX):
             try:
-                stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
-                stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
-                              "{value:3d}{unit}".format(value=int(value_n), unit=unit),
-                              curses.A_BOLD)
+                stdscr.addstr(size_y[1], size_x[0] + point, "-")
             except curses.error:
                 pass
-    for point in range(displayX):
-        try:
-            stdscr.addstr(size_y[1], size_x[0] + point, "-")
-        except curses.error:
-            pass
-    # Text label
-    info_string = value["name"] if "name" in value else ""
-    stdscr.addstr(size_y[0], size_x[0], info_string, curses.A_BOLD)
-    if "percent" in value:
-        stdscr.addstr(size_y[0], size_x[0] + len(info_string) + 1, value["percent"], color)
-    # Plot values
-    for idx, point in enumerate(reversed(points)):
-        y_val = int((float(displayY - 1) / max_val) * point)
-        x_val = size_x[1] - 1 - idx
-        if x_val >= size_x[0]:
-            try:
-                stdscr.addstr(size_y[1] - 1 - y_val, x_val, line, color)
-            except curses.error:
-                pass
+        # Text label
+        stdscr.addstr(size_y[0], size_x[0], self.param, curses.A_BOLD)
+        if label:
+            stdscr.addstr(size_y[0], size_x[0] + len(self.param) + 1, label, self.color)
+        # Plot values
+        for idx, point in enumerate(reversed(points)):
+            y_val = int((float(displayY - 1) / self.max_val) * point)
+            x_val = size_x[1] - 1 - idx
+            if x_val >= size_x[0]:
+                try:
+                    stdscr.addstr(size_y[1] - 1 - y_val, x_val, self.line, self.color)
+                except curses.error:
+                    pass
 
 
-def make_gauge_from_percent(data):
-    gauge = {'name': data['name'], 'status': data['status']}
-    if "ON" in data["status"]:
-        gauge['value'] = int(data['idle'][-1])
-    if data["status"] == "ON":
-        freq = data['frequency'][-1]
+def label_freq(value):
+    if 'frq' in value:
+        freq = value['frq']
         if freq >= 1000:
-            gauge['label'] = "{0:2.1f}GHz".format(freq / 1000.0)
+            return "{0:2.1f}GHz".format(freq / 1000.0)
         else:
-            gauge['label'] = str(int(freq)) + "MHz"
-    return gauge
+            return str(freq) + "MHz"
+    else:
+        return ""
 
 
 @check_curses
-def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6):
+def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", type_bar="|", color=curses.A_NORMAL):
     # Evaluate size withuout short name
-    name_size = len(gauge['name'])
-    size_bar = max_bar - name_size - 4
+    name_size = len(name)
+    size_bar = size - name_size - 4
     # Show short name linear gauge
-    stdscr.addstr(offset, start, ("{short_name:" + str(name_size) + "}").format(short_name=gauge['name']), curses.color_pair(color_name))
-    if 'value' in gauge:
-        # Check if the list of value is list or value
-        if isinstance(gauge['value'], list):
-            value = gauge['value'][-1]
-        else:
-            value = gauge['value']
+    stdscr.addstr(offset, start, ("{name:" + str(name_size) + "}").format(name=name), color)
+    # Check if value is not a string
+    if 'ON' in status:
         # Show bracket linear gauge and label and evaluate size withuout size labels and short name
-        size_bar -= (len(gauge['label']) + 1) if 'label' in gauge else 0
+        size_bar -= (len(label) + 1) if label else 0
         stdscr.addstr(offset, start + name_size + 1, "[" + " " * size_bar + "]", curses.A_BOLD)
-        if 'label' in gauge:
-            stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, gauge['label'])
+        if label:
+            stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, label)
         # Show progress value linear gauge
         n_bar = int(float(value) * float(size_bar) / 100.0)
         if n_bar >= 0:
             progress_bar = type_bar * n_bar
             # Build progress barr string
             str_progress_bar = ("{n_bar:" + str(size_bar) + "}").format(n_bar=progress_bar)
-            percent_label = gauge['percent'] if 'percent' in gauge else str(value) + "%"
+            percent_label = percent if percent else str(value) + "%"
             str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
             # Split string in green and grey part
             green_part = str_progress_bar[:n_bar]
@@ -236,7 +253,7 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
         # Show bracket linear gauge and label
         stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
         # Show bracket linear gauge and label
-        status = gauge["status"] if "status" in gauge else "OFF"
+        status = status if status else "OFF"
         stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(1))
 
 

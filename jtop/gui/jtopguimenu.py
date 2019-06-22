@@ -34,8 +34,8 @@ import curses
 # Graphics elements
 from .jtopguilib import (check_curses,
                          strfdelta,
-                         linear_percent_gauge,
-                         make_gauge_from_percent,
+                         linear_gauge,
+                         label_freq,
                          plot_name_info)
 
 
@@ -46,11 +46,14 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         # Split in double list
         start = max_bar if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 0
         off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
-        # Plot the linear gauge
-        gauge = make_gauge_from_percent(cpu)
-        if 'value' in gauge:
-            gauge["percent"] = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=gauge['value'])
-        linear_percent_gauge(stdscr, gauge, max_bar, int(offest + off_idx), start)
+        # Check if exist governor and add in percent name
+        percent = ""
+        if 'val' in cpu and 'governor' in cpu:
+            percent = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=cpu['val'])
+        # Show linear gauge
+        linear_gauge(stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
+                     name=cpu['name'], value=cpu.get('val', 0), status=cpu['status'], percent=percent, label=label_freq(cpu),
+                     color=curses.color_pair(6))
     if len(list_cpus) > 4:
         return int(offest + idx / 2 + 1)
     else:
@@ -62,21 +65,21 @@ def plot_temperatures(stdscr, start, offset, width, jetson):
     # Plot title
     stdscr.addstr(offset, start, ("{name:<9} {val:^8}").format(name="[Sensor]", val="[Temp]"), curses.A_BOLD)
     # Plot name and temperatures
-    for idx, temp in enumerate(sorted(jetson.stats['temperatures'])):
-        value = jetson.stats['temperatures'][temp]
+    for idx, temp in enumerate(sorted(jetson.stats['TEMP'])):
+        value = jetson.stats['TEMP'][temp]
         stdscr.addstr(offset + idx + 1, start,
-                      ("{name:<7} {val:8.2f}{unit}").format(name=temp, val=value['value'][-1], unit=value['unit']))
+                      ("{name:<7} {val:8.2f}C").format(name=temp, val=value))
 
 
 @check_curses
 def plot_voltages(stdscr, start, offset, width, jetson):
     # Plot title
-    stdscr.addstr(offset, start, "{name:<10} [Cur]  [Avr]".format(name="[Power/mV]"), curses.A_BOLD)
+    stdscr.addstr(offset, start, "{name:<12} [Cur]   [Avr]".format(name="[Power/mW]"), curses.A_BOLD)
     # Plot voltages
-    for idx, volt in enumerate(sorted(jetson.stats['voltages'])):
-        value = jetson.stats['voltages'][volt]
+    for idx, volt in enumerate(sorted(jetson.stats['VOLT'])):
+        value = jetson.stats['VOLT'][volt]
         stdscr.addstr(offset + idx + 1, start,
-                      ("{name:<10} {curr: <6} {avg: <6}").format(name=volt, curr=int(value['current'][-1]), avg=int(value['average'][-1])))
+                      ("{name:<12} {curr: <7} {avg: <7}").format(name=volt, curr=int(value['cur']), avg=int(value['avg'])))
 
 
 @check_curses
@@ -89,9 +92,20 @@ def compact_info(stdscr, start, offset, width, jetson):
     plot_name_info(stdscr, offset + counter, start, "UpT", uptime_string)
     counter += 1
     # FAN status
-    fan = jetson.fan
-    if fan is not None:
-        linear_percent_gauge(stdscr, fan, width, offset=offset + counter, start=start)
+    if "FAN" in jetson.stats:
+        fan = jetson.stats["FAN"]
+        if 'cpwm' in fan:
+            label = "T={target: >3}%".format(target=fan.get("tpwm", 0))
+            value = fan.get('cpwm', 0)
+        else:
+            label = ''
+            value = fan.get('tpwm', 0)
+        linear_gauge(stdscr, offset=offset + counter, start=start, size=width,
+                     name='FAN',
+                     value=value,
+                     label=label,
+                     status=fan['status'],
+                     color=curses.color_pair(6))
     else:
         stdscr.addstr(offset + counter, 0, "NO FAN", curses.color_pair(3))
     counter += 1
@@ -119,20 +133,22 @@ def compact_info(stdscr, start, offset, width, jetson):
         counter += 1
     # APE frequency
     if 'APE' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
+        plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']['val']) + "MHz")
         counter += 1
-    # MSENC frequency
+    # NVENC frequency
     stdscr.addstr(offset + counter, start, "HW engine:", curses.A_BOLD)
     counter += 1
-    if 'MSENC' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['MSENC']) + "MHz")
+    if 'NVENC' in jetson.stats:
+        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['NVENC']['val']) + "MHz")
     else:
         plot_name_info(stdscr, offset + counter, start, " ENC", "NOT RUNNING")
     counter += 1
     # NVDEC frequency
     if 'NVDEC' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start, " DEC", str(jetson.stats['NVDEC']) + "MHz")
+        plot_name_info(stdscr, offset + counter, start, " DEC", str(jetson.stats['NVDEC']['val']) + "MHz")
     else:
         plot_name_info(stdscr, offset + counter, start, " DEC", "NOT RUNNING")
     counter += 1
+    if 'MSENC' in jetson.stats:
+        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['MSENC']['val']) + "MHz")
 # EOF

@@ -33,7 +33,7 @@ from jtop import Fan
 def test_wrong_open():
     # Initialize object
     try:
-        Fan('wrong_path', 100, 1.0)
+        Fan('wrong_path')
         assert False
     except Fan.FanException:
         assert True
@@ -41,9 +41,15 @@ def test_wrong_open():
 
 def test_open():
     # Init fan
-    fan = Fan('tests/fan/', 100, 1.0)
+    fan = Fan('tests/fan/')
     # Update
     fan.update()
+    # Check dictionary
+    assert 'cap' in fan.status
+    assert 'step' in fan.status
+    assert 'cpwm' in fan.status
+    assert 'tpwm' in fan.status
+    assert 'status' in fan.status
     # Read status fan
-    assert fan.fan_ctrl[-1] == 100
+    assert fan.status['tpwm'] == 100
 # EOF
