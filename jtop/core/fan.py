@@ -67,10 +67,12 @@ class Fan(object):
         # Control temperature
         self._status["temp"] = int(self.read_status("temp_control")) if os.path.isfile(self.path + "temp_control") else 0
         # Status FAN
-        if os.getuid() == 0:
-            self._status["status"] = 'ON' if os.path.isfile(self.path + "target_pwm") else 'OFF'
-        else:
+        if os.path.isfile(self.path + "target_pwm"):
+            self._status["status"] = 'ON'
+        elif os.getuid() != 0:
             self._status["status"] = 'REQUIRE SUDO'
+        else:
+            self._status["status"] = 'OFF'
 
     def read_status(self, file_read):
         status = sp.Popen(['cat', self.path + file_read], stdout=sp.PIPE)
