@@ -52,7 +52,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
             percent = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=cpu['val'])
         # Show linear gauge
         linear_gauge(stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
-                     name=cpu['name'], value=cpu['val'], status=cpu['status'], percent=percent, label=label_freq(cpu),
+                     name=cpu['name'], value=cpu.get('val', 0), status=cpu['status'], percent=percent, label=label_freq(cpu),
                      color=curses.color_pair(6))
     if len(list_cpus) > 4:
         return int(offest + idx / 2 + 1)
@@ -132,22 +132,22 @@ def compact_info(stdscr, start, offset, width, jetson):
         counter += 1
     # APE frequency
     if 'APE' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']) + "MHz")
+        plot_name_info(stdscr, offset + counter, start, "APE", str(jetson.stats['APE']['val']) + "MHz")
         counter += 1
     # NVENC frequency
     stdscr.addstr(offset + counter, start, "HW engine:", curses.A_BOLD)
     counter += 1
     if 'NVENC' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['NVENC']) + "MHz")
+        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['NVENC']['val']) + "MHz")
     else:
         plot_name_info(stdscr, offset + counter, start, " ENC", "NOT RUNNING")
     counter += 1
     # NVDEC frequency
     if 'NVDEC' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start, " DEC", str(jetson.stats['NVDEC']) + "MHz")
+        plot_name_info(stdscr, offset + counter, start, " DEC", str(jetson.stats['NVDEC']['val']) + "MHz")
     else:
         plot_name_info(stdscr, offset + counter, start, " DEC", "NOT RUNNING")
     counter += 1
     if 'MSENC' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['MSENC']) + "MHz")
+        plot_name_info(stdscr, offset + counter, start, " ENC", str(jetson.stats['MSENC']['val']) + "MHz")
 # EOF

@@ -46,7 +46,7 @@ def val_freq(val):
         match = VAL_FRE_RE.search(val)
         return {'val': int(match.group(1)), 'frq': int(match.group(2))}
     else:
-        return int(val)
+        return {'val': int(val)}
 
 
 def SWAP(text):
