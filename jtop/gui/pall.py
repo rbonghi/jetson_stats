@@ -157,13 +157,13 @@ class ALL(Page):
                      type_bar="#",
                      color=curses.color_pair(3))
         # Last part of information
-        split = 1.0
-        split += 1.0 if self.jetson.stats['TEMP'] else 0.0
-        split += 1.0 if self.jetson.stats['VOLT'] else 0.0
-        column_width = int(float(width - 4) / split)
+        mini_menu = [compact_info]
+        if self.jetson.stats['TEMP']:
+            mini_menu += [plot_temperatures]
+        if self.jetson.stats['VOLT']:
+            mini_menu += [plot_voltages]
+        column_width = int(float(width - 4) / float(len(mini_menu)))
         line_counter += 1
-        # List of all mini menu
-        mini_menu = [compact_info, plot_temperatures, plot_voltages]
         # Evaluate column width
         column_width = int(float(width) / len(mini_menu))
         for idx, mini in enumerate(mini_menu):
