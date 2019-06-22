@@ -104,6 +104,7 @@ def compact_info(stdscr, start, offset, width, jetson):
                      name='FAN',
                      value=value,
                      label=label,
+                     status=fan['status'],
                      color=curses.color_pair(6))
     else:
         stdscr.addstr(offset + counter, 0, "NO FAN", curses.color_pair(3))
