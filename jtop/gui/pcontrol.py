@@ -40,8 +40,10 @@ class CTRL(Page):
 
     def __init__(self, stdscr, jetson, refresh):
         super(CTRL, self).__init__("CTRL", stdscr, jetson, refresh)
+        fan = self.jetson.stats['FAN']
+        value = 'cpwm' if 'cpwm' in fan else 'tpwm'
         # Initialize FAN chart
-        self.chart_fan = Chart("FAN", refresh, line="o", color=curses.color_pair(4), value_name="cpwm")
+        self.chart_fan = Chart("FAN", refresh, line="o", color=curses.color_pair(4), value_name=value)
         # Attach the chart for every update from jtop
         jetson.attach(self.chart_fan)
 
@@ -85,15 +87,16 @@ class CTRL(Page):
         # Add plot fan status
         if 'FAN' in self.jetson.stats:
             fan = self.jetson.stats['FAN']
+            # Add label
+            if 'cpwm' in fan:
+                label = "{current: >3}% of {target: >3}%".format(current=fan["cpwm"], target=fan["tpwm"])
+            else:
+                label = "Target: {target: >3}%".format(target=fan["tpwm"])
             # Evaluate size chart
             size_x = [posx + 40, width - 10]
             size_y = [2, height - 3]
-            percent = fan['percent'] if 'percent' in fan else ""
-            fan_value = {'name': 'FAN speed', 'percent': percent}
-            # If exist value of fan add in fan value
-            fan_value['idle'] = fan['value'] if 'value' in fan else [0]
             # Draw the GPU chart
-            self.chart_fan.draw(self.stdscr, size_x, size_y)
+            self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:

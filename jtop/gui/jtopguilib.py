@@ -160,21 +160,19 @@ class Chart(object):
     def update(self, jetson):
         """ Local update chart """
         self._noData = False
-        parameter = jetson.stats[self.param] if self.param in jetson.stats else {}
+        parameter = jetson.stats.get(self.param, {})
         # Get max value if is present
-        self.max_val = 100 if "max_val" not in parameter else parameter["max_val"]
+        self.max_val = parameter.get("max_val", 100)
         # Get unit
-        self.unit = "%" if "max_val" not in parameter else parameter["unit"]
+        self.unit = parameter.get("unit", "%")
         # Get name and build label
-        self.name = parameter["name"] if "name" in parameter else ""
-        # Get label
-        self.label = parameter["label"] if "label" in parameter else ""
+        self.name = parameter.get("name", "")
         # Append in list
         if self.value_name in parameter:
             self.value.append(parameter[self.value_name])
 
     @check_curses
-    def draw(self, stdscr, size_x, size_y):
+    def draw(self, stdscr, size_x, size_y, label=""):
         if self._noData:
             return
         # Evaluate Diplay X, and Y size
@@ -202,8 +200,8 @@ class Chart(object):
                 pass
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
-        if self.label:
-            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, self.label, self.color)
+        if label:
+            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label, self.color)
         # Plot values
         for idx, point in enumerate(reversed(points)):
             y_val = int((float(displayY - 1) / self.max_val) * point)
