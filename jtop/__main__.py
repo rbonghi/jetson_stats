@@ -91,7 +91,7 @@ def main():
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
-    parser.add_argument('-v', action='version', version='%(prog)s {version}'.format(version=get_version()))
+    parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
     # Set logging level
