@@ -40,12 +40,14 @@ class CTRL(Page):
 
     def __init__(self, stdscr, jetson, refresh):
         super(CTRL, self).__init__("CTRL", stdscr, jetson, refresh)
-        fan = self.jetson.stats['FAN']
-        value = 'cpwm' if 'cpwm' in fan else 'tpwm'
-        # Initialize FAN chart
-        self.chart_fan = Chart("FAN", refresh, line="o", color=curses.color_pair(4), value_name=value)
-        # Attach the chart for every update from jtop
-        jetson.attach(self.chart_fan)
+        # Only if exist a fan will be load a chart
+        if 'FAN' in self.jetson.stats:
+            fan = self.jetson.stats['FAN']
+            value = 'cpwm' if 'cpwm' in fan else 'tpwm'
+            # Initialize FAN chart
+            self.chart_fan = Chart("FAN", refresh, line="o", color=curses.color_pair(4), value_name=value)
+            # Attach the chart for every update from jtop
+            jetson.attach(self.chart_fan)
 
     def draw(self, key):
         """ Control board, check status jetson_clocks and change NVP model """

@@ -78,9 +78,9 @@ class ALL(Page):
                      label="(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
                                                                  size=lfb_status['size'],
                                                                  unit=lfb_status['unit']),
-                     percent="{use:2.1f}{unit}/{tot:2.1f}{unit}".format(use=ram_status['use'] / 1000.0,
-                                                                        unit=unit_name,
-                                                                        tot=ram_status['tot'] / 1000.0),
+                     percent="{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / 1000.0,
+                                                                         unit=unit_name,
+                                                                         tot=ram_status['tot'] / 1000.0),
                      color=curses.color_pair(6))
         # EMC linear gauge info
         if 'EMC' in self.jetson.stats:
