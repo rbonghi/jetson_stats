@@ -82,15 +82,6 @@ class ALL(Page):
                                                                          unit=unit_name,
                                                                          tot=ram_status['tot'] / 1000.0),
                      color=curses.color_pair(6))
-        # EMC linear gauge info
-        if 'EMC' in self.jetson.stats:
-            line_counter += 1
-            emc = self.jetson.stats['EMC']
-            linear_gauge(self.stdscr, offset=line_counter, size=width,
-                         name='EMC',
-                         value=emc['val'],
-                         label=label_freq(emc),
-                         color=curses.color_pair(6))
         # IRAM linear gauge info
         if 'IRAM' in self.jetson.stats:
             iram_status = self.jetson.stats['IRAM']
@@ -138,17 +129,26 @@ class ALL(Page):
                      percent=percent,
                      status='ON' if swap_status else 'OFF',
                      color=curses.color_pair(6))
-        # GPU linear gauge info
+        # EMC linear gauge info
         line_counter += 1
-        if 'GR3D' in self.jetson.stats:
-            gpu = self.jetson.stats['GR3D']
-            linear_gauge(self.stdscr, offset=line_counter + 1, size=width,
-                         name='GPU',
-                         value=gpu['val'],
-                         label=label_freq(gpu),
-                         color=curses.color_pair(6))
+        emc = self.jetson.stats.get('EMC', {})
+        linear_gauge(self.stdscr, offset=line_counter, size=width,
+                     name='EMC',
+                     value=emc.get('val', 0),
+                     status='ON' if emc else 'REQUIRE SUDO',
+                     label=label_freq(emc),
+                     color=curses.color_pair(6))
+        # GPU linear gauge info
         line_counter += 2
+        gpu = self.jetson.stats.get('GR3D', {})
+        linear_gauge(self.stdscr, offset=line_counter, size=width,
+                     name='GPU',
+                     value=gpu.get('val', 0),
+                     label=label_freq(gpu),
+                     status='ON' if gpu else 'REQUIRE SUDO',
+                     color=curses.color_pair(6))
         # Status disk
+        line_counter += 1
         disk_status = self.jetson.disk
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name='Dsk',

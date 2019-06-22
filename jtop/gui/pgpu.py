@@ -40,10 +40,11 @@ class GPU(Page):
 
     def __init__(self, stdscr, jetson, refresh):
         super(GPU, self).__init__("GPU", stdscr, jetson, refresh)
-        # Initialize GPU chart
-        self.chart_gpu = Chart("GR3D", refresh, color=curses.color_pair(2))
-        # Attach the chart for every update from jtop
-        jetson.attach(self.chart_gpu)
+        if 'GR3D' in jetson.stats:
+            # Initialize GPU chart
+            self.chart_gpu = Chart("GR3D", refresh, color=curses.color_pair(2))
+            # Attach the chart for every update from jtop
+            jetson.attach(self.chart_gpu)
 
     def draw(self, key):
         """
@@ -55,13 +56,15 @@ class GPU(Page):
         size_x = [2, max_x - 10]
         size_y = [1, max_y * 2 // 3 - 1]
         # Draw the GPU chart
-        self.chart_gpu.draw(self.stdscr, size_x, size_y)
+        if 'GR3D' in self.jetson.stats:
+            self.chart_gpu.draw(self.stdscr, size_x, size_y)
         # Percent Gauge GPU
-        gpu = self.jetson.stats['GR3D']
+        gpu = self.jetson.stats.get('GR3D', {})
         linear_gauge(self.stdscr, offset=max_y * 2 // 3, start=2, size=max_x // 2,
                      name='GPU',
-                     value=gpu['val'],
+                     value=gpu.get('val', 0),
                      label=label_freq(gpu),
+                     status='ON' if gpu else 'REQUIRE SUDO',
                      color=curses.color_pair(6))
         # Temperature GPU
         if "GPU" in self.jetson.stats['TEMP']:
