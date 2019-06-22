@@ -95,11 +95,11 @@ def compact_info(stdscr, start, offset, width, jetson):
     if "FAN" in jetson.stats:
         fan = jetson.stats["FAN"]
         if 'cpwm' in fan:
-            label = "T={target: >3}%".format(target=fan["tpwm"])
-            value = fan['cpwm']
+            label = "T={target: >3}%".format(target=fan.get("tpwm", 0))
+            value = fan.get('cpwm', 0)
         else:
             label = ''
-            value = fan['tpwm']
+            value = fan.get('tpwm', 0)
         linear_gauge(stdscr, offset=offset + counter, start=start, size=width,
                      name='FAN',
                      value=value,
