@@ -55,12 +55,10 @@ def check_tegra(tegra):
     # Check if is correctly written the variable
     assert "RAM" in tegra.stats
     variable = tegra.stats["RAM"]
-    assert "RAM" in variable
-    variable = tegra.stats["RAM"]["RAM"]
     # Check if ram["used"] is a list
-    assert isinstance(variable["used"], int)
+    assert isinstance(variable["use"], int)
     # Check if last value is the same send
-    assert variable["used"] == 4722
+    assert variable["use"] == 4722
 
 
 def test_stats():

@@ -30,8 +30,8 @@
 import curses
 from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import (linear_percent_gauge,
-                         make_gauge_from_percent)
+from .jtopguilib import (linear_gauge,
+                         label_freq)
 # Menu GUI pages
 from .jtopguimenu import (plot_voltages,
                           compact_info,
@@ -57,70 +57,109 @@ class ALL(Page):
         if 'MTS' in self.jetson.stats:
             line_counter += 1
             self.stdscr.addstr(line_counter, 0, "MTS ", curses.color_pair(5))
-            MTS_FG = {'name': 'FG',
-                      'value': int(self.jetson.stats['MTS']['fg']),
-                      }
-            linear_percent_gauge(self.stdscr, MTS_FG, width // 2 - 2,
-                                 offset=line_counter, start=4, color_name=5)
-            MTS_BG = {'name': 'BG',
-                      'value': int(self.jetson.stats['MTS']['bg']),
-                      }
-            linear_percent_gauge(self.stdscr, MTS_BG, width // 2 - 2,
-                                 offset=line_counter, start=2 + width // 2, color_name=5)
+            # Show FG linear gauge
+            linear_gauge(self.stdscr, offset=line_counter, start=4, size=width // 2 - 2,
+                         name='FG',
+                         value=self.jetson.stats['MTS']['fg'],
+                         color=curses.color_pair(5))
+            # Show BG linear gauge
+            linear_gauge(self.stdscr, offset=line_counter, start=2 + width // 2, size=width // 2 - 2,
+                         name='BG',
+                         value=self.jetson.stats['MTS']['bg'],
+                         color=curses.color_pair(5))
         # RAM linear gauge info
-        ram_status = self.jetson.stats['RAM']['RAM']
-        lfb_status = self.jetson.stats['RAM']['lfb']
-        RAM_VALUE = {'name': "Mem",
-                     'value': int(ram_status['used'] / float(ram_status['total']) * 100.0),
-                     'label': "(lfb " + str(lfb_status['nblock']) + "x" + str(lfb_status['size']) + "MB)",
-                     'percent': "{0:2.1f}GB/{1:2.1f}GB".format(ram_status['used'] / 1000.0, ram_status['total'] / 1000.0),
-                     }
         line_counter += 1
-        linear_percent_gauge(self.stdscr, RAM_VALUE, width, offset=line_counter)
+        ram_status = self.jetson.stats['RAM']
+        lfb_status = self.jetson.stats['RAM']['lfb']
+        unit_name = 'G'  # TODO improve with check unit status
+        linear_gauge(self.stdscr, offset=line_counter, size=width,
+                     name='Mem',
+                     value=int(ram_status['use'] / float(ram_status['tot']) * 100.0),
+                     label="(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
+                                                                 size=lfb_status['size'],
+                                                                 unit=lfb_status['unit']),
+                     percent="{use:2.1f}{unit}/{tot:2.1f}{unit}".format(use=ram_status['use'] / 1000.0,
+                                                                        unit=unit_name,
+                                                                        tot=ram_status['tot'] / 1000.0),
+                     color=curses.color_pair(6))
         # EMC linear gauge info
         if 'EMC' in self.jetson.stats:
             line_counter += 1
-            linear_percent_gauge(self.stdscr, make_gauge_from_percent(self.jetson.stats['EMC']), width, offset=line_counter)
+            emc = self.jetson.stats['EMC']
+            linear_gauge(self.stdscr, offset=line_counter, size=width,
+                         name='EMC',
+                         value=emc['val'],
+                         label=label_freq(emc),
+                         color=curses.color_pair(6))
         # IRAM linear gauge info
-        iram_status = self.jetson.stats['IRAM']
-        if iram_status:
+        if 'IRAM' in self.jetson.stats:
+            iram_status = self.jetson.stats['IRAM']
             line_counter += 1
-            IRAM_VALUE = {'name': "Imm",
-                          'value': int(iram_status['used'] / float(iram_status['total']) * 100.0),
-                          'label': "(lfb " + str(iram_status['size']) + "MB)",
-                          'percent': "{0:2.1f}GB/{1:2.1f}GB".format(iram_status['used'] / 1000.0,
-                                                                    iram_status['total'] / 1000.0),
-                          }
-            linear_percent_gauge(self.stdscr, IRAM_VALUE, width, offset=line_counter)
+            if iram_status['tot'] > 1000:
+                if 'k' == iram_status['unit']:
+                    unit = 'M'
+                elif 'M' == iram_status['unit']:
+                    unit = 'G'
+                percent = "{use:2.1f}{unit}B/{tot:2.1f}{unit}B".format(use=iram_status['use'] / 1000.0,
+                                                                       tot=iram_status['tot'] / 1000.0,
+                                                                       unit=unit)
+            else:
+                percent = "{use}{unit}B/{tot}{unit}B".format(use=iram_status['use'],
+                                                             tot=iram_status['tot'],
+                                                             unit=iram_status['unit'])
+            linear_gauge(self.stdscr, offset=line_counter, size=width,
+                         name='Imm',
+                         value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
+                         label="(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
+                                                            unit=iram_status['lfb']['unit']),
+                         percent=percent,
+                         color=curses.color_pair(6))
         # SWAP linear gauge info
-        swap_status = self.jetson.stats['SWAP']
-        if swap_status:
-            SWAP_VALUE = {'name': "Swp",
-                          'value': int(swap_status['used'] / float(swap_status['total']) * 100.0),
-                          'label': "(cached " + str(swap_status['cached']) + "MB)",
-                          'percent': "{0:2.1f}GB/{1:2.1f}GB".format(swap_status['used'] / 1000.0,
-                                                                    swap_status['total'] / 1000.0),
-                          }
-        else:
-            SWAP_VALUE = {'name': "Swp"}
         line_counter += 1
-        linear_percent_gauge(self.stdscr, SWAP_VALUE, width, offset=line_counter)
+        swap_status = self.jetson.stats.get('SWAP', {})
+        swap_cached = swap_status.get('cached', {})
+        if swap_status.get('tot', 0) > 1000:
+            if 'k' == swap_status['unit']:
+                unit = 'M'
+            elif 'M' == swap_status['unit']:
+                unit = 'G'
+            percent = "{use:2.1f}{unit}B/{tot:2.1f}{unit}B".format(use=swap_status['use'] / 1000.0,
+                                                                   tot=swap_status['tot'] / 1000.0,
+                                                                   unit=unit)
+        else:
+            percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0),
+                                                         tot=swap_status.get('tot', 0),
+                                                         unit=swap_status.get('unit', ''))
+        linear_gauge(self.stdscr, offset=line_counter, size=width,
+                     name='Swp',
+                     value=int(swap_status.get('use', 0) / float(swap_status.get('tot', 1)) * 100.0),
+                     label="(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'),
+                                                           unit=swap_cached.get('unit', '')),
+                     percent=percent,
+                     status='ON' if swap_status else 'OFF',
+                     color=curses.color_pair(6))
         # GPU linear gauge info
         line_counter += 1
         if 'GR3D' in self.jetson.stats:
-            linear_percent_gauge(self.stdscr, make_gauge_from_percent(self.jetson.stats['GR3D']), width, offset=line_counter + 1)
+            gpu = self.jetson.stats['GR3D']
+            linear_gauge(self.stdscr, offset=line_counter + 1, size=width,
+                         name='GPU',
+                         value=gpu['val'],
+                         label=label_freq(gpu),
+                         color=curses.color_pair(6))
         line_counter += 2
         # Status disk
         disk_status = self.jetson.disk
-        DISK_STATUS = {'name': "Dsk",
-                       'value': int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
-                       'percent': "{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
-                       }
-        linear_percent_gauge(self.stdscr, DISK_STATUS, width, offset=line_counter, type_bar="#", color_name=3)
+        linear_gauge(self.stdscr, offset=line_counter, size=width,
+                     name='Dsk',
+                     value=int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
+                     percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
+                     type_bar="#",
+                     color=curses.color_pair(3))
         # Last part of information
         split = 1.0
-        split += 1.0 if self.jetson.stats['temperatures'] else 0.0
-        split += 1.0 if self.jetson.stats['voltages'] else 0.0
+        split += 1.0 if self.jetson.stats['TEMP'] else 0.0
+        split += 1.0 if self.jetson.stats['VOLT'] else 0.0
         column_width = int(float(width - 4) / split)
         line_counter += 1
         # List of all mini menu

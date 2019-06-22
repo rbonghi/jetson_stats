@@ -104,10 +104,7 @@ class jtop(StatusObserver):
 
     @property
     def fan(self):
-        if self.qfan is not None:
-            return self.qfan.status
-        else:
-            return None
+        return self.qfan
 
     @property
     def disk(self):

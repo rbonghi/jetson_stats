@@ -30,9 +30,9 @@
 import curses
 from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import (linear_percent_gauge,
-                         make_gauge_from_percent,
-                         plot_name_info,
+from .jtopguilib import (plot_name_info,
+                         linear_gauge,
+                         label_freq,
                          Chart)
 
 
@@ -57,11 +57,16 @@ class GPU(Page):
         # Draw the GPU chart
         self.chart_gpu.draw(self.stdscr, size_x, size_y)
         # Percent Gauge GPU
-        linear_percent_gauge(self.stdscr, make_gauge_from_percent(self.jetson.stats['GR3D']), max_x // 2, offset=max_y * 2 // 3, start=2)
+        gpu = self.jetson.stats['GR3D']
+        linear_gauge(self.stdscr, offset=max_y * 2 // 3, start=2, size=max_x // 2,
+                     name='GPU',
+                     value=gpu['val'],
+                     label=label_freq(gpu),
+                     color=curses.color_pair(6))
         # Temperature GPU
-        if "GPU" in self.jetson.stats['temperatures']:
-            temp_gpu = self.jetson.stats['temperatures']['GPU']
-            plot_name_info(self.stdscr, max_y * 2 // 3, max_x // 2 + 4, "GPU Temp", str(temp_gpu['value']) + temp_gpu['unit'])
+        if "GPU" in self.jetson.stats['TEMP']:
+            temp_gpu = self.jetson.stats['TEMP']['GPU']
+            plot_name_info(self.stdscr, max_y * 2 // 3, max_x // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
         # Jetson clocks status
         jc = self.jetson.jetson_clocks
         if jc is not None:

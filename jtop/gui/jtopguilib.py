@@ -147,7 +147,7 @@ def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=Fals
 
 class Chart(object):
 
-    def __init__(self, param, interval, line="*", color=curses.A_NORMAL, time=10.0, value_name='value'):
+    def __init__(self, param, interval, line="*", color=curses.A_NORMAL, time=10.0, value_name='val'):
         self.line = line
         self.color = color
         self.time = time
@@ -215,41 +215,38 @@ class Chart(object):
                     pass
 
 
-def make_gauge_from_percent(data):
-    gauge = {'name': data['name'], 'status': data['status']}
-    if "ON" in data["status"]:
-        gauge['value'] = data['value']
-    if data["status"] == "ON":
-        freq = data['frequency']
+def label_freq(value):
+    if 'frq' in value:
+        freq = value['frq']
         if freq >= 1000:
-            gauge['label'] = "{0:2.1f}GHz".format(freq / 1000.0)
+            return "{0:2.1f}GHz".format(freq / 1000.0)
         else:
-            gauge['label'] = str(int(freq)) + "MHz"
-    return gauge
+            return str(freq) + "MHz"
+    else:
+        return ""
 
 
 @check_curses
-def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|", color_name=6, value_name='value'):
+def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", type_bar="|", color=curses.A_NORMAL):
     # Evaluate size withuout short name
-    name_size = len(gauge['name'])
-    size_bar = max_bar - name_size - 4
+    name_size = len(name)
+    size_bar = size - name_size - 4
     # Show short name linear gauge
-    stdscr.addstr(offset, start, ("{short_name:" + str(name_size) + "}").format(short_name=gauge['name']), curses.color_pair(color_name))
-    if value_name in gauge:
-        # Check if the list of value is list or value
-        value = gauge[value_name]
+    stdscr.addstr(offset, start, ("{name:" + str(name_size) + "}").format(name=name), color)
+    # Check if value is not a string
+    if 'ON' in status:
         # Show bracket linear gauge and label and evaluate size withuout size labels and short name
-        size_bar -= (len(gauge['label']) + 1) if 'label' in gauge else 0
+        size_bar -= (len(label) + 1) if label else 0
         stdscr.addstr(offset, start + name_size + 1, "[" + " " * size_bar + "]", curses.A_BOLD)
-        if 'label' in gauge:
-            stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, gauge['label'])
+        if label:
+            stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, label)
         # Show progress value linear gauge
         n_bar = int(float(value) * float(size_bar) / 100.0)
         if n_bar >= 0:
             progress_bar = type_bar * n_bar
             # Build progress barr string
             str_progress_bar = ("{n_bar:" + str(size_bar) + "}").format(n_bar=progress_bar)
-            percent_label = gauge['percent'] if 'percent' in gauge else str(value) + "%"
+            percent_label = percent if percent else str(value) + "%"
             str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
             # Split string in green and grey part
             green_part = str_progress_bar[:n_bar]
@@ -260,7 +257,7 @@ def linear_percent_gauge(stdscr, gauge, max_bar, offset=0, start=0, type_bar="|"
         # Show bracket linear gauge and label
         stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
         # Show bracket linear gauge and label
-        status = gauge["status"] if "status" in gauge else "OFF"
+        status = status if status else "OFF"
         stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(1))
 
 
