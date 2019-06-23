@@ -73,6 +73,24 @@ class Fan(object):
             self._status["status"] = 'REQUIRE SUDO'
         else:
             self._status["status"] = 'OFF'
+        # Run first time update status fan
+        self.update()
+
+    @property
+    def speed(self):
+        return self._status.get("tpwm", 0)
+
+    @speed.setter
+    def speed(self, value):
+        # Check limit speed
+        if self.isTPWM:
+            value = 100.0 if value > 100.0 else value
+            value = 0 if value < 0 else value
+            # Convert in PWM value
+            pwm = self._status["cap"] * value // 100
+            # Write PWM value
+            with open(self.path + "target_pwm", 'w') as f:
+                f.write(str(pwm))
 
     def read_status(self, file_read):
         status = sp.Popen(['cat', self.path + file_read], stdout=sp.PIPE)
