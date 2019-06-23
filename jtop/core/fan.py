@@ -27,15 +27,30 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
+import re
 import os
+from math import ceil
 # Logging
 import logging
-# Launch command
-import subprocess as sp
+# Compile decoder PWM table
+FAN_PWM_TABLE_RE = re.compile(r'\((.*?)\)')
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+
+
+def load_table(path):
+    table = []
+    with open(path + "pwm_rpm_table", 'r') as fp:
+        title = []
+        for line in fp.readlines():
+            match = FAN_PWM_TABLE_RE.search(line)
+            line = [l.strip() for l in match.group(1).split(",")]
+            if title:
+                table += [{title[idx]: val for idx, val in enumerate(line) if idx > 0}]
+            else:
+                title = line
+    return table
 
 
 class Fan(object):
@@ -57,11 +72,7 @@ class Fan(object):
         # Max value PWM
         self._status["cap"] = int(self.read_status("pwm_cap")) if os.path.isfile(self.path + "pwm_cap") else 255
         # PWM RPM table
-        if os.path.isfile(self.path + "pwm_rpm_table"):
-            pwm_rpm_table = self.read_status("pwm_rpm_table")
-            for line in pwm_rpm_table.decode("utf-8").split("\n"):
-                line = [val.strip() for val in line.split(",")]
-                # print(line)
+        self.table = load_table(self.path) if os.path.isfile(self.path + "pwm_rpm_table") else {}
         # Step time
         self._status["step"] = int(self.read_status("step_time")) if os.path.isfile(self.path + "step_time") else 0
         # Control temperature
@@ -83,19 +94,19 @@ class Fan(object):
     @speed.setter
     def speed(self, value):
         # Check limit speed
-        if self.isTPWM:
+        if os.access(self.path + "target_pwm", os.W_OK):
             value = 100.0 if value > 100.0 else value
             value = 0 if value < 0 else value
             # Convert in PWM value
-            pwm = self._status["cap"] * value // 100
+            pwm = ceil(self._status["cap"] * value / 100.0)
             # Write PWM value
             with open(self.path + "target_pwm", 'w') as f:
                 f.write(str(pwm))
 
     def read_status(self, file_read):
-        status = sp.Popen(['cat', self.path + file_read], stdout=sp.PIPE)
-        query, _ = status.communicate()
-        return query
+        with open(self.path + file_read, 'r') as f:
+            return f.read()
+        return None
 
     def update(self):
         # Read PWM
