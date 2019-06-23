@@ -1,5 +1,5 @@
 # Jetson stats
-[![PyPI - Downloads](https://img.shields.io/pypi/dw/jetson-stats.svg)](https://pypistats.org/packages/jetson-stats) [![PyPI version](https://badge.fury.io/py/jetson-stats.svg)](https://badge.fury.io/py/jetson-stats) [![Build Status](https://travis-ci.org/rbonghi/jetson_stats.svg?branch=master)](https://travis-ci.org/rbonghi/jetson_stats)
+[![PyPI - Downloads](https://img.shields.io/pypi/dw/jetson-stats.svg)](https://pypistats.org/packages/jetson-stats) [![PyPI version](https://badge.fury.io/py/jetson-stats.svg)](https://badge.fury.io/py/jetson-stats) [![Build Status](https://travis-ci.org/rbonghi/jetson_stats.svg?branch=master)](https://travis-ci.org/rbonghi/jetson_stats) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/jetson-stats.svg)](https://www.python.org/) [![PyPI - Format](https://img.shields.io/pypi/format/jetson-stats.svg)](https://pypi.org/project/jetson-stats/)
 
 **jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1] embedded board. When you install jetson-stats are included:
 * [jtop](#jtop)
@@ -39,15 +39,16 @@ sudo jtop
 Other options are availables with `-h` option:
 ```console
 nvidia@jetson-nano:~/$ sudo jtop -h
-usage: jtop [-h] [-r REFRESH] [--server] [-p PORT] [--debug] [--page PAGE]
+usage: jtop [-h] [-r REFRESH] [--debug] [--page PAGE] [--version]
 
-jtop is system monitoring utility that runs on the terminal
+jtop is a system monitoring utility and control. Runs on terminal
 
 optional arguments:
   -h, --help   show this help message and exit
   -r REFRESH   refresh interval
   --debug      Run with debug logger
   --page PAGE  Open fix page
+  --version    show program's version number and exit
 ```
 ### Controls
 To control the your NVIDIA Jetson are available this keyboard commands:
@@ -59,7 +60,7 @@ To control the your NVIDIA Jetson are available this keyboard commands:
 1. **ALL** Are collected all information about your board: CPUs status, Memory, *GPU*, disk, fan and all status about jetson_clocks, NVPmodel and other
 2. **GPU** A real time GPU history about your NVIDIA Jetson
 3. **CTRL** You can control the status of you
-4. **INFO** 
+4. **INFO** Are collected all information about libraries, CUDA, Serial Number, interfaces, ...
 ## [**jetson-release**][jetson_release]
 The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
 
