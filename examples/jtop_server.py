@@ -49,22 +49,22 @@ if __name__ == "__main__":
     print("Simple Tegrastats server")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((args.host, args.port))
+    sock.bind((args.host, args.port))
     print("Open server jtop to {}:{}".format(args.host, args.port))
-    # Wait socket request
-    sock.listen()
-    conn, addr = sock.accept()
-    print("Connected to {}".format(conn))
+    sock.listen(1)
 
     with jtop() as jetson:
         try:
             while True:
+                # Wait socket request
+                conn, addr = sock.accept()
+                print("Connected to {}".format(conn))
                 # Read and convert in JSON the jetson stats
                 stats = json.dumps(jetson.stats)
                 # Send by socket
                 conn.send(stats.encode())
-                # Sleep before send new stat
-                time.sleep(1)
+                # Close connection
+                conn.close()
         except Exception:
             sock.close()
 # EOF
