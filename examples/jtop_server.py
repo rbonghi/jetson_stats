@@ -32,17 +32,25 @@ from jtop import jtop
 import time
 import socket
 import json
+import argparse
 
-HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
+parser = argparse.ArgumentParser(description='Simple Tegrastats server.')
+
+# Standard loopback interface address (localhost)
+parser.add_argument('--host', action="store", dest="host", default="127.0.0.1")
+
+# Port to listen on (non-privileged ports are > 1023)
+parser.add_argument('--port', action="store", dest="port", type=int, default=65432)
+
+args = parser.parse_args()
 
 if __name__ == "__main__":
 
     print("Simple Tegrastats server")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((HOST, PORT))
-    print("Open server jtop to {}:{}".format(HOST, PORT))
+    sock.connect((args.host, args.port))
+    print("Open server jtop to {}:{}".format(args.host, args.port))
     # Wait socket request
     sock.listen()
     conn, addr = sock.accept()
