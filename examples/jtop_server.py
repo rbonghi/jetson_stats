@@ -29,7 +29,6 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from jtop import jtop
-import time
 import socket
 import json
 import argparse
