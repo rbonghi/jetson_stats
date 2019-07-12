@@ -41,6 +41,9 @@ parser.add_argument('--host', action="store", dest="host", default="127.0.0.1")
 # Port to listen on (non-privileged ports are > 1023)
 parser.add_argument('--port', action="store", dest="port", type=int, default=65432)
 
+# Optional argument to return message in a valid HTTP response
+parser.add_argument('--http', action="store_true")
+
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -61,7 +64,13 @@ if __name__ == "__main__":
                 # Read and convert in JSON the jetson stats
                 stats = json.dumps(jetson.stats)
                 # Send by socket
-                conn.send(stats.encode())
+                if args.http:
+                    conn.send("HTTP/1.1 200 OK\n"
+                            +"Content-Type: application/json\n"
+                            +"\n"
+                            +stats.encode())
+                else:
+                    conn.send(stats.encode())
                 # Close connection
                 conn.close()
         except Exception:
