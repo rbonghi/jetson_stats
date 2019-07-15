@@ -29,34 +29,47 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from jtop import jtop
-import time
 import socket
 import json
+import argparse
 
-HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
+parser = argparse.ArgumentParser(description='Simple Tegrastats server.')
+
+# Standard loopback interface address (localhost)
+parser.add_argument('--host', action="store", dest="host", default="127.0.0.1")
+
+# Port to listen on (non-privileged ports are > 1023)
+parser.add_argument('--port', action="store", dest="port", type=int, default=65432)
+
+# Optional argument to return message in a valid HTTP response
+parser.add_argument('--http', action="store_true")
+
+args = parser.parse_args()
 
 if __name__ == "__main__":
 
     print("Simple Tegrastats server")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((HOST, PORT))
-    print("Open server jtop to {}:{}".format(HOST, PORT))
-    # Wait socket request
-    sock.listen()
-    conn, addr = sock.accept()
-    print("Connected to {}".format(conn))
+    sock.bind((args.host, args.port))
+    print("Open server jtop to {}:{}".format(args.host, args.port))
+    sock.listen(1)
 
     with jtop() as jetson:
         try:
             while True:
+                # Wait socket request
+                conn, addr = sock.accept()
+                print("Connected to {}".format(conn))
                 # Read and convert in JSON the jetson stats
                 stats = json.dumps(jetson.stats)
                 # Send by socket
-                conn.send(stats.encode())
-                # Sleep before send new stat
-                time.sleep(1)
+                if args.http:
+                    conn.send("HTTP/1.1 200 OK\nContent-Type: application/json\n\n" + stats.encode())
+                else:
+                    conn.send(stats.encode())
+                # Close connection
+                conn.close()
         except Exception:
             sock.close()
 # EOF
