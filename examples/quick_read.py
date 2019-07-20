@@ -42,7 +42,8 @@ if __name__ == "__main__":
             # Status disk
             print(jetson.disk)
             # Status fans
-            print(jetson.fans)
+            if hasattr(jetson, 'fans'):
+                print(jetson.fans)
             # uptime
             print(jetson.uptime)
             # nvpmodel
