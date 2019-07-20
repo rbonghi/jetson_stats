@@ -69,6 +69,7 @@ class NVPmodel():
         * Nano: https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/
     """
     REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
+    REGPM = re.compile(r'NV Power Mode: ((.*))')
 
     class NVPmodelException(Exception):
         pass
@@ -150,9 +151,17 @@ class NVPmodel():
             logger.debug('nvqmodel status %s', out)
             # Decode lines and split
             lines = out.decode("utf-8").split("\n")
-            # Return the mode type
-            self.mode = str(lines[0].split(": ")[1])
-            self.num = int(lines[1])
+            # Extract lines
+            for idx, line in enumerate(lines):
+                # Search configuration NVPmodel
+                match = NVPmodel.REGPM.search(line)
+                # if match extract name and number
+                if match:
+                    # Extract NV Power Mode
+                    self.mode = match.group(1)
+                    # Extract number
+                    self.num = int(lines[idx + 1])
+                    break
         except OSError:
             logger.info("NVP Model does not exist")
         except AttributeError:

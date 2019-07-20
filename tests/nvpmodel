@@ -388,6 +388,16 @@ NVPM VERB: CPU_ONLINE CORE_0 1
 EOF
 }
 
+show_query()
+{
+    local name=$1
+    local number=$2
+
+    echo "NVPM WARN: fan mode is not set!"
+    echo "NV Power Mode: $name"
+    echo "$number"
+}
+
 set_level()
 {
     local level=$1
@@ -435,8 +445,7 @@ main()
                 exit 0
                 ;;
             -q)
-                echo "NVP model: ${modes[level]}"
-                echo "$level"
+                show_query ${modes[level]} $level
                 exit 0
                 ;;
             -h|--help)
