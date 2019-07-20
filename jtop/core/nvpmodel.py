@@ -158,7 +158,7 @@ class NVPmodel():
                 # if match extract name and number
                 if match:
                     # Extract NV Power Mode
-                    self.mode = match.group(1)
+                    self.mode = str(match.group(1))
                     # Extract number
                     self.num = int(lines[idx + 1])
                     break
