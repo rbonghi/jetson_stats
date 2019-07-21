@@ -55,6 +55,7 @@ To control the your NVIDIA Jetson are available this keyboard commands:
 * **a** Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)
 * **e** Enable/Disable jetson_clocks on board boot
 * **+** and **-** Increase and decrease the NVPmodel
+* **p** and **m** Increase and decrease the Fan speed
 ### Pages
 **jtop** have four different pages to control your NVIDIA Jetson:
 1. **ALL** Are collected all information about your board: CPUs status, Memory, *GPU*, disk, fan and all status about jetson_clocks, NVPmodel and other
