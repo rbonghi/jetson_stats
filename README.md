@@ -4,7 +4,6 @@
 **jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1] embedded board. When you install jetson-stats are included:
 * [jtop](#jtop)
 * [jetson-release](#jetson-release)
-* [jetson-docker](#jetson-docker)
 * [jetson_variables](#jetson_variables)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information
@@ -70,8 +69,6 @@ The command show the status and all information about your [NVIDIA Jetson][NVIDI
 This script generate the easy environment variables to know which is your Hardware version of the Jetson and which Jetpack you have already installed
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
-## [**jetson-docker**][jetson_docker]
-It is a bridge to use the NVIDIA core inside your doker container. This bridge share CUDA library, and all devices (nvmap and gpu)
 
 [jtop]: https://github.com/rbonghi/jetson_stats/wiki/jtop
 [jetson_variables]: https://github.com/rbonghi/jetson_stats/wiki/jetson_variables
