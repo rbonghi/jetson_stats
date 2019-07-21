@@ -36,6 +36,7 @@ from .jtopguilib import (check_curses,
                          box_list,
                          Chart)
 
+
 class CTRL(Page):
 
     def __init__(self, stdscr, jetson, refresh):
