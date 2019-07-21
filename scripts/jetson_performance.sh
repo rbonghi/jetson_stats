@@ -62,7 +62,8 @@ fi
 
 JETSON_STATS_FOLDER=/opt/jetson_stats
 # Load JETSON environment variables:
-. $JETSON_STATS_FOLDER/jetson_variables
+# Not required jetson_variables at this time
+# . $JETSON_STATS_FOLDER/jetson_variables
 
 JETSON_PERFORMANCE_WAIT_TIME=60
 JETSON_PERFORMANCE_CHECK_FILE=/tmp/jetson_performance_run
