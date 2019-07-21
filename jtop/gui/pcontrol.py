@@ -30,11 +30,11 @@
 import curses
 from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import (box_keyboard,
+from .jtopguilib import (check_curses,
+                         box_keyboard,
                          box_status,
                          box_list,
                          Chart)
-
 
 class CTRL(Page):
 
@@ -49,6 +49,7 @@ class CTRL(Page):
             # Attach the chart for every update from jtop
             jetson.attach(self.chart_fan)
 
+    @check_curses
     def draw(self, key):
         """ Control board, check status jetson_clocks and change NVP model """
         # Screen size
@@ -96,9 +97,17 @@ class CTRL(Page):
                 label = "Target: {target: >3}%".format(target=fan.get("tpwm", 0))
             # Evaluate size chart
             size_x = [posx + 40, width - 10]
-            size_y = [2, height - 3]
+            size_y = [start_pos, height - 3] if self.jetson.userid != 0 else [start_pos + 3, height - 3]
             # Draw the GPU chart
             self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
+            if self.jetson.userid == 0:
+                self.stdscr.addstr(start_pos + 1, posx + 40, "Speed", curses.A_BOLD)
+                # Draw keys to decrease fan speed
+                box_keyboard(self.stdscr, posx + 46, start_pos, "m", key)
+                # Draw selected number
+                self.stdscr.addstr(start_pos + 1, posx + 52, str(self.jetson.fan.speed), curses.A_NORMAL)
+                # Draw keys to increase fan speed
+                box_keyboard(self.stdscr, posx + 56, start_pos, "p", key)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
@@ -108,6 +117,8 @@ class CTRL(Page):
             enabled = self.jetson.jetson_clocks.enable
             # NVPmodel controller
             nvpmodel = self.jetson.nvpmodel
+            # FAN controller
+            fan = self.jetson.fan
             # Write the new jetson_clocks status
             if key == ord('a') and not start:
                 self.jetson.jetson_clocks.start = True
@@ -124,4 +135,10 @@ class CTRL(Page):
                     nvpmodel.increase()
                 elif key == ord('-'):
                     nvpmodel.decrease()
+            # Enable fan control
+            if fan is not None:
+                if key == ord('p'):
+                    fan.increase()
+                elif key == ord('m'):
+                    fan.decrease()
 # EOF

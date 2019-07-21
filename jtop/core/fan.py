@@ -103,6 +103,14 @@ class Fan(object):
             with open(self.path + "target_pwm", 'w') as f:
                 f.write(str(pwm))
 
+    def increase(self, step=10):
+        if self.speed + step <= 100:
+            self.speed += step
+
+    def decrease(self, step=10):
+        if self.speed - step >= 0:
+            self.speed -= step
+
     def read_status(self, file_read):
         with open(self.path + file_read, 'r') as f:
             return f.read()
