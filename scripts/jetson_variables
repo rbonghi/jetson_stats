@@ -67,24 +67,24 @@ export JETSON_DESCRIPTION
 # NVIDIA Jetson version
 # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
 # https://stackoverflow.com/questions/16817646/extract-version-number-from-a-string
+# https://askubuntu.com/questions/319307/reliably-check-if-a-package-is-installed-or-not
+# 
 if [ -f /etc/nv_tegra_release ]; then
     # L4T string
     # First line on /etc/nv_tegra_release 
     # - "# R28 (release), REVISION: 2.1, GCID: 11272647, BOARD: t186ref, EABI: aarch64, DATE: Thu May 17 07:29:06 UTC 2018"
     JETSON_L4T_STRING=$(head -n 1 /etc/nv_tegra_release)
-    
     # Load release and revision
     JETSON_L4T_RELEASE=$(echo $JETSON_L4T_STRING | cut -f 2 -d ' ' | grep -Po '(?<=R)[^;]+')
     JETSON_L4T_REVISION=$(echo $JETSON_L4T_STRING | cut -f 2 -d ',' | grep -Po '(?<=REVISION: )[^;]+')
 elif dpkg --get-selections | grep -q "^nvidia-l4t-core[[:space:]]*install$"; then
+    # Read version
 	JETSON_L4T_STRING=$(dpkg-query --showformat='${Version}' --show nvidia-l4t-core)
-	JETSON_L4T_ARRAY=(${JETSON_L4T_STRING//./ })
-	#echo ${JETSON_L4T_ARRAY[@]}
-	#echo ${#JETSON_L4T_ARRAY[@]}
-	
+	# extract version
+	JETSON_L4T_ARRAY=$(echo $JETSON_L4T_STRING | cut -f 1 -d '-')
     # Load release and revision
-	JETSON_L4T_RELEASE=${JETSON_L4T_ARRAY[0]}
-	JETSON_L4T_REVISION=${JETSON_L4T_ARRAY[1]}
+	JETSON_L4T_RELEASE=$(echo $JETSON_L4T_ARRAY | cut -f 1 -d '.')
+	JETSON_L4T_REVISION=${JETSON_L4T_ARRAY#"$JETSON_L4T_RELEASE."}
 else
     # Load release and revision
     JETSON_L4T_RELEASE="N"
