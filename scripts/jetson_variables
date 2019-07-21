@@ -68,7 +68,7 @@ export JETSON_DESCRIPTION
 # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
 # https://stackoverflow.com/questions/16817646/extract-version-number-from-a-string
 # https://askubuntu.com/questions/319307/reliably-check-if-a-package-is-installed-or-not
-# 
+# https://github.com/dusty-nv/jetson-inference/blob/7e81381a96c1ac5f57f1728afbfdec7f1bfeffc2/tools/install-pytorch.sh#L296
 if [ -f /etc/nv_tegra_release ]; then
     # L4T string
     # First line on /etc/nv_tegra_release 

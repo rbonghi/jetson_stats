@@ -85,7 +85,7 @@ class PostInstallCommand(install):
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/install.sh -s -no-pip'))
+        sp.call(shlex.split('./scripts/install.sh -s'))
 
 
 class PostDevelopCommand(develop):
@@ -96,7 +96,7 @@ class PostDevelopCommand(develop):
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/install.sh -s -no-pip'))
+        sp.call(shlex.split('./scripts/install.sh -s'))
 
 
 # Configuration setup module
@@ -162,10 +162,7 @@ setup(
                 ('/etc/systemd/system', ['scripts/jetson_performance.service']),
                 ],
     # Install extra scripts
-    scripts=['scripts/jetson-docker',
-             'scripts/jetson-swap',
-             'scripts/jetson-release',
-             ],
+    scripts=['scripts/jetson_swap', 'scripts/jetson_release'],
     cmdclass={'develop': PostDevelopCommand,
               'install': PostInstallCommand},
     # The following provide a command called `jtop`

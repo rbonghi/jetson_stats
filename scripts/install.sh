@@ -29,35 +29,49 @@
 
 BIN_FOLDER="/usr/local/bin"
 
-uninstaller_old_bin()
+# Load jetson_variables
+source scripts/jetson_variables
+
+js_uninstall_old()
 {
+    local FORCE=$1
+    local JETSON_FOLDER=$2
+    
+    # Remove jetson-docker link
+    if [ -f "$BIN_FOLDER/jetson-docker" ] ; then
+        echo "   * Remove OLD jetson-docker link"
+        sudo rm "$BIN_FOLDER/jetson-docker"
+    fi
+    
     # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jetson-release" ] ; then
+        echo "   * Remove OLD jetson-release link"
+        sudo rm "$BIN_FOLDER/jetson-release"
+    fi
+
+    # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jetson-swap" ] ; then
+        echo "   * Remove OLD jetson-swap link"
+        sudo rm "$BIN_FOLDER/jetson-swap"
+    fi
+    
     if [ -f "$BIN_FOLDER/jtop" ] ; then
         echo "   * Remove jtop link"
         sudo rm "$BIN_FOLDER/jtop"
     fi
     
-    # Remove jetson_release link
-    if [ -f "$BIN_FOLDER/jetson_release" ] ; then
-        echo "   * Remove jetson_release link"
-        sudo rm "$BIN_FOLDER/jetson_release"
-    fi
-
-    # Remove jetson_swap link
-    if [ -f "$BIN_FOLDER/jetson_swap" ] ; then
-        echo "   * Remove jetson_swap link"
-        sudo rm "$BIN_FOLDER/jetson_swap"
-    fi
-
-    # Remove jetson-docker link
-    if [ -f "$BIN_FOLDER/jetson-docker" ] ; then
-        echo "   * Remove jetson-docker link"
-        sudo rm "$BIN_FOLDER/jetson-docker"
+    # Remove /etc/jetson_easy folder
+    if [ -d "/etc/jetson_easy" ] ; then
+        echo "   * Remove jetson_easy folder"
+        sudo rm -R "/etc/jetson_easy"
     fi
 }
 
-disable_service()
+js_uninstall()
 {
+    local FORCE=$1
+    local JETSON_FOLDER=$2
+    
     # Remove the service from /etc/init.d
     if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
         # Uninstall the service
@@ -71,71 +85,166 @@ disable_service()
         # Disable the service
         echo "   * Disable service from /etc/systemd/system"
         sudo systemctl disable jetson_performance.service
-    fi
-}
-
-uninstaller_bin()
-{
-    # Remove the service from /etc/init.d
-    if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
-        # Remove service
-        sudo systemctl disable jetson_performance.service
+        # Remove service in list
         echo "   * Remove the service from /etc/systemd/system"
         sudo rm "/etc/systemd/system/jetson_performance.service"
+        # Update service list
+        echo "   * Reload services list"
+        sudo systemctl daemon-reload
     fi
-    # Update service list
-    sudo systemctl daemon-reload
-
-    # Remove from bashrc jetsonstat variables
-    if [ -f "/etc/profile.d/jetson_env.sh" ] ; then
-        echo "   * Remove the jetson_env.sh from /etc/profile.d/"
-        sudo rm "/etc/profile.d/jetson_env.sh"
-    fi
-}
-
-uninstaller()
-{
-    local JETSON_FOLDER=$1
     
-    echo " - Uninstall jetson_stats on $JETSON_FOLDER"
     # Remove configuration
     if [ -f $JETSON_FOLDER/l4t_dfs.conf ] ; then
-        echo "   * Remove the jetson_clock.sh configuration"
+        echo "   * Remove l4t_dfs.conf from $JETSON_FOLDER"
         sudo rm $JETSON_FOLDER/l4t_dfs.conf
     fi
+    
+    # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jetson_release" ] ; then
+        echo "   * Remove jetson_release link"
+        sudo rm "$BIN_FOLDER/jetson_release"
+    fi
 
-    # remove folder
-    echo "   * Remove jetson_easy folder"
-    sudo rm -r $JETSON_FOLDER
+    # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jetson_swap" ] ; then
+        echo "   * Remove jetson_swap link"
+        sudo rm "$BIN_FOLDER/jetson_swap"
+    fi
+    
+    # Remove jetson-docker link
+    if [ -f "$BIN_FOLDER/jetson_docker" ] ; then
+        echo "   * Remove jetson_docker link"
+        sudo rm "$BIN_FOLDER/jetson_docker"
+    fi
+
+    # Remove folder
+    if [ -d "$JETSON_FOLDER" ] ; then
+        echo "   * Remove $JETSON_FOLDER folder"
+        sudo rm -R $JETSON_FOLDER
+    fi
 }
 
-installer()
+js_install()
 {
-    local FORCE_INSTALL=$1
+    local FORCE=$1
+    local JETSON_FOLDER=$2
     
+    echo "   * Make folder $JETSON_FOLDER"
+    sudo mkdir -p "$JETSON_FOLDER"
+    
+    echo "   * Copy scrips in $JETSON_FOLDER"
+    sudo cp "scripts/jetson_variables" "$JETSON_FOLDER/jetson_variables"
+    sudo cp "scripts/jetson_performance.sh" "$JETSON_FOLDER/jetson_performance.sh"
+    sudo cp "scripts/jetson_swap" "$JETSON_FOLDER/jetson_swap"
+    sudo cp "scripts/jetson_release" "$JETSON_FOLDER/jetson_release"
+    
+    echo "   * Copy jetson_env.sh in /etc/profile.d/"
+    sudo cp "scripts/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
+    
+    echo "   * Copy jetson_performance.service in service list"
+    sudo cp "scripts/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+    
+    if [ ! -f $BIN_FOLDER/jetson_swap ] ; then
+        echo "   * Link jetson_swap in $BIN_FOLDER"
+        sudo ln -s $JETSON_FOLDER/jetson_swap $BIN_FOLDER/jetson_swap
+    fi
+    if [ ! -f $BIN_FOLDER/jetson_release ] ; then
+        echo "   * Link jetson_release in $BIN_FOLDER"
+        sudo ln -s $JETSON_FOLDER/jetson_release $BIN_FOLDER/jetson_release
+    fi
+    
+    # Install jetson_docker only for Jetpack before L4T 32
+    if [ $JETSON_L4T_RELEASE -lt 32 ]; then
+        echo "   * Copy jetson_docker in $JETSON_FOLDER for L4T=$JETSON_L4T_RELEASE"
+        sudo cp "scripts/jetson_docker" "$JETSON_FOLDER/jetson_docker"
+        
+        if [ ! -f $BIN_FOLDER/jetson_docker ] ; then
+            echo "   * Link jetson_docker in $BIN_FOLDER for L4T=$JETSON_L4T_RELEASE"
+            sudo ln -s $JETSON_FOLDER/jetson_docker $BIN_FOLDER/jetson_docker
+        fi
+    fi
+    
+    # Update service list
+    echo "   * Reload services list"
+    sudo systemctl daemon-reload
+}
+
+js_test_uninstall()
+{
+    local FORCE=$1
+    
+    # Remove tegrastats
+    if [ -f /usr/bin/tegrastats ] ; then
+        echo " - Remove /usr/bin/tegrastats"
+        sudo rm /usr/bin/tegrastats
+    else
+        echo " - /usr/bin/tegrastats does not exist"
+    fi
+    # Remove nvpmodel
+    if [ -f /usr/bin/nvpmodel ] ; then
+    echo " - Remove /usr/bin/nvpmodel"
+        sudo rm /usr/bin/nvpmodel
+    else
+        echo " - /usr/bin/nvpmodel does not exist"
+    fi
+    # Remove jetson_clock
+    if [ -f /usr/bin/jetson_clocks ] ; then
+    echo " - Remove /usr/bin/jetson_clocks"
+        sudo rm /usr/bin/jetson_clocks
+    else
+        echo " - /usr/bin/jetson_clocks does not exist"
+    fi
+}
+
+js_test_install()
+{
+    local FORCE=$1
+    
+    # tegrastats emulator
+    if [ ! -f /usr/bin/tegrastats ] || $FORCE ; then
+        echo " - Copy emulation tegrastats in /usr/bin/"
+        sudo cp tests/tegrastats /usr/bin/
+    else
+        echo " - Already exist tegrastats in /usr/bin/"
+    fi
+    # nvpmodel emulator
+    if [ ! -f /usr/bin/nvpmodel ] || $FORCE ; then
+    echo " - Copy emulation nvpmodel in /usr/bin/"
+        sudo cp tests/nvpmodel /usr/bin/
+    else
+        echo " - Already exist nvpmodel in /usr/bin/"
+    fi
+    # jetson_clock
+    if [ ! -f /usr/bin/jetson_clocks ] || $FORCE ; then
+    echo " - Copy emulation jetson_clocks in /usr/bin/"
+        sudo cp tests/jetson_clocks /usr/bin/
+    else
+        echo " - Already exist jetson_clocks in /usr/bin/"
+    fi
+}
+
+js_pyp()
+{
+    local FORCE=$1
+    
+    echo " - Install jetson_stats"
     # Launch installer pip
-    if $FORCE_INSTALL ; then
+    if $FORCE ; then
         sudo -H pip install -U -e .
     else
         sudo -H pip install -e .
     fi
 }
 
-installer_bin()
+js_service_auto()
 {
-    local JETSON_FOLDER=$1
-    
-    sudo mkdir -p "$1" 
-    
-    echo "   * Copy jetson_variables and jetson_performance"
-    sudo cp "scripts/jetson_variables" "/opt/jetson_stats/jetson_variables"
-    sudo cp "scripts/jetson_performance.sh" "/opt/jetson_stats/jetson_performance.sh"
-    
-    echo "   * Copy jetson_env.sh in /etc/profile.d/"
-    sudo cp "scripts/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
-    
-    echo "   * Copy jetson_variables and other scripts"
-    sudo cp "scripts/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+    tput setaf 4
+    echo " - Enable and start jetson_performance"
+    tput sgr0
+    # Enable service
+    sudo systemctl enable jetson_performance.service
+    # Run the service
+    sudo systemctl start jetson_performance.service
 }
 
 usage()
@@ -152,59 +261,53 @@ usage()
     echo "options,"
     echo "   -h|--help    | This help"
     echo "   -s|--silent  | Run jetson_stats in silent mode"
-    echo "   -i|--inst    | Change default install folder"
     echo "   -f|--force   | Force install all tools"
-    echo "   --uninstall  | Run the uninstaller"
-    echo "   -no-bin      | NOT Install this binaries fiels"
-    echo "   -no-pip      | NOT Install this repository with pip"
-    echo "   -test        | Install test files"
+    echo "   -i|--inst    | Change default install folder"
     echo "   -auto        | Run at start-up jetson performance"
-
+    echo "   --uninstall  | Run the uninstaller"
+    echo "   -test        | Install test files"
+    echo "   -pyp         | Install this repository"
 }
 
 main()
 {
     local SKIP_ASK=true
-    local AUTO_START=false
-    local FORCE_INSTALL=false
-    local START_UNINSTALL=false
-    local JETSON_FOLDER="/opt/jetson_stats"
-    local THIS_FOLDER=true
-    local INSTALL_BIN=true
+    local UNINSTALL=false
     local TEST_FILES=false
+    local FORCE=false
+    local SERVICE_AUTO=false
+    local PYP=false
+    local JETSON_FOLDER="/opt/jetson_stats"
     
 	# Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
-            -i|--inst)
-                JETSON_FOLDER=$2
-                shift 1
+            -h|--help)
+                # Load help
+                usage
+                exit 0
                 ;;
             -s|--silent)
                 SKIP_ASK=false
                 ;;
             -f|--force)
-                FORCE_INSTALL=true
+                FORCE=true
+                ;;
+            -i|--inst)
+                JETSON_FOLDER=$2
+                shift 1
+                ;;
+            -auto)
+                SERVICE_AUTO=true
                 ;;
             --uninstall)
-                START_UNINSTALL=true
-                ;;
-            -no-bin)
-                INSTALL_BIN=false
+                UNINSTALL=true
                 ;;
             -test)
                 TEST_FILES=true
                 ;;
-            -auto)
-                AUTO_START=true
-                ;;
-            -no-pip)
-                THIS_FOLDER=false
-                ;;
-            -h|--help)
-                # Load help
-                usage
-                exit 0
+            -pyp)
+                PYP=true
                 ;;
             *)
                 usage "[ERROR] Unknown option: $1"
@@ -227,9 +330,9 @@ main()
         tput sgr0
         exit 1
     fi
-	
+    
 	local install_uninstall_string="install"
-	if $START_UNINSTALL ; then
+	if $UNINSTALL ; then
         install_uninstall_string="uninstall"
     fi
 	
@@ -242,118 +345,49 @@ main()
             * ) echo "Please answer yes or no.";;
         esac
     done
-    
-    if $START_UNINSTALL ; then
-        tput setaf 3
-        echo "Uninstaller jetson-stats"
+    # Show options
+    tput setaf 3
+    echo "RUN $install_uninstall_string jetson-stats WORKDIR $JETSON_FOLDER"
+    tput sgr0
+    if $FORCE ; then
+        tput setaf 4
+        echo "Force $install_uninstall_string"
         tput sgr0
-    
-        # Run uninstaller binaries
-        disable_service
-        
-        # remove old configurations
-        if [ -d /etc/jetson_easy ] && ! $TEST_FILES ; then
-            uninstaller_old_bin
-            uninstaller /etc/jetson_easy
-        fi
-        
-        if $THIS_FOLDER && ! $TEST_FILES ; then
-            # Remove configuration standard
-            if [ -d "$JETSON_FOLDER" ] ; then
-                uninstaller_bin
-                uninstaller $JETSON_FOLDER
-            fi
-        fi
-        
-        if $TEST_FILES ; then
-            # Remove tegrastats
-            if [ -f /usr/bin/tegrastats ] ; then
-                echo " - Remove /usr/bin/tegrastats"
-                sudo rm /usr/bin/tegrastats
-            else
-                echo " - /usr/bin/tegrastats does not exist"
-            fi
-            # Remove nvpmodel
-            if [ -f /usr/bin/nvpmodel ] ; then
-            echo " - Remove /usr/bin/nvpmodel"
-                sudo rm /usr/bin/nvpmodel
-            else
-                echo " - /usr/bin/nvpmodel does not exist"
-            fi
-            # Remove jetson_clock
-            if [ -f /usr/bin/jetson_clocks ] ; then
-            echo " - Remove /usr/bin/jetson_clocks"
-                sudo rm /usr/bin/jetson_clocks
-            else
-                echo " - /usr/bin/jetson_clocks does not exist"
-            fi
-        fi
-    else
-        # ---------------------------------------------------------------
-        #                INSTALLER
-        # ---------------------------------------------------------------
-        tput setaf 3
-        echo "Installer jetson-stats"
-        tput sgr0
-        
-        if $FORCE_INSTALL ; then
-            tput setaf 4
-            echo "Force install"
-            tput sgr0
-        fi
-        
-        if $THIS_FOLDER && ! $TEST_FILES ; then
-            # Run installer
-            installer $FORCE_INSTALL
-        fi
-        
-        if $INSTALL_BIN && ! $TEST_FILES ; then
-            installer_bin $JETSON_FOLDER
-        fi
-        
-        if $TEST_FILES ; then
-            # tegrastats emulator
-            if [ ! -f /usr/bin/tegrastats ] || $FORCE_INSTALL ; then
-                echo " - Copy emulation tegrastats in /usr/bin/"
-                sudo cp tests/tegrastats /usr/bin/
-            else
-                echo " - Already exist tegrastats in /usr/bin/"
-            fi
-            # nvpmodel emulator
-            if [ ! -f /usr/bin/nvpmodel ] || $FORCE_INSTALL ; then
-            echo " - Copy emulation nvpmodel in /usr/bin/"
-                sudo cp tests/nvpmodel /usr/bin/
-            else
-                echo " - Already exist nvpmodel in /usr/bin/"
-            fi
-            # jetson_clock
-            if [ ! -f /usr/bin/jetson_clocks ] || $FORCE_INSTALL ; then
-            echo " - Copy emulation jetson_clocks in /usr/bin/"
-                sudo cp tests/jetson_clocks /usr/bin/
-            else
-                echo " - Already exist jetson_clocks in /usr/bin/"
-            fi
-        fi
-        
-        # Update service list
-        sudo systemctl daemon-reload
-        
-        if $AUTO_START ; then
-            tput setaf 4
-            echo " - Enable and start jetson_performance"
-            tput sgr0
-            # Enable service
-            sudo systemctl enable jetson_performance.service
-            # Run the service
-            sudo systemctl start jetson_performance.service
-        fi
     fi
     
+    # Run installer/uninstaller
+    if $UNINSTALL ; then
+        # Check if uninstall TEST files
+        if $TEST_FILES ; then
+            js_test_uninstall $FORCE
+        else
+            js_uninstall_old $FORCE $JETSON_FOLDER
+            js_uninstall $FORCE $JETSON_FOLDER
+        fi
+    else
+        # Check if uninstall TEST files
+        if $TEST_FILES ; then
+            js_test_install $FORCE
+        else
+            if $PYP ; then
+                # Run python installer
+                js_pyp $FORCE
+            else
+                # Run installer
+                js_install $FORCE $JETSON_FOLDER
+                
+                # Enable and start service
+                if $SERVICE_AUTO ; then
+                    js_service_auto
+                fi
+            fi
+        fi
+    fi
+
     tput setaf 2
     echo "DONE!"
     tput sgr0
 }
-
 
 main $@
 exit 0
