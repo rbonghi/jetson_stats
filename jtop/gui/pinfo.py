@@ -69,5 +69,6 @@ class INFO(Page):
                 self.stdscr.addstr(start_pos + idx, posx + spacing, ip, curses.A_BOLD)
                 idx += 1
         # Author information
+        plot_name_info(self.stdscr, start_pos - 1, width - 31, "Version", self.jetson.version)
         plot_name_info(self.stdscr, start_pos, width - 30, "Author", "Raffaello Bonghi")
         plot_name_info(self.stdscr, start_pos + 1, width - 30, "e-mail", "raffaello@rnext.it")

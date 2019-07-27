@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# This file is part of the ros_webconsole package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify

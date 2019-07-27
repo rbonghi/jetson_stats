@@ -25,7 +25,6 @@
     - https://docs.python.org/3.3/howto/curses.html#attributes-and-color
     - http://toilers.mines.edu/~jrosenth/101python/code/curses_plot/
 """
-import sys
 import argparse
 # Logging
 import logging

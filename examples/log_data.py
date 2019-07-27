@@ -38,6 +38,7 @@ def build_header(jetson):
     header += [key for key in jetson.stats.get('VOLT', {}).keys()]
     return header
 
+
 def build_row(jetson, now):
     row = {'time': now}
     # Add GPU idle
@@ -53,27 +54,27 @@ def build_row(jetson, now):
         row[key] = value.get('avg', 'na')
     return row
 
+
 if __name__ == "__main__":
 
     print("Simple Tegrastats reader")
     print("Save log on {file}".format(file=args.file))
-    
     first = True
     try:
         with open(args.file, 'w') as csvfile:
             with jtop() as jetson:
-                    while True:
-                        # Make header
-                        if first:
-                            writer = csv.DictWriter(csvfile, fieldnames=build_header(jetson))
-                            writer.writeheader()
-                            first = False
-                        # Write row
-                        now = datetime.now()
-                        writer.writerow(build_row(jetson, now))
-                        print("Logged at {time}".format(time=now))
-                        # Sleep before send new stat
-                        time.sleep(1)
+                while True:
+                    # Make header
+                    if first:
+                        writer = csv.DictWriter(csvfile, fieldnames=build_header(jetson))
+                        writer.writeheader()
+                        first = False
+                    # Write row
+                    now = datetime.now()
+                    writer.writerow(build_row(jetson, now))
+                    print("Logged at {time}".format(time=now))
+                    # Sleep before send new stat
+                    time.sleep(1)
     except KeyboardInterrupt:
         print("Closed with CTRL-C")
     except IOError:

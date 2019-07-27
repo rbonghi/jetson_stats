@@ -38,7 +38,6 @@ def xterm_line(jetson):
     return str_xterm
 
 
-
 def set_xterm_title(title):
     '''
     Set XTerm title using escape sequences.
