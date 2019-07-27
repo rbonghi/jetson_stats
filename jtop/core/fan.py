@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# This file is part of the ros_webconsole package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -57,14 +57,13 @@ class Fan(object):
         self.isRPM = os.path.isfile(self.path + "rpm_measured")
         self.isCPWM = os.path.isfile(self.path + "cur_pwm")
         self.isTPWM = os.path.isfile(self.path + "target_pwm")
+        self.isCTRL = os.path.isfile(self.path + "temp_control")
         # Max value PWM
         self._status["cap"] = int(self.read_status("pwm_cap")) if os.path.isfile(self.path + "pwm_cap") else 255
         # PWM RPM table
         self.table = load_table(self.path) if os.path.isfile(self.path + "pwm_rpm_table") else {}
         # Step time
         self._status["step"] = int(self.read_status("step_time")) if os.path.isfile(self.path + "step_time") else 0
-        # Control temperature
-        self._status["temp"] = int(self.read_status("temp_control")) if os.path.isfile(self.path + "temp_control") else 0
         # Status FAN
         if os.path.isfile(self.path + "target_pwm"):
             self._status["status"] = 'ON'
@@ -91,6 +90,19 @@ class Fan(object):
             with open(self.path + "target_pwm", 'w') as f:
                 f.write(str(pwm))
 
+    @property
+    def control(self):
+        return self._status.get("ctrl", False)
+
+    @control.setter
+    def control(self, value):
+        # Check limit speed
+        if os.access(self.path + "temp_control", os.W_OK):
+            value = 1 if value else 0
+            # Write status control value
+            with open(self.path + "temp_control", 'w') as f:
+                f.write(str(value))
+
     def increase(self, step=10):
         if self.speed + step <= 100:
             self.speed += step
@@ -105,6 +117,9 @@ class Fan(object):
         return None
 
     def update(self):
+        # Control temperature
+        if self.isCTRL:
+            self._status["ctrl"] = True if int(self.read_status("temp_control")) == 1 else False
         # Read PWM
         if self.isTPWM:
             fan_level = float(self.read_status("target_pwm")) / 255.0 * 100.0

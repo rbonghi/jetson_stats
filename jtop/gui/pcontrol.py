@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# This file is part of the ros_webconsole package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -90,13 +90,20 @@ class CTRL(Page):
             # Draw the GPU chart
             self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
             if self.jetson.userid == 0:
-                self.stdscr.addstr(start_pos + 1, posx + 40, "Speed", curses.A_BOLD)
                 # Draw keys to decrease fan speed
-                box_keyboard(self.stdscr, posx + 46, start_pos, "m", key)
+                box_keyboard(self.stdscr, posx + 40, start_pos, "m", key)
                 # Draw selected number
-                self.stdscr.addstr(start_pos + 1, posx + 52, str(self.jetson.fan.speed), curses.A_NORMAL)
+                self.stdscr.addstr(start_pos, posx + 46, "Speed", curses.A_BOLD)
+                speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
+                self.stdscr.addstr(start_pos + 1, posx + 46, speed_str, curses.A_NORMAL)
                 # Draw keys to increase fan speed
-                box_keyboard(self.stdscr, posx + 56, start_pos, "p", key)
+                box_keyboard(self.stdscr, posx + 52, start_pos, "p", key)
+                # Mode
+                if 'ctrl' in fan:
+                    box_keyboard(self.stdscr, posx + 58, start_pos, "f", key)
+                    ctrl_fan = fan['ctrl']
+                    enabled_box = "Act" if ctrl_fan else "Dis"
+                    box_status(self.stdscr, posx + 63, start_pos, enabled_box, ctrl_fan)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
@@ -130,4 +137,6 @@ class CTRL(Page):
                     fan.increase()
                 elif key == ord('m'):
                     fan.decrease()
+                if key == ord('f'):
+                    fan.control = not fan.control
 # EOF
