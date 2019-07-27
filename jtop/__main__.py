@@ -25,8 +25,6 @@
     - https://docs.python.org/3.3/howto/curses.html#attributes-and-color
     - http://toilers.mines.edu/~jrosenth/101python/code/curses_plot/
 """
-import re
-import os
 import sys
 import argparse
 # Logging
@@ -34,43 +32,12 @@ import logging
 # control command line
 import curses
 # Tegrastats objext reader
-from .jtop import jtop
+from .jtop import jtop, get_version
 # GUI jtop interface
 from .gui import JTOPGUI, ALL, GPU, CTRL, INFO
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
-
-
-def set_xterm_title(title):
-    '''
-    Set XTerm title using escape sequences.
-    By default, sets as 'Python' and the version number.
-    '''
-    # Make sure this terminal supports the OSC code (\33]),
-    # though not necessarily that it supports setting the title.
-    # If this check causes compatibility issues, you can add
-    # items to the tuple, or remove the check entirely.
-    if os.environ.get('TERM') in ('xterm',
-                                  'xterm-color',
-                                  'xterm-256color',
-                                  'linux',
-                                  'screen',
-                                  'screen-256color',
-                                  'screen-bce',
-                                  ):
-        sys.stdout.write('\33]0;' + title + '\a')
-        sys.stdout.flush()
-
-
-def get_version():
-    # Load version package
-    here = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(here, "__init__.py")) as fp:
-        VERSION = (
-            re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S).match(fp.read()).group(1)
-        )
-    return VERSION
 
 
 def main():
@@ -79,7 +46,7 @@ def main():
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
-    parser.add_argument('--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
     # Set logging level
@@ -88,9 +55,6 @@ def main():
                             format='%(name)s - %(levelname)s - %(message)s')
     else:
         logging.basicConfig()
-    # Title script
-    # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
-    set_xterm_title("jtop")
     # Open tegrastats reader and run the curses wrapper
     try:
         with jtop(interval=args.refresh) as jetson:

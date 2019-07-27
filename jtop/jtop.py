@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import os
 # Logging
 import logging
@@ -31,6 +32,16 @@ from .core import (import_os_variables,
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+# Version match
+VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
+
+
+def get_version():
+    # Load version package
+    here = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(here, "__init__.py")) as fp:
+        VERSION = VERSION_RE.match(fp.read()).group(1)
+    return VERSION
 
 
 class jtop(StatusObserver):
@@ -50,6 +61,8 @@ class jtop(StatusObserver):
     TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 
     def __init__(self, interval=500, time=10.0):
+        # Version package
+        self.version = get_version()
         # Initialize observer
         self._observers = set()
         # Load all Jetson variables

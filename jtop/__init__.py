@@ -17,7 +17,7 @@
 
 # flake8: noqa
 
-from .jtop import jtop
+from .jtop import jtop, get_version
 # Import extra controllers
 from .core import Tegrastats
 from .core import Fan

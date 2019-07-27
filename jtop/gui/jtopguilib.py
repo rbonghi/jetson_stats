@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import sys
 # control command line
 import curses
 from curses.textpad import rectangle
@@ -23,6 +25,27 @@ from collections import deque
 from math import ceil
 # Functions and decorators
 from functools import wraps
+
+
+def set_xterm_title(title):
+    '''
+    Set XTerm title using escape sequences.
+    By default, sets as 'Python' and the version number.
+    '''
+    # Make sure this terminal supports the OSC code (\33]),
+    # though not necessarily that it supports setting the title.
+    # If this check causes compatibility issues, you can add
+    # items to the tuple, or remove the check entirely.
+    if os.environ.get('TERM') in ('xterm',
+                                  'xterm-color',
+                                  'xterm-256color',
+                                  'linux',
+                                  'screen',
+                                  'screen-256color',
+                                  'screen-bce',
+                                  ):
+        sys.stdout.write('\33]0;' + title + '\a')
+        sys.stdout.flush()
 
 
 def check_size(height_max, width_max):
