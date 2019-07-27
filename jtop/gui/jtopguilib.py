@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# This file is part of the ros_webconsole package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,6 +25,18 @@ from collections import deque
 from math import ceil
 # Functions and decorators
 from functools import wraps
+
+
+def xterm_line(jetson):
+    str_xterm = ""
+    nvp = jetson.nvpmodel
+    if "GR3D" in jetson.stats:
+        gpu = jetson.stats["GR3D"]['val']
+        str_xterm += " - GPU {gpu: 3}% {label}".format(gpu=gpu, label=label_freq(jetson.stats["GR3D"]))
+    if nvp is not None:
+        str_xterm += " - NVP[{}]".format(nvp.num)
+    return str_xterm
+
 
 
 def set_xterm_title(title):

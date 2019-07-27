@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# This file is part of the ros_webconsole package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,8 @@ import curses
 # Graphics elements
 from .jtopguilib import (check_size,
                          check_curses,
-                         set_xterm_title)
+                         set_xterm_title,
+                         xterm_line)
 # Initialization abstract class
 # In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
 ABC = abc.ABCMeta('ABC', (object,), {})
@@ -130,7 +131,8 @@ class JTOPGUI:
     def header(self):
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
-        set_xterm_title("jtop")
+        # Print jtop basic info
+        set_xterm_title("jtop" + xterm_line(self.jetson))
         # Write first line
         board = self.jetson.board["board"]
         board_info = board["Name"] + " - Jetpack " + board["Jetpack"]
