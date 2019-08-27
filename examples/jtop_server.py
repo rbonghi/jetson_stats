@@ -54,7 +54,7 @@ if __name__ == "__main__":
                 stats = json.dumps(jetson.stats)
                 # Send by socket
                 if args.http:
-                    conn.send("HTTP/1.1 200 OK\nContent-Type: application/json\n\n" + stats.encode())
+                    conn.send("HTTP/1.1 200 OK\r\nHost: {}:{}\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{}".format(args.host, args.port, len(stats), stats.encode()))
                 else:
                     conn.send(stats.encode())
                 # Close connection
