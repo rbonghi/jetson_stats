@@ -46,13 +46,73 @@ def get_version():
 
 class jtop(StatusObserver):
     """
-        JTOP is a complete controller of all systems in your NVIDIA Jetson
-        * Tegrastats
-        * NVP Model
-        * Fan
+    JTOP is a complete controller of all systems in your NVIDIA Jetson
+     * Tegrastats
+     * NVP Model
+     * Fan
+     * Status board (i.g. Model version, Jetpack, ... )
+    You can initialize the jtop node like a file i.g.
+
+    with jtop() as jetson:
+        stat = jetson.stats
+
+    Or manually start up with the basic function open/close
+
+    jetson = jtop()
+    jetson.open()
+    stat = jetson.stats
+    jetson.close()
+
+    Jtop include all informations about your board. The default properties are:
+     * stats
+     * nvpmodel
+     * fan
+     * board
+     * disk
+    Follow the next attributes to know in detail how it works.
+
+    Attributes
+    ----------
+    userid: int
+        User ID launched
+    fan: Fan
+        Fan object with contron properties
+    disk: dict
+        Status of the disk with details: free, occupied space
+    jetson_clocks: JetsonClock
+        JetsonClock controller, with this object you can manage the JetsonClock
+    uptime: dict
+        Uptime of your jetson board
+    nvpmodel: NVPmodel
+        NVPmodel is the controller of your NVP model.
+        From this object you read and set the status of your NVIDIA Jetson.
+    local_interfaces: dict
+        Detailed dictionary with the status of all local interfaces
+    board: dict
+        Detailed information of your board, with a complete list of:
+         * Jetpack
+         * L4T
+         * Serial Number
+         * ...
+    stats: dict
+        Statistics of your board. A complete dictionary with the status of your
+        board. There are all information from tegrastats, nvpmodel and fan
+    Methods
+    -------
+    open()
+        Initialize and open the tegrastats reader
+    close()
+        Close the tegratstats reader
+    attach(observer)
+        Attach an observer to read the status from the jtop
+    detach(observer)
+        Deatach the observer from the jtop
+    update(stats)
+        Update the jtop status from stats
     """
 
     class JtopException(Exception):
+        """ Jtop general exception """
         pass
 
     # List of available fan
@@ -60,7 +120,13 @@ class jtop(StatusObserver):
     LIST_FANS = ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']
     TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 
-    def __init__(self, interval=500, time=10.0):
+    def __init__(self, interval=500):
+        """
+        Parameters
+        ----------
+        interval: int
+            Interval update tegrastats and other statistic function
+        """
         # Version package
         self.version = get_version()
         # Initialize observer
@@ -101,34 +167,42 @@ class jtop(StatusObserver):
 
     @property
     def userid(self):
+        """ Linux User ID """
         return os.getuid()
 
     @property
     def fan(self):
+        """ Fan object controller """
         return self.qfan
 
     @property
     def disk(self):
+        """ Disk status properties """
         return status_disk()
 
     @property
     def jetson_clocks(self):
+        """ JetsonClock controller """
         return self.jc
 
     @property
     def uptime(self):
+        """ Up time """
         return get_uptime()
 
     @property
     def nvpmodel(self):
+        """ NVPmodel controller """
         return self.nvp
 
     @property
     def local_interfaces(self):
+        """ Local interfaces information """
         return get_local_interfaces()
 
     @property
     def board(self):
+        """ Board information dictionary """
         board = {"Name": os.environ["JETSON_DESCRIPTION"],
                  "Type": os.environ["JETSON_TYPE"],
                  "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]",
@@ -143,6 +217,7 @@ class jtop(StatusObserver):
 
     @property
     def stats(self):
+        """ Dictionary with a complete list of tegrastats variables """
         # Wait the deque not empty
         while not self._stats:
             pass
@@ -150,21 +225,46 @@ class jtop(StatusObserver):
         return self._stats
 
     def open(self):
+        """ Open tegrastats app and read all stats """
         try:
             self.tegrastats.open(self)
         except Tegrastats.TegrastatsException as e:
             raise jtop.JtopException(e)
 
     def close(self):
+        """ Close tegrastats app """
         self.tegrastats.close()
 
     def attach(self, observer):
+        """
+        Attach an obserber to read the status of jtop
+
+        Parameters
+        ----------
+        observer: function
+            The function to call
+        """
         self._observers.add(observer)
 
     def detach(self, observer):
+        """
+        Detach an obserber from jtop
+
+        Parameters
+        ----------
+        observer: function
+            The function to detach
+        """
         self._observers.discard(observer)
 
     def update(self, stats):
+        """
+        Update the status of jtop passing stats
+        Parameters
+        ----------
+        stats: dict
+            Statistic dictionary
+        """
         # Update nvpmodel
         if self.nvp is not None:
             self.nvp.update()
@@ -180,9 +280,11 @@ class jtop(StatusObserver):
             observer.update(self)
 
     def __enter__(self):
+        """ Enter function for 'with' statement """
         self.open()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """ Exit function for 'with' statement """
         self.close()
 # EOF
