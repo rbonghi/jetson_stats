@@ -89,6 +89,7 @@ export JETSON_L4T
 # Write version of jetpack installed
 # https://developer.nvidia.com/embedded/jetpack-archive
 case $JETSON_L4T in
+    "32.2.1") JETSON_JETPACK="4.2.2" ;;
     "32.2.0" | "32.2") JETSON_JETPACK="4.2.1" ;;
     "32.1.0" | "32.1") JETSON_JETPACK="4.2" ;;
     "31.1.0" | "31.1") JETSON_JETPACK="4.1.1" ;;
@@ -229,4 +230,3 @@ export JETSON_SERIAL_NUMBER
 # TODO Add enviroments variables:
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 # - GCID, BOARD, EABI
-
