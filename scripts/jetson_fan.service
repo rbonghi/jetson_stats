@@ -1,0 +1,10 @@
+[Unit]
+Description=Setup fan at startup
+
+[Service]
+ExecStart=/opt/jetson_stats/jetson_fan.sh
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

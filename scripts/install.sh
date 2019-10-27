@@ -60,8 +60,21 @@ js_uninstall()
 {
     local FORCE=$1
     local JETSON_FOLDER=$2
+
+    # Remove fan service from /etc/init.d
+    if [ -f "/etc/systemd/system/jetson_fan.service" ] ; then
+        # Disable service
+        echo "   * Disable service from /etc/systemd/system"
+        sudo systemctl disable jetson_fan.service
+        # Remove service in list
+        echo "   * Remove the service from /etc/systemd/system"
+        sudo rm "/etc/systemd/system/jetson_fan.service"
+        # Update service list
+        echo "   * Reload services list"
+        sudo systemctl daemon-reload
+    fi
     
-    # Remove the service from /etc/init.d
+    # Remove jetson_performance service from /etc/init.d
     if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
         # Uninstall the service
         if [ $(systemctl is-active jetson_performance.service) = "active" ] ; then
@@ -80,6 +93,12 @@ js_uninstall()
         # Update service list
         echo "   * Reload services list"
         sudo systemctl daemon-reload
+    fi
+
+    # Remove fan configuration
+    if [ -f $JETSON_FOLDER/fan_config ] ; then
+        echo "   * Remove fan_config from $JETSON_FOLDER"
+        sudo rm $JETSON_FOLDER/fan_config
     fi
     
     # Remove configuration
@@ -126,13 +145,17 @@ js_install()
     sudo cp "scripts/jetson_performance.sh" "$JETSON_FOLDER/jetson_performance.sh"
     sudo cp "scripts/jetson_swap" "$JETSON_FOLDER/jetson_swap"
     sudo cp "scripts/jetson_release" "$JETSON_FOLDER/jetson_release"
+    sudo cp "scripts/jetson_fan.sh" "$JETSON_FOLDER/jetson_fan.sh"
     
     echo "   * Copy jetson_env.sh in /etc/profile.d/"
     sudo cp "scripts/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
     
     echo "   * Copy jetson_performance.service in service list"
     sudo cp "scripts/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
-    
+
+    echo "   * Copy jetson_fan.service in service list"
+    sudo cp "scripts/jetson_fan.service" "/etc/systemd/system/jetson_fan.service"
+
     if [ ! -f $BIN_FOLDER/jetson_swap ] ; then
         echo "   * Link jetson_swap in $BIN_FOLDER"
         sudo ln -s $JETSON_FOLDER/jetson_swap $BIN_FOLDER/jetson_swap
@@ -156,6 +179,10 @@ js_install()
     # Update service list
     echo "   * Reload services list"
     sudo systemctl daemon-reload
+
+    # Enable jetson fan at startup
+    echo "   * Reload services list"
+    sudo systemctl enable jetson_fan.service
 }
 
 js_test_uninstall()
