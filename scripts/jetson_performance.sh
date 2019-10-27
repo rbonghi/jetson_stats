@@ -13,7 +13,7 @@ fi
 # Description:       Script to use the jetson_clock.sh like service and delay start up.
 ### END INIT INFO
 
-# This file is part of the ros_webconsole package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -56,6 +56,7 @@ JETSON_STATS_FOLDER=/opt/jetson_stats
 JETSON_PERFORMANCE_WAIT_TIME=60
 JETSON_PERFORMANCE_CHECK_FILE=/tmp/jetson_performance_run
 JETSON_CONFIG_FOLDER="/tmp"
+JETSON_FAN_CONFIG="$JETSON_STATS_FOLDER/fan_config"
 
 if [ -f /usr/bin/jetson_clocks ] ; then
     JETSON_CLOCK_SCRIPT=/usr/bin/jetson_clocks
@@ -66,6 +67,34 @@ else
     exit 1
 fi
 
+set_fan_speed()
+{
+    local FAN_PATH=$1
+    local FAN_TYPE=$(sed '1q;d' $JETSON_FAN_CONFIG)
+    if [ ! -z "$FAN_TYPE" ] ; then
+        echo "Fan type: $FAN_TYPE"
+        if [ "$FAN_TYPE" = "AUTO" ] ; then
+            echo "Set fan auto mode"
+            echo "1" > "$FAN_PATH/temp_control"
+        elif [ "$FAN_TYPE" = "MANUAL" ] ; then
+            echo "Set fan manual mode"
+            echo "0" > "$FAN_PATH/temp_control"
+        fi
+        # Set speed only if FAN_TYPE is not JC    
+        if [ $FAN_TYPE != "JC" ] ; then
+            # Load speed fan
+            local FAN_SPEED=$(sed '2q;d' $JETSON_FAN_CONFIG)
+            # Setup fan speed
+            if [ ! -z "$FAN_SPEED" ] ; then
+                echo "Fan speed: $FAN_SPEED"
+                # Set fan speed
+                if [ -f "$FAN_PATH/target_pwm" ] ; then
+                    echo "$FAN_SPEED" > "$FAN_PATH/target_pwm"
+                fi
+            fi
+        fi
+    fi
+}
 
 status()
 {
@@ -96,7 +125,7 @@ start()
         sleep $TIME_TO_WAIT
         echo "...done!"
     fi
-    
+
     if [ ! -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
         # check if exist l4t_dfs.conf otherwhise delete
         if [ ! -f $JETSON_STATS_FOLDER/l4t_dfs.conf ] ; then
@@ -108,7 +137,18 @@ start()
         sudo $JETSON_CLOCK_SCRIPT
         # Write a file to check the system has running
         sudo touch $JETSON_PERFORMANCE_CHECK_FILE
-        echo "Service run at max performance"
+        echo "Service jetson_clock stats"
+        # Configure the Jetson FAN
+        if [ -f $JETSON_FAN_CONFIG ] ; then
+            echo "Load FAN configuration"
+            # Setup fan speed and type control
+            if [ -d "/sys/kernel/debug/tegra_fan" ] ; then
+                set_fan_speed "/sys/kernel/debug/tegra_fan"
+            fi
+            if [ -d "/sys/devices/pwm-fan" ] ; then
+                set_fan_speed "/sys/devices/pwm-fan"
+            fi
+        fi
     else
         echo "Service has running"
     fi
