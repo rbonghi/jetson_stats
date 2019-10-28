@@ -43,6 +43,8 @@ def load_table(path):
 
 class Fan(object):
 
+    CONFIGS = ["jc", "auto", "manual"]
+
     class FanException(Exception):
         pass
 
@@ -52,6 +54,8 @@ class Fan(object):
         # Check exist path
         if not os.path.isdir(path):
             raise Fan.FanException("Fan does not exist")
+        # Init status config with first config
+        self.config = Fan.CONFIGS[0]
         # Init status fan
         self._status = {}
         self.isRPM = os.path.isfile(self.path + "rpm_measured")
@@ -102,6 +106,26 @@ class Fan(object):
             # Write status control value
             with open(self.path + "temp_control", 'w') as f:
                 f.write(str(value))
+
+    @property
+    def config(self):
+        return self.config
+
+    @config.setter
+    def config(self, value):
+        if value == "jc":
+            pass
+        elif value == "auto":
+            pass
+        elif value == "manual":
+            pass
+        self.config = value
+
+    def conf_next(self):
+        pass
+
+    def conf_prev(self):
+        pass
 
     def increase(self, step=10):
         if self.speed + step <= 100:
