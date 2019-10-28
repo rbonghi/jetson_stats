@@ -145,6 +145,13 @@ class Fan(object):
         if self.speed - step >= 0:
             self.speed -= step
 
+    def store(self, conf_file="/opt/jetson_stats"):
+        with open(conf_file + "/fan_config", 'w') as f:
+            # Save actual configuration
+            f.write(self.conf.upper() + '\n')
+            # Save PWM defined
+            f.write(self.read_status("target_pwm"))
+
     def read_status(self, file_read):
         with open(self.path + file_read, 'r') as f:
             return f.read()

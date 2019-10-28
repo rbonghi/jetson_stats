@@ -138,5 +138,8 @@ class CTRL(Page):
                 elif key == ord('m'):
                     fan.decrease()
                 if key == ord('f'):
+                    # Go to next configuration
                     fan.conf_next()
+                # Store configuration
+                fan.store()
 # EOF
