@@ -55,7 +55,7 @@ class Fan(object):
         if not os.path.isdir(path):
             raise Fan.FanException("Fan does not exist")
         # Init status config with first config
-        self.config = Fan.CONFIGS[0]
+        self.conf = Fan.CONFIGS[0]
         # Init status fan
         self._status = {}
         self.isRPM = os.path.isfile(self.path + "rpm_measured")
@@ -109,27 +109,37 @@ class Fan(object):
 
     @property
     def config(self):
-        return self.config
+        return self.conf
 
     @config.setter
     def config(self, value):
         if value == "jc":
             pass
         elif value == "auto":
-            pass
+            self.control = True
         elif value == "manual":
-            pass
-        self.config = value
+            self.control = False
+        self.conf = value
 
     def conf_next(self):
-        pass
+        # Extract index  from name configuration
+        idx = Fan.CONFIGS.index(self.conf)
+        # Go to next index and normalize for size len
+        idx = (idx + 1) % len(Fan.CONFIGS)
+        # Update with new config name
+        self.config = Fan.CONFIGS[idx]
 
     def conf_prev(self):
-        pass
+        # Extract index  from name configuration
+        idx = Fan.CONFIGS.index(self.conf)
+        # Go to previous index and normalize for size len
+        idx = (idx - 1) % len(Fan.CONFIGS)
+        # Update with new config name
+        self.config = Fan.CONFIGS[idx]
 
     def increase(self, step=10):
         if self.speed + step <= 100:
-            self.speed += step
+            self.speed += step 
 
     def decrease(self, step=10):
         if self.speed - step >= 0:

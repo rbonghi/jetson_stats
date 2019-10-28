@@ -79,11 +79,13 @@ class CTRL(Page):
         # Add plot fan status
         if 'FAN' in self.jetson.stats:
             fan = self.jetson.stats['FAN']
+            # Read status control fan
+            ctrl_stat = "Enable" if fan['ctrl'] else "Disable" if 'ctrl' in fan else ""
             # Add label
             if 'cpwm' in fan:
-                label = "{current: >3}% of {target: >3}%".format(current=fan.get("cpwm", 0), target=fan.get("tpwm", 0))
+                label = "{current: >3}% of {target: >3}% {ctrl}".format(current=fan.get("cpwm", 0), target=fan.get("tpwm", 0), ctrl="CTRL=" + ctrl_stat)
             else:
-                label = "Target: {target: >3}%".format(target=fan.get("tpwm", 0))
+                label = "Target: {target: >3}% {ctrl}".format(target=fan.get("tpwm", 0), ctrl=ctrl_stat)
             # Evaluate size chart
             size_x = [posx + 40, width - 10]
             size_y = [start_pos, height - 3] if self.jetson.userid != 0 else [start_pos + 3, height - 3]
@@ -97,13 +99,11 @@ class CTRL(Page):
                 speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
                 self.stdscr.addstr(start_pos + 1, posx + 46, speed_str, curses.A_NORMAL)
                 # Draw keys to increase fan speed
-                box_keyboard(self.stdscr, posx + 52, start_pos, "p", key)
+                box_keyboard(self.stdscr, posx + 53, start_pos, "p", key)
                 # Mode
                 if 'ctrl' in fan:
-                    box_keyboard(self.stdscr, posx + 58, start_pos, "f", key)
-                    ctrl_fan = fan['ctrl']
-                    enabled_box = "Act" if ctrl_fan else "Dis"
-                    box_status(self.stdscr, posx + 63, start_pos, enabled_box, ctrl_fan)
+                    box_keyboard(self.stdscr, posx + 59, start_pos, "f", key)
+                    box_status(self.stdscr, posx + 64, start_pos, self.jetson.fan.config.capitalize(), False)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
@@ -138,5 +138,5 @@ class CTRL(Page):
                 elif key == ord('m'):
                     fan.decrease()
                 if key == ord('f'):
-                    fan.control = not fan.control
+                    fan.conf_next()
 # EOF
