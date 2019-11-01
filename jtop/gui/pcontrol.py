@@ -135,11 +135,15 @@ class CTRL(Page):
             if fan is not None:
                 if key == ord('p'):
                     fan.increase()
+                    # Store configuration
+                    fan.store()
                 elif key == ord('m'):
                     fan.decrease()
+                    # Store configuration
+                    fan.store()
                 if key == ord('f'):
                     # Go to next configuration
                     fan.conf_next()
-                # Store configuration
-                fan.store()
+                    # Store configuration
+                    fan.store()
 # EOF

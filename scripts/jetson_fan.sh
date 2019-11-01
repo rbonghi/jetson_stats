@@ -21,6 +21,24 @@
 JETSON_STATS_FOLDER=/opt/jetson_stats
 JETSON_FAN_CONFIG="$JETSON_STATS_FOLDER/fan_config"
 
+if [ -f /usr/bin/jetson_clocks ] ; then
+    JETSON_CLOCK_SCRIPT=/usr/bin/jetson_clocks
+elif [ -f /home/nvidia/jetson_clocks.sh ] ; then
+    JETSON_CLOCK_SCRIPT=/home/nvidia/jetson_clocks.sh
+else
+    echo "No jetson_clock script is availble in this board"
+    exit 1
+fi
+
+store_jetson_clock()
+{
+    if [ ! -f $JETSON_STATS_FOLDER/l4t_dfs.conf ] ; then
+        echo "Store the jetson_clock.sh configuration"
+        # Store jetson_clock configuration
+        sudo $JETSON_CLOCK_SCRIPT --store $JETSON_STATS_FOLDER/l4t_dfs.conf
+    fi
+}
+
 set_fan_speed()
 {
     local FAN_PATH=$1
@@ -66,6 +84,8 @@ status()
 main()
 {
     if [ $# -eq 0 ] ; then
+        # Store jetson clock configuration
+        store_jetson_clock
         # Setup fan speed and type control
         if [ -d "/sys/kernel/debug/tegra_fan" ] ; then
             set_fan_speed "/sys/kernel/debug/tegra_fan"

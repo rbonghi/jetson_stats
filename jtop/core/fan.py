@@ -75,6 +75,8 @@ class Fan(object):
             self._status["status"] = 'REQUIRE SUDO'
         else:
             self._status["status"] = 'OFF'
+        # Load configuration if exist
+        self.load()
         # Run first time update status fan
         self.update()
 
@@ -113,9 +115,7 @@ class Fan(object):
 
     @config.setter
     def config(self, value):
-        if value == "jc":
-            pass
-        elif value == "auto":
+        if value == "auto":
             self.control = True
         elif value == "manual":
             self.control = False
@@ -138,12 +138,25 @@ class Fan(object):
         self.config = Fan.CONFIGS[idx]
 
     def increase(self, step=10):
-        if self.speed + step <= 100:
-            self.speed += step 
+        # Round speed
+        spd = (self.speed // 10) * 10
+        # Increase the speed
+        if spd + step <= 100:
+            self.speed = spd + step
 
     def decrease(self, step=10):
-        if self.speed - step >= 0:
-            self.speed -= step
+        # Round speed
+        spd = (self.speed // 10) * 10
+        # Increase the speed
+        if spd - step >= 0:
+            self.speed = spd - step
+        if self.speed < step:
+            self.speed = 0
+
+    def load(self, conf_file="/opt/jetson_stats"):
+        if os.path.isfile(conf_file + "/fan_config"):
+            with open(conf_file + "/fan_config", 'r') as f:
+                self.conf = f.readline().lower().rstrip('\n')
 
     def store(self, conf_file="/opt/jetson_stats"):
         with open(conf_file + "/fan_config", 'w') as f:
