@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
+# Page class definition
+from .jtopgui import Page
 
-from .pinfo import INFO
-from .pcontrol import CTRL
-from .pgpu import GPU
-from .pall import ALL
-from .jtopgui import JTOPGUI
-from .pmem import MEM
+class MEM(Page):
+
+    def __init__(self, stdscr, jetson, refresh):
+        super(MEM, self).__init__("MEM", stdscr, jetson, refresh)
+
+    def draw(self, key):
+        pass

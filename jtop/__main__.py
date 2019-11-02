@@ -33,7 +33,7 @@ import curses
 # Tegrastats objext reader
 from .jtop import jtop, get_version
 # GUI jtop interface
-from .gui import JTOPGUI, ALL, GPU, CTRL, INFO
+from .gui import JTOPGUI, ALL, GPU, MEM, CTRL, INFO
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ def main():
         with jtop(interval=args.refresh) as jetson:
             try:
                 # Call the curses wrapper
-                curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, CTRL, INFO], init_page=args.page)
+                curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, MEM, CTRL, INFO], init_page=args.page)
             except KeyboardInterrupt:
                 # Catch keyboard interrupt and close
                 logger.info("Closed with CTRL-C")
