@@ -121,13 +121,18 @@ def strfdelta(tdelta, fmt):
 
 
 @check_curses
-def box_keyboard(stdscr, x, y, letter, key):
+def box_keyboard(stdscr, x, y, letter, key, label=None):
+    # Evaluate size label
+    lnlabel = len(label) + 1 if label is not None else 0
     # Draw background rectangle
-    rectangle(stdscr, y, x, y + 2, x + 4)
+    rectangle(stdscr, y, x, y + 2, x + 4 + lnlabel)
     # Default status
     status = curses.A_NORMAL if key != ord(letter) else curses.A_REVERSE
     # Write letter
     stdscr.addstr(y + 1, x + 2, letter, status)
+    # Write label
+    if label is not None:
+        stdscr.addstr(y + 1, x + 4, label, curses.A_NORMAL)
     # Return the status of key
     return True if key == ord(letter) else False
 
@@ -169,7 +174,7 @@ def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=Fals
 
 class Chart(object):
 
-    def __init__(self, param, interval, line="*", color=curses.A_NORMAL, time=10.0, value_name='val'):
+    def __init__(self, param, interval, line="*", color=curses.A_NORMAL, time=10.0, value_name='val', value_max="max_val"):
         self.line = line
         self.color = color
         self.time = time
@@ -177,6 +182,7 @@ class Chart(object):
         self.value = deque(max_record * [0], maxlen=max_record)
         self.param = param
         self.value_name = value_name
+        self.value_max = value_max
         self._noData = True
 
     def update(self, jetson):
@@ -184,7 +190,7 @@ class Chart(object):
         self._noData = False
         parameter = jetson.stats.get(self.param, {})
         # Get max value if is present
-        self.max_val = parameter.get("max_val", 100)
+        self.max_val = parameter.get(self.value_max, 100)
         # Get unit
         self.unit = parameter.get("unit", "%")
         # Append in list
