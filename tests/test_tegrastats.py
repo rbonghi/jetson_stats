@@ -47,6 +47,11 @@ def check_tegra(tegra):
     assert isinstance(variable["use"], int)
     # Check if last value is the same send
     assert variable["use"] == 4722
+    # Check temperature is in list
+    assert "TEMP" in tegra.stats
+    variable = tegra.stats["TEMP"]
+    # Check negative number is parsed
+    assert variable["BCPU"] < 0
 
 
 def test_stats():

@@ -26,7 +26,7 @@ VALS_RE = re.compile(r'\b([A-Z0-9_]+) ([0-9%@]+)(?=[^/])\b')
 VAL_FRE_RE = re.compile(r'\b(\d+)%@(\d+)')
 CPU_RE = re.compile(r'CPU \[(.*?)\]')
 VOLT_RE = re.compile(r'\b(\w+) ([0-9.]+)\/([0-9.]+)\b')
-TEMP_RE = re.compile(r'\b(\w+)@([0-9.]+)C\b')
+TEMP_RE = re.compile(r'\b(\w+)@(-?[0-9.]+)C\b')
 
 
 def val_freq(val):
