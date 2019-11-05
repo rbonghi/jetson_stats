@@ -80,10 +80,13 @@ class CTRL(Page):
         if 'FAN' in self.jetson.stats:
             fan = self.jetson.stats['FAN']
             # Read status control fan
-            ctrl_stat = "Enable" if fan['ctrl'] else "Disable" if 'ctrl' in fan else ""
+            if 'ctrl' in fan:
+                ctrl_stat = "CTRL=" + "Enable" if fan['ctrl'] else "Disable"
+            else:
+                ctrl_stat = ""
             # Add label
             if 'cpwm' in fan:
-                label = "{current: >3}% of {target: >3}% {ctrl}".format(current=fan.get("cpwm", 0), target=fan.get("tpwm", 0), ctrl="CTRL=" + ctrl_stat)
+                label = "{current: >3}% of {target: >3}% {ctrl}".format(current=fan.get("cpwm", 0), target=fan.get("tpwm", 0), ctrl=ctrl_stat)
             else:
                 label = "Target: {target: >3}% {ctrl}".format(target=fan.get("tpwm", 0), ctrl=ctrl_stat)
             # Evaluate size chart
