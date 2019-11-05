@@ -58,7 +58,7 @@ def main():
     # Open tegrastats reader and run the curses wrapper
     try:
         with jtop(interval=args.refresh) as jetson:
-             if not args.restore:
+            if not args.restore:
                 try:
                     # Call the curses wrapper
                     curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, MEM, CTRL, INFO], init_page=args.page)
