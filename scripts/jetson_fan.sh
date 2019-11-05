@@ -89,8 +89,7 @@ main()
         # Setup fan speed and type control
         if [ -d "/sys/kernel/debug/tegra_fan" ] ; then
             set_fan_speed "/sys/kernel/debug/tegra_fan"
-        fi
-        if [ -d "/sys/devices/pwm-fan" ] ; then
+        elif [ -d "/sys/devices/pwm-fan" ] ; then
             set_fan_speed "/sys/devices/pwm-fan"
         fi
         exit 0
