@@ -43,19 +43,19 @@ def load_table(path):
 
 class Fan(object):
 
-    CONFIGS = ["jc", "auto", "manual"]
-
     class FanException(Exception):
         pass
 
-    def __init__(self, path):
+    def __init__(self, path, temp_control=True):
         # Initialize number max records to record
         self.path = path
+        self.temp_control = temp_control
+        self.CONFIGS = ["jc", "auto", "manual"] if self.temp_control else ["jc", "auto"]
         # Check exist path
         if not os.path.isdir(path):
             raise Fan.FanException("Fan does not exist")
         # Init status config with first config
-        self.conf = Fan.CONFIGS[0]
+        self.conf = self.CONFIGS[0]
         # Init status fan
         self._status = {}
         self.isRPM = os.path.isfile(self.path + "rpm_measured")
@@ -103,7 +103,7 @@ class Fan(object):
     @control.setter
     def control(self, value):
         # Check limit speed
-        if os.access(self.path + "temp_control", os.W_OK):
+        if os.access(self.path + "temp_control", os.W_OK) and self.temp_control:
             value = 1 if value else 0
             # Write status control value
             with open(self.path + "temp_control", 'w') as f:
@@ -115,27 +115,34 @@ class Fan(object):
 
     @config.setter
     def config(self, value):
-        if value == "auto":
-            self.control = True
-        elif value == "manual":
-            self.control = False
+        if self.temp_control:
+            if value == "auto":
+                self.control = True
+            elif value == "manual":
+                self.control = False
         self.conf = value
 
     def conf_next(self):
-        # Extract index  from name configuration
-        idx = Fan.CONFIGS.index(self.conf)
-        # Go to next index and normalize for size len
-        idx = (idx + 1) % len(Fan.CONFIGS)
+        try:
+            # Extract index  from name configuration
+            idx = self.CONFIGS.index(self.conf)
+            # Go to next index and normalize for size len
+            idx = (idx + 1) % len(self.CONFIGS)
+        except ValueError:
+            idx = 0
         # Update with new config name
-        self.config = Fan.CONFIGS[idx]
+        self.config = self.CONFIGS[idx]
 
     def conf_prev(self):
-        # Extract index  from name configuration
-        idx = Fan.CONFIGS.index(self.conf)
-        # Go to previous index and normalize for size len
-        idx = (idx - 1) % len(Fan.CONFIGS)
+        try:
+            # Extract index  from name configuration
+            idx = self.CONFIGS.index(self.conf)
+            # Go to previous index and normalize for size len
+            idx = (idx - 1) % len(self.CONFIGS)
+        except ValueError:
+            idx = 0
         # Update with new config name
-        self.config = Fan.CONFIGS[idx]
+        self.config = self.CONFIGS[idx]
 
     def increase(self, step=10):
         # Round speed

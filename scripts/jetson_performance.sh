@@ -144,8 +144,7 @@ start()
             # Setup fan speed and type control
             if [ -d "/sys/kernel/debug/tegra_fan" ] ; then
                 set_fan_speed "/sys/kernel/debug/tegra_fan"
-            fi
-            if [ -d "/sys/devices/pwm-fan" ] ; then
+            elif [ -d "/sys/devices/pwm-fan" ] ; then
                 set_fan_speed "/sys/devices/pwm-fan"
             fi
         fi
@@ -164,6 +163,17 @@ stop()
     # Write a file to check the system has running
     if [ -f $JETSON_PERFORMANCE_CHECK_FILE ] ; then
         sudo rm $JETSON_PERFORMANCE_CHECK_FILE
+    fi
+
+    # Configure the Jetson FAN
+    if [ -f $JETSON_FAN_CONFIG ] ; then
+        echo "Load FAN configuration"
+        # Setup fan speed and type control
+        if [ -d "/sys/kernel/debug/tegra_fan" ] ; then
+            set_fan_speed "/sys/kernel/debug/tegra_fan"
+        elif [ -d "/sys/devices/pwm-fan" ] ; then
+            set_fan_speed "/sys/devices/pwm-fan"
+        fi
     fi
 }
 

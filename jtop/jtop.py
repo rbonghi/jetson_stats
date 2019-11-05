@@ -117,7 +117,7 @@ class jtop(StatusObserver):
 
     # List of available fan
     JTOP_FOLDER = '/opt/jetson_stats/'
-    LIST_FANS = ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']
+    LIST_FANS = [('/sys/kernel/debug/tegra_fan/', False), ('/sys/devices/pwm-fan/', True)]
     TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 
     def __init__(self, interval=500):
@@ -145,9 +145,9 @@ class jtop(StatusObserver):
             self.nvp = None
         # Find all fans availables
         self.qfan = None
-        for path in jtop.LIST_FANS:
+        for path, temp_control in jtop.LIST_FANS:
             try:
-                self.qfan = Fan(path)
+                self.qfan = Fan(path, temp_control)
                 logger.info("Fan {} loaded!".format(path))
                 break
             except Fan.FanException:

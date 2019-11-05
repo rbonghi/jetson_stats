@@ -81,7 +81,7 @@ class CTRL(Page):
             fan = self.jetson.stats['FAN']
             # Read status control fan
             if 'ctrl' in fan:
-                ctrl_stat = "CTRL=" + "Enable" if fan['ctrl'] else "Disable"
+                ctrl_stat = "CTRL=" + ("Enable" if fan['ctrl'] else "Disable")
             else:
                 ctrl_stat = ""
             # Add label
