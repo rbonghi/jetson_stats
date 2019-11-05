@@ -45,6 +45,7 @@ def main():
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
+    parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
@@ -57,12 +58,20 @@ def main():
     # Open tegrastats reader and run the curses wrapper
     try:
         with jtop(interval=args.refresh) as jetson:
-            try:
-                # Call the curses wrapper
-                curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, MEM, CTRL, INFO], init_page=args.page)
-            except KeyboardInterrupt:
-                # Catch keyboard interrupt and close
-                logger.info("Closed with CTRL-C")
+             if not args.restore:
+                try:
+                    # Call the curses wrapper
+                    curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, MEM, CTRL, INFO], init_page=args.page)
+                except KeyboardInterrupt:
+                    # Catch keyboard interrupt and close
+                    logger.info("Closed with CTRL-C")
+            else:
+                # If enable restore:
+                # * Set fan speed to 0
+                # * Disable jetson_clocks
+                # * Delete fan_configuration
+                # * Delete jetson_clocks configuration
+                pass
     except jtop.JtopException as e:
         # Print error and close
         print(e)
