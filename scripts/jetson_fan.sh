@@ -45,13 +45,10 @@ set_fan_speed()
     local FAN_TYPE=$(sed '1q;d' $JETSON_FAN_CONFIG)
     if [ ! -z "$FAN_TYPE" ] ; then
         echo "Set fan: $FAN_TYPE"
-        if [ "$FAN_TYPE" = "AUTO" ] ; then
+        # Set speed only if FAN_TYPE is MANUAL
+        if [ $FAN_TYPE = "MANUAL" ] ; then
+            # Enable temperature control
             echo "1" > "$FAN_PATH/temp_control"
-        elif [ "$FAN_TYPE" = "MANUAL" ] ; then
-            echo "0" > "$FAN_PATH/temp_control"
-        fi
-        # Set speed only if FAN_TYPE is not JC    
-        if [ $FAN_TYPE != "JC" ] ; then
             # Load speed fan
             local FAN_SPEED=$(sed '2q;d' $JETSON_FAN_CONFIG)
             # Setup fan speed

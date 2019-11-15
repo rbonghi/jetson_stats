@@ -46,13 +46,14 @@ class Fan(object):
     class FanException(Exception):
         pass
 
-    def __init__(self, path, temp_control=True, config_file="/opt/jetson_stats/fan_config"):
+    def __init__(self, path, jetson_clocks, temp_control=True, config_file="/opt/jetson_stats/fan_config"):
         # Config file
         self.config_file = config_file
+        self.jetson_clocks = jetson_clocks
         # Initialize number max records to record
         self.path = path
         self.temp_control = temp_control
-        self.CONFIGS = ["jc", "auto", "manual"] if self.temp_control else ["jc", "auto"]
+        self.CONFIGS = ["jc", "manual"]
         # Check exist path
         if not os.path.isdir(path):
             raise Fan.FanException("Fan does not exist")
@@ -118,10 +119,12 @@ class Fan(object):
     @config.setter
     def config(self, value):
         if self.temp_control:
-            if value == "auto":
+            if value == "manual":
                 self.control = True
-            elif value == "manual":
-                self.control = False
+            elif value == "jc":
+                if self.jetson_clocks.start:
+                    self.control = False
+                    self.speed = 100
         self.conf = value
 
     def conf_next(self):

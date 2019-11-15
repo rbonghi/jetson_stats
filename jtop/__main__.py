@@ -78,6 +78,8 @@ def main():
                     if jetson.fan:
                         jetson.fan.speed = 0
                         print("* Fan speed = 0 [OK]")
+                        jetson.fan.control = True
+                        print("* Fan temp_control = 1 [OK]")
                     # * Delete fan_configuration
                         if jetson.fan.clear():
                             print("* Clear Fan Configuration [OK]")
