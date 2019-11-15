@@ -69,7 +69,7 @@ class JetsonClocks(object):
         p = sp.Popen(['systemctl', enable_val, self.service + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         _, err = p.communicate()
         self.last_status = err.decode("utf-8")
-    
+
     def clear(self):
         if os.path.isfile(self.config_file):
             # Remove configuration file
