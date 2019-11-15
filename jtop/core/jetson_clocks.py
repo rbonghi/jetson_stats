@@ -29,7 +29,7 @@ class JetsonClocks(object):
 
     def __init__(self, service='jetson_performance'):
         # Config file
-        self.config_file = "/opt/jetson_stats/l4d.conf"
+        self.config_file = "/opt/jetson_stats/l4t_dfs.conf"
         # Service
         self.service = service
         self.last_status = ""
@@ -74,5 +74,8 @@ class JetsonClocks(object):
         if os.path.isfile(self.config_file):
             # Remove configuration file
             os.remove(self.config_file)
+            return True
+        else:
+            return False
 
 # EOF

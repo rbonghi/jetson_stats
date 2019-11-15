@@ -79,12 +79,12 @@ def main():
                         jetson.fan.speed = 0
                         print("* Fan speed = 0 [OK]")
                     # * Delete fan_configuration
-                        jetson.fan.clear()
-                        print("* Clear Fan Configuration [OK]")
+                        if jetson.fan.clear():
+                            print("* Clear Fan Configuration [OK]")
                     # * Delete jetson_clocks configuration
                     if jetson.jetson_clocks:
-                        jetson.jetson_clocks.clear()
-                        print("* Clear Jetson Clock Configuration [OK]")
+                        if jetson.jetson_clocks.clear():
+                            print("* Clear Jetson Clock Configuration [OK]")
                 else:
                     print("Please run with sudo")
     except jtop.JtopException as e:
