@@ -46,9 +46,9 @@ class Fan(object):
     class FanException(Exception):
         pass
 
-    def __init__(self, path, temp_control=True):
+    def __init__(self, path, temp_control=True, config_file="/opt/jetson_stats/fan_config"):
         # Config file
-        self.config_file = "/opt/jetson_stats/fan_config"
+        self.config_file = config_file
         # Initialize number max records to record
         self.path = path
         self.temp_control = temp_control

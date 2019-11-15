@@ -95,18 +95,22 @@ class CTRL(Page):
             # Draw the GPU chart
             self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
             if self.jetson.userid == 0:
-                # Draw keys to decrease fan speed
-                box_keyboard(self.stdscr, posx + 40, start_pos, "m", key)
-                # Draw selected number
-                self.stdscr.addstr(start_pos, posx + 46, "Speed", curses.A_BOLD)
-                speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
-                self.stdscr.addstr(start_pos + 1, posx + 46, speed_str, curses.A_NORMAL)
-                # Draw keys to increase fan speed
-                box_keyboard(self.stdscr, posx + 53, start_pos, "p", key)
                 # Mode
                 if 'ctrl' in fan:
-                    box_keyboard(self.stdscr, posx + 59, start_pos, "f", key)
-                    box_status(self.stdscr, posx + 64, start_pos, self.jetson.fan.config.capitalize(), False)
+                    box_keyboard(self.stdscr, posx + 40, start_pos, "f", key)
+                    box_status(self.stdscr, posx + 45, start_pos, self.jetson.fan.config.capitalize(), False)
+                # Show speed buttons only if is in manual
+                if self.jetson.fan.conf == 'manual':
+                    blk = 55
+                    # Draw keys to decrease fan speed
+                    box_keyboard(self.stdscr, posx + blk, start_pos, "m", key)
+                    # Draw selected number
+                    self.stdscr.addstr(start_pos, posx + blk + 6, "Speed", curses.A_BOLD)
+                    speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
+                    self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL)
+                    # Draw keys to increase fan speed
+                    box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key)
+
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
