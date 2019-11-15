@@ -54,6 +54,7 @@ class Fan(object):
         self.path = path
         self.temp_control = temp_control
         self.CONFIGS = ["jc", "manual"]
+        self.old_speed = 0
         # Check exist path
         if not os.path.isdir(path):
             raise Fan.FanException("Fan does not exist")
@@ -121,9 +122,13 @@ class Fan(object):
         if self.temp_control:
             if value == "manual":
                 self.control = True
+                self.speed = self.old_speed
             elif value == "jc":
                 if self.jetson_clocks.start:
                     self.control = False
+                    # Store speed status
+                    self.old_speed = self.speed
+                    # Set max speed
                     self.speed = 100
         self.conf = value
 
