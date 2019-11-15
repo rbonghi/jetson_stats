@@ -95,7 +95,7 @@ class Fan(object):
             value = 100.0 if value > 100.0 else value
             value = 0 if value < 0 else value
             # Convert in PWM value
-            pwm = ceil(self._status["cap"] * value / 100.0)
+            pwm = self.ValueToPWM(value)
             # Write PWM value
             with open(self.path + "target_pwm", 'w') as f:
                 f.write(str(pwm))
@@ -130,6 +130,8 @@ class Fan(object):
                     self.old_speed = self.speed
                     # Set max speed
                     self.speed = 100
+                else:
+                    self.speed = 0
         self.conf = value
 
     def conf_next(self):
@@ -181,19 +183,40 @@ class Fan(object):
     def load(self):
         if os.path.isfile(self.config_file):
             with open(self.config_file, 'r') as f:
-                self.conf = f.readline().lower().rstrip('\n')
+                line = f.readline()
+                if line:
+                    # Load configuration
+                    self.conf = line.lower().strip()
+                line = f.readline()
+                if line:
+                    # Load old speed
+                    try:
+                        speed = int(line.lower().strip())
+                        self.old_speed = self.PWMtoValue(speed)
+                    except ValueError:
+                        pass
 
     def store(self):
         with open(self.config_file, 'w') as f:
             # Save actual configuration
             f.write(self.conf.upper() + '\n')
-            # Save PWM defined
-            f.write(self.read_status("target_pwm"))
+            if not self.jetson_clocks.start:
+                # Save PWM defined
+                f.write(self.read_status("target_pwm"))
+            else:
+                pwm = self.ValueToPWM(self.old_speed)
+                f.write(str(pwm) + "\n")
 
     def read_status(self, file_read):
         with open(self.path + file_read, 'r') as f:
             return f.read()
         return None
+
+    def PWMtoValue(self, pwm):
+        return pwm * 100.0 / self._status["cap"]
+
+    def ValueToPWM(self, value):
+        return ceil(self._status["cap"] * value / 100.0)
 
     def update(self):
         # Control temperature

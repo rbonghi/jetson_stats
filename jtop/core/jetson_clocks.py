@@ -27,12 +27,24 @@ logger = logging.getLogger(__name__)
 
 class JetsonClocks(object):
 
+    class JCException(Exception):
+        pass
+
     def __init__(self, service='jetson_performance'):
         # Config file
         self.config_file = "/opt/jetson_stats/l4t_dfs.conf"
         # Service
         self.service = service
         self.last_status = ""
+        # Jetson Clocks path
+        if os.path.isfile("/usr/bin/jetson_clocks"):
+            self.jc_bin = "/usr/bin/jetson_clocks"
+        elif os.path.isfile("/home/nvidia/jetson_clocks.sh"):
+            self.jc_bin = "/home/nvidia/jetson_clocks.sh"
+        else:
+            raise JetsonClocks.JCException("No jetson_clock script is availble in this board")
+        # Store configuration if does not exist
+        self.store()
 
     @property
     def status(self):
@@ -69,6 +81,18 @@ class JetsonClocks(object):
         p = sp.Popen(['systemctl', enable_val, self.service + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         _, err = p.communicate()
         self.last_status = err.decode("utf-8")
+
+    def store(self):
+        if not os.path.isfile(self.config_file):
+            p = sp.Popen([self.jc_bin, '--store', self.config_file], stdout=sp.PIPE)
+            out, _ = p.communicate()
+            # Extract result
+            if out.decode("utf-8"):
+                return True
+            else:
+                return False
+        else:
+            return False
 
     def clear(self):
         if os.path.isfile(self.config_file):
