@@ -50,13 +50,27 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
 
 @check_curses
 def plot_temperatures(stdscr, start, offset, width, jetson):
+    # Define color temperatures
+    color_options = {
+        60: curses.color_pair(1),
+        40: curses.color_pair(3),
+        20: curses.A_NORMAL,
+    }
     # Plot title
     stdscr.addstr(offset, start, ("{name:<9} {val:^8}").format(name="[Sensor]", val="[Temp]"), curses.A_BOLD)
     # Plot name and temperatures
     for idx, temp in enumerate(sorted(jetson.stats['TEMP'])):
+        # Print temperature name
         value = jetson.stats['TEMP'][temp]
-        stdscr.addstr(offset + idx + 1, start,
-                      ("{name:<7} {val:8.2f}C").format(name=temp, val=value))
+        stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=temp))
+        # Set color temperature
+        color = curses.A_NORMAL
+        for k in color_options.keys():
+            if value >= k:
+                color = color_options[k]
+                break
+        # Print temperature value
+        stdscr.addstr(offset + idx + 1, start + offset // 2 + 2, ("{val:8.2f}C").format(val=value), color)
 
 
 @check_curses
