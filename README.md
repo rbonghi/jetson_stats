@@ -3,7 +3,7 @@
 
 **jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1] embedded board. When you install jetson-stats are included:
 * [jtop](#jtop)
-* [jetson-release](#jetson-release)
+* [jetson_release](#jetson_release)
 * [jetson_variables](#jetson_variables)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information
@@ -61,7 +61,7 @@ To control the your NVIDIA Jetson are available this keyboard commands:
 2. **GPU** A real time GPU history about your NVIDIA Jetson
 3. **CTRL** You can control the status of you
 4. **INFO** Are collected all information about libraries, CUDA, Serial Number, interfaces, ...
-## [**jetson-release**][jetson_release]
+## [**jetson_release**][jetson_release]
 The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png)
