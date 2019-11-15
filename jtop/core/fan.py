@@ -47,6 +47,8 @@ class Fan(object):
         pass
 
     def __init__(self, path, temp_control=True):
+        # Config file
+        self.config_file = "/opt/jetson_stats/fan_config"
         # Initialize number max records to record
         self.path = path
         self.temp_control = temp_control
@@ -160,13 +162,18 @@ class Fan(object):
         if self.speed < step:
             self.speed = 0
 
-    def load(self, conf_file="/opt/jetson_stats"):
-        if os.path.isfile(conf_file + "/fan_config"):
-            with open(conf_file + "/fan_config", 'r') as f:
+    def clear(self):
+        if os.path.isfile(self.config_file):
+            # Remove configuration file
+            os.remove(self.config_file)
+
+    def load(self):
+        if os.path.isfile(self.config_file):
+            with open(self.config_file, 'r') as f:
                 self.conf = f.readline().lower().rstrip('\n')
 
-    def store(self, conf_file="/opt/jetson_stats"):
-        with open(conf_file + "/fan_config", 'w') as f:
+    def store(self):
+        with open(self.config_file, 'w') as f:
             # Save actual configuration
             f.write(self.conf.upper() + '\n')
             # Save PWM defined

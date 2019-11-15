@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 # Logging
 import logging
 # Launch command
@@ -27,6 +28,9 @@ logger = logging.getLogger(__name__)
 class JetsonClocks(object):
 
     def __init__(self, service='jetson_performance'):
+        # Config file
+        self.config_file = "/opt/jetson_stats/l4d.conf"
+        # Service
         self.service = service
         self.last_status = ""
 
@@ -65,5 +69,10 @@ class JetsonClocks(object):
         p = sp.Popen(['systemctl', enable_val, self.service + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         _, err = p.communicate()
         self.last_status = err.decode("utf-8")
+    
+    def clear(self):
+        if os.path.isfile(self.config_file):
+            # Remove configuration file
+            os.remove(self.config_file)
 
 # EOF
