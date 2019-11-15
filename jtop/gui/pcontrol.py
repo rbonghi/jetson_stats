@@ -111,7 +111,6 @@ class CTRL(Page):
                     # Draw keys to increase fan speed
                     box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key)
 
-
     def keyboard(self, key):
         if self.jetson.userid == 0:
             # Start jetson_clocks
