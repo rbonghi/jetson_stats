@@ -56,7 +56,7 @@ def plot_temperatures(stdscr, start, offset, width, jetson):
         40: curses.color_pair(3),
         20: curses.A_NORMAL,
     }
-    list_options=sorted(color_options.keys(), reverse=True)
+    list_options = sorted(color_options.keys(), reverse=True)
     # Plot title
     stdscr.addstr(offset, start, ("{name:<9} {val:^8}").format(name="[Sensor]", val="[Temp]"), curses.A_BOLD)
     # Plot name and temperatures
