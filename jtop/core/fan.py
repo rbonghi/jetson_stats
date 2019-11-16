@@ -204,7 +204,7 @@ class Fan(object):
                 # Save PWM defined
                 f.write(self.read_status("target_pwm"))
             else:
-                pwm = self.ValueToPWM(self.old_speed)
+                pwm = int(self.ValueToPWM(self.old_speed))
                 f.write(str(pwm) + "\n")
 
     def read_status(self, file_read):
