@@ -37,7 +37,7 @@ class ALL(Page):
             Update screen with values
         """
         # Screen size
-        height, width = self.stdscr.getmaxyx()
+        _, width = self.stdscr.getmaxyx()
         line_counter = 1
         # Plot Status CPU
         line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.stats['CPU'], width)

@@ -16,20 +16,23 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from jtop import Fan
+from jtop import JetsonClocks
 
 
 def test_wrong_open():
+    jc = JetsonClocks()
     # Initialize object
     try:
-        Fan('wrong_path')
+        Fan('wrong_path', jc)
         assert False
     except Fan.FanException:
         assert True
 
 
 def test_open():
+    jc = JetsonClocks()
     # Init fan
-    fan = Fan('tests/fan/')
+    fan = Fan('tests/fan/', jc)
     # Update
     fan.update()
     # Check dictionary

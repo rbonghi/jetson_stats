@@ -66,12 +66,29 @@ def main():
                     # Catch keyboard interrupt and close
                     logger.info("Closed with CTRL-C")
             else:
-                # If enable restore:
-                # * Set fan speed to 0
-                # * Disable jetson_clocks
-                # * Delete fan_configuration
-                # * Delete jetson_clocks configuration
-                pass
+                if jetson.userid == 0:
+                    # If enable restore:
+                    # * Disable jetson_clocks
+                    if jetson.jetson_clocks:
+                        jetson.jetson_clocks.start = False
+                        print("* Stop jetson_clocks [OK]")
+                        jetson.jetson_clocks.enable = False
+                        print("* Disable jetson_clocks [OK]")
+                    # * Set fan speed to 0
+                    if jetson.fan:
+                        jetson.fan.speed = 0
+                        print("* Fan speed = 0 [OK]")
+                        jetson.fan.control = True
+                        print("* Fan temp_control = 1 [OK]")
+                    # * Delete fan_configuration
+                        if jetson.fan.clear():
+                            print("* Clear Fan Configuration [OK]")
+                    # * Delete jetson_clocks configuration
+                    if jetson.jetson_clocks:
+                        if jetson.jetson_clocks.clear():
+                            print("* Clear Jetson Clock Configuration [OK]")
+                else:
+                    print("Please run with sudo")
     except jtop.JtopException as e:
         # Print error and close
         print(e)

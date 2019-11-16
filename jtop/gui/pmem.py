@@ -22,11 +22,9 @@ from .jtopgui import Page
 from .jtopguilib import (linear_gauge,
                          label_freq)
 # Graphics elements
-from .jtopguilib import (check_curses,
-                         box_keyboard,
-                         box_status,
-                         box_list,
+from .jtopguilib import (box_keyboard,
                          Chart)
+
 
 class MEM(Page):
 
@@ -50,12 +48,12 @@ class MEM(Page):
         lfb_status = self.jetson.stats['RAM']['lfb']
         unit_name = 'G'  # TODO improve with check unit status
         # lfb label
-        percent="{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / 1000.0,
-                                                            unit=unit_name,
-                                                            tot=ram_status['tot'] / 1000.0)
-        label_lfb="(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
-                                                        size=lfb_status['size'],
-                                                        unit=lfb_status['unit'])
+        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / 1000.0,
+                                                              unit=unit_name,
+                                                              tot=ram_status['tot'] / 1000.0)
+        label_lfb = "(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
+                                                          size=lfb_status['size'],
+                                                          unit=lfb_status['unit'])
         # Draw the GPU chart
         self.chart_ram.draw(self.stdscr, size_x, size_y, label="{percent} - {lfb}".format(percent=percent, lfb=label_lfb))
         # Draw the Memory gague
@@ -122,13 +120,14 @@ class MEM(Page):
                      label=label_freq(emc),
                      color=curses.color_pair(6))
         # Clear cache button
-        clear_cache="Clear cache"
+        clear_cache = "Clear cache"
         self.stdscr.addstr(height - 3, 1, clear_cache, curses.A_NORMAL)
         box_keyboard(self.stdscr, len(clear_cache) + 2, height - 4, "c", key)
-        enable_swap="Enable swap"
+        enable_swap = "Enable swap"
         self.stdscr.addstr(height - 3, len(clear_cache) + 8, enable_swap, curses.A_NORMAL)
         box_keyboard(self.stdscr, len(clear_cache) + len(enable_swap) + 8, height - 4, "h", key)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
             pass
+# EOF

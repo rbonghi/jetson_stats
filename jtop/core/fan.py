@@ -46,11 +46,15 @@ class Fan(object):
     class FanException(Exception):
         pass
 
-    def __init__(self, path, temp_control=True):
+    def __init__(self, path, jetson_clocks, temp_control=True, config_file="/opt/jetson_stats/fan_config"):
+        # Config file
+        self.config_file = config_file
+        self.jetson_clocks = jetson_clocks
         # Initialize number max records to record
         self.path = path
         self.temp_control = temp_control
-        self.CONFIGS = ["jc", "auto", "manual"] if self.temp_control else ["jc", "auto"]
+        self.CONFIGS = ["jc", "manual"]
+        self.old_speed = 0
         # Check exist path
         if not os.path.isdir(path):
             raise Fan.FanException("Fan does not exist")
@@ -91,7 +95,7 @@ class Fan(object):
             value = 100.0 if value > 100.0 else value
             value = 0 if value < 0 else value
             # Convert in PWM value
-            pwm = ceil(self._status["cap"] * value / 100.0)
+            pwm = self.ValueToPWM(value)
             # Write PWM value
             with open(self.path + "target_pwm", 'w') as f:
                 f.write(str(pwm))
@@ -116,10 +120,18 @@ class Fan(object):
     @config.setter
     def config(self, value):
         if self.temp_control:
-            if value == "auto":
+            if value == "manual":
                 self.control = True
-            elif value == "manual":
-                self.control = False
+                self.speed = self.old_speed
+            elif value == "jc":
+                if self.jetson_clocks.start:
+                    self.control = False
+                    # Store speed status
+                    self.old_speed = self.speed
+                    # Set max speed
+                    self.speed = 100
+                else:
+                    self.speed = 0
         self.conf = value
 
     def conf_next(self):
@@ -160,22 +172,51 @@ class Fan(object):
         if self.speed < step:
             self.speed = 0
 
-    def load(self, conf_file="/opt/jetson_stats"):
-        if os.path.isfile(conf_file + "/fan_config"):
-            with open(conf_file + "/fan_config", 'r') as f:
-                self.conf = f.readline().lower().rstrip('\n')
+    def clear(self):
+        if os.path.isfile(self.config_file):
+            # Remove configuration file
+            os.remove(self.config_file)
+            return True
+        else:
+            return False
 
-    def store(self, conf_file="/opt/jetson_stats"):
-        with open(conf_file + "/fan_config", 'w') as f:
+    def load(self):
+        if os.path.isfile(self.config_file):
+            with open(self.config_file, 'r') as f:
+                line = f.readline()
+                if line:
+                    # Load configuration
+                    self.conf = line.lower().strip()
+                line = f.readline()
+                if line:
+                    # Load old speed
+                    try:
+                        speed = int(line.lower().strip())
+                        self.old_speed = self.PWMtoValue(speed)
+                    except ValueError:
+                        pass
+
+    def store(self):
+        with open(self.config_file, 'w') as f:
             # Save actual configuration
             f.write(self.conf.upper() + '\n')
-            # Save PWM defined
-            f.write(self.read_status("target_pwm"))
+            if not self.jetson_clocks.start:
+                # Save PWM defined
+                f.write(self.read_status("target_pwm"))
+            else:
+                pwm = int(self.ValueToPWM(self.old_speed))
+                f.write(str(pwm) + "\n")
 
     def read_status(self, file_read):
         with open(self.path + file_read, 'r') as f:
             return f.read()
         return None
+
+    def PWMtoValue(self, pwm):
+        return pwm * 100.0 / self._status["cap"]
+
+    def ValueToPWM(self, value):
+        return ceil(self._status["cap"] * value / 100.0)
 
     def update(self):
         # Control temperature
