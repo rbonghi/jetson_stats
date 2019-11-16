@@ -11,6 +11,7 @@ install: sudo apt-get install tox
 before_script:
 - sudo cp tests/tegrastats /usr/bin/
 - sudo cp tests/nvpmodel /usr/bin/
+- sudo cp tests/jetson_clocks /usr/bin/
 
 script: sudo tox
 
