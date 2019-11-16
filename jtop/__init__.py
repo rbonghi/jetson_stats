@@ -27,5 +27,5 @@ from .core import JetsonClocks
 from .core import import_os_variables, StatusObserver
 
 __author__ = "Raffaello Bonghi <raffaello@rnext.it>"
-__version__ = "1.7.6"
+__version__ = "1.7.7"
 # EOF
