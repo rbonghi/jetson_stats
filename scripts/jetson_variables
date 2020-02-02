@@ -23,16 +23,11 @@
 
 if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
     case $(cat /sys/module/tegra_fuse/parameters/tegra_chip_id) in
-        64)
-            JETSON_BOARD="TK1" ;;
-        33)
-            JETSON_BOARD="TX1" ;;
-        24)
-            JETSON_BOARD="TX2" ;;
-        25)
-            JETSON_BOARD="Xavier" ;;
-        *)
-            JETSON_BOARD="UNKNOWN" ;;
+        64) JETSON_BOARD="TK1" ;;
+        33) JETSON_BOARD="TX1" ;;
+        24) JETSON_BOARD="TX2" ;;
+        25) JETSON_BOARD="Xavier" ;;
+        *) JETSON_BOARD="UNKNOWN" ;;
     esac
     if [ "$JETSON_BOARD" = "Xavier" ] ; then
         JETSON_TYPE="AGX Xavier"
@@ -128,31 +123,37 @@ opencv_read_cuda()
 {
     # Red if use CUDA or not
     OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "Use Cuda" )
-
     if [ ! -z "$OPENCV_VERSION_VERBOSE" ]; then
         # Read status of CUDA
         OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':' | cut -f2 -d ' ' )
-        
-        if [ $OPENCV_CUDA_FLAG=="NO" ] ; then
+        if [ "$OPENCV_CUDA_FLAG" == "NO" ]; then
             # Set NO if cuda is not installed
-	    echo "NO"
+    	    echo "NO"
         else
             # Set YES if cuda is installed
-	    echo "YES"
+	        echo "YES"
         fi
         # Remove variable
         unset OPENCV_CUDA_FLAG
-    else
-        # read NVIDIA CUDA version
-        OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "NVIDIA CUDA" )
+        # Remove variable
+        unset OPENCV_VERSION_VERBOSE
+        return
+    fi
+    # read NVIDIA CUDA version
+    OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "NVIDIA CUDA" )
+    if [ ! -z "$OPENCV_VERSION_VERBOSE" ]; then
         # get information
         OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':')
         OPENCV_CUDA_FLAG=${OPENCV_CUDA_FLAG//[[:blank:]]/}
-	# Remove variable
+	    # Remove variable
         unset OPENCV_CUDA_FLAG
         # Set YES if cuda is installed
-	echo "YES"
+	    echo "YES"
+        # Remove variable
+        unset OPENCV_VERSION_VERBOSE
+        return
     fi
+    echo "NO"
     # Remove variable
     unset OPENCV_VERSION_VERBOSE
     return
@@ -174,16 +175,11 @@ export JETSON_OPENCV_CUDA
 # https://developer.nvidia.com/cuda-gpus
 # https://devtalk.nvidia.com/default/topic/988317/jetson-tx1/what-should-be-the-value-of-cuda_arch_bin/
 case $JETSON_BOARD in
-    "Xavier") 
-        JETSON_CUDA_ARCH_BIN="7.2" ;;
-    "TX2" | "TX2i") 
-        JETSON_CUDA_ARCH_BIN="6.2" ;;
-    "TX1")
-        JETSON_CUDA_ARCH_BIN="5.3" ;;
-    "TK1")
-        JETSON_CUDA_ARCH_BIN="3.2" ;;
-    * )
-        JETSON_CUDA_ARCH_BIN="NONE" ;;
+    "Xavier") JETSON_CUDA_ARCH_BIN="7.2" ;;
+    "TX2" | "TX2i") JETSON_CUDA_ARCH_BIN="6.2" ;;
+    "TX1") JETSON_CUDA_ARCH_BIN="5.3" ;;
+    "TK1") JETSON_CUDA_ARCH_BIN="3.2" ;;
+    * ) JETSON_CUDA_ARCH_BIN="NONE" ;;
 esac
 # Export Jetson CUDA ARCHITECTURE
 export JETSON_CUDA_ARCH_BIN
