@@ -88,7 +88,7 @@ class JTOPGUI:
         if hasattr(curses, 'curs_set'):
             try:
                 curses.curs_set(0)
-            except:
+            except Exception:
                 pass
         # Lastly, keys such as the arrow keys are sent as funny escape sequences to
         # our program. We can make curses give us nicer values (such as curses.KEY_LEFT)
