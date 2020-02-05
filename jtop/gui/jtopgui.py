@@ -84,8 +84,12 @@ class JTOPGUI:
         # Additionally, we want to make it so that the user does not have to press
         # enter to send keys to our program, so here is how we get keys instantly
         curses.cbreak()
-        # Hide the cursor
-        curses.curs_set(0)
+        # Try to hide the cursor
+        if hasattr(curses, 'curs_set'):
+            try:
+                curses.curs_set(0)
+            except:
+                pass
         # Lastly, keys such as the arrow keys are sent as funny escape sequences to
         # our program. We can make curses give us nicer values (such as curses.KEY_LEFT)
         # so it is easier on us.
