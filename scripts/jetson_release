@@ -28,9 +28,12 @@ reset=`tput sgr0`
 # - JETSON_OPENCV and JETSON_OPENCV_CUDA
 source /opt/jetson_stats/jetson_variables
 # Load NVP model status
-if [ "$JETSON_BOARD" = "Xavier" ] || [ "$JETSON_BOARD" = "TX2i" ] || [ "$JETSON_BOARD" = "TX2" ] ; then
-	NVPModel="$(nvpmodel -q 2>/dev/null | head -n 1)"
-	NVPModel_type="$(nvpmodel -q 2>/dev/null | sed -n 2p)"
+if hash nvpmodel 2>/dev/null; then
+	NVPModel="$(nvpmodel -q 2>/dev/null)"
+	NVPModel=$(echo $NVPModel | sed 's/.*Mode://')
+	# Extract model and type
+	NVPModel_type=$(echo $NVPModel | cut -d' ' -f 2)
+	NVPModel=$(echo $NVPModel | cut -d' ' -f 1)
 fi
 
 #Print Jetson version
@@ -40,8 +43,8 @@ echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
 # Print CUDA GPU architecture
 echo "   * CUDA GPU architecture $JETSON_CUDA_ARCH_BIN"
 #Print status NVPModel
-if [ "$JETSON_BOARD" = "Xavier" ] || [ "$JETSON_BOARD" = "TX2i" ] || [ "$JETSON_BOARD" = "TX2" ] ; then
-	echo "   * $NVPModel - Type: $NVPModel_type"
+if [ ! -z ${NVPModel+x} ] ; then
+	echo "   * NV Power Mode: ${green}$NVPModel${reset} - Type: ${green}$NVPModel_type${reset}"
 fi
 
 # Libraries

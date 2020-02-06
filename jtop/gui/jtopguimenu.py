@@ -78,11 +78,19 @@ def plot_temperatures(stdscr, start, offset, width, jetson):
 def plot_voltages(stdscr, start, offset, width, jetson):
     # Plot title
     stdscr.addstr(offset, start, "{name:<12} [Cur]   [Avr]".format(name="[Power/mW]"), curses.A_BOLD)
+    # Add Variable to keep track of total
+    total_avg = 0
+    total_cur = 0
     # Plot voltages
     for idx, volt in enumerate(sorted(jetson.stats['VOLT'])):
         value = jetson.stats['VOLT'][volt]
+        total_cur += int(value['cur'])
+        total_avg += int(value['avg'])
         stdscr.addstr(offset + idx + 1, start,
                       ("{name:<12} {curr: <7} {avg: <7}").format(name=volt, curr=int(value['cur']), avg=int(value['avg'])))
+    # Plot totals before finishing
+    stdscr.addstr(offset + idx + 2, start,
+                  ("{name:<12} {curr: <7} {avg: <7}").format(name="Total", curr=total_cur, avg=total_avg), curses.A_BOLD)
 
 
 @check_curses
