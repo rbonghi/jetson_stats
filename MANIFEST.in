@@ -25,3 +25,9 @@ recursive-include scripts *
 
 # Include examples files
 recursive-include examples *.py
+
+# Documentation
+recursive-include docs *.bat
+recursive-include docs *.py
+recursive-include docs *.rst
+recursive-include docs Makefile
