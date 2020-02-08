@@ -181,10 +181,6 @@ class JTOPGUI:
                 page = self.pages[self.n_page]
                 # Run key controller
                 page.keyboard(self.key)
-                # Run extra control for page if exist
-                # for page in self.pages:
-                #    # Run key controller
-                #     page.keyboard(self.key)
             # Store old value key
             self.old_key = self.key
         return True

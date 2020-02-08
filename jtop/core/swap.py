@@ -29,7 +29,7 @@ SWAP_MIN_SIZE = 2
 
 class Swap(object):
 
-    def __init__(self, dir_swap="/", default=8):
+    def __init__(self, dir_swap="/tmp", default=8):
         # Define actual size and new size variable
         self.actual_size = 0
         self.new_size = default
