@@ -36,13 +36,13 @@ if hash nvpmodel 2>/dev/null; then
 	NVPModel=$(echo $NVPModel | cut -d' ' -f 1)
 fi
 
-#Print Jetson version
+# Print Jetson version
 echo " - $JETSON_DESCRIPTION"
 # Print Jetpack and kernel
 echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
 # Print CUDA GPU architecture
 echo "   * CUDA GPU architecture $JETSON_CUDA_ARCH_BIN"
-#Print status NVPModel
+# Print status NVPModel
 if [ ! -z ${NVPModel+x} ] ; then
 	echo "   * NV Power Mode: ${green}$NVPModel${reset} - Type: ${green}$NVPModel_type${reset}"
 fi
