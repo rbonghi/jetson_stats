@@ -43,6 +43,11 @@ class Swap:
     def __sizeof__(self):
         return self.size
 
+    def clearChache(self):
+        clear_cache = sp.Popen(['sysctl vm.drop_caches=3'], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = clear_cache.communicate()
+        return True if out else False
+
     @property
     def enable(self):
         return True if self.swap_status else False
