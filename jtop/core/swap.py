@@ -22,6 +22,9 @@ import subprocess as sp
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
+SWAP_MAX_SIZE = 15
+SWAP_MIN_SIZE = 2
+
 
 class Swap(object):
 
@@ -34,6 +37,20 @@ class Swap(object):
         self.auto = False
         self.swap_status = {}
 
+    def increase(self):
+        if self.size + 1 <= SWAP_MAX_SIZE:
+            self.size += 1
+            return True
+        else:
+            return False
+
+    def decrease(self):
+        if self.size - 1 >= SWAP_MIN_SIZE:
+            self.size -= 1
+            return True
+        else:
+            return False
+
     @property
     def size(self):
         return self.new_size
@@ -42,7 +59,7 @@ class Swap(object):
     def size(self, val):
         self.new_size = val
 
-    def __sizeof__(self):
+    def __len__(self):
         return self.actual_size
 
     def clearCache(self):
@@ -89,5 +106,7 @@ class Swap(object):
         if self.swap_status:
             tot = self.swap_status.get('tot', 0)
             self.actual_size = tot / 1000.0
+            # Update with same status
+            self.new_size = int(self.actual_size)
 
     

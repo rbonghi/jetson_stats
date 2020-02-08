@@ -141,7 +141,14 @@ class MEM(Page):
                 box_keyboard(self.stdscr, start_pos + 10, height - 4, "-", key)
                 # Draw selected number
                 swp_size = int(self.jetson.swap.size)
-                self.stdscr.addstr(height - 3, start_pos + 17, str(swp_size) + "Gb", curses.A_NORMAL)
+                if swp_size > len(self.jetson.swap):
+                    color = curses.color_pair(2)
+                elif swp_size < len(self.jetson.swap):
+                    color = curses.color_pair(3)
+                else:
+                    color = curses.A_NORMAL
+                self.stdscr.addstr(height - 3, start_pos + 16, "{size: <2}".format(size=swp_size), color)
+                self.stdscr.addstr(height - 3, start_pos + 18, "Gb", curses.A_NORMAL)
                 # Draw keys to increase size swap
                 box_keyboard(self.stdscr, start_pos + 21, height - 4, "+", key)
 
@@ -154,4 +161,10 @@ class MEM(Page):
             if key == ord('h'):
                 # Change status swap
                 self.jetson.swap.enable = operator.not_(swap_enable)
+            # Enable nvpmodel control
+            if not swap_enable:
+                if key == ord('+'):
+                    self.jetson.swap.increase()
+                elif key == ord('-'):
+                    self.jetson.swap.decrease()
 # EOF
