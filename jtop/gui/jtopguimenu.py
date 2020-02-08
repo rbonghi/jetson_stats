@@ -16,6 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
+from copy import deepcopy
 from datetime import timedelta
 # control command line
 import curses
@@ -60,7 +61,10 @@ def plot_temperatures(stdscr, start, offset, width, jetson):
     # Plot title
     stdscr.addstr(offset, start, ("{name:<9} {val:^8}").format(name="[Sensor]", val="[Temp]"), curses.A_BOLD)
     # Plot name and temperatures
-    for idx, temp in enumerate(sorted(jetson.stats['TEMP'])):
+    temps = deepcopy(jetson.stats['TEMP'])
+    if 'PMIC' in temps:
+        del temps['PMIC']
+    for idx, temp in enumerate(sorted(temps)):
         # Print temperature name
         value = jetson.stats['TEMP'][temp]
         stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=temp))
