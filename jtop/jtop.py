@@ -103,6 +103,7 @@ class jtop(StatusObserver):
         self.version = get_version()
         # Initialize observer
         self._observers = set()
+        self._started = False
         # Load all Jetson variables
         logger.info("Load jetson variables from script")
         for k, v in import_os_variables(jtop.JTOP_FOLDER + 'jetson_variables').items():
@@ -215,14 +216,17 @@ class jtop(StatusObserver):
 
     def open(self):
         """ Open tegrastats app and read all stats """
-        try:
-            self.tegrastats.open(self)
-        except Tegrastats.TegrastatsException as e:
-            raise jtop.JtopException(e)
+        if not self._started:
+            try:
+                self.tegrastats.open(self)
+                self._started = True
+            except Tegrastats.TegrastatsException as e:
+                raise jtop.JtopException(e)
 
     def close(self):
         """ Close tegrastats app """
         self.tegrastats.close()
+        self._started = False
 
     def attach(self, observer):
         """
@@ -232,6 +236,9 @@ class jtop(StatusObserver):
         :type observer: function
         """
         self._observers.add(observer)
+        # Autostart the jtop if is off
+        if self._observers:
+            self.open()
 
     def detach(self, observer):
         """
@@ -261,7 +268,10 @@ class jtop(StatusObserver):
         self._stats = stats
         # Notifiy all observers
         for observer in self._observers:
-            observer.update(self)
+            if callable(observer):
+                observer(self.stats)
+            else:
+                observer.update(self)
 
     def __enter__(self):
         """ Enter function for 'with' statement """

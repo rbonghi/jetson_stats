@@ -13,8 +13,9 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))
 
-
 # -- Project information -----------------------------------------------------
+
+master_doc = 'index'
 
 project = 'jetson-stats'
 copyright = '2020, Raffaello Bonghi'
