@@ -57,8 +57,11 @@ if [ "$SWAP_OFF" = "Y" ]; then
         echo "Remove swapfile in $SWAPDIRECTORY"
         sudo swapoff "$SWAPDIRECTORY/$NAME_SWAP"
         sudo rm "$SWAPDIRECTORY/$NAME_SWAP"
+        exit 0
+    else
+        echo "Swap file does not exist in $SWAPDIRECTORY"
+        exit 1
     fi
-    exit 0
 fi
 
 echo "Creating Swapfile at: " $SWAPDIRECTORY

@@ -23,12 +23,12 @@ import subprocess as sp
 logger = logging.getLogger(__name__)
 
 
-class Swap:
+class Swap(object):
 
-    def __init__(self, dir_swap="/"):
+    def __init__(self, dir_swap="/", default=8):
         # Define actual size and new size variable
         self.actual_size = 0
-        self.new_size = 8
+        self.new_size = default
         # Set default folder swap
         self.dir = dir_swap
         self.auto = False

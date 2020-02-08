@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import operator
 import curses
 # Page class definition
 from .jtopgui import Page
@@ -120,30 +121,37 @@ class MEM(Page):
                      status='ON' if emc else 'REQUIRE SUDO',
                      label=label_freq(emc),
                      color=curses.color_pair(6))
-        # Clear cache button
-        box_keyboard(self.stdscr, 1, height - 7, "c", key)
-        clear_cache = "Clear cache"
-        self.stdscr.addstr(height - 6, 7, clear_cache, curses.A_NORMAL)
-        # Swap controller
-        box_keyboard(self.stdscr, 1, height - 4, "h", key)
-        enable_swap = "Swap"
-        self.stdscr.addstr(height - 3, 7, enable_swap, curses.A_NORMAL)
-        # Status swap
-        swap_enable = self.jetson.swap.enable
-        enabled_box = "Enabled" if swap_enable else "Disable"
-        box_status(self.stdscr, 8 + len(enable_swap), height - 4, enabled_box, swap_enable)
-        # Draw keys to decrease nvpmodel
-        start_pos = 9 + len(enable_swap)
-        box_keyboard(self.stdscr, start_pos + 10, height - 4, "-", key)
-        # Draw selected number
-        swp_size = int(self.jetson.swap.size)
-        self.stdscr.addstr(height - 3, start_pos + 17, str(swp_size) + "Gb", curses.A_NORMAL)
-        # Draw keys to increase nvpmodel
-        box_keyboard(self.stdscr, start_pos + 21, height - 4, "+", key)
+        if self.jetson.userid == 0:
+            # Clear cache button
+            box_keyboard(self.stdscr, 1, height - 7, "c", key)
+            clear_cache = "Clear cache"
+            self.stdscr.addstr(height - 6, 7, clear_cache, curses.A_NORMAL)
+        if self.jetson.userid == 0:    
+            # Swap controller
+            box_keyboard(self.stdscr, 1, height - 4, "h", key)
+            enable_swap = "Swap"
+            self.stdscr.addstr(height - 3, 7, enable_swap, curses.A_NORMAL)
+            # Status swap
+            swap_enable = self.jetson.swap.enable
+            enabled_box = "Enabled" if swap_enable else "Disable"
+            box_status(self.stdscr, 8 + len(enable_swap), height - 4, enabled_box, swap_enable)
+            if not swap_enable: 
+                # Draw keys to decrease size swap
+                start_pos = 9 + len(enable_swap)
+                box_keyboard(self.stdscr, start_pos + 10, height - 4, "-", key)
+                # Draw selected number
+                swp_size = int(self.jetson.swap.size)
+                self.stdscr.addstr(height - 3, start_pos + 17, str(swp_size) + "Gb", curses.A_NORMAL)
+                # Draw keys to increase size swap
+                box_keyboard(self.stdscr, start_pos + 21, height - 4, "+", key)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
+            swap_enable = self.jetson.swap.enable
             # Clear cache script
             if key == ord('c'):
                 self.jetson.swap.clearCache()
+            if key == ord('h'):
+                # Change status swap
+                self.jetson.swap.enable = operator.not_(swap_enable)
 # EOF
