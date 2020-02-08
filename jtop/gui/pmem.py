@@ -63,8 +63,6 @@ class MEM(Page):
         # Add all swaps
         for swap in self.jetson.swap.swaps():
             line_counter += 1
-            #swap['size'] = 1000000
-            # swap['used'] = 219610000 # swap['size'] / 2
             value = int(swap['used'] / float(swap['size']) * 100.0)
             # Extract size swap and unit
             szw, divider, unit = size_min(swap['size'])
@@ -77,11 +75,11 @@ class MEM(Page):
             else:
                 color = curses.color_pair(6)
             linear_gauge(self.stdscr, offset=line_counter, size=size, start=start,
-                        name=path.basename(swap['name']),
-                        value=value,
-                        percent="{use}/{tot}{unit}b".format(use=int(round(used)), tot=round(szw, 1), unit=unit),
-                        label="P={prio: d}".format(prio=int(swap['prio'])),
-                        color=color)
+                         name=path.basename(swap['name']),
+                         value=value,
+                         percent="{use}/{tot}{unit}b".format(use=int(round(used)), tot=round(szw, 1), unit=unit),
+                         label="P={prio: d}".format(prio=int(swap['prio'])),
+                         color=color)
         # Draw total swap gauge
         line_counter += 1
         self.stdscr.addstr(line_counter, start, "-" * (size - 1), curses.A_NORMAL)
