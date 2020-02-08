@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from os import path
 # Logging
 import logging
 # Launch command
@@ -119,7 +118,7 @@ class Swap(object):
             swap_cmd += ['--auto']
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
-    
+
     def _disable(self):
         # List swap command
         swap_cmd = ['jetson_swap', '--off', '--dir', str(self.dir)]
@@ -127,4 +126,3 @@ class Swap(object):
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
         # Remove swapfile if exist
 # EOF
-    
