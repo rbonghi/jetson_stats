@@ -126,7 +126,7 @@ class MEM(Page):
             box_keyboard(self.stdscr, 1, height - 7, "c", key)
             clear_cache = "Clear cache"
             self.stdscr.addstr(height - 6, 7, clear_cache, curses.A_NORMAL)
-        if self.jetson.userid == 0:    
+        if self.jetson.userid == 0:
             # Swap controller
             box_keyboard(self.stdscr, 1, height - 4, "h", key)
             self.stdscr.addstr(height - 4, 7, "Extra", curses.A_BOLD)
