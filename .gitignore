@@ -16,3 +16,4 @@ venv/
 # Unit test / coverage reports
 .tox/
 .cache/
+swapfile

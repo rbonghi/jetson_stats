@@ -20,7 +20,8 @@ import curses
 from .jtopgui import Page
 # Graphics elements
 from .jtopguilib import (linear_gauge,
-                         label_freq)
+                         label_freq,
+                         box_status)
 # Graphics elements
 from .jtopguilib import (box_keyboard,
                          Chart)
@@ -120,12 +121,22 @@ class MEM(Page):
                      label=label_freq(emc),
                      color=curses.color_pair(6))
         # Clear cache button
+        box_keyboard(self.stdscr, 1, height - 7, "c", key)
         clear_cache = "Clear cache"
-        self.stdscr.addstr(height - 3, 1, clear_cache, curses.A_NORMAL)
-        box_keyboard(self.stdscr, len(clear_cache) + 2, height - 4, "c", key)
-        enable_swap = "Enable swap"
-        self.stdscr.addstr(height - 3, len(clear_cache) + 8, enable_swap, curses.A_NORMAL)
-        box_keyboard(self.stdscr, len(clear_cache) + len(enable_swap) + 8, height - 4, "h", key)
+        self.stdscr.addstr(height - 6, 7, clear_cache, curses.A_NORMAL)
+        # Swap controller
+        box_keyboard(self.stdscr, 1, height - 4, "h", key)
+        enable_swap = "Swap"
+        self.stdscr.addstr(height - 3, 7, enable_swap, curses.A_NORMAL)
+        enabled_box = "Enabled" if swap_status else "Disable"
+        box_status(self.stdscr, 8 + len(enable_swap), height - 4, enabled_box, swap_status)
+        # Draw keys to decrease nvpmodel
+        start_pos = 9 + len(enable_swap)
+        box_keyboard(self.stdscr, start_pos + 10, height - 4, "-", key)
+        # Draw selected number
+        self.stdscr.addstr(height - 3, start_pos + 17, "8" + "GB", curses.A_NORMAL)
+        # Draw keys to increase nvpmodel
+        box_keyboard(self.stdscr, start_pos + 21, height - 4, "+", key)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
