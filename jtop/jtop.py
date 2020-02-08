@@ -276,8 +276,6 @@ class jtop(StatusObserver):
             self.qfan.update()
             # Add fan status
             stats["FAN"] = self.qfan.status
-        # Update status swap
-        self.swap.update(stats)
         # Update status
         self._stats = stats
         # Notifiy all observers

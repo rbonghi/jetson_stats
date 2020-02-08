@@ -136,9 +136,9 @@ class MEM(Page):
             swap_enable = self.jetson.swap.enable
             enabled_box = "Enabled" if swap_enable else "Disable"
             box_status(self.stdscr, 9 + len(enable_swap), height - 4, enabled_box, swap_enable)
-            if not swap_enable: 
+            start_pos = 10 + len(enable_swap)
+            if not swap_enable:
                 # Draw keys to decrease size swap
-                start_pos = 10 + len(enable_swap)
                 box_keyboard(self.stdscr, start_pos + 10, height - 4, "-", key)
                 # Draw selected number
                 swp_size = int(self.jetson.swap.size)
@@ -152,6 +152,9 @@ class MEM(Page):
                 self.stdscr.addstr(height - 3, start_pos + 18, "Gb", curses.A_BOLD)
                 # Draw keys to increase size swap
                 box_keyboard(self.stdscr, start_pos + 21, height - 4, "+", key)
+            else:
+                # Print folder swapfile
+                self.stdscr.addstr(height - 3, start_pos + 11, "{folder}".format(folder=self.jetson.swap.file), curses.A_BOLD)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:

@@ -23,20 +23,41 @@ import subprocess as sp
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
+FILENAME = "/swapfile"
 SWAP_MAX_SIZE = 15
 SWAP_MIN_SIZE = 2
 
 
 class Swap(object):
 
-    def __init__(self, dir_swap="/tmp", default=8):
+    def __init__(self, dir_swap="", default=8):
+        # Set default folder swap
+        self.dir = dir_swap
+        self.swap_info = {}
         # Define actual size and new size variable
         self.actual_size = 0
         self.new_size = default
-        # Set default folder swap
-        self.dir = dir_swap
-        self.auto = False
-        self.swap_status = {}
+        # Initialize auto mount
+        self.auto = True
+        # Load swap information
+        self.update()
+
+    def update(self):
+        swap_status = sp.Popen(['jetson_swap', '--status', '--dir', str(self.dir)], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = swap_status.communicate()
+        if out:
+            swap_data = out.decode("utf-8")
+            swap_data = swap_data.split("\t")
+            # Load swap informations
+            self.swap_info['file'] = swap_data[0].strip()
+            self.swap_info['type'] = swap_data[1].strip()
+            self.swap_info['size'] = int(swap_data[2].strip()) / 1000000.0
+            self.swap_info['used'] = int(swap_data[3].strip()) / 1000.0
+            self.swap_info['priority'] = int(swap_data[4].strip())
+            # Update size
+            self.actual_size = int(self.swap_info['size'])
+        else:
+            self.swap_info = {}
 
     def increase(self):
         if self.size + 1 <= SWAP_MAX_SIZE:
@@ -51,6 +72,10 @@ class Swap(object):
             return True
         else:
             return False
+
+    @property
+    def file(self):
+        return self.dir + FILENAME
 
     @property
     def size(self):
@@ -73,10 +98,8 @@ class Swap(object):
 
     @property
     def enable(self):
-        if path.isfile(self.dir + "/swapfile"):
-            return True
-        else:
-            return False
+        self.update()
+        return True if self.swap_info else False
 
     @enable.setter
     def enable(self, value):
@@ -103,15 +126,5 @@ class Swap(object):
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
         # Remove swapfile if exist
-
-    def update(self, stats):
-        self.swap_status = stats.get('SWAP', {})
-        # Update size status if swap is enable
-        if self.swap_status:
-            tot = self.swap_status.get('tot', 0)
-            self.actual_size = tot / 1000.0
-            # Update with same status
-            if path.isfile(self.dir):
-                self.new_size = int(self.actual_size)
-
+# EOF
     
