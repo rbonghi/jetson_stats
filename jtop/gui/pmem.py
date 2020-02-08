@@ -148,7 +148,7 @@ class MEM(Page):
                 else:
                     color = curses.A_NORMAL
                 self.stdscr.addstr(height - 3, start_pos + 16, "{size: <2}".format(size=swp_size), color)
-                self.stdscr.addstr(height - 3, start_pos + 18, "Gb", curses.A_NORMAL)
+                self.stdscr.addstr(height - 3, start_pos + 18, "Gb", curses.A_BOLD)
                 # Draw keys to increase size swap
                 box_keyboard(self.stdscr, start_pos + 21, height - 4, "+", key)
 

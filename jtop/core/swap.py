@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from os import path
 # Logging
 import logging
 # Launch command
@@ -72,7 +73,10 @@ class Swap(object):
 
     @property
     def enable(self):
-        return True if self.swap_status else False
+        if path.isfile(self.dir + "/swapfile"):
+            return True
+        else:
+            return False
 
     @enable.setter
     def enable(self, value):
@@ -107,6 +111,7 @@ class Swap(object):
             tot = self.swap_status.get('tot', 0)
             self.actual_size = tot / 1000.0
             # Update with same status
-            self.new_size = int(self.actual_size)
+            if path.isfile(self.dir):
+                self.new_size = int(self.actual_size)
 
     

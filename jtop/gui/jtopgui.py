@@ -156,10 +156,9 @@ class JTOPGUI:
             else:
                 self.stdscr.addstr(height - 1, position, ("{idx} {name}").format(idx=idx + 1, name=page.name))
             position += len(page.name) + 2
-            self.stdscr.addstr(height - 1, position, " - ", curses.A_REVERSE)
-            position += 3
-        # Add close option menu
-        self.stdscr.addstr(height - 1, position, "Q to close", curses.A_REVERSE)
+            if idx < len(self.pages) - 1:
+                self.stdscr.addstr(height - 1, position, " - ", curses.A_REVERSE)
+                position += 3
         # Author name
         name_author = "Raffaello Bonghi"
         self.stdscr.addstr(height - 1, width - len(name_author), name_author, curses.A_REVERSE)
@@ -175,7 +174,7 @@ class JTOPGUI:
             elif self.key in [ord(str(n)) for n in range(10)]:
                 num = int(chr(self.key))
                 self.set(num)
-            elif self.key == ord('q') or self.key == ord('Q'):
+            elif self.key == ord('q') or self.key == ord('Q') or self.ESC_BUTTON(self.key):
                 # keyboard check quit button
                 return False
             else:
@@ -189,4 +188,15 @@ class JTOPGUI:
             # Store old value key
             self.old_key = self.key
         return True
+
+    def ESC_BUTTON(self, key):
+        """
+            Check there is another character prevent combination ALT + <OTHER CHR>
+            https://stackoverflow.com/questions/5977395/ncurses-and-esc-alt-keys
+        """
+        if key == 27:
+            n = self.stdscr.getch()
+            if n == -1:
+                return True
+        return False
 # EOF
