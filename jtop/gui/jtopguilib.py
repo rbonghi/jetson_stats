@@ -250,6 +250,16 @@ def label_freq(value):
         return ""
 
 
+def size_min(num, divider=1.0, n=0):
+    if num >= divider * 1000.0:
+        n += 1
+        divider *= 1000.0
+        return size_min(num, divider, n)
+    else:
+        vect = ['', 'K', 'M', 'G', 'T']
+        return round(num / divider, 1), divider, vect[n]
+
+
 @check_curses
 def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", type_bar="|", color=curses.A_NORMAL):
     # Evaluate size withuout short name

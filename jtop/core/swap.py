@@ -22,16 +22,16 @@ import subprocess as sp
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
-FILENAME = "/swapfile"
 SWAP_MAX_SIZE = 15
 SWAP_MIN_SIZE = 2
 
 
 class Swap(object):
 
-    def __init__(self, dir_swap="", default=8):
+    def __init__(self, dir_swap="", default=8, swap_name="swfile"):
         # Set default folder swap
         self.dir = dir_swap
+        self.swap_name = swap_name
         self.swap_info = {}
         # Define actual size and new size variable
         self.actual_size = 0
@@ -42,7 +42,7 @@ class Swap(object):
         self.update()
 
     def update(self):
-        swap_status = sp.Popen(['jetson_swap', '--status', '--dir', str(self.dir)], stdout=sp.PIPE, stderr=sp.PIPE)
+        swap_status = sp.Popen(['jetson_swap', '--status', '--dir', self.dir, '--name', self.swap_name], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = swap_status.communicate()
         if out:
             swap_data = out.decode("utf-8")
@@ -57,6 +57,26 @@ class Swap(object):
             self.actual_size = int(self.swap_info['size'])
         else:
             self.swap_info = {}
+
+    def swaps(self):
+        swap_status = sp.Popen(['swapon', '--show', '--raw', '--byte'], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = swap_status.communicate()
+        swaps = []
+        if out:
+            swap_data = out.decode("utf-8")
+            # Read all data
+            names = []
+            for line in swap_data.split("\n"):
+                # Extract names
+                # The names are: name, type, size, used, prio
+                if not names:
+                    names = line.split()
+                    continue
+                # Extract data
+                datas = line.split()
+                if datas:
+                    swaps += [{name.lower(): int(data) if data.isdigit() else data for name, data in zip(names, datas)}]
+        return swaps
 
     def increase(self):
         if self.size + 1 <= SWAP_MAX_SIZE:
@@ -74,7 +94,7 @@ class Swap(object):
 
     @property
     def file(self):
-        return self.dir + FILENAME
+        return self.dir + "/" + self.swap_name
 
     @property
     def size(self):
@@ -112,7 +132,7 @@ class Swap(object):
 
     def _enable(self):
         # List swap command
-        swap_cmd = ['jetson_swap', '--size', str(self.new_size), '--dir', str(self.dir)]
+        swap_cmd = ['jetson_swap', '--size', str(self.new_size), '--dir', self.dir, '--name', self.swap_name]
         # Add auto command if request
         if self.auto:
             swap_cmd += ['--auto']
@@ -121,7 +141,7 @@ class Swap(object):
 
     def _disable(self):
         # List swap command
-        swap_cmd = ['jetson_swap', '--off', '--dir', str(self.dir)]
+        swap_cmd = ['jetson_swap', '--off', '--dir', self.dir, '--name', self.swap_name]
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
         # Remove swapfile if exist
