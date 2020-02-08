@@ -25,26 +25,31 @@ logger = logging.getLogger(__name__)
 
 class Swap:
 
-    def __init__(self):
-        self.path = "jetson_swap"
-        self._size = 8
-        self.dir = "/opt/"
+    def __init__(self, dir_swap="/"):
+        # Define actual size and new size variable
+        self.actual_size = 0
+        self.new_size = 8
+        # Set default folder swap
+        self.dir = dir_swap
         self.auto = False
         self.swap_status = {}
 
     @property
     def size(self):
-        return self._size
+        return self.new_size
 
     @size.setter
     def size(self, val):
-        self._size = val
+        self.new_size = val
 
     def __sizeof__(self):
-        return self.size
+        return self.actual_size
 
-    def clearChache(self):
-        clear_cache = sp.Popen(['sysctl vm.drop_caches=3'], stdout=sp.PIPE, stderr=sp.PIPE)
+    def clearCache(self):
+        """
+        Clear cache following https://coderwall.com/p/ef1gcw/managing-ram-and-swap
+        """
+        clear_cache = sp.Popen(['sysctl', 'vm.drop_caches=3'], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = clear_cache.communicate()
         return True if out else False
 
@@ -59,24 +64,30 @@ class Swap:
         # Enable or disable swap
         if value:
             self._enable()
+        else:
+            self._disable()
 
     def _enable(self):
         # List swap command
-        swap_cmd = [self.path, '--size', str(self._size)]
+        swap_cmd = ['jetson_swap', '--size', str(self.new_size), '--dir', str(self.dir)]
         # Add auto command if request
         if self.auto:
             swap_cmd += ['--auto']
-        # Set different folder
-        if self.dir:
-            swap_cmd += ['--dir', str(self.dir)]
         # Run script
-        self.p = sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+        sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+    
+    def _disable(self):
+        # List swap command
+        swap_cmd = ['jetson_swap', '--off', '--dir', str(self.dir)]
+        # Run script
+        sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+        # Remove swapfile if exist
 
     def update(self, stats):
         self.swap_status = stats.get('SWAP', {})
         # Update size status if swap is enable
         if self.swap_status:
             tot = self.swap_status.get('tot', 0)
-            self.size = tot / 1000.0
+            self.actual_size = tot / 1000.0
 
     

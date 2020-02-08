@@ -143,5 +143,7 @@ class MEM(Page):
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
-            pass
+            # Clear cache script
+            if key == ord('c'):
+                self.jetson.swap.clearCache()
 # EOF

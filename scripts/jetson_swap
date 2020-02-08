@@ -1,19 +1,22 @@
 #!/bin/bash
 
-#NVIDIA Jetson TX1 TX2 TX2i
+#NVIDIA Jetson Nano TX1 TX2 TX2i
 # Create a swap file and set up permissions
 # If a parameter is passed, it should be the place to create the swapfile
 
 SWAPDIRECTORY=$PWD
 SWAPSIZE=8
 AUTOMOUNT="N"
+SWAP_OFF="N"
+NAME_SWAP="swapfile"
 
 function usage
 {
-    echo "usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h]]"
+    echo "usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]"
     echo "  -d | --dir   <directoryname>   Directory to place swapfile"
     echo "  -s | --size  <gigabytes>"
     echo "  -a | --auto  Enable swap on boot in /etc/fstab "
+    echo "  --off        Switch off the swap"
     echo "  -h | --help  This message"
 }
 
@@ -23,10 +26,12 @@ while [ "$1" != "" ]; do
                                 SWAPDIRECTORY=$1
                                 ;;
         -s | --size )           shift 
-				SWAPSIZE=$1
+                                SWAPSIZE=$1
                                 ;;
         -a | --auto )           AUTOMOUNT="Y"
-				;;
+                                ;;
+        --off )                 SWAP_OFF="Y"
+                                ;;
         -h | --help )           usage
                                 exit
                                 ;;
@@ -46,29 +51,39 @@ if [[ $EUID != 0 ]]; then
     exit 1
 fi
 
+# Switch off the swapfile
+if [ "$SWAP_OFF" = "Y" ]; then
+    if [ -f "$SWAPDIRECTORY/$NAME_SWAP" ]; then
+        echo "Remove swapfile in $SWAPDIRECTORY"
+        sudo swapoff "$SWAPDIRECTORY/$NAME_SWAP"
+        sudo rm "$SWAPDIRECTORY/$NAME_SWAP"
+    fi
+    exit 0
+fi
+
 echo "Creating Swapfile at: " $SWAPDIRECTORY
 echo "Swapfile Size: " $SWAPSIZE"G"
 echo "Automount: " $AUTOMOUNT
 
 #Create a swapfile for Ubuntu at the current directory location
-fallocate -l $SWAPSIZE"G" $SWAPDIRECTORY"/swapfile"
+fallocate -l $SWAPSIZE"G" "$SWAPDIRECTORY/$NAME_SWAP"
 cd $SWAPDIRECTORY
 #List out the file
-ls -lh swapfile
+ls -lh "$SWAPDIRECTORY/$NAME_SWAP"
 # Change permissions so that only root can use it
-sudo chmod 600 swapfile
+sudo chmod 600 "$SWAPDIRECTORY/$NAME_SWAP"
 #List out the file
-ls -lh swapfile
+ls -lh "$SWAPDIRECTORY/$NAME_SWAP"
 #Set up the Linux swap area
-sudo mkswap swapfile
+sudo mkswap "$SWAPDIRECTORY/$NAME_SWAP"
 #Now start using the swapfile
-sudo swapon swapfile
+sudo swapon "$SWAPDIRECTORY/$NAME_SWAP"
 #Show that it's now being used
 swapon -s
 
 if [ "$AUTOMOUNT" = "Y" ]; then
 	echo "Modifying /etc/fstab to enable on boot"
-        SWAPLOCATION=$SWAPDIRECTORY"/swapfile"
+        SWAPLOCATION="$SWAPDIRECTORY/$NAME_SWAP"
         echo $SWAPLOCATION
 	sudo sh -c 'echo "'$SWAPLOCATION' none swap sw 0 0" >> /etc/fstab'
 fi
