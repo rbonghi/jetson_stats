@@ -128,13 +128,16 @@ class MEM(Page):
         box_keyboard(self.stdscr, 1, height - 4, "h", key)
         enable_swap = "Swap"
         self.stdscr.addstr(height - 3, 7, enable_swap, curses.A_NORMAL)
-        enabled_box = "Enabled" if swap_status else "Disable"
-        box_status(self.stdscr, 8 + len(enable_swap), height - 4, enabled_box, swap_status)
+        # Status swap
+        swap_enable = self.jetson.swap.enable
+        enabled_box = "Enabled" if swap_enable else "Disable"
+        box_status(self.stdscr, 8 + len(enable_swap), height - 4, enabled_box, swap_enable)
         # Draw keys to decrease nvpmodel
         start_pos = 9 + len(enable_swap)
         box_keyboard(self.stdscr, start_pos + 10, height - 4, "-", key)
         # Draw selected number
-        self.stdscr.addstr(height - 3, start_pos + 17, "8" + "GB", curses.A_NORMAL)
+        swp_size = int(self.jetson.swap.size)
+        self.stdscr.addstr(height - 3, start_pos + 17, str(swp_size) + "Gb", curses.A_NORMAL)
         # Draw keys to increase nvpmodel
         box_keyboard(self.stdscr, start_pos + 21, height - 4, "+", key)
 

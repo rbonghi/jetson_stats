@@ -24,6 +24,7 @@ from .core import NVPmodel
 from .core import Tegrastats
 from .core import Fan
 from .core import JetsonClocks
+from .core import Swap
 from .core import (import_os_variables,
                    get_uptime,
                    status_disk,
@@ -164,6 +165,8 @@ class jtop(StatusObserver):
         # Initialize Tegrastats controller
         self._stats = {}
         self.tegrastats = Tegrastats(tegrastats_file, interval)
+        # Initialize Swap controller
+        self.swap = Swap()
 
     @property
     def userid(self):
@@ -273,6 +276,8 @@ class jtop(StatusObserver):
             self.qfan.update()
             # Add fan status
             stats["FAN"] = self.qfan.status
+        # Update status swap
+        self.swap.update(stats)
         # Update status
         self._stats = stats
         # Notifiy all observers
