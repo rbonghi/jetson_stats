@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
+# Fix travis
+# https://github.com/readthedocs/readthedocs.org/issues/2569
 master_doc = 'index'
 
 project = 'jetson-stats'
