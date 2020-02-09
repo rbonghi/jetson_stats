@@ -57,8 +57,8 @@ jobs:
         - cd docs
         - make html
         - mv doc ../
-      - after_success:
-        - travis-sphinx deploy
+      # - after_success:
+      #  - travis-sphinx deploy
     - stage: test to PyPI
       script: sudo -H python setup.py sdist
       deploy:
