@@ -58,8 +58,8 @@ jobs:
         #- make html
         - pip install travis-sphinx sphinx-rtd-theme m2r
         - travis-sphinx build
-      - after_success:
-        - travis-sphinx deploy
+      #- after_success:
+      #  - travis-sphinx deploy
     - stage: test to PyPI
       script: sudo -H python setup.py sdist
       deploy:
