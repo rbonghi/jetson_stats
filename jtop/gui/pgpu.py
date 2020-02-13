@@ -42,13 +42,13 @@ class GPU(Page):
         max_y, max_x = self.stdscr.getmaxyx()
         # Evaluate size chart
         size_x = [2, max_x - 10]
-        size_y = [1, max_y * 2 // 3 - 1]
+        size_y = [1, max_y * 2 // 3]
         # Draw the GPU chart
         if 'GR3D' in self.jetson.stats:
             self.chart_gpu.draw(self.stdscr, size_x, size_y)
         # Percent Gauge GPU
         gpu = self.jetson.stats.get('GR3D', {})
-        linear_gauge(self.stdscr, offset=max_y * 2 // 3, start=2, size=max_x // 2,
+        linear_gauge(self.stdscr, offset=max_y * 2 // 3 + 1, start=2, size=max_x // 2,
                      name='GPU',
                      value=gpu.get('val', 0),
                      label=label_freq(gpu),
@@ -57,7 +57,7 @@ class GPU(Page):
         # Temperature GPU
         if "GPU" in self.jetson.stats['TEMP']:
             temp_gpu = self.jetson.stats['TEMP']['GPU']
-            plot_name_info(self.stdscr, max_y * 2 // 3, max_x // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
+            plot_name_info(self.stdscr, max_y * 2 // 3 + 1, max_x // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
         # Jetson clocks status
         jc = self.jetson.jetson_clocks
         if jc is not None:

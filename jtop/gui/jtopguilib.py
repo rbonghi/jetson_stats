@@ -174,7 +174,7 @@ def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=Fals
 
 class Chart(object):
 
-    def __init__(self, param, interval, line="*", color=curses.A_NORMAL, time=10.0, value_name='val', value_max="max_val"):
+    def __init__(self, param, interval, line="*", color=curses.A_NORMAL, time=10.0, value_name='val', value_max="max_val", tik=10):
         self.line = line
         self.color = color
         self.time = time
@@ -184,6 +184,8 @@ class Chart(object):
         self.value_name = value_name
         self.value_max = value_max
         self._noData = True
+        self.refresh = interval
+        self.tik = tik
 
     def update(self, jetson):
         """ Local update chart """
@@ -209,9 +211,9 @@ class Chart(object):
         for n in self.value:
             points += [n] * int(ceil(val))
         # Plot chart shape and labels
-        for point in range(displayY):
+        for point in range(displayY - 1):
             if displayY != point:
-                value_n = self.max_val / float(displayY - 1) * float(displayY - point - 1)
+                value_n = self.max_val / float(displayY - 2) * float(displayY - point - 2)
                 try:
                     stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
                     stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
@@ -219,22 +221,31 @@ class Chart(object):
                                   curses.A_BOLD)
                 except curses.error:
                     pass
+        ten_sec = int(self.tik * 1000 / self.refresh)
+        counter = 0
         for point in range(displayX):
-            try:
-                stdscr.addstr(size_y[1], size_x[0] + point, "-")
-            except curses.error:
-                pass
+            x_val = size_x[1] - 1 - point
+            if x_val >= size_x[0]:
+                try:
+                    if point % ten_sec == 0:
+                        stdscr.addstr(size_y[1] - 1, x_val, "|")
+                        stdscr.addstr(size_y[1], x_val, "{time}s".format(time=self.tik * counter))
+                        counter += 1
+                    else:
+                        stdscr.addstr(size_y[1] - 1, x_val, "-")
+                except curses.error:
+                    pass
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.param, curses.A_BOLD)
         if label:
             stdscr.addstr(size_y[0], size_x[0] + len(self.param) + 1, label, self.color)
         # Plot values
         for idx, point in enumerate(reversed(points)):
-            y_val = int((float(displayY - 1) / self.max_val) * point)
+            y_val = int((float(displayY - 2) / self.max_val) * point)
             x_val = size_x[1] - 1 - idx
             if x_val >= size_x[0]:
                 try:
-                    stdscr.addstr(size_y[1] - 1 - y_val, x_val, self.line, self.color)
+                    stdscr.addstr(size_y[1] - 2 - y_val, x_val, self.line, self.color)
                 except curses.error:
                     pass
 
