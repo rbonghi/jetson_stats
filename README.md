@@ -1,5 +1,6 @@
 # Jetson stats
 [![PyPI - Downloads](https://img.shields.io/pypi/dw/jetson-stats.svg)](https://pypistats.org/packages/jetson-stats) [![PyPI version](https://badge.fury.io/py/jetson-stats.svg)](https://badge.fury.io/py/jetson-stats) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/jetson-stats.svg)](https://www.python.org/) [![PyPI - Format](https://img.shields.io/pypi/format/jetson-stats.svg)](https://pypi.org/project/jetson-stats/)
+
 ![Python application](https://github.com/rbonghi/jetson_stats/workflows/Python%20application/badge.svg) ![Build & Deploy docs](https://github.com/rbonghi/jetson_stats/workflows/Build%20&%20Deploy%20docs/badge.svg)
 
 **jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1] embedded board. When you install jetson-stats are included:
@@ -7,7 +8,7 @@
 * [jetson_release](#jetson_release)
 * [jetson_variables](#jetson_variables)
 
-Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information
+Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rbonghi.github.io/jetson_stats).
 
 ## Install
 
