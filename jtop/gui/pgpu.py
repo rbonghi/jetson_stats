@@ -45,7 +45,11 @@ class GPU(Page):
         size_y = [1, max_y * 2 // 3]
         # Draw the GPU chart
         if 'GR3D' in self.jetson.stats:
-            self.chart_gpu.draw(self.stdscr, size_x, size_y)
+            frq = label_freq(self.jetson.stats['GR3D'])
+            label_chart_gpu = "{percent: >2}%".format(percent=self.jetson.stats['GR3D']['val'])
+            if frq:
+                label_chart_gpu += " - {frq}".format(frq=frq)
+            self.chart_gpu.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
         # Percent Gauge GPU
         gpu = self.jetson.stats.get('GR3D', {})
         linear_gauge(self.stdscr, offset=max_y * 2 // 3 + 1, start=2, size=max_x // 2,

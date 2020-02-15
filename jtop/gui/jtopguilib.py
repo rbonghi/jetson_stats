@@ -229,8 +229,8 @@ class Chart(object):
             if x_val >= size_x[0]:
                 try:
                     # Draw tick label
-                    label = "|" if (point / multi) % ten_sec == 0 else "-"
-                    stdscr.addstr(size_y[1] - 1, x_val, label)
+                    tik_label = "|" if (point / multi) % ten_sec == 0 else "-"
+                    stdscr.addstr(size_y[1] - 1, x_val, tik_label)
                     # Draw label
                     if counter > 0 and ((point - 1) / multi) % ten_sec == 0:
                         stdscr.addstr(size_y[1], x_val, "-{time}s".format(time=self.tik * counter))
