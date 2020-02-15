@@ -1,4 +1,4 @@
-name: Python application
+name: Build
 
 # Reference:
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
