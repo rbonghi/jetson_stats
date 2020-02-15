@@ -228,7 +228,7 @@ class Chart(object):
             x_val = size_x[1] - 1 - point
             if x_val >= size_x[0]:
                 try:
-                    if ( point / multi ) % ten_sec == 0:
+                    if (point / multi) % ten_sec == 0:
                         stdscr.addstr(size_y[1] - 1, x_val, "|")
                         stdscr.addstr(size_y[1], x_val, "{time}s".format(time=self.tik * counter))
                         counter += 1
