@@ -208,9 +208,8 @@ class Chart(object):
         displayY = size_y[1] - size_y[0] - 1
         val = float(displayX - 2) / float(len(self.value))
         points = []
-        multi = int(ceil(val))
         for n in self.value:
-            points += [n] * multi
+            points += [n] * int(ceil(val))
         # Plot chart shape and labels
         for point in range(displayY - 1):
             if displayY != point:
@@ -229,13 +228,13 @@ class Chart(object):
             if x_val >= size_x[0]:
                 try:
                     # Draw tick label
-                    tik_label = "|" if (point / multi) % ten_sec == 0 else "-"
+                    tik_label = "|" if ((point) / ceil(val)) % ten_sec == 0 else "-"
                     stdscr.addstr(size_y[1] - 1, x_val, tik_label)
                     # Draw label
-                    if counter > 0 and ((point - 1) / multi) % ten_sec == 0:
+                    if counter > 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
                         stdscr.addstr(size_y[1], x_val, "-{time}s".format(time=self.tik * counter))
                         counter += 1
-                    elif counter == 0 and ((point - 1) / multi) % ten_sec == 0:
+                    elif counter == 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
                         stdscr.addstr(size_y[1], x_val, "time")
                         counter += 1
                 except curses.error:
