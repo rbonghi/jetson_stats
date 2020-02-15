@@ -1,4 +1,4 @@
-name: Build & Deploy docs
+name: Docs
 
 # Reference:
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
