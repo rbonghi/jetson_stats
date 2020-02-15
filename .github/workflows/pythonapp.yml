@@ -1,0 +1,38 @@
+name: Python application
+
+# Reference:
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
+on: [push, pull_request]
+
+# Reference
+# https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
+
+jobs:
+  build:
+    name: Test on python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+        
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        # Install test dependencies
+        sudo cp tests/tegrastats /usr/bin/
+        sudo cp tests/nvpmodel /usr/bin/
+        sudo cp tests/jetson_clocks /usr/bin/
+        # Upgrade pip
+        python -m pip install --upgrade pip
+        # Install tox
+        sudo apt-get install tox
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+    - name: Test with tox
+      run: |
+        sudo tox -e py${{ matrix.python-version }}
