@@ -145,7 +145,7 @@ setup(
     platforms=["linux", "linux2", "darwin"],
     # Zip safe configuration
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
-    zip_safe=False,
+    zip_safe=True,
     # Install extra scripts
     scripts=['scripts/jetson_swap', 'scripts/jetson_release'],
     cmdclass={'develop': PostDevelopCommand,
