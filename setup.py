@@ -50,6 +50,7 @@ if os.getuid() != 0:
 
 here = path.abspath(path.dirname(__file__))
 project_homepage = "https://github.com/rbonghi/jetson_stats"
+documentation_homepage = "https://rbonghi.github.io/jetson_stats"
 
 
 # Get the long description from the README file
@@ -100,7 +101,7 @@ setup(
     url=project_homepage,
     download_url=(project_homepage + "/archive/master.zip"),
     project_urls={
-        "How To": (project_homepage + "/tree/master/docs"),
+        "How To": documentation_homepage,
         "Examples": (project_homepage + "/tree/master/examples"),
         "Bug Reports": (project_homepage + "/issues"),
         "Source": (project_homepage + "/tree/master")
@@ -109,7 +110,7 @@ setup(
     keywords=("jetson_stats jtop python system-monitor docker \
                nvidia Jetson Nano Xavier TX2 TX1 process viewer"
               ),
-    classifiers=["Development Status :: 4 - Beta",
+    classifiers=["Development Status :: 5 - Production/Stable",
                  # Audiencence and topics
                  "Intended Audience :: Developers",
                  "Topic :: Software Development :: Embedded Systems",
@@ -125,8 +126,9 @@ setup(
                  "Topic :: System :: Systems Administration",
                  "Topic :: Terminals",
                  # License
-                 "License :: OSI Approved :: MIT License",
+                 "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
                  # Programming and Operative system
+                 "Programming Language :: Unix Shell",
                  "Programming Language :: Python :: 2",
                  "Programming Language :: Python :: 2.7",
                  "Programming Language :: Python :: 3",
@@ -134,6 +136,7 @@ setup(
                  "Programming Language :: Python :: 3.5",
                  "Programming Language :: Python :: 3.6",
                  "Programming Language :: Python :: 3.7",
+                 "Programming Language :: Python :: 3.8",
                  "Operating System :: POSIX :: Linux",
                  ],
     # Requisites
@@ -143,12 +146,6 @@ setup(
     # Zip safe configuration
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
     zip_safe=False,
-    # Add jetson_variables in /opt/jetson_stats
-    # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('/opt/jetson_stats', ['scripts/jetson_variables', 'scripts/jetson_performance.sh']),
-                ('/etc/profile.d', ['scripts/jetson_env.sh']),
-                ('/etc/systemd/system', ['scripts/jetson_performance.service']),
-                ],
     # Install extra scripts
     scripts=['scripts/jetson_swap', 'scripts/jetson_release'],
     cmdclass={'develop': PostDevelopCommand,
