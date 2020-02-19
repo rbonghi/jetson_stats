@@ -49,8 +49,8 @@ if os.getuid() != 0:
 
 # Skip wheel install for pip
 # https://github.com/pypa/wheel/issues/92#issuecomment-317884954
-if 'bdist_wheel' in sys.argv:
-    raise RuntimeError("This setup.py does not support wheels")
+# if 'bdist_wheel' in sys.argv:
+#     raise RuntimeError("This setup.py does not support wheels")
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -151,10 +151,14 @@ setup(
     # Zip safe configuration
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
     zip_safe=False,
+    # Add jetson_variables in /opt/jetson_stats
+    # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
+    data_files=[('jetson_stats', ['data/jetson_variables']),
+                ],
     # Install extra scripts
     scripts=['scripts/jetson_swap', 'scripts/jetson_release'],
-    cmdclass={'develop': PostDevelopCommand,
-              'install': PostInstallCommand},
+    # cmdclass={'develop': PostDevelopCommand,
+    #           'install': PostInstallCommand},
     # The following provide a command called `jtop`
     entry_points={'console_scripts': ['jtop=jtop.__main__:main']},
 )

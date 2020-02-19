@@ -17,15 +17,17 @@
 
 
 from jtop import import_os_variables
+import os
+import sys
 
 
 def test_load():
-    JETSONS = import_os_variables('/opt/jetson_stats/jetson_variables')
+    JETSONS = import_os_variables(os.path.join(sys.prefix, 'jetson_stats') + '/jetson_variables')
     assert len(JETSONS) > 0
 
 
 def test_env():
-    JETSONS = import_os_variables('/opt/jetson_stats/jetson_variables')
+    JETSONS = import_os_variables(os.path.join(sys.prefix, 'jetson_stats') + '/jetson_variables')
     # Check contain JETSON_BOARD
     assert "JETSON_BOARD" in JETSONS
     # Check contain JETSON_L4T

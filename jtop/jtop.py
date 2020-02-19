@@ -48,6 +48,7 @@ Follow the next attributes to know in detail how it works.
 """
 import re
 import os
+import sys
 # Logging
 import logging
 
@@ -94,7 +95,7 @@ class jtop(StatusObserver):
         pass
 
     # List of available fan
-    JTOP_FOLDER = '/opt/jetson_stats/'
+    JTOP_FOLDER = os.path.join(sys.prefix, 'jetson_stats')  # '/opt/jetson_stats/'
     LIST_FANS = [('/sys/kernel/debug/tegra_fan/', False), ('/sys/devices/pwm-fan/', True)]
     TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 
@@ -106,7 +107,7 @@ class jtop(StatusObserver):
         self._started = False
         # Load all Jetson variables
         logger.info("Load jetson variables from script")
-        for k, v in import_os_variables(jtop.JTOP_FOLDER + 'jetson_variables').items():
+        for k, v in import_os_variables(jtop.JTOP_FOLDER + '/jetson_variables').items():
             logger.debug("New Enviroment variable {}:{}".format(k, v))
             os.environ[k] = v
         # Initialize jetson_clocks controller
