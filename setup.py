@@ -29,7 +29,6 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from os import path
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
 # and accepts an argument to specify the text encoding
@@ -48,13 +47,19 @@ if os.getuid() != 0:
     sys.exit(1)
 
 
-here = path.abspath(path.dirname(__file__))
+# Skip wheel install for pip
+# https://github.com/pypa/wheel/issues/92#issuecomment-317884954
+if 'bdist_wheel' in sys.argv:
+    raise RuntimeError("This setup.py does not support wheels")
+
+
+here = os.path.abspath(os.path.dirname(__file__))
 project_homepage = "https://github.com/rbonghi/jetson_stats"
 documentation_homepage = "https://rbonghi.github.io/jetson_stats"
 
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 # Load version package
@@ -145,7 +150,7 @@ setup(
     platforms=["linux", "linux2", "darwin"],
     # Zip safe configuration
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
-    zip_safe=True,
+    zip_safe=False,
     # Install extra scripts
     scripts=['scripts/jetson_swap', 'scripts/jetson_release'],
     cmdclass={'develop': PostDevelopCommand,
