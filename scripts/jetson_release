@@ -29,6 +29,8 @@ reset=`tput sgr0`
 JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])")
 source $JTOP_VARIABLE/jetson_variables
 
+jetson_release()
+{
 # Load NVP model status
 if hash nvpmodel 2>/dev/null; then
 	NVPModel="$(nvpmodel -q 2>/dev/null)"
@@ -51,7 +53,7 @@ fi
 
 # Libraries
 echo " - Libraries:"
-#Print Cuda version
+# Print Cuda version
 echo "   * CUDA $JETSON_CUDA"
 # Print cuDNN version
 echo "   * cuDNN $JETSON_CUDNN"
@@ -59,20 +61,69 @@ echo "   * cuDNN $JETSON_CUDNN"
 echo "   * TensorRT $JETSON_TENSORRT"
 # Print VisionWorks version
 echo "   * Visionworks $JETSON_VISIONWORKS"
-#Print OpenCv version and cuda compiled
+# Print OpenCv version and cuda compiled
 if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
     echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
 else
 	echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
 fi
-#Print status Jetson Performance service
+# Print status Jetson Performance service
 JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
 if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
-	echo " - Jetson Performance: ${green}$JE_PERFOMANCE_STATUS${reset}"
+	echo " - Jetson clock service: ${green}$JE_PERFOMANCE_STATUS${reset}"
 else
-	echo " - Jetson Performance: ${red}$JE_PERFOMANCE_STATUS${reset}"
+	echo " - Jetson clock service: ${red}$JE_PERFOMANCE_STATUS${reset}"
 fi
+# jetson-stats version
+JETSON_STATS_VERSION="$(jtop -v | cut -d " " -f2)"
+echo " - jetson-stats version $JETSON_STATS_VERSION"
+}
 
+jetson_fix()
+{
+	echo "Fix"
+}
+
+jetson_health()
+{
+	JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+	if [ $JE_PERFOMANCE_STATUS = "failed" ] ; then
+		echo "Jetson clock service is ${red}not installed!${reset}"
+	fi
+}
+
+function usage
+{
+    echo "usage: jetson_release [ [--check] | [-h] ]"
+    echo "  --health      Health status of your jetson-stats package"
+	echo "  --fix         Fix the jetson-stats package cleaning all errors"
+    echo "  -h | --help   This message"
+}
+
+main()
+{
+	# Decode all information from startup
+    while [ -n "$1" ]; do
+        case "$1" in
+			--health)  jetson_health
+                       exit 0 ;;
+			--fix)     jetson_fix
+					   exit 0 ;;
+            -h|--help) usage
+					   exit 0 ;;
+            *)		   usage "[ERROR] Unknown option: $1"
+					   exit 1 ;;
+        esac
+            shift 1
+    done
+
+	jetson_release
+}
+
+main $@
 exit 0
+
+# EOF
+
 
 

@@ -46,7 +46,7 @@ class CTRL(Page):
         # Position information
         posx = 2
         start_pos = 2
-        self.stdscr.addstr(start_pos, posx, "jetson_clocks controller", curses.A_BOLD)
+        self.stdscr.addstr(start_pos, posx, "jetson_clocks service", curses.A_BOLD)
         if self.jetson.userid == 0:
             # button start/stop jetson clocks
             box_keyboard(self.stdscr, start_pos - 1, posx + 1, "a", key)

@@ -23,6 +23,10 @@ include LICENSE
 # Include the data files
 recursive-include scripts *
 
+# Include services files
+recursive-include services *.service
+recursive-include services *.sh
+
 # Include examples files
 recursive-include examples *.py
 
@@ -31,6 +35,3 @@ recursive-include docs *.bat
 recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include docs Makefile
-
-recursive-include data *.service
-recursive-include data *.sh

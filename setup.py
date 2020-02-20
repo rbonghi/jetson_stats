@@ -29,6 +29,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
+from jtop import import_jetson_variables
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
 # and accepts an argument to specify the text encoding
@@ -40,6 +41,18 @@ import shlex
 import os
 import sys
 import re
+
+
+def list_scripts():
+    JETSONS = import_jetson_variables()
+    # Load scripts to install
+    scripts = ['scripts/jetson_swap', 'scripts/jetson_release']
+    # If jetpack lower than 32 install also jetson_docker
+    l4t_release = JETSONS['JETSON_L4T_RELEASE']
+    if l4t_release.isdigit():
+        if int(l4t_release) < 32:
+            scripts += ['scripts/jetson_docker']
+    return scripts
 
 
 if os.getuid() != 0:
@@ -148,8 +161,13 @@ setup(
     # Zip safe configuration
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
     zip_safe=False,
+    # Add jetson_variables in /opt/jetson_stats
+    # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
+    data_files=[('jetson_stats', ['services/jetson_performance.sh',
+                                  'services/jetson_fan.sh',
+                                  ])],
     # Install extra scripts
-    scripts=['scripts/jetson_swap', 'scripts/jetson_release'],
+    scripts=list_scripts(),
     # cmdclass={'develop': PostDevelopCommand,
     #           'install': PostInstallCommand},
     # The following provide a command called `jtop`

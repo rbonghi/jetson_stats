@@ -143,7 +143,7 @@ def compact_info(stdscr, start, offset, width, jetson):
         # Show if JetsonClock is enabled or not
         if jc.enable:
             jc_status = "[" + jc_status + "]"
-        plot_name_info(stdscr, offset + counter, start, "Jetson Clocks", jc_status, color)
+        plot_name_info(stdscr, offset + counter, start, "Jetson clocks Sv", jc_status, color)
         counter += 1
     # NVP Model
     nvpmodel = jetson.nvpmodel
