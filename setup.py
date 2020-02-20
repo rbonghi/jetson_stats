@@ -47,12 +47,6 @@ if os.getuid() != 0:
     sys.exit(1)
 
 
-# Skip wheel install for pip
-# https://github.com/pypa/wheel/issues/92#issuecomment-317884954
-# if 'bdist_wheel' in sys.argv:
-#     raise RuntimeError("This setup.py does not support wheels")
-
-
 here = os.path.abspath(os.path.dirname(__file__))
 project_homepage = "https://github.com/rbonghi/jetson_stats"
 documentation_homepage = "https://rbonghi.github.io/jetson_stats"
@@ -112,6 +106,9 @@ setup(
         "Source": (project_homepage + "/tree/master")
     },
     packages=find_packages(exclude=['examples', 'scripts', 'tests']),  # Required
+    # Load jetson_variables
+    package_data={"jtop": ["jetson_variables"]},
+    # Define research keywords
     keywords=("jetson_stats jtop python system-monitor docker \
                nvidia Jetson Nano Xavier TX2 TX1 process viewer"
               ),
@@ -151,10 +148,6 @@ setup(
     # Zip safe configuration
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
     zip_safe=False,
-    # Add jetson_variables in /opt/jetson_stats
-    # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('jetson_stats', ['data/jetson_variables']),
-                ],
     # Install extra scripts
     scripts=['scripts/jetson_swap', 'scripts/jetson_release'],
     # cmdclass={'develop': PostDevelopCommand,

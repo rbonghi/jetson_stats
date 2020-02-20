@@ -48,7 +48,6 @@ Follow the next attributes to know in detail how it works.
 """
 import re
 import os
-import sys
 # Logging
 import logging
 
@@ -67,6 +66,11 @@ from .core import (import_os_variables,
 logger = logging.getLogger(__name__)
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
+
+
+def import_jetson_variables():
+    JTOP_FOLDER, _ = os.path.split(__file__)
+    return import_os_variables(JTOP_FOLDER + "/jetson_variables", "JETSON_")
 
 
 def get_version():
@@ -94,11 +98,6 @@ class jtop(StatusObserver):
         """ Jtop general exception """
         pass
 
-    # List of available fan
-    JTOP_FOLDER = os.path.join(sys.prefix, 'jetson_stats')  # '/opt/jetson_stats/'
-    LIST_FANS = [('/sys/kernel/debug/tegra_fan/', False), ('/sys/devices/pwm-fan/', True)]
-    TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
-
     def __init__(self, interval=500):
         # Version package
         self.version = get_version()
@@ -107,7 +106,7 @@ class jtop(StatusObserver):
         self._started = False
         # Load all Jetson variables
         logger.info("Load jetson variables from script")
-        for k, v in import_os_variables(jtop.JTOP_FOLDER + '/jetson_variables').items():
+        for k, v in import_jetson_variables().items():
             logger.debug("New Enviroment variable {}:{}".format(k, v))
             os.environ[k] = v
         # Initialize jetson_clocks controller
@@ -119,7 +118,8 @@ class jtop(StatusObserver):
             self.nvp = None
         # Find all fans availables
         self.qfan = None
-        for path, temp_control in jtop.LIST_FANS:
+        LIST_FANS = [('/sys/kernel/debug/tegra_fan/', False), ('/sys/devices/pwm-fan/', True)]
+        for path, temp_control in LIST_FANS:
             try:
                 self.qfan = Fan(path, self.jc, temp_control)
                 logger.info("Fan {} loaded!".format(path))
@@ -128,7 +128,7 @@ class jtop(StatusObserver):
                 logger.info("Fan {} not loaded".format(path))
         # Start process tegrastats
         tegrastats_file = ""
-        for f_tegra in jtop.TEGRASTATS:
+        for f_tegra in ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']:
             if os.path.isfile(f_tegra):
                 logger.info("Load tegrastats {}".format(f_tegra))
                 tegrastats_file = f_tegra

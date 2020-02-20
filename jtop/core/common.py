@@ -41,7 +41,7 @@ class StatusObserver(ABC):
         pass
 
 
-def import_os_variables(SOURCE, PATTERN="JETSON_"):
+def import_os_variables(SOURCE, PATTERN):
     if os.path.isfile(SOURCE):
         logger.info("Open source file {}".format(SOURCE))
         proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE)
