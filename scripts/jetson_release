@@ -26,7 +26,9 @@ reset=`tput sgr0`
 # - JETSON_DESCRIPTION
 # - JETSON_CUDA
 # - JETSON_OPENCV and JETSON_OPENCV_CUDA
-source /opt/jetson_stats/jetson_variables
+JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])")
+source $JTOP_VARIABLE/jetson_variables
+
 # Load NVP model status
 if hash nvpmodel 2>/dev/null; then
 	NVPModel="$(nvpmodel -q 2>/dev/null)"
