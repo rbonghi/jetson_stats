@@ -65,7 +65,10 @@ class Tegrastats(Thread):
                     self._stats = self._decode(tegrastats_data)
                     # Notifiy all observers
                     for observer in self._observers:
-                        observer.update(self._stats)
+                        if callable(observer):
+                            observer(self._stats)
+                        else:
+                            observer.update(self._stats)
         except SystemExit:
             logger.error("System exit", exc_info=True)
         except AttributeError:

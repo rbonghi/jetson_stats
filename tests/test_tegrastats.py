@@ -39,17 +39,17 @@ def test_open():
     assert True
 
 
-def check_tegra(tegra):
+def check_tegra(stats):
     # Check if is correctly written the variable
-    assert "RAM" in tegra.stats
-    variable = tegra.stats["RAM"]
+    assert "RAM" in stats
+    variable = stats["RAM"]
     # Check if ram["used"] is a list
     assert isinstance(variable["use"], int)
     # Check if last value is the same send
     assert variable["use"] == 4722
     # Check temperature is in list
-    assert "TEMP" in tegra.stats
-    variable = tegra.stats["TEMP"]
+    assert "TEMP" in stats
+    variable = stats["TEMP"]
     # Check negative number is parsed
     assert variable["BCPU"] < 0
 
@@ -58,7 +58,7 @@ def test_stats():
     # Load tegracontroller
     with Tegrastats('/usr/bin/tegrastats', 100) as tegra:
         # Check tegra stats
-        check_tegra(tegra)
+        check_tegra(tegra.stats)
 
 
 def test_stats_callback():
