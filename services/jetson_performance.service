@@ -1,6 +1,6 @@
 [Unit]
 Documentation=man:systemd-sysv-generator(8)
-SourcePath=/opt/jetson_stats/jetson_performance.sh
+SourcePath=/usr/local/jetson_stats/jetson_performance.sh
 Description=Jetson performance is a script to control jetson_clock
 After=remote-fs.target
 After=all.target
@@ -14,8 +14,8 @@ KillMode=process
 GuessMainPID=no
 RemainAfterExit=yes
 SuccessExitStatus=5 6
-ExecStart=/opt/jetson_stats/jetson_performance.sh start
-ExecStop=/opt/jetson_stats/jetson_performance.sh stop
+ExecStart=/usr/local/jetson_stats/jetson_performance.sh start
+ExecStop=/usr/local/jetson_stats/jetson_performance.sh stop
 
 [Install]
 WantedBy=multi-user.target

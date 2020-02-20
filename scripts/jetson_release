@@ -20,76 +20,193 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
-# Load environment variables:
-# - JETSON_BOARD
-# - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
-# - JETSON_DESCRIPTION
-# - JETSON_CUDA
-# - JETSON_OPENCV and JETSON_OPENCV_CUDA
-JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])")
-source $JTOP_VARIABLE/jetson_variables
-
 jetson_release()
 {
-# Load NVP model status
-if hash nvpmodel 2>/dev/null; then
-	NVPModel="$(nvpmodel -q 2>/dev/null)"
-	NVPModel=$(echo $NVPModel | sed 's/.*Mode://')
-	# Extract model and type
-	NVPModel_type=$(echo $NVPModel | cut -d' ' -f 2)
-	NVPModel=$(echo $NVPModel | cut -d' ' -f 1)
-fi
+	# Load environment variables:
+	# - JETSON_BOARD
+	# - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
+	# - JETSON_DESCRIPTION
+	# - JETSON_CUDA
+	# - JETSON_OPENCV and JETSON_OPENCV_CUDA
+	JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])")
+	source $JTOP_VARIABLE/jetson_variables
 
-# Print Jetson version
-echo " - $JETSON_DESCRIPTION"
-# Print Jetpack and kernel
-echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
-# Print CUDA GPU architecture
-echo "   * CUDA GPU architecture $JETSON_CUDA_ARCH_BIN"
-# Print status NVPModel
-if [ ! -z ${NVPModel+x} ] ; then
-	echo "   * NV Power Mode: ${green}$NVPModel${reset} - Type: ${green}$NVPModel_type${reset}"
-fi
+	# Load NVP model status
+	if hash nvpmodel 2>/dev/null; then
+		NVPModel="$(nvpmodel -q 2>/dev/null)"
+		NVPModel=$(echo $NVPModel | sed 's/.*Mode://')
+		# Extract model and type
+		NVPModel_type=$(echo $NVPModel | cut -d' ' -f 2)
+		NVPModel=$(echo $NVPModel | cut -d' ' -f 1)
+	fi
+	# Print Jetson version
+	echo " - $JETSON_DESCRIPTION"
+	# Print Jetpack and kernel
+	echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
+	# Print CUDA GPU architecture
+	echo "   * CUDA GPU architecture $JETSON_CUDA_ARCH_BIN"
+	# Print status NVPModel
+	if [ ! -z ${NVPModel+x} ] ; then
+		echo "   * NV Power Mode: ${green}$NVPModel${reset} - Type: ${green}$NVPModel_type${reset}"
+	fi
+	# Libraries
+	echo " - Libraries:"
+	# Print Cuda version
+	echo "   * CUDA $JETSON_CUDA"
+	# Print cuDNN version
+	echo "   * cuDNN $JETSON_CUDNN"
+	# Print TensorRT version
+	echo "   * TensorRT $JETSON_TENSORRT"
+	# Print VisionWorks version
+	echo "   * Visionworks $JETSON_VISIONWORKS"
+	# Print OpenCv version and cuda compiled
+	if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
+		echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
+	else
+		echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
+	fi
+	# Print status Jetson Performance service
+	JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+	if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
+		echo " - Jetson clock service: ${green}$JE_PERFOMANCE_STATUS${reset}"
+	else
+		echo " - Jetson clock service: ${red}$JE_PERFOMANCE_STATUS${reset}"
+	fi
+	# jetson-stats version
+	JETSON_STATS_VERSION="$(jtop -v | cut -d " " -f2)"
+	echo " - jetson-stats version $JETSON_STATS_VERSION"
+}
 
-# Libraries
-echo " - Libraries:"
-# Print Cuda version
-echo "   * CUDA $JETSON_CUDA"
-# Print cuDNN version
-echo "   * cuDNN $JETSON_CUDNN"
-# Print TensorRT version
-echo "   * TensorRT $JETSON_TENSORRT"
-# Print VisionWorks version
-echo "   * Visionworks $JETSON_VISIONWORKS"
-# Print OpenCv version and cuda compiled
-if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
-    echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
-else
-	echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
-fi
-# Print status Jetson Performance service
-JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
-if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
-	echo " - Jetson clock service: ${green}$JE_PERFOMANCE_STATUS${reset}"
-else
-	echo " - Jetson clock service: ${red}$JE_PERFOMANCE_STATUS${reset}"
-fi
-# jetson-stats version
-JETSON_STATS_VERSION="$(jtop -v | cut -d " " -f2)"
-echo " - jetson-stats version $JETSON_STATS_VERSION"
+jetson_uninstall()
+{
+	local FORCE=$1
+
+    # Remove fan service from /etc/init.d
+    if [ -f "/etc/systemd/system/jetson_fan.service" ] ; then
+        # Disable service
+        echo "   * Disable service from /etc/systemd/system"
+        sudo systemctl disable jetson_fan.service
+        # Remove service in list
+        echo "   * Remove the service from /etc/systemd/system"
+        sudo rm "/etc/systemd/system/jetson_fan.service"
+        # Update service list
+        echo "   * Reload services list"
+        sudo systemctl daemon-reload
+    fi
+    
+    # Remove jetson_performance service from /etc/init.d
+    if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
+        # Uninstall the service
+        if [ $(systemctl is-active jetson_performance.service) = "active" ] ; then
+            tput setaf 1
+            echo "   * Stop and jetson_performance service"
+            tput sgr0
+            # Stop the service
+            sudo systemctl stop jetson_performance.service
+        fi
+        # Disable the service
+        echo "   * Disable service from /etc/systemd/system"
+        sudo systemctl disable jetson_performance.service
+        # Remove service in list
+        echo "   * Remove the service from /etc/systemd/system"
+        sudo rm "/etc/systemd/system/jetson_performance.service"
+        # Update service list
+        echo "   * Reload services list"
+        sudo systemctl daemon-reload
+    fi
 }
 
 jetson_fix()
 {
-	echo "Fix"
+	local JETSON_STATS_FOLDER=$1
+	local FORCE=$2
+	# Check if run in sudo
+    if [[ `id -u` -ne 0 ]] ; then 
+        tput setaf 1
+        echo "Please run as root"
+        tput sgr0
+        exit 1
+    fi
+
+	echo "Fix jetson-stats package:"
+
+	if [ ! -f "/etc/profile.d/jetson_env.sh" ] || $FORCE ; then
+		echo " * Copy jetson_fan.service in service list"
+		sudo cp "$JETSON_STATS_FOLDER/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
+    fi
+
+	if [ -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] || $FORCE ; then
+		echo " * Set jetson_performance executable"
+		sudo chmod +x "$JETSON_STATS_FOLDER/jetson_performance.sh"
+	fi
+
+	if [ ! -f "/etc/systemd/system/jetson_performance.service" ] || $FORCE ; then
+		echo " * jetson_performance.service"
+		echo "   - Copy jetson_performance.service in service list"
+		sudo cp "$JETSON_STATS_FOLDER/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+		# Update service list
+		echo "   - Reload services list"
+		sudo systemctl daemon-reload
+	fi
+
+	if [ -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] || $FORCE ; then
+		echo " * Set jetson_fan executable"
+		sudo chmod +x "$JETSON_STATS_FOLDER/jetson_fan.sh"
+	fi
+
+	if [ ! -f "/etc/systemd/system/jetson_fan.service" ] || $FORCE ; then
+		echo " * jetson_fan.service"
+		echo "   - Copy jetson_fan.service in service list"
+		sudo cp "$JETSON_STATS_FOLDER/jetson_fan.service" "/etc/systemd/system/jetson_fan.service"
+		# Update service list
+		echo "   - Reload services list"
+		sudo systemctl daemon-reload
+		# Enable jetson fan at startup
+		echo "   - Enable jetson_fan.service"
+		sudo systemctl enable jetson_fan.service
+	fi
 }
 
 jetson_health()
 {
-	JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
-	if [ $JE_PERFOMANCE_STATUS = "failed" ] ; then
-		echo "Jetson clock service is ${red}not installed!${reset}"
+	local JETSON_STATS_FOLDER=$1
+	local NUM_ERROR=0
+
+	echo "Health jetson-stats package:"
+	if [ ! -f "/etc/profile.d/jetson_env.sh" ] ; then
+		echo " * Jetson environment variables are ${red}not in list${reset}"
+		NUM_ERROR=1
+	else
+		echo " * Jetson environment variables are ${green}in list${reset}"
 	fi
+
+	if [ -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] ; then
+		echo " * jetson_performance ${green}executable${reset}"
+	else
+		echo " * jetson_performance ${red}not executable${reset}"
+	fi
+
+	local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+	if [ $JE_PERFOMANCE_STATUS = "failed" ] ; then
+		echo  " * Jetson clock service is ${red}not installed${reset}"
+	else
+		echo  " * Jetson clock service is ${green}installed${reset}"	
+	fi
+
+	if [ -x "$JETSON_STATS_FOLDER/jetson_fan.sh" ] ; then
+		echo " * jetson_fan ${green}executable${reset}"
+	else
+		echo " * jetson_fan ${red}not executable${reset}"
+	fi
+
+	local JE_FAN_STATUS="$(systemctl is-active jetson_fan.service)"
+	if [ $JE_FAN_STATUS = "failed" ] ; then
+		echo  " * Jetson fan service is ${red}not installed${reset}"
+	else
+		echo  " * Jetson fan service is ${green}installed${reset}"
+	fi
+
+	exit $NUM_ERROR
 }
 
 function usage
@@ -97,22 +214,34 @@ function usage
     echo "usage: jetson_release [ [--check] | [-h] ]"
     echo "  --health      Health status of your jetson-stats package"
 	echo "  --fix         Fix the jetson-stats package cleaning all errors"
+	echo "  --uninstall   Uninstall the jetson-stats services and variables"
     echo "  -h | --help   This message"
 }
 
 main()
 {
+	local FORCE=false
+	local JETSON_STATS_FOLDER="/usr/local/jetson_stats"
 	# Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
-			--health)  jetson_health
-                       exit 0 ;;
-			--fix)     jetson_fix
-					   exit 0 ;;
-            -h|--help) usage
-					   exit 0 ;;
-            *)		   usage "[ERROR] Unknown option: $1"
-					   exit 1 ;;
+            -f|--force)       FORCE=true
+							  ;;
+			--health)   	  jetson_health $JETSON_STATS_FOLDER
+                       		  exit 0
+					          ;;
+			--fix| --install) jetson_fix $JETSON_STATS_FOLDER $FORCE
+					   		  exit 0
+					   		  ;;
+			--uninstall)      jetson_uninstall $FORCE
+					   		  exit 0
+					   		  ;;
+            -h|--help) 		  usage
+					   		  exit 0
+					   		  ;;
+            *)			      usage "[ERROR] Unknown option: $1"
+					   		  exit 1
+					   		  ;;
         esac
             shift 1
     done

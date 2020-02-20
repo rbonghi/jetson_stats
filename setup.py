@@ -36,8 +36,8 @@ from jtop import import_jetson_variables
 # Python 3 only projects can skip this import
 from io import open
 # Launch command
-import subprocess as sp
-import shlex
+# import subprocess as sp
+# import shlex
 import os
 import sys
 import re
@@ -53,6 +53,10 @@ def list_scripts():
         if int(l4t_release) < 32:
             scripts += ['scripts/jetson_docker']
     return scripts
+
+
+def list_services():
+    return ["services/{file}".format(file=f) for f in os.listdir("services") if os.path.isfile(os.path.join("services", f))]
 
 
 if os.getuid() != 0:
@@ -81,23 +85,36 @@ version = VERSION
 class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
+        print(sys.prefix)
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
+        # sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/install.sh -s'))
+        # sp.call(shlex.split('./scripts/install.sh -s'))
 
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
+        # Make jetson stats folder
+        os.makedirs(sys.prefix + "/local/jetson_stats", exist_ok=True)
+        # Copy all files
+        for f_service in list_services():
+            folder, _ = os.path.split(__file__)
+            path = sys.prefix + "/local/jetson_stats/" + os.path.basename(f_service)
+            print("Linking {file} in {path}".format(file=os.path.basename(f_service), path=path))
+            # remove if exist file
+            if os.path.exists(path):
+                os.remove(path)
+            # Create a symbolic link
+            os.symlink(folder + "/" + f_service, path)
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
+        # sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/install.sh -s'))
+        # sp.call(shlex.split('./scripts/install.sh -s'))
 
 
 # Configuration setup module
@@ -163,13 +180,11 @@ setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('jetson_stats', ['services/jetson_performance.sh',
-                                  'services/jetson_fan.sh',
-                                  ])],
+    data_files=[('jetson_stats', list_services())],
     # Install extra scripts
     scripts=list_scripts(),
-    # cmdclass={'develop': PostDevelopCommand,
-    #           'install': PostInstallCommand},
+    cmdclass={'develop': PostDevelopCommand,
+              'install': PostInstallCommand},
     # The following provide a command called `jtop`
     entry_points={'console_scripts': ['jtop=jtop.__main__:main']},
 )
