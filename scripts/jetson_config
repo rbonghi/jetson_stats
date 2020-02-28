@@ -1,0 +1,67 @@
+#!/bin/bash
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# Copyright (c) 2019 Raffaello Bonghi.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+TITLE="Jetson software configurator"
+
+healt()
+{
+    local MENU="Choose an option"
+    local MENU_LIST=("<-- Back" "Return to the main menu.")
+    # Evaluate the size
+    local MENU_LIST_LEN
+    let MENU_LIST_LEN=${#LIST[@]}/2
+    # Make jetson_stats menu
+    local OUTPUT
+    OUTPUT=$(whiptail --title "$TITLE" --menu "$MENU" 15 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
+    # Read exit status
+    if [ $?=0 ]; then
+        # Run the function with the same name
+        if [ "$OUTPUT"="<--Back" ] ; then 
+            main
+        fi
+    else
+        # Return to main for other options
+        main
+    fi
+}
+
+fix()
+{
+    echo "Fix"
+}
+
+main()
+{
+    local MENU_LIST=("healt" "Check the status of jetson-stats" \
+                     "fix" "Fix the jetson-stats")
+    # Evaluate the size
+    local MENU_LIST_LEN
+    let MENU_LIST_LEN=${#LIST[@]}/2
+    # Make jetson_stats menu
+    local OUTPUT
+    OUTPUT=$(whiptail --title "$TITLE" --ok-button "Select" --cancel-button "Finish" --menu "" 15 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
+    # Read exit status
+    if [ $?=0 ]; then
+        # Run the function with the same name
+        $OUTPUT
+    fi
+}
+
+
+main $@
+exit 0
+# EOF
