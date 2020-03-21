@@ -27,14 +27,12 @@ HEALT_FUNCTIONS=("folders" "Check folders"\
                  "jetson_stats_up" "Jetson-stats startup service")
 # Jetson-stats main folder
 JETSON_STATS_FOLDER="/usr/local/jetson_stats"
-# Require reboot
-REQUIRE_REBOOT=false
 # Locate jetson-stats and python version
 JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-JTOP_PYTHON="3"
+JTOP_PYTHON="$(python3 -V 2>&1)"
 if [ -z "$JTOP_VARIABLE" ] ; then
     JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-    JTOP_PYTHON="2.7"
+    JTOP_PYTHON="$(python -V 2>&1)"
 fi
 # Run jetson_variables
 . $JTOP_VARIABLE/jetson_variables
@@ -117,6 +115,23 @@ fix_jetson_performance()
     sudo systemctl daemon-reload
 }
 
+uninstall_jetson_performance()
+{
+    # Uninstall the service
+    if [ $(systemctl is-active jetson_performance.service) = "active" ] ; then
+        # Stop the service
+        sudo systemctl stop jetson_performance.service
+    fi
+    # Disable the service
+    sudo systemctl disable jetson_performance.service
+    # Remove jetson_performance service from /etc/init.d
+    if [ -f "/etc/systemd/system/jetson_performance.service" ] ; then
+        sudo rm "/etc/systemd/system/jetson_performance.service"
+    fi
+    # Update service list
+    sudo systemctl daemon-reload
+}
+
 jetson_performance()
 {
     local TEXT="Status jetson_performance. The jetson_clock service.\n"
@@ -191,6 +206,18 @@ fix_jetson_stats_up()
     sudo systemctl enable jetson_fan.service
 }
 
+uninstall_jetson_stats_up()
+{
+    # Disable service
+    sudo systemctl disable jetson_fan.service
+    # Remove fan service from /etc/init.d
+    if [ -f "/etc/systemd/system/jetson_fan.service" ] ; then
+        sudo rm "/etc/systemd/system/jetson_fan.service"
+    fi
+    # Update service list
+    sudo systemctl daemon-reload
+}
+
 jetson_stats_up()
 {
     local TEXT="Status jetson_stats_up. The jetson_stats start-up service.\n"
@@ -235,8 +262,6 @@ fix_variables()
 {
     sudo cp "$JETSON_STATS_FOLDER/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
     # Require reboot
-    REQUIRE_REBOOT=true
-    # Force to require reboot
     if [ ! -f /var/run/reboot-required ] ; then
         sudo touch /var/run/reboot-required
     fi
@@ -327,7 +352,7 @@ health()
     # Make menu
     local MENU="jetson-stats configuration\n"
     MENU+=" - Folder scripts: $JETSON_STATS_FOLDER\n"
-    MENU+=" - jtop installed on python $JTOP_PYTHON\n"
+    MENU+=" - jtop installed on $JTOP_PYTHON\n"
     MENU+=" - jtop path: $JTOP_VARIABLE\n"
     MENU+="Choose an option:"
     # Build Menu healt list
@@ -413,13 +438,6 @@ main()
     # Evaluate the size
     local MENU_LIST_LEN
     let MENU_LIST_LEN=${#MENU_LIST[@]}/2
-    # If exist argument pass directly the name
-    if [ ! -z "$1" ] ; then
-        if type $1 | grep -i function > /dev/null; then
-            $1
-            exit 0
-        fi
-    fi
     local MENU_TEXT="$JETSON_DESCRIPTION"
     # Make jetson_stats menu
     local OUTPUT
@@ -431,11 +449,28 @@ main()
     fi
 }
 
+loop()
+{
+    # If exist argument pass directly the name
+    if [ ! -z "$1" ] ; then
+        if type $1 | grep -i function > /dev/null; then
+            $1
+            # Print request to reboot
+            if [ -f /var/run/reboot-required ] ; then
+                echo "${red}Require reboot!${reset}"
+            fi
+            exit 0
+        fi
+    else
+        # Run the main loop
+        main $@
+    fi
+    # Print request to reboot
+    if [ -f /var/run/reboot-required ] ; then
+        echo "${red}Require reboot!${reset}"
+    fi
+}
 
-main $@
-# Print request to reboot
-if [ -f /var/run/reboot-required ] || $REQUIRE_REBOOT ; then
-    echo "${red}Require reboot!${reset}"
-fi
+loop $@
 exit 0
 # EOF

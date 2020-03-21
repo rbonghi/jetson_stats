@@ -48,6 +48,7 @@ Follow the next attributes to know in detail how it works.
 """
 import re
 import os
+import sys
 # Logging
 import logging
 
@@ -99,6 +100,8 @@ class jtop(StatusObserver):
         pass
 
     def __init__(self, interval=500):
+        # Load configuration file path
+        config_file = sys.prefix + "/local/jetson_stats/"
         # Version package
         self.version = get_version()
         # Initialize observer
@@ -124,7 +127,7 @@ class jtop(StatusObserver):
         LIST_FANS = [('/sys/kernel/debug/tegra_fan/', False), ('/sys/devices/pwm-fan/', True)]
         for path, temp_control in LIST_FANS:
             try:
-                self.qfan = Fan(path, self.jc, temp_control)
+                self.qfan = Fan(path, self.jc, config_file, temp_control=temp_control)
                 logger.info("Fan {} loaded!".format(path))
                 break
             except Fan.FanException:

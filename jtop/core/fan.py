@@ -46,7 +46,7 @@ class Fan(object):
     class FanException(Exception):
         pass
 
-    def __init__(self, path, jetson_clocks, temp_control=True, config_file="/opt/jetson_stats/fan_config"):
+    def __init__(self, path, jetson_clocks, config_file, temp_control=True):
         # Config file
         self.config_file = config_file
         self.jetson_clocks = jetson_clocks

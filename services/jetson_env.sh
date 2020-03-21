@@ -15,5 +15,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])")
+JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+if [ -z "$JTOP_VARIABLE" ] ; then
+    JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+fi
 . $JTOP_VARIABLE/jetson_variables
+# EOF
