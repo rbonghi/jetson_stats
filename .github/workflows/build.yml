@@ -24,9 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         # Install test dependencies
-        sudo cp tests/tegrastats /usr/bin/
-        sudo cp tests/nvpmodel /usr/bin/
-        sudo cp tests/jetson_clocks /usr/bin/
+        sudo ./scripts/develop.sh -s
         # Upgrade pip
         python -m pip install --upgrade pip
         # Install tox
