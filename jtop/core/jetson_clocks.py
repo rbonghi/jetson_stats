@@ -30,9 +30,9 @@ class JetsonClocks(object):
     class JCException(Exception):
         pass
 
-    def __init__(self, service='jetson_performance'):
+    def __init__(self, config_file, service='jetson_performance'):
         # Config file
-        self.config_file = "/opt/jetson_stats/l4t_dfs.conf"
+        self.config_file = config_file + "l4t_dfs.conf"
         # Service
         self.service = service
         self.last_status = ""

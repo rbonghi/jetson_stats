@@ -16,17 +16,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from jtop import JetsonClocks
+import sys
 
 
 def test_init_jc():
     # Initialize JetsonClocks
-    JetsonClocks()
+    JetsonClocks(sys.prefix + "/local/jetson_stats/")
     assert True
 
 
 def test_read_status():
     # Initialize JetsonClocks
-    jc = JetsonClocks()
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
     assert isinstance(jc.status, str)
 
 
@@ -41,7 +42,7 @@ def status_check(var_status, new_status):
 
 def test_set_start():
     # Initialize JetsonClocks
-    jc = JetsonClocks()
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
     # check status True
     status_check(jc.start, True)
     # Check status False
@@ -50,7 +51,7 @@ def test_set_start():
 
 def test_set_enable():
     # Initialize JetsonClocks
-    jc = JetsonClocks()
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
     # check status True
     status_check(jc.enable, True)
     # Check status False

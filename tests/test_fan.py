@@ -15,24 +15,25 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 from jtop import Fan
 from jtop import JetsonClocks
 
 
 def test_wrong_open():
-    jc = JetsonClocks()
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
     # Initialize object
     try:
-        Fan('wrong_path', jc)
+        Fan('wrong_path', jc, sys.prefix + "/local/jetson_stats/")
         assert False
     except Fan.FanException:
         assert True
 
 
 def test_open():
-    jc = JetsonClocks()
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
     # Init fan
-    fan = Fan('tests/fan/', jc)
+    fan = Fan('tests/fan/', jc, sys.prefix + "/local/jetson_stats/")
     # Update
     fan.update()
     # Check dictionary

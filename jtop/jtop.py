@@ -114,7 +114,7 @@ class jtop(StatusObserver):
             os.environ[k] = v
         # Initialize jetson_clocks controller
         try:
-            self.jc = JetsonClocks()
+            self.jc = JetsonClocks(config_file)
         except JetsonClocks.JCException as e:
             raise jtop.JtopException(e)
         # Initialize NVP model
