@@ -18,7 +18,7 @@
 # Author: Raffaello Bonghi <raffaello@rnext.it>
 
 # Path folders
-JETSON_STATS_FOLDER=/opt/jetson_stats
+JETSON_STATS_FOLDER=/usr/local/jetson_stats
 JETSON_FAN_CONFIG="$JETSON_STATS_FOLDER/fan_config"
 
 if [ -f /usr/bin/jetson_clocks ] ; then

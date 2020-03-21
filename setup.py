@@ -82,41 +82,44 @@ with open(os.path.join(here, "jtop", "__init__.py")) as fp:
 version = VERSION
 
 
+def install_services():
+    """
+    This function install all services in a proper folder and setup the deamons
+    """
+    print("System prefix {prefix}".format(prefix=sys.prefix))
+    # Make jetson stats folder
+    root = sys.prefix + "/local/jetson_stats/"
+    if not os.path.exists(root):
+        os.makedirs(root)
+    # Copy all files
+    for f_service in list_services():
+        folder, _ = os.path.split(__file__)
+        path = root + os.path.basename(f_service)
+        print("Linking {file} in {path}".format(file=os.path.basename(f_service), path=path))
+        # remove if exist file
+        if os.path.exists(path):
+            os.remove(path)
+        # Create a symbolic link
+        os.symlink(folder + "/" + f_service, path)
+
+
 class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
-        print(sys.prefix)
-        # Run the uninstaller before to copy all scripts
-        # sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
+        # Install services
+        install_services()
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        # sp.call(shlex.split('./scripts/install.sh -s'))
 
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
-        # Make jetson stats folder
-        root = sys.prefix + "/local/jetson_stats"
-        if not os.path.exists(root):
-            os.makedirs(root)
-        # Copy all files
-        for f_service in list_services():
-            folder, _ = os.path.split(__file__)
-            path = root + os.path.basename(f_service)
-            print("Linking {file} in {path}".format(file=os.path.basename(f_service), path=path))
-            # remove if exist file
-            if os.path.exists(path):
-                os.remove(path)
-            # Create a symbolic link
-            os.symlink(folder + "/" + f_service, path)
-        # Run the uninstaller before to copy all scripts
-        # sp.call(shlex.split('./scripts/install.sh -s --uninstall'))
+        # Install services
+        install_services()
         # Run the default installation script
         develop.run(self)
-        # Run the restart all services before to close the installer
-        # sp.call(shlex.split('./scripts/install.sh -s'))
 
 
 # Configuration setup module
