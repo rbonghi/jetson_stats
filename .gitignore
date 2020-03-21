@@ -20,3 +20,5 @@ venv/
 .cache/
 swapfile
 test.py
+
+.vscode/

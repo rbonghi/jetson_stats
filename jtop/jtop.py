@@ -110,7 +110,10 @@ class jtop(StatusObserver):
             logger.debug("New Enviroment variable {}:{}".format(k, v))
             os.environ[k] = v
         # Initialize jetson_clocks controller
-        self.jc = JetsonClocks()
+        try:
+            self.jc = JetsonClocks()
+        except JetsonClocks.JCException as e:
+            raise jtop.JtopException(e)
         # Initialize NVP model
         try:
             self.nvp = NVPmodel(os.environ["JETSON_TYPE"], jetson_clocks=self.jc)

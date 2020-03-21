@@ -98,11 +98,13 @@ class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Make jetson stats folder
-        os.makedirs(sys.prefix + "/local/jetson_stats", exist_ok=True)
+        root = sys.prefix + "/local/jetson_stats"
+        if not os.path.exists(root):
+            os.makedirs(root)
         # Copy all files
         for f_service in list_services():
             folder, _ = os.path.split(__file__)
-            path = sys.prefix + "/local/jetson_stats/" + os.path.basename(f_service)
+            path = root + os.path.basename(f_service)
             print("Linking {file} in {path}".format(file=os.path.basename(f_service), path=path))
             # remove if exist file
             if os.path.exists(path):
