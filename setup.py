@@ -117,7 +117,7 @@ class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Install services
-        # install_services()
+        install_services()
         # Run the default installation script
         develop.run(self)
 

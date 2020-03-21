@@ -30,12 +30,14 @@ JETSON_STATS_FOLDER="/usr/local/jetson_stats"
 # Require reboot
 REQUIRE_REBOOT=false
 # Locate jetson-stats and python version
-JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])")
+JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
 JTOP_PYTHON="3"
 if [ -z "$JTOP_VARIABLE" ] ; then
-    JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])")
+    JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
     JTOP_PYTHON="2.7"
 fi
+# Run jetson_variables
+. $JTOP_VARIABLE/jetson_variables
 
 
 status_folders()
@@ -60,11 +62,11 @@ fix_folders()
 {
     # Remove jetson_release link
     if [ -f "/etc/jetson_easy" ] ; then
-        sudo rm "/etc/jetson_easy"
+        sudo rm -R "/etc/jetson_easy"
     fi
     # Remove jetson_release link
     if [ -f "/opt/jetson_stats" ] ; then
-        sudo rm "/opt/jetson_stats"
+        sudo rm -R "/opt/jetson_stats"
     fi
 }
 
@@ -84,22 +86,22 @@ folders()
 status_jetson_performance()
 {
     # Check if jetson_performance is executable
-    if [ -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] ; then
-        echo 0
+    if [ ! -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] ; then
+        echo 1
         return
-    else
+    fi
+    # Link jetson_performance in list
+    if [ ! -f "/etc/systemd/system/jetson_performance.service" ] ; then
         echo 1
         return
     fi
     # Check if jetson performance is correctly installed
     local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
-    if [ $JE_PERFOMANCE_STATUS = "failed" ] || [ $JE_PERFOMANCE_STATUS = "inactive" ] ; then
+    if [ $JE_PERFOMANCE_STATUS = "failed" ] ; then
         echo 1
         return
-    else
-        echo 0
-        return
     fi
+    # Everything is fine
     echo 0
 }
 
@@ -107,8 +109,10 @@ fix_jetson_performance()
 {
     # Make executable
     sudo chmod +x "$JETSON_STATS_FOLDER/jetson_performance.sh"
-    # Link jetson_performance in list
-    sudo ln -s "$JETSON_STATS_FOLDER/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+    # Check link jetson_performance in list
+    if [ ! -f "/etc/systemd/system/jetson_performance.service" ] ; then
+        sudo ln -s "$JETSON_STATS_FOLDER/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+    fi
     # Update service list
     sudo systemctl daemon-reload
 }
@@ -116,6 +120,7 @@ fix_jetson_performance()
 jetson_performance()
 {
     local TEXT="Status jetson_performance. The jetson_clock service.\n"
+    # Write status jetson_performance service
     if [ -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] ; then
         TEXT+=" - jetson_performance.sh is executable\n"
     else
@@ -123,30 +128,53 @@ jetson_performance()
     fi
     # Status service
     local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
-    TEXT+=" - jetson_performance service is $JE_PERFOMANCE_STATUS"
-    whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    TEXT+=" - [$JE_PERFOMANCE_STATUS] jetson_performance service\n"
+    # Enabled service
+    local JE_PERFOMANCE_ENABLED=$(systemctl is-enabled jetson_performance.service 2> /dev/null)
+    if [ -z $JE_PERFOMANCE_ENABLED ] ; then
+        JE_PERFOMANCE_ENABLED="failed"
+    fi
+    TEXT+=" - [$JE_PERFOMANCE_ENABLED] jetson_performance enable"
+    # Check status jetson_performance
+    if [ $(status_jetson_performance) -eq 1 ] ; then
+        # Fix jetson_performance
+        if (whiptail --title "$TITLE" --yesno "$TEXT\n\nDo you want fix?" 11 78); then
+            fix_jetson_performance
+        fi
+    else
+        # Run Message
+        whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    fi
     # Return to healt function
     health
 }
 
 status_jetson_stats_up()
 {
-    if [ -x "$JETSON_STATS_FOLDER/jetson_fan.sh" ] ; then
-        echo 0
-        return
-    else
+    # Check status file
+    if [ ! -x "$JETSON_STATS_FOLDER/jetson_fan.sh" ] ; then
         echo 1
         return
     fi
-
+    # Check link jetson_fan in list
+    if [ ! -f "/etc/systemd/system/jetson_fan.service" ] ; then
+        echo 1
+        return
+    fi
+    # Check status service
     local JE_FAN_STATUS="$(systemctl is-active jetson_fan.service)"
     if [ $JE_FAN_STATUS = "failed" ] ; then
         echo 1
         return
-    else
-        echo 0
+    fi
+    local JE_FAN_ENABLED=$(systemctl is-enabled jetson_fan.service 2> /dev/null)
+    if [ -z $JE_FAN_ENABLED ] ; then
+        JE_FAN_ENABLED="failed"
+        echo 1
         return
     fi
+    # Everything is fine
+    echo 0
 }
 
 fix_jetson_stats_up()
@@ -154,7 +182,9 @@ fix_jetson_stats_up()
     # Make executable
     sudo chmod +x "$JETSON_STATS_FOLDER/jetson_fan.sh"
     # Link jetson start up service
-    sudo ln -s "$JETSON_STATS_FOLDER/jetson_fan.service" "/etc/systemd/system/jetson_fan.service"
+    if [ ! -f "/etc/systemd/system/jetson_fan.service" ] ; then
+        sudo ln -s "$JETSON_STATS_FOLDER/jetson_fan.service" "/etc/systemd/system/jetson_fan.service" 2> /dev/null
+    fi
     # Update service list
     sudo systemctl daemon-reload
     # Enable jetson fan at startup
@@ -170,9 +200,24 @@ jetson_stats_up()
         TEXT+=" - jetson_fan.sh is NOT executable\n"
     fi
     # Status service
-    local JETSON_STATS_FOLDER="$(systemctl is-active jetson_fan.service)"
-    TEXT+=" - jetson_fan service is $JETSON_STATS_FOLDER"
-    whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    local JE_START_UP_STATUS="$(systemctl is-active jetson_fan.service)"
+    TEXT+=" - [$JE_START_UP_STATUS] jetson_fan service\n"
+    # Enabled service
+    local JE_FAN_ENABLED=$(systemctl is-enabled jetson_fan.service 2> /dev/null)
+    if [ -z $JE_FAN_ENABLED ] ; then
+        JE_FAN_ENABLED="failed"
+    fi
+    TEXT+=" - [$JE_FAN_ENABLED] jetson_fan enable"
+    # Check status jetson_performance
+    if [ $(status_jetson_stats_up) -eq 1 ] ; then
+        # Fix jetson_performance
+        if (whiptail --title "$TITLE" --yesno "$TEXT\n\nDo you want fix?" 11 78); then
+            fix_jetson_stats_up
+        fi
+    else
+        # Run Message
+        whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    fi
     # Return to healt function
     health
 }
@@ -191,6 +236,10 @@ fix_variables()
     sudo cp "$JETSON_STATS_FOLDER/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
     # Require reboot
     REQUIRE_REBOOT=true
+    # Force to require reboot
+    if [ ! -f /var/run/reboot-required ] ; then
+        sudo touch /var/run/reboot-required
+    fi
 }
 
 variables()
@@ -237,7 +286,7 @@ write_status()
     fi
 }
 
-status_healt()
+status_health()
 {
     local LIST=("$@")
     # Evaluate length list
@@ -255,6 +304,18 @@ status_healt()
         fi
     done
     return 0
+}
+
+check_run()
+{
+    local status=$1
+    # Check if require ask before exectute
+    if [ $status -eq 1 ] ; then
+        # If you cannot understand this, read Bash_Shell_Scripting#if_statements again.
+        if (whiptail --title "$TITLE" --yesno "This is an example of a yes/no box." 8 78); then
+            echo $?
+        fi
+    fi
 }
 
 health()
@@ -282,7 +343,7 @@ health()
         MENU_LIST+=("[$(write_status $status)] $name" "$description")
     done
     # Make jetson_stats menu
-    if status_healt "${HEALT_FUNCTIONS[@]}" ; then
+    if status_health "${HEALT_FUNCTIONS[@]}" ; then
         OK_BUTTON="Ok"
     else
         MENU_LIST+=("Fix" "Fix all packages")
@@ -359,21 +420,22 @@ main()
             exit 0
         fi
     fi
+    local MENU_TEXT="$JETSON_DESCRIPTION"
     # Make jetson_stats menu
     local OUTPUT
-    OUTPUT=$(whiptail --title "$TITLE" --ok-button "Select" --cancel-button "Finish" --menu "" 15 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
+    OUTPUT=$(whiptail --title "$TITLE" --ok-button "Select" --cancel-button "Finish" --menu "$MENU_TEXT" 15 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
     # Read exit status
     if [ $?=0 ]; then
         # Run the function with the same name
         $OUTPUT
     fi
-    # Print request to reboot
-    if $REQUIRE_REBOOT ; then
-        echo "${red}Require reboot!${reset}"
-    fi
 }
 
 
 main $@
+# Print request to reboot
+if [ -f /var/run/reboot-required ] || $REQUIRE_REBOOT ; then
+    echo "${red}Require reboot!${reset}"
+fi
 exit 0
 # EOF

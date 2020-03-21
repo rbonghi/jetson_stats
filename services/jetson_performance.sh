@@ -48,7 +48,7 @@ fi
  . /lib/lsb/init-functions
  . /lib/init/vars.sh
 
-JETSON_STATS_FOLDER=/opt/jetson_stats
+JETSON_STATS_FOLDER="/usr/local/jetson_stats"
 # Load JETSON environment variables:
 # Not required jetson_variables at this time
 # . $JETSON_STATS_FOLDER/jetson_variables
