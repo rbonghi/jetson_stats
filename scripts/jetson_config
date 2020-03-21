@@ -15,7 +15,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+red=`tput setaf 1`
+green=`tput setaf 2`
+reset=`tput sgr0`
+
 TITLE="Jetson software configurator"
+JETSON_FOLDER="/usr/local/jetson_stats"
+REQUIRE_REBOOT=false
+# Locate jetson-stats
+JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])")
+if [ -z "$JTOP_VARIABLE" ] ; then
+    JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])")
+fi
+
 
 status_folders()
 {
@@ -28,16 +40,23 @@ status_folders()
         echo 1
         return
     fi
-    if [ -d "/usr/local/jetson_stats" ] ; then
+    if [ -d $JETSON_FOLDER ] ; then
         echo 0
         return
     fi
+    # Everythin is fine
     echo 0
 }
 
 folders()
 {
-    echo "Folder function"
+    if [ $(status_folders) -eq 0 ] ; then
+        whiptail --title "Example Dialog" --msgbox "This is an example of a message box. You must hit OK to continue." 8 78
+        # Return to healt function
+        health
+    else
+        echo "Folder function"
+    fi
 }
 
 status_services()
@@ -76,21 +95,51 @@ services()
 	else
 		echo  " * Jetson fan service is ${green}installed${reset}"
 	fi
+
+
 }
 
 status_variables()
 {
-    echo 0
+    if [ -f "/etc/profile.d/jetson_env.sh" ] ; then
+        echo 0
+    else
+        echo 1
+    fi
+}
+
+fix_variables()
+{
+    sudo cp "$JETSON_FOLDER/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
 }
 
 variables()
 {
-    echo "Variables"
-	if [ ! -f "/etc/profile.d/jetson_env.sh" ] ; then
-		echo " * Jetson environment variables are ${red}not in list${reset}"
-	else
-		echo " * Jetson environment variables are ${green}in list${reset}"
-	fi
+    local TEXT="Jetson variable is:\n"
+    # Run script to fix variables
+    fix_variables
+    # Check status variables
+    if [ $(status_variables) -eq 0 ] ; then
+        TEXT+=" - Fixed"
+    else
+        TEXT+=" - Failure"
+    fi
+    whiptail --title "$TITLE" --msgbox "$TEXT" 8 78
+    # Return to healt function
+    health
+}
+
+fix_all()
+{
+    echo "Fix all"
+    local LIST=("$@")
+    for i in "${LIST[@]}"; do
+        # Check if a status function in list return error=1
+        echo "$i"
+        if [ $i -eq 1 ] ; then
+            echo "Fix: $i"
+        fi
+    done
 }
 
 write_status()
@@ -115,30 +164,37 @@ status_healt()
     return 0
 }
 
-healt()
+health()
 {
     local HEALT_FUNCTIONS=($(status_folders) $(status_variables) $(status_services))
+    local OK_BUTTON="Fix"
     # Make menu
-    local MENU="Choose an option"
+    local MENU="jetson-stats configuration\n"
+    MENU+=" - Folder scripts: $JETSON_FOLDER\n"
+    MENU+=" - Python jtop path: $JTOP_VARIABLE\n"
+    MENU+="Choose an option:"
     local MENU_LIST=("<-- Back" "Return to the main menu."\
                      "[$(write_status $(status_folders))] folders" "Check folders"\
                      "[$(write_status $(status_variables))] variables" "Check variables status"
                      "[$(write_status $(status_services))] services" "Check services")
+    # Make jetson_stats menu
+    if status_healt "${HEALT_FUNCTIONS[@]}" ; then
+        OK_BUTTON="Ok"
+    else
+        MENU_LIST+=("Fix" "Fix all packages")
+    fi
     # Evaluate the size
     local MENU_LIST_LEN
     let MENU_LIST_LEN=${#LIST[@]}/2
-    # Make jetson_stats menu
-    local OK_BUTTON="Fix"
-    if status_healt "${HEALT_FUNCTIONS[@]}" ; then
-        OK_BUTTON="Ok"
-    fi
     local OUTPUT
-    OUTPUT=$(whiptail --title "$TITLE" --ok-button "$OK_BUTTON" --cancel-button "return" --menu "$MENU" 15 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
+    OUTPUT=$(whiptail --title "$TITLE" --ok-button "$OK_BUTTON" --cancel-button "return" --menu "$MENU" 16 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
     # Read exit status
     if [ $? -eq 0 ]; then
         # Run the function with the same name
         if [ "$OUTPUT" = "<-- Back" ] ; then
             main
+        elif [ "$OUTPUT" = "Fix" ] ; then
+            fix_all "${HEALT_FUNCTIONS[@]}"
         else
             # Extract function name
             local FUNCTION=$(echo $OUTPUT | cut -d " " -f2)
@@ -154,13 +210,17 @@ healt()
 
 desktop()
 {
-    echo "desktop"
+    whiptail --title "$TITLE" --msgbox "Desktop box" 8 78
+    # Return to main menu
+    main
 }
 
 
 update()
 {
-    echo "update"
+    whiptail --title "$TITLE" --msgbox "Update box" 8 78
+    # Return to main menu
+    main
 }
 
 
@@ -179,7 +239,7 @@ you have heavily customised your installation.\
 
 main()
 {
-    local MENU_LIST=("healt" "Check the status of jetson-stats"\
+    local MENU_LIST=("health" "Check the status of jetson-stats"\
                      "desktop" "Enable/Disable boot from desktop"\
                      "update" "Update this tool to the latest version"\
                      "about"  "Information about this configuration tool")
@@ -200,6 +260,10 @@ main()
     if [ $?=0 ]; then
         # Run the function with the same name
         $OUTPUT
+    fi
+    # Print request to reboot
+    if $REQUIRE_REBOOT ; then
+        echo "${red}Require reboot!${reset}"
     fi
 }
 
