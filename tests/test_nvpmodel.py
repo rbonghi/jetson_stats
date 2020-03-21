@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 from jtop import NVPmodel
 from jtop import JetsonClocks
 
@@ -63,7 +64,7 @@ def test_decrease_mode():
 
 def test_set_jc_mode():
     # Load JetsonClocks controller
-    jc = JetsonClocks()
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
     jc.start = True
     # Initialize NVPmodel
     nvp = NVPmodel("PC", jetson_clocks=jc)
