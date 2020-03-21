@@ -17,10 +17,16 @@
 
 TITLE="Jetson software configurator"
 
+fix()
+{
+    echo "Fix"
+}
+
 healt()
 {
     local MENU="Choose an option"
-    local MENU_LIST=("<-- Back" "Return to the main menu.")
+    local MENU_LIST=("<-- Back" "Return to the main menu."\
+                     "fix" "Fix the jetson-stats")
     # Evaluate the size
     local MENU_LIST_LEN
     let MENU_LIST_LEN=${#LIST[@]}/2
@@ -39,15 +45,31 @@ healt()
     fi
 }
 
-fix()
+desktop()
 {
-    echo "Fix"
+    echo "desktop"
+}
+
+update()
+{
+    echo "update"
+}
+
+about() {
+  whiptail --msgbox "\
+This tool provides a straight-forward way of doing initial
+configuration of your NVIDIA jetson. Although it can be run
+at any time, some of the options may have difficulties if
+you have heavily customised your installation.\
+" 20 70 1
 }
 
 main()
 {
-    local MENU_LIST=("healt" "Check the status of jetson-stats" \
-                     "fix" "Fix the jetson-stats")
+    local MENU_LIST=("healt" "Check the status of jetson-stats"\
+                     "desktop" "Enable/Disable boot from desktop"\
+                     "update" "Update this tool to the latest version"\
+                     "about"  "Information about this configuration tool")
     # Evaluate the size
     local MENU_LIST_LEN
     let MENU_LIST_LEN=${#LIST[@]}/2

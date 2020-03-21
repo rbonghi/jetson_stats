@@ -46,7 +46,7 @@ import re
 def list_scripts():
     JETSONS = import_jetson_variables()
     # Load scripts to install
-    scripts = ['scripts/jetson_swap', 'scripts/jetson_release']
+    scripts = ['scripts/jetson_swap', 'scripts/jetson_release', 'scripts/jetson_config']
     # If jetpack lower than 32 install also jetson_docker
     l4t_release = JETSONS['JETSON_L4T_RELEASE']
     if l4t_release.isdigit():
