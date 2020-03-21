@@ -107,7 +107,7 @@ class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Install services
-        install_services()
+        # install_services()
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
@@ -117,7 +117,7 @@ class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Install services
-        install_services()
+        # install_services()
         # Run the default installation script
         develop.run(self)
 

@@ -40,7 +40,6 @@ fi
 
 status_folders()
 {
-    
     if [ -d "/etc/jetson_easy" ] ; then
         echo 1
         return
@@ -49,12 +48,24 @@ status_folders()
         echo 1
         return
     fi
-    if [ -d $JETSON_STATS_FOLDER ] ; then
-        echo 0
+    if [ ! -d $JETSON_STATS_FOLDER ] ; then
+        echo 1
         return
     fi
-    # Everythin is fine
+    # Everything is fine
     echo 0
+}
+
+fix_folders()
+{
+    # Remove jetson_release link
+    if [ -f "/etc/jetson_easy" ] ; then
+        sudo rm "/etc/jetson_easy"
+    fi
+    # Remove jetson_release link
+    if [ -f "/opt/jetson_stats" ] ; then
+        sudo rm "/opt/jetson_stats"
+    fi
 }
 
 folders()
@@ -90,6 +101,16 @@ status_jetson_performance()
         return
     fi
     echo 0
+}
+
+fix_jetson_performance()
+{
+    # Make executable
+    sudo chmod +x "$JETSON_STATS_FOLDER/jetson_performance.sh"
+    # Link jetson_performance in list
+    sudo ln -s "$JETSON_STATS_FOLDER/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+    # Update service list
+    sudo systemctl daemon-reload
 }
 
 jetson_performance()
@@ -128,6 +149,18 @@ status_jetson_stats_up()
     fi
 }
 
+fix_jetson_stats_up()
+{
+    # Make executable
+    sudo chmod +x "$JETSON_STATS_FOLDER/jetson_fan.sh"
+    # Link jetson start up service
+    sudo ln -s "$JETSON_STATS_FOLDER/jetson_fan.service" "/etc/systemd/system/jetson_fan.service"
+    # Update service list
+    sudo systemctl daemon-reload
+    # Enable jetson fan at startup
+    sudo systemctl enable jetson_fan.service
+}
+
 jetson_stats_up()
 {
     local TEXT="Status jetson_stats_up. The jetson_stats start-up service.\n"
@@ -156,6 +189,8 @@ status_variables()
 fix_variables()
 {
     sudo cp "$JETSON_STATS_FOLDER/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
+    # Require reboot
+    REQUIRE_REBOOT=true
 }
 
 variables()
@@ -178,11 +213,17 @@ fix_all()
 {
     echo "Fix all"
     local LIST=("$@")
+    # Evaluate length list
+    local LIST_LEN
+    let LIST_LEN=${#LIST[@]}-1
     for i in "${LIST[@]}"; do
+        # Read name
+        local name=${HEALT_FUNCTIONS[$i]}
+        # Evaluate status
+        local status=$(eval "status_$name")
         # Check if a status function in list return error=1
-        echo "$i"
-        if [ $i -eq 1 ] ; then
-            echo "Fix: $i"
+        if [ "$status" -eq 1 ] ; then
+            echo "Fix: $name"
         fi
     done
 }
@@ -237,7 +278,7 @@ health()
         local description=${HEALT_FUNCTIONS[$i+1]}
         # Evaluate status
         local status=$(eval "status_$name")
-        #echo $i $name $status
+        # echo $i $name $status
         MENU_LIST+=("[$(write_status $status)] $name" "$description")
     done
     # Make jetson_stats menu
@@ -291,7 +332,7 @@ update()
 
 about()
 {
-    whiptail --msgbox "\
+    whiptail  --title "$TITLE" --msgbox "\
 This tool provides a straight-forward way of doing initial
 configuration of your NVIDIA jetson. Although it can be run
 at any time, some of the options may have difficulties if
