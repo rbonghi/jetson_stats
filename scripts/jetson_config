@@ -20,12 +20,21 @@ green=`tput setaf 2`
 reset=`tput sgr0`
 
 TITLE="Jetson software configurator"
-JETSON_FOLDER="/usr/local/jetson_stats"
+# List of all health functions
+HEALT_FUNCTIONS=("folders" "Check folders"\
+                 "variables" "Check variables status"\
+                 "jetson_performance" "Status jetson clock service"\
+                 "jetson_stats_up" "Jetson-stats startup service")
+# Jetson-stats main folder
+JETSON_STATS_FOLDER="/usr/local/jetson_stats"
+# Require reboot
 REQUIRE_REBOOT=false
-# Locate jetson-stats
+# Locate jetson-stats and python version
 JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])")
+JTOP_PYTHON="3"
 if [ -z "$JTOP_VARIABLE" ] ; then
     JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])")
+    JTOP_PYTHON="2.7"
 fi
 
 
@@ -40,7 +49,7 @@ status_folders()
         echo 1
         return
     fi
-    if [ -d $JETSON_FOLDER ] ; then
+    if [ -d $JETSON_STATS_FOLDER ] ; then
         echo 0
         return
     fi
@@ -50,53 +59,89 @@ status_folders()
 
 folders()
 {
+    local TEXT=""
     if [ $(status_folders) -eq 0 ] ; then
-        whiptail --title "Example Dialog" --msgbox "This is an example of a message box. You must hit OK to continue." 8 78
-        # Return to healt function
-        health
+        TEXT="All folder are correctly installed"
     else
-        echo "Folder function"
+        TEXT="Clean and reinstall all folders."
+    fi
+    whiptail --title "$TITLE" --msgbox "$TEXT" 8 78
+    # Return to healt function
+    health
+}
+
+status_jetson_performance()
+{
+    # Check if jetson_performance is executable
+    if [ -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] ; then
+        echo 0
+        return
+    else
+        echo 1
+        return
+    fi
+    # Check if jetson performance is correctly installed
+    local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+    if [ $JE_PERFOMANCE_STATUS = "failed" ] || [ $JE_PERFOMANCE_STATUS = "inactive" ] ; then
+        echo 1
+        return
+    else
+        echo 0
+        return
+    fi
+    echo 0
+}
+
+jetson_performance()
+{
+    local TEXT="Status jetson_performance. The jetson_clock service.\n"
+    if [ -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] ; then
+        TEXT+=" - jetson_performance.sh is executable\n"
+    else
+        TEXT+=" - jetson_performance.sh is NOT executable\n"
+    fi
+    # Status service
+    local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+    TEXT+=" - jetson_performance service is $JE_PERFOMANCE_STATUS"
+    whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    # Return to healt function
+    health
+}
+
+status_jetson_stats_up()
+{
+    if [ -x "$JETSON_STATS_FOLDER/jetson_fan.sh" ] ; then
+        echo 0
+        return
+    else
+        echo 1
+        return
+    fi
+
+    local JE_FAN_STATUS="$(systemctl is-active jetson_fan.service)"
+    if [ $JE_FAN_STATUS = "failed" ] ; then
+        echo 1
+        return
+    else
+        echo 0
+        return
     fi
 }
 
-status_services()
+jetson_stats_up()
 {
-    echo 1
-}
-
-services()
-{
-    echo "Service function"
-	local JETSON_STATS_FOLDER="/usr/local/jetson_stats"
-
-
-	if [ -x "$JETSON_STATS_FOLDER/jetson_performance.sh" ] ; then
-		echo " * jetson_performance ${green}executable${reset}"
-	else
-		echo " * jetson_performance ${red}not executable${reset}"
-	fi
-
-	local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
-	if [ $JE_PERFOMANCE_STATUS = "failed" ] ; then
-		echo  " * Jetson clock service is ${red}not installed${reset}"
-	else
-		echo  " * Jetson clock service is ${green}installed${reset}"	
-	fi
-
-	if [ -x "$JETSON_STATS_FOLDER/jetson_fan.sh" ] ; then
-		echo " * jetson_fan ${green}executable${reset}"
-	else
-		echo " * jetson_fan ${red}not executable${reset}"
-	fi
-
-	local JE_FAN_STATUS="$(systemctl is-active jetson_fan.service)"
-	if [ $JE_FAN_STATUS = "failed" ] ; then
-		echo  " * Jetson fan service is ${red}not installed${reset}"
-	else
-		echo  " * Jetson fan service is ${green}installed${reset}"
-	fi
-
-
+    local TEXT="Status jetson_stats_up. The jetson_stats start-up service.\n"
+    if [ -x "$JETSON_STATS_FOLDER/jetson_fan.sh" ] ; then
+        TEXT+=" - jetson_fan.sh is executable\n"
+    else
+        TEXT+=" - jetson_fan.sh is NOT executable\n"
+    fi
+    # Status service
+    local JETSON_STATS_FOLDER="$(systemctl is-active jetson_fan.service)"
+    TEXT+=" - jetson_fan service is $JETSON_STATS_FOLDER"
+    whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    # Return to healt function
+    health
 }
 
 status_variables()
@@ -110,7 +155,7 @@ status_variables()
 
 fix_variables()
 {
-    sudo cp "$JETSON_FOLDER/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
+    sudo cp "$JETSON_STATS_FOLDER/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
 }
 
 variables()
@@ -154,10 +199,17 @@ write_status()
 status_healt()
 {
     local LIST=("$@")
-    # Check if there is a 
-    for i in "${LIST[@]}"; do
+    # Evaluate length list
+    local LIST_LEN
+    let LIST_LEN=${#LIST[@]}-1
+    # Check if there is a function require fix
+    for i in `seq 0 2 $LIST_LEN`; do
+        # Read name
+        local name=${HEALT_FUNCTIONS[$i]}
+        # Evaluate status
+        local status=$(eval "status_$name")
         # Check if a status function in list return error=1
-        if [ $i -eq 1 ] ; then
+        if [ $status -eq 1 ] ; then
             return 1
         fi
     done
@@ -166,17 +218,28 @@ status_healt()
 
 health()
 {
-    local HEALT_FUNCTIONS=($(status_folders) $(status_variables) $(status_services))
+    # Evaluate the size
+    local HEALT_FUNCTIONS_LEN
+    let HEALT_FUNCTIONS_LEN=${#HEALT_FUNCTIONS[@]}-1
     local OK_BUTTON="Fix"
     # Make menu
     local MENU="jetson-stats configuration\n"
-    MENU+=" - Folder scripts: $JETSON_FOLDER\n"
-    MENU+=" - Python jtop path: $JTOP_VARIABLE\n"
+    MENU+=" - Folder scripts: $JETSON_STATS_FOLDER\n"
+    MENU+=" - jtop installed on python $JTOP_PYTHON\n"
+    MENU+=" - jtop path: $JTOP_VARIABLE\n"
     MENU+="Choose an option:"
-    local MENU_LIST=("<-- Back" "Return to the main menu."\
-                     "[$(write_status $(status_folders))] folders" "Check folders"\
-                     "[$(write_status $(status_variables))] variables" "Check variables status"
-                     "[$(write_status $(status_services))] services" "Check services")
+    # Build Menu healt list
+    local MENU_LIST=("<-- Back" "Return to the main menu.")
+    # Build menu list
+    for i in `seq 0 2 $HEALT_FUNCTIONS_LEN`; do
+        # Read name
+        local name=${HEALT_FUNCTIONS[$i]}
+        local description=${HEALT_FUNCTIONS[$i+1]}
+        # Evaluate status
+        local status=$(eval "status_$name")
+        #echo $i $name $status
+        MENU_LIST+=("[$(write_status $status)] $name" "$description")
+    done
     # Make jetson_stats menu
     if status_healt "${HEALT_FUNCTIONS[@]}" ; then
         OK_BUTTON="Ok"
@@ -185,9 +248,9 @@ health()
     fi
     # Evaluate the size
     local MENU_LIST_LEN
-    let MENU_LIST_LEN=${#LIST[@]}/2
+    let MENU_LIST_LEN=${#MENU_LIST[@]}/2
     local OUTPUT
-    OUTPUT=$(whiptail --title "$TITLE" --ok-button "$OK_BUTTON" --cancel-button "return" --menu "$MENU" 16 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
+    OUTPUT=$(whiptail --title "$TITLE" --ok-button "$OK_BUTTON" --cancel-button "return" --menu "$MENU" 18 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
     # Read exit status
     if [ $? -eq 0 ]; then
         # Run the function with the same name
@@ -198,6 +261,8 @@ health()
         else
             # Extract function name
             local FUNCTION=$(echo $OUTPUT | cut -d " " -f2)
+            # Evaluate status
+            local status=$(eval "status_$FUNCTION")
             # Run function
             $FUNCTION
         fi
@@ -245,7 +310,7 @@ main()
                      "about"  "Information about this configuration tool")
     # Evaluate the size
     local MENU_LIST_LEN
-    let MENU_LIST_LEN=${#LIST[@]}/2
+    let MENU_LIST_LEN=${#MENU_LIST[@]}/2
     # If exist argument pass directly the name
     if [ ! -z "$1" ] ; then
         if type $1 | grep -i function > /dev/null; then
