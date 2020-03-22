@@ -21,6 +21,7 @@ reset=`tput sgr0`
 
 TITLE="jetson-stats configurator"
 INTERACTIVE=true
+FORCE=false
 # List of all health functions
 # For each health name are required three differents functions:
 # - status_<name>     -> Check the status of health function
@@ -42,6 +43,47 @@ if [ -z "$JTOP_VARIABLE" ] ; then
 fi
 # Run jetson_variables
 . $JTOP_VARIABLE/jetson_variables
+
+
+uninstall_old()
+{
+    local BIN_FOLDER="/usr/local/bin"
+
+    # Remove old jetson_fan service
+    if [ -f "/etc/systemd/system/jetson_fan.service" ] ; then
+        echo " * Remove OLD jetson_fan service"
+        # Disable service
+        sudo systemctl disable jetson_fan.service
+        # Remove fan service from /etc/init.d
+        sudo rm "/etc/systemd/system/jetson_fan.service"
+        # Update service list
+        sudo systemctl daemon-reload
+    fi
+
+    # Remove jetson-docker link
+    if [ -f "$BIN_FOLDER/jetson-docker" ] ; then
+        echo " * Remove OLD jetson-docker link"
+        sudo rm "$BIN_FOLDER/jetson-docker"
+    fi
+    
+    # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jetson-release" ] ; then
+        echo " * Remove OLD jetson-release link"
+        sudo rm "$BIN_FOLDER/jetson-release"
+    fi
+
+    # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jetson-swap" ] ; then
+        echo " * Remove OLD jetson-swap link"
+        sudo rm "$BIN_FOLDER/jetson-swap"
+    fi
+    
+    # Remove /etc/jetson_easy folder
+    if [ -d "/etc/jetson_easy" ] ; then
+        echo " * Remove jetson_easy folder"
+        sudo rm -R "/etc/jetson_easy"
+    fi
+}
 
 
 status_folders()
@@ -187,22 +229,22 @@ jetson_performance()
 status_jetson_stats_up()
 {
     # Check status file
-    if [ ! -x "$JETSON_STATS_FOLDER/jetson_fan.sh" ] ; then
+    if [ ! -x "$JETSON_STATS_FOLDER/jetson_stats_boot.sh" ] ; then
         echo 1
         return
     fi
-    # Check link jetson_fan in list
-    if [ ! -f "/etc/systemd/system/jetson_fan.service" ] ; then
+    # Check link jetson_stats_boot in list
+    if [ ! -f "/etc/systemd/system/jetson_stats_boot.service" ] ; then
         echo 1
         return
     fi
     # Check status service
-    local JE_FAN_STATUS="$(systemctl is-active jetson_fan.service)"
+    local JE_FAN_STATUS="$(systemctl is-active jetson_stats_boot.service)"
     if [ $JE_FAN_STATUS = "failed" ] ; then
         echo 1
         return
     fi
-    local JE_FAN_ENABLED=$(systemctl is-enabled jetson_fan.service 2> /dev/null)
+    local JE_FAN_ENABLED=$(systemctl is-enabled jetson_stats_boot.service 2> /dev/null)
     if [ -z $JE_FAN_ENABLED ] ; then
         JE_FAN_ENABLED="failed"
         echo 1
@@ -215,24 +257,24 @@ status_jetson_stats_up()
 fix_jetson_stats_up()
 {
     # Make executable
-    sudo chmod +x "$JETSON_STATS_FOLDER/jetson_fan.sh"
+    sudo chmod +x "$JETSON_STATS_FOLDER/jetson_stats_boot.sh"
     # Link jetson start up service
-    if [ ! -f "/etc/systemd/system/jetson_fan.service" ] ; then
-        sudo ln -s "$JETSON_STATS_FOLDER/jetson_fan.service" "/etc/systemd/system/jetson_fan.service" 2> /dev/null
+    if [ ! -f "/etc/systemd/system/jetson_stats_boot.service" ] ; then
+        sudo ln -s "$JETSON_STATS_FOLDER/jetson_stats_boot.service" "/etc/systemd/system/jetson_stats_boot.service" 2> /dev/null
     fi
     # Update service list
     sudo systemctl daemon-reload
     # Enable jetson fan at startup
-    sudo systemctl enable jetson_fan.service
+    sudo systemctl enable jetson_stats_boot.service
 }
 
 uninstall_jetson_stats_up()
 {
     # Disable service
-    sudo systemctl disable jetson_fan.service
+    sudo systemctl disable jetson_stats_boot.service
     # Remove fan service from /etc/init.d
-    if [ -f "/etc/systemd/system/jetson_fan.service" ] ; then
-        sudo rm "/etc/systemd/system/jetson_fan.service"
+    if [ -f "/etc/systemd/system/jetson_stats_boot.service" ] ; then
+        sudo rm "/etc/systemd/system/jetson_stats_boot.service"
     fi
     # Update service list
     sudo systemctl daemon-reload
@@ -240,21 +282,21 @@ uninstall_jetson_stats_up()
 
 jetson_stats_up()
 {
-    local TEXT="Status jetson_stats_up. The jetson_stats start-up service.\n"
-    if [ -x "$JETSON_STATS_FOLDER/jetson_fan.sh" ] ; then
-        TEXT+=" - jetson_fan.sh is executable\n"
+    local TEXT="Status jetson_stats_boot. The jetson_stats start-up service.\n"
+    if [ -x "$JETSON_STATS_FOLDER/jetson_stats_boot.sh" ] ; then
+        TEXT+=" - jetson_stats_boot.sh is executable\n"
     else
-        TEXT+=" - jetson_fan.sh is NOT executable\n"
+        TEXT+=" - jetson_stats_boot.sh is NOT executable\n"
     fi
     # Status service
-    local JE_START_UP_STATUS="$(systemctl is-active jetson_fan.service)"
-    TEXT+=" - [$JE_START_UP_STATUS] jetson_fan service\n"
+    local JE_START_UP_STATUS="$(systemctl is-active jetson_stats_boot.service)"
+    TEXT+=" - [$JE_START_UP_STATUS] jetson_stats_boot service\n"
     # Enabled service
-    local JE_FAN_ENABLED=$(systemctl is-enabled jetson_fan.service 2> /dev/null)
+    local JE_FAN_ENABLED=$(systemctl is-enabled jetson_stats_boot.service 2> /dev/null)
     if [ -z $JE_FAN_ENABLED ] ; then
         JE_FAN_ENABLED="failed"
     fi
-    TEXT+=" - [$JE_FAN_ENABLED] jetson_fan enable"
+    TEXT+=" - [$JE_FAN_ENABLED] jetson_stats_boot enable"
     # Check status jetson_performance
     if [ $(status_jetson_stats_up) -eq 1 ] ; then
         # Fix jetson_performance
@@ -338,7 +380,7 @@ installer()
         # Run uninstall script
         local status=$(eval "status_$name")
         # Check if a status function in list return error=1
-        if [ "$status" -eq 1 ] ; then
+        if [ "$status" -eq 1 ] || $FORCE ; then
             echo "${green}[Fix $name - $description]${reset}"
             # Run the fix scripts script
             eval "fix_$name"
@@ -552,6 +594,13 @@ EOF
     fi
 }
 
+jetson_clock()
+{
+    whiptail --title "$TITLE" --msgbox "jetson_clock box" 8 78
+    # Return to main menu
+    main
+}
+
 wifi()
 {
     whiptail --title "$TITLE" --msgbox "Wifi box" 8 78
@@ -587,7 +636,8 @@ main()
 {
     local MENU_LIST=("health" "Check the status of jetson-stats"\
                      "desktop" "Enable/Disable boot from desktop"\
-                     "wifi" "Improve wirless throughput"\
+                     "jetson_clock" "Enable/Disable jetson_clock service"\
+                     "wifi" "Improve wireless throughput"\
                      "update" "Update this tool to the latest version"\
                      "about"  "Information about this configuration tool")
     # Evaluate the size
@@ -652,6 +702,7 @@ loop()
                 shift 1
                 ;;
             --install)
+                FORCE=true
                 INTERACTIVE=false
                 INSTALLER=true
                 ;;
@@ -670,6 +721,8 @@ loop()
         # Run the installer
         installer "${HEALTH_FUNCTIONS[@]}"
     elif $UNINSTALLER ; then
+        # Remove all old folders and files
+        uninstall_old
         # Run the uninstaller
         uninstaller "${HEALTH_FUNCTIONS[@]}"
     else

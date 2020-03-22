@@ -2,7 +2,7 @@
 Description=Setup fan at startup
 
 [Service]
-ExecStart=/usr/local/jetson_stats/jetson_fan.sh
+ExecStart=/usr/local/jetson_stats/jetson_stats_boot.sh
 Type=oneshot
 RemainAfterExit=yes
 
