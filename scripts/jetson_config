@@ -19,7 +19,7 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
-TITLE="Jetson software configurator"
+TITLE="jetson-stats configurator"
 # List of all health functions
 HEALT_FUNCTIONS=("folders" "Check folders"\
                  "variables" "Check variables status"\
@@ -76,7 +76,16 @@ folders()
     else
         TEXT="Clean and reinstall all folders."
     fi
-    whiptail --title "$TITLE" --msgbox "$TEXT" 8 78
+    # Check status folders
+    if [ $(status_folders) -eq 1 ] ; then
+        # Run script to fix variables
+        if (whiptail --title "$TITLE" --yesno "$TEXT\n\nDo you want fix?" 11 78); then
+            fix_folders
+        fi
+    else
+        # Run Message
+        whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    fi
     # Return to healt function
     health
 }
@@ -269,16 +278,23 @@ fix_variables()
 
 variables()
 {
-    local TEXT="Jetson variable is:\n"
-    # Run script to fix variables
-    fix_variables
+    local TEXT="Jetson variables are:\n"
     # Check status variables
     if [ $(status_variables) -eq 0 ] ; then
         TEXT+=" - Fixed"
     else
         TEXT+=" - Failure"
     fi
-    whiptail --title "$TITLE" --msgbox "$TEXT" 8 78
+    # Check status jetson_performance
+    if [ $(status_variables) -eq 1 ] ; then
+        # Run script to fix variables
+        if (whiptail --title "$TITLE" --yesno "$TEXT\n\nDo you want fix?" 11 78); then
+            fix_variables
+        fi
+    else
+        # Run Message
+        whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    fi
     # Return to healt function
     health
 }
@@ -449,12 +465,47 @@ main()
     fi
 }
 
+usage()
+{
+    if [ "$1" != "" ]; then
+        echo "${red}$1${reset}"
+    fi
+
+    echo "jetson_config. [-p [OPTION]] | [--uninstall] | [-h]"
+    echo "   Configurator for your NVIDIA Jetson and health check for jetson-stats."
+    echo "Usage:"
+    echo "$0 [options]"
+    echo "options,"
+    echo "   -h|--help    | This help"
+    echo "   -p|--option  | Select page to open the script"
+    echo "   --uninstall  | Run the uninstaller"
+}
+
 loop()
 {
+    local FUNCTION=""
+	# Decode all information from startup
+    while [ -n "$1" ]; do
+        case "$1" in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -p|--option)
+                FUNCTION=$2
+                shift 1
+                ;;
+            *)
+                usage "[ERROR] Unknown option: $1"
+                exit 1
+            ;;
+        esac
+            shift 1
+    done
     # If exist argument pass directly the name
-    if [ ! -z "$1" ] ; then
-        if type $1 | grep -i function > /dev/null; then
-            $1
+    if [ ! -z "$FUNCTION" ] ; then
+        if type $FUNCTION | grep -i function > /dev/null; then
+            $FUNCTION
             # Print request to reboot
             if [ -f /var/run/reboot-required ] ; then
                 echo "${red}Require reboot!${reset}"

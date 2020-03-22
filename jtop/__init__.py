@@ -27,5 +27,7 @@ from .core import JetsonClocks
 from .core import StatusObserver
 
 __author__ = "Raffaello Bonghi <raffaello@rnext.it>"
-__version__ = "1.8.4.rc3"
+# Version package
+# https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
+__version__ = "2.0.0.dev1"
 # EOF
