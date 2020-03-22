@@ -605,13 +605,14 @@ main()
 
 do_finish() {
     if [ -f /var/run/reboot-required ] ; then
-        whiptail --title "$TITLE" --yes-button "Reboot" --yesno "Would you like to reboot now?" 12 60 2
-        if [ $? -eq 0 ]; then # yes
-            sync
-            reboot
-        else
-            echo "${red}Require reboot!${reset}"
+        if $INTERACTIVE ; then
+            whiptail --title "$TITLE" --yes-button "Reboot" --yesno "Would you like to reboot now?" 12 60 2
+            if [ $? -eq 0 ]; then # yes
+                sync
+                reboot
+            fi
         fi
+        echo "${red}Require reboot!${reset}"
     fi
     exit 0
 }
@@ -650,9 +651,11 @@ loop()
                 shift 1
                 ;;
             --install)
+                INTERACTIVE=false
                 INSTALLER=true
                 ;;
             --uninstall)
+                INTERACTIVE=false
                 UNINSTALLER=true
                 ;;
             *)
