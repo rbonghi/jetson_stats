@@ -669,7 +669,34 @@ jetson_clocks()
 
 wifi()
 {
-    whiptail --title "$TITLE" --msgbox "Wifi box" 8 78
+    # Reference:
+    # https://github.com/rbonghi/jetson_stats/issues/1#issuecomment-437585912
+    # https://askubuntu.com/questions/497395/14-04-wireless-throughput-issues
+    # https://unix.stackexchange.com/questions/404287/wifi-suddenly-extremely-slow
+    # Also run this to fix the Mbs rate. By default its slow so even if you add a Ethernet cable it will be terribly slow.
+    # Check if iwlwifi is included
+    if [ -f "/etc/modprobe.d/iwlwifi.conf" ] ; then
+        local TEXT="If suddenly the wifi is extremely slow a solution to fix the Mbs rate\n"
+        TEXT+="A option is enable on your wifi configuration adding:\n\n"
+        TEXT+="\"options iwlwifi 11n_disable=8\" in /etc/modprobe.d/iwlwifi.conf"
+        # Check if options iwlwifi 11n_disable=8 is already in /etc/modprobe.d/iwlwifi.conf
+        if grep -Fxq "options iwlwifi 11n_disable=8" "/etc/modprobe.d/iwlwifi.conf" ; then
+            whiptail --title "$TITLE" --msgbox "$TEXT\n\nInstalled!" 14 78
+        else
+            # Ask if you want add this rule
+            whiptail --title "$TITLE" --yesno "$TEXT\n\nDo you want update?" 14 78 2
+            if [ $? -eq 0 ]; then # yes
+                # Add 11n_disable=8 in iwlwifi.conf
+                echo "options iwlwifi 11n_disable=8" | sudo tee -a /etc/modprobe.d/iwlwifi.conf
+                # Require reboot
+                if [ ! -f /var/run/reboot-required ] ; then
+                    sudo touch /var/run/reboot-required
+                fi
+            fi
+        fi
+    else
+        whiptail --title "$TITLE" --msgbox "No wifi module recognize\n/etc/modprobe.d/iwlwifi.conf does not exist." 8 78
+    fi
     # Return to main menu
     main
 }
