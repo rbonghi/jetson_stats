@@ -107,11 +107,11 @@ status_folders()
 fix_folders()
 {
     # Remove jetson_release link
-    if [ -f "/etc/jetson_easy" ] ; then
+    if [ -d "/etc/jetson_easy" ] ; then
         sudo rm -R "/etc/jetson_easy"
     fi
     # Remove jetson_release link
-    if [ -f "/opt/jetson_stats" ] ; then
+    if [ -d "/opt/jetson_stats" ] ; then
         sudo rm -R "/opt/jetson_stats"
     fi
 }
