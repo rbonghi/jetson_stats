@@ -594,11 +594,71 @@ EOF
     fi
 }
 
-jetson_clock()
+jetson_clocks()
 {
-    whiptail --title "$TITLE" --msgbox "jetson_clock box" 8 78
-    # Return to main menu
-    main
+    local MENU="jetson_clocks is manage from jetson_performance.service\n"
+    # Jetson_performance status
+    local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+    MENU+=" - [$JE_PERFOMANCE_STATUS] jetson_performance service\n"
+    # Enabled service
+    local JE_PERFOMANCE_ENABLED=$(systemctl is-enabled jetson_performance.service 2> /dev/null)
+    if [ -z $JE_PERFOMANCE_ENABLED ] ; then
+        JE_PERFOMANCE_ENABLED="failed"
+    fi
+    MENU+=" - [$JE_PERFOMANCE_ENABLED] jetson_performance enable"
+    # Make GUI
+    if $INTERACTIVE ; then
+        BOOTOPT=$(whiptail --title "$TITLE" --menu "$MENU\nOptions:" 18 78 6 \
+            "<-- Back" "Return to the main menu" \
+            "Start" "Activate jetson_clocks service" \
+            "Stop" "Deactivate jetson_clocks service" \
+            "Enable" "Enable jetson_clocks service at system boot (delay 60s)" \
+            "Disable" "Disable jetson_clocks service at system boot" \
+        3>&1 1>&2 2>&3)
+    else
+        BOOTOPT=$1
+        true
+    fi
+    # Pass option
+    if [ $? -eq 0 ]; then
+        case "$BOOTOPT" in
+            "<-- Back")
+                # Return to main for other options
+                main
+                ;;
+            "Start") 
+                # Activate jetson_clocks service
+                sudo systemctl start jetson_performance.service
+                # Return to jetson_clocks menu
+                jetson_clocks
+                ;;
+            "Stop") 
+                # Activate jetson_clocks service
+                sudo systemctl stop jetson_performance.service
+                # Return to jetson_clocks menu
+                jetson_clocks
+                ;;
+            "Enable") 
+                # Activate jetson_clocks service
+                sudo systemctl enable jetson_performance.service
+                # Return to jetson_clocks menu
+                jetson_clocks
+                ;;
+            "Disable") 
+                # Activate jetson_clocks service
+                sudo systemctl disable jetson_performance.service
+                # Return to jetson_clocks menu
+                jetson_clocks
+                ;;
+            *)
+                whiptail --msgbox "Programmer error, unrecognised boot option" 20 60 2
+                return 1
+                ;;
+        esac
+    else
+        # Return to main for other options
+        main
+    fi
 }
 
 wifi()
@@ -636,7 +696,7 @@ main()
 {
     local MENU_LIST=("health" "Check the status of jetson-stats"\
                      "desktop" "Enable/Disable boot from desktop"\
-                     "jetson_clock" "Enable/Disable jetson_clock service"\
+                     "jetson_clocks" "Enable/Disable jetson_clocks service"\
                      "wifi" "Improve wireless throughput"\
                      "update" "Update this tool to the latest version"\
                      "about"  "Information about this configuration tool")
