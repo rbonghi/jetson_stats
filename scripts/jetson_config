@@ -45,49 +45,15 @@ fi
 . $JTOP_VARIABLE/jetson_variables
 
 
-uninstall_old()
-{
-    local BIN_FOLDER="/usr/local/bin"
-
-    # Remove old jetson_fan service
-    if [ -f "/etc/systemd/system/jetson_fan.service" ] ; then
-        echo " * Remove OLD jetson_fan service"
-        # Disable service
-        sudo systemctl disable jetson_fan.service
-        # Remove fan service from /etc/init.d
-        sudo rm "/etc/systemd/system/jetson_fan.service"
-        # Update service list
-        sudo systemctl daemon-reload
-    fi
-
-    # Remove jetson-docker link
-    if [ -f "$BIN_FOLDER/jetson-docker" ] ; then
-        echo " * Remove OLD jetson-docker link"
-        sudo rm "$BIN_FOLDER/jetson-docker"
-    fi
-    
-    # Remove jetson_release link
-    if [ -f "$BIN_FOLDER/jetson-release" ] ; then
-        echo " * Remove OLD jetson-release link"
-        sudo rm "$BIN_FOLDER/jetson-release"
-    fi
-
-    # Remove jetson_release link
-    if [ -f "$BIN_FOLDER/jetson-swap" ] ; then
-        echo " * Remove OLD jetson-swap link"
-        sudo rm "$BIN_FOLDER/jetson-swap"
-    fi
-    
-    # Remove /etc/jetson_easy folder
-    if [ -d "/etc/jetson_easy" ] ; then
-        echo " * Remove jetson_easy folder"
-        sudo rm -R "/etc/jetson_easy"
-    fi
-}
-
-
 status_folders()
 {
+    local BIN_FOLDER="/usr/local/bin"
+    # Old jetson_names
+    if [ -f "$BIN_FOLDER/jetson-docker" ] || [ -f "$BIN_FOLDER/jetson-release" ] || [ -f "$BIN_FOLDER/jetson-swap" ] ; then
+        echo 1
+        return
+    fi
+    # Old folder jetson_stats
     if [ -d "/etc/jetson_easy" ] ; then
         echo 1
         return
@@ -106,6 +72,27 @@ status_folders()
 
 fix_folders()
 {
+    local BIN_FOLDER="/usr/local/bin"
+    # Remove jetson-docker link
+    if [ -f "$BIN_FOLDER/jetson-docker" ] ; then
+        echo " * Remove OLD jetson-docker link"
+        sudo rm "$BIN_FOLDER/jetson-docker"
+    fi
+    # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jetson-release" ] ; then
+        echo " * Remove OLD jetson-release link"
+        sudo rm "$BIN_FOLDER/jetson-release"
+    fi
+    # Remove jetson_release link
+    if [ -f "$BIN_FOLDER/jetson-swap" ] ; then
+        echo " * Remove OLD jetson-swap link"
+        sudo rm "$BIN_FOLDER/jetson-swap"
+    fi
+    # Remove /etc/jetson_easy folder
+    if [ -d "/etc/jetson_easy" ] ; then
+        echo " * Remove jetson_easy folder"
+        sudo rm -R "/etc/jetson_easy"
+    fi
     # Remove jetson_release link
     if [ -d "/etc/jetson_easy" ] ; then
         sudo rm -R "/etc/jetson_easy"
@@ -114,6 +101,7 @@ fix_folders()
     if [ -d "/opt/jetson_stats" ] ; then
         sudo rm -R "/opt/jetson_stats"
     fi
+
 }
 
 uninstall_folders()
@@ -228,6 +216,11 @@ jetson_performance()
 
 status_jetson_stats_up()
 {
+    # Remove old jetson_fan service
+    if [ -f "/etc/systemd/system/jetson_fan.service" ] ; then
+        echo 1
+        return
+    fi
     # Check status file
     if [ ! -x "$JETSON_STATS_FOLDER/jetson_stats_boot.sh" ] ; then
         echo 1
@@ -256,6 +249,15 @@ status_jetson_stats_up()
 
 fix_jetson_stats_up()
 {
+    # Remove old jetson_fan service
+    if [ -f "/etc/systemd/system/jetson_fan.service" ] ; then
+        # Disable service
+        sudo systemctl disable jetson_fan.service
+        # Remove fan service from /etc/init.d
+        sudo rm "/etc/systemd/system/jetson_fan.service"
+        # Update service list
+        sudo systemctl daemon-reload
+    fi
     # Make executable
     sudo chmod +x "$JETSON_STATS_FOLDER/jetson_stats_boot.sh"
     # Link jetson start up service
@@ -332,10 +334,14 @@ fix_variables()
 uninstall_variables()
 {
     # Remove jetson_env variable
-    sudo rm "/etc/profile.d/jetson_env.sh"
-    # Require reboot
-    if [ ! -f /var/run/reboot-required ] ; then
-        sudo touch /var/run/reboot-required
+    if [ -f "/etc/profile.d/jetson_env.sh" ] ; then
+        sudo rm "/etc/profile.d/jetson_env.sh"
+        # Require reboot
+        if [ ! -f /var/run/reboot-required ] ; then
+            sudo touch /var/run/reboot-required
+        fi
+    else
+        echo "No jetson environment variables scripts installed"
     fi
 }
 
@@ -704,7 +710,8 @@ main()
     # Evaluate the size
     local MENU_LIST_LEN
     let MENU_LIST_LEN=${#MENU_LIST[@]}/2
-    local MENU_TEXT="$JETSON_DESCRIPTION"
+    local MENU_TEXT="$JETSON_DESCRIPTION\n"
+    MENU_TEXT+="$(jtop -v 2>&1)"
     # Make jetson_stats menu
     local OUTPUT
     OUTPUT=$(whiptail --title "$TITLE" --ok-button "Select" --cancel-button "Finish" --menu "$MENU_TEXT" 15 78 $MENU_LIST_LEN "${MENU_LIST[@]}" 3>&1 1>&2 2>&3)
@@ -721,7 +728,7 @@ do_finish() {
             whiptail --title "$TITLE" --yes-button "Reboot" --yesno "Would you like to reboot now?" 12 60 2
             if [ $? -eq 0 ]; then # yes
                 sync
-                reboot
+                sudo reboot
             fi
         fi
         echo "${red}Require reboot!${reset}"
@@ -782,8 +789,6 @@ loop()
         # Run the installer
         installer "${HEALTH_FUNCTIONS[@]}"
     elif $UNINSTALLER ; then
-        # Remove all old folders and files
-        uninstall_old
         # Run the uninstaller
         uninstaller "${HEALTH_FUNCTIONS[@]}"
     else
