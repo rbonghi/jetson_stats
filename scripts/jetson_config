@@ -552,9 +552,19 @@ EOF
     fi
 }
 
+wifi()
+{
+    whiptail --title "$TITLE" --msgbox "Wifi box" 8 78
+    # Return to main menu
+    main
+}
+
 update()
 {
-    whiptail --title "$TITLE" --msgbox "Update box" 8 78
+    # Run the installer
+    sudo -H pip install --no-cache-dir -U jetson_stats
+    # Show last version jtop
+    whiptail --title "$TITLE" --msgbox "Jtop installed:\n - $(jtop -v 2>&1)" 8 78
     # Return to main menu
     main
 }
@@ -576,6 +586,7 @@ main()
 {
     local MENU_LIST=("health" "Check the status of jetson-stats"\
                      "desktop" "Enable/Disable boot from desktop"\
+                     "wifi" "Improve wirless throughput"\
                      "update" "Update this tool to the latest version"\
                      "about"  "Information about this configuration tool")
     # Evaluate the size
