@@ -576,6 +576,7 @@ This tool provides a straight-forward way of doing initial
 configuration of your NVIDIA jetson. Although it can be run
 at any time, some of the options may have difficulties if
 you have heavily customised your installation.\
+\nScript installed in jetson-stats:\n - jtop\n - jetson_config\n - jetson_release\n - jetson_swap\
 " 20 70 1
     # Return to main menu
     main
