@@ -21,7 +21,12 @@ reset=`tput sgr0`
 
 TITLE="jetson-stats configurator"
 # List of all health functions
-HEALT_FUNCTIONS=("folders" "Check folders"\
+# For each health name are required three differents functions:
+# - status_<name>     -> Check the status of health function
+# - fix_<name>        -> Run the installer
+# - uninstall_<name>  -> Run the uninstaller
+# - <name>            -> Make the gui
+HEALTH_FUNCTIONS=("folders" "Check folders"\
                  "variables" "Check variables status"\
                  "jetson_performance" "Status jetson clock service"\
                  "jetson_stats_up" "Jetson-stats startup service")
@@ -410,8 +415,8 @@ check_run()
 health()
 {
     # Evaluate the size
-    local HEALT_FUNCTIONS_LEN
-    let HEALT_FUNCTIONS_LEN=${#HEALT_FUNCTIONS[@]}-1
+    local HEALTH_FUNCTIONS_LEN
+    let HEALTH_FUNCTIONS_LEN=${#HEALTH_FUNCTIONS[@]}-1
     local OK_BUTTON="Fix"
     # Make menu
     local MENU="jetson-stats configuration\n"
@@ -422,17 +427,17 @@ health()
     # Build Menu healt list
     local MENU_LIST=("<-- Back" "Return to the main menu.")
     # Build menu list
-    for i in `seq 0 2 $HEALT_FUNCTIONS_LEN`; do
+    for i in `seq 0 2 $HEALTH_FUNCTIONS_LEN`; do
         # Read name
-        local name=${HEALT_FUNCTIONS[$i]}
-        local description=${HEALT_FUNCTIONS[$i+1]}
+        local name=${HEALTH_FUNCTIONS[$i]}
+        local description=${HEALTH_FUNCTIONS[$i+1]}
         # Evaluate status
         local status=$(eval "status_$name")
         # echo $i $name $status
         MENU_LIST+=("[$(write_status $status)] $name" "$description")
     done
     # Make jetson_stats menu
-    if status_health "${HEALT_FUNCTIONS[@]}" ; then
+    if status_health "${HEALTH_FUNCTIONS[@]}" ; then
         OK_BUTTON="Ok"
     else
         MENU_LIST+=("Fix" "Fix all packages")
@@ -448,7 +453,10 @@ health()
         if [ "$OUTPUT" = "<-- Back" ] ; then
             main
         elif [ "$OUTPUT" = "Fix" ] ; then
-            installer "${HEALT_FUNCTIONS[@]}"
+            # Run the installer script
+            installer "${HEALTH_FUNCTIONS[@]}"
+            # Return to main
+            health
         else
             # Extract function name
             local FUNCTION=$(echo $OUTPUT | cut -d " " -f2)
@@ -561,10 +569,10 @@ loop()
     done
     if $INSTALLER ; then
         # Run the installer
-        installer "${HEALT_FUNCTIONS[@]}"
+        installer "${HEALTH_FUNCTIONS[@]}"
     elif $UNINSTALLER ; then
         # Run the uninstaller
-        uninstaller "${HEALT_FUNCTIONS[@]}"
+        uninstaller "${HEALTH_FUNCTIONS[@]}"
     else
         # If exist argument pass directly the name
         if [ ! -z "$FUNCTION" ] ; then
