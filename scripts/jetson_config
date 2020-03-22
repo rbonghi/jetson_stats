@@ -68,6 +68,11 @@ fix_folders()
     fi
 }
 
+uninstall_folders()
+{
+    echo "Nothing to do"
+}
+
 folders()
 {
     local TEXT=""
@@ -276,6 +281,16 @@ fix_variables()
     fi
 }
 
+uninstall_variables()
+{
+    # Remove jetson_env variable
+    sudo rm "/etc/profile.d/jetson_env.sh"
+    # Require reboot
+    if [ ! -f /var/run/reboot-required ] ; then
+        sudo touch /var/run/reboot-required
+    fi
+}
+
 variables()
 {
     local TEXT="Jetson variables are:\n"
@@ -299,21 +314,54 @@ variables()
     health
 }
 
-fix_all()
+installer()
 {
-    echo "Fix all"
     local LIST=("$@")
     # Evaluate length list
     local LIST_LEN
     let LIST_LEN=${#LIST[@]}-1
-    for i in "${LIST[@]}"; do
+    # Check if there is a function require fix
+    for i in `seq 0 2 $LIST_LEN`; do
         # Read name
-        local name=${HEALT_FUNCTIONS[$i]}
+        local name=${LIST[$i]}
+        local description=${LIST[$i+1]}
         # Evaluate status
+        local status=$(eval "status_$name")
+        # Uncomment this line only for test
+        # echo $i $name $status
+        # Run uninstall script
         local status=$(eval "status_$name")
         # Check if a status function in list return error=1
         if [ "$status" -eq 1 ] ; then
-            echo "Fix: $name"
+            echo "${green}[Fix $name - $description]${reset}"
+            # Run the fix scripts script
+            eval "fix_$name"
+        fi
+    done
+}
+
+uninstaller()
+{
+    local LIST=("$@")
+    # Evaluate length list
+    local LIST_LEN
+    let LIST_LEN=${#LIST[@]}-1
+    # Check if there is a function require fix
+    for i in `seq 0 2 $LIST_LEN`; do
+        # Read name
+        local name=${LIST[$i]}
+        local description=${LIST[$i+1]}
+        # Evaluate status
+        local status=$(eval "status_$name")
+        # Uncomment this line only for test
+        # echo $i $name $status
+        # Run uninstall script
+        if type "uninstall_$name"| grep -i function > /dev/null; then
+            echo "${green}[Uninstall $name - $description]${reset}"
+            # Call Uninstaller function
+            eval "uninstall_$name"
+        else
+            echo "Function uninstall_$name does not exist."
         fi
     done
 }
@@ -336,7 +384,7 @@ status_health()
     # Check if there is a function require fix
     for i in `seq 0 2 $LIST_LEN`; do
         # Read name
-        local name=${HEALT_FUNCTIONS[$i]}
+        local name=${LIST[$i]}
         # Evaluate status
         local status=$(eval "status_$name")
         # Check if a status function in list return error=1
@@ -400,7 +448,7 @@ health()
         if [ "$OUTPUT" = "<-- Back" ] ; then
             main
         elif [ "$OUTPUT" = "Fix" ] ; then
-            fix_all "${HEALT_FUNCTIONS[@]}"
+            installer "${HEALT_FUNCTIONS[@]}"
         else
             # Extract function name
             local FUNCTION=$(echo $OUTPUT | cut -d " " -f2)
@@ -478,12 +526,15 @@ usage()
     echo "options,"
     echo "   -h|--help    | This help"
     echo "   -p|--option  | Select page to open the script"
-    echo "   --uninstall  | Run the uninstaller"
+    echo "   --install    | Run installer. Equivalent to fix jetson-stats in health"
+    echo "   --uninstall  | Run uninstaller for all packages"
 }
 
 loop()
 {
     local FUNCTION=""
+    local INSTALLER=false
+    local UNINSTALLER=false
 	# Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
@@ -495,6 +546,12 @@ loop()
                 FUNCTION=$2
                 shift 1
                 ;;
+            --install)
+                INSTALLER=true
+                ;;
+            --uninstall)
+                UNINSTALLER=true
+                ;;
             *)
                 usage "[ERROR] Unknown option: $1"
                 exit 1
@@ -502,19 +559,27 @@ loop()
         esac
             shift 1
     done
-    # If exist argument pass directly the name
-    if [ ! -z "$FUNCTION" ] ; then
-        if type $FUNCTION | grep -i function > /dev/null; then
-            $FUNCTION
-            # Print request to reboot
-            if [ -f /var/run/reboot-required ] ; then
-                echo "${red}Require reboot!${reset}"
-            fi
-            exit 0
-        fi
+    if $INSTALLER ; then
+        # Run the installer
+        installer "${HEALT_FUNCTIONS[@]}"
+    elif $UNINSTALLER ; then
+        # Run the uninstaller
+        uninstaller "${HEALT_FUNCTIONS[@]}"
     else
-        # Run the main loop
-        main $@
+        # If exist argument pass directly the name
+        if [ ! -z "$FUNCTION" ] ; then
+            if type $FUNCTION | grep -i function > /dev/null; then
+                $FUNCTION
+                # Print request to reboot
+                if [ -f /var/run/reboot-required ] ; then
+                    echo "${red}Require reboot!${reset}"
+                fi
+                exit 0
+            fi
+        else
+            # Run the main loop
+            main $@
+        fi
     fi
     # Print request to reboot
     if [ -f /var/run/reboot-required ] ; then
