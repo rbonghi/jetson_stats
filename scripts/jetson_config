@@ -41,14 +41,12 @@ JTOP_PYTHON=""
 if type -P python3 >/dev/null 2>&1 ; then
 	JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
 	JTOP_PYTHON="$(python3 -V 2>&1)"
+    source $JTOP_VARIABLE/jetson_variables
 elif type -P python >/dev/null 2>&1 ; then
 	JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
 	JTOP_PYTHON="$(python -V 2>&1)"
-else
-	echo "${red}I cannot locate jetson_variables${reset}"
-	exit 1
+    source $JTOP_VARIABLE/jetson_variables
 fi
-source $JTOP_VARIABLE/jetson_variables
 
 
 status_folders()
