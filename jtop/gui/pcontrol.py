@@ -46,7 +46,7 @@ class CTRL(Page):
         # Position information
         posx = 2
         start_pos = 2
-        #self.stdscr.addstr(start_pos, posx, "jetson_clocks service", curses.A_BOLD)
+        # Jetson Clocks status
         jc_field = "jetson_clocks"
         status = self.jetson.jetson_clocks.status
         # Show status jetson_clocks
@@ -60,24 +60,28 @@ class CTRL(Page):
         if self.jetson.userid == 0 and not jc_manual:
             # button start/stop jetson clocks
             box_keyboard(self.stdscr, start_pos - 1, posx + 1, "a", key)
+        # Field service
+        service_string = "service"
+        self.stdscr.addstr(start_pos + 2, posx + 4, service_string, curses.A_BOLD)
+        self.stdscr.addstr(start_pos + 5, posx + 4, service_string, curses.A_BOLD)
         # Read status jetson_clocks
         start = self.jetson.jetson_clocks.start
         if service == "active":
-            color = curses.color_pair(2)  # Running (Green)
+            color = curses.A_BOLD         # Running (Bold)
         elif service == "inactive":
             color = curses.A_NORMAL       # Normal (Grey)
         elif "ing" in service:
             color = curses.color_pair(3)  # Warning (Yellow)
         else:
             color = curses.color_pair(1)  # Error (Red)
-        box_status(self.stdscr, start_pos + 4, posx + 1, service.capitalize(), start, color=color)
-        if self.jetson.userid == 0:
+        box_status(self.stdscr, start_pos + len(service_string) + 4, posx + 1, service.capitalize(), start, color=color)
+        if self.jetson.userid == 0 and not jc_manual:
             # button start/stop jetson clocks
             box_keyboard(self.stdscr, start_pos - 1, posx + 4, "e", key)
         # Read status jetson_clocks
         enabled = self.jetson.jetson_clocks.enable
         enabled_box = "Enable" if enabled else "Disable"
-        box_status(self.stdscr, start_pos + 4, posx + 4, enabled_box, enabled)
+        box_status(self.stdscr, start_pos + len(service_string) + 4, posx + 4, enabled_box, enabled)
         # Build NVP model list
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:
