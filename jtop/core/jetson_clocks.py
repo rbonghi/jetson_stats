@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import os
 # Logging
 import logging
@@ -26,15 +27,30 @@ logger = logging.getLogger(__name__)
 
 
 class JetsonClocks(object):
+    """
+        This controller manage the jetson_clocks service.
+    """
+    # CPU Cluster regex
+    # CPU Cluster Switching: Disabled
+    CPU_CLUSTER_REGEXP = re.compile(r'CPU Cluster Switching: ((.*))')
+    # CPU regex
+    # cpu0: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
+    CPU_REGEXP = re.compile(r'cpu(.+?): Online=(.+?) Governor=(.+?) MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=(.+?) IdleStates: WFI=(.+?) c7=((.*))')
+    # GPU regex
+    # GPU MinFreq=76800000 MaxFreq=921600000 CurrentFreq=384000000
+    GPU_REGEXP = re.compile(r'GPU MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=((.*))')
+    # EMC regex
+    # EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
+    EMC_REGEXP = re.compile(r'EMC MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=(.+?) FreqOverride=((.*))')
 
     class JCException(Exception):
         pass
 
-    def __init__(self, config_file, service='jetson_performance'):
+    def __init__(self, config_file, service_name='jetson_performance'):
         # Config file
         self.config_file = config_file + "l4t_dfs.conf"
         # Service
-        self.service = service
+        self.service_name = service_name
         self.last_status = ""
         # Jetson Clocks path
         if os.path.isfile("/usr/bin/jetson_clocks"):
@@ -46,11 +62,85 @@ class JetsonClocks(object):
         # Store configuration if does not exist
         self.store()
 
+    def show(self):
+        p = sp.Popen([self.jc_bin, '--show'], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = p.communicate()
+        # Decode lines
+        lines = out.decode("utf-8")
+        # Load lines
+        status = {"cpu": {}}
+        for line in lines.split("\n"):
+            # Search configuration CPU config
+            match = JetsonClocks.CPU_REGEXP.search(line)
+            # if match extract name and number
+            if match:
+                # Load CPU information
+                cpu = {"Online": True if int(match.group(2)) == 1 else False,
+                       "Governor": str(match.group(3)),
+                       "MinFreq": int(match.group(4)),
+                       "MaxFreq": int(match.group(5)),
+                       "CurrentFreq": int(match.group(6)),
+                       "IdleStates": {"WFI": int(match.group(7)),
+                                      "c7": int(match.group(8))}}
+                # Store in CPU list
+                status["cpu"]["cpu{num}".format(num=match.group(1))] = cpu
+                continue
+            # Search configuration GPU config
+            match = JetsonClocks.GPU_REGEXP.search(line)
+            # Load GPU match
+            if match:
+                status["gpu"] = {"MinFreq": int(match.group(1)),
+                                 "MaxFreq": int(match.group(2)),
+                                 "CurrentFreq": int(match.group(3))}
+                continue
+            # Search configuration EMC config
+            match = JetsonClocks.EMC_REGEXP.search(line)
+            # Load EMC match
+            if match:
+                status["emc"] = {"MinFreq": int(match.group(1)),
+                                 "MaxFreq": int(match.group(2)),
+                                 "CurrentFreq": int(match.group(3)),
+                                 "FreqOverride": int(match.group(4))}
+                continue
+            # Search configuration CPU Cluster config
+            match = JetsonClocks.CPU_CLUSTER_REGEXP.search(line)
+            # Load EMC match
+            if match:
+                status["cluster"] = str(match.group(1))
+                continue
+            # All other lines of jetson_clocks show are skipped
+            # SOC family:tegra210  Machine:NVIDIA Jetson Nano Developer Kit
+            # Online CPUs: 0-3
+            # Fan: speed=0
+            # NV Power Mode: MAXN
+        return status
+
     @property
-    def status(self):
-        p = sp.Popen(['systemctl', 'is-active', self.service + '.service'], stdout=sp.PIPE)
+    def service(self):
+        p = sp.Popen(['systemctl', 'is-active', self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = p.communicate()
         return str(out.decode("utf-8")).strip()
+
+    @property
+    def status(self):
+        # Load jetson_clocks show
+        show = self.show()
+        # Make statistics
+        stat = []
+        for cpu in show["cpu"].values():
+            # Check status CPUs
+            stat += [cpu['MaxFreq'] == cpu['MinFreq']]
+            stat += [cpu['MaxFreq'] == cpu['CurrentFreq']]
+        # Check status GPU
+        gpu = show["gpu"]
+        stat += [gpu['MaxFreq'] == gpu['MinFreq']]
+        stat += [gpu['MaxFreq'] == gpu['CurrentFreq']]
+        # Don't need to check EMC frequency
+        # Check status EMC
+        # emc = show["emc"]
+        # stat += [emc['MaxFreq'] == emc['MinFreq']]
+        # stat += [emc['MaxFreq'] == emc['CurrentFreq']]
+        return all(stat)
 
     @property
     def start(self):
@@ -62,13 +152,13 @@ class JetsonClocks(object):
         if not isinstance(value, bool):
             raise Exception("Use a boolean")
         start_val = "start" if value else "stop"
-        p = sp.Popen(['systemctl', start_val, self.service + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
+        p = sp.Popen(['systemctl', start_val, self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         _, err = p.communicate()
         self.last_status = err.decode("utf-8")
 
     @property
     def enable(self):
-        p = sp.Popen(['systemctl', 'is-enabled', self.service + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
+        p = sp.Popen(['systemctl', 'is-enabled', self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = p.communicate()
         enable_val = True if str(out.decode("utf-8")).strip() == "enabled" else False
         return enable_val
@@ -78,7 +168,7 @@ class JetsonClocks(object):
         if not isinstance(value, bool):
             raise Exception("Use a boolean")
         enable_val = "enable" if value else "disable"
-        p = sp.Popen(['systemctl', enable_val, self.service + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
+        p = sp.Popen(['systemctl', enable_val, self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         _, err = p.communicate()
         self.last_status = err.decode("utf-8")
 
