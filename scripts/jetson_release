@@ -48,6 +48,7 @@ JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
 # Extract jetson-stats version
 JETSON_STATS_VERSION="$(jtop -v  2>&1 | cut -d " " -f2)"
 
+
 # Print Jetson version
 echo " - $JETSON_DESCRIPTION"
 # Print Jetpack and kernel
@@ -62,33 +63,43 @@ if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
 else
 	echo "   * jetson_clocks service: ${red}$JE_PERFOMANCE_STATUS${reset}"
 fi
+
+
 # Board information
 echo " - Board info:"
 echo "   * $JETSON_TYPE - CN: $JETSON_CODENAME"
 echo "   * Chip Name: $JETSON_NAME - ID: $JETSON_CHIP_ID"
 echo "   * Board(s): $JETSON_BOARD"
-# Print CUDA GPU architecture
-echo "   * CUDA GPU architecture (ARCH_BIN): $JETSON_CUDA_ARCH_BIN"
+# If available print the Board IDS
 if [ ! -z "$JETSON_BOARDIDS" ] ; then
 	echo "   * Board ids: $JETSON_BOARDIDS"
 fi
+# Print CUDA GPU architecture
+echo "   * CUDA GPU architecture (ARCH_BIN): $JETSON_CUDA_ARCH_BIN"
+# Print serial number
+if [ ! -z $JETSON_SERIAL_NUMBER ] ; then
+	echo "   * Serial Number: ${JETSON_SERIAL_NUMBER^^}" # Make string to upper case
+fi
+
 
 # Libraries
 echo " - Libraries:"
 # Print Cuda version
-echo "   * CUDA $JETSON_CUDA"
+echo "   * CUDA: $JETSON_CUDA"
 # Print cuDNN version
-echo "   * cuDNN $JETSON_CUDNN"
+echo "   * cuDNN: $JETSON_CUDNN"
 # Print TensorRT version
-echo "   * TensorRT $JETSON_TENSORRT"
+echo "   * TensorRT: $JETSON_TENSORRT"
 # Print VisionWorks version
-echo "   * Visionworks $JETSON_VISIONWORKS"
+echo "   * Visionworks: $JETSON_VISIONWORKS"
 # Print OpenCv version and cuda compiled
 if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
-	echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
+	echo "   * OpenCV: $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
 else
-	echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
+	echo "   * OpenCV: $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
 fi
+
+
 # jetson-stats version
 echo " - jetson-stats:"
 echo "   * Version $JETSON_STATS_VERSION"
