@@ -219,7 +219,7 @@ opencv_read_cuda()
     OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "NVIDIA CUDA" )
     if [ ! -z "$OPENCV_VERSION_VERBOSE" ]; then
         # get information
-        OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':')
+        local OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':')
         OPENCV_CUDA_FLAG=${OPENCV_CUDA_FLAG//[[:blank:]]/}
         # Set YES if cuda is installed
 	    echo "YES"
