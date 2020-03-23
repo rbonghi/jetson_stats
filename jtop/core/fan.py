@@ -48,7 +48,7 @@ class Fan(object):
 
     def __init__(self, path, jetson_clocks, config_file, temp_control=True):
         # Config file
-        self.config_file = config_file
+        self.config_file = config_file + "/fan_config"
         self.jetson_clocks = jetson_clocks
         # Initialize number max records to record
         self.path = path

@@ -21,19 +21,19 @@ from jtop import JetsonClocks
 
 
 def test_wrong_open():
-    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats")
     # Initialize object
     try:
-        Fan('wrong_path', jc, sys.prefix + "/local/jetson_stats/")
+        Fan('wrong_path', jc, sys.prefix + "/local/jetson_stats")
         assert False
     except Fan.FanException:
         assert True
 
 
 def test_open():
-    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats")
     # Init fan
-    fan = Fan('tests/fan/', jc, sys.prefix + "/local/jetson_stats/")
+    fan = Fan('tests/fan/', jc, sys.prefix + "/local/jetson_stats")
     # Update
     fan.update()
     # Check dictionary

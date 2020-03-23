@@ -64,7 +64,7 @@ def test_decrease_mode():
 
 def test_set_jc_mode():
     # Load JetsonClocks controller
-    jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
+    jc = JetsonClocks(sys.prefix + "/local/jetson_stats")
     jc.start = True
     # Initialize NVPmodel
     nvp = NVPmodel(jetson_clocks=jc)

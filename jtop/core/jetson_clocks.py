@@ -48,7 +48,7 @@ class JetsonClocks(object):
 
     def __init__(self, config_file, service_name='jetson_performance'):
         # Config file
-        self.config_file = config_file + "l4t_dfs.conf"
+        self.config_file = config_file + "/l4t_dfs.conf"
         # Service
         self.service_name = service_name
         self.last_status = ""

@@ -101,7 +101,7 @@ class jtop(StatusObserver):
 
     def __init__(self, interval=500):
         # Load configuration file path
-        config_file = sys.prefix + "/local/jetson_stats/"
+        config_file = sys.prefix + "/local/jetson_stats"
         # Version package
         self.version = get_version()
         # Initialize observer
