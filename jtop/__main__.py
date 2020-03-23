@@ -38,6 +38,16 @@ from .gui import JTOPGUI, ALL, GPU, MEM, CTRL, INFO
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 def main():
     # Add arg parser
@@ -69,24 +79,25 @@ def main():
                 if jetson.userid == 0:
                     # If enable restore:
                     # * Disable jetson_clocks
+                    status = bcolors.OKGREEN + "OK" + bcolors.ENDC
                     if jetson.jetson_clocks:
                         jetson.jetson_clocks.start = False
-                        print("* Stop jetson_clocks [OK]")
+                        print("[{status}] Stop jetson_clocks service".format(status=status))
                         jetson.jetson_clocks.enable = False
-                        print("* Disable jetson_clocks [OK]")
+                        print("[{status}] Disable jetson_clocks service".format(status=status))
                     # * Set fan speed to 0
                     if jetson.fan:
                         jetson.fan.speed = 0
-                        print("* Fan speed = 0 [OK]")
+                        print("[{status}] Fan speed = 0".format(status=status))
                         jetson.fan.control = True
-                        print("* Fan temp_control = 1 [OK]")
+                        print("[{status}] Fan temp_control = 1".format(status=status))
                     # * Delete fan_configuration
                         if jetson.fan.clear():
-                            print("* Clear Fan Configuration [OK]")
+                            print("[{status}] Clear Fan Configuration".format(status=status))
                     # * Delete jetson_clocks configuration
                     if jetson.jetson_clocks:
                         if jetson.jetson_clocks.clear():
-                            print("* Clear Jetson Clock Configuration [OK]")
+                            print("[{status}] Clear Jetson Clock Configuration".format(status=status))
                 else:
                     print("Please run with sudo")
     except jtop.JtopException as e:
