@@ -66,19 +66,26 @@ class GPU(Page):
         jc = self.jetson.jetson_clocks
         if jc is not None:
             jc_status = jc.status
-            if jc_status == "active":
+            # Running (Green) or Normal (Grey)
+            jc_color = curses.color_pair(2) if jc_status else curses.A_NORMAL
+            # Write status jetson_clocks
+            jc_status_name = "Running" if jc_status else "Stopped"
+            # Status service 
+            jc_service = jc.service
+            if jc_service == "active":
                 color = curses.color_pair(2)  # Running (Green)
-            elif jc_status == "inactive":
+            elif jc_service == "inactive":
                 color = curses.A_NORMAL       # Normal (Grey)
-            elif "ing" in jc_status:
+            elif "ing" in jc_service:
                 color = curses.color_pair(3)  # Warning (Yellow)
             else:
                 color = curses.color_pair(1)  # Error (Red)
             # Show if JetsonClock is enabled or not
             if jc.enable:
-                jc_status = "[" + jc_status + "]"
-            plot_name_info(self.stdscr, max_y * 2 // 3 + 2, 2, "Jetson Clocks", jc_status, color)
+                jc_service = "[" + jc_service + "]"
+            plot_name_info(self.stdscr, max_y * 2 // 3 + 2, 2, "Jetson Clocks", jc_status_name, jc_color)
+            plot_name_info(self.stdscr, max_y * 2 // 3 + 3, 2, "Jetson Clocks Service", jc_service, color)
         # NVP Model
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:
-            plot_name_info(self.stdscr, max_y * 2 // 3 + 3, 2, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
+            plot_name_info(self.stdscr, max_y * 2 // 3 + 4, 2, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)

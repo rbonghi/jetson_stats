@@ -39,7 +39,19 @@ usage()
 
 show()
 {
-    echo "Show status jetson_clock"
+cat << EOF
+SOC family:TEST  Machine:TEST
+Online CPUs: 0-3
+CPU Cluster Switching: Disabled
+cpu0: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=1036800 IdleStates: WFI=1 c7=1 
+cpu1: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=518400 IdleStates: WFI=1 c7=1 
+cpu2: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=614400 IdleStates: WFI=1 c7=1 
+cpu3: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=614400 IdleStates: WFI=1 c7=1 
+GPU MinFreq=76800000 MaxFreq=921600000 CurrentFreq=460800000
+EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
+Fan: speed=0
+NV Power Mode: MAXN
+EOF
 }
 
 main()
