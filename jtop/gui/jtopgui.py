@@ -138,8 +138,8 @@ class JTOPGUI:
         # Print jtop basic info
         set_xterm_title("jtop" + xterm_line(self.jetson))
         # Write first line
-        board = self.jetson.board["board"]
-        board_info = board["Name"] + " - Jetpack " + board["Jetpack"]
+        board = self.jetson.board["info"]
+        board_info = board["Description"] + " - Jetpack " + board["Jetpack"]
         self.stdscr.addstr(0, 0, board_info, curses.A_BOLD)
         if self.jetson.userid != 0:
             self.stdscr.addstr(0, len(board_info) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))

@@ -62,8 +62,7 @@ class NVPmodel():
     class NVPmodelException(Exception):
         pass
 
-    def __init__(self, type_board, jetson_clocks=None):
-        self.type_board = type_board
+    def __init__(self, jetson_clocks=None):
         self.jetson_clocks = jetson_clocks
         try:
             nvpmodel_p = sp.Popen(['nvpmodel', '-p', '--verbose'], stdout=sp.PIPE)
@@ -82,8 +81,8 @@ class NVPmodel():
                     pm = {"ID": int(match.group(1)), "Name": match.group(2), "status": True}
                     self.board += [pm]
         except OSError:
-            logger.info("This board {} does not have NVP Model".format(type_board))
-            raise NVPmodel.NVPmodelException("NVPmodel does not exist for this board {}".format(type_board))
+            logger.info("This board does not have NVP Model")
+            raise NVPmodel.NVPmodelException("NVPmodel does not exist for this board")
         except AttributeError:
             logger.info("Wrong open")
             raise NVPmodel.NVPmodelException("Wrong open")

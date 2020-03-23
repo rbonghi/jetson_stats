@@ -22,7 +22,7 @@ from jtop import JetsonClocks
 
 def test_nvp_good():
     # Initialize NVPmodel
-    nvp = NVPmodel("PC")
+    nvp = NVPmodel()
     # Check values
     assert isinstance(nvp.mode, str)
     assert isinstance(nvp.num, int)
@@ -30,34 +30,34 @@ def test_nvp_good():
 
 def test_initialization():
     # Test board in list
-    nvp = NVPmodel("PC")
+    nvp = NVPmodel()
     assert isinstance(nvp.modes, list)
 
 
 def test_mode():
     # Test board in list
-    nvp = NVPmodel("PC")
+    nvp = NVPmodel()
     assert nvp.mode == nvp.modes[nvp.num]["Name"]
     assert nvp.num == nvp.modes[nvp.num]["ID"]
 
 
 def test_set_mode():
     # Initialize NVPmodel
-    nvp = NVPmodel("PC")
+    nvp = NVPmodel()
     # Set value
     assert nvp.set(0)
 
 
 def test_increase_mode():
     # Initialize NVPmodel
-    nvp = NVPmodel("PC")
+    nvp = NVPmodel()
     # Set value
     assert nvp.increase()
 
 
 def test_decrease_mode():
     # Initialize NVPmodel
-    nvp = NVPmodel("PC")
+    nvp = NVPmodel()
     # Set value
     assert nvp.decrease()
 
@@ -67,7 +67,7 @@ def test_set_jc_mode():
     jc = JetsonClocks(sys.prefix + "/local/jetson_stats/")
     jc.start = True
     # Initialize NVPmodel
-    nvp = NVPmodel("PC", jetson_clocks=jc)
+    nvp = NVPmodel(jetson_clocks=jc)
     # Set value
     set_status = nvp.set(0)
     # stop jc

@@ -64,16 +64,17 @@ else
 	echo "   * jetson_clocks service: ${red}$JE_PERFOMANCE_STATUS${reset}"
 fi
 
-
+# If available print the Board IDS
+BOAD_IDS_INFO=""
+if [ ! -z "$JETSON_BOARDIDS" ] ; then
+	BOAD_IDS_INFO="($JETSON_BOARDIDS)"
+fi
 # Board information
 echo " - Board info:"
 echo "   * $JETSON_TYPE - CN: $JETSON_CODENAME"
-echo "   * Chip Name: $JETSON_NAME - ID: $JETSON_CHIP_ID"
-echo "   * Board(s): $JETSON_BOARD"
-# If available print the Board IDS
-if [ ! -z "$JETSON_BOARDIDS" ] ; then
-	echo "   * Board ids: $JETSON_BOARDIDS"
-fi
+echo "   * Chip Name: $JETSON_NAME - ID:$JETSON_CHIP_ID"
+echo "   * Board(s): $JETSON_BOARD $BOAD_IDS_INFO"
+
 # Print CUDA GPU architecture
 echo "   * CUDA GPU architecture (ARCH_BIN): $JETSON_CUDA_ARCH_BIN"
 # Print serial number

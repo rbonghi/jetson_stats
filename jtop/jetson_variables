@@ -244,7 +244,7 @@ export JETSON_OPENCV_CUDA
 # Extract cuDNN version
 JETSON_CUDNN=$(dpkg -l 2>/dev/null | grep -m1 "libcudnn")
 if [ ! -z "$JETSON_CUDNN" ] ; then
-    JETSON_CUDNN=$(echo $JETSON_CUDNN | sed 's/.*libcudnn[0-9] \([^ ]*\).*/\1/' | cut -d '+' -f1 )
+    JETSON_CUDNN=$(echo $JETSON_CUDNN | sed 's/.*libcudnn[0-9] \([^ ]*\).*/\1/' | cut -d '-' -f1 )
 else
     JETSON_CUDNN="NOT_INSTALLED"
 fi
@@ -254,7 +254,7 @@ export JETSON_CUDNN
 # Extract TensorRT version
 JETSON_TENSORRT=$(dpkg -l 2>/dev/null | grep -m1 " tensorrt ")
 if [ ! -z "$JETSON_TENSORRT" ] ; then
-    JETSON_TENSORRT=$(echo $JETSON_TENSORRT | sed 's/.*tensorrt \([^ ]*\).*/\1/' | cut -d '+' -f1 )
+    JETSON_TENSORRT=$(echo $JETSON_TENSORRT | sed 's/.*tensorrt \([^ ]*\).*/\1/' | cut -d '-' -f1 )
 else
     JETSON_TENSORRT="NOT_INSTALLED"
 fi

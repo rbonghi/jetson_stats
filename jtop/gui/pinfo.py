@@ -37,17 +37,22 @@ class INFO(Page):
         # Screen size
         height, width = self.stdscr.getmaxyx()
         # Position information
-        posx = 2
+        posx = 1
         start_pos = 2
-        spacing = 20
+        spacing = 18
         # Up time
         uptime_string = strfdelta(timedelta(seconds=self.jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
-        plot_name_info(self.stdscr, start_pos, posx, "- Up Time", uptime_string)
+        #plot_name_info(self.stdscr, start_pos, posx, "- Up Time", uptime_string)
+        self.stdscr.addstr(start_pos, posx, "- Up Time:", curses.A_BOLD)
+        self.stdscr.addstr(start_pos, posx + spacing, uptime_string)
         start_pos += 1
         # Loop build information
         idx = 0
         # Board info
-        self.stdscr.addstr(start_pos + idx, posx, "- Board:", curses.A_BOLD)
+        self.stdscr.addstr(start_pos + idx, posx, "- Jetpack:", curses.A_BOLD)
+        self.stdscr.addstr(start_pos + idx, posx + spacing, self.jetson.board["info"]["Jetpack"], curses.A_BOLD)
+        self.stdscr.addstr(start_pos + idx + 1, posx, "- Board:", curses.A_BOLD)
+        idx += 1
         for name, info in self.jetson.board["board"].items():
             self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
             self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
@@ -61,8 +66,11 @@ class INFO(Page):
             idx += 1
         # IP address and Hostname
         if self.jetson.local_interfaces:
-            plot_name_info(self.stdscr, start_pos + idx + 1, posx, "- Hostname", self.jetson.local_interfaces["hostname"])
-            self.stdscr.addstr(start_pos + idx + 2, posx, "- Interfaces", curses.A_BOLD)
+            # Write hostname
+            self.stdscr.addstr(start_pos + idx + 1, posx, "- Hostname:", curses.A_BOLD)
+            self.stdscr.addstr(start_pos + idx + 1, posx + spacing, self.jetson.local_interfaces["hostname"], curses.A_BOLD)
+            # Write all interfaces
+            self.stdscr.addstr(start_pos + idx + 2, posx, "- Interfaces:", curses.A_BOLD)
             idx += 3
             for name, ip in self.jetson.local_interfaces["interfaces"].items():
                 self.stdscr.addstr(start_pos + idx, posx + 2, "* " + name + ":")

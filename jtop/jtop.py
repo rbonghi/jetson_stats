@@ -119,7 +119,7 @@ class jtop(StatusObserver):
             raise jtop.JtopException(e)
         # Initialize NVP model
         try:
-            self.nvp = NVPmodel(os.environ["JETSON_TYPE"], jetson_clocks=self.jc)
+            self.nvp = NVPmodel(jetson_clocks=self.jc)
         except NVPmodel.NVPmodelException:
             self.nvp = None
         # Find all fans availables
@@ -194,9 +194,13 @@ class jtop(StatusObserver):
          * Serial Number
          * ...
         """
-        board = {"Name": os.environ["JETSON_DESCRIPTION"],
-                 "Type": os.environ["JETSON_TYPE"],
-                 "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]",
+        board_ids = " ({})".format(os.environ["JETSON_BOARDIDS"]) if os.environ["JETSON_BOARDIDS"] else ""
+        info = {"Description": os.environ["JETSON_DESCRIPTION"],
+                "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"}
+        board = {"Type": os.environ["JETSON_TYPE"],
+                 "Code Name": os.environ["JETSON_CODENAME"],
+                 "Chip": os.environ["JETSON_NAME"] + " - ID:" + os.environ["JETSON_CHIP_ID"],
+                 "Board(s)": ", ".join(os.environ["JETSON_BOARD"].split()) + board_ids,
                  "GPU-Arch": os.environ["JETSON_CUDA_ARCH_BIN"],
                  "SN": os.environ["JETSON_SERIAL_NUMBER"].upper()}
         libraries = {"CUDA": os.environ["JETSON_CUDA"],
@@ -204,7 +208,7 @@ class jtop(StatusObserver):
                      "TensorRT": os.environ["JETSON_TENSORRT"],
                      "VisionWorks": os.environ["JETSON_VISIONWORKS"],
                      "OpenCV": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"]}
-        return {"board": board, "libraries": libraries}
+        return {"info": info, "board": board, "libraries": libraries}
 
     @property
     def stats(self):
