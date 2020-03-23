@@ -144,13 +144,17 @@ class JetsonClocks(object):
 
     @property
     def start(self):
-        start_val = True if self.status == "active" else False
+        start_val = True if self.service == "active" else False
         return start_val
 
     @start.setter
     def start(self, value):
         if not isinstance(value, bool):
             raise Exception("Use a boolean")
+        # Do not run if jetson_clocks as already running
+        if self.status and value == True:
+             return
+        # make service script
         start_val = "start" if value else "stop"
         p = sp.Popen(['systemctl', start_val, self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         _, err = p.communicate()

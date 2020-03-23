@@ -46,14 +46,31 @@ class CTRL(Page):
         # Position information
         posx = 2
         start_pos = 2
-        self.stdscr.addstr(start_pos, posx, "jetson_clocks service", curses.A_BOLD)
-        if self.jetson.userid == 0:
+        #self.stdscr.addstr(start_pos, posx, "jetson_clocks service", curses.A_BOLD)
+        jc_field = "jetson_clocks"
+        status = self.jetson.jetson_clocks.status
+        # Show status jetson_clocks
+        self.stdscr.addstr(start_pos, posx, jc_field, curses.A_BOLD)
+        color = curses.color_pair(2) if status else curses.A_NORMAL
+        jc_status_name = "Running" if status else "Stopped"
+        self.stdscr.addstr(start_pos, posx + len(jc_field) + 1, jc_status_name, color)
+        # Show service status
+        service = self.jetson.jetson_clocks.service
+        jc_manual = status and service != "active"
+        if self.jetson.userid == 0 and not jc_manual:
             # button start/stop jetson clocks
             box_keyboard(self.stdscr, start_pos - 1, posx + 1, "a", key)
         # Read status jetson_clocks
         start = self.jetson.jetson_clocks.start
-        status = self.jetson.jetson_clocks.status
-        box_status(self.stdscr, start_pos + 4, posx + 1, status.capitalize(), start)
+        if service == "active":
+            color = curses.color_pair(2)  # Running (Green)
+        elif service == "inactive":
+            color = curses.A_NORMAL       # Normal (Grey)
+        elif "ing" in service:
+            color = curses.color_pair(3)  # Warning (Yellow)
+        else:
+            color = curses.color_pair(1)  # Error (Red)
+        box_status(self.stdscr, start_pos + 4, posx + 1, service.capitalize(), start, color=color)
         if self.jetson.userid == 0:
             # button start/stop jetson clocks
             box_keyboard(self.stdscr, start_pos - 1, posx + 4, "e", key)

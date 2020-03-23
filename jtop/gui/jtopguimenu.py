@@ -138,16 +138,6 @@ def compact_info(stdscr, start, offset, width, jetson):
         color = curses.color_pair(2) if jc_status else curses.A_NORMAL
         # Write status jetson_clocks
         jc_status_name = "Running" if jc_status else "Stopped"
-        #if jc_status == "active":
-        #    color = curses.color_pair(2)  # Running (Green)
-        #elif jc_status == "inactive":
-        #    color = curses.A_NORMAL       # Normal (Grey)
-        #elif "ing" in jc_status:
-        #    color = curses.color_pair(3)  # Warning (Yellow)
-        #else:
-        #    color = curses.color_pair(1)  # Error (Red)
-
-
         # Specify the service running
         if jc_service == "active":
             jc_status_name += "+"
