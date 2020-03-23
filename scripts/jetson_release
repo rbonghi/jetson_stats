@@ -50,7 +50,7 @@ JETSON_STATS_VERSION="$(jtop -v  2>&1 | cut -d " " -f2)"
 
 
 # Print Jetson version
-echo " - $JETSON_DESCRIPTION"
+echo " - $JETSON_MACHINE"
 # Print Jetpack and kernel
 echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
 # Print status NVPModel
@@ -72,7 +72,7 @@ fi
 # Board information
 echo " - Board info:"
 echo "   * $JETSON_TYPE - CN: $JETSON_CODENAME"
-echo "   * Chip Name: $JETSON_NAME - ID:$JETSON_CHIP_ID"
+echo "   * SOC Family: $JETSON_SOC - ID:$JETSON_CHIP_ID"
 echo "   * Board(s): $JETSON_BOARD $BOAD_IDS_INFO"
 
 # Print CUDA GPU architecture

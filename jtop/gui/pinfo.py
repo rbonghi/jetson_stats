@@ -35,7 +35,7 @@ class INFO(Page):
             Write all environment variables
         """
         # Screen size
-        height, width = self.stdscr.getmaxyx()
+        _, width = self.stdscr.getmaxyx()
         # Position information
         posx = 1
         start_pos = 2

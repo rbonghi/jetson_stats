@@ -45,10 +45,10 @@ if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
     JETSON_CHIP_ID=$(cat /sys/module/tegra_fuse/parameters/tegra_chip_id)
 fi
 # Ectract type board
-JETSON_NAME=""
+JETSON_SOC=""
 if [ -f /proc/device-tree/compatible ]; then
     # Extract the last part of name
-    JETSON_NAME=$(tr -d '\0' < /proc/device-tree/compatible | sed -e 's/.*,//')
+    JETSON_SOC=$(tr -d '\0' < /proc/device-tree/compatible | sed -e 's/.*,//')
 fi
 # Extract boardids if exists
 JETSON_BOARDIDS=""
@@ -93,18 +93,18 @@ if [ -z "$JETSON_TYPE" ] ; then
     fi
 fi
 # Print description
-JETSON_DESCRIPTION=""
+JETSON_MACHINE=""
 if [ ! -z "$JETSON_TYPE" ] ; then
-    JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_TYPE"
+    JETSON_MACHINE="NVIDIA Jetson $JETSON_TYPE"
 fi
 # Export variables
 export JETSON_CHIP_ID
-export JETSON_NAME
+export JETSON_SOC
 export JETSON_BOARDIDS
 export JETSON_CODENAME
 export JETSON_BOARD
 export JETSON_TYPE
-export JETSON_DESCRIPTION
+export JETSON_MACHINE
 
 # Write CUDA architecture
 # https://developer.nvidia.com/cuda-gpus

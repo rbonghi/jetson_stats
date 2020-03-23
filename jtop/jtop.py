@@ -195,11 +195,11 @@ class jtop(StatusObserver):
          * ...
         """
         board_ids = " ({})".format(os.environ["JETSON_BOARDIDS"]) if os.environ["JETSON_BOARDIDS"] else ""
-        info = {"Description": os.environ["JETSON_DESCRIPTION"],
+        info = {"Machine": os.environ["JETSON_MACHINE"],
                 "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"}
         board = {"Type": os.environ["JETSON_TYPE"],
                  "Code Name": os.environ["JETSON_CODENAME"],
-                 "Chip": os.environ["JETSON_NAME"] + " - ID:" + os.environ["JETSON_CHIP_ID"],
+                 "SOC": os.environ["JETSON_SOC"] + " - ID:" + os.environ["JETSON_CHIP_ID"],
                  "Board(s)": ", ".join(os.environ["JETSON_BOARD"].split()) + board_ids,
                  "GPU-Arch": os.environ["JETSON_CUDA_ARCH_BIN"],
                  "SN": os.environ["JETSON_SERIAL_NUMBER"].upper()}
