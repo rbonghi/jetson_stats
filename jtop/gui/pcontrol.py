@@ -48,11 +48,17 @@ class CTRL(Page):
         start_pos = 2
         # Jetson Clocks status
         jc_field = "jetson_clocks"
-        status = self.jetson.jetson_clocks.status
         # Show status jetson_clocks
         self.stdscr.addstr(start_pos, posx, jc_field, curses.A_BOLD)
-        color = curses.color_pair(2) if status else curses.A_NORMAL
-        jc_status_name = "Running" if status else "Stopped"
+        try:
+            status = self.jetson.jetson_clocks.status
+            color = curses.color_pair(2) if status else curses.A_NORMAL
+            jc_status_name = "Running" if status else "Stopped"
+        except:
+            status = False
+            # Fix error color
+            color = curses.color_pair(1)
+            jc_status_name = "REQUIRE SUDO"
         self.stdscr.addstr(start_pos, posx + len(jc_field) + 1, jc_status_name, color)
         # Show service status
         service = self.jetson.jetson_clocks.service

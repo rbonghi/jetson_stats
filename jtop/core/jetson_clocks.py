@@ -127,19 +127,24 @@ class JetsonClocks(object):
         show = self.show()
         # Make statistics
         stat = []
-        for cpu in show["cpu"].values():
-            # Check status CPUs
-            stat += [cpu['MaxFreq'] == cpu['MinFreq']]
-            stat += [cpu['MaxFreq'] == cpu['CurrentFreq']]
+        if 'cpu' in show:
+            for cpu in show['cpu'].values():
+                # Check status CPUs
+                stat += [cpu['MaxFreq'] == cpu['MinFreq']]
+                stat += [cpu['MaxFreq'] == cpu['CurrentFreq']]
         # Check status GPU
-        gpu = show["gpu"]
-        stat += [gpu['MaxFreq'] == gpu['MinFreq']]
-        stat += [gpu['MaxFreq'] == gpu['CurrentFreq']]
+        if 'gpu' in show:
+            gpu = show['gpu']
+            stat += [gpu['MaxFreq'] == gpu['MinFreq']]
+            stat += [gpu['MaxFreq'] == gpu['CurrentFreq']]
         # Don't need to check EMC frequency
         # Check status EMC
-        # emc = show["emc"]
-        # stat += [emc['MaxFreq'] == emc['MinFreq']]
-        # stat += [emc['MaxFreq'] == emc['CurrentFreq']]
+        # if 'emc' in show:
+        #     emc = show['emc']
+        #     stat += [emc['MaxFreq'] == emc['MinFreq']]
+        #     stat += [emc['MaxFreq'] == emc['CurrentFreq']]
+        if not stat:
+            raise JetsonClocks.JCException("Require super user")
         return all(stat)
 
     @property

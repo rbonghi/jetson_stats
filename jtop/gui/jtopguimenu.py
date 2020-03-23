@@ -131,13 +131,18 @@ def compact_info(stdscr, start, offset, width, jetson):
     # Jetson clocks status
     jc = jetson.jetson_clocks
     if jc is not None:
-        jc_status = jc.status
+        try:
+            jc_status = jc.status
+            # Running (Green) or Normal (Grey)
+            color = curses.color_pair(2) if jc_status else curses.A_NORMAL
+            # Write status jetson_clocks
+            jc_status_name = "Running" if jc_status else "Stopped"
+        except:
+            # Fix error color
+            color = curses.color_pair(1)
+            jc_status_name = "REQUIRE SUDO"
         jc_service = jc.service
         jc_enable = jc.enable
-        # Running (Green) or Normal (Grey)
-        color = curses.color_pair(2) if jc_status else curses.A_NORMAL
-        # Write status jetson_clocks
-        jc_status_name = "Running" if jc_status else "Stopped"
         # Specify the service running
         if jc_service == "active":
             jc_status_name += "+"
