@@ -35,14 +35,20 @@ HEALTH_FUNCTIONS=("folders" "Check folders"\
 # Jetson-stats main folder
 JETSON_STATS_FOLDER="/usr/local/jetson_stats"
 # Locate jetson-stats and python version
-JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-JTOP_PYTHON="$(python3 -V 2>&1)"
-if [ -z "$JTOP_VARIABLE" ] ; then
-    JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-    JTOP_PYTHON="$(python -V 2>&1)"
+# Load JETSON environment variables
+JTOP_VARIABLE=""
+JTOP_PYTHON=""
+if type -P python3 >/dev/null 2>&1 ; then
+	JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+	JTOP_PYTHON="$(python3 -V 2>&1)"
+elif type -P python >/dev/null 2>&1 ; then
+	JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+	JTOP_PYTHON="$(python -V 2>&1)"
+else
+	echo "${red}I cannot locate jetson_variables${reset}"
+	exit 1
 fi
-# Run jetson_variables
-. $JTOP_VARIABLE/jetson_variables
+source $JTOP_VARIABLE/jetson_variables
 
 
 status_folders()
@@ -602,6 +608,8 @@ EOF
 
 jetson_clocks()
 {
+    # Reference
+    # https://askubuntu.com/questions/19320/how-to-enable-or-disable-services
     local MENU="jetson_clocks is manage from jetson_performance.service\n"
     # Jetson_performance status
     local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
@@ -750,6 +758,8 @@ main()
 }
 
 do_finish() {
+    # Reference:
+    # https://askubuntu.com/questions/921541/how-to-determine-if-a-restart-is-needed-on-my-ubuntu-server
     if [ -f /var/run/reboot-required ] ; then
         if $INTERACTIVE ; then
             whiptail --title "$TITLE" --yes-button "Reboot" --yesno "Would you like to reboot now?" 12 60 2

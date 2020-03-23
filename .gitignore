@@ -19,6 +19,6 @@ venv/
 .tox/
 .cache/
 swapfile
-test.py
+test.*
 
 .vscode/

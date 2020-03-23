@@ -1,6 +1,6 @@
 #!/bin/bash
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,37 +16,103 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-# NVIDIA Identify version 
-# reference: 
-# https://devtalk.nvidia.com/default/topic/1014424/jetson-tx2/identifying-tx1-and-tx2-at-runtime/
-# https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
+list_hw_boards()
+{
+    # Reference:
+    # 1. https://unix.stackexchange.com/questions/251013/bash-regex-capture-group
+    # 2. https://unix.stackexchange.com/questions/144298/delete-the-last-character-of-a-string-using-string-manipulation-in-shell-script
+    local s=$1
+    local regex='p([0-9-]+)' # Equivalent to p([\d-]*-)
+    local OUT=""
+    while [[ $s =~ $regex ]]; do
+        local board_name=$(echo "P${BASH_REMATCH[1]::-1}")
+        #echo $board_name
+        OUT+="$board_name "
+        # Find next match
+        s=${s#*"${BASH_REMATCH[1]}"}
+    done
+    echo $OUT
+}
 
+# Extract jetson chip id
+JETSON_CHIP_ID=""
 if [ -f /sys/module/tegra_fuse/parameters/tegra_chip_id ]; then
-    case $(cat /sys/module/tegra_fuse/parameters/tegra_chip_id) in
-        64) JETSON_BOARD="TK1" ;;
-        33) JETSON_BOARD="TX1" ;;
-        24) JETSON_BOARD="TX2" ;;
-        25) JETSON_BOARD="Xavier" ;;
-        *) JETSON_BOARD="UNKNOWN" ;;
-    esac
-    if [ "$JETSON_BOARD" = "Xavier" ] ; then
-        JETSON_TYPE="AGX Xavier"
-    elif [ "$JETSON_BOARD" = "TX1" ] ; then
-        JETSON_TYPE="NANO/TX1"
-    else
-        JETSON_TYPE="$JETSON_BOARD"
+    JETSON_CHIP_ID=$(cat /sys/module/tegra_fuse/parameters/tegra_chip_id)
+fi
+# Ectract type board
+JETSON_NAME=""
+if [ -f /proc/device-tree/compatible ]; then
+    # Extract the last part of name
+    JETSON_NAME=$(tr -d '\0' < /proc/device-tree/compatible | sed -e 's/.*,//')
+fi
+# Extract boardids if exists
+JETSON_BOARDIDS=""
+if [ -f /proc/device-tree/nvidia,boardids ]; then
+    JETSON_BOARDIDS=$(tr -d '\0' < /proc/device-tree/nvidia,boardids)
+fi
+# Code name
+JETSON_CODENAME=""
+JETSON_BOARD=""
+if [ -f /proc/device-tree/nvidia,dtsfilename ]; then
+    # ..<something>/hardware/nvidia/platform/t210/porg/kernel-dts/tegra210-p3448-0000-p3449-0000-b00.dts
+    # The last third is the codename of the board
+    JETSON_CODENAME=$(cat /proc/device-tree/nvidia,dtsfilename | tr '/' '\n' | tail -3 | head -n 1 )
+    # The basename extract the board type
+    JETSON_BOARD="$(tr -d '\0' < /proc/device-tree/nvidia,dtsfilename | sed 's/.*\///')"
+    # List of all boards
+    JETSON_BOARD=$(list_hw_boards "$JETSON_BOARD")
+fi
+
+# Detection NVIDIA Jetson
+# Jetson TK1 can be detected with chip id
+# Reference:
+# 1. https://github.com/rbonghi/jetson_stats/issues/48
+# 2. https://devtalk.nvidia.com/default/topic/1071080/jetson-nano/best-way-to-check-which-tegra-board/
+# 3. https://devtalk.nvidia.com/default/topic/1014424/jetson-tx2/identifying-tx1-and-tx2-at-runtime/
+# 4. https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
+case $JETSON_BOARD in
+    *2180*) JETSON_TYPE="TX1" ;;
+    P3310*) JETSON_TYPE="TX2" ;;
+    P3489-0080*) JETSON_TYPE="TX2 4GB" ;;
+    P3489*) JETSON_TYPE="TX2i" ;;
+    P2888-0060*) JETSON_TYPE="AGX Xavier 8GB" ;;
+    P2888*) JETSON_TYPE="AGX Xavier" ;;
+    P3448-0020*) JETSON_TYPE="Nano" ;;
+    P3448*) JETSON_TYPE="Nano (Developer Kit Version)" ;;
+    *) JETSON_TYPE="" ;;
+esac
+# if JETSON_TYPE empty, check CHIP_ID for jetson TK1
+if [ -z "$JETSON_TYPE" ] ; then
+    if [ "$JETSON_CHIP_ID" == "64" ] ; then
+        JETSON_TYPE="TK1"
     fi
-    # Make Jetson Description
+fi
+# Print description
+JETSON_DESCRIPTION=""
+if [ ! -z "$JETSON_TYPE" ] ; then
     JETSON_DESCRIPTION="NVIDIA Jetson $JETSON_TYPE"
-else
-    JETSON_BOARD="NO-BOARD"
-    JETSON_TYPE="PC"
-    JETSON_DESCRIPTION="PC computer"
 fi
 # Export variables
+export JETSON_CHIP_ID
+export JETSON_NAME
+export JETSON_BOARDIDS
+export JETSON_CODENAME
 export JETSON_BOARD
 export JETSON_TYPE
 export JETSON_DESCRIPTION
+
+# Write CUDA architecture
+# https://developer.nvidia.com/cuda-gpus
+# https://devtalk.nvidia.com/default/topic/988317/jetson-tx1/what-should-be-the-value-of-cuda_arch_bin/
+case $JETSON_TYPE in
+    *Xavier*) JETSON_CUDA_ARCH_BIN="7.2" ;;
+    TX2*) JETSON_CUDA_ARCH_BIN="6.2" ;;
+    TX1* | Nano*) JETSON_CUDA_ARCH_BIN="5.3" ;;
+    TK1) JETSON_CUDA_ARCH_BIN="3.2" ;;
+    * ) JETSON_CUDA_ARCH_BIN="NONE" ;;
+esac
+# Export Jetson CUDA ARCHITECTURE
+export JETSON_CUDA_ARCH_BIN
 
 # NVIDIA Jetson version
 # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
@@ -122,10 +188,10 @@ export JETSON_CUDA
 opencv_read_cuda()
 {
     # Red if use CUDA or not
-    OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "Use Cuda" )
+    local OPENCV_VERSION_VERBOSE=$(opencv_version --verbose | grep "Use Cuda" )
     if [ ! -z "$OPENCV_VERSION_VERBOSE" ]; then
         # Read status of CUDA
-        OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':' | cut -f2 -d ' ' )
+        local OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':' | cut -f2 -d ' ' )
         if [ "$OPENCV_CUDA_FLAG" == "NO" ]; then
             # Set NO if cuda is not installed
     	    echo "NO"
@@ -133,10 +199,6 @@ opencv_read_cuda()
             # Set YES if cuda is installed
 	        echo "YES"
         fi
-        # Remove variable
-        unset OPENCV_CUDA_FLAG
-        # Remove variable
-        unset OPENCV_VERSION_VERBOSE
         return
     fi
     # read NVIDIA CUDA version
@@ -145,17 +207,11 @@ opencv_read_cuda()
         # get information
         OPENCV_CUDA_FLAG=$(echo $OPENCV_VERSION_VERBOSE | cut -f2 -d ':')
         OPENCV_CUDA_FLAG=${OPENCV_CUDA_FLAG//[[:blank:]]/}
-	    # Remove variable
-        unset OPENCV_CUDA_FLAG
         # Set YES if cuda is installed
 	    echo "YES"
-        # Remove variable
-        unset OPENCV_VERSION_VERBOSE
         return
     fi
     echo "NO"
-    # Remove variable
-    unset OPENCV_VERSION_VERBOSE
     return
 }
 
@@ -170,19 +226,6 @@ fi
 # Opencv variables
 export JETSON_OPENCV
 export JETSON_OPENCV_CUDA
-
-# Write CUDA architecture
-# https://developer.nvidia.com/cuda-gpus
-# https://devtalk.nvidia.com/default/topic/988317/jetson-tx1/what-should-be-the-value-of-cuda_arch_bin/
-case $JETSON_BOARD in
-    "Xavier") JETSON_CUDA_ARCH_BIN="7.2" ;;
-    "TX2" | "TX2i") JETSON_CUDA_ARCH_BIN="6.2" ;;
-    "TX1") JETSON_CUDA_ARCH_BIN="5.3" ;;
-    "TK1") JETSON_CUDA_ARCH_BIN="3.2" ;;
-    * ) JETSON_CUDA_ARCH_BIN="NONE" ;;
-esac
-# Export Jetson CUDA ARCHITECTURE
-export JETSON_CUDA_ARCH_BIN
 
 # Extract cuDNN version
 JETSON_CUDNN=$(dpkg -l 2>/dev/null | grep -m1 "libcudnn")

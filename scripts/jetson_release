@@ -20,17 +20,18 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
-# Load environment variables:
-# - JETSON_BOARD
-# - JETSON_L4T (JETSON_L4T_RELEASE, JETSON_L4T_REVISION)
-# - JETSON_DESCRIPTION
-# - JETSON_CUDA
-# - JETSON_OPENCV and JETSON_OPENCV_CUDA
-JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-JTOP_PYTHON="$(python3 -V 2>&1)"
-if [ -z "$JTOP_VARIABLE" ] ; then
-    JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-    JTOP_PYTHON="$(python -V 2>&1)"
+# Load JETSON environment variables
+JTOP_VARIABLE=""
+JTOP_PYTHON=""
+if type -P python3 >/dev/null 2>&1 ; then
+	JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+	JTOP_PYTHON="$(python3 -V 2>&1)"
+elif type -P python >/dev/null 2>&1 ; then
+	JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+	JTOP_PYTHON="$(python -V 2>&1)"
+else
+	echo "${red}I cannot locate jetson_variables${reset}"
+	exit 1
 fi
 source $JTOP_VARIABLE/jetson_variables
 
@@ -42,16 +43,36 @@ if hash nvpmodel 2>/dev/null; then
 	NVPModel_type=$(echo $NVPModel | cut -d' ' -f 2)
 	NVPModel=$(echo $NVPModel | cut -d' ' -f 1)
 fi
+# Read status jetson_performance service
+JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+# Extract jetson-stats version
+JETSON_STATS_VERSION="$(jtop -v  2>&1 | cut -d " " -f2)"
+
 # Print Jetson version
 echo " - $JETSON_DESCRIPTION"
 # Print Jetpack and kernel
 echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
-# Print CUDA GPU architecture
-echo "   * CUDA GPU architecture $JETSON_CUDA_ARCH_BIN"
 # Print status NVPModel
 if [ ! -z ${NVPModel+x} ] ; then
 	echo "   * NV Power Mode: ${green}$NVPModel${reset} - Type: ${green}$NVPModel_type${reset}"
 fi
+# Print status Jetson Performance service
+if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
+	echo "   * jetson_clocks service: ${green}$JE_PERFOMANCE_STATUS${reset}"
+else
+	echo "   * jetson_clocks service: ${red}$JE_PERFOMANCE_STATUS${reset}"
+fi
+# Board information
+echo " - Board info:"
+echo "   * $JETSON_TYPE - CN: $JETSON_CODENAME"
+echo "   * Chip Name: $JETSON_NAME - ID: $JETSON_CHIP_ID"
+echo "   * Board(s): $JETSON_BOARD"
+# Print CUDA GPU architecture
+echo "   * CUDA GPU architecture (ARCH_BIN): $JETSON_CUDA_ARCH_BIN"
+if [ ! -z "$JETSON_BOARDIDS" ] ; then
+	echo "   * Board ids: $JETSON_BOARDIDS"
+fi
+
 # Libraries
 echo " - Libraries:"
 # Print Cuda version
@@ -68,19 +89,8 @@ if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
 else
 	echo "   * OpenCV $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
 fi
-# Print status Jetson Performance service
-JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
-if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
-	echo " - Jetson clock service: ${green}$JE_PERFOMANCE_STATUS${reset}"
-else
-	echo " - Jetson clock service: ${red}$JE_PERFOMANCE_STATUS${reset}"
-fi
 # jetson-stats version
-JETSON_STATS_VERSION="$(jtop -v  2>&1 | cut -d " " -f2)"
-echo " - jetson-stats"
+echo " - jetson-stats:"
 echo "   * Version $JETSON_STATS_VERSION"
-echo "   * Installend on $JTOP_PYTHON"
+echo "   * Works on $JTOP_PYTHON"
 # EOF
-
-
-
