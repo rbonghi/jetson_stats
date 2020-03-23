@@ -42,7 +42,6 @@ class INFO(Page):
         spacing = 18
         # Up time
         uptime_string = strfdelta(timedelta(seconds=self.jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
-        #plot_name_info(self.stdscr, start_pos, posx, "- Up Time", uptime_string)
         self.stdscr.addstr(start_pos, posx, "- Up Time:", curses.A_BOLD)
         self.stdscr.addstr(start_pos, posx + spacing, uptime_string)
         start_pos += 1
