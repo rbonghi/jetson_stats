@@ -51,7 +51,7 @@ class bcolors:
 
 def main():
     # Add arg parser
-    parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs in the terminal')
+    parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
@@ -72,9 +72,12 @@ def main():
                 try:
                     # Call the curses wrapper
                     curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, MEM, CTRL, INFO], init_page=args.page)
-                except KeyboardInterrupt:
+                except KeyboardInterrupt as x:
                     # Catch keyboard interrupt and close
-                    logger.info("Closed with CTRL-C")
+                    logger.info("Closed with CTRL-C [{status}]".format(status=x))
+                except SystemExit as x:
+                    # Catch keyboard interrupt and close
+                    logger.info("System exit {status}".format(status=x))
             else:
                 if jetson.userid == 0:
                     # If enable restore:
@@ -103,7 +106,6 @@ def main():
     except jtop.JtopException as e:
         # Print error and close
         print(e)
-
 
 if __name__ == "__main__":
     main()

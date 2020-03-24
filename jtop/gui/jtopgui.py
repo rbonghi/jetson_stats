@@ -17,11 +17,16 @@
 
 import abc
 import curses
+import signal
+# Logging
+import logging
 # Graphics elements
 from .jtopguilib import (check_size,
                          check_curses,
                          set_xterm_title,
                          xterm_line)
+# Create logger for jplotlib
+logger = logging.getLogger(__name__)
 # Initialization abstract class
 # In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
 ABC = abc.ABCMeta('ABC', (object,), {})
@@ -82,9 +87,18 @@ class JTOPGUI:
         # Initialize keyboard status
         self.key = -1
         self.old_key = -1
+        self.signal = True
+        # Catch all signals
+        for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
+            signal.signal(sig, self.handler)
         # Run the GUI
         if start:
             self.run()
+
+    def handler(self, signum = None, frame = None):
+        logger.info("Signal handler called with signal {signum}".format(signum=signum))
+        # Close gui
+        self.signal = False
 
     def run(self):
         # In this program, we don't want keystrokes echoed to the console,
@@ -107,7 +121,7 @@ class JTOPGUI:
         # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
         self.stdscr.nodelay(1)
         """ Here is the loop of our program, we keep clearing and redrawing in this loop """
-        while self.keyboard():
+        while self.keyboard() and self.signal:
             # Draw pages
             self.draw()
 
