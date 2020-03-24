@@ -124,15 +124,18 @@ main()
     # Make a temporary file to show the status of the board
     if [ "$RESTORE" = "True" ] ; then
         if [ -f "/tmp/jetson_clocks_test" ] ; then
+            # Remove fake test file
             rm "/tmp/jetson_clocks_test"
+            # Go to sleep for an interval
+            sleep $TIME_SLEEP
         fi
     elif [ "$STORE" = "True" ] ; then
         touch $conf
     else
         touch "/tmp/jetson_clocks_test"
+        # Go to sleep for an interval
+        sleep $TIME_SLEEP
     fi
-    # Go to sleep for an interval
-    sleep $TIME_SLEEP
 }
 
 main $@
