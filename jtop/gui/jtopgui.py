@@ -35,6 +35,15 @@ class Page(ABC):
         self.jetson = jetson
         self.refresh = refresh
 
+    def size_page(self):
+        height, width = self.stdscr.getmaxyx()
+        first = 0
+        # Remove a line for sudo header
+        if self.jetson.userid != 0:
+            height -= 1
+            first = 1
+        return height, width, first
+
     @abc.abstractmethod
     @check_curses
     def draw(self, key):
@@ -139,10 +148,12 @@ class JTOPGUI:
         set_xterm_title("jtop" + xterm_line(self.jetson))
         # Write first line
         board = self.jetson.board["info"]
-        board_info = board["Machine"] + " - Jetpack " + board["Jetpack"]
-        self.stdscr.addstr(0, 0, board_info, curses.A_BOLD)
+        # Add extra Line if without sudo
+        idx = 0
         if self.jetson.userid != 0:
-            self.stdscr.addstr(0, len(board_info) + 1, "- PLEASE RUN WITH SUDO", curses.color_pair(1))
+            self.stdscr.addstr(0, 0, "RUN WITH SUDO", curses.color_pair(1))
+            idx = 1
+        self.stdscr.addstr(idx, 0, board["Machine"] + " - Jetpack " + board["Jetpack"], curses.A_BOLD)
 
     @check_curses
     def menu(self):

@@ -35,10 +35,10 @@ class INFO(Page):
             Write all environment variables
         """
         # Screen size
-        _, width = self.stdscr.getmaxyx()
+        _, width, first = self.size_page()
         # Position information
         posx = 1
-        start_pos = 2
+        start_pos = first + 2
         spacing = 18
         # Up time
         uptime_string = strfdelta(timedelta(seconds=self.jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")

@@ -42,10 +42,10 @@ class CTRL(Page):
     def draw(self, key):
         """ Control board, check status jetson_clocks and change NVP model """
         # Screen size
-        height, width = self.stdscr.getmaxyx()
+        height, width, first = self.size_page()
         # Position information
         posx = 2
-        start_pos = 2
+        start_pos = first + 2
         # Jetson Clocks status
         jc_field = "jetson_clocks"
         # Show status jetson_clocks
@@ -65,7 +65,7 @@ class CTRL(Page):
         jc_manual = status and service != "active"
         if self.jetson.userid == 0 and not jc_manual:
             # button start/stop jetson clocks
-            box_keyboard(self.stdscr, start_pos - 1, posx + 1, "a", key)
+            box_keyboard(self.stdscr, posx - 1, start_pos + 1, "a", key)
         # Field service
         service_string = "service"
         self.stdscr.addstr(start_pos + 2, posx + 4, service_string, curses.A_BOLD)
@@ -80,29 +80,29 @@ class CTRL(Page):
             color = curses.color_pair(3)  # Warning (Yellow)
         else:
             color = curses.color_pair(1)  # Error (Red)
-        box_status(self.stdscr, start_pos + len(service_string) + 4, posx + 1, service.capitalize(), start, color=color)
+        box_status(self.stdscr, posx + len(service_string) + 4, start_pos + 1, service.capitalize(), start, color=color)
         if self.jetson.userid == 0 and not jc_manual:
             # button start/stop jetson clocks
-            box_keyboard(self.stdscr, start_pos - 1, posx + 4, "e", key)
+            box_keyboard(self.stdscr, posx - 1, start_pos + 4, "e", key)
         # Read status jetson_clocks
         enabled = self.jetson.jetson_clocks.enable
         enabled_box = "Enable" if enabled else "Disable"
-        box_status(self.stdscr, start_pos + len(service_string) + 4, posx + 4, enabled_box, enabled)
+        box_status(self.stdscr, posx + len(service_string) + 4, start_pos + 4, enabled_box, enabled)
         # Build NVP model list
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:
             self.stdscr.addstr(start_pos + 8, posx, "NVP model", curses.A_BOLD)
             if self.jetson.userid == 0:
                 # Draw keys to decrease nvpmodel
-                box_keyboard(self.stdscr, start_pos + 10, posx + 7, "-", key)
+                box_keyboard(self.stdscr, posx + 10, start_pos + 7, "-", key)
                 # Draw selected number
                 self.stdscr.addstr(start_pos + 8, posx + 16, str(nvpmodel.selected), curses.A_NORMAL)
                 # Draw keys to increase nvpmodel
-                box_keyboard(self.stdscr, start_pos + 18, posx + 7, "+", key)
+                box_keyboard(self.stdscr, posx + 18, start_pos + 7, "+", key)
             # Write list of available modes
             mode_names = [mode["Name"] for mode in nvpmodel.modes]
             mode_status = [mode["status"] for mode in nvpmodel.modes]
-            box_list(self.stdscr, start_pos - 1, posx + 10, mode_names, nvpmodel.num, status=mode_status, max_width=42, numbers=True)
+            box_list(self.stdscr, posx - 1, start_pos + 10, mode_names, nvpmodel.num, status=mode_status, max_width=42, numbers=True)
         # Add plot fan status
         if 'FAN' in self.jetson.stats:
             fan = self.jetson.stats['FAN']

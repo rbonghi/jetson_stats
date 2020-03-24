@@ -93,10 +93,10 @@ class MEM(Page):
 
     def draw(self, key):
         # Screen size
-        height, width = self.stdscr.getmaxyx()
+        height, width, first = self.size_page()
         # Set size chart memory
         size_x = [2, width * 1 // 2 - 1]
-        size_y = [1, height * 1 // 2 - 1]
+        size_y = [first + 1, height * 1 // 2 - 1]
         # RAM linear gauge info
         line_counter = size_y[1] + 2
         # Read RAM status and make gaugues
@@ -155,23 +155,23 @@ class MEM(Page):
                      color=curses.color_pair(6))
         if self.jetson.userid == 0:
             # Clear cache button
-            box_keyboard(self.stdscr, 1, height - 7, "c", key)
+            box_keyboard(self.stdscr, 1, first + height - 7, "c", key)
             clear_cache = "Clear cache"
-            self.stdscr.addstr(height - 6, 7, clear_cache, curses.A_NORMAL)
+            self.stdscr.addstr(first + height - 6, 7, clear_cache, curses.A_NORMAL)
         if self.jetson.userid == 0:
             # Swap controller
-            box_keyboard(self.stdscr, 1, height - 4, "h", key)
-            self.stdscr.addstr(height - 4, 7, "Extra", curses.A_BOLD)
+            box_keyboard(self.stdscr, 1, first + height - 4, "h", key)
+            self.stdscr.addstr(first + height - 4, 7, "Extra", curses.A_BOLD)
             enable_swap = "Swap"
-            self.stdscr.addstr(height - 3, 7, enable_swap, curses.A_NORMAL)
+            self.stdscr.addstr(first + height - 3, 7, enable_swap, curses.A_NORMAL)
             # Status swap
             swap_enable = self.jetson.swap.enable
             enabled_box = "Enabled" if swap_enable else "Disable"
-            box_status(self.stdscr, 9 + len(enable_swap), height - 4, enabled_box, swap_enable)
+            box_status(self.stdscr, 9 + len(enable_swap), first + height - 4, enabled_box, swap_enable)
             start_pos = 10 + len(enable_swap)
             if not swap_enable:
                 # Draw keys to decrease size swap
-                box_keyboard(self.stdscr, start_pos + 10, height - 4, "-", key)
+                box_keyboard(self.stdscr, start_pos + 10, first + height - 4, "-", key)
                 # Draw selected number
                 swp_size = int(self.jetson.swap.size)
                 if swp_size > len(self.jetson.swap):
@@ -180,13 +180,13 @@ class MEM(Page):
                     color = curses.color_pair(3)
                 else:
                     color = curses.A_NORMAL
-                self.stdscr.addstr(height - 3, start_pos + 16, "{size: <2}".format(size=swp_size), color)
-                self.stdscr.addstr(height - 3, start_pos + 18, "Gb", curses.A_BOLD)
+                self.stdscr.addstr(first + height - 3, start_pos + 16, "{size: <2}".format(size=swp_size), color)
+                self.stdscr.addstr(first + height - 3, start_pos + 18, "Gb", curses.A_BOLD)
                 # Draw keys to increase size swap
-                box_keyboard(self.stdscr, start_pos + 21, height - 4, "+", key)
+                box_keyboard(self.stdscr, start_pos + 21, first + height - 4, "+", key)
             # else:
             #    # Print folder swapfile
-            #    self.stdscr.addstr(height - 3, start_pos + 11, "{folder}".format(folder=self.jetson.swap.file), curses.A_BOLD)
+            #    self.stdscr.addstr(first + height - 3, start_pos + 11, "{folder}".format(folder=self.jetson.swap.file), curses.A_BOLD)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:

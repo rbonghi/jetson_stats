@@ -39,10 +39,10 @@ class GPU(Page):
             Draw a plot with GPU payload
         """
         # Screen size
-        max_y, max_x = self.stdscr.getmaxyx()
+        height, width, first = self.size_page()
         # Evaluate size chart
-        size_x = [2, max_x - 10]
-        size_y = [1, max_y * 2 // 3]
+        size_x = [2, width - 10]
+        size_y = [first + 1, height * 2 // 3]
         # Draw the GPU chart
         if 'GR3D' in self.jetson.stats:
             frq = label_freq(self.jetson.stats['GR3D'])
@@ -52,7 +52,7 @@ class GPU(Page):
             self.chart_gpu.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
         # Percent Gauge GPU
         gpu = self.jetson.stats.get('GR3D', {})
-        linear_gauge(self.stdscr, offset=max_y * 2 // 3 + 1, start=2, size=max_x // 2,
+        linear_gauge(self.stdscr, offset=first + height * 2 // 3 + 1, start=2, size=width // 2,
                      name='GPU',
                      value=gpu.get('val', 0),
                      label=label_freq(gpu),
@@ -61,7 +61,7 @@ class GPU(Page):
         # Temperature GPU
         if "GPU" in self.jetson.stats['TEMP']:
             temp_gpu = self.jetson.stats['TEMP']['GPU']
-            plot_name_info(self.stdscr, max_y * 2 // 3 + 1, max_x // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
+            plot_name_info(self.stdscr, first + height * 2 // 3 + 1, width // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
         # Jetson clocks status
         jc = self.jetson.jetson_clocks
         if jc is not None:
@@ -88,9 +88,9 @@ class GPU(Page):
             # Show if JetsonClock is enabled or not
             if jc.enable:
                 jc_service = "[" + jc_service + "]"
-            plot_name_info(self.stdscr, max_y * 2 // 3 + 2, 2, "Jetson Clocks", jc_status_name, jc_color)
-            plot_name_info(self.stdscr, max_y * 2 // 3 + 3, 2, "Jetson Clocks Service", jc_service, color)
+            plot_name_info(self.stdscr, first + height * 2 // 3 + 2, 2, "Jetson Clocks", jc_status_name, jc_color)
+            plot_name_info(self.stdscr, first + height * 2 // 3 + 3, 2, "Jetson Clocks Service", jc_service, color)
         # NVP Model
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:
-            plot_name_info(self.stdscr, max_y * 2 // 3 + 4, 2, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
+            plot_name_info(self.stdscr, first + height * 2 // 3 + 4, 2, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
