@@ -22,6 +22,7 @@ from .jtopguilib import (plot_name_info,
                          linear_gauge,
                          label_freq,
                          Chart)
+from ..core.jetson_clocks import JetsonClocks
 
 
 class GPU(Page):
@@ -71,11 +72,11 @@ class GPU(Page):
                 jc_color = curses.color_pair(2) if jc_status else curses.A_NORMAL
                 # Write status jetson_clocks
                 jc_status_name = "Running" if jc_status else "Stopped"
-            except:
+            except JetsonClocks.JCException:
                 # Fix error color
                 jc_color = curses.color_pair(7)
                 jc_status_name = "SUDO REQUIRED"
-            # Status service 
+            # Status service
             jc_service = jc.service
             if jc_service == "active":
                 color = curses.color_pair(2)  # Running (Green)

@@ -23,6 +23,7 @@ from .jtopguilib import (check_curses,
                          box_status,
                          box_list,
                          Chart)
+from ..core.jetson_clocks import JetsonClocks
 
 
 class CTRL(Page):
@@ -54,7 +55,7 @@ class CTRL(Page):
             status = self.jetson.jetson_clocks.status
             color = curses.color_pair(2) if status else curses.A_NORMAL
             jc_status_name = "Running" if status else "Stopped"
-        except:
+        except JetsonClocks.JCException:
             status = False
             # Fix error color
             color = curses.color_pair(7)

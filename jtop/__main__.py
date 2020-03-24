@@ -34,9 +34,9 @@ import curses
 from .jtop import jtop, get_version
 # GUI jtop interface
 from .gui import JTOPGUI, ALL, GPU, MEM, CTRL, INFO
-
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -106,6 +106,7 @@ def main():
     except jtop.JtopException as e:
         # Print error and close
         print(e)
+
 
 if __name__ == "__main__":
     main()

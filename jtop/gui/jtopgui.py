@@ -96,7 +96,7 @@ class JTOPGUI:
         if start:
             self.run()
 
-    def handler(self, signum = None, frame = None):
+    def handler(self, signum=None, frame=None):
         logger.info("Signal handler called with signal {signum}".format(signum=signum))
         # Close gui
         self.signal = False

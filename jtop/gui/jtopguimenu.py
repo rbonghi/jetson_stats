@@ -26,6 +26,7 @@ from .jtopguilib import (check_curses,
                          linear_gauge,
                          label_freq,
                          plot_name_info)
+from ..core.jetson_clocks import JetsonClocks
 
 
 @check_curses
@@ -137,7 +138,7 @@ def compact_info(stdscr, start, offset, width, jetson):
             color = curses.color_pair(2) if jc_status else curses.A_NORMAL
             # Write status jetson_clocks
             jc_status_name = "Running" if jc_status else "Stopped"
-        except:
+        except JetsonClocks.JCException:
             # Fix error color
             color = curses.color_pair(7)
             # SUDO REQUIRED is too long, change with a series of spaces
