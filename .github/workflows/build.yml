@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         # Install test dependencies
-        sudo ./scripts/develop.sh -s
+        sudo ./tests/develop.sh -s
         # Upgrade pip
         python -m pip install --upgrade pip
         # Install tox
