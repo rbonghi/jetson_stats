@@ -39,8 +39,8 @@ class MEM(Page):
         # Attach the chart for every update from jtop
         jetson.attach(self.chart_ram)
 
-    def swap_menu(self, size, start, width):
-        line_counter = 1
+    def swap_menu(self, lc, size, start, width):
+        line_counter = lc + 1
         # SWAP linear gauge info
         swap_status = self.jetson.stats.get('SWAP', {})
         swap_cached = swap_status.get('cached', {})
@@ -113,7 +113,7 @@ class MEM(Page):
         # Draw the GPU chart
         self.chart_ram.draw(self.stdscr, size_x, size_y, label="{percent} - {lfb}".format(percent=percent, lfb=label_lfb))
         # Make swap list file
-        self.swap_menu(size=size_x[1] - 7, start=size_x[1] + 9, width=width)
+        self.swap_menu(lc=first, size=size_x[1] - 7, start=size_x[1] + 9, width=width)
         # Draw the Memory gague
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name='Mem',
@@ -150,7 +150,7 @@ class MEM(Page):
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name='EMC',
                      value=emc.get('val', 0),
-                     status='ON' if emc else 'REQUIRE SUDO',
+                     status='ON' if emc else 'SUDO REQUIRED',
                      label=label_freq(emc),
                      color=curses.color_pair(6))
         if self.jetson.userid == 0:

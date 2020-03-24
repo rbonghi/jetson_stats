@@ -304,10 +304,10 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
             stdscr.addstr(offset, start + name_size + 2 + size_bar - len(grey_part), grey_part, curses.A_DIM)
     else:
         # Show bracket linear gauge and label
-        stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "))
+        stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "), curses.color_pair(7))
         # Show bracket linear gauge and label
         status = status if status else "OFF"
-        stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(1))
+        stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(7))
 
 
 @check_curses

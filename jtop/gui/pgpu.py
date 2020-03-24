@@ -56,7 +56,7 @@ class GPU(Page):
                      name='GPU',
                      value=gpu.get('val', 0),
                      label=label_freq(gpu),
-                     status='ON' if gpu else 'REQUIRE SUDO',
+                     status='ON' if gpu else 'SUDO REQUIRED',
                      color=curses.color_pair(6))
         # Temperature GPU
         if "GPU" in self.jetson.stats['TEMP']:
@@ -73,8 +73,8 @@ class GPU(Page):
                 jc_status_name = "Running" if jc_status else "Stopped"
             except:
                 # Fix error color
-                jc_color = curses.color_pair(1)
-                jc_status_name = "REQUIRE SUDO"
+                jc_color = curses.color_pair(7)
+                jc_status_name = "SUDO REQUIRED"
             # Status service 
             jc_service = jc.service
             if jc_service == "active":

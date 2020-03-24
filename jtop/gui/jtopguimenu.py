@@ -139,8 +139,9 @@ def compact_info(stdscr, start, offset, width, jetson):
             jc_status_name = "Running" if jc_status else "Stopped"
         except:
             # Fix error color
-            color = curses.color_pair(1)
-            jc_status_name = "REQUIRE SUDO"
+            color = curses.color_pair(7)
+            # SUDO REQUIRED is too long, change with a series of spaces
+            jc_status_name = 10 * " "
         jc_service = jc.service
         jc_enable = jc.enable
         # Specify the service running
