@@ -31,14 +31,17 @@ jetson_release()
 	if type -P python3 >/dev/null 2>&1 ; then
 		JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
 		JTOP_PYTHON="$(python3 -V 2>&1)"
-	elif type -P python >/dev/null 2>&1 ; then
+	fi
+	if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
 		JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
 		JTOP_PYTHON="$(python -V 2>&1)"
-	else
+	fi
+	if [ -z $JTOP_VARIABLE ] ; then
 		echo "${red}I cannot locate jetson_variables${reset}"
 		exit 1
 	fi
 	source $JTOP_VARIABLE/jetson_variables
+
 	# Load NVP model status
 	if hash nvpmodel 2>/dev/null; then
 		NVPModel="$(nvpmodel -q 2>/dev/null)"

@@ -39,14 +39,14 @@ JETSON_STATS_FOLDER="/usr/local/jetson_stats"
 JTOP_VARIABLE=""
 JTOP_PYTHON=""
 if type -P python3 >/dev/null 2>&1 ; then
-	JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-	JTOP_PYTHON="$(python3 -V 2>&1)"
-    source $JTOP_VARIABLE/jetson_variables
-elif type -P python >/dev/null 2>&1 ; then
-	JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-	JTOP_PYTHON="$(python -V 2>&1)"
-    source $JTOP_VARIABLE/jetson_variables
+    JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+    JTOP_PYTHON="$(python3 -V 2>&1)"
 fi
+if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
+    JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+    JTOP_PYTHON="$(python -V 2>&1)"
+fi
+source $JTOP_VARIABLE/jetson_variables
 
 
 status_folders()
@@ -163,7 +163,9 @@ fix_jetson_performance()
     sudo chmod +x "$JETSON_STATS_FOLDER/jetson_performance.sh"
     # Check link jetson_performance in list
     if [ ! -f "/etc/systemd/system/jetson_performance.service" ] ; then
-        sudo ln -s "$JETSON_STATS_FOLDER/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+        # Using a copy of the service to prevent the remotion when is call the function "disable"
+        sudo cp "$JETSON_STATS_FOLDER/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
+        # sudo ln -s "$JETSON_STATS_FOLDER/jetson_performance.service" "/etc/systemd/system/jetson_performance.service"
     fi
     # Update service list
     sudo systemctl daemon-reload
@@ -266,7 +268,10 @@ fix_jetson_stats_up()
     sudo chmod +x "$JETSON_STATS_FOLDER/jetson_stats_boot.sh"
     # Link jetson start up service
     if [ ! -f "/etc/systemd/system/jetson_stats_boot.service" ] ; then
-        sudo ln -s "$JETSON_STATS_FOLDER/jetson_stats_boot.service" "/etc/systemd/system/jetson_stats_boot.service" 2> /dev/null
+        # Using a copy of the service to prevent the remotion when is call the function "disable"
+        sudo cp "$JETSON_STATS_FOLDER/jetson_stats_boot.service" "/etc/systemd/system/jetson_stats_boot.service"
+        # Old configuration
+        # sudo ln -s "$JETSON_STATS_FOLDER/jetson_stats_boot.service" "/etc/systemd/system/jetson_stats_boot.service" 2> /dev/null
     fi
     # Update service list
     sudo systemctl daemon-reload

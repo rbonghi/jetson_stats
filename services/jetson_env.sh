@@ -16,11 +16,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Load JETSON environment variables
+JTOP_VARIABLE=""
 if type -P python3 >/dev/null 2>&1 ; then
 	JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-    . $JTOP_VARIABLE/jetson_variables
-elif type -P python >/dev/null 2>&1 ; then
-	JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-    . $JTOP_VARIABLE/jetson_variables
 fi
+if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
+	JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+fi
+. $JTOP_VARIABLE/jetson_variables
 # EOF
