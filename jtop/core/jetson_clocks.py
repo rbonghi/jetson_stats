@@ -34,8 +34,9 @@ class JetsonClocks(object):
     # CPU Cluster Switching: Disabled
     CPU_CLUSTER_REGEXP = re.compile(r'CPU Cluster Switching: ((.*))')
     # CPU regex
-    # cpu0: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
-    CPU_REGEXP = re.compile(r'cpu(.+?): Online=(.+?) Governor=(.+?) MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=(.+?) IdleStates: WFI=(.+?) c7=((.*))')
+    # NANO: cpu0: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
+    # Xavier: cpu0: Online=1 Governor=schedutil MinFreq=1190400 MaxFreq=2265600 CurrentFreq=1574400 IdleStates: C1=1 c6=1
+    CPU_REGEXP = re.compile(r'cpu(.+?): Online=(.+?) Governor=(.+?) MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=(.+?) IdleStates: (.+?)=(.+?) (.+?)=((.*))')
     # GPU regex
     # GPU MinFreq=76800000 MaxFreq=921600000 CurrentFreq=384000000
     GPU_REGEXP = re.compile(r'GPU MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=((.*))')
@@ -80,8 +81,8 @@ class JetsonClocks(object):
                        "MinFreq": int(match.group(4)),
                        "MaxFreq": int(match.group(5)),
                        "CurrentFreq": int(match.group(6)),
-                       "IdleStates": {"WFI": int(match.group(7)),
-                                      "c7": int(match.group(8))}}
+                       "IdleStates": {str(match.group(7)): int(match.group(8)),
+                                      str(match.group(9)): int(match.group(10))}}
                 # Store in CPU list
                 status["cpu"]["cpu{num}".format(num=match.group(1))] = cpu
                 continue
