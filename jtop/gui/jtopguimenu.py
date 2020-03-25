@@ -92,15 +92,25 @@ def plot_watts(stdscr, start, offset, width, jetson):
             total_name = val
             break
     # Extract the total from list
-    total = watts[total_name]
-    del watts[total_name]
+    # Otherwise sum all values
+    if total_name:
+        total = watts[total_name]
+        del watts[total_name]
+    else:
+        total = {'cur': 0, 'avg': 0}
     # Plot title
     stdscr.addstr(offset, start, "{name:<12} [Cur]   [Avr]".format(name="[Power/mW]"), curses.A_BOLD)
     # Plot voltages
     for idx, volt in enumerate(sorted(watts)):
         value = jetson.stats['WATT'][volt]
+        if not total_name:
+            total['cur'] += int(value['cur'])
+            total['avg'] += int(value['avg'])
         stdscr.addstr(offset + idx + 1, start,
                       ("{name:<12} {curr: <7} {avg: <7}").format(name=volt, curr=int(value['cur']), avg=int(value['avg'])))
+    # Fix total_name if empty
+    if not total_name:
+        total_name = "Total"
     # Plot totals before finishing
     stdscr.addstr(offset + idx + 2, start,
                   ("{name:<12} {curr: <7} {avg: <7}").format(name=total_name, curr=total['cur'], avg=total['avg']), curses.A_BOLD)

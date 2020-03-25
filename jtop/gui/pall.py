@@ -26,6 +26,8 @@ from .jtopguimenu import (plot_watts,
                           plot_temperatures,
                           plot_CPUs)
 
+# Actual variable printed
+# LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
 
 class ALL(Page):
 
