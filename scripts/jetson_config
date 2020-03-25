@@ -486,6 +486,12 @@ health()
     MENU+="Choose an option:"
     # Build Menu healt list
     local MENU_LIST=("<-- Back" "Return to the main menu.")
+    # Make jetson_stats menu
+    if status_health "${HEALTH_FUNCTIONS[@]}" ; then
+        OK_BUTTON="Ok"
+    else
+        MENU_LIST+=("Fix" "Fix all packages")
+    fi
     # Build menu list
     for i in `seq 0 2 $HEALTH_FUNCTIONS_LEN`; do
         # Read name
@@ -496,12 +502,6 @@ health()
         # echo $i $name $status
         MENU_LIST+=("[$(write_status $status)] $name" "$description")
     done
-    # Make jetson_stats menu
-    if status_health "${HEALTH_FUNCTIONS[@]}" ; then
-        OK_BUTTON="Ok"
-    else
-        MENU_LIST+=("Fix" "Fix all packages")
-    fi
     # Evaluate the size
     local MENU_LIST_LEN
     let MENU_LIST_LEN=${#MENU_LIST[@]}/2

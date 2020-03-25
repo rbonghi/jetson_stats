@@ -21,7 +21,7 @@ from .jtopgui import Page
 from .jtopguilib import (linear_gauge,
                          label_freq)
 # Menu GUI pages
-from .jtopguimenu import (plot_voltages,
+from .jtopguimenu import (plot_watts,
                           compact_info,
                           plot_temperatures,
                           plot_CPUs)
@@ -149,7 +149,7 @@ class ALL(Page):
         if self.jetson.stats['TEMP']:
             mini_menu += [plot_temperatures]
         if self.jetson.stats['WATT']:
-            mini_menu += [plot_voltages]
+            mini_menu += [plot_watts]
         column_width = int(float(width - 4) / float(len(mini_menu)))
         line_counter += 1
         # Evaluate column width
@@ -157,3 +157,4 @@ class ALL(Page):
         for idx, mini in enumerate(mini_menu):
             # Run mini page
             mini(self.stdscr, idx * column_width, line_counter, column_width, self.jetson)
+# EOF
