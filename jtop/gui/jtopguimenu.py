@@ -93,6 +93,8 @@ def plot_watts(stdscr, start, offset, width, jetson):
             break
     # Extract the total from list
     # Otherwise sum all values
+    # Example for Jetson Xavier
+    # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
     if total_name:
         total = watts[total_name]
         del watts[total_name]
