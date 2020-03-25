@@ -1,6 +1,6 @@
 #!/bin/bash
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -23,5 +23,8 @@ fi
 if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
 	JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
 fi
-. $JTOP_VARIABLE/jetson_variables
+# Load variables only if not empty the variable
+if [ ! -z $JTOP_VARIABLE ] ; then
+	. $JTOP_VARIABLE/jetson_variables
+fi
 # EOF

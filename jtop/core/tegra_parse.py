@@ -25,7 +25,7 @@ MTS_RE = re.compile(r'MTS fg (\d+)% bg (\d+)%')
 VALS_RE = re.compile(r'\b([A-Z0-9_]+) ([0-9%@]+)(?=[^/])\b')
 VAL_FRE_RE = re.compile(r'\b(\d+)%@(\d+)')
 CPU_RE = re.compile(r'CPU \[(.*?)\]')
-VOLT_RE = re.compile(r'\b(\w+) ([0-9.]+)\/([0-9.]+)\b')
+WATT_RE = re.compile(r'\b(\w+) ([0-9.]+)\/([0-9.]+)\b')
 TEMP_RE = re.compile(r'\b(\w+)@(-?[0-9.]+)C\b')
 
 
@@ -203,12 +203,12 @@ def TEMPS(text):
     return {name: float(val) for name, val in re.findall(TEMP_RE, text)}
 
 
-def VOLTS(text):
-    """ Parse all voltages in tegrastats output
+def WATTS(text):
+    """ Parse all milliwats in tegrastats output
 
         [VDD_name] X/Y
         X = Current power consumption in milliwatts.
         Y = Average power consumption in milliwatts.
     """
-    return {name: {'cur': int(cur), 'avg': int(avg)} for name, cur, avg in re.findall(VOLT_RE, text)}
+    return {name: {'cur': int(cur), 'avg': int(avg)} for name, cur, avg in re.findall(WATT_RE, text)}
 # EOF

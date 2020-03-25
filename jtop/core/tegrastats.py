@@ -22,7 +22,7 @@ import subprocess as sp
 # Threading
 from threading import Thread
 # Tegrastats parser
-from .tegra_parse import VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, VOLTS
+from .tegra_parse import VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, WATTS
 
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ class Tegrastats(Thread):
         stats['CPU'] = CPUS(text)
         # Parse temperatures
         stats['TEMP'] = TEMPS(text)
-        # Parse voltages
-        stats['VOLT'] = VOLTS(text)
+        # Parse Watts
+        stats['WATT'] = WATTS(text)
         return stats
 # EOF
