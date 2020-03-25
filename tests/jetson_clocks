@@ -85,14 +85,14 @@ main()
 {
     local TIME_SLEEP=1
     local conf=""
+    local SHOW="False"
     local STORE="False"
     local RESTORE="False"
 	# Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
             --show)
-                show
-                exit 0
+                SHOW="True"
                 ;;
             --restore)
                 conf=$2
@@ -121,6 +121,11 @@ main()
         exit 1
     fi
 
+    # Run show message
+    if [ "$SHOW" = "True" ] ; then
+        show
+        exit 0
+    fi
     # Make a temporary file to show the status of the board
     if [ "$RESTORE" = "True" ] ; then
         if [ -f "/tmp/jetson_clocks_test" ] ; then

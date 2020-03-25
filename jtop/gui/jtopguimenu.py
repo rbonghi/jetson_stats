@@ -142,7 +142,8 @@ def compact_info(stdscr, start, offset, width, jetson):
             # Fix error color
             color = curses.color_pair(7)
             # SUDO REQUIRED is too long, change with a series of spaces
-            jc_status_name = 10 * " "
+            # The number 16 = len("jetson clocks: ") + 1
+            jc_status_name = (width - 16) * " "
         jc_service = jc.service
         jc_enable = jc.enable
         # Specify the service running
