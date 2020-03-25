@@ -23,8 +23,7 @@ import subprocess as sp
 from threading import Thread
 # Tegrastats parser
 from .tegra_parse import VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, WATTS
-
-# Create logger for jplotlib
+# Create logger for tegrastats
 logger = logging.getLogger(__name__)
 
 

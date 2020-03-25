@@ -46,8 +46,10 @@ if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
     JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
     JTOP_PYTHON="$(python -V 2>&1)"
 fi
-source $JTOP_VARIABLE/jetson_variables
-
+# Load jetson_variables
+if [ ! -z $JTOP_VARIABLE ] ; then
+    source $JTOP_VARIABLE/jetson_variables
+fi
 
 status_folders()
 {
