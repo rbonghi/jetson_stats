@@ -87,8 +87,8 @@ def plot_voltages(stdscr, start, offset, width, jetson):
     total_avg = 0
     total_cur = 0
     # Plot voltages
-    for idx, volt in enumerate(sorted(jetson.stats['VOLT'])):
-        value = jetson.stats['VOLT'][volt]
+    for idx, volt in enumerate(sorted(jetson.stats['WATT'])):
+        value = jetson.stats['WATT'][volt]
         total_cur += int(value['cur'])
         total_avg += int(value['avg'])
         stdscr.addstr(offset + idx + 1, start,

@@ -148,7 +148,7 @@ class ALL(Page):
         mini_menu = [compact_info]
         if self.jetson.stats['TEMP']:
             mini_menu += [plot_temperatures]
-        if self.jetson.stats['VOLT']:
+        if self.jetson.stats['WATT']:
             mini_menu += [plot_voltages]
         column_width = int(float(width - 4) / float(len(mini_menu)))
         line_counter += 1
