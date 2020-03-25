@@ -150,26 +150,26 @@ def compact_info(stdscr, start, offset, width, jetson):
     # Jetson clocks status
     jc = jetson.jetson_clocks
     if jc is not None:
+        jc_service = jc.service
+        jc_enable = jc.enable
         try:
             jc_status = jc.status
             # Running (Green) or Normal (Grey)
             color = curses.color_pair(2) if jc_status else curses.A_NORMAL
             # Write status jetson_clocks
             jc_status_name = "Running" if jc_status else "Stopped"
+            # Specify the service running
+            if jc_service == "active":
+                jc_status_name += "+"
+            # Show if JetsonClock is enabled or not
+            if jc_enable:
+                jc_status_name = "[" + jc_status_name + "]"
         except JetsonClocks.JCException:
             # Fix error color
             color = curses.color_pair(7)
             # SUDO REQUIRED is too long, change with a series of spaces
             # The number 16 = len("jetson clocks: ") + 1
             jc_status_name = (width - 16) * " "
-        jc_service = jc.service
-        jc_enable = jc.enable
-        # Specify the service running
-        if jc_service == "active":
-            jc_status_name += "+"
-        # Show if JetsonClock is enabled or not
-        if jc_enable:
-            jc_status_name = "[" + jc_status_name + "]"
         # Show status jetson_clocks
         plot_name_info(stdscr, offset + counter, start, "Jetson clocks", jc_status_name, color)
         counter += 1

@@ -61,7 +61,8 @@ JETSON_BOARD=""
 if [ -f /proc/device-tree/nvidia,dtsfilename ]; then
     # ..<something>/hardware/nvidia/platform/t210/porg/kernel-dts/tegra210-p3448-0000-p3449-0000-b00.dts
     # The last third is the codename of the board
-    JETSON_CODENAME=$(cat /proc/device-tree/nvidia,dtsfilename | tr '/' '\n' | tail -3 | head -n 1 )
+    JETSON_CODENAME=$(tr -d '\0' < /proc/device-tree/nvidia,dtsfilename)
+    JETSON_CODENAME=$(echo ${JETSON_CODENAME#*"/hardware/nvidia/platform/"} | tr '/' '\n' | head -2 | tail -1 )
     # The basename extract the board type
     JETSON_BOARD="$(tr -d '\0' < /proc/device-tree/nvidia,dtsfilename | sed 's/.*\///')"
     # List of all boards
