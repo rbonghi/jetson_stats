@@ -38,13 +38,16 @@ JETSON_STATS_FOLDER="/usr/local/jetson_stats"
 # Load JETSON environment variables
 JTOP_VARIABLE=""
 JTOP_PYTHON=""
+JTOP_PYTHON_NAME=""
 if type -P python3 >/dev/null 2>&1 ; then
     JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
     JTOP_PYTHON="$(python3 -V 2>&1)"
+    JTOP_PYTHON_NAME="python3"
 fi
 if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
     JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
     JTOP_PYTHON="$(python -V 2>&1)"
+    JTOP_PYTHON_NAME="python"
 fi
 # Load jetson_variables
 if [ ! -z $JTOP_VARIABLE ] ; then
@@ -524,10 +527,13 @@ health()
     if [ $? -eq 0 ]; then
         # Run the function with the same name
         if [ "$OUTPUT" = "<-- Back" ] ; then
+            # Return to main
             main
         elif [ "$OUTPUT" = "Fix" ] ; then
             # Run the installer script
             installer "${HEALTH_FUNCTIONS[@]}"
+            # End loop
+            do_finish
             # Return to main
             health
         else
@@ -537,6 +543,8 @@ health()
             local status=$(eval "status_$FUNCTION")
             # Run function
             $FUNCTION
+            # End loop
+            do_finish
         fi
     else
         # Return to main for other options
@@ -628,7 +636,13 @@ jetson_clocks()
 {
     # Reference
     # https://askubuntu.com/questions/19320/how-to-enable-or-disable-services
-    local MENU="jetson_clocks is manage from jetson_performance.service\n"
+    local MENU="jetson_clocks is control the performance of your board.\n"
+    # Read jtop status
+    local JC_STATUS=""
+    if [ ! -z $JTOP_PYTHON_NAME ] ; then
+        local JC_STATUS=$(sudo $JTOP_PYTHON_NAME -c "from jtop import jtop; print(jtop().jc.status)")
+        MENU+=" - [$JC_STATUS] jetson_clocks\n"
+    fi
     # Jetson_performance status
     local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
     MENU+=" - [$JE_PERFOMANCE_STATUS] jetson_performance service\n"
@@ -640,6 +654,13 @@ jetson_clocks()
     MENU+=" - [$JE_PERFOMANCE_ENABLED] jetson_performance enable"
     # Make GUI
     if $INTERACTIVE ; then
+        if [ "$JC_STATUS" = "True" ] ; then
+            # Run message script
+            whiptail --title "$TITLE" --msgbox "$MENU\n\njetson_clocks running without jetson_performance.service!" 14 78 2
+            # Return to main
+            loop
+        fi
+        # Make jetson_clocks service options
         BOOTOPT=$(whiptail --title "$TITLE" --menu "$MENU\nOptions:" 18 78 6 \
             "<-- Back" "Return to the main menu" \
             "Start" "Activate jetson_clocks service" \
@@ -791,6 +812,33 @@ do_finish() {
     exit 0
 }
 
+do_password()
+{
+    # https://superuser.com/questions/553932/how-to-check-if-i-have-sudo-access
+    prompt=$(sudo -nv 2>&1)
+    if [ $? -eq 0 ]; then
+        # exit code of sudo-command is 0
+        # echo "has_sudo__pass_set"
+        return
+    elif echo $prompt | grep -q '^sudo:'; then
+        #echo "has_sudo__needs_pass"
+        # Open dialog menu to ask the password
+        local PASSWORD=$(whiptail --passwordbox "please enter '$USER' password" 8 78 --title "$TITLE" 3>&1 1>&2 2>&3)
+        exitstatus=$?
+        if [ $exitstatus = 0 ]; then
+            # Check if the root password if good
+            echo "$PASSWORD" | sudo -S -i true
+            do_password
+        else
+            # Exit from request
+            exit 0
+        fi
+    else
+        echo "no sudo"
+        return
+    fi
+}
+
 usage()
 {
     if [ "$1" != "" ]; then
@@ -850,18 +898,17 @@ loop()
         # If exist argument pass directly the name
         if [ ! -z "$FUNCTION" ] ; then
             if type $FUNCTION | grep -i function > /dev/null; then
+                # Ask sudo password before run
+                do_password
                 # Run function
                 $FUNCTION
-                # End loop
-                do_finish
             fi
         else
-            # Run the main loop
+            do_password
+            # Run function
             main $@
         fi
     fi
-    # End loop
-    do_finish
 }
 
 loop $@
