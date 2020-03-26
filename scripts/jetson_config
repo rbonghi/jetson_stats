@@ -149,6 +149,11 @@ status_jetson_performance()
         echo 1
         return
     fi
+    # Check if file are same
+    if ! cmp --silent "/etc/systemd/system/jetson_performance.service" "$JETSON_STATS_FOLDER/jetson_performance.service" ; then
+        echo 1
+        return
+    fi
     # Check if jetson performance is correctly installed
     local JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
     if [ $JE_PERFOMANCE_STATUS = "failed" ] ; then
@@ -239,6 +244,11 @@ status_jetson_stats_up()
         echo 1
         return
     fi
+    # Check if file are same
+    if ! cmp --silent "/etc/systemd/system/jetson_stats_boot.service" "$JETSON_STATS_FOLDER/jetson_stats_boot.service" ; then
+        echo 1
+        return
+    fi
     # Check status service
     local JE_FAN_STATUS="$(systemctl is-active jetson_stats_boot.service)"
     if [ $JE_FAN_STATUS = "failed" ] ; then
@@ -326,11 +336,18 @@ jetson_stats_up()
 
 status_variables()
 {
-    if [ -f "/etc/profile.d/jetson_env.sh" ] ; then
-        echo 0
-    else
+    # Check if file does not exist
+    if [ ! -f "/etc/profile.d/jetson_env.sh" ] ; then
         echo 1
+        return
     fi
+    # Check if file are different
+    if ! cmp --silent "/etc/profile.d/jetson_env.sh" "$JETSON_STATS_FOLDER/jetson_env.sh" ; then
+        echo 1
+        return
+    fi
+    # Everything is fine
+    echo 0
 }
 
 fix_variables()
@@ -358,17 +375,13 @@ uninstall_variables()
 
 variables()
 {
-    local TEXT="Jetson variables are:\n"
-    # Check status variables
-    if [ $(status_variables) -eq 0 ] ; then
-        TEXT+=" - Fixed"
-    else
-        TEXT+=" - Failure"
-    fi
+    local TEXT="jetson-stats add new enviroment variables in your bash starting \
+with \"JETSON_\" with detailed information about your board.\nThey are located in \"/etc/profile.d/jetson_env.sh"
     # Check status jetson_performance
     if [ $(status_variables) -eq 1 ] ; then
+        TEXT+="\n\nThe Jetson enviroment variables are in failure\nDo you want fix?"
         # Run script to fix variables
-        if (whiptail --title "$TITLE" --yesno "$TEXT\n\nDo you want fix?" 11 78); then
+        if (whiptail --title "$TITLE" --yesno "$TEXT" 11 78); then
             fix_variables
         fi
     else
