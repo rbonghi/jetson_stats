@@ -554,6 +554,8 @@ health()
 
 get_type_desktop()
 {
+    local GUI_CONF="/etc/gdm3/custom.conf"
+    # Check desktop configuration
     local DEFAULT_TARGET=$(systemctl get-default)
     local TYPE=""
     if [ "$DEFAULT_TARGET" = "multi-user.target" ] ; then
@@ -563,17 +565,54 @@ get_type_desktop()
         fi
     elif [ "$DEFAULT_TARGET" = "graphical.target" ] ; then
         TYPE="B3"
-        if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+        if grep -Fxq "AutomaticLoginEnable=True" $GUI_CONF ; then
             TYPE="B4"
+        elif [ grep -Fxq "# AutomaticLoginEnable=False" $GUI_CONF ] || [ grep -Fxq "AutomaticLoginEnable=False" $GUI_CONF ]; then
+            TYPE="B3"
         fi
     fi
     echo $TYPE
     return
 }
 
+update_desktop_login()
+{
+    local GUI_CONF="/etc/gdm3/custom.conf"
+    local option=$1
+    local user=$2
+    # Remove old Automatic configuration data
+    if grep -q "AutomaticLogin=" $GUI_CONF ; then
+        sudo sed -i "/^AutomaticLogin=/d" $GUI_CONF
+        echo "Removed"
+    fi
+    # Add new status
+    sudo sed -i "/\[daemon\]/a AutomaticLogin=$user" $GUI_CONF
+
+    # Remove old Automatic configuration data
+    if grep -q "AutomaticLoginEnable=" $GUI_CONF ; then
+        sudo sed -i "/^AutomaticLoginEnable=/d" $GUI_CONF
+    fi
+    # Add new status
+    sudo sed -i "/\[daemon\]/a AutomaticLoginEnable=$option" $GUI_CONF
+}
+
+identify_desktop()
+{
+    local TYPE=$1
+    local NAME=$2
+    if [ "$TYPE" = "$NAME" ] ; then
+        echo "[$NAME]"
+    else
+        echo "$NAME"
+    fi
+}
+
 desktop() {
-    # Reference from 
-    # https://github.com/RPi-Distro/raspi-config/blob/master/raspi-config#L1122
+    # Desktop manager. Enable and disable desktop feature with autologin or not
+    # Reference:
+    # 1. https://github.com/RPi-Distro/raspi-config/blob/master/raspi-config#L1122
+    # 2. https://linuxconfig.org/how-to-enable-automatic-login-on-ubuntu-18-04-bionic-beaver-linux
+    # 3. https://askubuntu.com/questions/819117/how-can-i-get-autologin-at-startup-working-on-ubuntu-server-16-04-1
     local MENU="Status board:\n"
     local DEFAULT_TARGET=$(systemctl get-default)
     local AUTO_LOGIN=""
@@ -584,15 +623,15 @@ desktop() {
     fi
     MENU+=" - $DEFAULT_TARGET\n"
     MENU+=" - Autologin: $AUTO_LOGIN"
-    MENU+="\n$(get_type_desktop)"
+    local DESKTOP_TYPE=$(get_type_desktop)
     # Make menu menu
     if $INTERACTIVE ; then
         BOOTOPT=$(whiptail --title "$TITLE" --menu "$MENU\n\nBoot Options" 18 78 6 \
             "<-- Back" "Return to the main menu" \
-            "B1 Console" "Text console, requiring user to login" \
-            "B2 Console Autologin" "Text console, automatically logged in as '$USER' user" \
-            "B3 Desktop" "Desktop GUI, requiring user to login" \
-            "B4 Desktop Autologin" "Desktop GUI, automatically logged in as '$USER' user" \
+            "$(identify_desktop $DESKTOP_TYPE B1) Console" "Text console, requiring user to login" \
+            "$(identify_desktop $DESKTOP_TYPE B2) Console Autologin" "Text console, automatically logged in as '$USER' user" \
+            "$(identify_desktop $DESKTOP_TYPE B3) Desktop" "Desktop GUI, requiring user to login" \
+            "$(identify_desktop $DESKTOP_TYPE B4) Desktop Autologin" "Desktop GUI, automatically logged in as '$USER' user" \
         3>&1 1>&2 2>&3)
     else
         BOOTOPT=$1
@@ -603,51 +642,64 @@ desktop() {
         case "$BOOTOPT" in
             "<-- Back")
                 # Return to main for other options
-                main
                 ;;
-            B1*)
-                systemctl set-default multi-user.target
-                ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
-                rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
+            *B1*)
+                sudo systemctl set-default multi-user.target
+                sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+                # Remove autologin
+                if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+                    sudo rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
+                fi
                 ;;
-            B2*)
-                systemctl set-default multi-user.target
-                ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+            *B2*)
+                sudo systemctl set-default multi-user.target
+                sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+                # If the file does not exist make it one
+                if [ ! -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+                    sudo touch "/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+                fi
+                # Change hownership
+                sudo chown $USER:$USER "/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+                # Copy the autologin configuration
                 cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
                 ;;
-            B3*)
-                systemctl set-default graphical.target
-                ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
-                rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
-                sed /etc/lightdm/lightdm.conf -i -e "s/^autologin-user=.*/#autologin-user=/"
+            *B3*)
+                sudo systemctl set-default graphical.target
+                sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+                # Remove autologin
+                if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+                    sudo rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
+                fi
+                # Update desktop login
+                update_desktop_login "False" $USER
                 ;;
-            B4*)
-                systemctl set-default graphical.target
-                ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
-                cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
-EOF
-                sed /etc/lightdm/lightdm.conf -i -e "s/^\(#\|\)autologin-user=.*/autologin-user=$USER/"
+            *B4*)
+                sudo systemctl set-default graphical.target
+                sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+                # Remove autologin
+                if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+                    sudo rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
+                fi
+                # Update desktop login
+                update_desktop_login "True" $USER
                 ;;
             *)
                 whiptail --msgbox "Programmer error, unrecognised boot option" 20 60 2
-                return 1
                 ;;
         esac
         # Require reboot
         if [ ! -f /var/run/reboot-required ] ; then
             sudo touch /var/run/reboot-required
         fi
-    else
-        # Return to main for other options
-        main
+        # End loop
+        do_finish
     fi
+    # Return to main for other options
+    main
 }
 
 jetson_clocks()
