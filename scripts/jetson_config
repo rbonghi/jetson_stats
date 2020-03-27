@@ -567,8 +567,6 @@ get_type_desktop()
         TYPE="B3"
         if grep -Fxq "AutomaticLoginEnable=True" $GUI_CONF ; then
             TYPE="B4"
-        elif [ grep -Fxq "# AutomaticLoginEnable=False" $GUI_CONF ] || [ grep -Fxq "AutomaticLoginEnable=False" $GUI_CONF ]; then
-            TYPE="B3"
         fi
     fi
     echo $TYPE
@@ -924,6 +922,7 @@ usage()
     echo "options,"
     echo "   -h|--help    | This help"
     echo "   -p|--option  | Select page to open the script"
+    echo "   -u|--user    | Change user to run the script"
     echo "   --install    | Run installer. Equivalent to fix jetson-stats in health"
     echo "   --uninstall  | Run uninstaller for all packages"
 }
@@ -942,6 +941,10 @@ loop()
                 ;;
             -p|--option)
                 FUNCTION=$2
+                shift 1
+                ;;
+            -u|--users)
+                USER=$2
                 shift 1
                 ;;
             --install)
