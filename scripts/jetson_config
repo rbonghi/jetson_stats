@@ -552,12 +552,42 @@ health()
     fi
 }
 
+get_type_desktop()
+{
+    local DEFAULT_TARGET=$(systemctl get-default)
+    local TYPE=""
+    if [ "$DEFAULT_TARGET" = "multi-user.target" ] ; then
+        TYPE="B1"
+        if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+            TYPE="B2"
+        fi
+    elif [ "$DEFAULT_TARGET" = "graphical.target" ] ; then
+        TYPE="B3"
+        if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+            TYPE="B4"
+        fi
+    fi
+    echo $TYPE
+    return
+}
+
 desktop() {
     # Reference from 
     # https://github.com/RPi-Distro/raspi-config/blob/master/raspi-config#L1122
+    local MENU="Status board:\n"
+    local DEFAULT_TARGET=$(systemctl get-default)
+    local AUTO_LOGIN=""
+    if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+        AUTO_LOGIN="True"
+    else
+        AUTO_LOGIN="False"
+    fi
+    MENU+=" - $DEFAULT_TARGET\n"
+    MENU+=" - Autologin: $AUTO_LOGIN"
+    MENU+="\n$(get_type_desktop)"
     # Make menu menu
     if $INTERACTIVE ; then
-        BOOTOPT=$(whiptail --title "$TITLE" --menu "Boot Options" 18 78 6 \
+        BOOTOPT=$(whiptail --title "$TITLE" --menu "$MENU\n\nBoot Options" 18 78 6 \
             "<-- Back" "Return to the main menu" \
             "B1 Console" "Text console, requiring user to login" \
             "B2 Console Autologin" "Text console, automatically logged in as '$USER' user" \
@@ -590,32 +620,20 @@ ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
                 ;;
             B3*)
-                if [ -e /etc/init.d/lightdm ]; then
-                    systemctl set-default graphical.target
-                    ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
-                    rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
-                    sed /etc/lightdm/lightdm.conf -i -e "s/^autologin-user=.*/#autologin-user=/"
-                    # disable_raspi_config_at_boot
-                else
-                    whiptail --msgbox "Do 'sudo apt-get install lightdm' to allow configuration of boot to desktop" 20 60 2
-                    return 1
-                fi
+                systemctl set-default graphical.target
+                ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+                rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
+                sed /etc/lightdm/lightdm.conf -i -e "s/^autologin-user=.*/#autologin-user=/"
                 ;;
             B4*)
-                if [ -e /etc/init.d/lightdm ]; then
-                    systemctl set-default graphical.target
-                    ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
-                    cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
+                systemctl set-default graphical.target
+                ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
+                cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << EOF
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
-                    sed /etc/lightdm/lightdm.conf -i -e "s/^\(#\|\)autologin-user=.*/autologin-user=$USER/"
-                    # disable_raspi_config_at_boot
-                else
-                    whiptail --msgbox "Do 'sudo apt-get install lightdm' to allow configuration of boot to desktop" 20 60 2
-                    return 1
-                fi
+                sed /etc/lightdm/lightdm.conf -i -e "s/^\(#\|\)autologin-user=.*/autologin-user=$USER/"
                 ;;
             *)
                 whiptail --msgbox "Programmer error, unrecognised boot option" 20 60 2
@@ -827,7 +845,9 @@ do_password()
         exitstatus=$?
         if [ $exitstatus = 0 ]; then
             # Check if the root password if good
-            echo "$PASSWORD" | sudo -S -i true
+            if $(echo "$PASSWORD" | sudo -S -i true) ; then
+                echo 
+            fi
             do_password
         else
             # Exit from request
