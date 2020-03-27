@@ -565,7 +565,7 @@ get_type_desktop()
         fi
     elif [ "$DEFAULT_TARGET" = "graphical.target" ] ; then
         TYPE="B3"
-        if grep -Fxq "AutomaticLoginEnable=True" $GUI_CONF ; then
+        if grep -q "AutomaticLoginEnable=[tT]rue" $GUI_CONF ; then
             TYPE="B4"
         fi
     fi
@@ -613,11 +613,15 @@ desktop() {
     # 3. https://askubuntu.com/questions/819117/how-can-i-get-autologin-at-startup-working-on-ubuntu-server-16-04-1
     local MENU="Status board:\n"
     local DEFAULT_TARGET=$(systemctl get-default)
-    local AUTO_LOGIN=""
-    if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
-        AUTO_LOGIN="True"
+    local AUTO_LOGIN="False"
+    if [ $DEFAULT_TARGET = "multi-user.target" ] ; then
+        if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+            AUTO_LOGIN="True"
+        fi
     else
-        AUTO_LOGIN="False"
+        if grep -q "AutomaticLoginEnable=[tT]rue" "/etc/gdm3/custom.conf" ; then
+            AUTO_LOGIN="True"
+        fi
     fi
     MENU+=" - $DEFAULT_TARGET\n"
     MENU+=" - Autologin: $AUTO_LOGIN"
