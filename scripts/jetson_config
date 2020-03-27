@@ -565,8 +565,10 @@ get_type_desktop()
         fi
     elif [ "$DEFAULT_TARGET" = "graphical.target" ] ; then
         TYPE="B3"
-        if grep -q "AutomaticLoginEnable=[tT]rue" $GUI_CONF ; then
-            TYPE="B4"
+        if [ -f $GUI_CONF ] ; then
+            if grep -q "AutomaticLoginEnable=[tT]rue" $GUI_CONF ; then
+                TYPE="B4"
+            fi
         fi
     fi
     echo $TYPE
@@ -578,20 +580,24 @@ update_desktop_login()
     local GUI_CONF="/etc/gdm3/custom.conf"
     local option=$1
     local user=$2
-    # Remove old Automatic configuration data
-    if grep -q "AutomaticLogin=" $GUI_CONF ; then
-        sudo sed -i "/^AutomaticLogin=/d" $GUI_CONF
-        echo "Removed"
-    fi
-    # Add new status
-    sudo sed -i "/\[daemon\]/a AutomaticLogin=$user" $GUI_CONF
+    if [ -f $GUI_CONF ] ; then
+        # Remove old Automatic configuration data
+        if grep -q "AutomaticLogin=" $GUI_CONF ; then
+            sudo sed -i "/^AutomaticLogin=/d" $GUI_CONF
+            echo "Removed"
+        fi
+        # Add new status
+        sudo sed -i "/\[daemon\]/a AutomaticLogin=$user" $GUI_CONF
 
-    # Remove old Automatic configuration data
-    if grep -q "AutomaticLoginEnable=" $GUI_CONF ; then
-        sudo sed -i "/^AutomaticLoginEnable=/d" $GUI_CONF
+        # Remove old Automatic configuration data
+        if grep -q "AutomaticLoginEnable=" $GUI_CONF ; then
+            sudo sed -i "/^AutomaticLoginEnable=/d" $GUI_CONF
+        fi
+        # Add new status
+        sudo sed -i "/\[daemon\]/a AutomaticLoginEnable=$option" $GUI_CONF
+    else
+        echo "${red}$GUI_CONF does not exist!${reset}"
     fi
-    # Add new status
-    sudo sed -i "/\[daemon\]/a AutomaticLoginEnable=$option" $GUI_CONF
 }
 
 identify_desktop()
@@ -619,8 +625,10 @@ desktop() {
             AUTO_LOGIN="True"
         fi
     else
-        if grep -q "AutomaticLoginEnable=[tT]rue" "/etc/gdm3/custom.conf" ; then
-            AUTO_LOGIN="True"
+        if [ -f "/etc/gdm3/custom.conf" ] ; then
+            if grep -q "AutomaticLoginEnable=[tT]rue" "/etc/gdm3/custom.conf" ; then
+                AUTO_LOGIN="True"
+            fi
         fi
     fi
     MENU+=" - $DEFAULT_TARGET\n"
@@ -658,6 +666,7 @@ desktop() {
                 sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
                 # If the file does not exist make it one
                 if [ ! -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
+                    sudo mkdir -p "/etc/systemd/system/getty@tty1.service.d"
                     sudo touch "/etc/systemd/system/getty@tty1.service.d/autologin.conf"
                 fi
                 # Change hownership
