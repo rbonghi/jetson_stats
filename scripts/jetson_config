@@ -997,6 +997,8 @@ loop()
         # Run the installer
         installer "${HEALTH_FUNCTIONS[@]}"
     elif $UNINSTALLER ; then
+        # Clean jtop configuration and restore
+        sudo jtop --restore
         # Run the uninstaller
         uninstaller "${HEALTH_FUNCTIONS[@]}"
     else
