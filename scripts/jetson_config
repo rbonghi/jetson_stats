@@ -687,6 +687,7 @@ desktop() {
     local MENU="Status board:\n"
     local DEFAULT_TARGET=$(systemctl get-default)
     local AUTO_LOGIN="False"
+    local REQUIRE_REBOOT=false
     if [ $DEFAULT_TARGET = "multi-user.target" ] ; then
         if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
             AUTO_LOGIN="True"
@@ -727,6 +728,7 @@ desktop() {
                 if [ -f "/etc/systemd/system/getty@tty1.service.d/autologin.conf" ] ; then
                     sudo rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
                 fi
+                REQUIRE_REBOOT=true
                 ;;
             *B2*)
                 sudo systemctl set-default multi-user.target
@@ -744,6 +746,7 @@ desktop() {
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER --noclear %I \$TERM
 EOF
+                REQUIRE_REBOOT=true
                 ;;
             *B3*)
                 sudo systemctl set-default graphical.target
@@ -754,6 +757,7 @@ EOF
                 fi
                 # Update desktop login
                 update_desktop_login "False" $USER
+                REQUIRE_REBOOT=true
                 ;;
             *B4*)
                 sudo systemctl set-default graphical.target
@@ -764,17 +768,20 @@ EOF
                 fi
                 # Update desktop login
                 update_desktop_login "True" $USER
+                REQUIRE_REBOOT=true
                 ;;
             *)
                 whiptail --msgbox "Programmer error, unrecognised boot option" 20 60 2
                 ;;
         esac
-        # Require reboot
-        if [ ! -f /var/run/reboot-required ] ; then
-            sudo touch /var/run/reboot-required
+        if $REQUIRE_REBOOT ; then
+            # Require reboot
+            if [ ! -f /var/run/reboot-required ] ; then
+                sudo touch /var/run/reboot-required
+            fi
+            # End loop
+            do_finish
         fi
-        # End loop
-        do_finish
     fi
     # Return to main for other options
     main
