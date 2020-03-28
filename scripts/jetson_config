@@ -949,11 +949,18 @@ usage()
     echo "   --uninstall  | Run uninstaller for all packages"
 }
 
+pip_installer()
+{
+    # fix install package for pip package
+    sudo cp -r "services" $JETSON_STATS_FOLDER
+}
+
 loop()
 {
     local FUNCTION=""
     local INSTALLER=false
     local UNINSTALLER=false
+    local PIP_INSTALLER=false
 	# Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
@@ -978,6 +985,9 @@ loop()
                 INTERACTIVE=false
                 UNINSTALLER=true
                 ;;
+            --pip)
+                PIP_INSTALLER=true
+                ;;
             *)
                 usage "[ERROR] Unknown option: $1"
                 exit 1
@@ -986,6 +996,10 @@ loop()
             shift 1
     done
     if $INSTALLER ; then
+        # This function is only used for the pip installer
+        if $PIP_INSTALLER ; then
+            pip_installer
+        fi
         # Run the installer
         installer "${HEALTH_FUNCTIONS[@]}"
     elif $UNINSTALLER ; then

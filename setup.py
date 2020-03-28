@@ -124,7 +124,7 @@ class PostDevelopCommand(develop):
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/jetson_config --install'))
+        sp.call(shlex.split('./scripts/jetson_config --pip --install'))
 
 
 # Configuration setup module
