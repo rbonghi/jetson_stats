@@ -103,7 +103,7 @@ fix_commands()
         PIP_VERSION="pip3"
     fi
     # Uninstall package
-    sudo -H $PIP_VERSION uninstall jetson-stats
+    sudo -H $PIP_VERSION uninstall -y jetson-stats
     # Reinstall package without cache dir pip
     sudo -H $PIP_VERSION install --no-cache-dir -U jetson-stats
     # After this script will be close the script
