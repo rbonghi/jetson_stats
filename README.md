@@ -20,7 +20,7 @@ sudo -H pip install -U jetson-stats
 
 _PS: Don't forget to **reboot** your board_
 
-**You can run jtop in your python script [read here](library)**
+**You can run jtop in your python script [read here][library]**
 
 ## [**jtop**][jtop] 
 It is a system monitoring utility that runs on the terminal and see and **control** realtime the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
