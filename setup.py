@@ -39,6 +39,7 @@ from io import open
 import subprocess as sp
 import shlex
 import os
+from shutil import copyfile
 import sys
 import re
 
@@ -82,7 +83,7 @@ with open(os.path.join(here, "jtop", "__init__.py")) as fp:
 version = VERSION
 
 
-def install_services():
+def install_services(copy=False):
     """
     This function install all services in a proper folder and setup the deamons
     """
@@ -95,12 +96,18 @@ def install_services():
     for f_service in list_services():
         folder, _ = os.path.split(__file__)
         path = root + os.path.basename(f_service)
-        print("Linking {file} in {path}".format(file=os.path.basename(f_service), path=path))
         # remove if exist file
         if os.path.exists(path):
             os.remove(path)
-        # Create a symbolic link
-        os.symlink(folder + "/" + f_service, path)
+        # Copy or link file
+        if copy:
+            type_service="Copying"
+            copyfile(folder + "/" + f_service, path)
+        else:
+            type_service="Linking"
+            os.symlink(folder + "/" + f_service, path)
+        # Prompt message
+        print("{type} {file} -> {path}".format(type=type_service, file=os.path.basename(f_service), path=path))
 
 
 class PostInstallCommand(install):
@@ -108,6 +115,8 @@ class PostInstallCommand(install):
     def run(self):
         # Run the uninstaller before to copy all scripts
         sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+        # Install services (copying)
+        install_services(copy=True)
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
@@ -119,12 +128,12 @@ class PostDevelopCommand(develop):
     def run(self):
         # Run the uninstaller before to copy all scripts
         sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-        # Install services
+        # Install services (linking)
         install_services()
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/jetson_config --pip --install'))
+        sp.call(shlex.split('./scripts/jetson_config --install'))
 
 
 # Configuration setup module

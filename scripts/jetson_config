@@ -423,8 +423,8 @@ installer()
         local status=$(eval "status_$name")
         # Check if a status function in list return error=1
         if [ "$status" -eq 1 ] || $FORCE ; then
-            echo "${green}[Fix $name - $description]${reset}"
-            # Run the fix scripts script
+            echo "${green}[Install $name - $description]${reset}"
+            # Run the Install scripts script
             eval "fix_$name"
         fi
     done
@@ -912,18 +912,23 @@ do_password()
         return
     elif echo $prompt | grep -q '^sudo:'; then
         #echo "has_sudo__needs_pass"
-        # Open dialog menu to ask the password
-        local PASSWORD=$(whiptail --passwordbox "please enter '$USER' password" 8 78 --title "$TITLE" 3>&1 1>&2 2>&3)
-        exitstatus=$?
-        if [ $exitstatus = 0 ]; then
-            # Check if the root password if good
-            if $(echo "$PASSWORD" | sudo -S -i true) ; then
-                echo 
+        if $INTERACTIVE ; then
+            # Open dialog menu to ask the password
+            local PASSWORD=$(whiptail --passwordbox "please enter '$USER' password" 8 78 --title "$TITLE" 3>&1 1>&2 2>&3)
+            exitstatus=$?
+            if [ $exitstatus = 0 ]; then
+                # Check if the root password if good
+                if $(echo "$PASSWORD" | sudo -S -i true) ; then
+                    echo 
+                fi
+                do_password
+            else
+                # Exit from request
+                exit 0
             fi
-            do_password
         else
-            # Exit from request
-            exit 0
+            # Request sudo password
+            sudo -v
         fi
     else
         echo "no sudo"
@@ -947,17 +952,6 @@ usage()
     echo "   -u|--user    | Change user to run the script"
     echo "   --install    | Run installer. Equivalent to fix jetson-stats in health"
     echo "   --uninstall  | Run uninstaller for all packages"
-}
-
-pip_installer()
-{
-    # fix install package for pip package
-    # Check if folder already exist and remove it
-    if [ -d $JETSON_STATS_FOLDER ] ; then
-        sudo rm -R $JETSON_STATS_FOLDER
-    fi
-    # Copy folder
-    sudo cp -r "services" $JETSON_STATS_FOLDER
 }
 
 loop()
@@ -990,9 +984,6 @@ loop()
                 INTERACTIVE=false
                 UNINSTALLER=true
                 ;;
-            --pip)
-                PIP_INSTALLER=true
-                ;;
             *)
                 usage "[ERROR] Unknown option: $1"
                 exit 1
@@ -1000,11 +991,9 @@ loop()
         esac
             shift 1
     done
+    # Ask sudo password before run
+    do_password
     if $INSTALLER ; then
-        # This function is only used for the pip installer
-        if $PIP_INSTALLER ; then
-            pip_installer
-        fi
         # Run the installer
         installer "${HEALTH_FUNCTIONS[@]}"
     elif $UNINSTALLER ; then
@@ -1014,14 +1003,11 @@ loop()
         # If exist argument pass directly the name
         if [ ! -z "$FUNCTION" ] ; then
             if type $FUNCTION | grep -i function > /dev/null; then
-                # Ask sudo password before run
-                do_password
                 # Run function
                 $FUNCTION
             fi
         else
-            do_password
-            # Run function
+            # Run main
             main $@
         fi
     fi
