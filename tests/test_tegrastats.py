@@ -45,8 +45,6 @@ def check_tegra(stats):
     variable = stats["RAM"]
     # Check if ram["used"] is a list
     assert isinstance(variable["use"], int)
-    # Check if last value is the same send
-    assert variable["use"] == 4722
     # Check temperature is in list
     assert "TEMP" in stats
     variable = stats["TEMP"]

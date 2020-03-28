@@ -88,7 +88,7 @@ tegrastats_out_sudo()
 main()
 {
     local TEST_MODEL_FOLDER="/tmp/jetson_model"
-    local JETSON_MODEL="Xavier"
+    local JETSON_MODEL=""
     local INTERVAL=500
     
     # Decode all information from startup
