@@ -52,14 +52,14 @@ class INFO(Page):
         self.stdscr.addstr(start_pos + idx, posx + spacing, self.jetson.board["info"]["Jetpack"], curses.A_BOLD)
         self.stdscr.addstr(start_pos + idx + 1, posx, "- Board:", curses.A_BOLD)
         idx += 1
-        for name, info in self.jetson.board["board"].items():
+        for name, info in sorted(self.jetson.board["board"].items()):
             self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
             self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
             idx += 1
         # Libraries info
         self.stdscr.addstr(start_pos + idx + 1, posx, "- Libraries:", curses.A_BOLD)
         idx += 1
-        for name, info in self.jetson.board["libraries"].items():
+        for name, info in sorted(self.jetson.board["libraries"].items()):
             self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
             self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
             idx += 1
