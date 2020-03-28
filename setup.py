@@ -101,10 +101,10 @@ def install_services(copy=False):
             os.remove(path)
         # Copy or link file
         if copy:
-            type_service="Copying"
+            type_service = "Copying"
             copyfile(folder + "/" + f_service, path)
         else:
-            type_service="Linking"
+            type_service = "Linking"
             os.symlink(folder + "/" + f_service, path)
         # Prompt message
         print("{type} {file} -> {path}".format(type=type_service, file=os.path.basename(f_service), path=path))
