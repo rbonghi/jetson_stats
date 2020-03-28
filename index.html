@@ -84,12 +84,13 @@
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 <li><a class="reference internal" href="#jetson-stats">Jetson stats</a><ul>
 <li><a class="reference internal" href="#install">Install</a></li>
-<li><a class="reference internal" href="#update-the-jetson-stats-version">Update the jetson-stats version</a></li>
-<li><a class="reference internal" href="#id2">**jtop**</a><ul>
-<li><a class="reference internal" href="#controls">Controls</a></li>
+<li><a class="reference internal" href="#id4">**jtop**</a><ul>
+<li><a class="reference internal" href="#pages">Pages</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id7">**jetson_variables**</a></li>
+<li><a class="reference internal" href="#id7">**jetson_config**</a></li>
+<li><a class="reference internal" href="#id9">**jetson_release**</a></li>
+<li><a class="reference internal" href="#id12">**jetson_variables**</a></li>
 </ul>
 </li>
 </ul>
@@ -181,27 +182,22 @@
 <p><strong>jetson-stats</strong> is a package to <strong>monitoring</strong> and <strong>control</strong> your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a> [Nano, Xavier, TX2i, TX2, TX1] embedded board. When you install jetson-stats are included:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="#jtop">jtop</a></p></li>
+<li><p><a class="reference external" href="#jetson_config">jetson_config</a></p></li>
 <li><p><a class="reference external" href="#jetson_release">jetson_release</a></p></li>
 <li><p><a class="reference external" href="#jetson_variables">jetson_variables</a></p></li>
 </ul>
 <p>Read the <a class="reference external" href="https://github.com/rbonghi/jetson_stat/wiki">Wiki</a> for more detailed information or read the package <a class="reference external" href="https://rbonghi.github.io/jetson_stats">documentation</a>.</p>
 <div class="section" id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-elm notranslate"><div class="highlight"><pre><span></span><span class="nv">sudo</span> <span class="nf">-</span><span class="kt">H</span> <span class="nv">pip</span> <span class="nv">install</span> <span class="nv">jetson</span><span class="nf">-</span><span class="nv">stats</span>
-</pre></div>
-</div>
-<p><strong>🚀 That’s it! 🚀</strong></p>
-<p>There are not require other information to use your jetson stats</p>
-</div>
-<div class="section" id="update-the-jetson-stats-version">
-<h2>Update the jetson-stats version<a class="headerlink" href="#update-the-jetson-stats-version" title="Permalink to this headline">¶</a></h2>
-<p>Now update your system monitor is easier then before.</p>
 <div class="highlight-elm notranslate"><div class="highlight"><pre><span></span><span class="nv">sudo</span> <span class="nf">-</span><span class="kt">H</span> <span class="nv">pip</span> <span class="nv">install</span> <span class="nf">-</span><span class="kt">U</span> <span class="nv">jetson</span><span class="nf">-</span><span class="nv">stats</span>
 </pre></div>
 </div>
+<p><strong>🚀 That’s it! 🚀</strong></p>
+<p><em>PS: Don’t forget to **reboot*</em> your board*</p>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>You can run jtop in your python script <a class="reference external" href="library">read here</a>**</p>
 </div>
-<div class="section" id="id2">
-<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jtop">**jtop**</a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id4">
+<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jtop">**jtop**</a><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <p>It is a system monitoring utility that runs on the terminal and see and <strong>control</strong> realtime the status of your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a>. CPU, RAM, GPU status and frequency and other…</p>
 <p>The prompt interface will be show like this image:</p>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif" /></a>
@@ -224,30 +220,46 @@
 <span class="go">  -v, --version  show program&#39;s version number and exit</span>
 </pre></div>
 </div>
-<div class="section" id="controls">
-<h3>Controls<a class="headerlink" href="#controls" title="Permalink to this headline">¶</a></h3>
-<p>To control the your NVIDIA Jetson are available this keyboard commands:</p>
+<div class="section" id="pages">
+<h3>Pages<a class="headerlink" href="#pages" title="Permalink to this headline">¶</a></h3>
+<p><strong>jtop</strong> have four different pages to control your NVIDIA Jetson:</p>
+<ol class="arabic simple">
+<li><p><strong>ALL</strong> Are collected all information about your board: CPUs status, Memory, <em>GPU</em>, disk, fan and all status about jetson_clocks, NVPmodel and other</p></li>
+<li><p><strong>GPU</strong> A real time GPU history about your NVIDIA Jetson</p></li>
+<li><p><strong>MEM</strong> A real time Memory chart and swap monitor</p></li>
+<li><p><strong>CTRL</strong> Enable/Disable <strong>jetson_clocks</strong>, <strong>nvpmodel</strong> or <strong>fan</strong> directly from here</p></li>
+<li><p><strong>INFO</strong> All information about libraries, CUDA, Serial Number, interfaces, …
+### Controls
+To control the your NVIDIA Jetson are available this keyboard commands:</p></li>
+</ol>
+<p>In page <strong>3 MEM</strong>:</p>
+<ul class="simple">
+<li><p><strong>c</strong> Clear cache</p></li>
+<li><p><strong>h</strong> Enable/Disable extra swap</p></li>
+<li><p><strong>+</strong> and <strong>-</strong> Increase and decrease swap size</p></li>
+</ul>
+<p>In page <strong>4 CTRL</strong>:</p>
 <ul class="simple">
 <li><p><strong>a</strong> Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)</p></li>
 <li><p><strong>e</strong> Enable/Disable jetson_clocks on board boot</p></li>
 <li><p><strong>+</strong> and <strong>-</strong> Increase and decrease the NVPmodel</p></li>
-<li><p><strong>p</strong> and <strong>m</strong> Increase and decrease the Fan speed
-### Pages
-<strong>jtop</strong> have four different pages to control your NVIDIA Jetson:</p></li>
+<li><p><strong>f</strong> Manual/jetson_clocks mode for your fan</p></li>
+<li><p><strong>p</strong> and <strong>m</strong> Increase and decrease the Fan speed</p></li>
 </ul>
-<ol class="arabic simple">
-<li><p><strong>ALL</strong> Are collected all information about your board: CPUs status, Memory, <em>GPU</em>, disk, fan and all status about jetson_clocks, NVPmodel and other</p></li>
-<li><p><strong>GPU</strong> A real time GPU history about your NVIDIA Jetson</p></li>
-<li><p><strong>CTRL</strong> You can control the status of you</p></li>
-<li><p><strong>INFO</strong> Are collected all information about libraries, CUDA, Serial Number, interfaces, …
-## <a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_release">**jetson_release**</a>
-The command show the status and all information about your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a></p></li>
-</ol>
-<a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png" /></a>
 </div>
 </div>
 <div class="section" id="id7">
-<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_variables">**jetson_variables**</a><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_config">**jetson_config**</a><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<p>Check <em>jetson-stats</em> <strong>health</strong>, enable/disable <strong>desktop</strong>, enable/disable <strong>jetson_clocks</strong>, improve the performance of your <strong>wifi</strong> are available only in one click using <strong>jetson_config</strong></p>
+<a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jetson_config.png"><img alt="jetson_config" src="https://github.com/rbonghi/jetson_stats/wiki/images/jetson_config.png" /></a>
+</div>
+<div class="section" id="id9">
+<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_release">**jetson_release**</a><a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<p>The command show the status and all information about your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a></p>
+<a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png" /></a>
+</div>
+<div class="section" id="id12">
+<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_variables">**jetson_variables**</a><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
 <p>This script generate the easy environment variables to know which is your Hardware version of the Jetson and which Jetpack you have already installed</p>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png" /></a>
 </div>
