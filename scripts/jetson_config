@@ -28,10 +28,11 @@ FORCE=false
 # - fix_<name>        -> Run the installer
 # - uninstall_<name>  -> Run the uninstaller
 # - <name>            -> Make the gui
-HEALTH_FUNCTIONS=("folders" "Check folders"\
-                 "variables" "Check variables status"\
-                 "jetson_performance" "Status jetson clock service"\
-                 "jetson_stats_up" "Jetson-stats startup service")
+HEALTH_FUNCTIONS=("commands" "Check all commands"\
+                  "folders" "Check folders"\
+                  "variables" "Check variables status"\
+                  "jetson_performance" "Status jetson clock service"\
+                  "jetson_stats_up" "Jetson-stats startup service")
 # Jetson-stats main folder
 JETSON_STATS_FOLDER="/usr/local/jetson_stats"
 # Locate jetson-stats and python version
@@ -53,6 +54,64 @@ fi
 if [ ! -z $JTOP_VARIABLE ] ; then
     source $JTOP_VARIABLE/jetson_variables
 fi
+
+status_commands()
+{
+    local BIN_FOLDER="/usr/local/bin"
+    if [ ! -f "$BIN_FOLDER/jetson_release" ] ; then
+        echo 1
+        return
+    fi
+    if [ ! -f "$BIN_FOLDER/jetson_swap" ] ; then
+        echo 1
+        return
+    fi
+    # Everything is fine
+    echo 0
+}
+
+commands()
+{
+    local TEXT=""
+    # Check status folders
+    if [ $(status_commands) -eq 1 ] ; then
+        TEXT="Require to reinstall this package using\n"
+        TEXT+="sudo -H pip install --no-cache-dir -U jetson-stats"
+        # Run script to fix variables
+        if (whiptail --title "$TITLE" --yesno "$TEXT\n\nDo you want fix?" 11 78); then
+            fix_commands
+        fi
+    else
+        TEXT="All commands are correctly installed"
+        # Run Message
+        whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    fi
+    # Return to healt function
+    health
+}
+
+fix_commands()
+{
+    # Skip this script if forced
+    if $FORCE ; then
+        echo "${red}Skip with FORCE option${reset}"
+        return
+    fi
+    # Recognize version pip
+    local PIP_VERSION="pip"
+    if [ $JTOP_PYTHON_NAME == "python3" ] ; then
+        PIP_VERSION="pip3"
+    fi
+    # Uninstall package
+    sudo -H $PIP_VERSION uninstall jetson-stats
+    # Reinstall package without cache dir pip
+    sudo -H $PIP_VERSION install --no-cache-dir -U jetson-stats
+}
+
+uninstall_commands()
+{
+    echo "Nothing to do"
+}
 
 status_folders()
 {
@@ -130,18 +189,15 @@ uninstall_folders()
 folders()
 {
     local TEXT=""
-    if [ $(status_folders) -eq 0 ] ; then
-        TEXT="All folder are correctly installed"
-    else
-        TEXT="Clean and reinstall all folders."
-    fi
     # Check status folders
     if [ $(status_folders) -eq 1 ] ; then
+        TEXT="Clean and reinstall all folders."
         # Run script to fix variables
         if (whiptail --title "$TITLE" --yesno "$TEXT\n\nDo you want fix?" 11 78); then
             fix_folders
         fi
     else
+        TEXT="All folder are correctly installed"
         # Run Message
         whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
     fi

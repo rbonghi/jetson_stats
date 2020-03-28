@@ -28,6 +28,9 @@ SWAP_MIN_SIZE = 2
 
 class Swap(object):
 
+    class SwapException(Exception):
+        pass
+
     def __init__(self, dir_swap="", default=8, swap_name="swfile"):
         # Set default folder swap
         self.dir = dir_swap
@@ -38,6 +41,10 @@ class Swap(object):
         self.new_size = default
         # Initialize auto mount
         self.auto = True
+        # Check if exist jetson_swap
+        exist = sp.call('command -v jetson_swap >> /dev/null', shell=True)
+        if exist != 0:
+            raise Swap.SwapException("jetson_swap does not exist!")
         # Load swap information
         self.update()
 

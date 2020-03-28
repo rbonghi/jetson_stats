@@ -141,11 +141,14 @@ class jtop(StatusObserver):
                 break
         if not tegrastats_file:
             raise jtop.JtopException("Tegrastats is not availabe on this board")
+        try:
+            # Initialize Swap controller
+            self.swap = Swap()
+        except Swap.SwapException as e:
+            raise jtop.JtopException(e)
         # Initialize Tegrastats controller
         self._stats = {}
         self.tegrastats = Tegrastats(tegrastats_file, interval)
-        # Initialize Swap controller
-        self.swap = Swap()
 
     @property
     def userid(self):
