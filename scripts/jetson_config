@@ -809,7 +809,7 @@ jetson_clocks()
     MENU+=" - [$JE_PERFOMANCE_ENABLED] jetson_performance enable"
     # Make GUI
     if $INTERACTIVE ; then
-        if [ "$JC_STATUS" = "True" ] ; then
+        if [ "$JC_STATUS" = "True" ] && [ "$JE_PERFOMANCE_STATUS" != "active" ] ; then
             # Run message script
             whiptail --title "$TITLE" --msgbox "$MENU\n\njetson_clocks running without jetson_performance.service!" 14 78 2
             # Return to main
