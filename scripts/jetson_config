@@ -28,7 +28,7 @@ FORCE=false
 # - fix_<name>        -> Run the installer
 # - uninstall_<name>  -> Run the uninstaller
 # - <name>            -> Make the gui
-HEALTH_FUNCTIONS=("commands" "Check all commands"\
+HEALTH_FUNCTIONS=("commands" "Check all commands if are installed"\
                   "folders" "Check folders"\
                   "variables" "Check variables status"\
                   "jetson_performance" "Status jetson clock service"\
@@ -106,6 +106,8 @@ fix_commands()
     sudo -H $PIP_VERSION uninstall jetson-stats
     # Reinstall package without cache dir pip
     sudo -H $PIP_VERSION install --no-cache-dir -U jetson-stats
+    # After this script will be close the script
+    exit 0
 }
 
 uninstall_commands()
