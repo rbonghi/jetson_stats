@@ -5,6 +5,7 @@
 
 **jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Nano, Xavier, TX2i, TX2, TX1] embedded board. When you install jetson-stats are included:
 * [jtop](#jtop)
+* [jetson_config](#jetson_config)
 * [jetson_release](#jetson_release)
 * [jetson_variables](#jetson_variables)
 
@@ -13,19 +14,13 @@ Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed i
 ## Install
 
 ```elm
-sudo -H pip install jetson-stats
+sudo -H pip install -U jetson-stats
 ```
 **🚀 That's it! 🚀** 
 
-There are not require other information to use your jetson stats
+_PS: Don't forget to **reboot** your board_
 
-## Update the jetson-stats version
-
-Now update your system monitor is easier then before.
-
-```elm
-sudo -H pip install -U jetson-stats
-```
+**You can run jtop in your python script [read here](library)**
 
 ## [**jtop**][jtop] 
 It is a system monitoring utility that runs on the terminal and see and **control** realtime the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
@@ -52,18 +47,33 @@ optional arguments:
   --restore      Reset Jetson configuration
   -v, --version  show program's version number and exit
 ```
-### Controls
-To control the your NVIDIA Jetson are available this keyboard commands:
-* **a** Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)
-* **e** Enable/Disable jetson_clocks on board boot
-* **+** and **-** Increase and decrease the NVPmodel
-* **p** and **m** Increase and decrease the Fan speed
 ### Pages
 **jtop** have four different pages to control your NVIDIA Jetson:
 1. **ALL** Are collected all information about your board: CPUs status, Memory, *GPU*, disk, fan and all status about jetson_clocks, NVPmodel and other
 2. **GPU** A real time GPU history about your NVIDIA Jetson
-3. **CTRL** You can control the status of you
-4. **INFO** Are collected all information about libraries, CUDA, Serial Number, interfaces, ...
+2. **MEM** A real time Memory chart and swap monitor
+3. **CTRL** Enable/Disable **jetson_clocks**, **nvpmodel** or **fan** directly from here
+4. **INFO** All information about libraries, CUDA, Serial Number, interfaces, ...
+### Controls
+To control the your NVIDIA Jetson are available this keyboard commands:
+
+In page **3 MEM**:
+* **c** Clear cache
+* **h** Enable/Disable extra swap
+* **+** and **-** Increase and decrease swap size
+
+In page **4 CTRL**:
+* **a** Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)
+* **e** Enable/Disable jetson_clocks on board boot
+* **+** and **-** Increase and decrease the NVPmodel
+* **f** Manual/jetson_clocks mode for your fan
+* **p** and **m** Increase and decrease the Fan speed
+
+## [**jetson_config**][jetson_config]
+
+Check _jetson-stats_ **health**, enable/disable **desktop**, enable/disable **jetson_clocks**, improve the performance of your **wifi** are available only in one click using **jetson_config**
+
+![jetson_config](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_config.png)
 ## [**jetson_release**][jetson_release]
 The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
 
@@ -73,7 +83,9 @@ This script generate the easy environment variables to know which is your Hardwa
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
 
+[library]: https://github.com/rbonghi/jetson_stats/wiki/library
 [jtop]: https://github.com/rbonghi/jetson_stats/wiki/jtop
+[jetson_config]: https://github.com/rbonghi/jetson_stats/wiki/jetson_config
 [jetson_variables]: https://github.com/rbonghi/jetson_stats/wiki/jetson_variables
 [jetson_release]: https://github.com/rbonghi/jetson_stats/wiki/jetson_release
 [jetson_performance]: https://github.com/rbonghi/jetson_stats/wiki/jetson_performance

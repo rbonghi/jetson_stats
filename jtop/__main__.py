@@ -105,7 +105,9 @@ def main():
                     print("Please run with sudo")
     except jtop.JtopException as e:
         # Print error and close
-        print(e)
+        print(bcolors.FAIL + e  + bcolors.ENDC)
+        print("Try to use jetson_config (health page) to fix this package")
+        print("or open an issue on https://github.com/rbonghi/jetson_stats/issues")
 
 
 if __name__ == "__main__":
