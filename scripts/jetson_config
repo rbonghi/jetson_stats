@@ -952,6 +952,11 @@ usage()
 pip_installer()
 {
     # fix install package for pip package
+    # Check if folder already exist and remove it
+    if [ -d $JETSON_STATS_FOLDER ] ; then
+        sudo rm -R $JETSON_STATS_FOLDER
+    fi
+    # Copy folder
     sudo cp -r "services" $JETSON_STATS_FOLDER
 }
 
