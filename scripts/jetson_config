@@ -84,22 +84,18 @@ fix_folders()
     local BIN_FOLDER="/usr/local/bin"
     # Remove jetson-docker link
     if [ -f "$BIN_FOLDER/jetson-docker" ] ; then
-        echo " * Remove OLD jetson-docker link"
         sudo rm "$BIN_FOLDER/jetson-docker"
     fi
     # Remove jetson_release link
     if [ -f "$BIN_FOLDER/jetson-release" ] ; then
-        echo " * Remove OLD jetson-release link"
         sudo rm "$BIN_FOLDER/jetson-release"
     fi
     # Remove jetson_release link
     if [ -f "$BIN_FOLDER/jetson-swap" ] ; then
-        echo " * Remove OLD jetson-swap link"
         sudo rm "$BIN_FOLDER/jetson-swap"
     fi
     # Remove /etc/jetson_easy folder
     if [ -d "/etc/jetson_easy" ] ; then
-        echo " * Remove jetson_easy folder"
         sudo rm -R "/etc/jetson_easy"
     fi
     # Remove jetson_release link
@@ -108,6 +104,19 @@ fix_folders()
     fi
     # Remove jetson_release link
     if [ -d "/opt/jetson_stats" ] ; then
+        # remove old reference folders
+        if [ -f "$BIN_FOLDER/jetson_docker" ] ; then
+            sudo rm "$BIN_FOLDER/jetson_docker"
+        fi
+        # Remove jetson_release link
+        if [ -f "$BIN_FOLDER/jetson_release" ] ; then
+            sudo rm "$BIN_FOLDER/jetson_release"
+        fi
+        # Remove jetson_release link
+        if [ -f "$BIN_FOLDER/jetson_swap" ] ; then
+            sudo rm "$BIN_FOLDER/jetson_swap"
+        fi
+        # Remove reference folder
         sudo rm -R "/opt/jetson_stats"
     fi
 
