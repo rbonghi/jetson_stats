@@ -25,6 +25,7 @@
     - https://docs.python.org/3.3/howto/curses.html#attributes-and-color
     - http://toilers.mines.edu/~jrosenth/101python/code/curses_plot/
 """
+import os
 import argparse
 # Logging
 import logging
@@ -36,6 +37,8 @@ from .jtop import jtop, get_version
 from .gui import JTOPGUI, ALL, GPU, MEM, CTRL, INFO
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+# Reference repository
+REPOSITORY="https://github.com/rbonghi/TeleInstaPy/issues"
 
 
 class bcolors:
@@ -78,6 +81,20 @@ def main():
                 except SystemExit as x:
                     # Catch keyboard interrupt and close
                     logger.info("System exit {status}".format(status=x))
+                status = bcolors.WARNING + "WARN" + bcolors.ENDC
+                # Check if jetpack is missing
+                if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
+                    board=os.environ["JETSON_BOARD"]
+                    boardids=os.environ["JETSON_BOARDIDS"]
+                    chip_id=os.environ["JETSON_CHIP_ID"]
+                    soc=os.environ["JETSON_SOC"]
+                    print(" [{status}] This board is unknown {board}".format(status=status, board=board))
+                    print("Open an issue on {repository}/new?template=board-missing.md&title=Missinig+{board}".format(repository=REPOSITORY, board=board))
+                # Check if jetpack is missing
+                if os.environ["JETSON_JETPACK"] == "UNKNOWN":
+                    l4t=os.environ["JETSON_L4T"]
+                    print(" [{status}] jetpack missing for [L4T {l4t}]".format(status=status, l4t=l4t))
+                    print("Open an issue on {repository}/new?template=jetpack-missing.md&title=Jetpack+missinig+{l4t}".format(repository=REPOSITORY, l4t=l4t))
             else:
                 if jetson.userid == 0:
                     # If enable restore:
@@ -85,22 +102,22 @@ def main():
                     status = bcolors.OKGREEN + "OK" + bcolors.ENDC
                     if jetson.jetson_clocks:
                         jetson.jetson_clocks.start = False
-                        print("[{status}] Stop jetson_clocks service".format(status=status))
+                        print(" [{status}] Stop jetson_clocks service".format(status=status))
                         jetson.jetson_clocks.enable = False
-                        print("[{status}] Disable jetson_clocks service".format(status=status))
+                        print(" [{status}] Disable jetson_clocks service".format(status=status))
                     # * Set fan speed to 0
                     if jetson.fan:
                         jetson.fan.speed = 0
-                        print("[{status}] Fan speed = 0".format(status=status))
+                        print(" [{status}] Fan speed = 0".format(status=status))
                         jetson.fan.control = True
-                        print("[{status}] Fan temp_control = 1".format(status=status))
+                        print(" [{status}] Fan temp_control = 1".format(status=status))
                     # * Delete fan_configuration
                         if jetson.fan.clear():
-                            print("[{status}] Clear Fan Configuration".format(status=status))
+                            print(" [{status}] Clear Fan Configuration".format(status=status))
                     # * Delete jetson_clocks configuration
                     if jetson.jetson_clocks:
                         if jetson.jetson_clocks.clear():
-                            print("[{status}] Clear Jetson Clock Configuration".format(status=status))
+                            print(" [{status}] Clear Jetson Clock Configuration".format(status=status))
                 else:
                     print("Please run with sudo")
     except jtop.JtopException as e:
