@@ -32,7 +32,7 @@ import logging
 # control command line
 import curses
 # Load colors
-from common import bcolors, hyperlink, make_issue
+from github import jetpack_missing, board_missing
 # Tegrastats objext reader
 from .jtop import jtop, get_version
 # GUI jtop interface
@@ -43,49 +43,15 @@ logger = logging.getLogger(__name__)
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
 
 
-def jetpack_missing():
-    version = get_version()
-    l4t = os.environ["JETSON_L4T"]
-    # Title
-    title = "Jetpack missing [L4T {l4t}]".format(l4t=l4t)
-    # Template
-    template = "jetpack-missing.md"
-    # Body
-    body = "Please update jetson-stats with new jetpack\n\n"
-    body += "**Linux for Tegra**\n"
-    body += " - L4T: " + l4t + "\n\n"
-    body += "**Jetson-Stats**\n"
-    body += " - Version: " + version + "\n"
-    # Make url
-    url = make_issue(REPOSITORY, title, body, labels="missing", template=template)
-    # message shell
-    return hyperlink(url, title)
-
-
-def board_missing():
-    version = get_version()
-    board = os.environ["JETSON_BOARD"]
-    # Title
-    title = "Board missing {board}".format(board=board)
-    # Template
-    template = "board-missing.md"
-    # Body
-    body = "Please update jetson-stats with this board\n\n"
-    body += "**Board**\n"
-    body += " - Board(s): " + board + "\n"
-    body += " - Boardis: " + os.environ["JETSON_BOARDIDS"] + "\n"
-    body += " - SOC: " + os.environ["JETSON_SOC"] + "\n"
-    body += " - ID: " + os.environ["JETSON_CHIP_ID"] + "\n"
-    body += " - Code Name: " + os.environ["JETSON_CODENAME"] + "\n\n"
-    body += "**Jetpack**\n"
-    body += " - Jetpack: " + os.environ["JETSON_JETPACK"] + "\n"
-    body += " - L4T: " + os.environ["JETSON_L4T"] + "\n\n"
-    body += "**Jetson-Stats**\n"
-    body += " - version: " + version + "\n"
-    # Make url
-    url = make_issue(REPOSITORY, title, body=body, labels="missing", template=template)
-    # message shell
-    return hyperlink(url, title)
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 def main():
@@ -146,10 +112,10 @@ def main():
         status = bcolors.WARNING + "WARN" + bcolors.ENDC
         # Check if jetpack is missing
         if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
-            print(" [{status}] {link}".format(status=status, link=board_missing()))
+            print(" [{status}] {link}".format(status=status, link=board_missing(REPOSITORY, get_version())))
         # Check if jetpack is missing
         if os.environ["JETSON_JETPACK"] == "UNKNOWN":
-            print(" [{status}] {link}".format(status=status, link=jetpack_missing()))
+            print(" [{status}] {link}".format(status=status, link=jetpack_missing(REPOSITORY, get_version())))
     except jtop.JtopException as e:
         # Print error and close
         print(bcolors.FAIL + e + bcolors.ENDC)

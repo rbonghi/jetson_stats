@@ -19,15 +19,49 @@
 import os
 
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+def jetpack_missing(repository, version):
+    #version = get_version()
+    l4t = os.environ["JETSON_L4T"]
+    # Title
+    title = "Jetpack missing [L4T {l4t}]".format(l4t=l4t)
+    # Template
+    template = "jetpack-missing.md"
+    # Body
+    body = "Please update jetson-stats with new jetpack\n\n"
+    body += "**Linux for Tegra**\n"
+    body += " - L4T: " + l4t + "\n\n"
+    body += "**Jetson-Stats**\n"
+    body += " - Version: " + version + "\n"
+    # Make url
+    url = make_issue(repository, title, body=body, labels="missing", template=template)
+    # message shell
+    return hyperlink(url, title)
+
+
+def board_missing(repository, version):
+    #version = get_version()
+    board = os.environ["JETSON_BOARD"]
+    # Title
+    title = "Board missing {board}".format(board=board)
+    # Template
+    template = "board-missing.md"
+    # Body
+    body = "Please update jetson-stats with this board\n\n"
+    body += "**Board**\n"
+    body += " - Board(s): " + board + "\n"
+    body += " - Boardis: " + os.environ["JETSON_BOARDIDS"] + "\n"
+    body += " - SOC: " + os.environ["JETSON_SOC"] + "\n"
+    body += " - ID: " + os.environ["JETSON_CHIP_ID"] + "\n"
+    body += " - Code Name: " + os.environ["JETSON_CODENAME"] + "\n\n"
+    body += "**Jetpack**\n"
+    body += " - Jetpack: " + os.environ["JETSON_JETPACK"] + "\n"
+    body += " - L4T: " + os.environ["JETSON_L4T"] + "\n\n"
+    body += "**Jetson-Stats**\n"
+    body += " - version: " + version + "\n"
+    # Make url
+    url = make_issue(repository, title, body=body, labels="missing", template=template)
+    # message shell
+    return hyperlink(url, title)
 
 
 def hyperlink(url, text):
