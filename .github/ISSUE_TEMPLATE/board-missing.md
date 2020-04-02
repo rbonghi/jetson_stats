@@ -2,11 +2,12 @@
 name: Board missing
 about: jetson-stats does not recognize this board
 title: ''
-labels: bug
+labels: missing
 assignees: ''
 ---
+Please update jetson-stats with this board
 <!-- Complete all fields -->
-# Jetson-Stats
+## Jetson-Stats
 version: <!-- jtop -v -->
 
 <!--
@@ -14,7 +15,7 @@ version: <!-- jtop -v -->
    * jetson_release -v
    * jtop (page INFO)
 -->
-# Board
+## Board
 * SOC:
 * ID:
 * Board(s):

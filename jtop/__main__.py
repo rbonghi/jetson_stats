@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -31,6 +31,8 @@ import argparse
 import logging
 # control command line
 import curses
+# Load colors
+from common import bcolors, hyperlink, make_issue
 # Tegrastats objext reader
 from .jtop import jtop, get_version
 # GUI jtop interface
@@ -41,30 +43,48 @@ logger = logging.getLogger(__name__)
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
 
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+def jetpack_missing():
+    version = get_version()
+    l4t = os.environ["JETSON_L4T"]
+    # Title
+    title = "Jetpack missing {l4t}".format(l4t=l4t)
+    # Template
+    template = "jetpack-missing.md"
+    # Body
+    body = "Please update jetson-stats with new jetpack\n"
+    body += "## Linux for Tegra\n"
+    body += "L4T: " + l4t + "\n"
+    body += "## Jetson-Stats\n"
+    body += "version: " + version + "\n\n"
+    # Make url
+    url = make_issue(REPOSITORY, title, body, labels="missing", template=template)
+    # message shell
+    msg = "Jetpack missing for [L4T {l4t}]".format(l4t=l4t)
+    return hyperlink(url, msg)
 
 
-def hyperlink(url, text):
-    # Reference:
-    # 1. http://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
-    # 2. https://stackoverflow.com/questions/40419276/python-how-to-print-text-to-console-as-hyperlink
-    # 3. https://purpleidea.com/blog/2018/06/29/hyperlinks-in-gnome-terminal/
-    # 4. https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
-    # 5. https://stackoverflow.com/questions/44078888/clickable-html-links-in-python-3-6-shell
-    # Check type of shell
-    shell = os.environ['SHELL']
-    if 'bash' in shell:
-        return u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\".format(url=url, text=text)
-    else:
-        return "{text} {url}".format(url=url, text=text)
+def board_missing():
+    version = get_version()
+    board = os.environ["JETSON_BOARD"]
+    # Title
+    title = "Board missing {board}".format(board=board)
+    # Template
+    template = "board-missing.md"
+    # Body
+    body = "Please update jetson-stats with this board\n"
+    body += "## Board\n"
+    body += "Board(s): " + board + "\n"
+    body += "Boardis: " + os.environ["JETSON_BOARDIDS"] + "\n"
+    body += "SOC: " + os.environ["JETSON_SOC"] + "\n"
+    body += "ID: " + os.environ["JETSON_CHIP_ID"] + "\n"
+    body += "Code Name: " + os.environ["JETSON_CODENAME"] + "\n"
+    body += "## Jetson-Stats\n"
+    body += "version: " + version + "\n\n"
+    # Make url
+    url = make_issue(REPOSITORY, title, body=body, labels="missing", template=template)
+    # message shell
+    msg = "Board {board} unknown".format(board=board)
+    return hyperlink(url, msg)
 
 
 def main():
@@ -96,22 +116,6 @@ def main():
                 except SystemExit as x:
                     # Catch keyboard interrupt and close
                     logger.info("System exit {status}".format(status=x))
-                status = bcolors.WARNING + "WARN" + bcolors.ENDC
-                # Check if jetpack is missing
-                if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
-                    board = os.environ["JETSON_BOARD"]
-                    # boardids = os.environ["JETSON_BOARDIDS"]
-                    # chip_id = os.environ["JETSON_CHIP_ID"]
-                    # soc = os.environ["JETSON_SOC"]
-                    url = "{repository}/new?template=board-missing.md&title=Missing+{board}".format(repository=REPOSITORY, board=board)
-                    text = "Board {board} unknown".format(board=board)
-                    print(" [{status}] {link} (CTRL + Click to open issue)".format(status=status, link=hyperlink(url, text)))
-                # Check if jetpack is missing
-                if os.environ["JETSON_JETPACK"] == "UNKNOWN":
-                    l4t = os.environ["JETSON_L4T"]
-                    url = "{repository}/new?template=jetpack-missing.md&title=Jetpack+missing+{l4t}".format(repository=REPOSITORY, l4t=l4t)
-                    text = "Jetpack missing for [L4T {l4t}]".format(l4t=l4t)
-                    print(" [{status}] {link} (CTRL + Click to open issue)".format(status=status, link=hyperlink(url, text)))
             else:
                 if jetson.userid == 0:
                     # If enable restore:
@@ -136,7 +140,15 @@ def main():
                         if jetson.jetson_clocks.clear():
                             print(" [{status}] Clear Jetson Clock Configuration".format(status=status))
                 else:
-                    print("Please run with sudo")
+                    print("{red}Please run with sudo{reset}".format(red=bcolors.FAIL, reset=bcolors.ENDC))
+        # Check warnings
+        status = bcolors.WARNING + "WARN" + bcolors.ENDC
+        # Check if jetpack is missing
+        if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
+            print(" [{status}] {link}".format(status=status, link=board_missing()))
+        # Check if jetpack is missing
+        if os.environ["JETSON_JETPACK"] == "UNKNOWN":
+            print(" [{status}] {link}".format(status=status, link=jetpack_missing()))
     except jtop.JtopException as e:
         # Print error and close
         print(bcolors.FAIL + e + bcolors.ENDC)
