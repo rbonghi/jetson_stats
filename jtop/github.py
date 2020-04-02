@@ -20,7 +20,6 @@ import os
 
 
 def jetpack_missing(repository, version):
-    #version = get_version()
     l4t = os.environ["JETSON_L4T"]
     # Title
     title = "Jetpack missing [L4T {l4t}]".format(l4t=l4t)
@@ -39,7 +38,6 @@ def jetpack_missing(repository, version):
 
 
 def board_missing(repository, version):
-    #version = get_version()
     board = os.environ["JETSON_BOARD"]
     # Title
     title = "Board missing {board}".format(board=board)
@@ -74,9 +72,9 @@ def hyperlink(url, text):
     # Check type of shell
     shell = os.environ['SHELL']
     if 'bash' in shell:
-        return u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (CTRL + Click to open issue)".format(url=url, text=text)
+        return u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (CTRL + Click to open this issue)".format(url=url, text=text)
     else:
-        return "{text} {url}".format(url=url, text=text)
+        return "{text} ({url})".format(url=url, text=text)
 
 
 def make_issue(repository, title, body="", labels="", template=""):
