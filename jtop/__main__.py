@@ -38,7 +38,7 @@ from .gui import JTOPGUI, ALL, GPU, MEM, CTRL, INFO
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 # Reference repository
-REPOSITORY="https://github.com/rbonghi/TeleInstaPy/issues"
+REPOSITORY="https://github.com/rbonghi/jetson_stats/issues"
 
 
 class bcolors:
