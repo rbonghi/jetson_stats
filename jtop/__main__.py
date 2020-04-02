@@ -47,20 +47,19 @@ def jetpack_missing():
     version = get_version()
     l4t = os.environ["JETSON_L4T"]
     # Title
-    title = "Jetpack missing {l4t}".format(l4t=l4t)
+    title = "Jetpack missing [L4T {l4t}]".format(l4t=l4t)
     # Template
     template = "jetpack-missing.md"
     # Body
-    body = "Please update jetson-stats with new jetpack\n"
-    body += "## Linux for Tegra\n"
-    body += "L4T: " + l4t + "\n"
-    body += "## Jetson-Stats\n"
-    body += "version: " + version + "\n\n"
+    body = "Please update jetson-stats with new jetpack\n\n"
+    body += "**Linux for Tegra**\n"
+    body += " - L4T: " + l4t + "\n\n"
+    body += "**Jetson-Stats**\n"
+    body += " - Version: " + version + "\n"
     # Make url
     url = make_issue(REPOSITORY, title, body, labels="missing", template=template)
     # message shell
-    msg = "Jetpack missing for [L4T {l4t}]".format(l4t=l4t)
-    return hyperlink(url, msg)
+    return hyperlink(url, title)
 
 
 def board_missing():
@@ -71,20 +70,22 @@ def board_missing():
     # Template
     template = "board-missing.md"
     # Body
-    body = "Please update jetson-stats with this board\n"
-    body += "## Board\n"
-    body += "Board(s): " + board + "\n"
-    body += "Boardis: " + os.environ["JETSON_BOARDIDS"] + "\n"
-    body += "SOC: " + os.environ["JETSON_SOC"] + "\n"
-    body += "ID: " + os.environ["JETSON_CHIP_ID"] + "\n"
-    body += "Code Name: " + os.environ["JETSON_CODENAME"] + "\n"
-    body += "## Jetson-Stats\n"
-    body += "version: " + version + "\n\n"
+    body = "Please update jetson-stats with this board\n\n"
+    body += "**Board**\n"
+    body += " - Board(s): " + board + "\n"
+    body += " - Boardis: " + os.environ["JETSON_BOARDIDS"] + "\n"
+    body += " - SOC: " + os.environ["JETSON_SOC"] + "\n"
+    body += " - ID: " + os.environ["JETSON_CHIP_ID"] + "\n"
+    body += " - Code Name: " + os.environ["JETSON_CODENAME"] + "\n\n"
+    body += "**Jetpack**\n"
+    body += " - Jetpack: " + os.environ["JETSON_JETPACK"] + "\n"
+    body += " - L4T: " + os.environ["JETSON_L4T"] + "\n\n"
+    body += "**Jetson-Stats**\n"
+    body += " - version: " + version + "\n"
     # Make url
     url = make_issue(REPOSITORY, title, body=body, labels="missing", template=template)
     # message shell
-    msg = "Board {board} unknown".format(board=board)
-    return hyperlink(url, msg)
+    return hyperlink(url, title)
 
 
 def main():

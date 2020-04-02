@@ -48,14 +48,15 @@ def hyperlink(url, text):
 def make_issue(repository, title, body="", labels="", template=""):
     # Reference
     # https://help.github.com/en/enterprise/2.17/user/github/managing-your-work-on-github/about-automation-for-issues-and-pull-requests-with-query-parameters
-    title = title.replace(" ", "+")
+    # https://krypted.com/utilities/html-encoding-reference/
+    title = title.replace(" ", "+").replace("[", "%5B").replace("]", "%5D")
     url = "{repository}/new?title={title}".format(repository=repository, title=title)
     if labels:
         url += "&labels=" + labels
     if template:
         url += "&template=" + template
     if body:
-        body = body.replace(" ", "+").replace("#", "%23").replace("\n", "%0A")
+        body = body.replace(" ", "+").replace("#", "%23").replace("\n", "%0A").replace("*", "%2A")
         url += "&body=" + body
     return url
 # EOF
