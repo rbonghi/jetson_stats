@@ -100,9 +100,9 @@ def main():
                 # Check if jetpack is missing
                 if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
                     board = os.environ["JETSON_BOARD"]
-                    boardids = os.environ["JETSON_BOARDIDS"]
-                    chip_id = os.environ["JETSON_CHIP_ID"]
-                    soc = os.environ["JETSON_SOC"]
+                    # boardids = os.environ["JETSON_BOARDIDS"]
+                    # chip_id = os.environ["JETSON_CHIP_ID"]
+                    # soc = os.environ["JETSON_SOC"]
                     url = "{repository}/new?template=board-missing.md&title=Missing+{board}".format(repository=REPOSITORY, board=board)
                     text = "Board {board} unknown".format(board=board)
                     print(" [{status}] {link} (CTRL + Click to open issue)".format(status=status, link=hyperlink(url, text)))
