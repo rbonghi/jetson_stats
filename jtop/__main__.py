@@ -53,6 +53,18 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+    @staticmethod
+    def ok():
+        return bcolors.OKGREEN + "OK" + bcolors.ENDC
+
+    @staticmethod
+    def warning():
+        return bcolors.WARNING + "WARN" + bcolors.ENDC
+
+    @staticmethod
+    def fail():
+        return bcolors.FAIL + "ERR" + bcolors.ENDC
+
 
 def main():
     # Add arg parser
@@ -87,38 +99,35 @@ def main():
                 if jetson.userid == 0:
                     # If enable restore:
                     # * Disable jetson_clocks
-                    status = bcolors.OKGREEN + "OK" + bcolors.ENDC
                     if jetson.jetson_clocks:
                         jetson.jetson_clocks.start = False
-                        print(" [{status}] Stop jetson_clocks service".format(status=status))
+                        print("[{status}] Stop jetson_clocks service".format(status=bcolors.ok()))
                         jetson.jetson_clocks.enable = False
-                        print(" [{status}] Disable jetson_clocks service".format(status=status))
+                        print("[{status}] Disable jetson_clocks service".format(status=bcolors.ok()))
                     # * Set fan speed to 0
                     if jetson.fan:
                         jetson.fan.speed = 0
-                        print(" [{status}] Fan speed = 0".format(status=status))
+                        print("[{status}] Fan speed = 0".format(status=bcolors.ok()))
                         jetson.fan.control = True
-                        print(" [{status}] Fan temp_control = 1".format(status=status))
+                        print("[{status}] Fan temp_control = 1".format(status=bcolors.ok()))
                     # * Delete fan_configuration
                         if jetson.fan.clear():
-                            print(" [{status}] Clear Fan Configuration".format(status=status))
+                            print("[{status}] Clear Fan Configuration".format(status=bcolors.ok()))
                     # * Delete jetson_clocks configuration
                     if jetson.jetson_clocks:
                         if jetson.jetson_clocks.clear():
-                            print(" [{status}] Clear Jetson Clock Configuration".format(status=status))
+                            print("[{status}] Clear Jetson Clock Configuration".format(status=bcolors.ok()))
                 else:
-                    print("{red}Please run with sudo{reset}".format(red=bcolors.FAIL, reset=bcolors.ENDC))
-        # Check warnings
-        status = bcolors.WARNING + "WARN" + bcolors.ENDC
+                    print("[{status}] Please run with sudo".format(status=bcolors.fail()))
         # Check if jetpack is missing
         if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
-            print(" [{status}] {link}".format(status=status, link=board_missing(REPOSITORY, get_version())))
+            print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, get_version())))
         # Check if jetpack is missing
         if os.environ["JETSON_JETPACK"] == "UNKNOWN":
-            print(" [{status}] {link}".format(status=status, link=jetpack_missing(REPOSITORY, get_version())))
+            print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, get_version())))
     except jtop.JtopException as e:
         # Print error and close
-        print(bcolors.FAIL + e + bcolors.ENDC)
+        print("[{status}] {error}".format(status=bcolors.fail(), error=e.message))
         print("Run jetson_config (health page) to fix it")
         print("or open an issue on {url}".format(url=REPOSITORY))
 
