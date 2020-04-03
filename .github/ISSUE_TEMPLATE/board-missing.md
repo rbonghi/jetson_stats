@@ -1,7 +1,7 @@
 ---
 name: Board missing
 about: jetson-stats does not recognize this board
-title: 'Board missing {board}'
+title: 'Board missing []'
 labels: missing
 assignees: ''
 ---

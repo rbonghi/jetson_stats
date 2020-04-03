@@ -1,7 +1,7 @@
 ---
 name: Jetpack missing
 about: jetson-stats miss a JetPack
-title: 'Jetpack missing [L4T {l4t}]'
+title: 'Jetpack missing [L4T e.g. 5.2.1]'
 labels: missing
 assignees: ''
 ---

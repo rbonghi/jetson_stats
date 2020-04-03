@@ -32,7 +32,7 @@ import logging
 # control command line
 import curses
 # Load colors
-from github import jetpack_missing, board_missing
+from .github import jetpack_missing, board_missing
 # Tegrastats objext reader
 from .jtop import jtop, get_version
 # GUI jtop interface
