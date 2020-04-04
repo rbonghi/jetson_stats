@@ -72,6 +72,7 @@ def main():
     parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
     parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
+    parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
@@ -119,12 +120,13 @@ def main():
                             print("[{status}] Clear Jetson Clock Configuration".format(status=bcolors.ok()))
                 else:
                     print("[{status}] Please run with sudo".format(status=bcolors.fail()))
-        # Check if jetpack is missing
-        if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
-            print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, get_version())))
-        # Check if jetpack is missing
-        if os.environ["JETSON_JETPACK"] == "UNKNOWN":
-            print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, get_version())))
+        if not args.no_warnings:
+            # Check if jetpack is missing
+            if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
+                print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, get_version())))
+            # Check if jetpack is missing
+            if os.environ["JETSON_JETPACK"] == "UNKNOWN":
+                print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, get_version())))
     except jtop.JtopException as e:
         # Print error and close
         print("[{status}] {error}".format(status=bcolors.fail(), error=e.message))
