@@ -1,9 +1,10 @@
 ---
 name: Jetpack missing
 about: jetson-stats miss a JetPack
-title: 'Jetpack missing [L4T e.g. 5.2.1]'
+title: Jetpack missing [L4T e.g. 5.2.1]
 labels: missing
 assignees: ''
+
 ---
 
 Please update jetson-stats with new jetpack

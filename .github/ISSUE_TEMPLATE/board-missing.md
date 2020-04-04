@@ -1,9 +1,10 @@
 ---
 name: Board missing
 about: jetson-stats does not recognize this board
-title: 'Board missing []'
+title: Board missing []
 labels: missing
 assignees: ''
+
 ---
 
 Please update jetson-stats with this board
