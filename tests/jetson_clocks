@@ -37,6 +37,25 @@ usage()
     echo "run jetson_clocks.sh without any option to set static max frequency to CPU, GPU and EMC clocks."
 }
 
+show_tx2()
+{
+cat << EOF
+SOC family:tegra186  Machine:quill
+Online CPUs: 0,3-5
+CPU Cluster Switching: Disabled
+cpu0: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1 
+cpu1: Online=0 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1113600 IdleStates: C1=1 c6=1 c7=1 
+cpu2: Online=0 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1113600 IdleStates: C1=1 c6=1 c7=1 
+cpu3: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1881600 IdleStates: C1=1 c7=1 
+cpu4: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1 
+cpu5: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1 
+GPU MinFreq=114750000 MaxFreq=1134750000 CurrentFreq=114750000
+EMC MinFreq=40800000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
+Fan: speed=0
+NV Power Mode: MAXP_CORE_ARM
+EOF
+}
+
 show_off()
 {
 cat << EOF
@@ -44,7 +63,7 @@ SOC family:TEST  Machine:TEST
 Online CPUs: 0-3
 CPU Cluster Switching: Disabled
 cpu0: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
-cpu1: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
+cpu1: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 c6=1 c8=1
 cpu2: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
 cpu3: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
 GPU MinFreq=76800000 MaxFreq=921600000 CurrentFreq=100000
@@ -61,9 +80,9 @@ cat << EOF
 SOC family:TEST  Machine:TEST
 Online CPUs: 0-3
 CPU Cluster Switching: Disabled
-cpu0: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 
+cpu0: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1
 cpu1: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 
-cpu2: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 
+cpu2: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 C1=1
 cpu3: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 
 GPU MinFreq=921600000 MaxFreq=921600000 CurrentFreq=921600000
 EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
