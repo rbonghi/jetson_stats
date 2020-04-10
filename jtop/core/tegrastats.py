@@ -105,10 +105,12 @@ class Tegrastats(Thread):
 
     def close(self):
         if self.p is not None:
-            self.p.kill()
-            return True
-        else:
-            return False
+            try:
+                self.p.kill()
+                return True
+            except OSError:
+                pass
+        return False
 
     def __enter__(self):
         self.open()
