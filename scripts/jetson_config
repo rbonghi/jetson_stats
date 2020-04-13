@@ -425,7 +425,7 @@ fix_variables()
     sudo cp "$JETSON_STATS_FOLDER/jetson_env.sh" "/etc/profile.d/jetson_env.sh"
     # Require reboot
     if [ ! -f /var/run/reboot-required ] ; then
-        sudo touch /var/run/reboot-required
+        sudo sh -c 'echo "*** System Restart Required ***" > /var/run/reboot-required'
     fi
 }
 
@@ -436,7 +436,7 @@ uninstall_variables()
         sudo rm "/etc/profile.d/jetson_env.sh"
         # Require reboot
         if [ ! -f /var/run/reboot-required ] ; then
-            sudo touch /var/run/reboot-required
+            sudo sh -c 'echo "*** System Restart Required ***" > /var/run/reboot-required'
         fi
     else
         echo "No jetson environment variables scripts installed"
@@ -777,7 +777,7 @@ EOF
         if $REQUIRE_REBOOT ; then
             # Require reboot
             if [ ! -f /var/run/reboot-required ] ; then
-                sudo touch /var/run/reboot-required
+                sudo sh -c 'echo "*** System Restart Required ***" > /var/run/reboot-required'
             fi
             # End loop
             do_finish
@@ -892,7 +892,7 @@ wifi()
                 echo "options iwlwifi 11n_disable=8" | sudo tee -a /etc/modprobe.d/iwlwifi.conf
                 # Require reboot
                 if [ ! -f /var/run/reboot-required ] ; then
-                    sudo touch /var/run/reboot-required
+                    sudo sh -c 'echo "*** System Restart Required ***" > /var/run/reboot-required'
                 fi
             fi
         fi
@@ -909,8 +909,8 @@ update()
     sudo -H pip install --no-cache-dir -U jetson_stats
     # Show last version jtop
     whiptail --title "$TITLE" --msgbox "Jtop installed:\n - $(jtop -v 2>&1)" 8 78
-    # Return to main menu
-    main
+    # Move to healt page
+    health
 }
 
 about()
