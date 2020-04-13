@@ -909,7 +909,7 @@ update()
     sudo -H pip install --no-cache-dir -U jetson_stats
     # Show last version jtop
     whiptail --title "$TITLE" --msgbox "Jtop installed:\n - $(jtop -v 2>&1)" 8 78
-    # Move to healt page
+    # Move to health page
     health
 }
 
