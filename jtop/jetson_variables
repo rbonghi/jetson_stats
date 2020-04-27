@@ -165,7 +165,9 @@ export JETSON_L4T
 # Write version of jetpack installed
 # https://developer.nvidia.com/embedded/jetpack-archive
 case $JETSON_L4T in
-    "32.3.1") JETSON_JETPACK="4.3" ;;    
+    "32.4.2") JETSON_JETPACK="4.4" ;;
+    "32.3.1") JETSON_JETPACK="4.3" ;;
+    "32.2.3") JETSON_JETPACK="4.2.3" ;;
     "32.2.1") JETSON_JETPACK="4.2.2" ;;
     "32.2.0" | "32.2") JETSON_JETPACK="4.2.1" ;;
     "32.1.0" | "32.1") JETSON_JETPACK="4.2" ;;
