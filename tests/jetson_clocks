@@ -19,12 +19,12 @@
 
 usage()
 {
-	if [ "$1" != "" ]; then
-    	tput setaf 1
-		echo "$1"
-		tput sgr0
-	fi
-	
+    if [ "$1" != "" ]; then
+        tput setaf 1
+        echo "$1"
+        tput sgr0
+    fi
+    
     echo "jetson_clock, EMULATOR of NVIDIA Jetsons"
     echo "Maximize jetson performance by setting static max frequency to CPU, GPU and EMC clocks."
     echo "Usage:"
@@ -107,7 +107,7 @@ main()
     local SHOW="False"
     local STORE="False"
     local RESTORE="False"
-	# Decode all information from startup
+    # Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
             --show)

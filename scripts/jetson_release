@@ -23,97 +23,97 @@ reset=`tput sgr0`
 
 jetson_release()
 {
-	local VERBOSE=$1
+    local VERBOSE=$1
 
-	# Load JETSON environment variables
-	JTOP_VARIABLE=""
-	JTOP_PYTHON=""
-	if type -P python3 >/dev/null 2>&1 ; then
-		JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-		JTOP_PYTHON="$(python3 -V 2>&1)"
-	fi
-	if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
-		JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-		JTOP_PYTHON="$(python -V 2>&1)"
-	fi
-	if [ -z $JTOP_VARIABLE ] ; then
-		echo "${red}I cannot locate jetson_variables${reset}"
-		exit 1
-	fi
-	source $JTOP_VARIABLE/jetson_variables
+    # Load JETSON environment variables
+    JTOP_VARIABLE=""
+    JTOP_PYTHON=""
+    if type -P python3 >/dev/null 2>&1 ; then
+        JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+        JTOP_PYTHON="$(python3 -V 2>&1)"
+    fi
+    if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
+        JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
+        JTOP_PYTHON="$(python -V 2>&1)"
+    fi
+    if [ -z $JTOP_VARIABLE ] ; then
+        echo "${red}I cannot locate jetson_variables${reset}"
+        exit 1
+    fi
+    source $JTOP_VARIABLE/jetson_variables
 
-	# Load NVP model status
-	if hash nvpmodel 2>/dev/null; then
-		NVPModel="$(nvpmodel -q 2>/dev/null)"
-		NVPModel=$(echo $NVPModel | sed 's/.*Mode://')
-		# Extract model and type
-		NVPModel_type=$(echo $NVPModel | cut -d' ' -f 2)
-		NVPModel=$(echo $NVPModel | cut -d' ' -f 1)
-	fi
-	# Read status jetson_performance service
-	JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
-	# Extract jetson-stats version
-	JETSON_STATS_VERSION="$(jtop -v  2>&1 | cut -d " " -f2)"
+    # Load NVP model status
+    if hash nvpmodel 2>/dev/null; then
+        NVPModel="$(nvpmodel -q 2>/dev/null)"
+        NVPModel=$(echo $NVPModel | sed 's/.*Mode://')
+        # Extract model and type
+        NVPModel_type=$(echo $NVPModel | cut -d' ' -f 2)
+        NVPModel=$(echo $NVPModel | cut -d' ' -f 1)
+    fi
+    # Read status jetson_performance service
+    JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+    # Extract jetson-stats version
+    JETSON_STATS_VERSION="$(jtop -v  2>&1 | cut -d " " -f2)"
 
 
-	# Print Jetson version
-	echo " - $JETSON_MACHINE"
-	# Print Jetpack and kernel
-	echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
-	# Print status NVPModel
-	if [ ! -z ${NVPModel+x} ] ; then
-		echo "   * NV Power Mode: ${green}$NVPModel${reset} - Type: ${green}$NVPModel_type${reset}"
-	fi
-	# Print status Jetson Performance service
-	if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
-		echo "   * jetson_clocks service: ${green}$JE_PERFOMANCE_STATUS${reset}"
-	else
-		echo "   * jetson_clocks service: ${red}$JE_PERFOMANCE_STATUS${reset}"
-	fi
+    # Print Jetson version
+    echo " - $JETSON_MACHINE"
+    # Print Jetpack and kernel
+    echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
+    # Print status NVPModel
+    if [ ! -z ${NVPModel+x} ] ; then
+        echo "   * NV Power Mode: ${green}$NVPModel${reset} - Type: ${green}$NVPModel_type${reset}"
+    fi
+    # Print status Jetson Performance service
+    if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
+        echo "   * jetson_clocks service: ${green}$JE_PERFOMANCE_STATUS${reset}"
+    else
+        echo "   * jetson_clocks service: ${red}$JE_PERFOMANCE_STATUS${reset}"
+    fi
 
-	if $VERBOSE ; then
-		# If available print the Board IDS
-		BOAD_IDS_INFO=""
-		if [ ! -z "$JETSON_BOARDIDS" ] ; then
-			BOAD_IDS_INFO="($JETSON_BOARDIDS)"
-		fi
-		# Board information
-		echo " - Board info:"
-		echo "   * $JETSON_TYPE - CN: $JETSON_CODENAME"
-		echo "   * SOC Family: $JETSON_SOC - ID:$JETSON_CHIP_ID"
-		echo "   * Board(s): $JETSON_BOARD $BOAD_IDS_INFO"
+    if $VERBOSE ; then
+        # If available print the Board IDS
+        BOAD_IDS_INFO=""
+        if [ ! -z "$JETSON_BOARDIDS" ] ; then
+            BOAD_IDS_INFO="($JETSON_BOARDIDS)"
+        fi
+        # Board information
+        echo " - Board info:"
+        echo "   * $JETSON_TYPE - CN: $JETSON_CODENAME"
+        echo "   * SOC Family: $JETSON_SOC - ID:$JETSON_CHIP_ID"
+        echo "   * Board(s): $JETSON_BOARD $BOAD_IDS_INFO"
 
-		# Print CUDA GPU architecture
-		echo "   * CUDA GPU architecture (ARCH_BIN): $JETSON_CUDA_ARCH_BIN"
-		# Print serial number
-		if [ ! -z $JETSON_SERIAL_NUMBER ] ; then
-			echo "   * Serial Number: ${JETSON_SERIAL_NUMBER^^}" # Make string to upper case
-		fi
-	fi
+        # Print CUDA GPU architecture
+        echo "   * CUDA GPU architecture (ARCH_BIN): $JETSON_CUDA_ARCH_BIN"
+        # Print serial number
+        if [ ! -z $JETSON_SERIAL_NUMBER ] ; then
+            echo "   * Serial Number: ${JETSON_SERIAL_NUMBER^^}" # Make string to upper case
+        fi
+    fi
 
-	# Libraries
-	echo " - Libraries:"
-	# Print Cuda version
-	echo "   * CUDA: $JETSON_CUDA"
-	# Print cuDNN version
-	echo "   * cuDNN: $JETSON_CUDNN"
-	# Print TensorRT version
-	echo "   * TensorRT: $JETSON_TENSORRT"
-	# Print VisionWorks version
-	echo "   * Visionworks: $JETSON_VISIONWORKS"
-	# Print OpenCv version and cuda compiled
-	if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
-		echo "   * OpenCV: $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
-	else
-		echo "   * OpenCV: $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
-	fi
+    # Libraries
+    echo " - Libraries:"
+    # Print Cuda version
+    echo "   * CUDA: $JETSON_CUDA"
+    # Print cuDNN version
+    echo "   * cuDNN: $JETSON_CUDNN"
+    # Print TensorRT version
+    echo "   * TensorRT: $JETSON_TENSORRT"
+    # Print VisionWorks version
+    echo "   * Visionworks: $JETSON_VISIONWORKS"
+    # Print OpenCv version and cuda compiled
+    if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
+        echo "   * OpenCV: $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
+    else
+        echo "   * OpenCV: $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
+    fi
 
-	if $VERBOSE ; then
-		# jetson-stats version
-		echo " - jetson-stats:"
-		echo "   * Version $JETSON_STATS_VERSION"
-		echo "   * Works on $JTOP_PYTHON"
-	fi
+    if $VERBOSE ; then
+        # jetson-stats version
+        echo " - jetson-stats:"
+        echo "   * Version $JETSON_STATS_VERSION"
+        echo "   * Works on $JTOP_PYTHON"
+    fi
 }
 
 usage()
@@ -133,8 +133,8 @@ usage()
 
 main()
 {
-	local VERBOSE=false
-	# Decode all information from startup
+    local VERBOSE=false
+    # Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
             -h|--help)
@@ -152,8 +152,8 @@ main()
             shift 1
     done
 
-	# Run jetson_release
-	jetson_release $VERBOSE
+    # Run jetson_release
+    jetson_release $VERBOSE
 }
 
 main $@

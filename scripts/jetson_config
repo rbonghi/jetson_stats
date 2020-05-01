@@ -1025,7 +1025,7 @@ loop()
     local INSTALLER=false
     local UNINSTALLER=false
     local PIP_INSTALLER=false
-	# Decode all information from startup
+    # Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
             -h|--help)

@@ -19,51 +19,51 @@
 
 usage()
 {
-	if [ "$1" != "" ]; then
-    	tput setaf 1
-		echo "$1"
-		tput sgr0
-	fi
-	
+    if [ "$1" != "" ]; then
+        tput setaf 1
+        echo "$1"
+        tput sgr0
+    fi
+    
     echo "EMULATOR Nvidia Power Model Tool Version 1.1.2"
     echo "Usage:"
     echo "$0 [options]"
 
 cat << EOF
-	nvpmodel [-h | --help] [--verbose] [-q | --query] [-p | --parse] [-u | --udata]
-		[-w | --wait <sec>] [--boot] [-m | --mode <mode>] [-f | --conf <filename>] [-o | --os <android,l4t>]
+    nvpmodel [-h | --help] [--verbose] [-q | --query] [-p | --parse] [-u | --udata]
+        [-w | --wait <sec>] [--boot] [-m | --mode <mode>] [-f | --conf <filename>] [-o | --os <android,l4t>]
 -h, --help:
-	Print this help info.
+    Print this help info.
 --verbose:
-	Enable verbose log.
+    Enable verbose log.
 --boot:
-	Exit and do nothing if it is sanity-flashed build.
+    Exit and do nothing if it is sanity-flashed build.
 -p, --parse:
-	Parse the config file only. Recommended to enable verbose log.
+    Parse the config file only. Recommended to enable verbose log.
 -m, --mode <mode>:
-	<mode> is one of the integer POWER_MODEL ID defined in config file. Switch to the specified power mode.
+    <mode> is one of the integer POWER_MODEL ID defined in config file. Switch to the specified power mode.
 -f, --conf:
-	explicitly specify the config file.            
-	If it is the only option, then it sets the power mode as default mode configured in the file.            
-	This option can be used for developer usage to specify a config file other than the default one.
+    explicitly specify the config file.            
+    If it is the only option, then it sets the power mode as default mode configured in the file.            
+    This option can be used for developer usage to specify a config file other than the default one.
 -o, --os <android,l4t>:
-	Perform OS specific operations for power model settings. Argument is case insensitive.
+    Perform OS specific operations for power model settings. Argument is case insensitive.
 -q, --query:
-	Query the current power mode.
+    Query the current power mode.
 -w, --wait:
-	delay exectuion by specified amount of seconds.
+    delay exectuion by specified amount of seconds.
 -u, --udata:
-	specify the absolute path for user data file when set or query power mode.
+    specify the absolute path for user data file when set or query power mode.
 Examples:
-	nvpmodel -m 2: switch to POWER_MODEL ID=2 of which settings are defined in the default configuration file.
-	nvpmodel -m 2 -o android: switch to POWER_MODEL ID=2 and perform Android specific operations for power mode.
-	nvpmodel -m 2 -f pm.conf: switch to POWER_MODEL ID=2 of which settings are defined in pm.conf.
-	nvpmodel -m 2 -u /data/status: switch to POWER_MODEL ID=2 and store the active mode as user settings in /data/status.
-	nvpmodel -f pm.conf: read the active mode in user data file and set it as the power mode which is configured in pm.conf.            
-		If user data file does not exist or the active mode value is invalid, set defalut mode instead.
-	nvpmodel -q: print the current power mode.
-	nvpmodel -q --verbose: print the current power mode with verbose info.
-	nvpmodel -p -f pm.conf: parse pm.conf and print the result.
+    nvpmodel -m 2: switch to POWER_MODEL ID=2 of which settings are defined in the default configuration file.
+    nvpmodel -m 2 -o android: switch to POWER_MODEL ID=2 and perform Android specific operations for power mode.
+    nvpmodel -m 2 -f pm.conf: switch to POWER_MODEL ID=2 of which settings are defined in pm.conf.
+    nvpmodel -m 2 -u /data/status: switch to POWER_MODEL ID=2 and store the active mode as user settings in /data/status.
+    nvpmodel -f pm.conf: read the active mode in user data file and set it as the power mode which is configured in pm.conf.            
+        If user data file does not exist or the active mode value is invalid, set defalut mode instead.
+    nvpmodel -q: print the current power mode.
+    nvpmodel -q --verbose: print the current power mode with verbose info.
+    nvpmodel -p -f pm.conf: parse pm.conf and print the result.
 EOF
 }
 
@@ -417,7 +417,7 @@ main()
         echo 'nvpmodel emulator'
         exit 0
     fi
-	# Decode all information from startup
+    # Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
             --verbose) 
