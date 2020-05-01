@@ -110,6 +110,11 @@ if [ -f /proc/device-tree/nvidia,boardids ]; then
     JETSON_BOARDIDS=$(tr -d '\0' < /proc/device-tree/nvidia,boardids)
 fi
 
+# Code name
+JETSON_CODENAME=""
+JETSON_TYPE=""
+JETSON_MODULE="UNKNOWN"
+JETSON_BOARD="UNKNOWN"
 list_hw_boards()
 {
     # Extract from DTS the name of the boards available
@@ -126,17 +131,17 @@ list_hw_boards()
         # If jetson type is not empty the module name is the same
         if [ ! -z "$JETSON_TYPE" ] ; then
             JETSON_MODULE=$board_name
+            echo "JETSON_TYPE=\"$JETSON_TYPE\""
+            echo "JETSON_MODULE=\"$JETSON_MODULE\""
         else
             JETSON_BOARD=$board_name
+            echo "JETSON_BOARD=\"$JETSON_BOARD\""
         fi
         # Find next match
         s=${s#*"${BASH_REMATCH[1]}"}
     done
 }
-# Code name
-JETSON_CODENAME=""
-JETSON_MODULE="UNKNOWN"
-JETSON_BOARD="UNKNOWN"
+# Read DTS file
 if [ -f /proc/device-tree/nvidia,dtsfilename ]; then
     # ..<something>/hardware/nvidia/platform/t210/porg/kernel-dts/tegra210-p3448-0000-p3449-0000-b00.dts
     # The last third is the codename of the board
@@ -145,7 +150,7 @@ if [ -f /proc/device-tree/nvidia,dtsfilename ]; then
     # The basename extract the board type
     JETSON_DTS="$(tr -d '\0' < /proc/device-tree/nvidia,dtsfilename | sed 's/.*\///')"
     # List of all boards
-    list_hw_boards "$JETSON_DTS"
+    eval $(list_hw_boards "$JETSON_DTS")
 fi
 
 # Print description
