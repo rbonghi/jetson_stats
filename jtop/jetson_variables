@@ -69,27 +69,27 @@ jetson_board()
 {
     local JETSON_CHIP_ID=$1
     local JETSON_BOARD=$2
-    local JETSON_MODULE=""
+    local JETSON_TYPE=""
     # Detection jetson board
     case $JETSON_BOARD in
-        *2180*) JETSON_MODULE="TX1" ;;
-        P3310*) JETSON_MODULE="TX2" ;;
-        P3489-0080*) JETSON_MODULE="TX2 4GB" ;;
-        P3489*) JETSON_MODULE="TX2i" ;;
-        P2888-0060*) JETSON_MODULE="AGX Xavier 8GB" ;;
-        P2888*) JETSON_MODULE="AGX Xavier" ;;
-        P3448-0020*) JETSON_MODULE="Nano" ;;
-        P3448*) JETSON_MODULE="Nano (Developer Kit Version)" ;;
-        *) JETSON_MODULE="" ;;
+        *2180*) JETSON_TYPE="TX1" ;;
+        P3310*) JETSON_TYPE="TX2" ;;
+        P3489-0080*) JETSON_TYPE="TX2 4GB" ;;
+        P3489*) JETSON_TYPE="TX2i" ;;
+        P2888-0060*) JETSON_TYPE="AGX Xavier 8GB" ;;
+        P2888*) JETSON_TYPE="AGX Xavier" ;;
+        P3448-0020*) JETSON_TYPE="Nano" ;;
+        P3448*) JETSON_TYPE="Nano (Developer Kit Version)" ;;
+        *) JETSON_TYPE="" ;;
     esac
-    # if JETSON_MODULE empty, check CHIP_ID for jetson TK1
-    if [ -z "$JETSON_MODULE" ] ; then
+    # if JETSON_TYPE empty, check CHIP_ID for jetson TK1
+    if [ -z "$JETSON_TYPE" ] ; then
         if [ "$JETSON_CHIP_ID" == "64" ] ; then
-            JETSON_MODULE="TK1"
+            JETSON_TYPE="TK1"
         fi
     fi
     # Return board name
-    echo $JETSON_MODULE
+    echo $JETSON_TYPE
 }
 ###########################
 
@@ -118,44 +118,49 @@ list_hw_boards()
     # 2. https://unix.stackexchange.com/questions/144298/delete-the-last-character-of-a-string-using-string-manipulation-in-shell-script
     local s=$1
     local regex='p([0-9-]+)' # Equivalent to p([\d-]*-)
-    local OUT=""
     while [[ $s =~ $regex ]]; do
         local board_name=$(echo "P${BASH_REMATCH[1]::-1}")
         #echo $board_name
-        OUT+="$board_name "
+        # Load jetson type
+        JETSON_TYPE=$(jetson_board $JETSON_CHIP_ID $board_name)
+        # If jetson type is not empty the module name is the same
+        if [ ! -z "$JETSON_TYPE" ] ; then
+            JETSON_MODULE=$board_name
+        else
+            JETSON_BOARD=$board_name
+        fi
         # Find next match
         s=${s#*"${BASH_REMATCH[1]}"}
     done
-    echo $OUT
 }
 # Code name
 JETSON_CODENAME=""
-JETSON_BOARD=""
+JETSON_MODULE="UNKNOWN"
+JETSON_BOARD="UNKNOWN"
 if [ -f /proc/device-tree/nvidia,dtsfilename ]; then
     # ..<something>/hardware/nvidia/platform/t210/porg/kernel-dts/tegra210-p3448-0000-p3449-0000-b00.dts
     # The last third is the codename of the board
     JETSON_CODENAME=$(tr -d '\0' < /proc/device-tree/nvidia,dtsfilename)
     JETSON_CODENAME=$(echo ${JETSON_CODENAME#*"/hardware/nvidia/platform/"} | tr '/' '\n' | head -2 | tail -1 )
     # The basename extract the board type
-    JETSON_BOARD="$(tr -d '\0' < /proc/device-tree/nvidia,dtsfilename | sed 's/.*\///')"
+    JETSON_DTS="$(tr -d '\0' < /proc/device-tree/nvidia,dtsfilename | sed 's/.*\///')"
     # List of all boards
-    JETSON_BOARD=$(list_hw_boards "$JETSON_BOARD")
+    list_hw_boards "$JETSON_DTS"
 fi
 
-# Load jetson type
-JETSON_MODULE=$(jetson_board "$JETSON_CHIP_ID $JETSON_BOARD")
 # Print description
 JETSON_MACHINE=""
-if [ ! -z "$JETSON_MODULE" ] ; then
-    JETSON_MACHINE="NVIDIA Jetson $JETSON_MODULE"
+if [ ! -z "$JETSON_TYPE" ] ; then
+    JETSON_MACHINE="NVIDIA Jetson $JETSON_TYPE"
 fi
 # Export variables
 export JETSON_CHIP_ID
 export JETSON_SOC
 export JETSON_BOARDIDS
 export JETSON_CODENAME
-export JETSON_BOARD
 export JETSON_MODULE
+export JETSON_BOARD
+export JETSON_TYPE
 export JETSON_MACHINE
 
 # Write CUDA architecture
