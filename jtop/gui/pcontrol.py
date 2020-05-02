@@ -34,7 +34,7 @@ class CTRL(Page):
         # Initialize FAN chart
         self.chart_fan = Chart(jetson, "FAN", refresh, self.update_chart, line="o", color=curses.color_pair(4), color_chart=curses.color_pair(10))
 
-    def update_chart(self, jetson):
+    def update_chart(self, jetson, name):
         parameter = jetson.stats.get("FAN", {})
         value = 'cpwm' if 'cpwm' in parameter else 'tpwm'
         # Get max value if is present

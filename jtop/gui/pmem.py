@@ -35,9 +35,9 @@ class MEM(Page):
     def __init__(self, stdscr, jetson, refresh):
         super(MEM, self).__init__("MEM", stdscr, jetson, refresh)
         # Initialize MEM chart
-        self.chart_ram = Chart(jetson, "RAM", refresh, self.update_chart, color=curses.color_pair(6), color_chart=curses.color_pair(12))#, value_name="use", value_max="tot")
+        self.chart_ram = Chart(jetson, "RAM", refresh, self.update_chart, color=curses.color_pair(6), color_chart=curses.color_pair(12))
 
-    def update_chart(self, jetson):
+    def update_chart(self, jetson, name):
         parameter = jetson.stats.get("RAM", {})
         # Get max value if is present
         max_val = parameter.get("tot", 100)

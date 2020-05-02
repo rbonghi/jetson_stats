@@ -36,7 +36,7 @@ from .github import jetpack_missing, board_missing
 # Tegrastats objext reader
 from .jtop import jtop, get_version
 # GUI jtop interface
-from .gui import JTOPGUI, ALL, GPU, MEM, CTRL, INFO
+from .gui import JTOPGUI, ALL, CPU, GPU, MEM, CTRL, INFO
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 # Reference repository
@@ -89,7 +89,7 @@ def main():
             if not args.restore:
                 try:
                     # Call the curses wrapper
-                    curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, MEM, CTRL, INFO], init_page=args.page)
+                    curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, CPU, GPU, MEM, CTRL, INFO], init_page=args.page)
                 except KeyboardInterrupt as x:
                     # Catch keyboard interrupt and close
                     logger.info("Closed with CTRL-C [{status}]".format(status=x))

@@ -205,7 +205,7 @@ class Chart(object):
         """ Local update chart """
         self._noData = False
         # Call the callback
-        data = self.callback(jetson)
+        data = self.callback(jetson, self.name)
         # Get max value if is present
         self.max_val = data.get("max", 100)
         # Get unit

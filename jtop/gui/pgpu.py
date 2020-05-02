@@ -32,7 +32,7 @@ class GPU(Page):
         # Initialize GPU chart
         self.chart_gpu = Chart(jetson, "GPU", refresh, self.update_chart, color=curses.color_pair(2), color_chart=curses.color_pair(8))
 
-    def update_chart(self, jetson):
+    def update_chart(self, jetson, name):
         parameter = jetson.stats.get("GR3D", {})
         # Get max value if is present
         max_val = parameter.get("max_val", 100)

@@ -19,6 +19,7 @@
 
 from .pinfo import INFO
 from .pcontrol import CTRL
+from .pcpu import CPU
 from .pgpu import GPU
 from .pall import ALL
 from .jtopgui import JTOPGUI
