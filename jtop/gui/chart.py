@@ -18,6 +18,7 @@
 # Math functions
 from math import ceil
 import curses
+from curses.textpad import rectangle
 from collections import deque
 from .jtopguilib import check_curses
 
@@ -47,6 +48,7 @@ class Chart(object):
         self.unit = "%"
         self.max_val = 100
         self.active = True
+        self.message = "OFF"
         # local variable no data
         self._noData = True
         # Attach the chart for every update from jtop
@@ -61,6 +63,8 @@ class Chart(object):
         self.max_val = data.get("max", 100)
         # Get unit
         self.unit = data.get("unit", "%")
+        # Get status
+        self.active = data.get("active", True)
         # update the queue
         self.value.append(data.get("value", 0))
 
@@ -86,6 +90,24 @@ class Chart(object):
                                   curses.A_BOLD)
                 except curses.error:
                     pass
+        # Text label
+        stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
+        if label:
+            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label, self.color)
+        # Draw ticks and labels
+        self._plot_x_axis(stdscr, val, size_x, size_y, displayX)
+        # Plot chart lines
+        if self.active:
+            # Plot values
+            self._plot_values(stdscr, points, size_x, size_y, displayY)
+        else:
+            rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1] - 2, size_x[1] - 1)
+            # Write message
+            middle_x = (size_x[1] - size_x[0] - len(self.message)) // 2
+            middle_y = (size_y[1] - size_y[0]) // 2
+            stdscr.addstr(size_y[0] + middle_y, size_x[0] + middle_x, self.message, curses.A_BOLD)
+
+    def _plot_x_axis(self, stdscr, val, size_x, size_y, displayX):
         # Draw ticks and labels
         ten_sec = int(self.tik * 1000 / self.refresh)
         counter = 0
@@ -105,11 +127,10 @@ class Chart(object):
                         counter += 1
                 except curses.error:
                     pass
-        # Text label
-        stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
-        if label:
-            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label, self.color)
-        # Plot values
+
+    def _plot_values(self, stdscr, points, size_x, size_y, displayY):
+        """ Plot values
+        """
         for idx, point in enumerate(reversed(points)):
             y_val = int((float(displayY - 2) / self.max_val) * point)
             x_val = size_x[1] - 1 - idx

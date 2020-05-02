@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import curses
-from curses.textpad import Textbox, rectangle
+from curses.textpad import rectangle
 import platform
 # Page class definition
 from .jtopgui import Page
@@ -34,8 +34,10 @@ class CPU(Page):
     def update_chart(self, jetson, name):
         n = int(name.split(" ")[1]) - 1
         cpu = jetson.stats["CPU"][n]
+        status = cpu.get("status", "OFF") == "ON"
         return {
             'value': cpu.get("val", 0),
+            'active': status
         }
 
     def draw(self, key):
