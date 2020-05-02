@@ -21,8 +21,8 @@ from .jtopgui import Page
 from .jtopguilib import (check_curses,
                          box_keyboard,
                          box_status,
-                         box_list,
-                         Chart)
+                         box_list)
+from .chart import Chart
 from ..core.jetson_clocks import JetsonClocks
 
 

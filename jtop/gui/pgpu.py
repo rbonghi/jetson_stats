@@ -20,8 +20,8 @@ from .jtopgui import Page
 # Graphics elements
 from .jtopguilib import (plot_name_info,
                          linear_gauge,
-                         label_freq,
-                         Chart)
+                         label_freq)
+from .chart import Chart
 from ..core.jetson_clocks import JetsonClocks
 
 

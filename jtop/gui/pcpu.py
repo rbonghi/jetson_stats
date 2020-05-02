@@ -20,7 +20,7 @@ from curses.textpad import Textbox, rectangle
 import platform
 # Page class definition
 from .jtopgui import Page
-from .jtopguilib import Chart
+from .chart import Chart
 
 class CPU(Page):
 

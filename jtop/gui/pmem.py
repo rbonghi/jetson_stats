@@ -26,9 +26,8 @@ from .jtopguilib import (linear_gauge,
                          box_status)
 # Graphics elements
 from .jtopguilib import (box_keyboard,
-                         Chart,
                          size_min)
-
+from .chart import Chart
 
 class MEM(Page):
 
