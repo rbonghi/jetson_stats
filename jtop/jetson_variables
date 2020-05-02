@@ -20,8 +20,9 @@
 # - UID -> https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 # - GCID, BOARD, EABI
 
-
+###########################
 #### JETPACK DETECTION ####
+###########################
 # Write version of jetpack installed
 # https://developer.nvidia.com/embedded/jetpack-archive
 jetson_jetpack()
@@ -57,14 +58,14 @@ jetson_jetpack()
     echo $JETSON_JETPACK
 }
 
+###########################
 ####  BOARD DETECTION  ####
+###########################
 # Detection NVIDIA Jetson
 # Jetson TK1 can be detected with chip id
 # Reference:
 # 1. https://github.com/rbonghi/jetson_stats/issues/48
-# 2. https://devtalk.nvidia.com/default/topic/1071080/jetson-nano/best-way-to-check-which-tegra-board/
-# 3. https://devtalk.nvidia.com/default/topic/1014424/jetson-tx2/identifying-tx1-and-tx2-at-runtime/
-# 4. https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
+# 2. https://github.com/rbonghi/jetson_stats/issues/57
 jetson_board()
 {
     local JETSON_CHIP_ID=$1
@@ -143,6 +144,9 @@ list_hw_boards()
     done
 }
 # Read DTS file
+# 1. https://devtalk.nvidia.com/default/topic/1071080/jetson-nano/best-way-to-check-which-tegra-board/
+# 2. https://devtalk.nvidia.com/default/topic/1014424/jetson-tx2/identifying-tx1-and-tx2-at-runtime/
+# 3. https://devtalk.nvidia.com/default/topic/996988/jetson-tk1/chip-uid/post/5100481/#5100481
 if [ -f /proc/device-tree/nvidia,dtsfilename ]; then
     # ..<something>/hardware/nvidia/platform/t210/porg/kernel-dts/tegra210-p3448-0000-p3449-0000-b00.dts
     # The last third is the codename of the board
