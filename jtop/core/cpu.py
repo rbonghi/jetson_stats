@@ -17,8 +17,8 @@
 
 
 import re
-
 REGEXP = re.compile(r'(.+?): ((.*))')
+
 
 class cpuinfo():
     """

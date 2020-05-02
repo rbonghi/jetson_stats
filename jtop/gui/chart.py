@@ -27,7 +27,7 @@ class Chart(object):
     """
     Chart draw object
     """
-    def __init__(self, jetson, name, interval, callback, line="*", color=curses.A_NORMAL, color_chart=None, fill=True, time=10.0, tik=2): #value_name='val', value_max="max_val"
+    def __init__(self, jetson, name, interval, callback, line="*", color=curses.A_NORMAL, color_chart=None, fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
         self.callback = callback

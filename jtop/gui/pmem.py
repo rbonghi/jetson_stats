@@ -29,6 +29,7 @@ from .jtopguilib import (box_keyboard,
                          size_min)
 from .chart import Chart
 
+
 class MEM(Page):
 
     def __init__(self, stdscr, jetson, refresh):

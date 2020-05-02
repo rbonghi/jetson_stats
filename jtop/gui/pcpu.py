@@ -23,6 +23,7 @@ from .jtopgui import Page
 from .jtopguilib import plot_name_info
 from .chart import Chart
 
+
 class CPU(Page):
 
     def __init__(self, stdscr, jetson, refresh):
@@ -30,7 +31,12 @@ class CPU(Page):
         # List all CPU
         self.chart_cpus = []
         for idx, cpu in enumerate(self.jetson.stats["CPU"]):
-            self.chart_cpus += [Chart(jetson, "CPU {idx}".format(idx=idx + 1), refresh, self.update_chart, color=curses.color_pair(4), color_chart=curses.color_pair(10))]
+            self.chart_cpus += [Chart(jetson,
+                                      "CPU {idx}".format(idx=idx + 1),
+                                      refresh,
+                                      self.update_chart,
+                                      color=curses.color_pair(4),
+                                      color_chart=curses.color_pair(10))]
 
     def update_chart(self, jetson, name):
         n = int(name.split(" ")[1]) - 1
@@ -69,7 +75,7 @@ class CPU(Page):
             # Load governor if exist
             governor = cpu.get("governor", "")
             # Load model architecture
-            model =  ""
+            model = ""
             if idx in architecture:
                 cpu_arch = architecture[idx]
                 model = cpu_arch.get("model name", "").split()[0]
@@ -84,7 +90,7 @@ class CPU(Page):
             else:
                 self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, status, curses.A_NORMAL)
         # Evaluate size single chart
-        x_size = (width - x_offset -  6 * (ncpu // 2) ) // (ncpu // 2)
+        x_size = (width - x_offset - 6 * (ncpu // 2)) // (ncpu // 2)
         y_size = (height - 4) // 2
         # Plot all CPUs
         for idx, cpu in enumerate(self.chart_cpus):
@@ -92,10 +98,9 @@ class CPU(Page):
             line = 1 if idx >= ncpu // 2 else 0
             # Incrase counter
             counter = idx - line * (ncpu // 2)
-            # Evaluate size chart    
+            # Evaluate size chart
             size_x = [x_offset + 2 + (counter * (x_size + 6)), x_offset + x_size + (counter * (x_size + 6))]
             size_y = [first + 1 + (line * (y_size + 1)), y_size + (line * (y_size + 1))]
             # Draw chart
             cpu.draw(self.stdscr, size_x, size_y)
-
 # EOF
