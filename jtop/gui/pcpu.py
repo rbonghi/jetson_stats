@@ -20,6 +20,7 @@ from curses.textpad import rectangle
 import platform
 # Page class definition
 from .jtopgui import Page
+from .jtopguilib import plot_name_info
 from .chart import Chart
 
 class CPU(Page):
@@ -52,13 +53,36 @@ class CPU(Page):
         x_offset = width // 4
         # Draw info rectangle
         rectangle(self.stdscr, first + 1, 0, height - 2, first + x_offset)
-
-        self.stdscr.addstr(first + 2, 2, "Platform", curses.A_NORMAL)
+        # Draw title side area
+        self.stdscr.addstr(first + 1, 1, " Platform ", curses.A_BOLD)
+        # Platform information
+        arch = platform.machine()
+        plot_name_info(self.stdscr, first + 2, 2, "Arch", arch)
+        release = platform.release()
+        plot_name_info(self.stdscr, first + 3, 2, "Rel", release)
         # Architecture CPU cores
-        for idx, model in enumerate(self.jetson.architecture):
-            number = self.jetson.architecture[model]
-            model = model.split(" ")[0]
-            self.stdscr.addstr(first + 3 + idx, 2, "{n}: {model}".format(n=number, model=model), curses.A_NORMAL)
+        architecture = self.jetson.architecture
+        offset_table = 5
+        for idx, cpu in enumerate(self.jetson.stats["CPU"]):
+            status = cpu.get("status", "OFF")
+            active = status == "ON"
+            # Load governor if exist
+            governor = cpu.get("governor", "")
+            # Load model architecture
+            model =  ""
+            if idx in architecture:
+                cpu_arch = architecture[idx]
+                model = cpu_arch.get("model name", "").split()[0]
+            # Write label CPU name
+            cpu_name = "CPU {n}:".format(n=idx + 1)
+            # Draw info
+            color = curses.color_pair(8) if active else curses.color_pair(7)
+            self.stdscr.addstr(first + offset_table + idx * 2, 2, cpu_name, color)
+            if active:
+                self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, governor, curses.A_NORMAL)
+                self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2 + len(cpu_name) + 1, model, curses.A_NORMAL)
+            else:
+                self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, status, curses.A_NORMAL)
         # Evaluate size single chart
         x_size = (width - x_offset -  6 * (ncpu // 2) ) // (ncpu // 2)
         y_size = (height - 4) // 2

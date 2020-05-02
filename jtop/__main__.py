@@ -89,7 +89,7 @@ def main():
             if not args.restore:
                 try:
                     # Call the curses wrapper
-                    curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, CPU, GPU, MEM, CTRL, INFO], init_page=args.page)
+                    curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, MEM, CPU, CTRL, INFO], init_page=args.page)
                 except KeyboardInterrupt as x:
                     # Catch keyboard interrupt and close
                     logger.info("Closed with CTRL-C [{status}]".format(status=x))

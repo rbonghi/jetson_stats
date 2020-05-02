@@ -25,9 +25,8 @@ class cpuinfo():
     Find in cpuinfo information about the board
     """
     @staticmethod
-    def load():
-        cpus = [{}]
-        counter = 0
+    def info():
+        cpus = {}
         with open("/proc/cpuinfo", "r") as fp:
             for line in fp:
                 # Search line
@@ -35,23 +34,22 @@ class cpuinfo():
                 if match:
                     key = match.group(1).rstrip()
                     value = match.group(2).rstrip()
-                    # Load cpu info
-                    cpus[counter][key] = value
-                else:
-                    counter += 1
-                    cpus += [{}]
-        # If empty remove the last one in list
-        if not cpus[-1]:
-            del cpus[-1]
+                    # Load value or if it is a new processor initialize a new field
+                    if key == "processor":
+                        n_proc = int(value)
+                        cpus[n_proc] = {}
+                    else:
+                        # Load cpu info
+                        cpus[n_proc][key] = value
         return cpus
 
     @staticmethod
     def models():
         # Load cpuinfo
-        cpus = cpuinfo.load()
+        cpus = cpuinfo.info()
         models = {}
         # Find all models
-        for cpu in cpus:
+        for cpu in cpus.values():
             model = cpu.get("model name", "")
             if model not in models:
                 models[model] = 1

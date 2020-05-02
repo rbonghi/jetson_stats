@@ -158,7 +158,8 @@ class jtop(StatusObserver):
 
     @property
     def architecture(self):
-        return cpuinfo.models()
+        """ CPU architecture """
+        return cpuinfo.info()
 
     @property
     def fan(self):
