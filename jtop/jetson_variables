@@ -80,6 +80,7 @@ jetson_board()
         P2888*) JETSON_TYPE="AGX Xavier" ;;
         P3448-0020*) JETSON_TYPE="Nano" ;;
         P3448*) JETSON_TYPE="Nano (Developer Kit Version)" ;;
+        P3668*) JETSON_TYPE="Xavier NX" ;;
         *) JETSON_TYPE="" ;;
     esac
     # if JETSON_TYPE empty, check CHIP_ID for jetson TK1

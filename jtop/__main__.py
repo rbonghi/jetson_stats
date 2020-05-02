@@ -122,7 +122,7 @@ def main():
                     print("[{status}] Please run with sudo".format(status=bcolors.fail()))
         if not args.no_warnings:
             # Check if jetpack is missing
-            if os.environ["JETSON_TYPE"] and not os.environ["JETSON_BOARD"]:
+            if not os.environ["JETSON_TYPE"] and os.environ["JETSON_BOARD"]:
                 print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, get_version())))
             # Check if jetpack is missing
             if os.environ["JETSON_JETPACK"] == "UNKNOWN":
