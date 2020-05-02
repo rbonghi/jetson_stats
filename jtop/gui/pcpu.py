@@ -52,7 +52,11 @@ class CPU(Page):
         rectangle(self.stdscr, first + 1, 0, height - 2, first + x_offset)
 
         self.stdscr.addstr(first + 2, 2, "Platform", curses.A_NORMAL)
-
+        # Architecture CPU cores
+        for idx, model in enumerate(self.jetson.architecture):
+            number = self.jetson.architecture[model]
+            model = model.split(" ")[0]
+            self.stdscr.addstr(first + 3 + idx, 2, "{n}: {model}".format(n=number, model=model), curses.A_NORMAL)
         # Evaluate size single chart
         x_size = (width - x_offset -  6 * (ncpu // 2) ) // (ncpu // 2)
         y_size = (height - 4) // 2

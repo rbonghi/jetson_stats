@@ -57,6 +57,7 @@ from .core import Tegrastats
 from .core import Fan
 from .core import JetsonClocks
 from .core import Swap
+from .core import cpuinfo
 from .core import (import_os_variables,
                    get_uptime,
                    status_disk,
@@ -154,6 +155,10 @@ class jtop(StatusObserver):
     def userid(self):
         """ Linux User ID """
         return os.getuid()
+
+    @property
+    def architecture(self):
+        return cpuinfo.models()
 
     @property
     def fan(self):
