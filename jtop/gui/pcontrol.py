@@ -59,7 +59,7 @@ class CTRL(Page):
             status = False
             # Fix error color
             color = curses.color_pair(7)
-            jc_status_name = "SUDO REQUIRED"
+            jc_status_name = "SUDO SUGGESTED"
         self.stdscr.addstr(start_pos, posx + len(jc_field) + 1, jc_status_name, color)
         # Show service status
         service = self.jetson.jetson_clocks.service

@@ -169,7 +169,7 @@ def compact_info(stdscr, start, offset, width, jetson):
         except JetsonClocks.JCException:
             # Fix error color
             color = curses.color_pair(7)
-            # SUDO REQUIRED is too long, change with a series of spaces
+            # SUDO SUGGESTED is too long, change with a series of spaces
             # The number 16 = len("jetson clocks: ") + 1
             jc_status_name = (width - 16) * " "
         # Show status jetson_clocks

@@ -125,7 +125,7 @@ class ALL(Page):
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name='EMC',
                      value=emc.get('val', 0),
-                     status='ON' if emc else 'SUDO REQUIRED',
+                     status='ON' if emc else 'SUDO SUGGESTED',
                      label=label_freq(emc),
                      color=curses.color_pair(6))
         # GPU linear gauge info
@@ -135,7 +135,7 @@ class ALL(Page):
                      name='GPU',
                      value=gpu.get('val', 0),
                      label=label_freq(gpu),
-                     status='ON' if gpu else 'SUDO REQUIRED',
+                     status='ON' if gpu else 'SUDO SUGGESTED',
                      color=curses.color_pair(6))
         # Status disk
         line_counter += 1

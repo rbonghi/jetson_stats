@@ -150,7 +150,7 @@ class MEM(Page):
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name='EMC',
                      value=emc.get('val', 0),
-                     status='ON' if emc else 'SUDO REQUIRED',
+                     status='ON' if emc else 'SUDO SUGGESTED',
                      label=label_freq(emc),
                      color=curses.color_pair(6))
         if self.jetson.userid == 0:

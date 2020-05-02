@@ -76,7 +76,7 @@ class Fan(object):
         if os.path.isfile(self.path + "target_pwm"):
             self._status["status"] = 'ON'
         elif os.getuid() != 0:
-            self._status["status"] = 'SUDO REQUIRED'
+            self._status["status"] = 'SUDO SUGGESTED'
         else:
             self._status["status"] = 'OFF'
         # Load configuration if exist
