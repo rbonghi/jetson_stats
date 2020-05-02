@@ -29,11 +29,21 @@ class GPU(Page):
 
     def __init__(self, stdscr, jetson, refresh):
         super(GPU, self).__init__("GPU", stdscr, jetson, refresh)
-        if 'GR3D' in jetson.stats:
-            # Initialize GPU chart
-            self.chart_gpu = Chart("GR3D", refresh, color=curses.color_pair(2))
-            # Attach the chart for every update from jtop
-            jetson.attach(self.chart_gpu)
+        # Initialize GPU chart
+        self.chart_gpu = Chart(jetson, "GPU", refresh, self.update_chart, color=curses.color_pair(2), color_chart=curses.color_pair(8))
+
+    def update_chart(self, jetson):
+        parameter = jetson.stats.get("GR3D", {})
+        # Get max value if is present
+        max_val = parameter.get("max_val", 100)
+        # Get unit
+        unit = parameter.get("unit", "%")
+        # Append in list
+        return {
+            'value': parameter.get("val", 0),
+            'max': max_val,
+            'unit': unit,
+        }
 
     def draw(self, key):
         """
@@ -74,7 +84,7 @@ class GPU(Page):
                 jc_status_name = "Running" if jc_status else "Stopped"
             except JetsonClocks.JCException:
                 # Fix error color
-                jc_color = curses.color_pair(7)
+                jc_color = curses.color_pair(11)
                 jc_status_name = "SUDO SUGGESTED"
             # Status service
             jc_service = jc.service

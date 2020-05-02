@@ -18,6 +18,9 @@
 
 import os
 
+# Shell infromation
+# os.environ['SHELL']
+
 
 def jetpack_missing(repository, version):
     l4t = os.environ["JETSON_L4T"]
@@ -62,7 +65,7 @@ def board_missing(repository, version):
     return hyperlink(url, title)
 
 
-def hyperlink(url, text):
+def hyperlink(url, text, hyperlink=True):
     # Reference:
     # 1. http://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
     # 2. https://stackoverflow.com/questions/40419276/python-how-to-print-text-to-console-as-hyperlink
@@ -70,8 +73,7 @@ def hyperlink(url, text):
     # 4. https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
     # 5. https://stackoverflow.com/questions/44078888/clickable-html-links-in-python-3-6-shell
     # Check type of shell
-    shell = os.environ['SHELL']
-    if 'bash' in shell:
+    if hyperlink:
         return u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (CTRL + Click to open this issue)".format(url=url, text=text)
     else:
         return "{text} ({url})".format(url=url, text=text)

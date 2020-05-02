@@ -35,9 +35,20 @@ class MEM(Page):
     def __init__(self, stdscr, jetson, refresh):
         super(MEM, self).__init__("MEM", stdscr, jetson, refresh)
         # Initialize MEM chart
-        self.chart_ram = Chart("RAM", refresh, color=curses.color_pair(6), value_name="use", value_max="tot")
-        # Attach the chart for every update from jtop
-        jetson.attach(self.chart_ram)
+        self.chart_ram = Chart(jetson, "RAM", refresh, self.update_chart, color=curses.color_pair(6), color_chart=curses.color_pair(12))#, value_name="use", value_max="tot")
+
+    def update_chart(self, jetson):
+        parameter = jetson.stats.get("RAM", {})
+        # Get max value if is present
+        max_val = parameter.get("tot", 100)
+        # Get unit
+        unit = parameter.get("unit", "M")
+        # Append in list
+        return {
+            'value': parameter.get("use", 0),
+            'max': max_val,
+            'unit': unit
+        }
 
     def swap_menu(self, lc, size, start, width):
         line_counter = lc + 1

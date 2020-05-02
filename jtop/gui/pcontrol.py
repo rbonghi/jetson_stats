@@ -31,13 +31,22 @@ class CTRL(Page):
     def __init__(self, stdscr, jetson, refresh):
         super(CTRL, self).__init__("CTRL", stdscr, jetson, refresh)
         # Only if exist a fan will be load a chart
-        if 'FAN' in self.jetson.stats:
-            fan = self.jetson.stats['FAN']
-            value = 'cpwm' if 'cpwm' in fan else 'tpwm'
-            # Initialize FAN chart
-            self.chart_fan = Chart("FAN", refresh, line="o", color=curses.color_pair(4), value_name=value)
-            # Attach the chart for every update from jtop
-            jetson.attach(self.chart_fan)
+        # Initialize FAN chart
+        self.chart_fan = Chart(jetson, "FAN", refresh, self.update_chart, line="o", color=curses.color_pair(4), color_chart=curses.color_pair(10))
+
+    def update_chart(self, jetson):
+        parameter = jetson.stats.get("FAN", {})
+        value = 'cpwm' if 'cpwm' in parameter else 'tpwm'
+        # Get max value if is present
+        max_val = parameter.get("max_val", 100)
+        # Get unit
+        unit = parameter.get("unit", "%")
+        # Append in list
+        return {
+            'value': parameter.get(value, 0),
+            'max': max_val,
+            'unit': unit,
+        }
 
     @check_curses
     def draw(self, key):
@@ -58,7 +67,7 @@ class CTRL(Page):
         except JetsonClocks.JCException:
             status = False
             # Fix error color
-            color = curses.color_pair(7)
+            color = curses.color_pair(11)
             jc_status_name = "SUDO SUGGESTED"
         self.stdscr.addstr(start_pos, posx + len(jc_field) + 1, jc_status_name, color)
         # Show service status

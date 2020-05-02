@@ -75,7 +75,13 @@ class JTOPGUI:
         curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)
         curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
+        # background
+        curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_RED)
+        curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_GREEN)
+        curses.init_pair(9, curses.COLOR_WHITE, curses.COLOR_YELLOW)
+        curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLUE)
+        curses.init_pair(11, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
+        curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_CYAN)
         # Set curses reference, refresh and jetson controller
         self.stdscr = stdscr
         self.refresh = refresh
@@ -167,9 +173,9 @@ class JTOPGUI:
         idx = 0
         if self.jetson.userid != 0:
             _, width = self.stdscr.getmaxyx()
-            self.stdscr.addstr(0, 0, ("{0:<" + str(width) + "}").format(" "), curses.color_pair(7))
+            self.stdscr.addstr(0, 0, ("{0:<" + str(width) + "}").format(" "), curses.color_pair(11))
             string_sudo = "SUDO SUGGESTED"
-            self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(7))
+            self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(11))
             idx = 1
         self.stdscr.addstr(idx, 0, board["Machine"] + " - Jetpack " + board["Jetpack"], curses.A_BOLD)
 
