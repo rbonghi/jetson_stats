@@ -26,12 +26,3 @@ recursive-include scripts *
 # Include services files
 recursive-include services *.service
 recursive-include services *.sh
-
-# Include examples files
-recursive-include examples *.py
-
-# Documentation
-recursive-include docs *.bat
-recursive-include docs *.py
-recursive-include docs *.rst
-recursive-include docs Makefile
