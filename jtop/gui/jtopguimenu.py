@@ -25,7 +25,8 @@ from .jtopguilib import (check_curses,
                          strfdelta,
                          linear_gauge,
                          label_freq,
-                         plot_name_info)
+                         plot_name_info,
+                         size_min)
 from ..core.jetson_clocks import JetsonClocks
 
 
@@ -191,24 +192,49 @@ def compact_info(stdscr, start, offset, width, height, jetson):
     if nvpmodel is not None:
         plot_name_info(stdscr, offset + counter, start + 1, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
         counter += 1
+    # Write all engines
+    engines(stdscr, start, offset + counter, width, height, jetson)
+
+
+def engines(stdscr, start, offset, width, height, jetson):
+    stdscr.hline(offset, start + 1, curses.ACS_HLINE, width - 1)
+    stdscr.addstr(offset, start + (width - 13) // 2, " [HW engines] ", curses.A_BOLD)
+    counter = 1
     # APE frequency
     if 'APE' in jetson.stats:
         plot_name_info(stdscr, offset + counter, start + 1, "APE", str(jetson.stats['APE']['val']) + "MHz")
         counter += 1
-    # NVENC frequency
-    stdscr.addstr(offset + counter, start + 1, "HW engine:", curses.A_BOLD)
-    counter += 1
+    # Find encoders
     if 'NVENC' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start + 1, " ENC", str(jetson.stats['NVENC']['val']) + "MHz")
+        enc_name = 'NVENC'
+        enc_val = "{value}{unit}Hz".format(value=jetson.stats['NVENC']['val'], unit="M")
+    elif 'MSENC' in jetson.stats:
+        enc_name = 'MSENC'
+        enc_val = "{value}{unit}Hz".format(value=jetson.stats['MSENC']['val'], unit="M")
     else:
-        plot_name_info(stdscr, offset + counter, start + 1, " ENC", "NOT RUNNING")
-    counter += 1
-    # NVDEC frequency
+        enc_name = 'NVENC'
+        enc_val = "OFF"
+    # Find decoders
     if 'NVDEC' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start + 1, " DEC", str(jetson.stats['NVDEC']['val']) + "MHz")
+        dec_name = 'NVDEC'
+        dec_val = "{value}{unit}Hz".format(value=jetson.stats['NVDEC']['val'], unit="M")
     else:
-        plot_name_info(stdscr, offset + counter, start + 1, " DEC", "NOT RUNNING")
+        dec_name = 'NVDEC'
+        dec_val = "OFF"
+    double_info(stdscr, start + 1, offset + counter, width, (enc_name, enc_val), (dec_name, dec_val))
     counter += 1
-    if 'MSENC' in jetson.stats:
-        plot_name_info(stdscr, offset + counter, start + 1, " ENC", str(jetson.stats['MSENC']['val']) + "MHz")
+    # NVJPG
+    nvjpg = jetson.nvjpg
+    if nvjpg:
+        status = nvjpg['status']
+        value, _, unit = size_min(nvjpg['rate'])
+        plot_name_info(stdscr, offset + counter, start + 1, "NVJPG", "{value}{unit}Hz".format(value=value, unit=unit))
+        # Plot status
+        status_name = "[ON]" if status else "[OFF]"
+        stdscr.addstr(offset + counter, start + width - 7, status_name, curses.A_NORMAL)
+
+
+def double_info(stdscr, start, offset, width, enc, dec):
+    plot_name_info(stdscr, offset, start, enc[0], enc[1])
+    plot_name_info(stdscr, offset, start + width // 2, dec[0], dec[1])
 # EOF
