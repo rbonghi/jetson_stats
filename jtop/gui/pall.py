@@ -135,17 +135,6 @@ class ALL(Page):
                      type_bar="#",
                      color=curses.color_pair(3))
         # Last part of information
-        #mini_menu = [compact_info]
-        #if self.jetson.stats['TEMP']:
-        #    mini_menu += [plot_temperatures]
-        #if self.jetson.stats['WATT']:
-        #    mini_menu += [plot_watts]
-        #line_counter += 1
-        # Evaluate column width
-        #column_width = (width) // (len(mini_menu))
-        #for idx, mini in enumerate(mini_menu):
-        #    # Run mini page
-        #    mini(self.stdscr, idx * column_width, line_counter, column_width - 1, height - line_counter - 2, self.jetson)
         rectangle(self.stdscr, line_counter + 1, 0, height - 2, width - 1)
         mini_menu = 1
         mini_menu += 1 if self.jetson.stats['TEMP'] else 0
