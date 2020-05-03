@@ -332,7 +332,6 @@ if [ ! -z $JETSON_VULKAN_INFO ] ; then
 else
     JETSON_VULKAN_INFO="NOT_INSTALLED"
 fi
-echo $JETSON_VULKAN_INFO
 # Export VPI
 export JETSON_VULKAN_INFO
 #EOF

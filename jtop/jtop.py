@@ -208,20 +208,25 @@ class jtop(StatusObserver):
          * Serial Number
          * ...
         """
-        board_ids = " ({})".format(os.environ["JETSON_BOARDIDS"]) if os.environ["JETSON_BOARDIDS"] else ""
         info = {"Machine": os.environ["JETSON_MACHINE"],
                 "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"}
         board = {"Type": os.environ["JETSON_TYPE"],
                  "Code Name": os.environ["JETSON_CODENAME"],
-                 "SOC": os.environ["JETSON_SOC"] + " - ID:" + os.environ["JETSON_CHIP_ID"],
-                 "Board(s)": ", ".join(os.environ["JETSON_BOARD"].split()) + board_ids,
+                 "SOC": os.environ["JETSON_SOC"],
+                 "Chip ID": os.environ["JETSON_CHIP_ID"],
+                 "Boardids": os.environ["JETSON_BOARDIDS"],
+                 "Module": os.environ["JETSON_MODULE"],
+                 "Board": os.environ["JETSON_BOARD"],
                  "GPU-Arch": os.environ["JETSON_CUDA_ARCH_BIN"],
                  "SN": os.environ["JETSON_SERIAL_NUMBER"].upper()}
         libraries = {"CUDA": os.environ["JETSON_CUDA"],
                      "cuDNN": os.environ["JETSON_CUDNN"],
                      "TensorRT": os.environ["JETSON_TENSORRT"],
                      "VisionWorks": os.environ["JETSON_VISIONWORKS"],
-                     "OpenCV": os.environ["JETSON_OPENCV"] + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"]}
+                     "OpenCV": os.environ["JETSON_OPENCV"], # + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"],
+                     "OpenCV-Cuda": os.environ["JETSON_OPENCV_CUDA"],
+                     "VPI": os.environ["JETSON_VPI"],
+                     "Vulkan": os.environ["JETSON_VULKAN_INFO"]}
         return {"info": info, "board": board, "libraries": libraries}
 
     @property

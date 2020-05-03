@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
+bold=`tput bold`
 red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
@@ -57,7 +57,7 @@ jetson_release()
 
 
     # Print Jetson version
-    echo " - $JETSON_MACHINE"
+    echo "${bold} - $JETSON_MACHINE${reset}"
     # Print Jetpack and kernel
     echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
     # Print status NVPModel
@@ -72,17 +72,16 @@ jetson_release()
     fi
 
     if $VERBOSE ; then
-        # If available print the Board IDS
-        BOAD_IDS_INFO=""
-        if [ ! -z "$JETSON_BOARDIDS" ] ; then
-            BOAD_IDS_INFO="($JETSON_BOARDIDS)"
-        fi
         # Board information
-        echo " - Board info:"
-        echo "   * $JETSON_TYPE - CN: $JETSON_CODENAME"
+        echo "${bold} - Board info:${reset}"
+        echo "   * Type: $JETSON_TYPE"
         echo "   * SOC Family: $JETSON_SOC - ID:$JETSON_CHIP_ID"
-        echo "   * Board(s): $JETSON_BOARD $BOAD_IDS_INFO"
-
+        echo "   * Module: $JETSON_MODULE - Board: $JETSON_BOARD"
+        echo "   * Code Name: $JETSON_CODENAME"
+        # If available print the Board IDS
+        if [ ! -z "$JETSON_BOARDIDS" ] ; then
+            echo "   * Boardids: $JETSON_BOARDIDS"
+        fi
         # Print CUDA GPU architecture
         echo "   * CUDA GPU architecture (ARCH_BIN): $JETSON_CUDA_ARCH_BIN"
         # Print serial number
@@ -92,7 +91,7 @@ jetson_release()
     fi
 
     # Libraries
-    echo " - Libraries:"
+    echo "${bold} - Libraries:${reset}"
     # Print Cuda version
     echo "   * CUDA: $JETSON_CUDA"
     # Print cuDNN version
@@ -107,10 +106,13 @@ jetson_release()
     else
         echo "   * OpenCV: $JETSON_OPENCV compiled CUDA: ${red}$JETSON_OPENCV_CUDA${reset}"
     fi
-
+    # Print VPI version
+    echo "   * VPI: $JETSON_VPI"
+    # Print Vulkan version
+    echo "   * Vulkan: $JETSON_VULKAN_INFO"
     if $VERBOSE ; then
         # jetson-stats version
-        echo " - jetson-stats:"
+        echo "${bold} - jetson-stats:${reset}"
         echo "   * Version $JETSON_STATS_VERSION"
         echo "   * Works on $JTOP_PYTHON"
     fi
