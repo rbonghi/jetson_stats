@@ -16,6 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import curses
+from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .jtopguilib import (linear_gauge,
@@ -40,7 +41,7 @@ class ALL(Page):
             Update screen with values
         """
         # Screen size
-        _, width, first = self.size_page()
+        height, width, first = self.size_page()
         line_counter = first + 1
         # Plot Status CPU
         line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.stats['CPU'], width)
@@ -134,16 +135,38 @@ class ALL(Page):
                      type_bar="#",
                      color=curses.color_pair(3))
         # Last part of information
-        mini_menu = [compact_info]
-        if self.jetson.stats['TEMP']:
-            mini_menu += [plot_temperatures]
-        if self.jetson.stats['WATT']:
-            mini_menu += [plot_watts]
-        column_width = int(float(width - 4) / float(len(mini_menu)))
-        line_counter += 1
+        #mini_menu = [compact_info]
+        #if self.jetson.stats['TEMP']:
+        #    mini_menu += [plot_temperatures]
+        #if self.jetson.stats['WATT']:
+        #    mini_menu += [plot_watts]
+        #line_counter += 1
         # Evaluate column width
-        column_width = int(float(width) / len(mini_menu))
-        for idx, mini in enumerate(mini_menu):
-            # Run mini page
-            mini(self.stdscr, idx * column_width, line_counter, column_width, self.jetson)
+        #column_width = (width) // (len(mini_menu))
+        #for idx, mini in enumerate(mini_menu):
+        #    # Run mini page
+        #    mini(self.stdscr, idx * column_width, line_counter, column_width - 1, height - line_counter - 2, self.jetson)
+        rectangle(self.stdscr, line_counter + 1, 0, height - 2, width - 1)
+        mini_menu = 1
+        mini_menu += 1 if self.jetson.stats['TEMP'] else 0
+        mini_menu += 1 if self.jetson.stats['WATT'] else 0
+        column_width = (width) // (mini_menu)
+        # Plot compact info
+        compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, height - line_counter - 3, self.jetson)
+        # Plot temperatures
+        if self.jetson.stats['TEMP']:
+            self.add_line(line_counter + 1, column_width + 2, height - (line_counter + 1) - 1)
+            plot_temperatures(self.stdscr, column_width + 2, line_counter + 1, column_width - 4, height - line_counter - 3, self.jetson)
+        # plot watts
+        if self.jetson.stats['WATT']:
+            self.add_line(line_counter + 1, 2 * column_width - 2, height - (line_counter + 1) - 1)
+            plot_watts(self.stdscr, 2 * column_width - 1, line_counter + 1, column_width + 2, height - line_counter - 3, self.jetson)
+
+    def add_line(self, pos_y, pos_x, height):
+        """
+        http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
+        """
+        self.stdscr.addch(pos_y, pos_x, curses.ACS_TTEE)
+        self.stdscr.vline(pos_y + 1, pos_x, curses.ACS_VLINE, height - 2)
+        self.stdscr.addch(pos_y + height - 1, pos_x, curses.ACS_BTEE)
 # EOF

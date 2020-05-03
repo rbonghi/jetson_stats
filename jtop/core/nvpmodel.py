@@ -78,7 +78,8 @@ class NVPmodel():
                 match = NVPmodel.REGEXP.search(line)
                 # if match extract name and number
                 if match:
-                    pm = {"ID": int(match.group(1)), "Name": match.group(2).replace("_", " "), "status": True}
+                    mode = str(match.group(2))
+                    pm = {"ID": int(match.group(1)), "Name": mode.replace("MODE_", "").replace("_", " "), "status": True}
                     self.board += [pm]
         except OSError:
             logger.info("This board does not have NVP Model")
@@ -145,7 +146,8 @@ class NVPmodel():
                 # if match extract name and number
                 if match:
                     # Extract NV Power Mode
-                    self.mode = str(match.group(1).replace("_", " "))
+                    mode = str(match.group(1))
+                    self.mode = mode.replace("MODE_", "").replace("_", " ")
                     # Extract number
                     self.num = int(lines[idx + 1])
                     break

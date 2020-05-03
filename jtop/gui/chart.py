@@ -26,6 +26,7 @@ from .jtopguilib import check_curses
 class Chart(object):
     """
     Chart draw object
+    http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
     """
     def __init__(self, jetson, name, interval, callback, type_value=int, line="*", color=curses.A_NORMAL, color_chart=None, fill=True, time=10.0, tik=2):
         self.jetson = jetson
