@@ -223,7 +223,7 @@ class jtop(StatusObserver):
                      "cuDNN": os.environ["JETSON_CUDNN"],
                      "TensorRT": os.environ["JETSON_TENSORRT"],
                      "VisionWorks": os.environ["JETSON_VISIONWORKS"],
-                     "OpenCV": os.environ["JETSON_OPENCV"], # + " compiled CUDA: " + os.environ["JETSON_OPENCV_CUDA"],
+                     "OpenCV": os.environ["JETSON_OPENCV"],
                      "OpenCV-Cuda": os.environ["JETSON_OPENCV_CUDA"],
                      "VPI": os.environ["JETSON_VPI"],
                      "Vulkan": os.environ["JETSON_VULKAN_INFO"]}
