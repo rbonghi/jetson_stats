@@ -96,7 +96,7 @@ class CPU(Page):
             else:
                 self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, status, curses.A_NORMAL)
         # Evaluate size single chart
-        x_size = (width - x_offset - 6) // (n_cpu // 2) - 1
+        x_size = (width - x_offset - 5) // (n_cpu // 2)
         y_size = (height - 2) // 2
         # Plot all CPUs
         for idx, (cpu, data) in enumerate(zip(self.chart_cpus, self.jetson.stats["CPU"])):
@@ -108,8 +108,8 @@ class CPU(Page):
             # Incrase counter
             counter = idx - line * (n_cpu // 2)
             # Evaluate size chart
-            add_size = 6 if y_label else 0
-            size_x = [x_offset + 2 + (counter * (x_size)), x_offset + x_size * (1 + counter) + add_size]
+            add_size = 5 if y_label else 0
+            size_x = [x_offset + 1 + (counter * (x_size)), x_offset + x_size * (1 + counter) + add_size - 1]
             size_y = [first + 1 + (line * (y_size)), y_size * (1 + line)]
             # Value and frequency
             if status:
