@@ -175,10 +175,11 @@ class Fan(object):
     def clear(self):
         if os.path.isfile(self.config_file):
             # Remove configuration file
-            os.remove(self.config_file)
-            return True
-        else:
-            return False
+            try:
+                os.remove(self.config_file)
+            except OSError:
+                return False
+        return True
 
     def load(self):
         if os.path.isfile(self.config_file):

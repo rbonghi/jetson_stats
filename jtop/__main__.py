@@ -112,12 +112,14 @@ def main():
                         jetson.fan.control = True
                         print("[{status}] Fan temp_control = 1".format(status=bcolors.ok()))
                     # * Delete fan_configuration
-                        if jetson.fan.clear():
-                            print("[{status}] Clear Fan Configuration".format(status=bcolors.ok()))
+                        clear = jetson.fan.clear()
+                        status = bcolors.ok() if clear else bcolors.fail()
+                        print("[{status}] Clear Fan Configuration".format(status=status))
                     # * Delete jetson_clocks configuration
                     if jetson.jetson_clocks:
-                        if jetson.jetson_clocks.clear():
-                            print("[{status}] Clear Jetson Clock Configuration".format(status=bcolors.ok()))
+                        clear = jetson.jetson_clocks.clear()
+                        status = bcolors.ok() if clear else bcolors.fail()
+                        print("[{status}] Clear Jetson Clock Configuration".format(status=status))
                 else:
                     print("[{status}] Please run with sudo".format(status=bcolors.fail()))
         if not args.no_warnings:
