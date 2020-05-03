@@ -15,18 +15,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
+import os
 
-from .nvpmodel import NVPmodel
-from .tegrastats import Tegrastats
-from .fan import Fan
-from .jetson_clocks import JetsonClocks
-from .swap import Swap
-from .cpu import cpuinfo
-from .engine import nvjpg
-from .common import (import_os_variables,
-                     get_uptime,
-                     status_disk,
-                     get_local_interfaces,
-                     StatusObserver)
-# EOF
+
+def nvjpg(path="/sys/kernel/debug/clk/nvjpg"):
+    # Read status enable
+    nvjpg = {}
+    # Check if access to this file
+    if os.access(path + "/clk_enable_count", os.R_OK):
+        with open(path + "/clk_enable_count", 'r') as f:
+            # Write status engine
+            nvjpg['status'] = int(f.read()) == 1
+    # Check if access to this file
+    if os.access(path + "/clk_rate", os.R_OK):
+        with open(path + "/clk_rate", 'r') as f:
+            # Write status engine
+            nvjpg['rate'] = int(f.read())
+    return nvjpg

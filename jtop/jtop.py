@@ -58,6 +58,7 @@ from .core import Fan
 from .core import JetsonClocks
 from .core import Swap
 from .core import cpuinfo
+from .core import nvjpg
 from .core import (import_os_variables,
                    get_uptime,
                    status_disk,
@@ -188,6 +189,10 @@ class jtop(StatusObserver):
         From this object you read and set the status of your NVIDIA Jetson.
         """
         return self.nvp
+
+    @property
+    def nvjpg(self):
+        return nvjpg()
 
     @property
     def local_interfaces(self):
