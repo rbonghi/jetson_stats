@@ -64,9 +64,7 @@ class ALL(Page):
         lfb_status = self.jetson.stats['RAM']['lfb']
         szw, divider, unit = size_min(ram_status['tot'], start=ram_status['unit'])
         # lfb label
-        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / divider,
-                                                              unit=unit,
-                                                              tot=szw)
+        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / divider, unit=unit, tot=szw)
         label_lfb = "(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
                                                           size=lfb_status['size'],
                                                           unit=lfb_status['unit'])
@@ -83,9 +81,7 @@ class ALL(Page):
             line_counter += 1
             szw, divider, unit = size_min(iram_status['tot'], start=iram_status['unit'])
             # lfb label
-            percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider,
-                                                                  unit=unit,
-                                                                  tot=szw)
+            percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider, unit=unit, tot=szw)
             label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
                                                      unit=iram_status['lfb']['unit'])
             linear_gauge(self.stdscr, offset=line_counter, size=width,
@@ -100,9 +96,7 @@ class ALL(Page):
         swap_cached = swap_status.get('cached', {})
         szw, divider, unit = size_min(swap_status['tot'], start=swap_status['unit'])
         # lfb label
-        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=swap_status['use'] / divider,
-                                                                unit=unit,
-                                                                tot=szw)
+        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=swap_status['use'] / divider, unit=unit, tot=szw)
         label_lfb = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'),
                                                     unit=swap_cached.get('unit', ''))
         linear_gauge(self.stdscr, offset=line_counter, size=width,

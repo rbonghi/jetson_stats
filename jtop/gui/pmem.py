@@ -59,9 +59,7 @@ class MEM(Page):
         swap_status = self.jetson.stats.get('SWAP', {})
         swap_cached = swap_status.get('cached', {})
         szw, divider, unit = size_min(swap_status['tot'], start=swap_status['unit'])
-        percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0) / divider,
-                                                     tot=szw,
-                                                     unit=unit)
+        percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0) / divider, tot=szw, unit=unit)
         # Make label cache
         label = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'), unit=swap_cached.get('unit', ''))
         self.stdscr.addstr(line_counter, start, "Swap", curses.A_BOLD)
@@ -88,7 +86,6 @@ class MEM(Page):
                          color=color)
         # Draw total swap gauge
         line_counter += 1
-        #self.stdscr.addstr(line_counter, start, "-" * (size - 1), curses.A_NORMAL)
         self.stdscr.hline(line_counter, start, curses.ACS_HLINE, size - 1)
         line_counter += 1
         linear_gauge(self.stdscr, offset=line_counter, size=size, start=start,
@@ -111,9 +108,7 @@ class MEM(Page):
         lfb_status = self.jetson.stats['RAM']['lfb']
         szw, divider, unit = size_min(ram_status['tot'], start=ram_status['unit'])
         # lfb label
-        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / divider,
-                                                              unit=unit,
-                                                              tot=szw)
+        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / divider, unit=unit, tot=szw)
         label_lfb = "(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
                                                           size=lfb_status['size'],
                                                           unit=lfb_status['unit'])
@@ -134,9 +129,7 @@ class MEM(Page):
             line_counter += 1
             szw, divider, unit = size_min(iram_status['tot'], start=iram_status['unit'])
             # lfb label
-            percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider,
-                                                                  unit=unit,
-                                                                  tot=szw)
+            percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider, unit=unit, tot=szw)
             label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
                                                      unit=iram_status['lfb']['unit'])
             linear_gauge(self.stdscr, offset=line_counter, size=width,

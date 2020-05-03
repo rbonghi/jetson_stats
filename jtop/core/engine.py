@@ -32,3 +32,4 @@ def nvjpg(path="/sys/kernel/debug/clk/nvjpg"):
             # Write status engine
             nvjpg['rate'] = int(f.read())
     return nvjpg
+# EOF

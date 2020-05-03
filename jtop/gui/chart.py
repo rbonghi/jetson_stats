@@ -98,17 +98,18 @@ class Chart(object):
         # Draw ticks and labels
         self._plot_x_axis(stdscr, val, size_x, size_y, displayX, label=y_label)
         # Plot chart shape and labels
-        if y_label:
-            self._plot_y_axis(stdscr, size_x, size_y, displayY)
+        self._plot_y_axis(stdscr, size_x, size_y, displayY, label=y_label)
 
-    def _plot_y_axis(self, stdscr, size_x, size_y, displayY):
+    def _plot_y_axis(self, stdscr, size_x, size_y, displayY, label=True):
         # Plot chart shape and labels
-        label_x = size_x[1] - 5
+        label_x = size_x[1] - 5 if label else size_x[1]
         for point in range(displayY):
             if displayY != point:
                 value_n = self.max_val / float(displayY - 1) * float(displayY - point - 1)
                 try:
                     stdscr.addch(1 + size_y[0] + point, label_x, curses.ACS_LTEE)
+                    if not label:
+                        continue
                     if self.type_value == float:
                         lab_c = "{value:2.1f}{unit}".format(value=value_n, unit=self.unit)
                     else:
