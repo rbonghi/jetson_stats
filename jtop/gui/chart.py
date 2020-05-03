@@ -27,7 +27,7 @@ class Chart(object):
     """
     Chart draw object
     """
-    def __init__(self, jetson, name, interval, callback, y_label=True, line="*", color=curses.A_NORMAL, color_chart=None, fill=True, time=10.0, tik=2):
+    def __init__(self, jetson, name, interval, callback, type_value=int, line="*", color=curses.A_NORMAL, color_chart=None, fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
         self.callback = callback
@@ -46,10 +46,10 @@ class Chart(object):
         self.value = deque(max_record * [0], maxlen=max_record)
         # Initialzie default values and unit
         self.unit = "%"
+        self.type_value = type_value
         self.max_val = 100
         self.active = True
         self.message = "OFF"
-        self.y_label = y_label
         # Attach the chart for every update from jtop
         jetson.attach(self)
 
@@ -72,10 +72,8 @@ class Chart(object):
         self.value.append(value)
 
     @check_curses
-    def draw(self, stdscr, size_x, size_y, label=""):
+    def draw(self, stdscr, size_x, size_y, label="", y_label=True):
         # Evaluate Diplay X, and Y size
-        # rectangle(stdscr, size_y[0], size_x[0], size_y[1], size_x[1])
-
         displayX = size_x[1] - size_x[0] + 1
         displayY = size_y[1] - size_y[0] - 1
         val = float(displayX - 2) / float(len(self.value))
@@ -89,18 +87,18 @@ class Chart(object):
         # Plot chart lines
         if self.active:
             # Plot values
-            self._plot_values(stdscr, points, size_x, size_y, displayY, label=self.y_label)
+            self._plot_values(stdscr, points, size_x, size_y, displayY, label=y_label)
         else:
-            l_label = size_x[1] - 6 if self.y_label else size_x[1] - 1
+            l_label = size_x[1] - 6 if y_label else size_x[1] - 1
             rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1] - 2, l_label)
             # Write message
             middle_x = (l_label - size_x[0] - len(self.message)) // 2
             middle_y = (size_y[1] - size_y[0]) // 2
             stdscr.addstr(size_y[0] + middle_y, size_x[0] + middle_x, self.message, curses.A_BOLD)
         # Draw ticks and labels
-        self._plot_x_axis(stdscr, val, size_x, size_y, displayX, label=self.y_label)
+        self._plot_x_axis(stdscr, val, size_x, size_y, displayX, label=y_label)
         # Plot chart shape and labels
-        if self.y_label:
+        if y_label:
             self._plot_y_axis(stdscr, size_x, size_y, displayY)
 
     def _plot_y_axis(self, stdscr, size_x, size_y, displayY):
@@ -111,9 +109,11 @@ class Chart(object):
                 value_n = self.max_val / float(displayY - 1) * float(displayY - point - 1)
                 try:
                     stdscr.addch(1 + size_y[0] + point, label_x, curses.ACS_LTEE)
-                    stdscr.addstr(1 + size_y[0] + point, label_x + 2,
-                                  "{value:3d}{unit}".format(value=int(value_n), unit=self.unit),
-                                  curses.A_BOLD)
+                    if self.type_value == float:
+                        lab_c = "{value:2.1f}{unit}".format(value=value_n, unit=self.unit)
+                    else:
+                        lab_c = "{value:3d}{unit}".format(value=int(value_n), unit=self.unit)
+                    stdscr.addstr(1 + size_y[0] + point, label_x + 2, lab_c, curses.A_BOLD)
                 except curses.error:
                     pass
 

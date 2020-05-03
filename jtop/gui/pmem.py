@@ -35,7 +35,7 @@ class MEM(Page):
     def __init__(self, stdscr, jetson, refresh):
         super(MEM, self).__init__("MEM", stdscr, jetson, refresh)
         # Initialize MEM chart
-        self.chart_ram = Chart(jetson, "RAM", refresh, self.update_chart, color=curses.color_pair(6), color_chart=curses.color_pair(12))
+        self.chart_ram = Chart(jetson, "RAM", refresh, self.update_chart, type_value=float, color=curses.color_pair(6), color_chart=curses.color_pair(12))
 
     def update_chart(self, jetson, name):
         parameter = jetson.stats.get("RAM", {})
@@ -43,11 +43,14 @@ class MEM(Page):
         max_val = parameter.get("tot", 100)
         # Get unit
         unit = parameter.get("unit", "M")
+        # Get value
+        value = parameter.get("use", 0)
+        info = size_min(max_val, start=unit)
         # Append in list
         return {
-            'value': parameter.get("use", 0),
-            'max': max_val,
-            'unit': unit
+            'value': value / info[1],
+            'max': info[0],
+            'unit': info[2]
         }
 
     def swap_menu(self, lc, size, start, width):
@@ -55,18 +58,10 @@ class MEM(Page):
         # SWAP linear gauge info
         swap_status = self.jetson.stats.get('SWAP', {})
         swap_cached = swap_status.get('cached', {})
-        if swap_status.get('tot', 0) > 1000:
-            if 'k' == swap_status['unit']:
-                unit = 'M'
-            elif 'M' == swap_status['unit']:
-                unit = 'G'
-            percent = "{use:2.1f}{unit}B/{tot:2.1f}{unit}B".format(use=swap_status['use'] / 1000.0,
-                                                                   tot=swap_status['tot'] / 1000.0,
-                                                                   unit=unit)
-        else:
-            percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0),
-                                                         tot=swap_status.get('tot', 0),
-                                                         unit=swap_status.get('unit', ''))
+        szw, divider, unit = size_min(swap_status['tot'], start=swap_status['unit'])
+        percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0) / divider,
+                                                     tot=szw,
+                                                     unit=unit)
         # Make label cache
         label = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'), unit=swap_cached.get('unit', ''))
         self.stdscr.addstr(line_counter, start, "Swap", curses.A_BOLD)
@@ -114,11 +109,11 @@ class MEM(Page):
         # Read RAM status and make gaugues
         ram_status = self.jetson.stats['RAM']
         lfb_status = self.jetson.stats['RAM']['lfb']
-        unit_name = 'G'  # TODO improve with check unit status
+        szw, divider, unit = size_min(ram_status['tot'], start=ram_status['unit'])
         # lfb label
-        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / 1000.0,
-                                                              unit=unit_name,
-                                                              tot=ram_status['tot'] / 1000.0)
+        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / divider,
+                                                              unit=unit,
+                                                              tot=szw)
         label_lfb = "(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
                                                           size=lfb_status['size'],
                                                           unit=lfb_status['unit'])
@@ -137,23 +132,17 @@ class MEM(Page):
         if 'IRAM' in self.jetson.stats:
             iram_status = self.jetson.stats['IRAM']
             line_counter += 1
-            if iram_status['tot'] > 1000:
-                if 'k' == iram_status['unit']:
-                    unit = 'M'
-                elif 'M' == iram_status['unit']:
-                    unit = 'G'
-                percent = "{use:2.1f}{unit}B/{tot:2.1f}{unit}B".format(use=iram_status['use'] / 1000.0,
-                                                                       tot=iram_status['tot'] / 1000.0,
-                                                                       unit=unit)
-            else:
-                percent = "{use}{unit}B/{tot}{unit}B".format(use=iram_status['use'],
-                                                             tot=iram_status['tot'],
-                                                             unit=iram_status['unit'])
+            szw, divider, unit = size_min(iram_status['tot'], start=iram_status['unit'])
+            # lfb label
+            percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider,
+                                                                  unit=unit,
+                                                                  tot=szw)
+            label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
+                                                     unit=iram_status['lfb']['unit'])
             linear_gauge(self.stdscr, offset=line_counter, size=width,
                          name='Imm',
                          value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
-                         label="(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
-                                                            unit=iram_status['lfb']['unit']),
+                         label=label_lfb,
                          percent=percent,
                          color=curses.color_pair(6))
         # EMC linear gauge info

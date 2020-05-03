@@ -19,6 +19,7 @@ import curses
 from .jtopgui import Page
 # Graphics elements
 from .jtopguilib import (linear_gauge,
+                         size_min,
                          label_freq)
 # Menu GUI pages
 from .jtopguimenu import (plot_watts,
@@ -61,61 +62,53 @@ class ALL(Page):
         line_counter += 1
         ram_status = self.jetson.stats['RAM']
         lfb_status = self.jetson.stats['RAM']['lfb']
-        unit_name = 'G'  # TODO improve with check unit status
+        szw, divider, unit = size_min(ram_status['tot'], start=ram_status['unit'])
+        # lfb label
+        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / divider,
+                                                              unit=unit,
+                                                              tot=szw)
+        label_lfb = "(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
+                                                          size=lfb_status['size'],
+                                                          unit=lfb_status['unit'])
+        # Plot Linear Gauge
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name='Mem',
                      value=int(ram_status['use'] / float(ram_status['tot']) * 100.0),
-                     label="(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
-                                                                 size=lfb_status['size'],
-                                                                 unit=lfb_status['unit']),
-                     percent="{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / 1000.0,
-                                                                         unit=unit_name,
-                                                                         tot=ram_status['tot'] / 1000.0),
+                     label=label_lfb,
+                     percent=percent,
                      color=curses.color_pair(6))
         # IRAM linear gauge info
         if 'IRAM' in self.jetson.stats:
             iram_status = self.jetson.stats['IRAM']
             line_counter += 1
-            if iram_status['tot'] > 1000:
-                if 'k' == iram_status['unit']:
-                    unit = 'M'
-                elif 'M' == iram_status['unit']:
-                    unit = 'G'
-                percent = "{use:2.1f}{unit}B/{tot:2.1f}{unit}B".format(use=iram_status['use'] / 1000.0,
-                                                                       tot=iram_status['tot'] / 1000.0,
-                                                                       unit=unit)
-            else:
-                percent = "{use}{unit}B/{tot}{unit}B".format(use=iram_status['use'],
-                                                             tot=iram_status['tot'],
-                                                             unit=iram_status['unit'])
+            szw, divider, unit = size_min(iram_status['tot'], start=iram_status['unit'])
+            # lfb label
+            percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider,
+                                                                  unit=unit,
+                                                                  tot=szw)
+            label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
+                                                     unit=iram_status['lfb']['unit'])
             linear_gauge(self.stdscr, offset=line_counter, size=width,
                          name='Imm',
                          value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
-                         label="(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
-                                                            unit=iram_status['lfb']['unit']),
+                         label=label_lfb,
                          percent=percent,
                          color=curses.color_pair(6))
         # SWAP linear gauge info
         line_counter += 1
         swap_status = self.jetson.stats.get('SWAP', {})
         swap_cached = swap_status.get('cached', {})
-        if swap_status.get('tot', 0) > 1000:
-            if 'k' == swap_status['unit']:
-                unit = 'M'
-            elif 'M' == swap_status['unit']:
-                unit = 'G'
-            percent = "{use:2.1f}{unit}B/{tot:2.1f}{unit}B".format(use=swap_status['use'] / 1000.0,
-                                                                   tot=swap_status['tot'] / 1000.0,
-                                                                   unit=unit)
-        else:
-            percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0),
-                                                         tot=swap_status.get('tot', 0),
-                                                         unit=swap_status.get('unit', ''))
+        szw, divider, unit = size_min(swap_status['tot'], start=swap_status['unit'])
+        # lfb label
+        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=swap_status['use'] / divider,
+                                                                unit=unit,
+                                                                tot=szw)
+        label_lfb = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'),
+                                                    unit=swap_cached.get('unit', ''))
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name='Swp',
                      value=int(swap_status.get('use', 0) / float(swap_status.get('tot', 1)) * 100.0),
-                     label="(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'),
-                                                           unit=swap_cached.get('unit', '')),
+                     label=label_lfb,
                      percent=percent,
                      status='ON' if swap_status else 'OFF',
                      color=curses.color_pair(6))

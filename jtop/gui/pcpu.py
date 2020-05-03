@@ -32,14 +32,12 @@ class CPU(Page):
         self.chart_cpus = []
         n_cpu = len(self.jetson.stats["CPU"])
         for idx in range(n_cpu):
-            label = idx % (n_cpu // 2) == (n_cpu // 2) - 1
             self.chart_cpus += [Chart(jetson,
                                       "CPU {idx}".format(idx=idx + 1),
                                       refresh,
                                       self.update_chart,
                                       color=curses.color_pair(4),
-                                      color_chart=curses.color_pair(10),
-                                      y_label=label)]
+                                      color_chart=curses.color_pair(10))]
 
     def update_chart(self, jetson, name):
         n = int(name.split(" ")[1]) - 1
@@ -54,7 +52,7 @@ class CPU(Page):
         """
             Draw a plot with GPU payload
         """
-        ncpu = len(self.chart_cpus)
+        n_cpu = sum([1 if cpu.get("status", "OFF") == "ON" else 0 for cpu in self.jetson.stats["CPU"]])
         # Screen size
         height, width, first = self.size_page()
         # Make all CPU charts
@@ -98,18 +96,22 @@ class CPU(Page):
             else:
                 self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, status, curses.A_NORMAL)
         # Evaluate size single chart
-        x_size = (width - x_offset) // (ncpu // 2) - 1
+        x_size = (width - x_offset) // (n_cpu // 2) - 1
         y_size = (height - 2) // 2
         # Plot all CPUs
         for idx, (cpu, data) in enumerate(zip(self.chart_cpus, self.jetson.stats["CPU"])):
+            y_label = idx % (n_cpu // 2) == (n_cpu // 2) - 1
+            # status CPU
+            status = data.get("status", "OFF") == "ON"
             # Select line
-            line = 1 if idx >= ncpu // 2 else 0
+            line = 1 if idx >= n_cpu // 2 else 0
             # Incrase counter
-            counter = idx - line * (ncpu // 2)
+            counter = idx - line * (n_cpu // 2)
             # Evaluate size chart
             size_x = [x_offset + 2 + (counter * (x_size)), x_offset + x_size * (1 + counter)]
             size_y = [first + 1 + (line * (y_size)), y_size * (1 + line)]
             # Value and frequency
-            label_chart_gpu = "{percent: >2}%".format(percent=data['val'])
-            cpu.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
+            if status:
+                label_chart_cpu = "{percent: >2}%".format(percent=data['val']) if 'val' in data else ""
+                cpu.draw(self.stdscr, size_x, size_y, label=label_chart_cpu, y_label=y_label)
 # EOF

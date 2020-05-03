@@ -180,14 +180,15 @@ def label_freq(value):
         return ""
 
 
-def size_min(num, divider=1.0, n=0):
+def size_min(num, divider=1.0, n=0, start=''):
     if num >= divider * 1000.0:
         n += 1
         divider *= 1000.0
-        return size_min(num, divider, n)
+        return size_min(num, divider, n, start)
     else:
-        vect = ['', 'K', 'M', 'G', 'T']
-        return round(num / divider, 1), divider, vect[n]
+        vect = ['', 'k', 'M', 'G', 'T']
+        idx = vect.index(start)
+        return round(num / divider, 1), divider, vect[n + idx]
 
 
 @check_curses
