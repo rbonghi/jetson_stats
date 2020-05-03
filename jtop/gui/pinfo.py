@@ -68,7 +68,7 @@ class INFO(Page):
         self.info_variable(start_pos + idx + 5, posx + 2, "* Serial Number", board["SN"])
         idx += 5
         if board["Boardids"]:
-            self.info_variable(start_pos + idx + 6, posx + 2, "* Board ids", board["Boardids"])
+            self.info_variable(start_pos + idx + 1, posx + 2, "* Board ids", board["Boardids"])
             idx += 1
         # Libraries info
         library_line = start_pos + idx + 1
