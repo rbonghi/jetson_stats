@@ -135,27 +135,29 @@ class ALL(Page):
                      type_bar="#",
                      color=curses.color_pair(3))
         # Last part of information
-        rectangle(self.stdscr, line_counter + 1, 0, height - 2, width - 1)
         mini_menu = 1
         mini_menu += 1 if self.jetson.stats['TEMP'] else 0
         mini_menu += 1 if self.jetson.stats['WATT'] else 0
         column_width = (width) // (mini_menu)
+        column_height = height - line_counter - 3 + first
+        # Make rectangle
+        rectangle(self.stdscr, line_counter + 1, 0, line_counter + 1 + column_height, width - 1)
         # Plot compact info
-        compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, height - line_counter - 3, self.jetson)
+        compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, column_height, self.jetson)
         # Plot temperatures
         if self.jetson.stats['TEMP']:
-            self.add_line(line_counter + 1, column_width + 2, height - (line_counter + 1) - 1)
-            plot_temperatures(self.stdscr, column_width + 2, line_counter + 1, column_width - 4, height - line_counter - 3, self.jetson)
+            self.add_line(line_counter + 1, column_width + 2, column_height)
+            plot_temperatures(self.stdscr, column_width + 2, line_counter + 1, column_width - 4, column_height, self.jetson)
         # plot watts
         if self.jetson.stats['WATT']:
-            self.add_line(line_counter + 1, 2 * column_width - 2, height - (line_counter + 1) - 1)
-            plot_watts(self.stdscr, 2 * column_width - 1, line_counter + 1, column_width + 2, height - line_counter - 3, self.jetson)
+            self.add_line(line_counter + 1, 2 * column_width - 2, column_height)
+            plot_watts(self.stdscr, 2 * column_width - 1, line_counter + 1, column_width + 2, column_height, self.jetson)
 
     def add_line(self, pos_y, pos_x, height):
         """
         http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
         """
         self.stdscr.addch(pos_y, pos_x, curses.ACS_TTEE)
-        self.stdscr.vline(pos_y + 1, pos_x, curses.ACS_VLINE, height - 2)
-        self.stdscr.addch(pos_y + height - 1, pos_x, curses.ACS_BTEE)
+        self.stdscr.vline(pos_y + 1, pos_x, curses.ACS_VLINE, height - 1)
+        self.stdscr.addch(pos_y + height, pos_x, curses.ACS_BTEE)
 # EOF

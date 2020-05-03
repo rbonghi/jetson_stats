@@ -157,7 +157,8 @@ def compact_info(stdscr, start, offset, width, height, jetson):
                      status=fan['status'],
                      color=curses.color_pair(6))
     else:
-        stdscr.addstr(offset + counter, 0, "NO FAN", curses.color_pair(3))
+        stdscr.hline(offset + counter, start + 1, curses.ACS_BLOCK, width, curses.color_pair(3))
+        stdscr.addstr(offset + counter, start + (width - 8) // 2, " NO FAN ", curses.color_pair(3))
     counter += 1
     # Jetson clocks status
     jc = jetson.jetson_clocks
