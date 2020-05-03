@@ -122,11 +122,11 @@ class Chart(object):
         # Draw ticks and labels
         ten_sec = int(self.tik * 1000 / self.refresh)
         counter = 0
-        label_y = size_x[1] - 4 if label else size_x[1]
+        label_y = size_x[1] - 5 if label else size_x[1]
         # Draw line
         stdscr.hline(size_y[1] - 1, size_x[0], curses.ACS_HLINE, label_y - size_x[0])
         for point in range(displayX):
-            x_val = label_y - 1 - point
+            x_val = label_y - point
             if x_val >= size_x[0]:
                 try:
                     # Draw tick label
@@ -154,7 +154,7 @@ class Chart(object):
             x_val = label_x - 1 - idx
             if x_val >= size_x[0]:
                 if self.fill:
-                    for n in range(0, y_val + 1):
+                    for n in range(1, y_val + 1):
                         try:
                             stdscr.addstr(size_y[1] - 1 - n, x_val, " ", self.color_chart)
                         except curses.error:
