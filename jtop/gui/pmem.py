@@ -93,7 +93,8 @@ class MEM(Page):
                          color=color)
         # Draw total swap gauge
         line_counter += 1
-        self.stdscr.addstr(line_counter, start, "-" * (size - 1), curses.A_NORMAL)
+        #self.stdscr.addstr(line_counter, start, "-" * (size - 1), curses.A_NORMAL)
+        self.stdscr.hline(line_counter, start, curses.ACS_HLINE, size - 1)
         line_counter += 1
         linear_gauge(self.stdscr, offset=line_counter, size=size, start=start,
                      name='TOT',
@@ -106,7 +107,7 @@ class MEM(Page):
         # Screen size
         height, width, first = self.size_page()
         # Set size chart memory
-        size_x = [2, width * 1 // 2 - 1]
+        size_x = [2, width * 1 // 2 + 5]
         size_y = [first + 1, height * 1 // 2 - 1]
         # RAM linear gauge info
         line_counter = size_y[1] + 2
@@ -124,7 +125,7 @@ class MEM(Page):
         # Draw the GPU chart
         self.chart_ram.draw(self.stdscr, size_x, size_y, label="{percent} - {lfb}".format(percent=percent, lfb=label_lfb))
         # Make swap list file
-        self.swap_menu(lc=first, size=size_x[1] - 7, start=size_x[1] + 9, width=width)
+        self.swap_menu(lc=first, start=size_x[1] + 3, size=size_x[1] - 13, width=width)
         # Draw the Memory gague
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name='Mem',

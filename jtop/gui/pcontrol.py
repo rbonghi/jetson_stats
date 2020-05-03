@@ -33,6 +33,8 @@ class CTRL(Page):
         # Only if exist a fan will be load a chart
         # Initialize FAN chart
         self.chart_fan = Chart(jetson, "FAN", refresh, self.update_chart, line="o", color=curses.color_pair(4), color_chart=curses.color_pair(10))
+        if 'FAN' not in self.jetson.stats:
+            self.chart_fan.statusChart(False, "NO FAN")
 
     def update_chart(self, jetson, name):
         parameter = jetson.stats.get("FAN", {})
@@ -46,6 +48,7 @@ class CTRL(Page):
             'value': parameter.get(value, 0),
             'max': max_val,
             'unit': unit,
+            'active': 'FAN' in jetson.stats
         }
 
     @check_curses
@@ -113,7 +116,15 @@ class CTRL(Page):
             mode_names = [mode["Name"] for mode in nvpmodel.modes]
             mode_status = [mode["status"] for mode in nvpmodel.modes]
             box_list(self.stdscr, posx - 1, start_pos + 10, mode_names, nvpmodel.num, status=mode_status, max_width=42, numbers=True)
-        # Add plot fan status
+
+        # Evaluate size chart
+        size_x = [posx + 40, width - 2]
+        if self.jetson.userid == 0 and 'FAN' in self.jetson.stats:
+            size_y = [start_pos + 3, height - 3]
+        else:
+            size_y = [start_pos, height - 3]
+        # Add label
+        label = ""
         if 'FAN' in self.jetson.stats:
             fan = self.jetson.stats['FAN']
             # Read status control fan
@@ -126,27 +137,25 @@ class CTRL(Page):
                 label = "{current: >3}% of {target: >3}% {ctrl}".format(current=fan.get("cpwm", 0), target=fan.get("tpwm", 0), ctrl=ctrl_stat)
             else:
                 label = "Target: {target: >3}% {ctrl}".format(target=fan.get("tpwm", 0), ctrl=ctrl_stat)
-            # Evaluate size chart
-            size_x = [posx + 40, width - 10]
-            size_y = [start_pos, height - 3] if self.jetson.userid != 0 else [start_pos + 3, height - 3]
-            # Draw the GPU chart
-            self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
-            if self.jetson.userid == 0:
-                # Mode
-                if 'ctrl' in fan:
-                    box_keyboard(self.stdscr, posx + 40, start_pos, "f", key)
-                    box_status(self.stdscr, posx + 45, start_pos, self.jetson.fan.config.capitalize(), False)
-                # Show speed buttons only if is in manual
-                if self.jetson.fan.conf == 'manual':
-                    blk = 55
-                    # Draw keys to decrease fan speed
-                    box_keyboard(self.stdscr, posx + blk, start_pos, "m", key)
-                    # Draw selected number
-                    self.stdscr.addstr(start_pos, posx + blk + 6, "Speed", curses.A_BOLD)
-                    speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
-                    self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL)
-                    # Draw keys to increase fan speed
-                    box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key)
+        # Draw the GPU chart
+        self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
+        # Add plot fan status
+        if self.jetson.userid == 0 and 'FAN' in self.jetson.stats:
+            # Mode
+            if 'ctrl' in fan:
+                box_keyboard(self.stdscr, posx + 40, start_pos, "f", key)
+                box_status(self.stdscr, posx + 45, start_pos, self.jetson.fan.config.capitalize(), False)
+            # Show speed buttons only if is in manual
+            if self.jetson.fan.conf == 'manual':
+                blk = 55
+                # Draw keys to decrease fan speed
+                box_keyboard(self.stdscr, posx + blk, start_pos, "m", key)
+                # Draw selected number
+                self.stdscr.addstr(start_pos, posx + blk + 6, "Speed", curses.A_BOLD)
+                speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
+                self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL)
+                # Draw keys to increase fan speed
+                box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:

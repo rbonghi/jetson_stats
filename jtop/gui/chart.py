@@ -27,7 +27,7 @@ class Chart(object):
     """
     Chart draw object
     """
-    def __init__(self, jetson, name, interval, callback, line="*", color=curses.A_NORMAL, color_chart=None, fill=True, time=10.0, tik=2):
+    def __init__(self, jetson, name, interval, callback, y_label=True, line="*", color=curses.A_NORMAL, color_chart=None, fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
         self.callback = callback
@@ -49,101 +49,118 @@ class Chart(object):
         self.max_val = 100
         self.active = True
         self.message = "OFF"
-        # local variable no data
-        self._noData = True
+        self.y_label = y_label
         # Attach the chart for every update from jtop
         jetson.attach(self)
 
+    def statusChart(self, active, message):
+        self.active = active
+        self.message = message
+
     def update(self, jetson):
         """ Local update chart """
-        self._noData = False
         # Call the callback
         data = self.callback(jetson, self.name)
         # Get max value if is present
-        self.max_val = data.get("max", 100)
+        self.max_val = data.get("max", self.max_val)
         # Get unit
-        self.unit = data.get("unit", "%")
+        self.unit = data.get("unit", self.unit)
         # Get status
-        self.active = data.get("active", True)
+        self.active = data.get("active", self.active)
         # update the queue
-        self.value.append(data.get("value", 0))
+        value = data.get("value", 0)
+        self.value.append(value)
 
     @check_curses
     def draw(self, stdscr, size_x, size_y, label=""):
-        if self._noData:
-            return
         # Evaluate Diplay X, and Y size
+        # rectangle(stdscr, size_y[0], size_x[0], size_y[1], size_x[1])
+
         displayX = size_x[1] - size_x[0] + 1
         displayY = size_y[1] - size_y[0] - 1
         val = float(displayX - 2) / float(len(self.value))
         points = []
         for n in self.value:
             points += [n] * int(ceil(val))
-        # Plot chart shape and labels
-        for point in range(displayY - 1):
-            if displayY != point:
-                value_n = self.max_val / float(displayY - 2) * float(displayY - point - 2)
-                try:
-                    stdscr.addstr(1 + size_y[0] + point, size_x[1], "-")
-                    stdscr.addstr(1 + size_y[0] + point, size_x[1] + 2,
-                                  "{value:3d}{unit}".format(value=int(value_n), unit=self.unit),
-                                  curses.A_BOLD)
-                except curses.error:
-                    pass
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if label:
             stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label, self.color)
-        # Draw ticks and labels
-        self._plot_x_axis(stdscr, val, size_x, size_y, displayX)
         # Plot chart lines
         if self.active:
             # Plot values
-            self._plot_values(stdscr, points, size_x, size_y, displayY)
+            self._plot_values(stdscr, points, size_x, size_y, displayY, label=self.y_label)
         else:
-            rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1] - 2, size_x[1] - 1)
+            l_label = size_x[1] - 6 if self.y_label else size_x[1] - 1
+            rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1] - 2, l_label)
             # Write message
-            middle_x = (size_x[1] - size_x[0] - len(self.message)) // 2
+            middle_x = (l_label - size_x[0] - len(self.message)) // 2
             middle_y = (size_y[1] - size_y[0]) // 2
             stdscr.addstr(size_y[0] + middle_y, size_x[0] + middle_x, self.message, curses.A_BOLD)
+        # Draw ticks and labels
+        self._plot_x_axis(stdscr, val, size_x, size_y, displayX, label=self.y_label)
+        # Plot chart shape and labels
+        if self.y_label:
+            self._plot_y_axis(stdscr, size_x, size_y, displayY)
 
-    def _plot_x_axis(self, stdscr, val, size_x, size_y, displayX):
+    def _plot_y_axis(self, stdscr, size_x, size_y, displayY):
+        # Plot chart shape and labels
+        label_x = size_x[1] - 5
+        for point in range(displayY):
+            if displayY != point:
+                value_n = self.max_val / float(displayY - 1) * float(displayY - point - 1)
+                try:
+                    stdscr.addch(1 + size_y[0] + point, label_x, curses.ACS_LTEE)
+                    stdscr.addstr(1 + size_y[0] + point, label_x + 2,
+                                  "{value:3d}{unit}".format(value=int(value_n), unit=self.unit),
+                                  curses.A_BOLD)
+                except curses.error:
+                    pass
+
+    def _plot_x_axis(self, stdscr, val, size_x, size_y, displayX, label=True):
         # Draw ticks and labels
         ten_sec = int(self.tik * 1000 / self.refresh)
         counter = 0
+        label_y = size_x[1] - 4 if label else size_x[1]
+        # Draw line
+        stdscr.hline(size_y[1] - 1, size_x[0], curses.ACS_HLINE, label_y - size_x[0])
         for point in range(displayX):
-            x_val = size_x[1] - 1 - point
+            x_val = label_y - 1 - point
             if x_val >= size_x[0]:
                 try:
                     # Draw tick label
-                    tik_label = "|" if ((point) / ceil(val)) % ten_sec == 0 else "-"
-                    stdscr.addstr(size_y[1] - 1, x_val, tik_label)
+                    if ((point) / ceil(val)) % ten_sec == 0:
+                        stdscr.addch(size_y[1] - 1, x_val, curses.ACS_TTEE)
                     # Draw label
                     if counter > 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
                         stdscr.addstr(size_y[1], x_val, "-{time}s".format(time=self.tik * counter))
-                        counter += 1
                     elif counter == 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
-                        stdscr.addstr(size_y[1], x_val, "time")
+                        if label:
+                            stdscr.addstr(size_y[1], x_val + 3, "time")
+                        stdscr.addstr(size_y[1], x_val + 1, "0")
+                    # Increase counter
+                    if ((point - 1) / ceil(val)) % ten_sec == 0:
                         counter += 1
                 except curses.error:
                     pass
 
-    def _plot_values(self, stdscr, points, size_x, size_y, displayY):
+    def _plot_values(self, stdscr, points, size_x, size_y, displayY, label=True):
         """ Plot values
         """
+        label_x = size_x[1] - 5 if label else size_x[1]
         for idx, point in enumerate(reversed(points)):
-            y_val = int((float(displayY - 2) / self.max_val) * point)
-            x_val = size_x[1] - 1 - idx
+            y_val = int((float(displayY - 1) / self.max_val) * point)
+            x_val = label_x - 1 - idx
             if x_val >= size_x[0]:
                 if self.fill:
                     for n in range(0, y_val + 1):
                         try:
-                            stdscr.addstr(size_y[1] - 2 - n, x_val, " ", self.color_chart)
+                            stdscr.addstr(size_y[1] - 1 - n, x_val, " ", self.color_chart)
                         except curses.error:
                             pass
                 else:
                     try:
-                        stdscr.addstr(size_y[1] - 2 - y_val, x_val, self.line, self.color)
+                        stdscr.addstr(size_y[1] - 1 - y_val, x_val, self.line, self.color)
                     except curses.error:
                         pass
 # EOF

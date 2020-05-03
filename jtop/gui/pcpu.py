@@ -30,13 +30,16 @@ class CPU(Page):
         super(CPU, self).__init__("CPU", stdscr, jetson, refresh)
         # List all CPU
         self.chart_cpus = []
-        for idx in range(len(self.jetson.stats["CPU"])):
+        n_cpu = len(self.jetson.stats["CPU"])
+        for idx in range(n_cpu):
+            label = idx % (n_cpu // 2) == (n_cpu // 2) - 1
             self.chart_cpus += [Chart(jetson,
                                       "CPU {idx}".format(idx=idx + 1),
                                       refresh,
                                       self.update_chart,
                                       color=curses.color_pair(4),
-                                      color_chart=curses.color_pair(10))]
+                                      color_chart=curses.color_pair(10),
+                                      y_label=label)]
 
     def update_chart(self, jetson, name):
         n = int(name.split(" ")[1]) - 1
@@ -65,6 +68,7 @@ class CPU(Page):
         arch = platform.machine()
         plot_name_info(self.stdscr, first + 2, 2, "Arch", arch)
         release = platform.release()
+        release = release[:x_offset - (first + 3) - 4]
         plot_name_info(self.stdscr, first + 3, 2, "Rel", release)
         # Architecture CPU cores
         architecture = self.jetson.architecture
@@ -75,11 +79,13 @@ class CPU(Page):
             frq = label_freq(cpu)
             # Load governor if exist
             governor = cpu.get("governor", "")
+            governor = governor[:x_offset - (first + 3) - 4]
             # Load model architecture
             model = ""
             if idx in architecture:
                 cpu_arch = architecture[idx]
                 model = cpu_arch.get("model name", "").split()[0]
+                model = model[:x_offset - (first + 3) - 4]
             # Write label CPU name
             cpu_name = "CPU {n}:".format(n=idx + 1)
             # Draw info
@@ -92,8 +98,8 @@ class CPU(Page):
             else:
                 self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, status, curses.A_NORMAL)
         # Evaluate size single chart
-        x_size = (width - x_offset - 6 * (ncpu // 2)) // (ncpu // 2)
-        y_size = (height - 4) // 2
+        x_size = (width - x_offset) // (ncpu // 2) - 1
+        y_size = (height - 2) // 2
         # Plot all CPUs
         for idx, (cpu, data) in enumerate(zip(self.chart_cpus, self.jetson.stats["CPU"])):
             # Select line
@@ -101,8 +107,8 @@ class CPU(Page):
             # Incrase counter
             counter = idx - line * (ncpu // 2)
             # Evaluate size chart
-            size_x = [x_offset + 2 + (counter * (x_size + 6)), x_offset + x_size + (counter * (x_size + 6))]
-            size_y = [first + 1 + (line * (y_size + 1)), y_size + (line * (y_size + 1))]
+            size_x = [x_offset + 2 + (counter * (x_size)), x_offset + x_size * (1 + counter)]
+            size_y = [first + 1 + (line * (y_size)), y_size * (1 + line)]
             # Value and frequency
             label_chart_gpu = "{percent: >2}%".format(percent=data['val'])
             cpu.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)

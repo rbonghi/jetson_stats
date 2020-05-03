@@ -52,7 +52,7 @@ class GPU(Page):
         # Screen size
         height, width, first = self.size_page()
         # Evaluate size chart
-        size_x = [2, width - 10]
+        size_x = [2, width - 2]
         size_y = [first + 1, height * 2 // 3]
         # Draw the GPU chart
         if 'GR3D' in self.jetson.stats:
