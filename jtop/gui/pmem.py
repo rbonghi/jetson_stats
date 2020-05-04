@@ -22,8 +22,7 @@ import curses
 from .jtopgui import Page
 # Graphics elements
 from .jtopguilib import (linear_gauge,
-                         label_freq,
-                         box_status)
+                         label_freq)
 # Graphics elements
 from .jtopguilib import (box_keyboard,
                          size_min)

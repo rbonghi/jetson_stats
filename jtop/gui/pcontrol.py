@@ -20,7 +20,6 @@ from .jtopgui import Page
 # Graphics elements
 from .jtopguilib import (check_curses,
                          box_keyboard,
-                         box_status,
                          box_list)
 from .chart import Chart
 from ..core.jetson_clocks import JetsonClocks
@@ -148,7 +147,6 @@ class CTRL(Page):
             # Mode
             if 'ctrl' in fan:
                 box_keyboard(self.stdscr, posx + 40, start_pos, "f", key, mouse=mouse, action=self.keyboard)
-                #box_status(self.stdscr, posx + 45, start_pos, self.jetson.fan.config.capitalize(), False)
                 self.stdscr.addstr(start_pos + 1, posx + 46, self.jetson.fan.config.capitalize(), curses.A_BOLD)
             # Show speed buttons only if is in manual
             if self.jetson.fan.conf == 'manual':
