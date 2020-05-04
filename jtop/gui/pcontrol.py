@@ -115,8 +115,9 @@ class CTRL(Page):
             # Write list of available modes
             mode_names = [mode["Name"] for mode in nvpmodel.modes]
             mode_status = [mode["status"] for mode in nvpmodel.modes]
-            box_list(self.stdscr, posx - 1, start_pos + 10, mode_names, nvpmodel.num, status=mode_status, max_width=42, numbers=True)
-
+            box_list(self.stdscr, posx - 1, start_pos + 10, mode_names, nvpmodel.num,
+                     status=mode_status, max_width=42, numbers=True,
+                     mouse=mouse, action=self.nvp_action)
         # Evaluate size chart
         size_x = [posx + 40, width - 2]
         if self.jetson.userid == 0 and 'FAN' in self.jetson.stats:
@@ -156,6 +157,13 @@ class CTRL(Page):
                 self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL, action=self.keyboard)
                 # Draw keys to increase fan speed
                 box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key, mouse=mouse, action=self.keyboard)
+
+    def nvp_action(self, name):
+        # Read number
+        number = int(name.split(" ")[0])
+        # Run nvpmodel on number selected
+        nvpmodel = self.jetson.nvpmodel
+        nvpmodel.set(number)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:

@@ -146,17 +146,20 @@ def box_keyboard(stdscr, x, y, letter, key, mouse=(), label=None, action=None):
 
 
 @check_curses
-def box_status(stdscr, x, y, name, status=False, color=curses.A_REVERSE):
+def box_status(stdscr, x, y, name, status=False, color=curses.A_REVERSE, mouse=(), action=None):
     # Draw background rectangle
     rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
     # Default status
     status = color if status else curses.A_NORMAL
     # Write letter
     stdscr.addstr(y + 1, x + 2, name, status)
+    # Run Action
+    if action is not None and mouse_clicked(mouse, y, x, 3 + len(name), 2):
+        action(name)
 
 
 @check_curses
-def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=False):
+def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=False, mouse=(), action=None):
     len_prev = 0
     line = 0
     skip_line = False if max_width == -1 else True
@@ -173,7 +176,7 @@ def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=Fals
             line += 3
             len_prev = 0
         # Plot box
-        box_status(stdscr, x + len_prev, y + line, str_name, status=status_selected, color=color)
+        box_status(stdscr, x + len_prev, y + line, str_name, status=status_selected, color=color, mouse=mouse, action=action)
         len_prev += len(str_name) + 4
     # Draw background rectangle
     # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))

@@ -100,6 +100,7 @@ class NVPmodel():
     def set(self, level):
         """ Set nvpmodel to a new status """
         try:
+            self.selected = level
             # Set the new nvpmodel status
             sep_nvp = sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
             out, _ = sep_nvp.communicate()
