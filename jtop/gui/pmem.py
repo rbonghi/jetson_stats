@@ -152,12 +152,12 @@ class MEM(Page):
                      color=curses.color_pair(6))
         if self.jetson.userid == 0:
             # Clear cache button
-            box_keyboard(self.stdscr, 1, first + height - 7, "c", key)
+            box_keyboard(self.stdscr, 1, first + height - 7, "c", key, mouse=mouse, action=self.keyboard)
             clear_cache = "Clear cache"
             self.stdscr.addstr(first + height - 6, 7, clear_cache, curses.A_NORMAL)
         if self.jetson.userid == 0:
             # Swap controller
-            box_keyboard(self.stdscr, 1, first + height - 4, "h", key)
+            box_keyboard(self.stdscr, 1, first + height - 4, "h", key, mouse=mouse, action=self.keyboard)
             self.stdscr.addstr(first + height - 4, 7, "Extra", curses.A_BOLD)
             enable_swap = "Swap"
             self.stdscr.addstr(first + height - 3, 7, enable_swap, curses.A_NORMAL)
@@ -168,7 +168,7 @@ class MEM(Page):
             start_pos = 10 + len(enable_swap)
             if not swap_enable:
                 # Draw keys to decrease size swap
-                box_keyboard(self.stdscr, start_pos + 10, first + height - 4, "-", key)
+                box_keyboard(self.stdscr, start_pos + 10, first + height - 4, "-", key, mouse=mouse, action=self.keyboard)
                 # Draw selected number
                 swp_size = int(self.jetson.swap.size)
                 if swp_size > len(self.jetson.swap):
@@ -180,7 +180,7 @@ class MEM(Page):
                 self.stdscr.addstr(first + height - 3, start_pos + 16, "{size: <2}".format(size=swp_size), color)
                 self.stdscr.addstr(first + height - 3, start_pos + 18, "Gb", curses.A_BOLD)
                 # Draw keys to increase size swap
-                box_keyboard(self.stdscr, start_pos + 21, first + height - 4, "+", key)
+                box_keyboard(self.stdscr, start_pos + 21, first + height - 4, "+", key, mouse=mouse, action=self.keyboard)
             # else:
             #    # Print folder swapfile
             #    self.stdscr.addstr(first + height - 3, start_pos + 11, "{folder}".format(folder=self.jetson.swap.file), curses.A_BOLD)
@@ -189,15 +189,15 @@ class MEM(Page):
         if self.jetson.userid == 0:
             swap_enable = self.jetson.swap.enable
             # Clear cache script
-            if key == ord('c'):
+            if key == 'c':
                 self.jetson.swap.clearCache()
-            if key == ord('h'):
+            if key == 'h':
                 # Change status swap
                 self.jetson.swap.enable = operator.not_(swap_enable)
             # Enable nvpmodel control
             if not swap_enable:
-                if key == ord('+'):
+                if key == '+':
                     self.jetson.swap.increase()
-                elif key == ord('-'):
+                elif key == '-':
                     self.jetson.swap.decrease()
 # EOF

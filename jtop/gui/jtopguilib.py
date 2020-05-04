@@ -117,21 +117,32 @@ def strfdelta(tdelta, fmt):
     return fmt.format(**d)
 
 
+def mouse_clicked(mouse, y, x, width, height):
+    if mouse:
+        mx, my = mouse
+        if my >= y and my <= y + height and mx >= x and mx <= x + width:
+            return True
+    return False
+
+
 @check_curses
-def box_keyboard(stdscr, x, y, letter, key, label=None):
+def box_keyboard(stdscr, x, y, letter, key, mouse=(), label=None, action=None):
     # Evaluate size label
     lnlabel = len(label) + 1 if label is not None else 0
     # Draw background rectangle
     rectangle(stdscr, y, x, y + 2, x + 4 + lnlabel)
     # Default status
-    status = curses.A_NORMAL if key != ord(letter) else curses.A_REVERSE
+    status = key == ord(letter) or mouse_clicked(mouse, y, x, 4 + lnlabel, 2)
     # Write letter
-    stdscr.addstr(y + 1, x + 2, letter, status)
+    stdscr.addstr(y + 1, x + 2, letter, curses.A_REVERSE if status else curses.A_NORMAL)
     # Write label
     if label is not None:
         stdscr.addstr(y + 1, x + 4, label, curses.A_NORMAL)
+    # Run Action
+    if action is not None and status:
+        action(letter)
     # Return the status of key
-    return True if key == ord(letter) else False
+    return True if status else False
 
 
 @check_curses

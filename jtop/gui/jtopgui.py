@@ -248,10 +248,6 @@ class JTOPGUI:
             elif self.key == ord('q') or self.key == ord('Q') or self.ESC_BUTTON(self.key):
                 # keyboard check quit button
                 return False
-            else:
-                page = self.pages[self.n_page]
-                # Run key controller
-                page.keyboard(self.key)
             # Store old value key
             self.old_key = self.key
         return True

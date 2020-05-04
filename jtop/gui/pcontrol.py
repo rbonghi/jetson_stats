@@ -78,7 +78,7 @@ class CTRL(Page):
         jc_manual = status and service != "active"
         if self.jetson.userid == 0 and not jc_manual:
             # button start/stop jetson clocks
-            box_keyboard(self.stdscr, posx - 1, start_pos + 1, "a", key)
+            box_keyboard(self.stdscr, posx - 1, start_pos + 1, "a", key, mouse=mouse, action=self.keyboard)
         # Field service
         service_string = "service"
         self.stdscr.addstr(start_pos + 2, posx + 4, service_string, curses.A_BOLD)
@@ -96,7 +96,7 @@ class CTRL(Page):
         box_status(self.stdscr, posx + len(service_string) + 4, start_pos + 1, service.capitalize(), start, color=color)
         if self.jetson.userid == 0 and not jc_manual:
             # button start/stop jetson clocks
-            box_keyboard(self.stdscr, posx - 1, start_pos + 4, "e", key)
+            box_keyboard(self.stdscr, posx - 1, start_pos + 4, "e", key, mouse=mouse, action=self.keyboard)
         # Read status jetson_clocks
         enabled = self.jetson.jetson_clocks.enable
         enabled_box = "Enable" if enabled else "Disable"
@@ -107,11 +107,11 @@ class CTRL(Page):
             self.stdscr.addstr(start_pos + 8, posx, "NVP model", curses.A_BOLD)
             if self.jetson.userid == 0:
                 # Draw keys to decrease nvpmodel
-                box_keyboard(self.stdscr, posx + 10, start_pos + 7, "-", key)
+                box_keyboard(self.stdscr, posx + 10, start_pos + 7, "-", key, mouse=mouse, action=self.keyboard)
                 # Draw selected number
                 self.stdscr.addstr(start_pos + 8, posx + 16, str(nvpmodel.selected), curses.A_NORMAL)
                 # Draw keys to increase nvpmodel
-                box_keyboard(self.stdscr, posx + 18, start_pos + 7, "+", key)
+                box_keyboard(self.stdscr, posx + 18, start_pos + 7, "+", key, mouse=mouse, action=self.keyboard)
             # Write list of available modes
             mode_names = [mode["Name"] for mode in nvpmodel.modes]
             mode_status = [mode["status"] for mode in nvpmodel.modes]
@@ -143,19 +143,19 @@ class CTRL(Page):
         if self.jetson.userid == 0 and 'FAN' in self.jetson.stats:
             # Mode
             if 'ctrl' in fan:
-                box_keyboard(self.stdscr, posx + 40, start_pos, "f", key)
+                box_keyboard(self.stdscr, posx + 40, start_pos, "f", key, mouse=mouse, action=self.keyboard)
                 box_status(self.stdscr, posx + 45, start_pos, self.jetson.fan.config.capitalize(), False)
             # Show speed buttons only if is in manual
             if self.jetson.fan.conf == 'manual':
                 blk = 55
                 # Draw keys to decrease fan speed
-                box_keyboard(self.stdscr, posx + blk, start_pos, "m", key)
+                box_keyboard(self.stdscr, posx + blk, start_pos, "m", key, mouse=mouse, action=self.keyboard)
                 # Draw selected number
                 self.stdscr.addstr(start_pos, posx + blk + 6, "Speed", curses.A_BOLD)
                 speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
-                self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL)
+                self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL, action=self.keyboard)
                 # Draw keys to increase fan speed
-                box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key)
+                box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key, mouse=mouse, action=self.keyboard)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:
@@ -168,32 +168,32 @@ class CTRL(Page):
             # FAN controller
             fan = self.jetson.fan
             # Write the new jetson_clocks status
-            if key == ord('a') and not start:
+            if key == 'a' and not start:
                 self.jetson.jetson_clocks.start = True
-            elif key == ord('a') and start:
+            elif key == 'a' and start:
                 self.jetson.jetson_clocks.start = False
             # Write the new jetson_clocks status
-            elif key == ord('e') and not enabled:
+            elif key == 'e' and not enabled:
                 self.jetson.jetson_clocks.enable = True
-            elif key == ord('e') and enabled:
+            elif key == 'e' and enabled:
                 self.jetson.jetson_clocks.enable = False
             # Enable nvpmodel control
             if nvpmodel is not None:
-                if key == ord('+'):
+                if key == '+':
                     nvpmodel.increase()
-                elif key == ord('-'):
+                elif key == '-':
                     nvpmodel.decrease()
             # Enable fan control
             if fan is not None:
-                if key == ord('p'):
+                if key == 'p':
                     fan.increase()
                     # Store configuration
                     fan.store()
-                elif key == ord('m'):
+                elif key == 'm':
                     fan.decrease()
                     # Store configuration
                     fan.store()
-                if key == ord('f'):
+                if key == 'f':
                     # Go to next configuration
                     fan.conf_next()
                     # Store configuration
