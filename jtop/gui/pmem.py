@@ -163,7 +163,6 @@ class MEM(Page):
             self.stdscr.addstr(first + height - 3, 7, enable_swap, curses.A_NORMAL)
             # Status swap
             swap_enable = self.jetson.swap.enable
-            # Status swap
             self.stdscr.addstr(first + height - 4, 11 + len(enable_swap), "Status", curses.A_UNDERLINE)
             self.stdscr.addstr(first + height - 3, 11 + len(enable_swap),
                                "Enabled" if swap_enable else "Disable",

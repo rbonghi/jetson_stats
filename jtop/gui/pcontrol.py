@@ -148,10 +148,11 @@ class CTRL(Page):
             # Mode
             if 'ctrl' in fan:
                 box_keyboard(self.stdscr, posx + 40, start_pos, "f", key, mouse=mouse, action=self.keyboard)
-                box_status(self.stdscr, posx + 45, start_pos, self.jetson.fan.config.capitalize(), False)
+                #box_status(self.stdscr, posx + 45, start_pos, self.jetson.fan.config.capitalize(), False)
+                self.stdscr.addstr(start_pos + 1, posx + 46, self.jetson.fan.config.capitalize(), curses.A_BOLD)
             # Show speed buttons only if is in manual
             if self.jetson.fan.conf == 'manual':
-                blk = 55
+                blk = 53
                 # Draw keys to decrease fan speed
                 box_keyboard(self.stdscr, posx + blk, start_pos, "m", key, mouse=mouse, action=self.keyboard)
                 # Draw selected number
