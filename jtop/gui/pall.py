@@ -36,7 +36,7 @@ class ALL(Page):
     def __init__(self, stdscr, jetson, refresh):
         super(ALL, self).__init__("ALL", stdscr, jetson, refresh)
 
-    def draw(self, key):
+    def draw(self, key, mouse):
         """
             Update screen with values
         """

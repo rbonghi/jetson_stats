@@ -51,7 +51,7 @@ class Page(ABC):
 
     @abc.abstractmethod
     @check_curses
-    def draw(self, key):
+    def draw(self, key, mouse):
         pass
 
     def keyboard(self, key):
@@ -94,6 +94,9 @@ class JTOPGUI:
         # Initialize keyboard status
         self.key = -1
         self.old_key = -1
+        # Initialize mouse
+        self.mouse = ()
+        # Initialize signal
         self.signal = True
         # Catch all signals
         for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
@@ -143,7 +146,7 @@ class JTOPGUI:
         # Get page selected
         page = self.pages[self.n_page]
         # Draw the page
-        page.draw(self.key)
+        page.draw(self.key, self.mouse)
         # Draw menu
         self.menu()
         # Draw the screen
@@ -212,19 +215,23 @@ class JTOPGUI:
                 if mx >= position and mx < position + size:
                     # Set new page
                     self.set(idx + 1)
-                    break
+                    return True
                 # Increase counter
                 position += size + 3
+        return False
 
     def events(self):
         event = self.stdscr.getch()
         # Run keyboard check
         status = self.keyboard(event)
+        # Clear event mouse
+        self.mouse = ()
         # Check event mouse
         if event == curses.KEY_MOUSE:
             _, mx, my, _, _ = curses.getmouse()
             # Run event menu controller
-            self.event_menu(mx, my)
+            if not self.event_menu(mx, my):
+                self.mouse = (mx, my)
         return status
 
     def keyboard(self, event):

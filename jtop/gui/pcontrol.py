@@ -52,7 +52,7 @@ class CTRL(Page):
         }
 
     @check_curses
-    def draw(self, key):
+    def draw(self, key, mouse):
         """ Control board, check status jetson_clocks and change NVP model """
         # Screen size
         height, width, first = self.size_page()

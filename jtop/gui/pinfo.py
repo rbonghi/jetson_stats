@@ -34,7 +34,7 @@ class INFO(Page):
         self.stdscr.addstr(start, offset, name + ":")
         self.stdscr.addstr(start, offset + spacing, value, curses.A_BOLD)
 
-    def draw(self, key):
+    def draw(self, key, mouse):
         """
             Write all environment variables
         """

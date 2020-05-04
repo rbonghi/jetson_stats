@@ -95,7 +95,7 @@ class MEM(Page):
                      status='ON' if swap_status else 'OFF',
                      color=curses.color_pair(6))
 
-    def draw(self, key):
+    def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
         # Set size chart memory

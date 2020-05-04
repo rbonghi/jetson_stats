@@ -45,7 +45,7 @@ class GPU(Page):
             'unit': unit,
         }
 
-    def draw(self, key):
+    def draw(self, key, mouse):
         """
             Draw a plot with GPU payload
         """
