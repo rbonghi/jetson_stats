@@ -81,10 +81,9 @@ class CTRL(Page):
             box_keyboard(self.stdscr, posx - 1, start_pos + 1, "a", key, mouse=mouse, action=self.keyboard)
         # Field service
         service_string = "service"
-        self.stdscr.addstr(start_pos + 2, posx + 4, service_string, curses.A_BOLD)
-        self.stdscr.addstr(start_pos + 5, posx + 4, service_string, curses.A_BOLD)
+        self.stdscr.addstr(start_pos + 2, posx + 4, service_string, curses.A_UNDERLINE)
+        self.stdscr.addstr(start_pos + 5, posx + 4, service_string, curses.A_UNDERLINE)
         # Read status jetson_clocks
-        start = self.jetson.jetson_clocks.start
         if service == "active":
             color = curses.A_BOLD         # Running (Bold)
         elif service == "inactive":
@@ -93,14 +92,18 @@ class CTRL(Page):
             color = curses.color_pair(3)  # Warning (Yellow)
         else:
             color = curses.color_pair(1)  # Error (Red)
-        box_status(self.stdscr, posx + len(service_string) + 4, start_pos + 1, service.capitalize(), start, color=color)
+        # Status service
+        self.stdscr.addstr(start_pos + 2, posx + len(service_string) + 5,
+                           service.capitalize(),
+                           color)
         if self.jetson.userid == 0 and not jc_manual:
             # button start/stop jetson clocks
             box_keyboard(self.stdscr, posx - 1, start_pos + 4, "e", key, mouse=mouse, action=self.keyboard)
         # Read status jetson_clocks
         enabled = self.jetson.jetson_clocks.enable
-        enabled_box = "Enable" if enabled else "Disable"
-        box_status(self.stdscr, posx + len(service_string) + 4, start_pos + 4, enabled_box, enabled)
+        self.stdscr.addstr(start_pos + 5, posx + len(service_string) + 5,
+                           "Enable" if enabled else "Disable",
+                           curses.A_BOLD if enabled else curses.A_NORMAL)
         # Build NVP model list
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:

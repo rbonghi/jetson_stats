@@ -158,13 +158,17 @@ class MEM(Page):
         if self.jetson.userid == 0:
             # Swap controller
             box_keyboard(self.stdscr, 1, first + height - 4, "h", key, mouse=mouse, action=self.keyboard)
-            self.stdscr.addstr(first + height - 4, 7, "Extra", curses.A_BOLD)
+            self.stdscr.addstr(first + height - 4, 7, "Extra", curses.A_UNDERLINE)
             enable_swap = "Swap"
             self.stdscr.addstr(first + height - 3, 7, enable_swap, curses.A_NORMAL)
             # Status swap
             swap_enable = self.jetson.swap.enable
-            enabled_box = "Enabled" if swap_enable else "Disable"
-            box_status(self.stdscr, 9 + len(enable_swap), first + height - 4, enabled_box, swap_enable)
+            # Status swap
+            self.stdscr.addstr(first + height - 4, 11 + len(enable_swap), "Status", curses.A_UNDERLINE)
+            self.stdscr.addstr(first + height - 3, 11 + len(enable_swap),
+                               "Enabled" if swap_enable else "Disable",
+                               curses.A_BOLD if swap_enable else curses.A_NORMAL)
+            # Swap boxes
             start_pos = 10 + len(enable_swap)
             if not swap_enable:
                 # Draw keys to decrease size swap
