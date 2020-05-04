@@ -154,7 +154,7 @@ class CTRL(Page):
                 # Draw selected number
                 self.stdscr.addstr(start_pos, posx + blk + 6, "Speed", curses.A_BOLD)
                 speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
-                self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL, action=self.keyboard)
+                self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL)
                 # Draw keys to increase fan speed
                 box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key, mouse=mouse, action=self.keyboard)
 
