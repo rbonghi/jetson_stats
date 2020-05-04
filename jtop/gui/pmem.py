@@ -99,7 +99,7 @@ class MEM(Page):
         # Screen size
         height, width, first = self.size_page()
         # Set size chart memory
-        size_x = [2, width * 1 // 2 + 5]
+        size_x = [1, width * 1 // 2 + 5]
         size_y = [first + 1, height * 1 // 2 - 1]
         # RAM linear gauge info
         line_counter = size_y[1] + 2
@@ -117,7 +117,8 @@ class MEM(Page):
         # Make swap list file
         self.swap_menu(lc=first, start=size_x[1] + 3, size=size_x[1] - 13, width=width)
         # Draw the Memory gague
-        linear_gauge(self.stdscr, offset=line_counter, size=width,
+        linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
+                     start=1,
                      name='Mem',
                      value=int(ram_status['use'] / float(ram_status['tot']) * 100.0),
                      label=label_lfb,
@@ -132,7 +133,8 @@ class MEM(Page):
             percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider, unit=unit, tot=szw)
             label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
                                                      unit=iram_status['lfb']['unit'])
-            linear_gauge(self.stdscr, offset=line_counter, size=width,
+            linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
+                         start=1,
                          name='Imm',
                          value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
                          label=label_lfb,
@@ -141,7 +143,8 @@ class MEM(Page):
         # EMC linear gauge info
         line_counter += 1
         emc = self.jetson.stats.get('EMC', {})
-        linear_gauge(self.stdscr, offset=line_counter, size=width,
+        linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
+                     start=1,
                      name='EMC',
                      value=emc.get('val', 0),
                      status='ON' if emc else 'SUDO SUGGESTED',

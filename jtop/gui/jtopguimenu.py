@@ -213,25 +213,27 @@ def engines(stdscr, start, offset, width, height, jetson):
         enc_val = "{value}{unit}Hz".format(value=jetson.stats['MSENC']['val'], unit="M")
     else:
         enc_name = 'NVENC'
-        enc_val = "OFF"
+        enc_val = "[OFF]"
     # Find decoders
     if 'NVDEC' in jetson.stats:
         dec_name = 'NVDEC'
         dec_val = "{value}{unit}Hz".format(value=jetson.stats['NVDEC']['val'], unit="M")
     else:
         dec_name = 'NVDEC'
-        dec_val = "OFF"
+        dec_val = "[OFF]"
     double_info(stdscr, start + 1, offset + counter, width, (enc_name, enc_val), (dec_name, dec_val))
     counter += 1
     # NVJPG
     nvjpg = jetson.nvjpg
     if nvjpg:
         status = nvjpg['status']
-        value, _, unit = size_min(nvjpg['rate'])
-        plot_name_info(stdscr, offset + counter, start + 1, "NVJPG", "{value}{unit}Hz".format(value=value, unit=unit))
+        if status:
+            value, _, unit = size_min(nvjpg['rate'])
+            value = "{value}{unit}Hz".format(value=value, unit=unit)
+        else:
+            value = "[OFF]"
         # Plot status
-        status_name = "[ON]" if status else "[OFF]"
-        stdscr.addstr(offset + counter, start + width - 7, status_name, curses.A_NORMAL)
+        plot_name_info(stdscr, offset + counter, start + 1, "NVJPG", value)
 
 
 def double_info(stdscr, start, offset, width, enc, dec):
