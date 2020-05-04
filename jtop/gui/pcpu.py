@@ -20,8 +20,10 @@ from curses.textpad import rectangle
 import platform
 # Page class definition
 from .jtopgui import Page
-from .jtopguilib import (plot_name_info, label_freq)
 from .chart import Chart
+from .jtopguilib import (check_curses,
+                         plot_name_info,
+                         label_freq)
 
 
 class CPU(Page):
@@ -48,6 +50,7 @@ class CPU(Page):
             'active': status
         }
 
+    @check_curses
     def draw(self, key):
         """
             Draw a plot with GPU payload
@@ -59,7 +62,7 @@ class CPU(Page):
         counter = 0
         x_offset = width // 4
         # Draw info rectangle
-        rectangle(self.stdscr, first + 1, 0, height - 2, first + x_offset)
+        rectangle(self.stdscr, first + 1, 0, height - 2 + first, first + x_offset)
         # Draw title side area
         self.stdscr.addstr(first + 1, 1, " Platform ", curses.A_BOLD)
         # Platform information
@@ -89,15 +92,20 @@ class CPU(Page):
             # Draw info
             color = curses.color_pair(8) if active else curses.color_pair(7)
             self.stdscr.addstr(first + offset_table + idx * 2, 2, cpu_name, color)
-            if active:
-                self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, model, curses.A_NORMAL)
-                self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, frq, curses.A_NORMAL)
-                self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2 + len(cpu_name) + 1, governor, curses.A_NORMAL)
-            else:
-                self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, status, curses.A_NORMAL)
+            try:
+                if active:
+                    self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, model, curses.A_NORMAL)
+                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, frq, curses.A_NORMAL)
+                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2 + len(cpu_name) + 1, governor, curses.A_NORMAL)
+                else:
+                    self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(cpu_name) + 1, status, curses.A_NORMAL)
+            except curses.error:
+                pass
         # Evaluate size single chart
-        x_size = (width - x_offset - 5) // (n_cpu // 2)
-        y_size = (height - 2) // 2
+        x_size = (width - x_offset - 6) // (n_cpu // 2)
+        y_size = (height - 2 - first) // 2
+        # Measure offset label
+        offest_label = width - (2 + x_offset + x_size * (n_cpu // 2))
         # Plot all CPUs
         for idx, (cpu, data) in enumerate(zip(self.chart_cpus, self.jetson.stats["CPU"])):
             y_label = idx % (n_cpu // 2) == (n_cpu // 2) - 1
@@ -108,9 +116,9 @@ class CPU(Page):
             # Incrase counter
             counter = idx - line * (n_cpu // 2)
             # Evaluate size chart
-            add_size = 5 if y_label else 0
-            size_x = [x_offset + 1 + (counter * (x_size)), x_offset + x_size * (1 + counter) + add_size - 1]
-            size_y = [first + 1 + (line * (y_size)), y_size * (1 + line)]
+            add_size = offest_label if y_label else 0
+            size_x = [x_offset + 2 + (counter * (x_size)), x_offset + x_size * (1 + counter) + add_size]
+            size_y = [first + 1 + (line * (y_size)), first + y_size * (1 + line)]
             # Value and frequency
             if status:
                 label_chart_cpu = "{percent: >2}%".format(percent=data['val']) if 'val' in data else ""

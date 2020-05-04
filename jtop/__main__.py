@@ -127,7 +127,7 @@ def main():
             if not os.environ["JETSON_TYPE"] and os.environ["JETSON_BOARD"]:
                 print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, get_version())))
             # Check if jetpack is missing
-            if os.environ["JETSON_JETPACK"] == "UNKNOWN":
+            if os.environ["JETSON_JETPACK"] == "UNKNOWN" and os.environ["JETSON_L4T"] != "N.N.N":
                 print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, get_version())))
     except jtop.JtopException as e:
         # Print error and close
