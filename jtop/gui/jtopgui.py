@@ -124,11 +124,13 @@ class JTOPGUI:
         # our program. We can make curses give us nicer values (such as curses.KEY_LEFT)
         # so it is easier on us.
         self.stdscr.keypad(True)
+        # Enable mouse mask
+        curses.mousemask(True)
         # Refreshing page curses loop
         # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
         self.stdscr.nodelay(1)
         """ Here is the loop of our program, we keep clearing and redrawing in this loop """
-        while self.keyboard() and self.signal:
+        while self.events() and self.signal:
             # Draw pages
             self.draw()
 
@@ -198,8 +200,35 @@ class JTOPGUI:
         name_author = "Raffaello Bonghi"
         self.stdscr.addstr(height - 1, width - len(name_author), name_author, curses.A_REVERSE)
 
-    def keyboard(self):
-        self.key = self.stdscr.getch()
+    def event_menu(self, mx, my):
+        height, _ = self.stdscr.getmaxyx()
+        # Check if is an event menu
+        if my == height - 1:
+            # Check which page
+            position = 1
+            for idx, page in enumerate(self.pages):
+                size = len(page.name) + 2
+                # Check if mouse is inside menu name
+                if mx >= position and mx < position + size:
+                    # Set new page
+                    self.set(idx + 1)
+                    break
+                # Increase counter
+                position += size + 3
+
+    def events(self):
+        event = self.stdscr.getch()
+        # Run keyboard check
+        status = self.keyboard(event)
+        # Check event mouse
+        if event == curses.KEY_MOUSE:
+            _, mx, my, _, _ = curses.getmouse()
+            # Run event menu controller
+            self.event_menu(mx, my)
+        return status
+
+    def keyboard(self, event):
+        self.key = event
         if self.old_key != self.key:
             # keyboard check list
             if self.key == curses.KEY_LEFT:
