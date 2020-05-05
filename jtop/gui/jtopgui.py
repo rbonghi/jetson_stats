@@ -191,7 +191,7 @@ class JTOPGUI:
         self.stdscr.addstr(height - 1, 0, ("{0:<" + str(width - 1) + "}").format(" "), curses.A_REVERSE)
         position = 1
         for idx, page in enumerate(self.pages):
-            color =  curses.A_NORMAL if self.n_page == idx else curses.A_REVERSE
+            color = curses.A_NORMAL if self.n_page == idx else curses.A_REVERSE
             self.stdscr.addstr(height - 1, position, str(idx + 1), color | curses.A_BOLD)
             self.stdscr.addstr(height - 1, position + 1, page.name + " ", color)
             position += len(page.name) + 3
