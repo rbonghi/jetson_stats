@@ -161,11 +161,12 @@ class CTRL(Page):
                 box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key, mouse=mouse, action=self.keyboard)
 
     def nvp_action(self, name):
-        # Read number
-        number = int(name.split(" ")[0])
-        # Run nvpmodel on number selected
-        nvpmodel = self.jetson.nvpmodel
-        nvpmodel.set(number)
+        if self.jetson.userid == 0:
+            # Read number
+            number = int(name.split(" ")[0])
+            # Run nvpmodel on number selected
+            nvpmodel = self.jetson.nvpmodel
+            nvpmodel.set(number)
 
     def keyboard(self, key):
         if self.jetson.userid == 0:

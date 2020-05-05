@@ -133,7 +133,7 @@ class JTOPGUI:
         # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
         self.stdscr.nodelay(1)
         """ Here is the loop of our program, we keep clearing and redrawing in this loop """
-        while self.events() and self.signal:
+        while not self.events() and self.signal:
             # Draw pages
             self.draw()
 
@@ -191,14 +191,12 @@ class JTOPGUI:
         self.stdscr.addstr(height - 1, 0, ("{0:<" + str(width - 1) + "}").format(" "), curses.A_REVERSE)
         position = 1
         for idx, page in enumerate(self.pages):
-            if self.n_page != idx:
-                self.stdscr.addstr(height - 1, position, ("{idx} {name}").format(idx=idx + 1, name=page.name), curses.A_REVERSE)
-            else:
-                self.stdscr.addstr(height - 1, position, ("{idx} {name}").format(idx=idx + 1, name=page.name))
-            position += len(page.name) + 2
-            if idx < len(self.pages) - 1:
-                self.stdscr.addstr(height - 1, position, " - ", curses.A_REVERSE)
-                position += 3
+            color =  curses.A_NORMAL if self.n_page == idx else curses.A_REVERSE
+            self.stdscr.addstr(height - 1, position, str(idx + 1), color | curses.A_BOLD)
+            self.stdscr.addstr(height - 1, position + 1, page.name + " ", color)
+            position += len(page.name) + 3
+        self.stdscr.addstr(height - 1, position, "Q", curses.A_REVERSE | curses.A_BOLD)
+        self.stdscr.addstr(height - 1, position + 1, "uit ", curses.A_REVERSE)
         # Author name
         name_author = "Raffaello Bonghi"
         self.stdscr.addstr(height - 1, width - len(name_author), name_author, curses.A_REVERSE)
@@ -210,29 +208,33 @@ class JTOPGUI:
             # Check which page
             position = 1
             for idx, page in enumerate(self.pages):
-                size = len(page.name) + 2
+                size = len(page.name) + 3
                 # Check if mouse is inside menu name
                 if mx >= position and mx < position + size:
                     # Set new page
                     self.set(idx + 1)
-                    return True
+                    return False
                 # Increase counter
-                position += size + 3
+                position += size
+            # Quit button
+            if mx >= position and mx < position + 4:
+                return True
         return False
 
     def events(self):
         event = self.stdscr.getch()
         # Run keyboard check
-        status = self.keyboard(event)
+        status_mouse = False
+        status_keyboard = self.keyboard(event)
         # Clear event mouse
         self.mouse = ()
         # Check event mouse
         if event == curses.KEY_MOUSE:
             _, mx, my, _, _ = curses.getmouse()
             # Run event menu controller
-            if not self.event_menu(mx, my):
-                self.mouse = (mx, my)
-        return status
+            status_mouse = self.event_menu(mx, my)
+            self.mouse = (mx, my)
+        return status_keyboard or status_mouse
 
     def keyboard(self, event):
         self.key = event
@@ -247,10 +249,10 @@ class JTOPGUI:
                 self.set(num)
             elif self.key == ord('q') or self.key == ord('Q') or self.ESC_BUTTON(self.key):
                 # keyboard check quit button
-                return False
+                return True
             # Store old value key
             self.old_key = self.key
-        return True
+        return False
 
     def ESC_BUTTON(self, key):
         """
