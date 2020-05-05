@@ -95,14 +95,9 @@ class ALL(Page):
         line_counter += 1
         swap_status = self.jetson.stats.get('SWAP', {})
         swap_cached = swap_status.get('cached', {})
-        if swap_status:
-            szw, divider, unit = size_min(swap_status['tot'], start=swap_status['unit'])
-            use = swap_status['use'] / divider
-        else:
-            szw, divider, unit = 0, 1.0, "M"
-            use = 0
         # lfb label
-        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=use, unit=unit, tot=szw)
+        szw, divider, unit = size_min(swap_status.get('tot', 0), start=swap_status.get('unit', ''))
+        percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0) / divider, tot=szw, unit=unit)
         label_lfb = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'),
                                                     unit=swap_cached.get('unit', ''))
         linear_gauge(self.stdscr, offset=line_counter, size=width,
