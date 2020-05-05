@@ -107,14 +107,17 @@ class CPU(Page):
         # Measure offset label
         offest_label = width - (2 + x_offset + x_size * (n_cpu // 2))
         # Plot all CPUs
+        idxn = 0
         for idx, (cpu, data) in enumerate(zip(self.chart_cpus, self.jetson.stats["CPU"])):
-            y_label = idx % (n_cpu // 2) == (n_cpu // 2) - 1
             # status CPU
             status = data.get("status", "OFF") == "ON"
+            if not status:
+                continue
+            y_label = idxn % (n_cpu // 2) == (n_cpu // 2) - 1
             # Select line
-            line = 1 if idx >= n_cpu // 2 else 0
+            line = 1 if idxn >= n_cpu // 2 else 0
             # Incrase counter
-            counter = idx - line * (n_cpu // 2)
+            counter = idxn - line * (n_cpu // 2)
             # Evaluate size chart
             add_size = offest_label if y_label else 0
             size_x = [x_offset + 2 + (counter * (x_size)), x_offset + x_size * (1 + counter) + add_size]
@@ -123,4 +126,5 @@ class CPU(Page):
             if status:
                 label_chart_cpu = "{percent: >2}%".format(percent=data['val']) if 'val' in data else ""
                 cpu.draw(self.stdscr, size_x, size_y, label=label_chart_cpu, y_label=y_label)
+            idxn += 1
 # EOF

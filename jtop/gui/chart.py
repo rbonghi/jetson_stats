@@ -80,6 +80,7 @@ class Chart(object):
         val = float(displayX - 2) / float(len(self.value))
         points = []
         for n in self.value:
+            n = n if n <= self.max_val else self.max_val
             points += [n] * int(ceil(val))
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)

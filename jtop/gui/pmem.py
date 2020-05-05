@@ -57,7 +57,12 @@ class MEM(Page):
         # SWAP linear gauge info
         swap_status = self.jetson.stats.get('SWAP', {})
         swap_cached = swap_status.get('cached', {})
-        szw, divider, unit = size_min(swap_status['tot'], start=swap_status['unit'])
+        if swap_status:
+            szw, divider, unit = size_min(swap_status['tot'], start=swap_status['unit'])
+            use = swap_status['use'] / divider
+        else:
+            szw, divider, unit = 0, 1.0, "M"
+            use = 0
         percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0) / divider, tot=szw, unit=unit)
         # Make label cache
         label = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'), unit=swap_cached.get('unit', ''))
