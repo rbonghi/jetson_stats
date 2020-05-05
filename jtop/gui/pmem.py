@@ -156,7 +156,7 @@ class MEM(Page):
             self.stdscr.addstr(first + height - 6, 7, clear_cache, curses.A_NORMAL)
         if self.jetson.userid == 0:
             # Swap controller
-            box_keyboard(self.stdscr, 1, first + height - 4, "h", key, mouse=mouse, action=self.keyboard)
+            box_keyboard(self.stdscr, 1, first + height - 4, "s", key, mouse=mouse, action=self.keyboard)
             self.stdscr.addstr(first + height - 4, 7, "Extra", curses.A_UNDERLINE)
             enable_swap = "Swap"
             self.stdscr.addstr(first + height - 3, 7, enable_swap, curses.A_NORMAL)
@@ -193,7 +193,7 @@ class MEM(Page):
             # Clear cache script
             if key == 'c':
                 self.jetson.swap.clearCache()
-            if key == 'h':
+            if key == 's':
                 # Change status swap
                 self.jetson.swap.enable = operator.not_(swap_enable)
             # Enable nvpmodel control
