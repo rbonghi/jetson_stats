@@ -18,8 +18,7 @@
 import curses
 from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import (check_curses,
-                         box_keyboard)
+from .jtopguilib import check_curses
 from .chart import Chart
 from .button import Button, ButtonList
 from ..core.jetson_clocks import JetsonClocks
@@ -37,10 +36,15 @@ class CTRL(Page):
         # Initialize buttons
         self.service_start = Button(stdscr, key="s", action=self.action_service_start)
         self.service_enable = Button(stdscr, key="e", action=self.action_service_enable)
+        # NVP Model controller
         self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
         self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
         mode_names = [mode["Name"] for mode in self.jetson.nvpmodel.modes]
         self.nvp_list = ButtonList(stdscr, range(len(mode_names)), mode_names, action=self.action_nvp)
+        # Fan controller
+        self.fan_status = Button(stdscr, key="f", action=self.action_fan_status)
+        self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
+        self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
 
     def action_nvp_increase(self, key):
         if self.jetson.userid == 0:
@@ -76,6 +80,34 @@ class CTRL(Page):
             # Start jetson_clocks
             self.jetson.jetson_clocks.start = not self.jetson.jetson_clocks.start
 
+    def action_fan_status(self, key):
+        if self.jetson.userid == 0:
+            # FAN controller
+            fan = self.jetson.fan
+            if fan is not None:
+                # Go to next configuration
+                fan.conf_next()
+                # Store configuration
+                fan.store()
+
+    def action_fan_increase(self, key):
+        if self.jetson.userid == 0:
+            # FAN controller
+            fan = self.jetson.fan
+            if fan is not None:
+                fan.increase()
+                # Store configuration
+                fan.store()
+
+    def action_fan_decrease(self, key):
+        if self.jetson.userid == 0:
+            # FAN controller
+            fan = self.jetson.fan
+            if fan is not None:
+                fan.decrease()
+                # Store configuration
+                fan.store()
+
     def update_chart(self, jetson, name):
         parameter = jetson.stats.get("FAN", {})
         value = 'cpwm' if 'cpwm' in parameter else 'tpwm'
@@ -99,8 +131,6 @@ class CTRL(Page):
         # Position information
         start_y = first + 1
         start_x = 1
-        posx = 2
-        start_pos = first + 2
         # Jetson Clocks status
         jc_field = "jetson_clocks"
         # Show status jetson_clocks
@@ -187,37 +217,17 @@ class CTRL(Page):
         if self.jetson.userid == 0 and 'FAN' in self.jetson.stats:
             # Mode
             if 'ctrl' in fan:
-                box_keyboard(self.stdscr, posx + 40, start_pos, "f", key, mouse=mouse, action=self.keyboard)
-                self.stdscr.addstr(start_pos + 1, posx + 46, self.jetson.fan.config.capitalize(), curses.A_BOLD)
+                self.fan_status.draw(start_y, start_x + width // 2, key, mouse)
+                self.stdscr.addstr(start_y + 1, start_x + width // 2 + 6, self.jetson.fan.config.capitalize(), curses.A_BOLD)
             # Show speed buttons only if is in manual
             if self.jetson.fan.conf == 'manual':
-                blk = 53
+                blk = start_x + width // 2 + 13
                 # Draw keys to decrease fan speed
-                box_keyboard(self.stdscr, posx + blk, start_pos, "m", key, mouse=mouse, action=self.keyboard)
+                self.fan_status_decrease.draw(start_y, blk, key, mouse)
                 # Draw selected number
-                self.stdscr.addstr(start_pos, posx + blk + 6, "Speed", curses.A_BOLD)
+                self.stdscr.addstr(start_y, blk + 6, "Speed", curses.A_BOLD)
                 speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
-                self.stdscr.addstr(start_pos + 1, posx + blk + 6, speed_str, curses.A_NORMAL)
+                self.stdscr.addstr(start_y + 1, blk + 6, speed_str, curses.A_NORMAL)
                 # Draw keys to increase fan speed
-                box_keyboard(self.stdscr, posx + blk + 13, start_pos, "p", key, mouse=mouse, action=self.keyboard)
-
-    def keyboard(self, key):
-        if self.jetson.userid == 0:
-            # FAN controller
-            fan = self.jetson.fan
-            # Enable fan control
-            if fan is not None:
-                if key == 'p':
-                    fan.increase()
-                    # Store configuration
-                    fan.store()
-                elif key == 'm':
-                    fan.decrease()
-                    # Store configuration
-                    fan.store()
-                if key == 'f':
-                    # Go to next configuration
-                    fan.conf_next()
-                    # Store configuration
-                    fan.store()
+                self.fan_status_increase.draw(start_y, blk + 13, key, mouse)
 # EOF
