@@ -128,7 +128,7 @@ class JTOPGUI:
         # so it is easier on us.
         self.stdscr.keypad(True)
         # Enable mouse mask
-        available, old = curses.mousemask(curses.BUTTON1_CLICKED)
+        _, _ = curses.mousemask(curses.BUTTON1_CLICKED)
         # Refreshing page curses loop
         # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
         self.stdscr.nodelay(1)
