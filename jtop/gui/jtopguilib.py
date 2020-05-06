@@ -158,31 +158,6 @@ def box_status(stdscr, x, y, name, status=False, color=curses.A_REVERSE, mouse=(
         action(name)
 
 
-@check_curses
-def box_list(stdscr, x, y, data, selected, status=[], max_width=-1, numbers=False, mouse=(), action=None):
-    len_prev = 0
-    line = 0
-    skip_line = False if max_width == -1 else True
-    for idx, name in enumerate(data):
-        if status:
-            color = curses.A_REVERSE if status[idx] else curses.color_pair(1)
-            status_selected = True if selected == idx else not status[idx]
-        else:
-            status_selected = True if selected == idx else False
-        # Add number idx if required
-        str_name = name if not numbers else str(idx) + " " + name
-        # Find next position
-        if skip_line and len_prev + len(str_name) + 4 >= max_width:
-            line += 3
-            len_prev = 0
-        # Plot box
-        box_status(stdscr, x + len_prev, y + line, str_name, status=status_selected, color=color, mouse=mouse, action=action)
-        len_prev += len(str_name) + 4
-    # Draw background rectangle
-    # rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
-    return line
-
-
 def label_freq(value):
     if 'frq' in value:
         freq = value['frq']
