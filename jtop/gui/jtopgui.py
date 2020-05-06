@@ -128,7 +128,7 @@ class JTOPGUI:
         # so it is easier on us.
         self.stdscr.keypad(True)
         # Enable mouse mask
-        curses.mousemask(True)
+        available, old = curses.mousemask(curses.BUTTON1_CLICKED)
         # Refreshing page curses loop
         # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
         self.stdscr.nodelay(1)
@@ -230,10 +230,13 @@ class JTOPGUI:
         self.mouse = ()
         # Check event mouse
         if event == curses.KEY_MOUSE:
-            _, mx, my, _, _ = curses.getmouse()
-            # Run event menu controller
-            status_mouse = self.event_menu(mx, my)
-            self.mouse = (mx, my)
+            try:
+                _, mx, my, _, _ = curses.getmouse()
+                # Run event menu controller
+                status_mouse = self.event_menu(mx, my)
+                self.mouse = (mx, my)
+            except curses.error:
+                pass
         return status_keyboard or status_mouse
 
     def keyboard(self, event):

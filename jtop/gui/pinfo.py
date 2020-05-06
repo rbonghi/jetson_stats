@@ -83,7 +83,7 @@ class INFO(Page):
                 self.stdscr.addstr(start_pos + idx + 1, posx + 25, "compiled CUDA:")
                 cuda = self.jetson.board["libraries"]["OpenCV-Cuda"]
                 color = curses.color_pair(2) if cuda == "YES" else curses.color_pair(1)
-                self.stdscr.addstr(start_pos + idx + 1, posx + 40, cuda, color)
+                self.stdscr.addstr(start_pos + idx + 1, posx + 40, cuda, color | curses.A_BOLD)
             idx += 1
         # IP address and Hostname
         if self.jetson.local_interfaces:
