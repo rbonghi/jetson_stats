@@ -19,7 +19,6 @@ import os
 import sys
 # control command line
 import curses
-from curses.textpad import rectangle
 # Functions and decorators
 from functools import wraps
 
@@ -115,19 +114,6 @@ def strfdelta(tdelta, fmt):
     d["hours"], rem = divmod(tdelta.seconds, 3600)
     d["minutes"], d["seconds"] = divmod(rem, 60)
     return fmt.format(**d)
-
-
-@check_curses
-def box_status(stdscr, x, y, name, status=False, color=curses.A_REVERSE, mouse=(), action=None):
-    # Draw background rectangle
-    rectangle(stdscr, y, x, y + 2, x + 3 + len(name))
-    # Default status
-    status = color if status else curses.A_NORMAL
-    # Write letter
-    stdscr.addstr(y + 1, x + 2, name, status)
-    # Run Action
-    if action is not None and mouse_clicked(mouse, y, x, 3 + len(name), 2):
-        action(name)
 
 
 def label_freq(value):

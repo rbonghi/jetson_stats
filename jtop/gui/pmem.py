@@ -20,12 +20,11 @@ import curses
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import (linear_gauge,
-                         label_freq)
-# Graphics elements
-from .jtopguilib import size_min
-from .chart import Chart
-from .button import Button
+from .lib.common import (linear_gauge,
+                         label_freq,
+                         size_min)
+from .lib.chart import Chart
+from .lib.button import Button
 
 
 class MEM(Page):

@@ -20,8 +20,8 @@ from curses.textpad import rectangle
 import platform
 # Page class definition
 from .jtopgui import Page
-from .chart import Chart
-from .jtopguilib import (check_curses,
+from .lib.chart import Chart
+from .lib.common import (check_curses,
                          plot_name_info,
                          label_freq)
 

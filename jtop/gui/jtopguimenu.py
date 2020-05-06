@@ -21,7 +21,7 @@ from datetime import timedelta
 # control command line
 import curses
 # Graphics elements
-from .jtopguilib import (check_curses,
+from .lib.common import (check_curses,
                          strfdelta,
                          linear_gauge,
                          label_freq,

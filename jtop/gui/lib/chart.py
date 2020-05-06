@@ -20,7 +20,7 @@ from math import ceil
 import curses
 from curses.textpad import rectangle
 from collections import deque
-from .jtopguilib import check_curses
+from .common import check_curses
 
 
 class Chart(object):

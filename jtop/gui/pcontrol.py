@@ -18,9 +18,11 @@
 import curses
 from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import check_curses
-from .chart import Chart
-from .button import Button, ButtonList
+from .lib.common import check_curses
+# Graphic library
+from .lib.chart import Chart
+from .lib.button import Button, ButtonList
+# Jetson Clock event
 from ..core.jetson_clocks import JetsonClocks
 
 

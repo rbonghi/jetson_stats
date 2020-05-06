@@ -20,7 +20,7 @@ from datetime import timedelta
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import plot_name_info
+from .lib.common import plot_name_info
 # Menu GUI pages
 from .jtopguimenu import strfdelta
 

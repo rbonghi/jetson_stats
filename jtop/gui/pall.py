@@ -19,7 +19,7 @@ import curses
 from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
-from .jtopguilib import (linear_gauge,
+from .lib.common import (linear_gauge,
                          size_min,
                          label_freq)
 # Menu GUI pages

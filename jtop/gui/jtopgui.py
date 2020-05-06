@@ -21,7 +21,7 @@ import signal
 # Logging
 import logging
 # Graphics elements
-from .jtopguilib import (check_size,
+from .lib.common import (check_size,
                          check_curses,
                          set_xterm_title,
                          xterm_line)
