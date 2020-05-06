@@ -19,9 +19,9 @@ import curses
 from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
-from .lib.common import (linear_gauge,
-                         size_min,
+from .lib.common import (size_min,
                          label_freq)
+from .lib.linear_gauge import linear_gauge
 # Menu GUI pages
 from .jtopguimenu import (plot_watts,
                           compact_info,

@@ -139,41 +139,6 @@ def size_min(num, divider=1.0, n=0, start=''):
 
 
 @check_curses
-def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", type_bar="|", color=curses.A_NORMAL):
-    # Evaluate size withuout short name
-    name_size = len(name)
-    size_bar = size - name_size - 4
-    # Show short name linear gauge
-    stdscr.addstr(offset, start, ("{name:" + str(name_size) + "}").format(name=name), color)
-    # Check if value is not a string
-    if 'ON' in status:
-        # Show bracket linear gauge and label and evaluate size withuout size labels and short name
-        size_bar -= (len(label) + 1) if label else 0
-        stdscr.addstr(offset, start + name_size + 1, "[" + " " * size_bar + "]", curses.A_BOLD)
-        if label:
-            stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, label)
-        # Show progress value linear gauge
-        n_bar = int(float(value) * float(size_bar) / 100.0)
-        if n_bar >= 0:
-            progress_bar = type_bar * n_bar
-            # Build progress barr string
-            str_progress_bar = ("{n_bar:" + str(size_bar) + "}").format(n_bar=progress_bar)
-            percent_label = percent if percent else str(value) + "%"
-            str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
-            # Split string in green and grey part
-            green_part = str_progress_bar[:n_bar]
-            grey_part = str_progress_bar[n_bar:]
-            stdscr.addstr(offset, start + name_size + 2, green_part, curses.color_pair(2))
-            stdscr.addstr(offset, start + name_size + 2 + size_bar - len(grey_part), grey_part, curses.A_DIM)
-    else:
-        # Show bracket linear gauge and label
-        stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "), curses.color_pair(7))
-        # Show bracket linear gauge and label
-        status = status if status else "OFF"
-        stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(7))
-
-
-@check_curses
 def plot_dictionary(stdscr, offset, data, name, start=0):
     # Plot title
     stdscr.addstr(offset, start, name + ":", curses.A_BOLD)

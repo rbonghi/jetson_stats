@@ -23,10 +23,10 @@ import curses
 # Graphics elements
 from .lib.common import (check_curses,
                          strfdelta,
-                         linear_gauge,
                          label_freq,
                          plot_name_info,
                          size_min)
+from .lib.linear_gauge import linear_gauge
 from ..core.jetson_clocks import JetsonClocks
 
 

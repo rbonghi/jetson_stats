@@ -20,9 +20,9 @@ import curses
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
-from .lib.common import (linear_gauge,
-                         label_freq,
+from .lib.common import (label_freq,
                          size_min)
+from .lib.linear_gauge import linear_gauge
 from .lib.chart import Chart
 from .lib.button import Button
 

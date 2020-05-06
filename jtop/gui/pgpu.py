@@ -19,8 +19,8 @@ import curses
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import (plot_name_info,
-                         linear_gauge,
                          label_freq)
+from .lib.linear_gauge import linear_gauge
 from .lib.chart import Chart
 from ..core.jetson_clocks import JetsonClocks
 
