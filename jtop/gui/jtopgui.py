@@ -154,8 +154,13 @@ class JTOPGUI:
         # Set a timeout and read keystroke
         self.stdscr.timeout(self.refresh)
 
-    def increase(self):
-        idx = self.n_page + 1
+    def increase(self, loop=False):
+        # check reset
+        if loop and self.n_page >= len(self.pages) - 1:
+            idx = 0
+        else:
+            idx = self.n_page + 1
+        # Fix set new page
         self.set(idx + 1)
 
     def decrease(self):
@@ -243,7 +248,9 @@ class JTOPGUI:
         self.key = event
         if self.old_key != self.key:
             # keyboard check list
-            if self.key == curses.KEY_LEFT:
+            if self.key == ord('\t'):
+                self.increase(loop=True)
+            elif self.key == curses.KEY_LEFT:
                 self.decrease()
             elif self.key == curses.KEY_RIGHT:
                 self.increase()
