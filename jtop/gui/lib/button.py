@@ -18,7 +18,7 @@
 # control command line
 import curses
 from curses.textpad import rectangle
-
+from threading import Thread
 # Size button
 SIZE_BUTTON_HEIGHT = 2
 
@@ -39,18 +39,21 @@ class Button:
         rectangle(self.stdscr, posy, posx, posy + SIZE_BUTTON_HEIGHT, posx + width)
         # status
         status = self._keyPressed(key) or self._mousePressed(posy, posx, width, mouse)
-        pressed = color if status or exstatus else curses.A_NORMAL
         # Write key letter
         if self.key:
             underline = curses.A_UNDERLINE if self.underline else curses.A_NORMAL
+            pressed = color if status or exstatus and not self.label else curses.A_NORMAL
             self.stdscr.addstr(posy + 1, posx + 2, self.key, underline | pressed)
         # Write label
         if self.label:
             posx_label = 4 if self.key else 2
+            pressed = color if status or exstatus else curses.A_NORMAL
             self.stdscr.addstr(posy + 1, posx + posx_label, self.label, pressed)
         # Run action
         if status and self.action is not None:
-            self.action(self.key)
+            # Run a thread
+            th = Thread(target=self.action, args=(self.key))
+            th.start()
 
     def sizeX(self):
         width = 4 if self.key else 2
