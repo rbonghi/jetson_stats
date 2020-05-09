@@ -41,7 +41,7 @@ from .gui import JTOPGUI, ALL, CPU, GPU, MEM, CTRL, INFO
 logger = logging.getLogger(__name__)
 # Reference repository
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
-
+LOOP_SECONDS = 5
 
 class bcolors:
     HEADER = '\033[95m'
@@ -69,11 +69,12 @@ class bcolors:
 def main():
     # Add arg parser
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
-    parser.add_argument('-r', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
-    parser.add_argument('--page', dest="page", help='Open fix page', type=int, default=1)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
+    parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
+    parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
+    parser.add_argument('-p', '--page', dest="page", help='Open fix page', type=int, default=1)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
@@ -89,7 +90,7 @@ def main():
             if not args.restore:
                 try:
                     # Call the curses wrapper
-                    curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, MEM, CPU, CTRL, INFO], init_page=args.page)
+                    curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
                 except KeyboardInterrupt as x:
                     # Catch keyboard interrupt and close
                     logger.info("Closed with CTRL-C [{status}]".format(status=x))

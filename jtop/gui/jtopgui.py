@@ -20,6 +20,8 @@ import curses
 import signal
 # Logging
 import logging
+# Timer
+from datetime import datetime, timedelta
 # Graphics elements
 from .lib.common import (check_size,
                          check_curses,
@@ -67,7 +69,7 @@ class JTOPGUI:
     """
     COLORS = {"RED": 1, "GREEN": 2, "YELLOW": 3, "BLUE": 4, "MAGENTA": 5, "CYAN": 6}
 
-    def __init__(self, stdscr, refresh, jetson, pages, init_page=0, start=True):
+    def __init__(self, stdscr, refresh, jetson, pages, init_page=0, start=True, loop=False, seconds=5):
         # Define pairing colors
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -103,14 +105,14 @@ class JTOPGUI:
             signal.signal(sig, self.handler)
         # Run the GUI
         if start:
-            self.run()
+            self.run(loop, seconds)
 
     def handler(self, signum=None, frame=None):
         logger.info("Signal handler called with signal {signum}".format(signum=signum))
         # Close gui
         self.signal = False
 
-    def run(self):
+    def run(self, loop, seconds):
         # In this program, we don't want keystrokes echoed to the console,
         # so we run this to disable that
         curses.noecho()
@@ -132,10 +134,16 @@ class JTOPGUI:
         # Refreshing page curses loop
         # https://stackoverflow.com/questions/54409978/python-curses-refreshing-text-with-a-loop
         self.stdscr.nodelay(1)
-        """ Here is the loop of our program, we keep clearing and redrawing in this loop """
+        # Using current time
+        old = datetime.now()
+        # Here is the loop of our program, we keep clearing and redrawing in this loop
         while not self.events() and self.signal:
             # Draw pages
             self.draw()
+            # Increase page automatically if loop enabled
+            if loop and datetime.now() - old >= timedelta(seconds=seconds):
+                self.increase(loop=True)
+                old = datetime.now()
 
     @check_size(20, 50)
     def draw(self):

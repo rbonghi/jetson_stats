@@ -35,19 +35,21 @@ sudo jtop
 Other options are availables with `-h` option:
 ```console
 nvidia@jetson-nano:~/$ sudo jtop -h
-usage: jtop [-h] [-r REFRESH] [--debug] [--page PAGE] [--no-warnings]
-            [--restore] [-v]
+usage: jtop [-h] [--debug] [--no-warnings] [--restore] [--loop] [-r REFRESH]
+            [-p PAGE] [-v]
 
 jtop is system monitoring utility and runs on terminal
 
 optional arguments:
-  -h, --help     show this help message and exit
-  -r REFRESH     refresh interval
-  --debug        Run with debug logger
-  --page PAGE    Open fix page
-  --no-warnings  Do not show warnings
-  --restore      Reset Jetson configuration
-  -v, --version  show program's version number and exit
+  -h, --help            show this help message and exit
+  --debug               Run with debug logger
+  --no-warnings         Do not show warnings
+  --restore             Reset Jetson configuration
+  --loop                Automatically switch page every 5s
+  -r REFRESH, --refresh REFRESH
+                        refresh interval
+  -p PAGE, --page PAGE  Open fix page
+  -v, --version         show program's version number and exit
 ```
 ### Pages
 **jtop** have four different pages to control your NVIDIA Jetson:
