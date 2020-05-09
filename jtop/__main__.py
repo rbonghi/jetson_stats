@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
 LOOP_SECONDS = 5
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
