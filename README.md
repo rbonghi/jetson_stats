@@ -3,7 +3,7 @@
 
 ![Build](https://github.com/rbonghi/jetson_stats/workflows/Build/badge.svg) ![Docs](https://github.com/rbonghi/jetson_stats/workflows/Docs/badge.svg) ![Publish](https://github.com/rbonghi/jetson_stats/workflows/Publish/badge.svg)
 
-**jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [XavierNX, Nano, AGX Xavier, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
+**jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Xavier NX, Nano, AGX Xavier, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
 
 When you install jetson-stats are included:
 * [jtop](#jtop)
