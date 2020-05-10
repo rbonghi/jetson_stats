@@ -210,15 +210,15 @@ class jtop(StatusObserver):
         """
         info = {"Machine": os.environ["JETSON_MACHINE"],
                 "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"}
-        board = {"Type": os.environ["JETSON_TYPE"],
-                 "Code Name": os.environ["JETSON_CODENAME"],
+        board = {"TYPE": os.environ["JETSON_TYPE"],
+                 "CODENAME": os.environ["JETSON_CODENAME"],
                  "SOC": os.environ["JETSON_SOC"],
-                 "Chip ID": os.environ["JETSON_CHIP_ID"],
-                 "Boardids": os.environ["JETSON_BOARDIDS"],
-                 "Module": os.environ["JETSON_MODULE"],
-                 "Board": os.environ["JETSON_BOARD"],
-                 "GPU-Arch": os.environ["JETSON_CUDA_ARCH_BIN"],
-                 "SN": os.environ["JETSON_SERIAL_NUMBER"].upper()}
+                 "CHIP_ID": os.environ["JETSON_CHIP_ID"],
+                 "BOARDIDS": os.environ["JETSON_BOARDIDS"],
+                 "MODULE": os.environ["JETSON_MODULE"],
+                 "BOARD": os.environ["JETSON_BOARD"],
+                 "CUDA_ARCH_BIN": os.environ["JETSON_CUDA_ARCH_BIN"],
+                 "SERIAL_NUMBER": os.environ["JETSON_SERIAL_NUMBER"].upper()}
         libraries = {"CUDA": os.environ["JETSON_CUDA"],
                      "cuDNN": os.environ["JETSON_CUDNN"],
                      "TensorRT": os.environ["JETSON_TENSORRT"],

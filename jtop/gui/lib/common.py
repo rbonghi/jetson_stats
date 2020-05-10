@@ -24,7 +24,7 @@ from functools import wraps
 
 
 def xterm_line(jetson):
-    str_xterm = " " + jetson.board["board"]["Type"]
+    str_xterm = " " + jetson.board["board"]["TYPE"]
     nvp = jetson.nvpmodel
     # if "GR3D" in jetson.stats:
     #     gpu = jetson.stats["GR3D"]['val']

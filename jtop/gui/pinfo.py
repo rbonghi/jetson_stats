@@ -58,17 +58,17 @@ class INFO(Page):
         idx += 2
         # Load Board information
         board = self.jetson.board["board"]
-        self.info_variable(start_pos + idx, posx + 2, "* Type", board["Type"])
+        self.info_variable(start_pos + idx, posx + 2, "* Type", board["TYPE"])
         self.info_variable(start_pos + idx + 1, posx + 2, "* SOC Family", board["SOC"])
-        self.info_variable(start_pos + idx + 1, posx + 33, "ID", board["Chip ID"], spacing=4)
-        self.info_variable(start_pos + idx + 2, posx + 2, "* Module", board["Module"])
-        self.info_variable(start_pos + idx + 2, posx + 33, "Board", board["Board"], spacing=7)
-        self.info_variable(start_pos + idx + 3, posx + 2, "* Code Name", board["Code Name"])
-        self.info_variable(start_pos + idx + 4, posx + 2, "* Cuda ARCH", board["GPU-Arch"])
-        self.info_variable(start_pos + idx + 5, posx + 2, "* Serial Number", board["SN"])
+        self.info_variable(start_pos + idx + 1, posx + 33, "ID", board["CHIP_ID"], spacing=4)
+        self.info_variable(start_pos + idx + 2, posx + 2, "* Module", board["MODULE"])
+        self.info_variable(start_pos + idx + 2, posx + 33, "Board", board["BOARD"], spacing=7)
+        self.info_variable(start_pos + idx + 3, posx + 2, "* Code Name", board["CODENAME"])
+        self.info_variable(start_pos + idx + 4, posx + 2, "* Cuda ARCH", board["CUDA_ARCH_BIN"])
+        self.info_variable(start_pos + idx + 5, posx + 2, "* Serial Number", board["SERIAL_NUMBER"])
         idx += 5
-        if board["Boardids"]:
-            self.info_variable(start_pos + idx + 1, posx + 2, "* Board ids", board["Boardids"])
+        if board["BOARDIDS"]:
+            self.info_variable(start_pos + idx + 1, posx + 2, "* Board ids", board["BOARDIDS"])
             idx += 1
         # Libraries info
         library_line = start_pos + idx + 1

@@ -29,5 +29,5 @@ from .core import StatusObserver
 __author__ = "Raffaello Bonghi <raffaello@rnext.it>"
 # Version package
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "2.1.0rc1"
+__version__ = "2.1.0"
 # EOF
