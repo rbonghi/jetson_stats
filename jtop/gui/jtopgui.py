@@ -171,8 +171,12 @@ class JTOPGUI:
         # Fix set new page
         self.set(idx + 1)
 
-    def decrease(self):
-        idx = self.n_page + 1
+    def decrease(self, loop=False):
+        # check reset
+        if loop and self.n_page <= 0:
+            idx = len(self.pages) + 1
+        else:
+            idx = self.n_page + 1
         self.set(idx - 1)
 
     def set(self, idx):
@@ -256,12 +260,10 @@ class JTOPGUI:
         self.key = event
         if self.old_key != self.key:
             # keyboard check list
-            if self.key == ord('\t'):
+            if self.key == curses.KEY_LEFT:
+                self.decrease(loop=True)
+            elif self.key == curses.KEY_RIGHT or self.key == ord('\t'):
                 self.increase(loop=True)
-            elif self.key == curses.KEY_LEFT:
-                self.decrease()
-            elif self.key == curses.KEY_RIGHT:
-                self.increase()
             elif self.key in [ord(str(n)) for n in range(10)]:
                 num = int(chr(self.key))
                 self.set(num)
