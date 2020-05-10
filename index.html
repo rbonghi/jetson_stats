@@ -90,7 +90,8 @@
 </li>
 <li><a class="reference internal" href="#id7">**jetson_config**</a></li>
 <li><a class="reference internal" href="#id9">**jetson_release**</a></li>
-<li><a class="reference internal" href="#id12">**jetson_variables**</a></li>
+<li><a class="reference internal" href="#id12">**jetson_swap**</a></li>
+<li><a class="reference internal" href="#id14">**jetson_variables**</a></li>
 </ul>
 </li>
 </ul>
@@ -179,11 +180,13 @@
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/workflows/Build/badge.svg"><img alt="Build" src="https://github.com/rbonghi/jetson_stats/workflows/Build/badge.svg" /></a>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/workflows/Docs/badge.svg"><img alt="Docs" src="https://github.com/rbonghi/jetson_stats/workflows/Docs/badge.svg" /></a>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/workflows/Publish/badge.svg"><img alt="Publish" src="https://github.com/rbonghi/jetson_stats/workflows/Publish/badge.svg" /></a>
-<p><strong>jetson-stats</strong> is a package to <strong>monitoring</strong> and <strong>control</strong> your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a> [Nano, Xavier, TX2i, TX2, TX1] embedded board. When you install jetson-stats are included:</p>
+<p><strong>jetson-stats</strong> is a package to <strong>monitoring</strong> and <strong>control</strong> your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a> [XavierNX, Nano, AGX Xavier, TX1, TX2] Works with all NVIDIA Jetson ecosystem.</p>
+<p>When you install jetson-stats are included:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="#jtop">jtop</a></p></li>
 <li><p><a class="reference external" href="#jetson_config">jetson_config</a></p></li>
 <li><p><a class="reference external" href="#jetson_release">jetson_release</a></p></li>
+<li><p><a class="reference external" href="#jetson_swap">jetson_swap</a></p></li>
 <li><p><a class="reference external" href="#jetson_variables">jetson_variables</a></p></li>
 </ul>
 <p>Read the <a class="reference external" href="https://github.com/rbonghi/jetson_stat/wiki">Wiki</a> for more detailed information or read the package <a class="reference external" href="https://rbonghi.github.io/jetson_stats">documentation</a>.</p>
@@ -199,35 +202,39 @@
 <div class="section" id="id4">
 <h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jtop">**jtop**</a><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <p>It is a system monitoring utility that runs on the terminal and see and <strong>control</strong> realtime the status of your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a>. CPU, RAM, GPU status and frequency and other…</p>
-<p>The prompt interface will be show like this image:</p>
+<p>The prompt interface will be show like this image, <strong>now clickable!</strong>:</p>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif" /></a>
-<p>You can run the jtop with (Suggested to run with <strong>sudo</strong>)</p>
+<p>You can run the jtop with (<em>Suggested</em> to run with <strong>sudo</strong>)</p>
 <div class="highlight-elm notranslate"><div class="highlight"><pre><span></span><span class="nv">sudo</span> <span class="nv">jtop</span>
 </pre></div>
 </div>
 <p>Other options are availables with <code class="docutils literal notranslate"><span class="pre">-h</span></code> option:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@jetson-nano:~/$</span> sudo jtop -h
-<span class="go">usage: jtop [-h] [-r REFRESH] [--debug] [--page PAGE] [--no-warnings]</span>
-<span class="go">            [--restore] [-v]</span>
+<span class="go">usage: jtop [-h] [--debug] [--no-warnings] [--restore] [--loop] [-r REFRESH]</span>
+<span class="go">            [-p PAGE] [-v]</span>
 
 <span class="go">jtop is system monitoring utility and runs on terminal</span>
 
 <span class="go">optional arguments:</span>
-<span class="go">  -h, --help     show this help message and exit</span>
-<span class="go">  -r REFRESH     refresh interval</span>
-<span class="go">  --debug        Run with debug logger</span>
-<span class="go">  --page PAGE    Open fix page</span>
-<span class="go">  --no-warnings  Do not show warnings</span>
-<span class="go">  --restore      Reset Jetson configuration</span>
-<span class="go">  -v, --version  show program&#39;s version number and exit</span>
+<span class="go">  -h, --help            show this help message and exit</span>
+<span class="go">  --debug               Run with debug logger</span>
+<span class="go">  --no-warnings         Do not show warnings</span>
+<span class="go">  --restore             Reset Jetson configuration</span>
+<span class="go">  --loop                Automatically switch page every 5s</span>
+<span class="go">  -r REFRESH, --refresh REFRESH</span>
+<span class="go">                        refresh interval</span>
+<span class="go">  -p PAGE, --page PAGE  Open fix page</span>
+<span class="go">  -v, --version         show program&#39;s version number and exit</span>
 </pre></div>
 </div>
+<p>You can change page using <em>left</em>, <em>right</em> arrow or <em>TAB</em> to change page.</p>
 <div class="section" id="pages">
 <h3>Pages<a class="headerlink" href="#pages" title="Permalink to this headline">¶</a></h3>
 <p><strong>jtop</strong> have four different pages to control your NVIDIA Jetson:</p>
 <ol class="arabic simple">
 <li><p><strong>ALL</strong> Are collected all information about your board: CPUs status, Memory, <em>GPU</em>, disk, fan and all status about jetson_clocks, NVPmodel and other</p></li>
 <li><p><strong>GPU</strong> A real time GPU history about your NVIDIA Jetson</p></li>
+<li><p><strong>CPU</strong> A real time CPU plot of NVIDIA Jetson</p></li>
 <li><p><strong>MEM</strong> A real time Memory chart and swap monitor</p></li>
 <li><p><strong>CTRL</strong> Enable/Disable <strong>jetson_clocks</strong>, <strong>nvpmodel</strong> or <strong>fan</strong> directly from here</p></li>
 <li><p><strong>INFO</strong> All information about libraries, CUDA, Serial Number, interfaces, …
@@ -237,7 +244,7 @@ To control the your NVIDIA Jetson are available this keyboard commands:</p></li>
 <p>In page <strong>3 MEM</strong>:</p>
 <ul class="simple">
 <li><p><strong>c</strong> Clear cache</p></li>
-<li><p><strong>h</strong> Enable/Disable extra swap</p></li>
+<li><p><strong>s</strong> Enable/Disable extra swap</p></li>
 <li><p><strong>+</strong> and <strong>-</strong> Increase and decrease swap size</p></li>
 </ul>
 <p>In page <strong>4 CTRL</strong>:</p>
@@ -261,7 +268,22 @@ To control the your NVIDIA Jetson are available this keyboard commands:</p></li>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png" /></a>
 </div>
 <div class="section" id="id12">
-<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_variables">**jetson_variables**</a><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_swap">**jetson_swap**</a><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
+<p>Simple manager to switch on and switch off a swapfile in your jetson.</p>
+<div class="highlight-elm notranslate"><div class="highlight"><pre><span></span>nvidia@jetson-nano:~/$ sudo jetson_swap -h
+usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
+  -d | --dir    &lt;directoryname&gt; Directory to place swapfile
+  -n | --name   &lt;swapname&gt; Name swap file
+  -s | --size   &lt;gigabytes&gt;
+  -a | --auto   Enable swap on boot in /etc/fstab
+  -t | --status Check if the swap is currently active
+  --off         Switch off the swap
+  -h | --help   This message
+</pre></div>
+</div>
+</div>
+<div class="section" id="id14">
+<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_variables">**jetson_variables**</a><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
 <p>This script generate the easy environment variables to know which is your Hardware version of the Jetson and which Jetpack you have already installed</p>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png" /></a>
 </div>
