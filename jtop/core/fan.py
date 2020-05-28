@@ -33,7 +33,7 @@ def load_table(path):
         title = []
         for line in fp.readlines():
             match = FAN_PWM_TABLE_RE.search(line)
-            line = [l.strip() for l in match.group(1).split(",")]
+            line = [tab.strip() for tab in match.group(1).split(",")]
             if title:
                 table += [{title[idx]: val for idx, val in enumerate(line) if idx > 0}]
             else:
