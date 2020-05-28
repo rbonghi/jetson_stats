@@ -22,7 +22,7 @@ from .jtopgui import Page
 # Graphics elements
 from .lib.common import (label_freq,
                          size_min)
-from .lib.linear_gauge import linear_gauge
+from .lib.linear_gauge import linear_gauge, GaugeName
 from .lib.chart import Chart
 from .lib.button import Button
 
@@ -104,21 +104,19 @@ class MEM(Page):
             else:
                 color = curses.color_pair(6)
             linear_gauge(self.stdscr, offset=line_counter, size=size, start=start,
-                         name=path.basename(swap['name']),
+                         name=GaugeName(path.basename(swap['name']), color=color),
                          value=value,
                          percent="{use}/{tot}{unit}b".format(use=int(round(used)), tot=round(szw, 1), unit=unit),
-                         label="P={prio: d}".format(prio=int(swap['prio'])),
-                         color=color)
+                         label="P={prio: d}".format(prio=int(swap['prio'])))
         # Draw total swap gauge
         line_counter += 1
         self.stdscr.hline(line_counter, start, curses.ACS_HLINE, size - 1)
         line_counter += 1
         linear_gauge(self.stdscr, offset=line_counter, size=size, start=start,
-                     name='TOT',
+                     name=GaugeName('TOT', color=curses.color_pair(6)),
                      value=int(swap_status.get('use', 0) / float(swap_status.get('tot', 1)) * 100.0),
                      percent=percent,
-                     status='ON' if swap_status else 'OFF',
-                     color=curses.color_pair(6))
+                     status='ON' if swap_status else 'OFF')
 
     def draw(self, key, mouse):
         # Screen size
@@ -144,11 +142,10 @@ class MEM(Page):
         # Draw the Memory gague
         linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
                      start=1,
-                     name='Mem',
+                     name=GaugeName('Mem', color=curses.color_pair(6)),
                      value=int(ram_status['use'] / float(ram_status['tot']) * 100.0),
                      label=label_lfb,
-                     percent=percent,
-                     color=curses.color_pair(6))
+                     percent=percent)
         # IRAM linear gauge info
         if 'IRAM' in self.jetson.stats:
             iram_status = self.jetson.stats['IRAM']
@@ -160,21 +157,19 @@ class MEM(Page):
                                                      unit=iram_status['lfb']['unit'])
             linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
                          start=1,
-                         name='Imm',
+                         name=GaugeName('Imm', color=curses.color_pair(6)),
                          value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
                          label=label_lfb,
-                         percent=percent,
-                         color=curses.color_pair(6))
+                         percent=percent)
         # EMC linear gauge info
         line_counter += 1
         emc = self.jetson.stats.get('EMC', {})
         linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
                      start=1,
-                     name='EMC',
+                     name=GaugeName('EMC', color=curses.color_pair(6)),
                      value=emc.get('val', 0),
                      status='ON' if emc else 'SUDO SUGGESTED',
-                     label=label_freq(emc),
-                     color=curses.color_pair(6))
+                     label=label_freq(emc))
         if self.jetson.userid == 0:
             # Clear cache button
             self.button_cache.draw(first + height - 7, 1, key, mouse)

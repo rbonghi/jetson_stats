@@ -20,7 +20,7 @@ from .jtopgui import Page
 # Graphics elements
 from .lib.common import (plot_name_info,
                          label_freq)
-from .lib.linear_gauge import linear_gauge
+from .lib.linear_gauge import linear_gauge, GaugeName
 from .lib.chart import Chart
 from ..core.jetson_clocks import JetsonClocks
 
@@ -64,11 +64,10 @@ class GPU(Page):
         # Percent Gauge GPU
         gpu = self.jetson.stats.get('GR3D', {})
         linear_gauge(self.stdscr, offset=first + height * 2 // 3 + 1, start=1, size=width // 2,
-                     name='GPU',
+                     name=GaugeName('GPU', color=curses.color_pair(6)),
                      value=gpu.get('val', 0),
                      label=label_freq(gpu),
-                     status='ON' if gpu else 'SUDO SUGGESTED',
-                     color=curses.color_pair(6))
+                     status='ON' if gpu else 'SUDO SUGGESTED')
         # Temperature GPU
         if "GPU" in self.jetson.stats['TEMP']:
             temp_gpu = self.jetson.stats['TEMP']['GPU']

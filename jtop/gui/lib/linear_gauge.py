@@ -19,20 +19,28 @@ import curses
 from .common import check_curses
 
 
+class GaugeName:
+    def __init__(self, text, color=curses.A_NORMAL):
+        self.text = text
+        self.color = color
+
+
 @check_curses
-def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", type_bar="|", color=curses.A_NORMAL):
+def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", type_bar="|"):
+    name = GaugeName(name) if isinstance(name, str) else name
+    label = GaugeName(label) if isinstance(label, str) else label
     # Evaluate size withuout short name
-    name_size = len(name)
+    name_size = len(name.text)
     size_bar = size - name_size - 4
     # Show short name linear gauge
-    stdscr.addstr(offset, start, ("{name:" + str(name_size) + "}").format(name=name), color)
+    stdscr.addstr(offset, start, name.text, name.color)
     # Check if value is not a string
     if 'ON' in status:
         # Show bracket linear gauge and label and evaluate size withuout size labels and short name
-        size_bar -= (len(label) + 1) if label else 0
+        size_bar -= (len(label.text) + 1) if label.text else 0
         stdscr.addstr(offset, start + name_size + 1, "[" + " " * size_bar + "]", curses.A_BOLD)
-        if label:
-            stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, label)
+        if label.text:
+            stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, label.text, label.color)
         # Show progress value linear gauge
         n_bar = int(float(value) * float(size_bar) / 100.0)
         if n_bar >= 0:

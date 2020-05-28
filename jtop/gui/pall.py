@@ -21,7 +21,7 @@ from .jtopgui import Page
 # Graphics elements
 from .lib.common import (size_min,
                          label_freq)
-from .lib.linear_gauge import linear_gauge
+from .lib.linear_gauge import linear_gauge, GaugeName
 # Menu GUI pages
 from .jtopguimenu import (plot_watts,
                           compact_info,
@@ -51,14 +51,12 @@ class ALL(Page):
             self.stdscr.addstr(line_counter, 0, "MTS ", curses.color_pair(5))
             # Show FG linear gauge
             linear_gauge(self.stdscr, offset=line_counter, start=4, size=width // 2 - 2,
-                         name='FG',
-                         value=self.jetson.stats['MTS']['fg'],
-                         color=curses.color_pair(5))
+                         name=GaugeName('FG', color=curses.color_pair(5)),
+                         value=self.jetson.stats['MTS']['fg'])
             # Show BG linear gauge
             linear_gauge(self.stdscr, offset=line_counter, start=2 + width // 2, size=width // 2 - 2,
-                         name='BG',
-                         value=self.jetson.stats['MTS']['bg'],
-                         color=curses.color_pair(5))
+                         name=GaugeName('BG', color=curses.color_pair(5)),
+                         value=self.jetson.stats['MTS']['bg'])
         # RAM linear gauge info
         line_counter += 1
         ram_status = self.jetson.stats['RAM']
@@ -71,11 +69,10 @@ class ALL(Page):
                                                           unit=lfb_status['unit'])
         # Plot Linear Gauge
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name='Mem',
+                     name=GaugeName('Mem', color=curses.color_pair(6)),
                      value=int(ram_status['use'] / float(ram_status['tot']) * 100.0),
                      label=label_lfb,
-                     percent=percent,
-                     color=curses.color_pair(6))
+                     percent=percent)
         # IRAM linear gauge info
         if 'IRAM' in self.jetson.stats:
             iram_status = self.jetson.stats['IRAM']
@@ -86,11 +83,10 @@ class ALL(Page):
             label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
                                                      unit=iram_status['lfb']['unit'])
             linear_gauge(self.stdscr, offset=line_counter, size=width,
-                         name='Imm',
+                         name=GaugeName('Imm', color=curses.color_pair(6)),
                          value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
                          label=label_lfb,
-                         percent=percent,
-                         color=curses.color_pair(6))
+                         percent=percent)
         # SWAP linear gauge info
         line_counter += 1
         swap_status = self.jetson.stats.get('SWAP', {})
@@ -101,39 +97,35 @@ class ALL(Page):
         label_lfb = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'),
                                                     unit=swap_cached.get('unit', ''))
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name='Swp',
+                     name=GaugeName('Swp', color=curses.color_pair(6)),
                      value=int(swap_status.get('use', 0) / float(swap_status.get('tot', 1)) * 100.0),
                      label=label_lfb,
                      percent=percent,
-                     status='ON' if swap_status else 'OFF',
-                     color=curses.color_pair(6))
+                     status='ON' if swap_status else 'OFF')
         # EMC linear gauge info
         line_counter += 1
         emc = self.jetson.stats.get('EMC', {})
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name='EMC',
+                     name=GaugeName('EMC', color=curses.color_pair(6)),
                      value=emc.get('val', 0),
                      status='ON' if emc else 'SUDO SUGGESTED',
-                     label=label_freq(emc),
-                     color=curses.color_pair(6))
+                     label=label_freq(emc))
         # GPU linear gauge info
         line_counter += 2
         gpu = self.jetson.stats.get('GR3D', {})
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name='GPU',
+                     name=GaugeName('GPU', color=curses.color_pair(6)),
                      value=gpu.get('val', 0),
                      label=label_freq(gpu),
-                     status='ON' if gpu else 'SUDO SUGGESTED',
-                     color=curses.color_pair(6))
+                     status='ON' if gpu else 'SUDO SUGGESTED')
         # Status disk
         line_counter += 1
         disk_status = self.jetson.disk
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name='Dsk',
+                     name=GaugeName('Dsk', color=curses.color_pair(3)),
                      value=int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
                      percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
-                     type_bar="#",
-                     color=curses.color_pair(3))
+                     type_bar="#")
         # Last part of information
         mini_menu = 1
         mini_menu += 1 if self.jetson.stats['TEMP'] else 0

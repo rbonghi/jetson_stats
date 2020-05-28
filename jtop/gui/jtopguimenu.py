@@ -26,7 +26,7 @@ from .lib.common import (check_curses,
                          label_freq,
                          plot_name_info,
                          size_min)
-from .lib.linear_gauge import linear_gauge
+from .lib.linear_gauge import linear_gauge, GaugeName
 from ..core.jetson_clocks import JetsonClocks
 
 
@@ -43,8 +43,11 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
             percent = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=cpu['val'])
         # Show linear gauge
         linear_gauge(stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
-                     name=cpu['name'], value=cpu.get('val', 0), status=cpu['status'], percent=percent, label=label_freq(cpu),
-                     color=curses.color_pair(6))
+                     name=GaugeName(cpu['name'], color=curses.color_pair(6)),
+                     value=cpu.get('val', 0),
+                     status=cpu['status'],
+                     percent=percent,
+                     label=label_freq(cpu))
     if len(list_cpus) > 4:
         return int(offest + idx / 2 + 1)
     else:
@@ -152,11 +155,10 @@ def compact_info(stdscr, start, offset, width, height, jetson):
             label = ''
             value = fan.get('tpwm', 0)
         linear_gauge(stdscr, offset=offset + counter, start=start + 1, size=width,
-                     name='FAN',
+                     name=GaugeName('FAN', color=curses.color_pair(6)),
                      value=value,
                      label=label,
-                     status=fan['status'],
-                     color=curses.color_pair(6))
+                     status=fan['status'])
     else:
         stdscr.hline(offset + counter, start + 1, curses.ACS_BLOCK, width, curses.color_pair(3))
         stdscr.addstr(offset + counter, start + (width - 8) // 2, " NO FAN ", curses.color_pair(3))
