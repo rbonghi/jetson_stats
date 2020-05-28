@@ -164,6 +164,10 @@ JETSON_MACHINE=""
 if [ ! -z "$JETSON_TYPE" ] ; then
     JETSON_MACHINE="NVIDIA Jetson $JETSON_TYPE"
 fi
+# Desktop PC detection
+if [ -z "$JETSON_TYPE" ] && [ -z "$JETSON_SOC" ] ; then
+    JETSON_MACHINE="Desktop PC"
+fi
 # Export variables
 export JETSON_CHIP_ID
 export JETSON_SOC
