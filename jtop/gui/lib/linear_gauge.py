@@ -50,7 +50,7 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
         if label.text:
             stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, label.text, label.color)
         # Show progress value linear gauge
-        n_bar = int(float(sum([value.number for value in values])) * float(size_bar) / 100.0)
+        n_bar = int(float(sum([val.number for val in values])) * float(size_bar) / 100.0)
         if n_bar >= 0:
             # Build progress barr string
             str_progress_bar = value.bar * n_bar
