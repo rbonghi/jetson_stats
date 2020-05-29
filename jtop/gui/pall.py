@@ -126,8 +126,9 @@ class ALL(Page):
         disk_status = self.jetson.disk
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name=GaugeName('Dsk', color=curses.color_pair(3)),
-                     value=(GaugeBar(int(float(disk_status['used']) / float(disk_status['total']) * 100.0), curses.color_pair(2), bar="#"), ),
-                     percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']))
+                     value=int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
+                     percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
+                     bar="#")
         # Last part of information
         mini_menu = 1
         mini_menu += 1 if self.jetson.stats['TEMP'] else 0

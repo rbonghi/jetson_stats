@@ -26,14 +26,13 @@ class GaugeName:
 
 
 class GaugeBar:
-    def __init__(self, number, color, bar="|"):
+    def __init__(self, number, color):
         self.number = number
         self.color = color
-        self.bar = bar
 
 
 @check_curses
-def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label=""):
+def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", bar="|"):
     name = GaugeName(name) if isinstance(name, str) else name
     label = GaugeName(label) if isinstance(label, str) else label
     values = (GaugeBar(value, curses.color_pair(2)), ) if isinstance(value, int) else value
@@ -50,11 +49,12 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
         if label.text:
             stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, label.text, label.color)
         # Show progress value linear gauge
-        n_bar = int(float(sum([val.number for val in values])) * float(size_bar) / 100.0)
+        total = sum([val.number for val in values])
+        n_bar = int(float(total) * float(size_bar) / 100.0)
         if n_bar >= 0:
             # Build progress barr string
-            str_progress_bar = value.bar * n_bar
-            percent_label = percent if percent else str(value.number) + "%"
+            str_progress_bar = bar * n_bar
+            percent_label = percent if percent else str(total) + "%"
             str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
             # Split string in green and grey part
             counter = 0
