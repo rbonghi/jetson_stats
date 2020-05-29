@@ -32,7 +32,7 @@ class MEM(Page):
     def __init__(self, stdscr, jetson, refresh):
         super(MEM, self).__init__("MEM", stdscr, jetson, refresh)
         # Initialize MEM chart
-        self.chart_ram = Chart(jetson, "RAM", refresh, self.update_chart, 
+        self.chart_ram = Chart(jetson, "RAM", refresh, self.update_chart,
                                type_value=float,
                                color=curses.color_pair(6),
                                color_chart=[curses.color_pair(12), curses.color_pair(8)])

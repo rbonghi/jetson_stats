@@ -44,7 +44,7 @@ class Chart(object):
         self.tik = tik
         # Initialization chart
         max_record = int(self.time * (float(1.0 / float(interval)) * 1000.0))
-        self.values = deque(max_record * [ (len(self.color_chart) * [0]) ], maxlen=max_record)
+        self.values = deque(max_record * [(len(self.color_chart) * [0])], maxlen=max_record)
         # Initialzie default values and unit
         self.unit = "%"
         self.type_value = type_value
@@ -151,7 +151,7 @@ class Chart(object):
         label_x = size_x[1] - 5 if label else size_x[1]
 
         for idx, values in enumerate(reversed(self.values)):
-            #n = n if n <= self.max_val else self.max_val
+            # TODO: n = n if n <= self.max_val else self.max_val
             x_val = label_x - idx * time_block - 3
             # Draw chart
             counter = 0
