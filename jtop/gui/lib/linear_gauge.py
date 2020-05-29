@@ -25,10 +25,18 @@ class GaugeName:
         self.color = color
 
 
+class GaugeBar:
+    def __init__(self, number, color, bar="|"):
+        self.number = number
+        self.color = color
+        self.bar = bar
+
+
 @check_curses
-def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", type_bar="|"):
+def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label=""):
     name = GaugeName(name) if isinstance(name, str) else name
     label = GaugeName(label) if isinstance(label, str) else label
+    values = (GaugeBar(value, curses.color_pair(2)), ) if isinstance(value, int) else value
     # Evaluate size withuout short name
     name_size = len(name.text)
     size_bar = size - name_size - 4
@@ -42,17 +50,22 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
         if label.text:
             stdscr.addstr(offset, start + name_size + 1 + size_bar + 3, label.text, label.color)
         # Show progress value linear gauge
-        n_bar = int(float(value) * float(size_bar) / 100.0)
+        n_bar = int(float(sum([value.number for value in values])) * float(size_bar) / 100.0)
         if n_bar >= 0:
-            progress_bar = type_bar * n_bar
             # Build progress barr string
-            str_progress_bar = ("{n_bar:" + str(size_bar) + "}").format(n_bar=progress_bar)
-            percent_label = percent if percent else str(value) + "%"
+            str_progress_bar = value.bar * n_bar
+            percent_label = percent if percent else str(value.number) + "%"
             str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
             # Split string in green and grey part
-            green_part = str_progress_bar[:n_bar]
+            counter = 0
+            old_val = 0
+            for value in values:
+                val_bar = int(float(old_val + value.number) * float(size_bar) / 100.0)
+                stdscr.addstr(offset, start + name_size + 2 + counter, str_progress_bar[counter:val_bar], value.color)
+                counter += val_bar
+                old_val += value.number
+            # Draw grey part
             grey_part = str_progress_bar[n_bar:]
-            stdscr.addstr(offset, start + name_size + 2, green_part, curses.color_pair(2))
             stdscr.addstr(offset, start + name_size + 2 + size_bar - len(grey_part), grey_part, curses.A_DIM)
     else:
         # Show bracket linear gauge and label

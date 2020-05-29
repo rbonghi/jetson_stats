@@ -21,7 +21,7 @@ from .jtopgui import Page
 # Graphics elements
 from .lib.common import (size_min,
                          label_freq)
-from .lib.linear_gauge import linear_gauge, GaugeName
+from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
 # Menu GUI pages
 from .jtopguimenu import (plot_watts,
                           compact_info,
@@ -68,9 +68,12 @@ class ALL(Page):
                                                           size=lfb_status['size'],
                                                           unit=lfb_status['unit'])
         # Plot Linear Gauge
+        ram_bar = GaugeBar(int(ram_status['use'] / float(ram_status['tot']) * 100.0), curses.color_pair(2))
+        # TODO: test
+        shared_ram = GaugeBar(30, curses.color_pair(6))
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name=GaugeName('Mem', color=curses.color_pair(6)),
-                     value=int(ram_status['use'] / float(ram_status['tot']) * 100.0),
+                     value=(ram_bar, shared_ram),
                      label=label_lfb,
                      percent=percent)
         # IRAM linear gauge info
@@ -123,9 +126,8 @@ class ALL(Page):
         disk_status = self.jetson.disk
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name=GaugeName('Dsk', color=curses.color_pair(3)),
-                     value=int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
-                     percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
-                     type_bar="#")
+                     value=(GaugeBar(int(float(disk_status['used']) / float(disk_status['total']) * 100.0), curses.color_pair(2), bar="#"), ),
+                     percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']))
         # Last part of information
         mini_menu = 1
         mini_menu += 1 if self.jetson.stats['TEMP'] else 0
