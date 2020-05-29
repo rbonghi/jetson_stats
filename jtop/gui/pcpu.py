@@ -39,14 +39,14 @@ class CPU(Page):
                                       refresh,
                                       self.update_chart,
                                       color=curses.color_pair(4),
-                                      color_chart=curses.color_pair(10))]
+                                      color_chart=[curses.color_pair(10)])]
 
     def update_chart(self, jetson, name):
         n = int(name.split(" ")[1]) - 1
         cpu = jetson.stats["CPU"][n]
         status = cpu.get("status", "OFF") == "ON"
         return {
-            'value': cpu.get("val", 0),
+            'value': [cpu.get("val", 0)],
             'active': status
         }
 

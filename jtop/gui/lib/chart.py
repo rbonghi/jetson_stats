@@ -28,7 +28,7 @@ class Chart(object):
     Chart draw object
     http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
     """
-    def __init__(self, jetson, name, interval, callback, type_value=int, line="*", color=curses.A_NORMAL, color_chart=None, fill=True, time=10.0, tik=2):
+    def __init__(self, jetson, name, interval, callback, type_value=int, line="*", color=curses.A_NORMAL, color_chart=[], fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
         self.callback = callback
@@ -37,14 +37,14 @@ class Chart(object):
         # Design chart shape
         self.line = line
         self.color = color
-        self.color_chart = color if color_chart is None else color_chart
+        self.color_chart = color_chart if color_chart else [color]
         self.fill = fill
         # Set timing
         self.time = time
         self.tik = tik
         # Initialization chart
         max_record = int(self.time * (float(1.0 / float(interval)) * 1000.0))
-        self.value = deque(max_record * [0], maxlen=max_record)
+        self.values = deque(max_record * [ (len(self.color_chart) * [0]) ], maxlen=max_record)
         # Initialzie default values and unit
         self.unit = "%"
         self.type_value = type_value
@@ -69,19 +69,14 @@ class Chart(object):
         # Get status
         self.active = data.get("active", self.active)
         # update the queue
-        value = data.get("value", 0)
-        self.value.append(value)
+        value = data.get("value", [0])
+        self.values.append(value)
 
     @check_curses
     def draw(self, stdscr, size_x, size_y, label="", y_label=True):
         # Evaluate Diplay X, and Y size
         displayX = size_x[1] - size_x[0] + 1
         displayY = size_y[1] - size_y[0] - 1
-        val = float(displayX - 2) / float(len(self.value))
-        points = []
-        for n in self.value:
-            n = n if n <= self.max_val else self.max_val
-            points += [n] * int(ceil(val))
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if label:
@@ -89,7 +84,7 @@ class Chart(object):
         # Plot chart lines
         if self.active:
             # Plot values
-            self._plot_values(stdscr, points, size_x, size_y, displayY, label=y_label)
+            self._plot_values(stdscr, size_x, size_y, displayX, displayY, label=y_label)
         else:
             l_label = size_x[1] - 6 if y_label else size_x[1] - 1
             rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1] - 2, l_label)
@@ -98,7 +93,7 @@ class Chart(object):
             middle_y = (size_y[1] - size_y[0]) // 2
             stdscr.addstr(size_y[0] + middle_y, size_x[0] + middle_x, self.message, curses.A_BOLD)
         # Draw ticks and labels
-        self._plot_x_axis(stdscr, val, size_x, size_y, displayX, label=y_label)
+        self._plot_x_axis(stdscr, size_x, size_y, displayX, label=y_label)
         # Plot chart shape and labels
         self._plot_y_axis(stdscr, size_x, size_y, displayY, label=y_label)
 
@@ -120,7 +115,8 @@ class Chart(object):
                 except curses.error:
                     pass
 
-    def _plot_x_axis(self, stdscr, val, size_x, size_y, displayX, label=True):
+    def _plot_x_axis(self, stdscr, size_x, size_y, displayX, label=True):
+        val = float(displayX - 2) / float(len(self.values))
         # Draw ticks and labels
         ten_sec = int(self.tik * 1000 / self.refresh)
         counter = 0
@@ -147,23 +143,32 @@ class Chart(object):
                 except curses.error:
                     pass
 
-    def _plot_values(self, stdscr, points, size_x, size_y, displayY, label=True):
-        """ Plot values
-        """
+    def _plot_values(self, stdscr, size_x, size_y, displayX, displayY, label=True):
+        """ Plot values """
+        val = float(displayX - 2) / float(len(self.values))
+        time_block = int(ceil(val))
+
         label_x = size_x[1] - 5 if label else size_x[1]
-        for idx, point in enumerate(reversed(points)):
-            y_val = int((float(displayY - 1) / self.max_val) * point)
-            x_val = label_x - 1 - idx
-            if x_val >= size_x[0]:
-                if self.fill:
-                    for n in range(1, y_val + 1):
+
+        for idx, values in enumerate(reversed(self.values)):
+            #n = n if n <= self.max_val else self.max_val
+            x_val = label_x - idx * time_block - 3
+            # Draw chart
+            counter = 0
+            for value, color in zip(values, self.color_chart):
+                y_val = int((float(displayY - 1) / self.max_val) * value)
+
+                if x_val >= size_x[0]:
+                    if self.fill:
+                        for n in range(counter + 1, counter + y_val + 1):
+                            try:
+                                stdscr.addstr(size_y[1] - 1 - n, x_val, " " * time_block, color)
+                            except curses.error:
+                                pass
+                    else:
                         try:
-                            stdscr.addstr(size_y[1] - 1 - n, x_val, " ", self.color_chart)
+                            stdscr.addstr(size_y[1] - 1 - y_val, x_val, self.line, self.color)
                         except curses.error:
                             pass
-                else:
-                    try:
-                        stdscr.addstr(size_y[1] - 1 - y_val, x_val, self.line, self.color)
-                    except curses.error:
-                        pass
+                counter += y_val
 # EOF

@@ -30,7 +30,7 @@ class GPU(Page):
     def __init__(self, stdscr, jetson, refresh):
         super(GPU, self).__init__("GPU", stdscr, jetson, refresh)
         # Initialize GPU chart
-        self.chart_gpu = Chart(jetson, "GPU", refresh, self.update_chart, color=curses.color_pair(2), color_chart=curses.color_pair(8))
+        self.chart_gpu = Chart(jetson, "GPU", refresh, self.update_chart, color=curses.color_pair(2), color_chart=[curses.color_pair(8)])
 
     def update_chart(self, jetson, name):
         parameter = jetson.stats.get("GR3D", {})
@@ -40,7 +40,7 @@ class GPU(Page):
         unit = parameter.get("unit", "%")
         # Append in list
         return {
-            'value': parameter.get("val", 0),
+            'value': [parameter.get("val", 0)],
             'max': max_val,
             'unit': unit,
         }
