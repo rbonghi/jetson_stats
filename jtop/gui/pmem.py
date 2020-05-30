@@ -35,7 +35,7 @@ class MEM(Page):
         self.chart_ram = Chart(jetson, "RAM", refresh, self.update_chart,
                                type_value=float,
                                color=curses.color_pair(6),
-                               color_chart=[curses.color_pair(12), curses.color_pair(8)])
+                               color_chart=[curses.color_pair(12)])
         # Initialize buttons
         self.button_cache = Button(stdscr, "c", action=self.action_cache)
         self.button_swap = Button(stdscr, "s", action=self.action_swap)
@@ -76,7 +76,7 @@ class MEM(Page):
         info = size_min(max_val, start=unit)
         # Append in list
         return {
-            'value': [value / info[1], 2],
+            'value': [value / info[1]],
             'max': info[0],
             'unit': info[2]
         }
