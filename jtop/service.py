@@ -17,6 +17,7 @@
 
 import os
 import socket
+import grp
 from .core import Tegrastats
 
 
@@ -24,14 +25,29 @@ class JtopServer:
 
     PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
     PIPE_JTOP_STATS = '/tmp/jtop_stats'
+    PIPE_JTOP_USER = 'jetson_stats'
 
     def __init__(self):
+        try:
+            gid = grp.getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
+            print(gid)
+        except KeyError:
+            print("Group jetson_stats does not exist!")
+        
+        if os.path.exists(JtopServer.PIPE_JTOP_CTRL):
+            print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_CTRL))
+            os.remove(JtopServer.PIPE_JTOP_CTRL)
         if os.path.exists(JtopServer.PIPE_JTOP_STATS):
             print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_STATS))
             os.remove(JtopServer.PIPE_JTOP_STATS)
-        # Initialize socket
-        self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        self.socket.bind(JtopServer.PIPE_JTOP_STATS)
+        # Initialize and bind control socket
+        self.sock_ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        self.sock_ctrl.bind(JtopServer.PIPE_JTOP_CTRL)
+        self.sock_ctrl.settimeout(1)
+        os.chown(JtopServer.PIPE_JTOP_CTRL, 1000, 1000)
+        # Initialize and bind statistics socket
+        self.socket_stats = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        self.socket_stats.bind(JtopServer.PIPE_JTOP_STATS)
         # Set ownership file
         os.chown(JtopServer.PIPE_JTOP_STATS, 1000, 1000)
         # Setup tegrastats
@@ -39,16 +55,31 @@ class JtopServer:
         self.tegra.attach(self.tegra_stats)
 
     def loop(self):
-        pass
+        while True:
+            try:
+                datagram = self.sock_ctrl.recv(1024)
+                print("Datagram: {datagram}".format(datagram=datagram))
+                # Run tegrastats
+                if datagram == "start":
+                    self.tegra.open()
+                elif datagram == "stop":
+                    self.tegra.close()
+            except socket.timeout:
+                #print("Timeout!")
+                pass
+            except KeyboardInterrupt:
+                break
 
     def close(self):
         print("End Server")
-        self.socket.close()
+        self.sock_ctrl.close()
+        os.remove(JtopServer.PIPE_JTOP_CTRL)
+        self.socket_stats.close()
         os.remove(JtopServer.PIPE_JTOP_STATS)
 
     def tegra_stats(self, stats):
         print("Stats")
-        self.socket.sendto("stats", JtopServer.PIPE_JTOP_STATS)
+        self.socket_stats.sendto("stats", JtopServer.PIPE_JTOP_STATS)
 
 
 

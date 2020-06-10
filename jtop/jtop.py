@@ -43,15 +43,26 @@ def get_version():
     return VERSION
 
 class jtop:
+    class JtopException(Exception):
+        """ Jtop general exception """
+        pass
 
     def __init__(self, interval=500):
         # Open socket
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        self.sock_ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 
     def open(self):
+        try:
+            self.sock_ctrl.sendto("start", JtopServer.PIPE_JTOP_CTRL)
+        except socket.error:
+            raise jtop.JtopException("jtop server not available")
         print("Open library")
 
     def close(self):
+        try:
+            self.sock_ctrl.sendto("stop", JtopServer.PIPE_JTOP_CTRL)
+        except socket.error:
+            raise jtop.JtopException("jtop server not available")
         print("Close library")
 
     def __enter__(self):

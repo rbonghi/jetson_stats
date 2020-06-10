@@ -16,9 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import socket
-import grp
 # Jtop server
 from .service import JtopServer
 
@@ -45,48 +42,15 @@ class bcolors:
     def fail(message="ERR"):
         return bcolors.FAIL + message + bcolors.ENDC
 
-
+# https://stackoverflow.com/questions/11114589/creating-hidden-arguments-with-python-argparse
 def main():
-
-    try:
-        gid = grp.getgrnam("jetson_stats").gr_gid
-        print(gid)
-    except KeyError:
-        print("jetson_stats group does not exist!")
-
-    if os.path.exists(JtopServer.PIPE_JTOP_CTRL):
-        print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_CTRL))
-        os.remove(JtopServer.PIPE_JTOP_CTRL)
-    # bind socket
-    sock_in = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-    sock_in.bind(JtopServer.PIPE_JTOP_CTRL)
-    os.chown(JtopServer.PIPE_JTOP_CTRL, 1000, 1000)
-    sock_in.settimeout(1)
     # jtop service
     server = JtopServer()
-
     print("Service started")
-    while True:
-        try:
-            datagram = sock_in.recv(1024)
-            print("Datagram: {datagram}".format(datagram=datagram))
-            # Run tegrastats
-            if datagram == "start":
-                server.tegra.open()
-            elif datagram == "stop":
-                server.tegra.close()
-        except socket.timeout:
-            #print("Timeout!")
-            pass
-        except KeyboardInterrupt:
-            break
-
+    server.loop()
     # Close stats server
-    server.close()
     print("Close service")
-    sock_in.close()
-    os.remove(JtopServer.PIPE_JTOP_CTRL)
-
+    server.close()
 
 
 if __name__ == "__main__":
