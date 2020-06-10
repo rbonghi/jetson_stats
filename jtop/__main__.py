@@ -18,11 +18,9 @@
 
 import os
 import socket
+import grp
 # Jtop server
 from .service import JtopServer
-
-PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
-PIPE_JTOP_STATS = '/tmp/jtop_stats'
 
 
 class bcolors:
@@ -49,22 +47,45 @@ class bcolors:
 
 
 def main():
-    if os.path.exists(PIPE_JTOP_CTRL):
-        print("Remove old pipe {pipe}".format(pipe=PIPE_JTOP_CTRL))
-        os.remove(PIPE_JTOP_CTRL)
+
+    try:
+        gid = grp.getgrnam("jetson_stats").gr_gid
+        print(gid)
+    except KeyError:
+        print("jetson_stats group does not exist!")
+
+    if os.path.exists(JtopServer.PIPE_JTOP_CTRL):
+        print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_CTRL))
+        os.remove(JtopServer.PIPE_JTOP_CTRL)
     # bind socket
     sock_in = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-    sock_in.bind(PIPE_JTOP_CTRL)
-    os.chown(PIPE_JTOP_CTRL, 1000, 1000)
+    sock_in.bind(JtopServer.PIPE_JTOP_CTRL)
+    os.chown(JtopServer.PIPE_JTOP_CTRL, 1000, 1000)
     sock_in.settimeout(1)
     # jtop service
-    server = JtopServer(PIPE_JTOP_STATS)
+    server = JtopServer()
+
+    print("Service started")
+    while True:
+        try:
+            datagram = sock_in.recv(1024)
+            print("Datagram: {datagram}".format(datagram=datagram))
+            # Run tegrastats
+            if datagram == "start":
+                server.tegra.open()
+            elif datagram == "stop":
+                server.tegra.close()
+        except socket.timeout:
+            #print("Timeout!")
+            pass
+        except KeyboardInterrupt:
+            break
 
     # Close stats server
     server.close()
     print("Close service")
     sock_in.close()
-    os.remove(PIPE_JTOP_CTRL)
+    os.remove(JtopServer.PIPE_JTOP_CTRL)
 
 
 

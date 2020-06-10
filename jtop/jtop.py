@@ -17,6 +17,8 @@
 
 import os
 import re
+import socket
+from service import JtopServer
 from .core import import_os_variables
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
@@ -43,5 +45,21 @@ def get_version():
 class jtop:
 
     def __init__(self, interval=500):
-        pass
+        # Open socket
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+
+    def open(self):
+        print("Open library")
+
+    def close(self):
+        print("Close library")
+
+    def __enter__(self):
+        """ Enter function for 'with' statement """
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """ Exit function for 'with' statement """
+        self.close()
 # EOF

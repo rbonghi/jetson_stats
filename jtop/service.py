@@ -22,28 +22,33 @@ from .core import Tegrastats
 
 class JtopServer:
 
-    def __init__(self, PIPE_JTOP_STATS):
-        if os.path.exists(PIPE_JTOP_STATS):
-            print("Remove old pipe {pipe}".format(pipe=PIPE_JTOP_STATS))
-            os.remove(PIPE_JTOP_STATS)
+    PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
+    PIPE_JTOP_STATS = '/tmp/jtop_stats'
+
+    def __init__(self):
+        if os.path.exists(JtopServer.PIPE_JTOP_STATS):
+            print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_STATS))
+            os.remove(JtopServer.PIPE_JTOP_STATS)
         # Initialize socket
-        self.PIPE_JTOP_STATS = PIPE_JTOP_STATS
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        self.socket.bind(PIPE_JTOP_STATS)
+        self.socket.bind(JtopServer.PIPE_JTOP_STATS)
         # Set ownership file
-        os.chown(PIPE_JTOP_STATS, 1000, 1000)
+        os.chown(JtopServer.PIPE_JTOP_STATS, 1000, 1000)
         # Setup tegrastats
         self.tegra = Tegrastats('/usr/bin/tegrastats', 500)
         self.tegra.attach(self.tegra_stats)
 
+    def loop(self):
+        pass
+
     def close(self):
         print("End Server")
         self.socket.close()
-        os.remove(self.PIPE_JTOP_STATS)
+        os.remove(JtopServer.PIPE_JTOP_STATS)
 
     def tegra_stats(self, stats):
         print("Stats")
-        self.socket.sendto("stats", self.PIPE_JTOP_STATS)
+        self.socket.sendto("stats", JtopServer.PIPE_JTOP_STATS)
 
 
 
