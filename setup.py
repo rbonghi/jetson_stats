@@ -114,26 +114,26 @@ class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+        #sp.call(shlex.split('./scripts/jetson_config --uninstall'))
         # Install services (copying)
-        install_services(copy=True)
+        #install_services(copy=True)
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/jetson_config --install'))
+        #sp.call(shlex.split('./scripts/jetson_config --install'))
 
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+        #sp.call(shlex.split('./scripts/jetson_config --uninstall'))
         # Install services (linking)
-        install_services()
+        #install_services()
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/jetson_config --install'))
+        #sp.call(shlex.split('./scripts/jetson_config --install'))
 
 
 # Configuration setup module
