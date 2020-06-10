@@ -54,7 +54,8 @@ class jtop:
     def open(self):
         try:
             self.sock_ctrl.sendto("start", JtopServer.PIPE_JTOP_CTRL)
-        except socket.error:
+        except socket.error as e:
+            print(e)
             raise jtop.JtopException("jtop server not available")
         print("Open library")
 

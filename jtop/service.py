@@ -16,8 +16,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import stat
 import socket
-import grp
+from  grp import getgrnam
 from .core import Tegrastats
 
 
@@ -27,13 +28,15 @@ class JtopServer:
     PIPE_JTOP_STATS = '/tmp/jtop_stats'
     PIPE_JTOP_USER = 'jetson_stats'
 
-    def __init__(self):
+    def __init__(self, timeout=1):
         try:
-            gid = grp.getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
-            print(gid)
+            gid = getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
         except KeyError:
-            print("Group jetson_stats does not exist!")
-        
+            # TODO: Check how to be writeable only from same group
+            # raise Exception("Group jetson_stats does not exist!")
+            print("Check how to be writeable only from same group")
+            gid = os.getgid()
+        # Remove old pipes if exists
         if os.path.exists(JtopServer.PIPE_JTOP_CTRL):
             print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_CTRL))
             os.remove(JtopServer.PIPE_JTOP_CTRL)
@@ -43,15 +46,21 @@ class JtopServer:
         # Initialize and bind control socket
         self.sock_ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         self.sock_ctrl.bind(JtopServer.PIPE_JTOP_CTRL)
-        self.sock_ctrl.settimeout(1)
-        os.chown(JtopServer.PIPE_JTOP_CTRL, 1000, 1000)
+        self.sock_ctrl.settimeout(timeout)
+        os.chown(JtopServer.PIPE_JTOP_CTRL, os.getuid(), gid)
+        # Set mode
+        # https://www.tutorialspoint.com/python/os_chmod.htm
+        os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
         # Initialize and bind statistics socket
         self.socket_stats = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         self.socket_stats.bind(JtopServer.PIPE_JTOP_STATS)
         # Set ownership file
-        os.chown(JtopServer.PIPE_JTOP_STATS, 1000, 1000)
+        os.chown(JtopServer.PIPE_JTOP_STATS, os.getuid(), gid)
+        # Set mode
+        # TODO: Set mode is only readable from all
+        # os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
         # Setup tegrastats
-        self.tegra = Tegrastats('/usr/bin/tegrastats', 500)
+        self.tegra = Tegrastats('/usr/bin/tegrastats')
         self.tegra.attach(self.tegra_stats)
 
     def loop(self):
@@ -61,14 +70,12 @@ class JtopServer:
                 print("Datagram: {datagram}".format(datagram=datagram))
                 # Run tegrastats
                 if datagram == "start":
-                    self.tegra.open()
+                    self.tegra.open(interval=500)
                 elif datagram == "stop":
                     self.tegra.close()
             except socket.timeout:
                 #print("Timeout!")
                 pass
-            except KeyboardInterrupt:
-                break
 
     def close(self):
         print("End Server")
@@ -78,9 +85,6 @@ class JtopServer:
         os.remove(JtopServer.PIPE_JTOP_STATS)
 
     def tegra_stats(self, stats):
-        print("Stats")
+        print(stats)
         self.socket_stats.sendto("stats", JtopServer.PIPE_JTOP_STATS)
-
-
-
 # EOF

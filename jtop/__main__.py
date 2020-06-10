@@ -47,7 +47,10 @@ def main():
     # jtop service
     server = JtopServer()
     print("Service started")
-    server.loop()
+    try:
+        server.loop()
+    except KeyboardInterrupt:
+        pass
     # Close stats server
     print("Close service")
     server.close()

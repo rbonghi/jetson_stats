@@ -110,6 +110,13 @@ def install_services(copy=False):
         print("{type} {file} -> {path}".format(type=type_service, file=os.path.basename(f_service), path=path))
 
 
+"""
+Add in installer create group
+sudo groupadd jetson_stats
+
+sudo usermod -a -G jetson_stats $USER
+"""
+
 class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
