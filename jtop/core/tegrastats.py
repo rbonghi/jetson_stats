@@ -73,9 +73,16 @@ class Tegrastats:
         stats['WATT'] = WATTS(text)
         return stats
 
+    def _is_alive(self):
+        if self.p is None:
+            return False
+        if self.p.poll() is None:
+            return True
+        return False
+
     def _read_tegrastats(self):
         try:
-            while self.p.poll() is None:
+            while self._is_alive():
                 out = self.p.stdout
                 if out is not None:
                     # Read line process output
@@ -99,24 +106,26 @@ class Tegrastats:
         self._observers.discard(observer)
 
     def open(self, interval=500):
-        if self.p is None:
-            try:
-                # Launch subprocess or raise and exception
-                self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
-                # Start thread Service client
-                self._thread = Thread(target=self._read_tegrastats, args=[])
-                self._thread.setDaemon = True
-                self._thread.start()
-                return True
-            except OSError:
-                logger.error("Tegrastats not in list!")
-                raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
-        return False
+        # Check if process exist
+        if self.p is not None:
+            return False
+        try:
+            # Launch subprocess or raise and exception
+            self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
+        except OSError:
+            logger.error("Tegrastats not in list!")
+            raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
+        # Start thread Service client
+        self._thread = Thread(target=self._read_tegrastats, args=[])
+        self._thread.setDaemon = True
+        self._thread.start()
+        return True
 
     def close(self):
         if self.p is not None:
             try:
                 self.p.kill()
+                # Clean objeck
                 self.p = None
                 return True
             except OSError:

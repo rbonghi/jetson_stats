@@ -15,12 +15,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Logging
+import logging
+# Operative system
 import os
 # TODO temporary commented: import stat
 from multiprocessing import Process, Queue
 from multiprocessing.managers import BaseManager
 # TODO temporary commented: from  grp import getgrnam
 from .tegrastats import Tegrastats
+# Create logger for tegrastats
+logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
 try:
     import queue

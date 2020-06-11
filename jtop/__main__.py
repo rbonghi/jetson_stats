@@ -16,9 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Logging
+import logging
 # Jtop server
 from .core import JtopServer
-
+# Create logger for jplotlib
+logger = logging.getLogger(__name__)
 
 class bcolors:
     HEADER = '\033[95m'
@@ -45,6 +48,9 @@ class bcolors:
 
 # https://stackoverflow.com/questions/11114589/creating-hidden-arguments-with-python-argparse
 def main():
+
+    # Initialize logging level
+    logging.basicConfig()
     # jtop service
     server = JtopServer()
     print("Service started")
