@@ -16,16 +16,22 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import stat
-from Queue import Empty
+# TODO temporary commented: import stat
 from multiprocessing import Process, Queue
 from multiprocessing.managers import BaseManager
-from  grp import getgrnam
+# TODO temporary commented: from  grp import getgrnam
 from .tegrastats import Tegrastats
+# Load queue library for python 2 and python 3
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 
 PIPE_JTOP_STATS = '/tmp/jtop_stats'
 PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
-AUTHKEY='aaabbcc'
+PIPE_JTOP_USER = 'jetson_stats'
+AUTHKEY = 'aaabbcc'
+
 
 class CtrlManager(BaseManager):
 
@@ -35,6 +41,7 @@ class CtrlManager(BaseManager):
     def get_queue(self):
         pass
 
+
 class StatsManager(BaseManager):
 
     def __init__(self, authkey=AUTHKEY):
@@ -43,22 +50,18 @@ class StatsManager(BaseManager):
     def stats(self):
         pass
 
-# https://stackoverflow.com/questions/9361625/how-to-make-a-socket-server-listen-on-local-file
-# https://stackoverflow.com/questions/34249188/oserror-errno-107-transport-endpoint-is-not-connected
-class JtopServer(Process):
 
-    
-    PIPE_JTOP_USER = 'jetson_stats'
+class JtopServer(Process):
 
     def __init__(self, timeout=1):
         self.q = Queue()
         self.stats = {}
         super(JtopServer, self).__init__()
-        #try:
+        # try:
         #    gid = getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
-        #except KeyError:
-            # TODO: Check how to be writeable only from same group
-            # raise Exception("Group jetson_stats does not exist!")
+        # except KeyError:
+        # TODO: Check how to be writeable only from same group
+        # raise Exception("Group jetson_stats does not exist!")
         #    print("Check how to be writeable only from same group")
         #    gid = os.getgid()
         # Remove old pipes if exists
@@ -71,10 +74,10 @@ class JtopServer(Process):
         # Register queue manager
         CtrlManager.register('get_queue', callable=lambda: self.q)
         self.controller = CtrlManager()
-        #os.chown(JtopServer.PIPE_JTOP_CTRL, os.getuid(), gid)
+        # os.chown(JtopServer.PIPE_JTOP_CTRL, os.getuid(), gid)
         # Set mode
         # https://www.tutorialspoint.com/python/os_chmod.htm
-        #os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
+        # os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
         # Register stats
         StatsManager.register("stats", self._read_data)
         self.broadcaster = StatsManager()
@@ -90,11 +93,12 @@ class JtopServer(Process):
     def run(self):
         while True:
             try:
-                out = self.q.get(timeout=1)
-                #print(out)
+                # Decode control message
+                _ = self.q.get(timeout=1)
+                # print(out)
                 # Run stats
                 self.tegra.open(interval=1000)
-            except Empty:
+            except queue.Empty:
                 if self.tegra.close():
                     print("tegrastats close")
             except KeyboardInterrupt:

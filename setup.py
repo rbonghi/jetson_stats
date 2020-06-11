@@ -36,8 +36,8 @@ from jtop import import_jetson_variables
 # Python 3 only projects can skip this import
 from io import open
 # Launch command
-import subprocess as sp
-import shlex
+# TODO temporary commented: import subprocess as sp
+# TODO temporary commented: import shlex
 import os
 from shutil import copyfile
 import sys
@@ -119,30 +119,31 @@ sudo usermod -a -G jetson_stats $USER
 # https://stackoverflow.com/questions/35448758/using-setup-py-to-install-python-project-as-a-systemd-service
 """
 
+
 class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        #sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+        # TODO temporary commented: sp.call(shlex.split('./scripts/jetson_config --uninstall'))
         # Install services (copying)
-        #install_services(copy=True)
+        # TODO temporary commented: install_services(copy=True)
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        #sp.call(shlex.split('./scripts/jetson_config --install'))
+        # TODO temporary commented: sp.call(shlex.split('./scripts/jetson_config --install'))
 
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        #sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+        # TODO temporary commented: sp.call(shlex.split('./scripts/jetson_config --uninstall'))
         # Install services (linking)
-        #install_services()
+        # TODO temporary commented: install_services()
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        #sp.call(shlex.split('./scripts/jetson_config --install'))
+        # TODO temporary commented: sp.call(shlex.split('./scripts/jetson_config --install'))
 
 
 # Configuration setup module

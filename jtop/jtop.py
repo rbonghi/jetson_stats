@@ -17,9 +17,8 @@
 
 import os
 import re
-import time
 from threading import Thread
-from .core import import_os_variables, JtopServer, CtrlManager, StatsManager
+from .core import import_os_variables, CtrlManager, StatsManager
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
@@ -42,6 +41,7 @@ def get_version():
         VERSION = VERSION_RE.match(fp.read()).group(1)
     return VERSION
 
+
 class jtop(Thread):
     class JtopException(Exception):
         """ Jtop general exception """
@@ -49,7 +49,7 @@ class jtop(Thread):
 
     def __init__(self, interval=500):
         Thread.__init__(self)
-        
+        # Initialize daemon
         self.daemon = True
         # Open socket
         CtrlManager.register('get_queue')

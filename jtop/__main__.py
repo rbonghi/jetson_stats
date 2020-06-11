@@ -17,7 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Jtop server
-from .core import JtopServer, StatsManager, CtrlManager
+from .core import JtopServer
 
 
 class bcolors:
@@ -41,6 +41,7 @@ class bcolors:
     @staticmethod
     def fail(message="ERR"):
         return bcolors.FAIL + message + bcolors.ENDC
+
 
 # https://stackoverflow.com/questions/11114589/creating-hidden-arguments-with-python-argparse
 def main():
