@@ -23,6 +23,7 @@ from .core import JtopServer
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
