@@ -55,7 +55,7 @@ class jtop(Thread):
         CtrlManager.register('get_queue')
         manager = CtrlManager()
         manager.connect()
-        self.queue = manager.get_queue()
+        self.controller = manager.get_queue()
         # Read stats
         StatsManager.register("stats")
         self.receiver = StatsManager()
@@ -68,7 +68,7 @@ class jtop(Thread):
             stats = self.receiver.stats()
             print(stats)
             # Send alive message
-            self.queue.put("start")
+            self.controller.put("start")
         print("Exit")
 
     def open(self):

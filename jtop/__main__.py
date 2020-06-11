@@ -56,7 +56,7 @@ def main():
     server = JtopServer()
     print("Service started")
     try:
-        server.open()
+        server.start()
     except KeyboardInterrupt:
         pass
     # Close stats server

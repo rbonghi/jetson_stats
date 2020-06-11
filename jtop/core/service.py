@@ -22,7 +22,7 @@ import os
 # TODO temporary commented: import stat
 from multiprocessing import Process, Queue
 from multiprocessing.managers import BaseManager
-# TODO temporary commented: from  grp import getgrnam
+from grp import getgrnam
 from .tegrastats import Tegrastats
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
@@ -57,19 +57,15 @@ class StatsManager(BaseManager):
 
 
 class JtopServer(Process):
-
+    """
+        - https://pymotw.com/2/multiprocessing/basics.html
+        - https://stackoverflow.com/questions/1829116/how-to-share-variables-across-scripts-in-python
+    """
     def __init__(self, timeout=1):
         self.q = Queue()
         self.stats = {}
         self.timeout = timeout
         super(JtopServer, self).__init__()
-        # try:
-        #    gid = getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
-        # except KeyError:
-        # TODO: Check how to be writeable only from same group
-        # raise Exception("Group jetson_stats does not exist!")
-        #    print("Check how to be writeable only from same group")
-        #    gid = os.getgid()
         # Remove old pipes if exists
         if os.path.exists(PIPE_JTOP_CTRL):
             print("Remove old pipe {pipe}".format(pipe=PIPE_JTOP_CTRL))
@@ -80,21 +76,14 @@ class JtopServer(Process):
         # Register queue manager
         CtrlManager.register('get_queue', callable=lambda: self.q)
         self.controller = CtrlManager()
-        # os.chown(JtopServer.PIPE_JTOP_CTRL, os.getuid(), gid)
-        # Set mode
-        # https://www.tutorialspoint.com/python/os_chmod.htm
-        # os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
         # Register stats
+        # https://docs.python.org/2/library/multiprocessing.html#using-a-remote-manager
         StatsManager.register("stats", self._read_data)
         self.broadcaster = StatsManager()
         self.broadcaster.start()
-        # Set mode
-        # TODO: Set mode is only readable from all
-        # os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
         # Setup tegrastats
         self.tegra = Tegrastats('/usr/bin/tegrastats')
         self.tegra.attach(self.tegra_stats)
-        self.counter = 0
 
     def run(self):
         timeout = None
@@ -104,8 +93,9 @@ class JtopServer(Process):
                 _ = self.q.get(timeout=timeout)
                 timeout = self.timeout
                 # print(out)
+                interval = 1000
                 # Run stats
-                self.tegra.open(interval=1000)
+                self.tegra.open(interval=interval)
             except queue.Empty:
                 # Close and log status
                 if self.tegra.close():
@@ -115,10 +105,26 @@ class JtopServer(Process):
             except KeyboardInterrupt:
                 break
 
-    def open(self):
+    def start(self):
+        try:
+            gid = getgrnam(PIPE_JTOP_USER).gr_gid
+        except KeyError:
+            # TODO: Check how to be writeable only from same group
+            raise Exception("Group jetson_stats does not exist!")
+        else:
+            gid = os.getgid()
+            print("Check how to be writeable only from same group. Now use gid={gid}".format(gid=gid))
         # Run the Control server
-        self.start()
+        super(JtopServer, self).start()
         s = self.controller.get_server()
+        # Change owner
+        os.chown(PIPE_JTOP_CTRL, os.getuid(), gid)
+        # TODO: Set mode cotroller and stats
+        # https://www.tutorialspoint.com/python/os_chmod.htm
+        # os.chmod(PIPE_JTOP_CTRL, stat.S_IWOTH)
+        # Set mode for stats
+        # os.chmod(PIPE_JTOP_STATS, stat.S_IWOTH)
+        # Run server
         s.serve_forever()
 
     def close(self):
@@ -128,9 +134,16 @@ class JtopServer(Process):
     def tegra_stats(self, stats):
         print("stats")
         # Update stats
-        self.stats_sync = self.broadcaster.stats()
-        self.stats_sync.update(stats)
-        self.counter += 1
+        # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
+        try:
+            self.stats_sync = self.broadcaster.stats()
+            self.stats_sync.update(stats)
+        except Exception as e:
+            print(e)
+
+    def __del__(self):
+        print("On delete")
+        self.close()
 
     def _read_data(self):
         return self.stats
