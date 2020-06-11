@@ -34,13 +34,6 @@ logger = logging.getLogger(__name__)
 ABC = abc.ABCMeta('ABC', (object,), {})
 
 
-class StatusObserver(ABC):
-
-    @abc.abstractmethod
-    def update(self, stats):
-        pass
-
-
 def import_os_variables(SOURCE, PATTERN):
     if os.path.isfile(SOURCE):
         logger.info("Open source file {}".format(SOURCE))

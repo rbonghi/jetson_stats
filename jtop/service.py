@@ -23,7 +23,7 @@ import os
 from multiprocessing import Process, Queue
 from multiprocessing.managers import BaseManager
 from grp import getgrnam
-from .tegrastats import Tegrastats
+from .core import Tegrastats
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3

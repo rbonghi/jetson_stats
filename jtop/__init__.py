@@ -18,13 +18,6 @@
 # flake8: noqa
 
 from .jtop import jtop, import_jetson_variables
-# Import extra controllers
-from .core import Tegrastats
-from .core import Fan
-from .core import NVPmodel
-from .core import JetsonClocks
-# Import os variable importer
-from .core import StatusObserver
 
 __author__ = "Raffaello Bonghi <raffaello@rnext.it>"
 # Version package

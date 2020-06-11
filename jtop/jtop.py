@@ -18,7 +18,8 @@
 import os
 import re
 from threading import Thread
-from .core import import_os_variables, CtrlManager, StatsManager
+from .service import CtrlManager, StatsManager
+from .core import import_os_variables
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 

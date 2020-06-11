@@ -19,7 +19,7 @@
 # Logging
 import logging
 # Jtop server
-from .core import JtopServer
+from .service import JtopServer
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
