@@ -115,6 +115,8 @@ Add in installer create group
 sudo groupadd jetson_stats
 
 sudo usermod -a -G jetson_stats $USER
+
+# https://stackoverflow.com/questions/35448758/using-setup-py-to-install-python-project-as-a-systemd-service
 """
 
 class PostInstallCommand(install):

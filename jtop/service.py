@@ -17,25 +17,41 @@
 
 import os
 import stat
-import socket
+from multiprocessing import Process, Queue
+from multiprocessing.managers import BaseManager
 from  grp import getgrnam
 from .core import Tegrastats
 
 
-class JtopServer:
+class QueueManager(BaseManager):
+    
+    def get_queue(self):
+        pass
+
+class MyListManager(BaseManager):
+
+    def read_data(self):
+        pass
+
+# https://stackoverflow.com/questions/9361625/how-to-make-a-socket-server-listen-on-local-file
+# https://stackoverflow.com/questions/34249188/oserror-errno-107-transport-endpoint-is-not-connected
+class JtopServer(Process):
 
     PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
     PIPE_JTOP_STATS = '/tmp/jtop_stats'
     PIPE_JTOP_USER = 'jetson_stats'
 
     def __init__(self, timeout=1):
-        try:
-            gid = getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
-        except KeyError:
+        self.q = Queue()
+        super(JtopServer, self).__init__()
+        
+        #try:
+        #    gid = getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
+        #except KeyError:
             # TODO: Check how to be writeable only from same group
             # raise Exception("Group jetson_stats does not exist!")
-            print("Check how to be writeable only from same group")
-            gid = os.getgid()
+        #    print("Check how to be writeable only from same group")
+        #    gid = os.getgid()
         # Remove old pipes if exists
         if os.path.exists(JtopServer.PIPE_JTOP_CTRL):
             print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_CTRL))
@@ -43,48 +59,51 @@ class JtopServer:
         if os.path.exists(JtopServer.PIPE_JTOP_STATS):
             print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_STATS))
             os.remove(JtopServer.PIPE_JTOP_STATS)
-        # Initialize and bind control socket
-        self.sock_ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        self.sock_ctrl.bind(JtopServer.PIPE_JTOP_CTRL)
-        self.sock_ctrl.settimeout(timeout)
-        os.chown(JtopServer.PIPE_JTOP_CTRL, os.getuid(), gid)
+        # Register queue manager
+        QueueManager.register('get_queue', callable=lambda: self.q)
+        self.manager = QueueManager(address=(JtopServer.PIPE_JTOP_CTRL), authkey='abracadabra')
+        #os.chown(JtopServer.PIPE_JTOP_CTRL, os.getuid(), gid)
         # Set mode
         # https://www.tutorialspoint.com/python/os_chmod.htm
-        os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
-        # Initialize and bind statistics socket
-        self.socket_stats = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        self.socket_stats.bind(JtopServer.PIPE_JTOP_STATS)
-        # Set ownership file
-        os.chown(JtopServer.PIPE_JTOP_STATS, os.getuid(), gid)
+        #os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
+        self.stats = {}
+        # Register stats
+        #MyListManager.register("service", self.read_data, exposed=['__getitem__', '__setitem__', '__str__', 'append', 'count', 'extend', 'index', 'insert', 'pop', 'remove', 'reverse', 'sort'])
+        MyListManager.register("service", self.read_data)
+        self.broadcaster = MyListManager(address=(JtopServer.PIPE_JTOP_STATS), authkey='')
+        self.broadcaster.start()
         # Set mode
         # TODO: Set mode is only readable from all
         # os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
         # Setup tegrastats
         self.tegra = Tegrastats('/usr/bin/tegrastats')
         self.tegra.attach(self.tegra_stats)
+        self.counter = 0
+        self.start()
 
-    def loop(self):
+    def __call__(self):
+        return self
+
+    def run(self):
         while True:
-            try:
-                datagram = self.sock_ctrl.recv(1024)
-                print("Datagram: {datagram}".format(datagram=datagram))
-                # Run tegrastats
-                if datagram == "start":
-                    self.tegra.open(interval=500)
-                elif datagram == "stop":
-                    self.tegra.close()
-            except socket.timeout:
-                #print("Timeout!")
-                pass
+            out = self.q.get()
+            self.stats_sync = self.broadcaster.service()
+            self.stats_sync.update({'a': self.counter})
+            print(out, self.stats_sync)
+            self.counter += 1
+
+    def open(self):
+        s = self.manager.get_server()
+        s.serve_forever()
 
     def close(self):
         print("End Server")
-        self.sock_ctrl.close()
-        os.remove(JtopServer.PIPE_JTOP_CTRL)
-        self.socket_stats.close()
-        os.remove(JtopServer.PIPE_JTOP_STATS)
+        self.broadcaster.shutdown()
 
     def tegra_stats(self, stats):
-        print(stats)
-        self.socket_stats.sendto("stats", JtopServer.PIPE_JTOP_STATS)
+        print("stats")
+        #self.counter += 1
+
+    def read_data(self):
+        return self.stats
 # EOF

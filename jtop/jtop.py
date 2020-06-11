@@ -17,8 +17,9 @@
 
 import os
 import re
-import socket
-from service import JtopServer
+import time
+from threading import Thread
+from service import JtopServer, QueueManager, MyListManager
 from .core import import_os_variables
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
@@ -42,28 +43,41 @@ def get_version():
         VERSION = VERSION_RE.match(fp.read()).group(1)
     return VERSION
 
-class jtop:
+class jtop(Thread):
     class JtopException(Exception):
         """ Jtop general exception """
         pass
 
     def __init__(self, interval=500):
+        Thread.__init__(self)
+        
+        self.daemon = True
         # Open socket
-        self.sock_ctrl = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        QueueManager.register('get_queue')
+        manager = QueueManager(address=(JtopServer.PIPE_JTOP_CTRL), authkey='abracadabra')
+        manager.connect()
+        self.queue = manager.get_queue()
+        # Read stats
+        MyListManager.register("service")
+        self.receiver = MyListManager(address=(JtopServer.PIPE_JTOP_STATS), authkey='')
+        self.receiver.connect()
+
+    def run(self):
+        print("start")
+        while True:
+            self.queue.put("hello")
+            syncarr = self.receiver.service()
+            print(syncarr)
+            #print(dir(syncarr))
+            #print(syncarr.read_data())
+            time.sleep(1)
+        print("Exit")
 
     def open(self):
-        try:
-            self.sock_ctrl.sendto("start", JtopServer.PIPE_JTOP_CTRL)
-        except socket.error as e:
-            print(e)
-            raise jtop.JtopException("jtop server not available")
         print("Open library")
+        self.start()
 
     def close(self):
-        try:
-            self.sock_ctrl.sendto("stop", JtopServer.PIPE_JTOP_CTRL)
-        except socket.error:
-            raise jtop.JtopException("jtop server not available")
         print("Close library")
 
     def __enter__(self):
