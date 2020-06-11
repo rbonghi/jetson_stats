@@ -99,23 +99,25 @@ class Tegrastats:
         self._observers.discard(observer)
 
     def open(self, interval=500):
-        try:
-            # Launch subprocess or raise and exception
-            self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
-            # Start thread Service client
-            self._thread = Thread(target=self._read_tegrastats, args=[])
-            self._thread.setDaemon = True
-            self._thread.start()
-            return True
-        except OSError:
-            logger.error("Tegrastats not in list!")
-            raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
+        if self.p is None:
+            try:
+                # Launch subprocess or raise and exception
+                self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
+                # Start thread Service client
+                self._thread = Thread(target=self._read_tegrastats, args=[])
+                self._thread.setDaemon = True
+                self._thread.start()
+                return True
+            except OSError:
+                logger.error("Tegrastats not in list!")
+                raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
         return False
 
     def close(self):
         if self.p is not None:
             try:
                 self.p.kill()
+                self.p = None
                 return True
             except OSError:
                 pass

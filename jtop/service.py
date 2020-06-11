@@ -17,6 +17,7 @@
 
 import os
 import stat
+from Queue import Empty
 from multiprocessing import Process, Queue
 from multiprocessing.managers import BaseManager
 from  grp import getgrnam
@@ -75,7 +76,7 @@ class JtopServer(Process):
         # https://www.tutorialspoint.com/python/os_chmod.htm
         #os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
         # Register stats
-        StatsManager.register("stats", self.read_data)
+        StatsManager.register("stats", self._read_data)
         self.broadcaster = StatsManager()
         self.broadcaster.start()
         # Set mode
@@ -88,11 +89,14 @@ class JtopServer(Process):
 
     def run(self):
         while True:
-            out = self.q.get()
-            self.stats_sync = self.broadcaster.stats()
-            self.stats_sync.update({'a': self.counter})
-            print(out, self.stats_sync)
-            self.counter += 1
+            try:
+                out = self.q.get(timeout=1)
+                #print(out)
+                # Run stats
+                self.tegra.open(interval=1000)
+            except Empty:
+                if self.tegra.close():
+                    print("tegrastats close")
 
     def open(self):
         # Run the Control server
@@ -106,9 +110,12 @@ class JtopServer(Process):
 
     def tegra_stats(self, stats):
         print("stats")
-        #self.counter += 1
+        # Update stats
+        self.stats_sync = self.broadcaster.stats()
+        self.stats_sync.update(stats)
+        self.counter += 1
 
-    def read_data(self):
+    def _read_data(self):
         return self.stats
 
     def __call__(self):

@@ -65,12 +65,11 @@ class jtop(Thread):
     def run(self):
         print("start")
         while True:
-            # Send alive message
-            self.queue.put("hello")
             # Read stats from jtop service
             stats = self.receiver.stats()
             print(stats)
-            time.sleep(1)
+            # Send alive message
+            self.queue.put("start")
         print("Exit")
 
     def open(self):
