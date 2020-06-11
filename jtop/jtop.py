@@ -19,7 +19,7 @@ import os
 import re
 import time
 from threading import Thread
-from service import JtopServer, QueueManager, MyListManager
+from service import JtopServer, CtrlManager, StatsManager
 from .core import import_os_variables
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
@@ -53,23 +53,23 @@ class jtop(Thread):
         
         self.daemon = True
         # Open socket
-        QueueManager.register('get_queue')
-        manager = QueueManager(address=(JtopServer.PIPE_JTOP_CTRL), authkey='abracadabra')
+        CtrlManager.register('get_queue')
+        manager = CtrlManager()
         manager.connect()
         self.queue = manager.get_queue()
         # Read stats
-        MyListManager.register("service")
-        self.receiver = MyListManager(address=(JtopServer.PIPE_JTOP_STATS), authkey='')
+        StatsManager.register("stats")
+        self.receiver = StatsManager()
         self.receiver.connect()
 
     def run(self):
         print("start")
         while True:
+            # Send alive message
             self.queue.put("hello")
-            syncarr = self.receiver.service()
-            print(syncarr)
-            #print(dir(syncarr))
-            #print(syncarr.read_data())
+            # Read stats from jtop service
+            stats = self.receiver.stats()
+            print(stats)
             time.sleep(1)
         print("Exit")
 

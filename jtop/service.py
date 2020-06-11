@@ -22,29 +22,37 @@ from multiprocessing.managers import BaseManager
 from  grp import getgrnam
 from .core import Tegrastats
 
+PIPE_JTOP_STATS = '/tmp/jtop_stats'
+PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
+AUTHKEY='aaabbcc'
 
-class QueueManager(BaseManager):
-    
+class CtrlManager(BaseManager):
+
+    def __init__(self, authkey=AUTHKEY):
+        super(CtrlManager, self).__init__(address=(PIPE_JTOP_CTRL), authkey=authkey)
+
     def get_queue(self):
         pass
 
-class MyListManager(BaseManager):
+class StatsManager(BaseManager):
 
-    def read_data(self):
+    def __init__(self, authkey=AUTHKEY):
+        super(StatsManager, self).__init__(address=(PIPE_JTOP_STATS), authkey=authkey)
+
+    def stats(self):
         pass
 
 # https://stackoverflow.com/questions/9361625/how-to-make-a-socket-server-listen-on-local-file
 # https://stackoverflow.com/questions/34249188/oserror-errno-107-transport-endpoint-is-not-connected
 class JtopServer(Process):
 
-    PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
-    PIPE_JTOP_STATS = '/tmp/jtop_stats'
+    
     PIPE_JTOP_USER = 'jetson_stats'
 
     def __init__(self, timeout=1):
         self.q = Queue()
+        self.stats = {}
         super(JtopServer, self).__init__()
-        
         #try:
         #    gid = getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
         #except KeyError:
@@ -53,24 +61,22 @@ class JtopServer(Process):
         #    print("Check how to be writeable only from same group")
         #    gid = os.getgid()
         # Remove old pipes if exists
-        if os.path.exists(JtopServer.PIPE_JTOP_CTRL):
-            print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_CTRL))
-            os.remove(JtopServer.PIPE_JTOP_CTRL)
-        if os.path.exists(JtopServer.PIPE_JTOP_STATS):
-            print("Remove old pipe {pipe}".format(pipe=JtopServer.PIPE_JTOP_STATS))
-            os.remove(JtopServer.PIPE_JTOP_STATS)
+        if os.path.exists(PIPE_JTOP_CTRL):
+            print("Remove old pipe {pipe}".format(pipe=PIPE_JTOP_CTRL))
+            os.remove(PIPE_JTOP_CTRL)
+        if os.path.exists(PIPE_JTOP_STATS):
+            print("Remove old pipe {pipe}".format(pipe=PIPE_JTOP_STATS))
+            os.remove(PIPE_JTOP_STATS)
         # Register queue manager
-        QueueManager.register('get_queue', callable=lambda: self.q)
-        self.manager = QueueManager(address=(JtopServer.PIPE_JTOP_CTRL), authkey='abracadabra')
+        CtrlManager.register('get_queue', callable=lambda: self.q)
+        self.controller = CtrlManager()
         #os.chown(JtopServer.PIPE_JTOP_CTRL, os.getuid(), gid)
         # Set mode
         # https://www.tutorialspoint.com/python/os_chmod.htm
         #os.chmod(JtopServer.PIPE_JTOP_CTRL, stat.S_IWOTH)
-        self.stats = {}
         # Register stats
-        #MyListManager.register("service", self.read_data, exposed=['__getitem__', '__setitem__', '__str__', 'append', 'count', 'extend', 'index', 'insert', 'pop', 'remove', 'reverse', 'sort'])
-        MyListManager.register("service", self.read_data)
-        self.broadcaster = MyListManager(address=(JtopServer.PIPE_JTOP_STATS), authkey='')
+        StatsManager.register("stats", self.read_data)
+        self.broadcaster = StatsManager()
         self.broadcaster.start()
         # Set mode
         # TODO: Set mode is only readable from all
@@ -79,21 +85,19 @@ class JtopServer(Process):
         self.tegra = Tegrastats('/usr/bin/tegrastats')
         self.tegra.attach(self.tegra_stats)
         self.counter = 0
-        self.start()
-
-    def __call__(self):
-        return self
 
     def run(self):
         while True:
             out = self.q.get()
-            self.stats_sync = self.broadcaster.service()
+            self.stats_sync = self.broadcaster.stats()
             self.stats_sync.update({'a': self.counter})
             print(out, self.stats_sync)
             self.counter += 1
 
     def open(self):
-        s = self.manager.get_server()
+        # Run the Control server
+        self.start()
+        s = self.controller.get_server()
         s.serve_forever()
 
     def close(self):
@@ -106,4 +110,7 @@ class JtopServer(Process):
 
     def read_data(self):
         return self.stats
+
+    def __call__(self):
+        return self
 # EOF
