@@ -19,6 +19,7 @@
 
 from .nvpmodel import NVPmodel
 from .tegrastats import Tegrastats
+from .service import JtopServer, StatsManager, CtrlManager
 from .fan import Fan
 from .jetson_clocks import JetsonClocks
 from .swap import Swap

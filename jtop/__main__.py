@@ -17,7 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Jtop server
-from .service import JtopServer
+from .core import JtopServer, StatsManager, CtrlManager
 
 
 class bcolors:

@@ -19,8 +19,7 @@ import os
 import re
 import time
 from threading import Thread
-from service import JtopServer, CtrlManager, StatsManager
-from .core import import_os_variables
+from .core import import_os_variables, JtopServer, CtrlManager, StatsManager
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 

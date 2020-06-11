@@ -21,7 +21,7 @@ from Queue import Empty
 from multiprocessing import Process, Queue
 from multiprocessing.managers import BaseManager
 from  grp import getgrnam
-from .core import Tegrastats
+from .tegrastats import Tegrastats
 
 PIPE_JTOP_STATS = '/tmp/jtop_stats'
 PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
@@ -97,6 +97,8 @@ class JtopServer(Process):
             except Empty:
                 if self.tegra.close():
                     print("tegrastats close")
+            except KeyboardInterrupt:
+                break
 
     def open(self):
         # Run the Control server
