@@ -56,6 +56,7 @@ class JtopServer(Process):
     def __init__(self, timeout=1):
         self.q = Queue()
         self.stats = {}
+        self.timeout = timeout
         super(JtopServer, self).__init__()
         # try:
         #    gid = getgrnam(JtopServer.PIPE_JTOP_USER).gr_gid
@@ -91,16 +92,21 @@ class JtopServer(Process):
         self.counter = 0
 
     def run(self):
+        timeout = None
         while True:
             try:
                 # Decode control message
-                _ = self.q.get(timeout=1)
+                _ = self.q.get(timeout=timeout)
+                timeout = self.timeout
                 # print(out)
                 # Run stats
                 self.tegra.open(interval=1000)
             except queue.Empty:
+                # Close and log status
                 if self.tegra.close():
                     print("tegrastats close")
+                # Disable timeout
+                timeout = None
             except KeyboardInterrupt:
                 break
 
