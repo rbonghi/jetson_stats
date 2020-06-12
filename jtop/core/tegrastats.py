@@ -109,15 +109,15 @@ class Tegrastats:
         # Check if process exist
         if self.p is not None:
             return False
+        # Start thread Service client
+        self._thread = Thread(target=self._read_tegrastats, args=[])
+        self._thread.setDaemon = True
         try:
             # Launch subprocess or raise and exception
             self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
         except OSError:
             logger.error("Tegrastats not in list!")
             raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
-        # Start thread Service client
-        self._thread = Thread(target=self._read_tegrastats, args=[])
-        self._thread.setDaemon = True
         self._thread.start()
         return True
 

@@ -68,29 +68,29 @@ class jtop(Thread):
 
     @property
     def stats(self):
+        """
+            A dictionary with the status of the board
+        """
         return self._stats
 
     def ram(self):
         return {}
 
     def run(self):
-        print("start")
         while True:
             # Read stats from jtop service
             self._stats = self.receiver.stats()
             # Send alive message
             self.controller.put({})
-        print("Exit")
 
     def open(self):
-        print("Open library")
         # Send alive message
         self.controller.put({'interval': self.interval})
         # Read stats from jtop service
-        while not self.receiver.stats():
+        while not dict(self.receiver.stats()):
             pass
-        # Save first value
-        self._stats = self.receiver.stats()
+        # Save and convert first value
+        self._stats = dict(self.receiver.stats())
         # Run thread reader
         self.start()
 

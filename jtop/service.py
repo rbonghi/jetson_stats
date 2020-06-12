@@ -78,7 +78,7 @@ class JtopServer(Process):
         self.controller = CtrlManager()
         # Register stats
         # https://docs.python.org/2/library/multiprocessing.html#using-a-remote-manager
-        StatsManager.register("stats", self._read_data)
+        StatsManager.register("stats", callable=self._read_data, exposed=['__getitem__', 'clear', 'copy', 'fromkeys', 'get', 'has_key', 'items', 'iteritems', 'iterkeys', 'itervalues', 'keys', 'pop', 'popitem', 'setdefault', 'update', 'values', 'viewitems', 'viewkeys', 'viewvalues'])
         self.broadcaster = StatsManager()
         self.broadcaster.start()
         # Setup tegrastats
