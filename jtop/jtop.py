@@ -20,6 +20,10 @@ import re
 from threading import Thread
 from .service import CtrlManager, StatsManager
 from .core import import_os_variables
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
@@ -59,7 +63,13 @@ class jtop(Thread):
         # Open socket
         CtrlManager.register('get_queue')
         manager = CtrlManager()
-        manager.connect()
+        try:
+            manager.connect()
+        except FileNotFoundError:
+            raise jtop.JtopException("jetson_stats service not active, please run sudo ... ")
+        except ValueError:
+            # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
+            raise jtop.JtopException("mismatch python version between library and service")
         self.controller = manager.get_queue()
         # Read stats
         StatsManager.register("status")

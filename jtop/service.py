@@ -41,7 +41,7 @@ AUTHKEY = 'aaabbcc'
 class CtrlManager(BaseManager):
 
     def __init__(self, authkey=AUTHKEY):
-        super(CtrlManager, self).__init__(address=(PIPE_JTOP_CTRL), authkey=authkey)
+        super(CtrlManager, self).__init__(address=(PIPE_JTOP_CTRL), authkey=authkey.encode("utf-8"))
 
     def get_queue(self):
         pass
@@ -50,7 +50,7 @@ class CtrlManager(BaseManager):
 class StatsManager(SyncManager):
 
     def __init__(self, authkey=AUTHKEY):
-        super(StatsManager, self).__init__(address=(PIPE_JTOP_STATS), authkey=authkey)
+        super(StatsManager, self).__init__(address=(PIPE_JTOP_STATS), authkey=authkey.encode("utf-8"))
 
     def status(self):
         pass
@@ -62,8 +62,10 @@ class StatsManager(SyncManager):
 class JtopServer(Process):
     """
         - https://pymotw.com/2/multiprocessing/basics.html
+        - https://pymotw.com/2/multiprocessing/communication.html
         - https://stackoverflow.com/questions/1829116/how-to-share-variables-across-scripts-in-python
         - https://stackoverflow.com/questions/45342200/how-to-use-syncmanager-lock-or-event-correctly
+        - https://stackoverflow.com/questions/2545961/how-to-synchronize-a-python-dict-with-multiprocessing
     """
     def __init__(self, timeout=1):
         self.q = Queue()
@@ -123,8 +125,7 @@ class JtopServer(Process):
             gid = getgrnam(PIPE_JTOP_USER).gr_gid
         except KeyError:
             # TODO: Check how to be writeable only from same group
-            raise Exception("Group jetson_stats does not exist!")
-        else:
+            # raise Exception("Group jetson_stats does not exist!")
             gid = os.getgid()
             print("Check how to be writeable only from same group. Now use gid={gid}".format(gid=gid))
         # Run the Control server
@@ -157,6 +158,7 @@ class JtopServer(Process):
         self.close()
 
     def get_lock(self):
+        # https://stackoverflow.com/questions/45342200/how-to-use-syncmanager-lock-or-event-correctly
         return self.global_lock
 
     def _read_data(self):
