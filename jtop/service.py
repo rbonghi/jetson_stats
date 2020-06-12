@@ -82,8 +82,7 @@ class JtopServer(Process):
         self.broadcaster = StatsManager()
         self.broadcaster.start()
         # Setup tegrastats
-        self.tegra = Tegrastats('/usr/bin/tegrastats')
-        self.tegra.attach(self.tegra_stats)
+        self.tegra = Tegrastats('/usr/bin/tegrastats', self.tegra_stats)
 
     def run(self):
         timeout = None

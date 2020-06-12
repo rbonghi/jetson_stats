@@ -38,15 +38,16 @@ class Tegrastats:
     class TegrastatsException(Exception):
         pass
 
-    def __init__(self, path):
+    def __init__(self, path, callback):
         # Initialize jetson stats
         self._stats = {}
         # Start process tegrastats
         self.path = path
         # Define Tegrastats process
+        self._thread = None
         self.p = None
-        # Initialize observer
-        self._observers = set()
+        # Initialize callback
+        self.callback = callback
 
     def _decode(self, text):
         # Find and parse all single values
@@ -73,16 +74,15 @@ class Tegrastats:
         stats['WATT'] = WATTS(text)
         return stats
 
-    def _is_alive(self):
-        if self.p is None:
-            return False
-        if self.p.poll() is None:
-            return True
-        return False
-
-    def _read_tegrastats(self):
+    def _read_tegrastats(self, interval):
         try:
-            while self._is_alive():
+            # Launch subprocess or raise and exception
+            self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
+        except OSError:
+            logger.error("Tegrastats not in list!")
+            raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
+        try:
+            while self.p.poll() is None:
                 out = self.p.stdout
                 if out is not None:
                     # Read line process output
@@ -91,44 +91,37 @@ class Tegrastats:
                     tegrastats_data = line.decode("utf-8")
                     # Decode and store
                     self._stats = self._decode(tegrastats_data)
-                    # Notifiy all observers
-                    for observer in self._observers:
-                        observer(self._stats)
+                    # Launch callback
+                    self.callback(self._stats)
+        except AttributeError:
+            pass
         except SystemExit:
             logger.error("System exit", exc_info=True)
         except AttributeError:
             logger.error("Attribute error", exc_info=True)
-
-    def attach(self, observer):
-        self._observers.add(observer)
-
-    def detach(self, observer):
-        self._observers.discard(observer)
+        # Reset variable
+        self.p = None
 
     def open(self, interval=500):
-        # Check if process exist
-        if self.p is not None:
+        # Check if thread or process exist
+        if self._thread is not None or self.p is not None:
             return False
         # Start thread Service client
-        self._thread = Thread(target=self._read_tegrastats, args=[])
+        self._thread = Thread(target=self._read_tegrastats, args=[interval])
         self._thread.setDaemon = True
-        try:
-            # Launch subprocess or raise and exception
-            self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
-        except OSError:
-            logger.error("Tegrastats not in list!")
-            raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
         self._thread.start()
         return True
 
     def close(self):
-        if self.p is not None:
-            try:
-                self.p.kill()
-                # Clean objeck
-                self.p = None
-                return True
-            except OSError:
-                pass
-        return False
+        # Check if thread and process are already empty
+        if self._thread is None or self.p is None:
+            return False
+        try:
+            self.p.kill()
+        except OSError:
+            pass
+        # Clean process variable
+        self.p = None
+        self._thread = None
+        return True
 # EOF
