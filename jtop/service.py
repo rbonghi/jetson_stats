@@ -90,12 +90,17 @@ class JtopServer(Process):
         while True:
             try:
                 # Decode control message
-                _ = self.q.get(timeout=timeout)
+                control = self.q.get(timeout=timeout)
                 timeout = self.timeout
-                # print(out)
-                interval = 1000
-                # Run stats
-                self.tegra.open(interval=interval)
+                # Check if control is not empty
+                if not control:
+                    continue
+                # Initialize tegrastats speed
+                if 'interval' in control:
+                    interval = control['interval']
+                    # Run stats
+                    if self.tegra.open(interval=interval):
+                        print("tegrastats started")
             except queue.Empty:
                 # Close and log status
                 if self.tegra.close():
@@ -119,10 +124,10 @@ class JtopServer(Process):
         s = self.controller.get_server()
         # Change owner
         os.chown(PIPE_JTOP_CTRL, os.getuid(), gid)
-        # TODO: Set mode cotroller and stats
+        os.chown(PIPE_JTOP_STATS, os.getuid(), gid)
+        # TODO: Change mode cotroller and stats
         # https://www.tutorialspoint.com/python/os_chmod.htm
         # os.chmod(PIPE_JTOP_CTRL, stat.S_IWOTH)
-        # Set mode for stats
         # os.chmod(PIPE_JTOP_STATS, stat.S_IWOTH)
         # Run server
         s.serve_forever()

@@ -50,6 +50,10 @@ class jtop(Thread):
 
     def __init__(self, interval=500):
         Thread.__init__(self)
+        # Load interval
+        self.interval = interval
+        # Stats read from service
+        self._stats = {}
         # Initialize daemon
         self.daemon = True
         # Open socket
@@ -62,18 +66,32 @@ class jtop(Thread):
         self.receiver = StatsManager()
         self.receiver.connect()
 
+    @property
+    def stats(self):
+        return self._stats
+
+    def ram(self):
+        return {}
+
     def run(self):
         print("start")
         while True:
             # Read stats from jtop service
-            stats = self.receiver.stats()
-            print(stats)
+            self._stats = self.receiver.stats()
             # Send alive message
-            self.controller.put("start")
+            self.controller.put({})
         print("Exit")
 
     def open(self):
         print("Open library")
+        # Send alive message
+        self.controller.put({'interval': self.interval})
+        # Read stats from jtop service
+        while not self.receiver.stats():
+            pass
+        # Save first value
+        self._stats = self.receiver.stats()
+        # Run thread reader
         self.start()
 
     def close(self):
