@@ -89,9 +89,12 @@ class jtop(Thread):
     def run(self):
         while True:
             # Read stats from jtop service
-            self._stats = dict(self.receiver.status())
-            # Send alive message
-            self.controller.put({})
+            status = dict(self.receiver.status())
+            # Update only if differents
+            if self._stats != status:
+                self._stats = status
+                # Send alive message
+                self.controller.put({})
 
     def open(self):
         # Send alive message
