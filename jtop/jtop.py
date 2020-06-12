@@ -79,7 +79,7 @@ class jtop(Thread):
     def run(self):
         while True:
             # Read stats from jtop service
-            self._stats = self.receiver.stats()
+            self._stats = dict(self.receiver.stats())
             # Send alive message
             self.controller.put({})
 
