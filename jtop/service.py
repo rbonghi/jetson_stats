@@ -84,7 +84,7 @@ class JtopServer(Process):
         # Register stats
         # https://docs.python.org/2/library/multiprocessing.html#using-a-remote-manager
         StatsManager.register('Lock', self.get_lock, AcquirerProxy)
-        StatsManager.register("status", callable=self._read_data, 
+        StatsManager.register("status", callable=self._read_data,
                               exposed=['__getitem__', 'copy', 'fromkeys', 'get', 'has_key', 'items',
                                        'iteritems', 'iterkeys', 'itervalues', 'keys', 'setdefault',
                                        'update', 'values', 'viewitems', 'viewkeys', 'viewvalues'])
