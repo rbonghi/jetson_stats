@@ -92,7 +92,8 @@ class Tegrastats:
                     # Decode and store
                     self._stats = self._decode(tegrastats_data)
                     # Launch callback
-                    self.callback(self._stats)
+                    if self.p is not None:
+                        self.callback(self._stats)
         except AttributeError:
             pass
         except SystemExit:

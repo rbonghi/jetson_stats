@@ -62,7 +62,7 @@ class jtop(Thread):
         manager.connect()
         self.controller = manager.get_queue()
         # Read stats
-        StatsManager.register("stats")
+        StatsManager.register("status")
         self.receiver = StatsManager()
         self.receiver.connect()
 
@@ -79,7 +79,7 @@ class jtop(Thread):
     def run(self):
         while True:
             # Read stats from jtop service
-            self._stats = dict(self.receiver.stats())
+            self._stats = dict(self.receiver.status())
             # Send alive message
             self.controller.put({})
 
@@ -87,10 +87,10 @@ class jtop(Thread):
         # Send alive message
         self.controller.put({'interval': self.interval})
         # Read stats from jtop service
-        while not dict(self.receiver.stats()):
+        while not dict(self.receiver.status()):
             pass
         # Save and convert first value
-        self._stats = dict(self.receiver.stats())
+        self._stats = dict(self.receiver.status())
         # Run thread reader
         self.start()
 

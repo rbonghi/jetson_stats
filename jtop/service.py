@@ -20,8 +20,8 @@ import logging
 # Operative system
 import os
 # TODO temporary commented: import stat
-from multiprocessing import Process, Queue
-from multiprocessing.managers import BaseManager
+from multiprocessing import Process, Queue, Lock
+from multiprocessing.managers import BaseManager, SyncManager, AcquirerProxy
 from grp import getgrnam
 from .core import Tegrastats
 # Create logger for tegrastats
@@ -47,12 +47,15 @@ class CtrlManager(BaseManager):
         pass
 
 
-class StatsManager(BaseManager):
+class StatsManager(SyncManager):
 
     def __init__(self, authkey=AUTHKEY):
         super(StatsManager, self).__init__(address=(PIPE_JTOP_STATS), authkey=authkey)
 
-    def stats(self):
+    def status(self):
+        pass
+
+    def Lock(self):
         pass
 
 
@@ -60,10 +63,12 @@ class JtopServer(Process):
     """
         - https://pymotw.com/2/multiprocessing/basics.html
         - https://stackoverflow.com/questions/1829116/how-to-share-variables-across-scripts-in-python
+        - https://stackoverflow.com/questions/45342200/how-to-use-syncmanager-lock-or-event-correctly
     """
     def __init__(self, timeout=1):
         self.q = Queue()
-        self.stats = {}
+        self.data = {}
+        self.global_lock = Lock()
         self.timeout = timeout
         super(JtopServer, self).__init__()
         # Remove old pipes if exists
@@ -78,7 +83,11 @@ class JtopServer(Process):
         self.controller = CtrlManager()
         # Register stats
         # https://docs.python.org/2/library/multiprocessing.html#using-a-remote-manager
-        StatsManager.register("stats", callable=self._read_data, exposed=['__getitem__', 'copy', 'fromkeys', 'get', 'has_key', 'items', 'iteritems', 'iterkeys', 'itervalues', 'keys', 'setdefault', 'update', 'values', 'viewitems', 'viewkeys', 'viewvalues'])
+        StatsManager.register('Lock', self.get_lock, AcquirerProxy)
+        StatsManager.register("status", callable=self._read_data, 
+                              exposed=['__getitem__', 'copy', 'fromkeys', 'get', 'has_key', 'items',
+                                       'iteritems', 'iterkeys', 'itervalues', 'keys', 'setdefault',
+                                       'update', 'values', 'viewitems', 'viewkeys', 'viewvalues'])
         self.broadcaster = StatsManager()
         self.broadcaster.start()
         # Setup tegrastats
@@ -139,18 +148,20 @@ class JtopServer(Process):
         print("stats")
         # Update stats
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
-        try:
-            self.stats_sync = self.broadcaster.stats()
-            self.stats_sync.update(stats)
-        except Exception as e:
-            print(e)
+        self.data_sync = self.broadcaster.status()
+        with self.broadcaster.Lock():
+            self.data_sync.update(stats)
 
     def __del__(self):
         print("On delete")
         self.close()
 
+    def get_lock(self):
+        return self.global_lock
+
     def _read_data(self):
-        return self.stats
+        with self.global_lock:
+            return self.data
 
     def __call__(self):
         return self
