@@ -60,6 +60,8 @@ class jtop(Thread):
         self._running = False
         # Load interval
         self.interval = interval
+        # Initialize observer
+        self._observers = set()
         # Stats read from service
         self._stats = {}
         # Open socket
@@ -84,6 +86,27 @@ class jtop(Thread):
         StatsManager.register('sync_condition')
         self.broadcaster = StatsManager()
 
+    def attach(self, observer):
+        """
+        Attach an obserber to read the status of jtop
+
+        :param observer: The function to call
+        :type observer: function
+        """
+        self._observers.add(observer)
+        # Autostart the jtop if is off
+        if self._observers:
+            self.start()
+
+    def detach(self, observer):
+        """
+        Detach an obserber from jtop
+
+        :param observer:  The function to detach
+        :type observer: function
+        """
+        self._observers.discard(observer)
+
     @property
     def stats(self):
         """
@@ -97,6 +120,10 @@ class jtop(Thread):
 
     def decode(self, data):
         self._stats = data
+        # Notifiy all observers
+        for observer in self._observers:
+            # Call all observer in list
+            observer(self.stats)
 
     def run(self):
         # Acquire condition
@@ -107,7 +134,7 @@ class jtop(Thread):
             try:
                 self.sync_cond.wait()
             except EOFError:
-                logger.error("wait error")
+                print("wait error")
                 break
             # Read stats from jtop service
             data = self.sync_data.copy()
@@ -116,7 +143,7 @@ class jtop(Thread):
         try:
             self.sync_cond.release()
         except IOError:
-            logger.error("Release error")
+            print("Release error")
             raise jtop.JtopException("Lost connection to server")
         # Release condition
         print("exit read")
