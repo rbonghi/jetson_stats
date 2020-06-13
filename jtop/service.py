@@ -20,7 +20,6 @@ import logging
 # Operative system
 import os
 import stat
-# TODO temporary commented: import stat
 from multiprocessing import Process, Queue, Condition
 from multiprocessing.managers import BaseManager, SyncManager
 from grp import getgrnam
@@ -138,7 +137,7 @@ class JtopServer(Process):
             gid = getgrnam(PIPE_JTOP_USER).gr_gid
         except KeyError:
             # User does not exist
-            raise Exception("Group {jtop_user} does not exist!".format(PIPE_JTOP_USER))
+            raise Exception("Group {jtop_user} does not exist!".format(jtop_user=PIPE_JTOP_USER))
         # Start broadcaster
         self.broadcaster.start()
         # Initialize syncronized data and conditional
@@ -151,7 +150,7 @@ class JtopServer(Process):
         # Change owner
         os.chown(PIPE_JTOP_CTRL, os.getuid(), gid)
         os.chown(PIPE_JTOP_STATS, os.getuid(), gid)
-        # TODO: Change mode cotroller and stats
+        # Change mode cotroller and stats
         # https://www.tutorialspoint.com/python/os_chmod.htm
         # Equivalent permission 660 srw-rw----
         os.chmod(PIPE_JTOP_CTRL, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
@@ -164,7 +163,6 @@ class JtopServer(Process):
         self.broadcaster.shutdown()
 
     def tegra_stats(self, stats):
-        #print("stats")
         # Update stats
         self.sync_cond.acquire()
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python

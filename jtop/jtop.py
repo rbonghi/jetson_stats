@@ -68,9 +68,10 @@ class jtop(Thread):
         try:
             manager.connect()
         except FileNotFoundError as e:
-            if e.errno == 2: #Message error: 'No such file or directory'
+            if e.errno == 2:  # Message error: 'No such file or directory'
+                # TODO: Fixe message error
                 raise jtop.JtopException("jetson_stats service not active, please run sudo ... ")
-            elif e.errno == 13: #Message error: 'Permission denied'
+            elif e.errno == 13:  # Message error: 'Permission denied'
                 raise jtop.JtopException("I can't access to server, check group ")
             else:
                 raise FileNotFoundError(e)
