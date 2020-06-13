@@ -18,9 +18,13 @@
 import logging
 import os
 import re
+import copy
 from threading import Thread
 from .service import CtrlManager, StatsManager
-from .core import import_os_variables
+from .core import (import_os_variables,
+                   get_uptime,
+                   status_disk,
+                   get_local_interfaces)
 try:
     FileNotFoundError
 except NameError:
@@ -59,7 +63,7 @@ class jtop(Thread):
         Thread.__init__(self)
         self._running = False
         # Load interval
-        self.interval = interval
+        self._interval = interval
         # Initialize observer
         self._observers = set()
         # Stats read from service
@@ -80,11 +84,13 @@ class jtop(Thread):
         except ValueError:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
             raise jtop.JtopException("mismatch python version between library and service")
-        self.controller = manager.get_queue()
+        self._controller = manager.get_queue()
         # Read stats
         StatsManager.register("sync_data")
         StatsManager.register('sync_condition')
-        self.broadcaster = StatsManager()
+        self._broadcaster = StatsManager()
+        # Version package
+        self.version = get_version()
 
     def attach(self, observer):
         """
@@ -110,7 +116,10 @@ class jtop(Thread):
     @property
     def stats(self):
         """
-            A dictionary with the status of the board
+        A dictionary with the status of the board
+
+        :return: Compacts jetson statistics
+        :rtype: dict
         """
         return self._stats
 
@@ -118,30 +127,110 @@ class jtop(Thread):
     def ram(self):
         return {}
 
-    def decode(self, data):
-        self._stats = data
+    def _total_power(self, dpower):
+        """
+        Private function to measure the total watt
+
+        :return: Total power and a second dictionary with all other measures
+        :rtype: dict, dict
+        """
+        # In according with:
+        # https://forums.developer.nvidia.com/t/power-consumption-monitoring/73608/8
+        # https://github.com/rbonghi/jetson_stats/issues/51
+        total_name = ""
+        for val in dpower:
+            if "_IN" in val:
+                total_name = val
+                break
+        # Extract the total from list
+        # Otherwise sum all values
+        # Example for Jetson Xavier
+        # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
+        if total_name:
+            total = dpower[total_name]
+            del dpower[total_name]
+            return total, dpower
+        # Otherwise measure all total power
+        total = {'cur': 0, 'avg': 0}
+        for power in dpower.values():
+            total['cur'] += power['cur']
+            total['avg'] += power['avg']
+        return {'Total': total}, dpower
+
+    @property
+    def power(self):
+        """
+        A dictionary with all power consumption
+
+        :return: Detailed information about power consumption
+        :rtype: dict
+        """
+        if 'WATT' not in self._stats:
+            return {}
+        raw_power = copy.copy(self._stats['WATT'])
+        # Refactor names
+        dpower = {str(k.replace("VDD_", "").replace("POM_", "").replace("_", " ")): v for k, v in raw_power.items()}
+        # Measure total power
+        total, dpower = self._total_power(dpower)
+        # Add total power
+        dpower.update(total)
+        return dpower
+
+    @property
+    def temperature(self):
+        """
+        A dictionary with board temperatures
+
+        :return: Detailed information about temperature
+        :rtype: dict
+        """
+        if 'TEMP' not in self._stats:
+            return {}
+        # Extract temperatures
+        temperatures = copy.copy(self._stats['TEMP'])
+        if 'PMIC' in temperatures:
+            del temperatures['PMIC']
+        # TODO: Decode all field to string
+        return temperatures
+
+    @property
+    def local_interfaces(self):
+        """ Local interfaces information """
+        return get_local_interfaces()
+
+    @property
+    def disk(self):
+        """ Disk status properties """
+        return status_disk()
+
+    @property
+    def uptime(self):
+        """ Up time """
+        return get_uptime()
+
+    def _decode(self):
         # Notifiy all observers
         for observer in self._observers:
             # Call all observer in list
-            observer(self.stats)
+            observer(self._stats)
 
     def run(self):
         # Acquire condition
-        self.sync_cond.acquire()
+        self._sync_cond.acquire()
         while self._running:
             # Send alive message
-            self.controller.put({})
+            self._controller.put({})
             try:
-                self.sync_cond.wait()
+                self._sync_cond.wait()
             except EOFError:
                 print("wait error")
                 break
             # Read stats from jtop service
-            data = self.sync_data.copy()
+            self._stats = self._sync_data.copy()
             # Decode and update all jtop data
-            self.decode(data)
+            self._decode()
         try:
-            self.sync_cond.release()
+            self._sync_cond.release()
         except IOError:
             print("Release error")
             raise jtop.JtopException("Lost connection to server")
@@ -150,18 +239,19 @@ class jtop(Thread):
 
     def start(self):
         # Connected to broadcaster
-        self.broadcaster.connect()
+        self._broadcaster.connect()
         # Initialize syncronized data and condition
-        self.sync_data = self.broadcaster.sync_data()
-        self.sync_cond = self.broadcaster.sync_condition()
+        self._sync_data = self._broadcaster.sync_data()
+        self._sync_cond = self._broadcaster.sync_condition()
         # Send alive message
-        self.controller.put({'interval': self.interval})
+        self._controller.put({'interval': self._interval})
         # Wait first value
         try:
-            self.sync_cond.acquire()
-            self.sync_cond.wait()
-            self.decode(self.sync_data.copy())
-            self.sync_cond.release()
+            self._sync_cond.acquire()
+            self._sync_cond.wait()
+            self._stats = self._sync_data.copy()
+            self._decode()
+            self._sync_cond.release()
         except (IOError, EOFError):
             logger.error("Release error")
             raise jtop.JtopException("Lost connection to server")
