@@ -67,8 +67,13 @@ class jtop(Thread):
         manager = CtrlManager()
         try:
             manager.connect()
-        except FileNotFoundError:
-            raise jtop.JtopException("jetson_stats service not active, please run sudo ... ")
+        except FileNotFoundError as e:
+            if e.errno == 2: #Message error: 'No such file or directory'
+                raise jtop.JtopException("jetson_stats service not active, please run sudo ... ")
+            elif e.errno == 13: #Message error: 'Permission denied'
+                raise jtop.JtopException("I can't access to server, check group ")
+            else:
+                raise FileNotFoundError(e)
         except ValueError:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
             raise jtop.JtopException("mismatch python version between library and service")
@@ -99,7 +104,7 @@ class jtop(Thread):
             # Send alive message
             self.controller.put({})
             try:
-                self.sync_cond.wait(1)
+                self.sync_cond.wait()
             except EOFError:
                 logger.error("wait error")
                 break
@@ -115,7 +120,7 @@ class jtop(Thread):
         # Release condition
         print("exit read")
 
-    def open(self):
+    def start(self):
         # Connected to broadcaster
         self.broadcaster.connect()
         # Initialize syncronized data and condition
@@ -123,8 +128,20 @@ class jtop(Thread):
         self.sync_cond = self.broadcaster.sync_condition()
         # Send alive message
         self.controller.put({'interval': self.interval})
+        # Wait first value
+        try:
+            self.sync_cond.acquire()
+            self.sync_cond.wait()
+            self.decode(self.sync_data.copy())
+            self.sync_cond.release()
+        except (IOError, EOFError):
+            logger.error("Release error")
+            raise jtop.JtopException("Lost connection to server")
         # Run thread reader
         self._running = True
+        super(jtop, self).start()
+
+    def open(self):
         self.start()
 
     def close(self):
@@ -134,7 +151,7 @@ class jtop(Thread):
 
     def __enter__(self):
         """ Enter function for 'with' statement """
-        self.open()
+        self.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

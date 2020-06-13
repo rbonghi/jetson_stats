@@ -19,6 +19,7 @@
 import logging
 # Operative system
 import os
+import stat
 # TODO temporary commented: import stat
 from multiprocessing import Process, Queue, Condition
 from multiprocessing.managers import BaseManager, SyncManager
@@ -67,9 +68,9 @@ class JtopServer(Process):
         - https://stackoverflow.com/questions/45342200/how-to-use-syncmanager-lock-or-event-correctly
         - https://stackoverflow.com/questions/2545961/how-to-synchronize-a-python-dict-with-multiprocessing
     """
-    def __init__(self, timeout=1):
+    def __init__(self, gain_timeout=2):
         # Timeout control command
-        self.timeout = timeout
+        self.gain_timeout = gain_timeout
         # Command queue
         self.q = Queue()
         # Dictionary to sync
@@ -104,11 +105,11 @@ class JtopServer(Process):
 
     def run(self):
         timeout = None
+        local_timeout = 1
         while True:
             try:
                 # Decode control message
                 control = self.q.get(timeout=timeout)
-                timeout = self.timeout
                 # Check if control is not empty
                 if not control:
                     continue
@@ -117,7 +118,12 @@ class JtopServer(Process):
                     interval = control['interval']
                     # Run stats
                     if self.tegra.open(interval=interval):
-                        print("tegrastats started")
+                        # Set timeout
+                        local_timeout = float((interval * self.gain_timeout) / 1000.0)
+                        # Status start tegrastats
+                        print("tegrastats started {timeout}s".format(timeout=local_timeout))
+                # Update timeout interval
+                timeout = local_timeout
             except queue.Empty:
                 # Close and log status
                 if self.tegra.close():
@@ -131,10 +137,8 @@ class JtopServer(Process):
         try:
             gid = getgrnam(PIPE_JTOP_USER).gr_gid
         except KeyError:
-            # TODO: Check how to be writeable only from same group
-            # raise Exception("Group jetson_stats does not exist!")
-            gid = os.getgid()
-            print("Check how to be writeable only from same group. Now use gid={gid}".format(gid=gid))
+            # User does not exist
+            raise Exception("Group {jtop_user} does not exist!".format(PIPE_JTOP_USER))
         # Start broadcaster
         self.broadcaster.start()
         # Initialize syncronized data and conditional
@@ -149,8 +153,9 @@ class JtopServer(Process):
         os.chown(PIPE_JTOP_STATS, os.getuid(), gid)
         # TODO: Change mode cotroller and stats
         # https://www.tutorialspoint.com/python/os_chmod.htm
-        # os.chmod(PIPE_JTOP_CTRL, stat.S_IWOTH)
-        # os.chmod(PIPE_JTOP_STATS, stat.S_IWOTH)
+        # Equivalent permission 660 srw-rw----
+        os.chmod(PIPE_JTOP_CTRL, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
+        os.chmod(PIPE_JTOP_STATS, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
         # Run server forever
         ctrl_server.serve_forever()
 
@@ -159,7 +164,7 @@ class JtopServer(Process):
         self.broadcaster.shutdown()
 
     def tegra_stats(self, stats):
-        print("stats")
+        #print("stats")
         # Update stats
         self.sync_cond.acquire()
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
