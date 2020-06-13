@@ -109,7 +109,6 @@ class Tegrastats:
             return False
         # Start thread Service client
         self._thread = Thread(target=self._read_tegrastats, args=[interval])
-        self._thread.setDaemon = True
         self._thread.start()
         return True
 

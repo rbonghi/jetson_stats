@@ -20,8 +20,8 @@ import logging
 # Operative system
 import os
 # TODO temporary commented: import stat
-from multiprocessing import Process, Queue, Lock
-from multiprocessing.managers import BaseManager, SyncManager, AcquirerProxy
+from multiprocessing import Process, Queue, Condition
+from multiprocessing.managers import BaseManager, SyncManager
 from grp import getgrnam
 from .core import Tegrastats
 # Create logger for tegrastats
@@ -52,10 +52,10 @@ class StatsManager(SyncManager):
     def __init__(self, authkey=AUTHKEY):
         super(StatsManager, self).__init__(address=(PIPE_JTOP_STATS), authkey=authkey.encode("utf-8"))
 
-    def status(self):
+    def sync_data(self):
         pass
 
-    def Lock(self):
+    def sync_condition(self):
         pass
 
 
@@ -68,10 +68,15 @@ class JtopServer(Process):
         - https://stackoverflow.com/questions/2545961/how-to-synchronize-a-python-dict-with-multiprocessing
     """
     def __init__(self, timeout=1):
-        self.q = Queue()
-        self.data = {}
-        self.global_lock = Lock()
+        # Timeout control command
         self.timeout = timeout
+        # Command queue
+        self.q = Queue()
+        # Dictionary to sync
+        self.data = {}
+        # Conditional to lock
+        self.cond = Condition()
+        # Load super Thread constructor
         super(JtopServer, self).__init__()
         # Remove old pipes if exists
         if os.path.exists(PIPE_JTOP_CTRL):
@@ -85,15 +90,17 @@ class JtopServer(Process):
         self.controller = CtrlManager()
         # Register stats
         # https://docs.python.org/2/library/multiprocessing.html#using-a-remote-manager
-        StatsManager.register('Lock', self.get_lock, AcquirerProxy)
-        StatsManager.register("status", callable=self._read_data,
-                              exposed=['__getitem__', 'copy', 'fromkeys', 'get', 'has_key', 'items',
-                                       'iteritems', 'iterkeys', 'itervalues', 'keys', 'setdefault',
-                                       'update', 'values', 'viewitems', 'viewkeys', 'viewvalues'])
+        StatsManager.register("sync_data", self._get_data)
+        StatsManager.register('sync_condition', self._get_cond)
         self.broadcaster = StatsManager()
-        self.broadcaster.start()
         # Setup tegrastats
         self.tegra = Tegrastats('/usr/bin/tegrastats', self.tegra_stats)
+
+    def _get_data(self):
+        return self.data
+
+    def _get_cond(self):
+        return self.cond
 
     def run(self):
         timeout = None
@@ -128,9 +135,15 @@ class JtopServer(Process):
             # raise Exception("Group jetson_stats does not exist!")
             gid = os.getgid()
             print("Check how to be writeable only from same group. Now use gid={gid}".format(gid=gid))
+        # Start broadcaster
+        self.broadcaster.start()
+        # Initialize syncronized data and conditional
+        self.sync_data = self.broadcaster.sync_data()
+        self.sync_cond = self.broadcaster.sync_condition()
         # Run the Control server
         super(JtopServer, self).start()
-        s = self.controller.get_server()
+        # Get control server
+        ctrl_server = self.controller.get_server()
         # Change owner
         os.chown(PIPE_JTOP_CTRL, os.getuid(), gid)
         os.chown(PIPE_JTOP_STATS, os.getuid(), gid)
@@ -138,8 +151,8 @@ class JtopServer(Process):
         # https://www.tutorialspoint.com/python/os_chmod.htm
         # os.chmod(PIPE_JTOP_CTRL, stat.S_IWOTH)
         # os.chmod(PIPE_JTOP_STATS, stat.S_IWOTH)
-        # Run server
-        s.serve_forever()
+        # Run server forever
+        ctrl_server.serve_forever()
 
     def close(self):
         print("End Server")
@@ -148,23 +161,14 @@ class JtopServer(Process):
     def tegra_stats(self, stats):
         print("stats")
         # Update stats
+        self.sync_cond.acquire()
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
-        self.data_sync = self.broadcaster.status()
-        with self.broadcaster.Lock():
-            self.data_sync.update(stats)
+        self.sync_data.update(stats)
+        # Notify and release token
+        self.sync_cond.notify_all()
+        self.sync_cond.release()
 
     def __del__(self):
         print("On delete")
         self.close()
-
-    def get_lock(self):
-        # https://stackoverflow.com/questions/45342200/how-to-use-syncmanager-lock-or-event-correctly
-        return self.global_lock
-
-    def _read_data(self):
-        with self.global_lock:
-            return self.data
-
-    def __call__(self):
-        return self
 # EOF

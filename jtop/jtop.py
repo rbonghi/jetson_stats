@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import os
 import re
 from threading import Thread
@@ -24,6 +25,8 @@ try:
     FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
+# Create logger for tegrastats
+logger = logging.getLogger(__name__)
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
@@ -54,12 +57,11 @@ class jtop(Thread):
 
     def __init__(self, interval=500):
         Thread.__init__(self)
+        self._running = False
         # Load interval
         self.interval = interval
         # Stats read from service
         self._stats = {}
-        # Initialize daemon
-        self.daemon = True
         # Open socket
         CtrlManager.register('get_queue')
         manager = CtrlManager()
@@ -72,9 +74,9 @@ class jtop(Thread):
             raise jtop.JtopException("mismatch python version between library and service")
         self.controller = manager.get_queue()
         # Read stats
-        StatsManager.register("status")
-        self.receiver = StatsManager()
-        self.receiver.connect()
+        StatsManager.register("sync_data")
+        StatsManager.register('sync_condition')
+        self.broadcaster = StatsManager()
 
     @property
     def stats(self):
@@ -83,31 +85,51 @@ class jtop(Thread):
         """
         return self._stats
 
+    @property
     def ram(self):
         return {}
 
+    def decode(self, data):
+        self._stats = data
+
     def run(self):
-        while True:
+        # Acquire condition
+        self.sync_cond.acquire()
+        while self._running:
+            # Send alive message
+            self.controller.put({})
+            try:
+                self.sync_cond.wait(1)
+            except EOFError:
+                logger.error("wait error")
+                break
             # Read stats from jtop service
-            status = dict(self.receiver.status())
-            # Update only if differents
-            if self._stats != status:
-                self._stats = status
-                # Send alive message
-                self.controller.put({})
+            data = self.sync_data.copy()
+            # Decode and update all jtop data
+            self.decode(data)
+        try:
+            self.sync_cond.release()
+        except IOError:
+            logger.error("Release error")
+            raise jtop.JtopException("Lost connection to server")
+        # Release condition
+        print("exit read")
 
     def open(self):
+        # Connected to broadcaster
+        self.broadcaster.connect()
+        # Initialize syncronized data and condition
+        self.sync_data = self.broadcaster.sync_data()
+        self.sync_cond = self.broadcaster.sync_condition()
         # Send alive message
         self.controller.put({'interval': self.interval})
-        # Read stats from jtop service
-        while not dict(self.receiver.status()):
-            pass
-        # Save and convert first value
-        self._stats = dict(self.receiver.status())
         # Run thread reader
+        self._running = True
         self.start()
 
     def close(self):
+        # Switch off broadcaster thread
+        self._running = False
         print("Close library")
 
     def __enter__(self):
