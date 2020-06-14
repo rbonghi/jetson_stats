@@ -18,6 +18,7 @@
 import logging
 import os
 import re
+import sys
 import copy
 from threading import Thread
 from .service import CtrlManager, StatsManager
@@ -240,7 +241,12 @@ class jtop(Thread):
             # Call all observer in list
             observer(self)
 
+    @property
+    def is_alive(self):
+        return self._running
+
     def run(self):
+        # https://stackoverflow.com/questions/13074847/catching-exception-in-context-manager-enter
         while self._running:
             # Send alive message
             self._controller.put({})
@@ -248,8 +254,10 @@ class jtop(Thread):
             try:
                 data = self._get_data()
             except EOFError:
-                self._running = False
-                raise jtop.JtopException("Lost connection with jtop server")
+                if self.__exit__(*sys.exc_info()):
+                    self._running = False
+                else:
+                    raise jtop.JtopException("Lost connection with jtop server")
             # Decode and update all jtop data
             self._decode(data)
 
@@ -280,16 +288,20 @@ class jtop(Thread):
         self.daemon = True
         super(jtop, self).start()
 
-    def open(self, blocking=True):
+    def loop_for_ever(self):
         self.start()
         # Blocking function to catch exceptions
-        if blocking:
-            self.join()
+        while True:
+            try:
+                self.join(timeout=0.1)
+            except (KeyboardInterrupt, SystemExit):
+                break
+        # Close jtop
+        self.close()
 
     def close(self):
         # Switch off broadcaster thread
         self._running = False
-        print("Close library")
 
     def __enter__(self):
         """ Enter function for 'with' statement """
@@ -299,4 +311,5 @@ class jtop(Thread):
     def __exit__(self, exc_type, exc_val, exc_tb):
         """ Exit function for 'with' statement """
         self.close()
+        return True
 # EOF
