@@ -62,6 +62,9 @@ class jtop(Thread):
 
     def __init__(self, interval=0.5):
         Thread.__init__(self)
+        # Error message from thread
+        self._error = ""
+        # Start server
         self._running = False
         # Load interval
         self._interval = float(interval)
@@ -253,13 +256,13 @@ class jtop(Thread):
             # Read stats from jtop service
             try:
                 data = self._get_data()
+                # Decode and update all jtop data
+                self._decode(data)
             except EOFError:
-                if self.__exit__(*sys.exc_info()):
-                    self._running = False
-                else:
-                    raise jtop.JtopException("Lost connection with jtop server")
-            # Decode and update all jtop data
-            self._decode(data)
+                # Run close loop
+                self.__exit__(*sys.exc_info())
+                # Write error message
+                self._error = "Lost connection with jtop server"
 
     def _get_data(self):
         # Check if is not set event otherwise wait
@@ -291,13 +294,16 @@ class jtop(Thread):
     def loop_for_ever(self):
         self.start()
         # Blocking function to catch exceptions
-        while True:
+        while self._running:
             try:
                 self.join(timeout=0.1)
             except (KeyboardInterrupt, SystemExit):
                 break
         # Close jtop
         self.close()
+        # Catch exception if exist
+        if self._error:
+            raise jtop.JtopException(self._error)
 
     def close(self):
         # Switch off broadcaster thread
@@ -311,5 +317,8 @@ class jtop(Thread):
     def __exit__(self, exc_type, exc_val, exc_tb):
         """ Exit function for 'with' statement """
         self.close()
+        # Catch exception if exist
+        if self._error:
+            raise jtop.JtopException(self._error)
         return True
 # EOF
