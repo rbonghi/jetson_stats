@@ -87,7 +87,7 @@ class jtop(Thread):
         self._controller = manager.get_queue()
         # Read stats
         StatsManager.register("sync_data")
-        StatsManager.register('sync_condition')
+        StatsManager.register('sync_event')
         self._broadcaster = StatsManager()
         # Version package
         self.version = get_version()
@@ -230,47 +230,41 @@ class jtop(Thread):
             observer(self._stats)
 
     def run(self):
-        # Acquire condition
-        self._sync_cond.acquire()
         while self._running:
             # Send alive message
             self._controller.put({})
-            try:
-                self._sync_cond.wait(1)
-            except EOFError:
-                print("wait error")
-                break
             # Read stats from jtop service
-            data = self._sync_data.copy()
+            data = self._get_data()
             # Decode and update all jtop data
             self._decode(data)
-        try:
-            self._sync_cond.release()
-        except IOError:
-            print("Release error")
-            raise jtop.JtopException("Lost connection to server")
         # Release condition
         print("exit read")
+
+    def _get_data(self):
+        # Check if is not set event otherwise wait
+        if not self._sync_event.is_set():
+            self._sync_event.wait()
+        # Read stats from jtop service
+        data = self._sync_data.copy()
+        # Clear event
+        self._sync_event.clear()
+        return data
 
     def start(self):
         # Connected to broadcaster
         self._broadcaster.connect()
         # Initialize syncronized data and condition
         self._sync_data = self._broadcaster.sync_data()
-        self._sync_cond = self._broadcaster.sync_condition()
+        self._sync_event = self._broadcaster.sync_event()
         # Send alive message
         self._controller.put({'interval': self._interval})
         # Wait first value
-        try:
-            self._sync_cond.acquire()
-            self._sync_cond.wait()
-            self._decode(self._sync_data.copy())
-            self._sync_cond.release()
-        except (IOError, EOFError):
-            logger.error("Release error")
-            raise jtop.JtopException("Lost connection to server")
+        data = self._get_data()
+        # Decode and update all jtop data
+        self._decode(data)
         # Run thread reader
         self._running = True
+        self.daemon = True
         super(jtop, self).start()
 
     def open(self):

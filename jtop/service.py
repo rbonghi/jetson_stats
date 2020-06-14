@@ -20,7 +20,7 @@ import logging
 # Operative system
 import os
 import stat
-from multiprocessing import Process, Queue, Condition
+from multiprocessing import Process, Queue, Event
 from multiprocessing.managers import BaseManager, SyncManager
 from grp import getgrnam
 from .core import Tegrastats
@@ -56,7 +56,7 @@ class StatsManager(SyncManager):
     def sync_data(self):
         pass
 
-    def sync_condition(self):
+    def sync_event(self):
         pass
 
 
@@ -77,11 +77,8 @@ class JtopServer(Process):
         self.q = Queue()
         # Dictionary to sync
         self.data = {}
-        # Conditional to lock
-        # TODO: Check adding an RLock
-        # https://docs.python.org/2.0/lib/condition-objects.html
-        # https://docs.python.org/2.7/library/threading.html#condition-objects
-        self.cond = Condition()
+        # Event lock
+        self.event = Event()
         # Load super Thread constructor
         super(JtopServer, self).__init__()
         # Remove old pipes if exists
@@ -98,7 +95,7 @@ class JtopServer(Process):
         # Register stats
         # https://docs.python.org/2/library/multiprocessing.html#using-a-remote-manager
         StatsManager.register("sync_data", callable=lambda: self.data)
-        StatsManager.register('sync_condition', callable=lambda: self.cond)
+        StatsManager.register('sync_event', callable=lambda: self.event)
         self.broadcaster = StatsManager()
         # Initialize jetson_clocks controller
         self.jc = JetsonClocks(config_file)
@@ -145,7 +142,7 @@ class JtopServer(Process):
         self.broadcaster.start()
         # Initialize syncronized data and conditional
         self.sync_data = self.broadcaster.sync_data()
-        self.sync_cond = self.broadcaster.sync_condition()
+        self.sync_event = self.broadcaster.sync_event()
         # Run the Control server
         super(JtopServer, self).start()
         # Get control server
@@ -167,13 +164,11 @@ class JtopServer(Process):
 
     def tegra_stats(self, stats):
         print("tegrastats read")
-        # Update stats
-        self.sync_cond.acquire()
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(stats)
-        # Notify and release token
-        self.sync_cond.notify_all()
-        self.sync_cond.release()
+        # Set event for all clients
+        if not self.sync_event.is_set():
+            self.sync_event.set()
 
     def __del__(self):
         print("On delete")
