@@ -59,7 +59,7 @@ class jtop(Thread):
         """ Jtop general exception """
         pass
 
-    def __init__(self, interval=500):
+    def __init__(self, interval=0.5):
         Thread.__init__(self)
         self._running = False
         # Load interval
@@ -100,9 +100,6 @@ class jtop(Thread):
         :type observer: function
         """
         self._observers.add(observer)
-        # Autostart the jtop if is off
-        if self._observers:
-            self.start()
 
     def detach(self, observer):
         """
@@ -221,12 +218,13 @@ class jtop(Thread):
             # Send alive message
             self._controller.put({})
             try:
-                self._sync_cond.wait()
+                self._sync_cond.wait(1)
             except EOFError:
                 print("wait error")
                 break
             # Read stats from jtop service
             self._stats = self._sync_data.copy()
+            print("Data reived!")
             # Decode and update all jtop data
             self._decode()
         try:

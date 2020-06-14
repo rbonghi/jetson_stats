@@ -114,15 +114,15 @@ class JtopServer(Process):
                     continue
                 # Initialize tegrastats speed
                 if 'interval' in control:
-                    interval = control['interval']
+                    local_timeout = control['interval']
+                    # Set timeout
+                    interval = int(local_timeout * 1000)
                     # Run stats
                     if self.tegra.open(interval=interval):
-                        # Set timeout
-                        local_timeout = float((interval * self.gain_timeout) / 1000.0)
                         # Status start tegrastats
-                        print("tegrastats started {timeout}s".format(timeout=local_timeout))
+                        print("tegrastats started {interval}ms".format(interval=interval))
                 # Update timeout interval
-                timeout = local_timeout
+                timeout = local_timeout * self.gain_timeout
             except queue.Empty:
                 # Close and log status
                 if self.tegra.close():
