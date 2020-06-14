@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 # Logging
 import logging
 # Jtop server
@@ -49,11 +50,11 @@ class bcolors:
 
 # https://stackoverflow.com/questions/11114589/creating-hidden-arguments-with-python-argparse
 def main():
-
+    path = sys.prefix
     # Initialize logging level
     logging.basicConfig()
     # jtop service
-    server = JtopServer()
+    server = JtopServer(path)
     print("Service started")
     try:
         server.start()

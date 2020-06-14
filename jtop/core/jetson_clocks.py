@@ -21,9 +21,16 @@ import os
 import logging
 # Launch command
 import subprocess as sp
-
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
+
+
+def locate_jetson_clocks():
+    for f_fc in ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']:
+        if os.path.isfile(f_fc):
+            logger.info("Load jetson_clocks {}".format(f_fc))
+            return f_fc
+    raise JetsonClocks.JCException("Tegrastats is not availabe on this board")
 
 
 class JetsonClocks(object):
@@ -47,21 +54,11 @@ class JetsonClocks(object):
     class JCException(Exception):
         pass
 
-    def __init__(self, config_file, service_name='jetson_performance'):
+    def __init__(self, path, config_file_name="/l4t_dfs.conf"):
         # Config file
-        self.config_file = config_file + "/l4t_dfs.conf"
-        # Service
-        self.service_name = service_name
-        self.last_status = ""
+        self.config_file = path + config_file_name
         # Jetson Clocks path
-        if os.path.isfile("/usr/bin/jetson_clocks"):
-            self.jc_bin = "/usr/bin/jetson_clocks"
-        elif os.path.isfile("/home/nvidia/jetson_clocks.sh"):
-            self.jc_bin = "/home/nvidia/jetson_clocks.sh"
-        else:
-            raise JetsonClocks.JCException("No jetson_clock script is availble in this board")
-        # Store configuration if does not exist
-        self.store()
+        self.jc_bin = locate_jetson_clocks()
 
     def show(self):
         p = sp.Popen([self.jc_bin, '--show'], stdout=sp.PIPE, stderr=sp.PIPE)
@@ -115,16 +112,7 @@ class JetsonClocks(object):
             # NV Power Mode: MAXN
         return status
 
-    @property
-    def service(self):
-        p = sp.Popen(['systemctl', 'is-active', self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = p.communicate()
-        return str(out.decode("utf-8")).strip()
-
-    @property
-    def status(self):
-        # Load jetson_clocks show
-        show = self.show()
+    def isAlive(self, show):
         # Make statistics
         stat = []
         if 'cpu' in show:
@@ -162,22 +150,6 @@ class JetsonClocks(object):
         # make service script
         start_val = "start" if value else "stop"
         p = sp.Popen(['systemctl', start_val, self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
-        _, err = p.communicate()
-        self.last_status = err.decode("utf-8")
-
-    @property
-    def enable(self):
-        p = sp.Popen(['systemctl', 'is-enabled', self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = p.communicate()
-        enable_val = True if str(out.decode("utf-8")).strip() == "enabled" else False
-        return enable_val
-
-    @enable.setter
-    def enable(self, value):
-        if not isinstance(value, bool):
-            raise Exception("Use a boolean")
-        enable_val = "enable" if value else "disable"
-        p = sp.Popen(['systemctl', enable_val, self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
         _, err = p.communicate()
         self.last_status = err.decode("utf-8")
 

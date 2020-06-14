@@ -24,6 +24,7 @@ from multiprocessing import Process, Queue, Condition
 from multiprocessing.managers import BaseManager, SyncManager
 from grp import getgrnam
 from .core import Tegrastats
+from .core import JetsonClocks
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -67,7 +68,9 @@ class JtopServer(Process):
         - https://stackoverflow.com/questions/45342200/how-to-use-syncmanager-lock-or-event-correctly
         - https://stackoverflow.com/questions/2545961/how-to-synchronize-a-python-dict-with-multiprocessing
     """
-    def __init__(self, gain_timeout=2):
+
+    def __init__(self, path, gain_timeout=2):
+        config_file = path
         # Timeout control command
         self.gain_timeout = gain_timeout
         # Command queue
@@ -93,8 +96,10 @@ class JtopServer(Process):
         StatsManager.register("sync_data", self._get_data)
         StatsManager.register('sync_condition', self._get_cond)
         self.broadcaster = StatsManager()
+        # Initialize jetson_clocks controller
+        self.jc = JetsonClocks(config_file)
         # Setup tegrastats
-        self.tegra = Tegrastats('/usr/bin/tegrastats', self.tegra_stats)
+        self.tegra = Tegrastats(self.tegra_stats)
 
     def _get_data(self):
         return self.data

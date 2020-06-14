@@ -17,6 +17,7 @@
 
 # Logging
 import logging
+import os
 # Launch command
 import subprocess as sp
 # Threading
@@ -25,6 +26,14 @@ from threading import Thread
 from .tegra_parse import VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, WATTS
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
+
+
+def locate_tegrastats():
+    for f_tegra in ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']:
+        if os.path.isfile(f_tegra):
+            logger.info("Load tegrastats {}".format(f_tegra))
+            return f_tegra
+    raise Tegrastats.TegrastatsException("Tegrastats is not availabe on this board")
 
 
 class Tegrastats:
@@ -38,11 +47,11 @@ class Tegrastats:
     class TegrastatsException(Exception):
         pass
 
-    def __init__(self, path, callback):
+    def __init__(self, callback):
         # Initialize jetson stats
         self._stats = {}
         # Start process tegrastats
-        self.path = path
+        self.path = locate_tegrastats()
         # Define Tegrastats process
         self._thread = None
         self.p = None
