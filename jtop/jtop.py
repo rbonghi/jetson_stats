@@ -234,16 +234,18 @@ class jtop(Thread):
             # Send alive message
             self._controller.put({})
             # Read stats from jtop service
-            data = self._get_data()
+            try:
+                data = self._get_data()
+            except EOFError:
+                self._running = False
+                raise jtop.JtopException("Lost connection with jtop server")
             # Decode and update all jtop data
             self._decode(data)
-        # Release condition
-        print("exit read")
 
     def _get_data(self):
         # Check if is not set event otherwise wait
         if not self._sync_event.is_set():
-            self._sync_event.wait()
+            self._sync_event.wait(self._interval * 2)
         # Read stats from jtop service
         data = self._sync_data.copy()
         # Clear event
@@ -267,8 +269,11 @@ class jtop(Thread):
         self.daemon = True
         super(jtop, self).start()
 
-    def open(self):
+    def open(self, blocking=True):
         self.start()
+        # Blocking function to catch exceptions
+        if blocking:
+            self.join()
 
     def close(self):
         # Switch off broadcaster thread
