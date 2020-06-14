@@ -63,7 +63,7 @@ class jtop(Thread):
         Thread.__init__(self)
         self._running = False
         # Load interval
-        self._interval = interval
+        self._interval = float(interval)
         # Initialize observer
         self._observers = set()
         # Stats read from service
@@ -124,6 +124,14 @@ class jtop(Thread):
     def ram(self):
         return {}
 
+    @property
+    def cpu(self):
+        if 'CPU' not in self._stats:
+            return {}
+        # Extract CPU
+        cpus = copy.copy(self._stats['CPU'])
+        return cpus
+
     def _total_power(self, dpower):
         """
         Private function to measure the total watt
@@ -146,7 +154,7 @@ class jtop(Thread):
         if total_name:
             total = dpower[total_name]
             del dpower[total_name]
-            return total, dpower
+            return {'Total': total}, dpower
         # Otherwise measure all total power
         total = {'cur': 0, 'avg': 0}
         for power in dpower.values():
@@ -164,9 +172,7 @@ class jtop(Thread):
         """
         if 'WATT' not in self._stats:
             return {}
-        raw_power = copy.copy(self._stats['WATT'])
-        # Refactor names
-        dpower = {str(k.replace("VDD_", "").replace("POM_", "").replace("_", " ")): v for k, v in raw_power.items()}
+        dpower = copy.copy(self._stats['WATT'])
         # Measure total power
         total, dpower = self._total_power(dpower)
         # Add total power
@@ -185,9 +191,6 @@ class jtop(Thread):
             return {}
         # Extract temperatures
         temperatures = copy.copy(self._stats['TEMP'])
-        if 'PMIC' in temperatures:
-            del temperatures['PMIC']
-        # TODO: Decode all field to string
         return temperatures
 
     @property
@@ -205,7 +208,22 @@ class jtop(Thread):
         """ Up time """
         return get_uptime()
 
-    def _decode(self):
+    def _decode(self, data):
+        """
+        Internal decode function to decode and refactoring data
+        """
+        if 'WATT' in data:
+            # Refactor names
+            data['WATT'] = {str(k.replace("VDD_", "").replace("POM_", "").replace("_", " ")): v for k, v in data['WATT'].items()}
+        if 'TEMP' in data:
+            # Remove PMIC temperature
+            if 'PMIC' in data['TEMP']:
+                del data['TEMP']['PMIC']
+            # TODO: Decode all field to string
+        # Store data in stats
+        self._stats = data
+        # TODO: Store nvpmode and jetson_clocks
+        # ...
         # Notifiy all observers
         for observer in self._observers:
             # Call all observer in list
@@ -223,10 +241,9 @@ class jtop(Thread):
                 print("wait error")
                 break
             # Read stats from jtop service
-            self._stats = self._sync_data.copy()
-            print("Data reived!")
+            data = self._sync_data.copy()
             # Decode and update all jtop data
-            self._decode()
+            self._decode(data)
         try:
             self._sync_cond.release()
         except IOError:
@@ -247,8 +264,7 @@ class jtop(Thread):
         try:
             self._sync_cond.acquire()
             self._sync_cond.wait()
-            self._stats = self._sync_data.copy()
-            self._decode()
+            self._decode(self._sync_data.copy())
             self._sync_cond.release()
         except (IOError, EOFError):
             logger.error("Release error")

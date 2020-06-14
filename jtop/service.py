@@ -163,6 +163,7 @@ class JtopServer(Process):
         self.broadcaster.shutdown()
 
     def tegra_stats(self, stats):
+        print("tegrastats read")
         # Update stats
         self.sync_cond.acquire()
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
