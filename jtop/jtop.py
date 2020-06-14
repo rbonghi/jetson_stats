@@ -122,7 +122,11 @@ class jtop(Thread):
 
     @property
     def ram(self):
-        return {}
+        if 'RAM' not in self._stats:
+            return {}
+        # Extract RAM
+        ram = copy.copy(self._stats['RAM'])
+        return ram
 
     @property
     def cpu(self):
@@ -131,6 +135,14 @@ class jtop(Thread):
         # Extract CPU
         cpus = copy.copy(self._stats['CPU'])
         return cpus
+
+    @property
+    def gpu(self):
+        if 'GR3D' not in self._stats:
+            return {}
+        # Extract GPU
+        gpu = copy.copy(self._stats['GR3D'])
+        return gpu
 
     def _total_power(self, dpower):
         """
@@ -219,7 +231,6 @@ class jtop(Thread):
             # Remove PMIC temperature
             if 'PMIC' in data['TEMP']:
                 del data['TEMP']['PMIC']
-            # TODO: Decode all field to string
         # Store data in stats
         self._stats = data
         # TODO: Store nvpmode and jetson_clocks
@@ -227,7 +238,7 @@ class jtop(Thread):
         # Notifiy all observers
         for observer in self._observers:
             # Call all observer in list
-            observer(self._stats)
+            observer(self)
 
     def run(self):
         while self._running:

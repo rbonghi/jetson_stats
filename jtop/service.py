@@ -68,6 +68,9 @@ class JtopServer(Process):
         - https://stackoverflow.com/questions/45342200/how-to-use-syncmanager-lock-or-event-correctly
         - https://stackoverflow.com/questions/2545961/how-to-synchronize-a-python-dict-with-multiprocessing
     """
+    class Exception(Exception):
+        """ Jtop general exception """
+        pass
 
     def __init__(self, path, gain_timeout=2):
         config_file = path
@@ -81,14 +84,6 @@ class JtopServer(Process):
         self.event = Event()
         # Load super Thread constructor
         super(JtopServer, self).__init__()
-        # Remove old pipes if exists
-        # TODO: Raise if pipe exists otherwise with force to close
-        if os.path.exists(PIPE_JTOP_CTRL):
-            print("Remove old pipe {pipe}".format(pipe=PIPE_JTOP_CTRL))
-            os.remove(PIPE_JTOP_CTRL)
-        if os.path.exists(PIPE_JTOP_STATS):
-            print("Remove old pipe {pipe}".format(pipe=PIPE_JTOP_STATS))
-            os.remove(PIPE_JTOP_STATS)
         # Register queue manager
         CtrlManager.register('get_queue', callable=lambda: self.q)
         self.controller = CtrlManager()
@@ -132,14 +127,23 @@ class JtopServer(Process):
             except KeyboardInterrupt:
                 break
 
-    def start(self):
+    def start(self, force=False):
         try:
             gid = getgrnam(PIPE_JTOP_USER).gr_gid
         except KeyError:
             # User does not exist
             raise Exception("Group {jtop_user} does not exist!".format(jtop_user=PIPE_JTOP_USER))
+        # Remove old pipes if exists
+        if force and (os.path.exists(PIPE_JTOP_CTRL) or os.path.exists(PIPE_JTOP_STATS)):
+            print("Remove pipe {pipe}".format(pipe=PIPE_JTOP_CTRL))
+            os.remove(PIPE_JTOP_CTRL)
+            print("Remove pipe {pipe}".format(pipe=PIPE_JTOP_STATS))
+            os.remove(PIPE_JTOP_STATS)
         # Start broadcaster
-        self.broadcaster.start()
+        try:
+            self.broadcaster.start()
+        except EOFError:
+            raise JtopServer.Exception("Server already alive")
         # Initialize syncronized data and conditional
         self.sync_data = self.broadcaster.sync_data()
         self.sync_event = self.broadcaster.sync_event()

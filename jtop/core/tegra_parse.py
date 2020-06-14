@@ -93,11 +93,11 @@ def RAM(text):
     if match:
         return {'use': int(match.group(1)),
                 'tot': int(match.group(2)),
-                'unit': match.group(3),
+                'unit': str(match.group(3)),
                 # group 4 is an optional space
                 'lfb': {'nblock': int(match.group(5)),
                         'size': int(match.group(6)),
-                        'unit': match.group(7)}
+                        'unit': str(match.group(7))}
                 }
     else:
         return {}
@@ -167,28 +167,26 @@ def CPUS(text):
         Z = CPU frequency in megahertz. Goes up or down dynamically depending on the CPU workload.
     """
     match = CPU_RE.search(text)
-    cpus = []
+    cpus = {}
     if match:
         # Extract
         cpus_list = match.group(1).split(',')
         for idx, cpu_str in enumerate(cpus_list):
             # Set name CPU
-            cpu = {'name': 'CPU' + str(idx + 1)}
+            name = 'CPU' + str(idx + 1)
+            cpus[name] = {}
             # status
             if 'off' == cpu_str:
-                cpu['status'] = "OFF"
-            else:
-                cpu['status'] = "ON"
-                val = val_freq(cpu_str)
-                cpu.update(val)
-                # Update status governor
-                governor_name = '/sys/devices/system/cpu/cpu' + str(idx) + '/cpufreq/scaling_governor'
-                # Add governor CPU if only exist
-                if os.path.isfile(governor_name):
-                    with open(governor_name, 'r') as f:
-                        cpu['governor'] = f.read()[:-1]
-            # Add in list
-            cpus += [cpu]
+                continue
+            # Add data CPU
+            val = val_freq(cpu_str)
+            cpus[name].update(val)
+            # Update status governor
+            governor_name = '/sys/devices/system/cpu/cpu' + str(idx) + '/cpufreq/scaling_governor'
+            # Add governor CPU if only exist
+            if os.path.isfile(governor_name):
+                with open(governor_name, 'r') as f:
+                    cpus[name]['governor'] = f.read()[:-1]
     return cpus
 
 
@@ -200,7 +198,7 @@ def TEMPS(text):
         X = Current temperature
         /sys/devices/virtual/thermal/thermal_zoneX/type.
     """
-    return {name: float(val) for name, val in re.findall(TEMP_RE, text)}
+    return {str(name): float(val) for name, val in re.findall(TEMP_RE, text)}
 
 
 def WATTS(text):
