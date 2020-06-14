@@ -80,7 +80,7 @@ class JtopServer(Process):
         # Conditional to lock
         # TODO: Check adding an RLock
         # https://docs.python.org/2.0/lib/condition-objects.html
-        # https://docs.python.org/2.7/library/threading.html#condition-objects
+        # https://docs.python.org/2.7/library/threading.html#condition-objects
         self.cond = Condition()
         # Load super Thread constructor
         super(JtopServer, self).__init__()
