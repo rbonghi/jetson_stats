@@ -63,7 +63,7 @@ class jtop(Thread):
     def __init__(self, interval=0.5):
         Thread.__init__(self)
         # Error message from thread
-        self._error = ""
+        self._error = None
         # Start server
         self._running = False
         # Load interval
@@ -259,10 +259,13 @@ class jtop(Thread):
                 # Decode and update all jtop data
                 self._decode(data)
             except EOFError:
+                # Raise jtop exception
+                raise jtop.JtopException("Lost connection with jtop server")
+            except Exception as error:
                 # Run close loop
                 self.__exit__(*sys.exc_info())
                 # Write error message
-                self._error = "Lost connection with jtop server"
+                self._error = error
 
     def _get_data(self):
         # Check if is not set event otherwise wait
@@ -282,10 +285,14 @@ class jtop(Thread):
         self._sync_event = self._broadcaster.sync_event()
         # Send alive message
         self._controller.put({'interval': self._interval})
-        # Wait first value
-        data = self._get_data()
-        # Decode and update all jtop data
-        self._decode(data)
+        try:
+            # Wait first value
+            data = self._get_data()
+            # Decode and update all jtop data
+            self._decode(data)
+        except EOFError:
+            # Raise jtop exception
+            raise jtop.JtopException("Lost connection with jtop server")
         # Run thread reader
         self._running = True
         self.daemon = True
@@ -301,13 +308,13 @@ class jtop(Thread):
                 break
         # Close jtop
         self.close()
-        # Catch exception if exist
-        if self._error:
-            raise jtop.JtopException(self._error)
 
     def close(self):
         # Switch off broadcaster thread
         self._running = False
+        # Catch exception if exist
+        if self._error:
+            raise Exception(self._error)
 
     def __enter__(self):
         """ Enter function for 'with' statement """
@@ -317,8 +324,5 @@ class jtop(Thread):
     def __exit__(self, exc_type, exc_val, exc_tb):
         """ Exit function for 'with' statement """
         self.close()
-        # Catch exception if exist
-        if self._error:
-            raise jtop.JtopException(self._error)
         return True
 # EOF
