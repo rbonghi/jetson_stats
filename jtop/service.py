@@ -75,10 +75,14 @@ class JtopServer(Process):
         # Dictionary to sync
         self.data = {}
         # Conditional to lock
+        # TODO: Check adding an RLock
+        # https://docs.python.org/2.0/lib/condition-objects.html
+        # https://docs.python.org/2.7/library/threading.html#condition-objects
         self.cond = Condition()
         # Load super Thread constructor
         super(JtopServer, self).__init__()
         # Remove old pipes if exists
+        # TODO: Raise if pipe exists otherwise with force to close
         if os.path.exists(PIPE_JTOP_CTRL):
             print("Remove old pipe {pipe}".format(pipe=PIPE_JTOP_CTRL))
             os.remove(PIPE_JTOP_CTRL)
@@ -90,17 +94,11 @@ class JtopServer(Process):
         self.controller = CtrlManager()
         # Register stats
         # https://docs.python.org/2/library/multiprocessing.html#using-a-remote-manager
-        StatsManager.register("sync_data", self._get_data)
-        StatsManager.register('sync_condition', self._get_cond)
+        StatsManager.register("sync_data", callable=lambda: self.data)
+        StatsManager.register('sync_condition', callable=lambda: self.cond)
         self.broadcaster = StatsManager()
         # Setup tegrastats
         self.tegra = Tegrastats('/usr/bin/tegrastats', self.tegra_stats)
-
-    def _get_data(self):
-        return self.data
-
-    def _get_cond(self):
-        return self.cond
 
     def run(self):
         timeout = None
