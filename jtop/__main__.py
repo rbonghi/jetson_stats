@@ -73,15 +73,18 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
-    # Initialize logging level
-    logging.basicConfig()
 
     # Run service
     if args.service:
+        # Initialize logging level
+        logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+        # Run service
         service()
         exit(0)
     # Run the client
     try:
+        # Initialize logging level
+        logging.basicConfig()
         # Convert refresh to second
         interval = float(args.refresh / 1000.0)
         with jtop(interval=interval) as jetson:

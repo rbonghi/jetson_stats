@@ -21,12 +21,14 @@ import logging
 import os
 import sys
 import stat
+import json
+import time
 import traceback
+from grp import getgrnam
 from multiprocessing import Process, Queue, Event
 from multiprocessing.managers import SyncManager
-from grp import getgrnam
-from .core import Tegrastats
-from .core import JetsonClocks
+# jetson_stats imports
+from .core import Tegrastats, JetsonClocks, get_uptime
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -35,9 +37,13 @@ try:
 except ImportError:
     import Queue as queue
 
+# Pipe configuration
+PATH_FOLDER = '/local/jetson_stats'
 PIPE_JTOP = '/tmp/jtop'
 PIPE_JTOP_USER = 'jetson_stats'
 AUTHKEY = 'aaabbcc'
+# Service configuration
+CONFIG_JTOP = "config.json"
 
 
 class JtopManager(SyncManager):
@@ -68,7 +74,17 @@ class JtopServer(Process):
         pass
 
     def __init__(self, path, gain_timeout=2):
-        config_file = path
+        # Configuration dictionary
+        self.config = {}
+        # Load configuration path
+        config_path = path + PATH_FOLDER
+        config_file = config_path + '/' + CONFIG_JTOP
+        # Load configuration if exist
+        if os.path.isfile(config_file):
+            logger.info("Load config from {path}".format(path=config_file))
+            with open(config_file) as json_file:
+                self.config = json.load(json_file)
+        # Error queue
         self._error = Queue()
         # Timeout control command
         self.gain_timeout = gain_timeout
@@ -87,7 +103,9 @@ class JtopServer(Process):
         JtopManager.register('sync_event', callable=lambda: self.event)
         self.broadcaster = JtopManager()
         # Initialize jetson_clocks controller
-        self.jc = JetsonClocks(config_file)
+        self.jetson_clocks = JetsonClocks(config_path, self.config)
+        # Run setup
+        self.jetson_clocks.initialization()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
 

@@ -17,13 +17,21 @@
 
 import re
 import os
+import time
 # Logging
 import logging
 # Launch command
 import subprocess as sp
+from datetime import datetime, timedelta
+from threading import Thread
+# Get uptime
+from .common import get_uptime
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
+CONFIG_DEFAULT_BOOT = False
+CONFIG_DEFAULT_DELAY = 60  # In seconds
+CONFIG_DEFAULT_L4T_FILE = "l4t_dfs.conf"
 
 def locate_jetson_clocks():
     for f_fc in ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']:
@@ -54,11 +62,52 @@ class JetsonClocks(object):
     class JCException(Exception):
         pass
 
-    def __init__(self, path, config_file_name="/l4t_dfs.conf"):
+    def __init__(self, path, config):
+        # Load configuration
+        self.config = config.get('jetson_clocks', {})
+        jetson_clocks_file = self.config.get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
         # Config file
-        self.config_file = path + config_file_name
+        self.config_l4t = path + "/" + jetson_clocks_file
         # Jetson Clocks path
         self.jc_bin = locate_jetson_clocks()
+        # Check if running a root
+        if os.getuid() != 0:
+            raise JetsonClocks.JCException("Need sudo")
+
+    def _jetson_clocks_boot(self, boot_time):
+        # Measure remaining time from boot
+        boot_time = timedelta(seconds=boot_time)
+        up_time = timedelta(seconds=get_uptime())
+        # If needtime make a sleep
+        if up_time < boot_time:
+            delta = (boot_time - up_time).total_seconds()
+            logger.info("Starting jetson_clocks in: {delta}s".format(delta=delta))
+            time.sleep(delta)
+        # Start jetson_clocks
+        self.start()
+        logger.info("jetson_clocks running")
+
+    def initialization(self):
+        # Load jetson_clocks start up information
+        jetson_clocks_boot = self.config.get('boot', CONFIG_DEFAULT_BOOT)
+        jetson_clocks_start = self.config.get('wait', CONFIG_DEFAULT_DELAY)
+        # Check if exist configuration file
+        if not os.path.isfile(self.config_l4t):
+            if self.is_alive:
+                logger.warning("I can't store jetson_clocks is already running")
+            else:
+                logger.info("Store jetson_clocks configuration in {file}".format(file=self.config_l4t))
+                self.store()
+        # Check which version is L4T is loaded
+        # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
+        # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
+        # Temporary disabled to find a best way to start this service.
+        # The service ondemand disabled doesn't improve the performance of the start-up
+        # If jetson_clocks on boot run a thread
+        if jetson_clocks_boot and not self.is_alive:
+            # Start thread Service client
+            self._thread = Thread(target=self._jetson_clocks_boot, args=[jetson_clocks_start])
+            self._thread.start()
 
     def show(self):
         p = sp.Popen([self.jc_bin, '--show'], stdout=sp.PIPE, stderr=sp.PIPE)
@@ -112,7 +161,10 @@ class JetsonClocks(object):
             # NV Power Mode: MAXN
         return status
 
-    def isAlive(self, show):
+    @property
+    def is_alive(self):
+        # Load status jetson_clocks
+        show = self.show()
         # Make statistics
         stat = []
         if 'cpu' in show:
@@ -135,42 +187,39 @@ class JetsonClocks(object):
             raise JetsonClocks.JCException("Require super user")
         return all(stat)
 
-    @property
     def start(self):
-        start_val = True if self.service == "active" else False
-        return start_val
+        # Run jetson_clocks
+        p = sp.Popen([self.jc_bin], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = p.communicate()
+        # Extract result
+        message = out.decode("utf-8")
+        if message:
+            raise JetsonClocks.JCException("Error to start jetson_clocks: {message}".format(message=message))
 
-    @start.setter
-    def start(self, value):
-        if not isinstance(value, bool):
-            raise Exception("Use a boolean")
-        # Do not run if jetson_clocks as already running
-        if self.status and value:
-            return
-        # make service script
-        start_val = "start" if value else "stop"
-        p = sp.Popen(['systemctl', start_val, self.service_name + '.service'], stdout=sp.PIPE, stderr=sp.PIPE)
-        _, err = p.communicate()
-        self.last_status = err.decode("utf-8")
+    def stop(self):
+        # Run jetson_clocks
+        p = sp.Popen([self.jc_bin, '--restore', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = p.communicate()
+        # Extract result
+        message = out.decode("utf-8")
+        if message:
+            raise JetsonClocks.JCException("Error to start jetson_clocks: {message}".format(message=message))
 
     def store(self):
-        if not os.path.isfile(self.config_file):
-            p = sp.Popen([self.jc_bin, '--store', self.config_file], stdout=sp.PIPE)
-            out, _ = p.communicate()
-            # Extract result
-            if out.decode("utf-8"):
-                return True
-            else:
-                return False
-        else:
-            return False
-
-    def clear(self):
-        if os.path.isfile(self.config_file):
-            # Remove configuration file
-            os.remove(self.config_file)
+        # Store configuration jetson_clocks
+        p = sp.Popen([self.jc_bin, '--store', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = p.communicate()
+        # Extract result
+        if out.decode("utf-8"):
             return True
         else:
             return False
 
+    def clear(self):
+        if os.path.isfile(self.config_l4t):
+            # Remove configuration file
+            os.remove(self.config_l4t)
+            return True
+        else:
+            return False
 # EOF
