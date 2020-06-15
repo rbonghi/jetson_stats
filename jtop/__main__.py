@@ -58,7 +58,7 @@ def main():
     print("Service started")
     try:
         server.start()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         pass
     # Close stats server
     print("Close service")

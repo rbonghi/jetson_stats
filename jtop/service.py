@@ -19,7 +19,9 @@
 import logging
 # Operative system
 import os
+import sys
 import stat
+import traceback
 from multiprocessing import Process, Queue, Event
 from multiprocessing.managers import BaseManager, SyncManager
 from grp import getgrnam
@@ -74,6 +76,8 @@ class JtopServer(Process):
 
     def __init__(self, path, gain_timeout=2):
         config_file = path
+        self._running = True
+        self._error = None
         # Timeout control command
         self.gain_timeout = gain_timeout
         # Command queue
@@ -100,32 +104,41 @@ class JtopServer(Process):
     def run(self):
         timeout = None
         local_timeout = 1
-        while True:
-            try:
-                # Decode control message
-                control = self.q.get(timeout=timeout)
-                # Check if control is not empty
-                if not control:
-                    continue
-                # Initialize tegrastats speed
-                if 'interval' in control:
-                    local_timeout = control['interval']
-                    # Set timeout
-                    interval = int(local_timeout * 1000)
-                    # Run stats
-                    if self.tegra.open(interval=interval):
-                        # Status start tegrastats
-                        print("tegrastats started {interval}ms".format(interval=interval))
-                # Update timeout interval
-                timeout = local_timeout * self.gain_timeout
-            except queue.Empty:
-                # Close and log status
-                if self.tegra.close():
-                    print("tegrastats close")
-                # Disable timeout
-                timeout = None
-            except KeyboardInterrupt:
-                break
+        try:
+            while self._running:
+                try:
+                    # Decode control message
+                    control = self.q.get(timeout=timeout)
+                    # Check if control is not empty
+                    if not control:
+                        continue
+                    # Initialize tegrastats speed
+                    if 'interval' in control:
+                        local_timeout = control['interval']
+                        # Set timeout
+                        interval = int(local_timeout * 1000)
+                        # Run stats
+                        if self.tegra.open(interval=interval):
+                            # Status start tegrastats
+                            print("tegrastats started {interval}ms".format(interval=interval))
+                    # Update timeout interval
+                    timeout = local_timeout * self.gain_timeout
+                except queue.Empty:
+                    # Close and log status
+                    if self.tegra.close():
+                        print("tegrastats close")
+                    # Disable timeout
+                    timeout = None
+        except Exception:
+            # Close tegra
+            self.tegra.close()
+            # Run close loop
+            self._running = False
+            ex_type, ex_value, tb = sys.exc_info()
+            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
+            # Write error message
+            self._error = error
+            print(error)
 
     def start(self, force=False):
         try:
@@ -147,10 +160,8 @@ class JtopServer(Process):
         # Initialize syncronized data and conditional
         self.sync_data = self.broadcaster.sync_data()
         self.sync_event = self.broadcaster.sync_event()
-        # Run the Control server
-        super(JtopServer, self).start()
         # Get control server
-        ctrl_server = self.controller.get_server()
+        self.ctrl_server = self.controller.get_server()
         # Change owner
         os.chown(PIPE_JTOP_CTRL, os.getuid(), gid)
         os.chown(PIPE_JTOP_STATS, os.getuid(), gid)
@@ -159,12 +170,24 @@ class JtopServer(Process):
         # Equivalent permission 660 srw-rw----
         os.chmod(PIPE_JTOP_CTRL, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
         os.chmod(PIPE_JTOP_STATS, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
+        # Run the Control server
+        super(JtopServer, self).start()
         # Run server forever
-        ctrl_server.serve_forever()
+        self.ctrl_server.serve_forever()
+        print("Exit")
+
+    def shutdown_request(self, request):
+        request.shutdown()
+
 
     def close(self):
         print("End Server")
         self.broadcaster.shutdown()
+        # Catch exception if exist
+        if self._error:
+            ex_type, ex_value, tb_str = self._error
+            message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
+            raise ex_type(message)
 
     def tegra_stats(self, stats):
         print("tegrastats read")
@@ -175,6 +198,5 @@ class JtopServer(Process):
             self.sync_event.set()
 
     def __del__(self):
-        print("On delete")
         self.close()
 # EOF
