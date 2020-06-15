@@ -22,7 +22,7 @@ import time
 import logging
 # Launch command
 import subprocess as sp
-from datetime import datetime, timedelta
+from datetime import timedelta
 from threading import Thread
 # Get uptime
 from .common import get_uptime
@@ -32,6 +32,31 @@ logger = logging.getLogger(__name__)
 CONFIG_DEFAULT_BOOT = False
 CONFIG_DEFAULT_DELAY = 60  # In seconds
 CONFIG_DEFAULT_L4T_FILE = "l4t_dfs.conf"
+
+
+def jetson_clocks_alive(show):
+    # Make statistics
+    stat = []
+    if 'CPU' in show:
+        for cpu in show['CPU'].values():
+            # Check status CPUs
+            stat += [cpu['MaxFreq'] == cpu['MinFreq']]
+            stat += [cpu['MaxFreq'] == cpu['CurrentFreq']]
+    # Check status GPU
+    if 'gpu' in show:
+        gpu = show['gpu']
+        stat += [gpu['MaxFreq'] == gpu['MinFreq']]
+        stat += [gpu['MaxFreq'] == gpu['CurrentFreq']]
+    # Don't need to check EMC frequency
+    # Check status EMC
+    # if 'emc' in show:
+    #     emc = show['emc']
+    #     stat += [emc['MaxFreq'] == emc['MinFreq']]
+    #     stat += [emc['MaxFreq'] == emc['CurrentFreq']]
+    if not stat:
+        raise JetsonClocks.JCException("Require super user")
+    return all(stat)
+
 
 def locate_jetson_clocks():
     for f_fc in ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']:
@@ -115,7 +140,7 @@ class JetsonClocks(object):
         # Decode lines
         lines = out.decode("utf-8")
         # Load lines
-        status = {"cpu": {}}
+        status = {"CPU": {}}
         for line in lines.split("\n"):
             # Search configuration CPU config
             match = JetsonClocks.CPU_REGEXP.search(line)
@@ -129,7 +154,7 @@ class JetsonClocks(object):
                        "CurrentFreq": int(match.group(6)),
                        "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).split()}}
                 # Store in CPU list
-                status["cpu"]["cpu{num}".format(num=match.group(1))] = cpu
+                status["CPU"]["CPU{num}".format(num=match.group(1))] = cpu
                 continue
             # Search configuration GPU config
             match = JetsonClocks.GPU_REGEXP.search(line)
@@ -166,26 +191,7 @@ class JetsonClocks(object):
         # Load status jetson_clocks
         show = self.show()
         # Make statistics
-        stat = []
-        if 'cpu' in show:
-            for cpu in show['cpu'].values():
-                # Check status CPUs
-                stat += [cpu['MaxFreq'] == cpu['MinFreq']]
-                stat += [cpu['MaxFreq'] == cpu['CurrentFreq']]
-        # Check status GPU
-        if 'gpu' in show:
-            gpu = show['gpu']
-            stat += [gpu['MaxFreq'] == gpu['MinFreq']]
-            stat += [gpu['MaxFreq'] == gpu['CurrentFreq']]
-        # Don't need to check EMC frequency
-        # Check status EMC
-        # if 'emc' in show:
-        #     emc = show['emc']
-        #     stat += [emc['MaxFreq'] == emc['MinFreq']]
-        #     stat += [emc['MaxFreq'] == emc['CurrentFreq']]
-        if not stat:
-            raise JetsonClocks.JCException("Require super user")
-        return all(stat)
+        return jetson_clocks_alive(show)
 
     def start(self):
         # Run jetson_clocks

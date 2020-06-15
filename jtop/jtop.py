@@ -26,7 +26,8 @@ from .service import JtopManager
 from .core import (import_os_variables,
                    get_uptime,
                    status_disk,
-                   get_local_interfaces)
+                   get_local_interfaces,
+                   jetson_clocks_alive)
 try:
     FileNotFoundError
 except NameError:
@@ -101,7 +102,13 @@ class jtop(Thread):
 
     @property
     def jetson_clocks(self):
-        return False
+        """
+        Status jetson_clocks
+
+        :return: true if jetson_clocks is running otherwise false
+        :rtype: bool
+        """
+        return jetson_clocks_alive(self._jc_show)
 
     @jetson_clocks.setter
     def jetson_clocks(self, value):
@@ -224,9 +231,6 @@ class jtop(Thread):
         """
         Internal decode function to decode and refactoring data
         """
-        # Load jetson_clocks data
-        jc = data['jc']
-        print(jc)
         # Read tegrastat
         tegrastats = data['stats']
         if 'WATT' in tegrastats:
@@ -236,10 +240,18 @@ class jtop(Thread):
             # Remove PMIC temperature
             if 'PMIC' in tegrastats['TEMP']:
                 del tegrastats['TEMP']['PMIC']
+        # Load jetson_clocks data
+        self._jc_show = data['jc']
         # Store data in stats
+        if 'CPU' in self._jc_show:
+            for k, v in tegrastats['CPU'].items():
+                # Extract jc_cpu info
+                jc_cpu = self._jc_show['CPU'].get(k, {})
+                # Update CPU information
+                v.update(jc_cpu)
+                tegrastats['CPU'][k] = v
+        # Store the updated stats from tegrastats
         self._stats = tegrastats
-        # TODO: Store nvpmode and jetson_clocks
-        # ...
         # Notifiy all observers
         for observer in self._observers:
             # Call all observer in list

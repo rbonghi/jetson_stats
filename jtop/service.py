@@ -22,13 +22,12 @@ import os
 import sys
 import stat
 import json
-import time
 import traceback
 from grp import getgrnam
 from multiprocessing import Process, Queue, Event
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
-from .core import Tegrastats, JetsonClocks, get_uptime
+from .core import Tegrastats, JetsonClocks
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3

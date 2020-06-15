@@ -154,6 +154,15 @@ def VALS(text):
     return vals
 
 
+def get_governor(cpus, idx):
+    """ Update status governor """
+    governor_name = '/sys/devices/system/cpu/cpu' + str(idx - 1) + '/cpufreq/scaling_governor'
+    # Add governor CPU if only exist
+    if os.path.isfile(governor_name):
+        with open(governor_name, 'r') as f:
+            cpus['CPU' + str(idx)]['governor'] = f.read()[:-1]
+
+
 def CPUS(text):
     """ Parse CPU information and extract status
 
@@ -181,12 +190,6 @@ def CPUS(text):
             # Add data CPU
             val = val_freq(cpu_str)
             cpus[name].update(val)
-            # Update status governor
-            governor_name = '/sys/devices/system/cpu/cpu' + str(idx) + '/cpufreq/scaling_governor'
-            # Add governor CPU if only exist
-            if os.path.isfile(governor_name):
-                with open(governor_name, 'r') as f:
-                    cpus[name]['governor'] = f.read()[:-1]
     return cpus
 
 
