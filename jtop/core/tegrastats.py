@@ -114,9 +114,12 @@ class Tegrastats:
         # Kill process if alive
         if self.p is not None:
             # Kill
-            self.p.kill()
+            try:
+                self.p.kill()
+            except OSError:
+                pass
             # Reset variable
-            self.p = None 
+            self.p = None
 
     def open(self, interval=500):
         # Check if thread or process exist

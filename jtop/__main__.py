@@ -16,11 +16,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 import sys
+import time
 # Logging
 import logging
 # Jtop server
 from .service import JtopServer
+# Tegrastats objext reader
+from .jtop import jtop, get_version
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 
@@ -48,11 +52,8 @@ class bcolors:
         return bcolors.FAIL + message + bcolors.ENDC
 
 
-# https://stackoverflow.com/questions/11114589/creating-hidden-arguments-with-python-argparse
-def main():
+def service():
     path = sys.prefix
-    # Initialize logging level
-    logging.basicConfig()
     # jtop service
     server = JtopServer(path)
     print("Service started")
@@ -62,6 +63,36 @@ def main():
         print(e)
     # Close stats server
     print("Close service")
+
+
+def main():
+    parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
+    parser.add_argument('--service', help=argparse.SUPPRESS, action="store_true", default=False)
+    parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
+    parser.add_argument('-p', '--page', dest="page", help='Open fix page', type=int, default=1)
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
+    # Parse arguments
+    args = parser.parse_args()
+    # Initialize logging level
+    logging.basicConfig()
+
+    # Run service
+    if args.service:
+        service()
+        exit(0)
+    # Run the client
+    try:
+        # Convert refresh to second
+        interval = float(args.refresh / 1000.0)
+        with jtop(interval=interval) as jetson:
+            # Status connection
+            while jetson.is_alive:
+                print(jetson.cpu)
+                print(jetson.gpu)
+                # Sleep
+                time.sleep(interval)
+    except jtop.JtopException as e:
+        print(e)
 
 
 if __name__ == "__main__":
