@@ -20,6 +20,7 @@ import os
 import re
 import sys
 import copy
+import traceback
 from threading import Thread
 from .service import CtrlManager, StatsManager
 from .core import (import_os_variables,
@@ -249,32 +250,36 @@ class jtop(Thread):
         return self._running
 
     def run(self):
+        # https://gist.github.com/schlamar/2311116
         # https://stackoverflow.com/questions/13074847/catching-exception-in-context-manager-enter
-        while self._running:
-            # Send alive message
-            self._controller.put({})
-            # Read stats from jtop service
-            try:
+        try:
+            while self._running:
+                # Send alive message
+                self._controller.put({})
+                # Read stats from jtop service
                 data = self._get_data()
                 # Decode and update all jtop data
                 self._decode(data)
-            except EOFError:
-                # Raise jtop exception
-                raise jtop.JtopException("Lost connection with jtop server")
-            except Exception as error:
-                # Run close loop
-                self.__exit__(*sys.exc_info())
-                # Write error message
-                self._error = error
+        except Exception:
+            # Run close loop
+            self._running = False
+            ex_type, ex_value, tb = sys.exc_info()
+            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
+            # Write error message
+            self._error = error
 
     def _get_data(self):
-        # Check if is not set event otherwise wait
-        if not self._sync_event.is_set():
-            self._sync_event.wait(self._interval * 2)
-        # Read stats from jtop service
-        data = self._sync_data.copy()
-        # Clear event
-        self._sync_event.clear()
+        try:
+            # Check if is not set event otherwise wait
+            if not self._sync_event.is_set():
+                self._sync_event.wait(self._interval * 2)
+            # Read stats from jtop service
+            data = self._sync_data.copy()
+            # Clear event
+            self._sync_event.clear()
+        except EOFError:
+            # Raise jtop exception
+            raise jtop.JtopException("Lost connection with jtop server")
         return data
 
     def start(self):
@@ -285,14 +290,10 @@ class jtop(Thread):
         self._sync_event = self._broadcaster.sync_event()
         # Send alive message
         self._controller.put({'interval': self._interval})
-        try:
-            # Wait first value
-            data = self._get_data()
-            # Decode and update all jtop data
-            self._decode(data)
-        except EOFError:
-            # Raise jtop exception
-            raise jtop.JtopException("Lost connection with jtop server")
+        # Wait first value
+        data = self._get_data()
+        # Decode and update all jtop data
+        self._decode(data)
         # Run thread reader
         self._running = True
         self.daemon = True
@@ -314,7 +315,9 @@ class jtop(Thread):
         self._running = False
         # Catch exception if exist
         if self._error:
-            raise Exception(self._error)
+            ex_type, ex_value, tb_str = self._error
+            message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
+            raise ex_type(message)
 
     def __enter__(self):
         """ Enter function for 'with' statement """
