@@ -18,6 +18,8 @@
 # Logging
 import logging
 import os
+import sys
+import traceback
 # Launch command
 import subprocess as sp
 # Threading
@@ -48,6 +50,8 @@ class Tegrastats:
         pass
 
     def __init__(self, callback):
+        # Error message from thread
+        self._error = None
         # Initialize jetson stats
         self._stats = {}
         # Start process tegrastats
@@ -85,12 +89,7 @@ class Tegrastats:
 
     def _read_tegrastats(self, interval):
         try:
-            # Launch subprocess or raise and exception
-            self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
-        except OSError:
-            logger.error("Tegrastats not in list!")
-            raise Tegrastats.TegrastatsException("Tegrastats is not available on this hardware")
-        try:
+            # Reading loop
             while self.p.poll() is None:
                 out = self.p.stdout
                 if out is not None:
@@ -104,26 +103,44 @@ class Tegrastats:
                     if self.p is not None:
                         self.callback(self._stats)
         except AttributeError:
+            # Error when is close the process
             pass
-        except SystemExit:
-            logger.error("System exit", exc_info=True)
-        except AttributeError:
-            logger.error("Attribute error", exc_info=True)
-        # Reset variable
-        self.p = None
+        except Exception:
+            # Run close loop
+            ex_type, ex_value, tb = sys.exc_info()
+            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
+            # Write error message
+            self._error = error
+        # Kill process if alive
+        if self.p is not None:
+            # Kill
+            self.p.kill()
+            # Reset variable
+            self.p = None 
 
     def open(self, interval=500):
         # Check if thread or process exist
-        if self._thread is not None or self.p is not None:
+        if self.p is not None:
             return False
+        # Launch subprocess or raise and exception
+        self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
         # Start thread Service client
         self._thread = Thread(target=self._read_tegrastats, args=[interval])
         self._thread.start()
         return True
 
     def close(self):
+        self._thread = None
+        # Catch exception if exist
+        if self._error:
+            # Make error with traceback
+            ex_type, ex_value, tb_str = self._error
+            message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
+            # Clean error
+            self._error = None
+            raise ex_type(message)
         # Check if thread and process are already empty
-        if self._thread is None or self.p is None:
+        if self.p is None:
             return False
         try:
             self.p.kill()
@@ -131,6 +148,5 @@ class Tegrastats:
             pass
         # Clean process variable
         self.p = None
-        self._thread = None
         return True
 # EOF

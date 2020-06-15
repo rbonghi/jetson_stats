@@ -57,12 +57,11 @@ def main():
     server = JtopServer(path)
     print("Service started")
     try:
-        server.start()
-    except (KeyboardInterrupt, SystemExit):
-        pass
+        server.loop_for_ever()
+    except Exception as e:
+        print(e)
     # Close stats server
     print("Close service")
-    server.close()
 
 
 if __name__ == "__main__":

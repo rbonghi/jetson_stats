@@ -22,7 +22,7 @@ import sys
 import copy
 import traceback
 from threading import Thread
-from .service import CtrlManager, StatsManager
+from .service import JtopManager
 from .core import (import_os_variables,
                    get_uptime,
                    status_disk,
@@ -73,27 +73,11 @@ class jtop(Thread):
         self._observers = set()
         # Stats read from service
         self._stats = {}
-        # Open socket
-        CtrlManager.register('get_queue')
-        manager = CtrlManager()
-        try:
-            manager.connect()
-        except FileNotFoundError as e:
-            if e.errno == 2:  # Message error: 'No such file or directory'
-                # TODO: Fixe message error
-                raise jtop.JtopException("jetson_stats service not active, please run sudo ... ")
-            elif e.errno == 13:  # Message error: 'Permission denied'
-                raise jtop.JtopException("I can't access to server, check group ")
-            else:
-                raise FileNotFoundError(e)
-        except ValueError:
-            # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
-            raise jtop.JtopException("mismatch python version between library and service")
-        self._controller = manager.get_queue()
         # Read stats
-        StatsManager.register("sync_data")
-        StatsManager.register('sync_event')
-        self._broadcaster = StatsManager()
+        JtopManager.register('get_queue')
+        JtopManager.register("sync_data")
+        JtopManager.register('sync_event')
+        self._broadcaster = JtopManager()
         # Version package
         self.version = get_version()
 
@@ -275,6 +259,8 @@ class jtop(Thread):
                 self._sync_event.wait(self._interval * 2)
             # Read stats from jtop service
             data = self._sync_data.copy()
+            if not data:
+                raise jtop.JtopException("Error connection")
             # Clear event
             self._sync_event.clear()
         except EOFError:
@@ -284,8 +270,21 @@ class jtop(Thread):
 
     def start(self):
         # Connected to broadcaster
-        self._broadcaster.connect()
+        try:
+            self._broadcaster.connect()
+        except FileNotFoundError as e:
+            if e.errno == 2:  # Message error: 'No such file or directory'
+                # TODO: Fixe message error
+                raise jtop.JtopException("jetson_stats service not active, please run sudo ... ")
+            elif e.errno == 13:  # Message error: 'Permission denied'
+                raise jtop.JtopException("I can't access to server, check group ")
+            else:
+                raise FileNotFoundError(e)
+        except ValueError:
+            # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
+            raise jtop.JtopException("mismatch python version between library and service")
         # Initialize syncronized data and condition
+        self._controller = self._broadcaster.get_queue()
         self._sync_data = self._broadcaster.sync_data()
         self._sync_event = self._broadcaster.sync_event()
         # Send alive message

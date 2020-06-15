@@ -23,7 +23,7 @@ import sys
 import stat
 import traceback
 from multiprocessing import Process, Queue, Event
-from multiprocessing.managers import BaseManager, SyncManager
+from multiprocessing.managers import SyncManager
 from grp import getgrnam
 from .core import Tegrastats
 from .core import JetsonClocks
@@ -35,25 +35,18 @@ try:
 except ImportError:
     import Queue as queue
 
-PIPE_JTOP_STATS = '/tmp/jtop_stats'
-PIPE_JTOP_CTRL = '/tmp/jtop_ctrl'
+PIPE_JTOP = '/tmp/jtop'
 PIPE_JTOP_USER = 'jetson_stats'
 AUTHKEY = 'aaabbcc'
 
 
-class CtrlManager(BaseManager):
+class JtopManager(SyncManager):
 
     def __init__(self, authkey=AUTHKEY):
-        super(CtrlManager, self).__init__(address=(PIPE_JTOP_CTRL), authkey=authkey.encode("utf-8"))
+        super(JtopManager, self).__init__(address=(PIPE_JTOP), authkey=authkey.encode("utf-8"))
 
     def get_queue(self):
         pass
-
-
-class StatsManager(SyncManager):
-
-    def __init__(self, authkey=AUTHKEY):
-        super(StatsManager, self).__init__(address=(PIPE_JTOP_STATS), authkey=authkey.encode("utf-8"))
 
     def sync_data(self):
         pass
@@ -76,8 +69,7 @@ class JtopServer(Process):
 
     def __init__(self, path, gain_timeout=2):
         config_file = path
-        self._running = True
-        self._error = None
+        self._error = Queue()
         # Timeout control command
         self.gain_timeout = gain_timeout
         # Command queue
@@ -88,14 +80,12 @@ class JtopServer(Process):
         self.event = Event()
         # Load super Thread constructor
         super(JtopServer, self).__init__()
-        # Register queue manager
-        CtrlManager.register('get_queue', callable=lambda: self.q)
-        self.controller = CtrlManager()
         # Register stats
         # https://docs.python.org/2/library/multiprocessing.html#using-a-remote-manager
-        StatsManager.register("sync_data", callable=lambda: self.data)
-        StatsManager.register('sync_event', callable=lambda: self.event)
-        self.broadcaster = StatsManager()
+        JtopManager.register('get_queue', callable=lambda: self.q)
+        JtopManager.register("sync_data", callable=lambda: self.data)
+        JtopManager.register('sync_event', callable=lambda: self.event)
+        self.broadcaster = JtopManager()
         # Initialize jetson_clocks controller
         self.jc = JetsonClocks(config_file)
         # Setup tegrastats
@@ -105,7 +95,7 @@ class JtopServer(Process):
         timeout = None
         local_timeout = 1
         try:
-            while self._running:
+            while True:
                 try:
                     # Decode control message
                     control = self.q.get(timeout=timeout)
@@ -127,18 +117,20 @@ class JtopServer(Process):
                     # Close and log status
                     if self.tegra.close():
                         print("tegrastats close")
+                        self.sync_event.clear()
                     # Disable timeout
                     timeout = None
+        except (KeyboardInterrupt, SystemExit):
+            pass
         except Exception:
             # Close tegra
-            self.tegra.close()
-            # Run close loop
-            self._running = False
+            if self.tegra.close():
+                print("tegrastats close")
+            # Catch exception
             ex_type, ex_value, tb = sys.exc_info()
             error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
             # Write error message
-            self._error = error
-            print(error)
+            self._error.put(error)
 
     def start(self, force=False):
         try:
@@ -147,11 +139,9 @@ class JtopServer(Process):
             # User does not exist
             raise Exception("Group {jtop_user} does not exist!".format(jtop_user=PIPE_JTOP_USER))
         # Remove old pipes if exists
-        if force and (os.path.exists(PIPE_JTOP_CTRL) or os.path.exists(PIPE_JTOP_STATS)):
-            print("Remove pipe {pipe}".format(pipe=PIPE_JTOP_CTRL))
-            os.remove(PIPE_JTOP_CTRL)
-            print("Remove pipe {pipe}".format(pipe=PIPE_JTOP_STATS))
-            os.remove(PIPE_JTOP_STATS)
+        if force and os.path.exists(PIPE_JTOP):
+            print("Remove pipe {pipe}".format(pipe=PIPE_JTOP))
+            os.remove(PIPE_JTOP)
         # Start broadcaster
         try:
             self.broadcaster.start()
@@ -160,34 +150,34 @@ class JtopServer(Process):
         # Initialize syncronized data and conditional
         self.sync_data = self.broadcaster.sync_data()
         self.sync_event = self.broadcaster.sync_event()
-        # Get control server
-        self.ctrl_server = self.controller.get_server()
         # Change owner
-        os.chown(PIPE_JTOP_CTRL, os.getuid(), gid)
-        os.chown(PIPE_JTOP_STATS, os.getuid(), gid)
+        os.chown(PIPE_JTOP, os.getuid(), gid)
         # Change mode cotroller and stats
         # https://www.tutorialspoint.com/python/os_chmod.htm
         # Equivalent permission 660 srw-rw----
-        os.chmod(PIPE_JTOP_CTRL, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
-        os.chmod(PIPE_JTOP_STATS, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
+        os.chmod(PIPE_JTOP, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
         # Run the Control server
+        self.daemon = True
         super(JtopServer, self).start()
-        # Run server forever
-        self.ctrl_server.serve_forever()
-        print("Exit")
 
-    def shutdown_request(self, request):
-        request.shutdown()
-
+    def loop_for_ever(self):
+        try:
+            self.start()
+            # Get exception
+            error = self._error.get()
+            self.join()
+            # Raise error if exist
+            if error:
+                ex_type, ex_value, tb_str = error
+                message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
+                raise ex_type(message)
+        except (KeyboardInterrupt, SystemExit):
+            pass
+        # Close communitication
+        self.close()
 
     def close(self):
-        print("End Server")
         self.broadcaster.shutdown()
-        # Catch exception if exist
-        if self._error:
-            ex_type, ex_value, tb_str = self._error
-            message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
-            raise ex_type(message)
 
     def tegra_stats(self, stats):
         print("tegrastats read")
