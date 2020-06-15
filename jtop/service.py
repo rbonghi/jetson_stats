@@ -78,12 +78,9 @@ class JtopServer(Process):
         self.config = {}
         # Load configuration path
         config_path = path + PATH_FOLDER
-        config_file = config_path + '/' + CONFIG_JTOP
-        # Load configuration if exist
-        if os.path.isfile(config_file):
-            logger.info("Load config from {path}".format(path=config_file))
-            with open(config_file) as json_file:
-                self.config = json.load(json_file)
+        self.config_file = config_path + '/' + CONFIG_JTOP
+        # Load configuration
+        self.load()
         # Error queue
         self._error = Queue()
         # Timeout control command
@@ -109,6 +106,20 @@ class JtopServer(Process):
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
 
+    def load(self):
+        # Load configuration if exist
+        if not os.path.isfile(self.config_file):
+            return
+        logger.info("Load config from {path}".format(path=self.config_file))
+        with open(self.config_file) as json_file:
+            self.config = json.load(json_file)
+
+    def store(self):
+        logger.info("Stor config to {path}".format(path=self.config_file))
+        # Write configuration
+        with open(self.config_file, 'w') as outfile:
+            json.dump(self.config, outfile)
+
     def run(self):
         timeout = None
         local_timeout = 1
@@ -120,6 +131,19 @@ class JtopServer(Process):
                     # Check if control is not empty
                     if not control:
                         continue
+                    # Manage jetson_clocks
+                    if 'jc' in control:
+                        # Enable or disable
+                        if control['jc']:
+                            if self.jetson_clocks.start():
+                                logger.info("jetson_clocks stared")
+                            else:
+                                logger.warning("jetson_clocks already running")
+                        else:
+                            if self.jetson_clocks.stop():
+                                logger.info("jetson_clocks stopped")
+                            else:
+                                logger.info("jetson_clocks already stopped")
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         local_timeout = control['interval']
@@ -128,13 +152,13 @@ class JtopServer(Process):
                         # Run stats
                         if self.tegra.open(interval=interval):
                             # Status start tegrastats
-                            print("tegrastats started {interval}ms".format(interval=interval))
+                            logger.info("tegrastats started {interval}ms".format(interval=interval))
                     # Update timeout interval
                     timeout = local_timeout * self.gain_timeout
                 except queue.Empty:
                     # Close and log status
                     if self.tegra.close():
-                        print("tegrastats close")
+                        logger.info("tegrastats close")
                         self.sync_event.clear()
                     # Disable timeout
                     timeout = None
@@ -198,9 +222,15 @@ class JtopServer(Process):
         self.broadcaster.shutdown()
 
     def tegra_stats(self, stats):
-        print("tegrastats read")
+        data = {}
+        logger.info("tegrastats read")
+        # Load data stats
+        data['stats'] = stats
+        # Load status jetson_clocks
+        data['jc'] = self.jetson_clocks.show()
+        # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
-        self.sync_data.update(stats)
+        self.sync_data.update(data)
         # Set event for all clients
         if not self.sync_event.is_set():
             self.sync_event.set()

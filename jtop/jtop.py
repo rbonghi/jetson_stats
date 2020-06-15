@@ -100,6 +100,17 @@ class jtop(Thread):
         self._observers.discard(observer)
 
     @property
+    def jetson_clocks(self):
+        return False
+
+    @jetson_clocks.setter
+    def jetson_clocks(self, value):
+        if not isinstance(value, bool):
+            raise Exception("Use a boolean")
+        # Send status jetson_clocks
+        self._controller.put({'jc': value})
+
+    @property
     def stats(self):
         """
         A dictionary with the status of the board
@@ -213,15 +224,20 @@ class jtop(Thread):
         """
         Internal decode function to decode and refactoring data
         """
-        if 'WATT' in data:
+        # Load jetson_clocks data
+        jc = data['jc']
+        print(jc)
+        # Read tegrastat
+        tegrastats = data['stats']
+        if 'WATT' in tegrastats:
             # Refactor names
-            data['WATT'] = {str(k.replace("VDD_", "").replace("POM_", "").replace("_", " ")): v for k, v in data['WATT'].items()}
-        if 'TEMP' in data:
+            tegrastats['WATT'] = {str(k.replace("VDD_", "").replace("POM_", "").replace("_", " ")): v for k, v in tegrastats['WATT'].items()}
+        if 'TEMP' in tegrastats:
             # Remove PMIC temperature
-            if 'PMIC' in data['TEMP']:
-                del data['TEMP']['PMIC']
+            if 'PMIC' in tegrastats['TEMP']:
+                del tegrastats['TEMP']['PMIC']
         # Store data in stats
-        self._stats = data
+        self._stats = tegrastats
         # TODO: Store nvpmode and jetson_clocks
         # ...
         # Notifiy all observers

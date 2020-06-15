@@ -195,6 +195,7 @@ class JetsonClocks(object):
         message = out.decode("utf-8")
         if message:
             raise JetsonClocks.JCException("Error to start jetson_clocks: {message}".format(message=message))
+        return True
 
     def stop(self):
         # Run jetson_clocks
@@ -204,6 +205,7 @@ class JetsonClocks(object):
         message = out.decode("utf-8")
         if message:
             raise JetsonClocks.JCException("Error to start jetson_clocks: {message}".format(message=message))
+        return True
 
     def store(self):
         # Store configuration jetson_clocks
