@@ -84,7 +84,7 @@ class Config:
         logger.info("Store config to {path}".format(path=self.config_file))
         # Write configuration
         with open(self.config_file, 'w') as outfile:
-            json.dump(self._config, outfile)
+            json.dump(self._config, outfile, sort_keys=True, indent=4)
         # Update last configuration
         self._last_config = copy.deepcopy(self._config)
 # EOF

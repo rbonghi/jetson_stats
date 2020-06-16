@@ -63,6 +63,7 @@ class JtopServer(Process):
         - https://stackoverflow.com/questions/1829116/how-to-share-variables-across-scripts-in-python
         - https://stackoverflow.com/questions/45342200/how-to-use-syncmanager-lock-or-event-correctly
         - https://stackoverflow.com/questions/2545961/how-to-synchronize-a-python-dict-with-multiprocessing
+        - https://docs.python.org/2.7/reference/datamodel.html
     """
     class Exception(Exception):
         """ Jtop general exception """
@@ -91,8 +92,6 @@ class JtopServer(Process):
         self.broadcaster = JtopManager()
         # Initialize jetson_clocks controller
         self.jetson_clocks = JetsonClocksService(self.config)
-        # Run setup
-        self.jetson_clocks.initialization()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
 
@@ -151,6 +150,9 @@ class JtopServer(Process):
             self._error.put(error)
 
     def start(self, force=False):
+        # Run setup
+        self.jetson_clocks.initialization()
+        # Initialize socket
         try:
             gid = getgrnam(PIPE_JTOP_USER).gr_gid
         except KeyError:
@@ -165,7 +167,7 @@ class JtopServer(Process):
             self.broadcaster.start()
         except EOFError:
             raise JtopServer.Exception("Server already alive")
-        # Initialize syncronized data and conditional
+        # Initialize synchronized data and conditional
         self.sync_data = self.broadcaster.sync_data()
         self.sync_event = self.broadcaster.sync_event()
         # Change owner
@@ -191,7 +193,7 @@ class JtopServer(Process):
                 raise ex_type(message)
         except (KeyboardInterrupt, SystemExit):
             pass
-        # Close communitication
+        # Close communication
         self.close()
 
     def close(self):

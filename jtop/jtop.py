@@ -33,7 +33,7 @@ try:
     FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
-# Create logger for tegrastats
+# Create logger
 logger = logging.getLogger(__name__)
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
@@ -89,7 +89,7 @@ class jtop(Thread):
 
     def attach(self, observer):
         """
-        Attach an obserber to read the status of jtop
+        Attach an observer to read the status of jtop
 
         :param observer: The function to call
         :type observer: function
@@ -98,7 +98,7 @@ class jtop(Thread):
 
     def detach(self, observer):
         """
-        Detach an obserber from jtop
+        Detach an observer from jtop
 
         :param observer:  The function to detach
         :type observer: function
@@ -119,6 +119,9 @@ class jtop(Thread):
     def jetson_clocks(self, value):
         if not isinstance(value, bool):
             raise ValueError("Use a boolean")
+        # Check if service is not started otherwise skip
+        if self._jc.status == 'activating':
+            return
         # Send status jetson_clocks
         self._controller.put({'jc': value})
 
@@ -257,9 +260,11 @@ class jtop(Thread):
                 # Update CPU information
                 v.update(jc_cpu)
                 tegrastats['CPU'][k] = v
+        if 'GPU' in jc_show:
+            tegrastats['GR3D'].update(jc_show['GPU'])
         # Store the updated stats from tegrastats
         self._stats = tegrastats
-        # Notifiy all observers
+        # Notify all observers
         for observer in self._observers:
             # Call all observer in list
             observer(self)
@@ -318,7 +323,7 @@ class jtop(Thread):
         except ValueError:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
             raise jtop.JtopException("mismatch python version between library and service")
-        # Initialize syncronized data and condition
+        # Initialize synchronized data and condition
         self._controller = self._broadcaster.get_queue()
         self._sync_data = self._broadcaster.sync_data()
         self._sync_event = self._broadcaster.sync_event()

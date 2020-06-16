@@ -82,9 +82,14 @@ def locate_jetson_clocks():
 
 
 class JetsonClocks(object):
+    """
+        Reference:
+        - https://docs.python.org/2.7/reference/datamodel.html
+    """
 
     def __init__(self, config):
         self._config = config
+        self._show = {}
 
     @property
     def boot(self):
@@ -103,6 +108,14 @@ class JetsonClocks(object):
         self._config.set('jetson_clocks', config)
 
     @property
+    def status(self):
+        # Check if is alive jetson_clocks
+        if self.is_alive:
+            return 'running'
+        # Otherwise check status thread jetson_clocks
+        return 'activating' if self._show.get('thread', False) else 'inactive'
+
+    @property
     def is_alive(self):
         return self._alive
 
@@ -113,6 +126,7 @@ class JetsonClocks(object):
         return str(self._alive)
 
     def _update(self, show):
+        self._show = show
         self._alive = jetson_clocks_alive(show)
 
 
