@@ -227,6 +227,7 @@ class JtopServer(Process):
         data['stats'] = stats
         # Load status jetson_clocks
         data['jc'] = self.jetson_clocks.show()
+        data['jc'].update({'thread': self.jetson_clocks.is_running})
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)

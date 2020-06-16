@@ -235,7 +235,7 @@ class jtop(Thread):
         tegrastats = data['stats']
         if 'WATT' in tegrastats:
             # Refactor names
-            tegrastats['WATT'] = {str(k.replace("VDD_", "").replace("POM_", "").replace("_", " ")): v for k, v in tegrastats['WATT'].items()}
+            tegrastats['WATT'] = {k.replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in tegrastats['WATT'].items()}
         if 'TEMP' in tegrastats:
             # Remove PMIC temperature
             if 'PMIC' in tegrastats['TEMP']:

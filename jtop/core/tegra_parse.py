@@ -211,5 +211,5 @@ def WATTS(text):
         X = Current power consumption in milliwatts.
         Y = Average power consumption in milliwatts.
     """
-    return {name: {'cur': int(cur), 'avg': int(avg)} for name, cur, avg in re.findall(WATT_RE, text)}
+    return {str(name): {'cur': int(cur), 'avg': int(avg)} for name, cur, avg in re.findall(WATT_RE, text)}
 # EOF
