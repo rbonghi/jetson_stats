@@ -23,11 +23,12 @@ import copy
 import traceback
 from threading import Thread
 from .service import JtopManager
-from .core import (import_os_variables,
+from .core import (Config,
+                   import_os_variables,
                    get_uptime,
                    status_disk,
                    get_local_interfaces,
-                   jetson_clocks_alive)
+                   JetsonClocks)
 try:
     FileNotFoundError
 except NameError:
@@ -64,6 +65,8 @@ class jtop(Thread):
 
     def __init__(self, interval=0.5):
         Thread.__init__(self)
+        # Load configuration
+        self._config = Config()
         # Error message from thread
         self._error = None
         # Start server
@@ -81,6 +84,8 @@ class jtop(Thread):
         self._broadcaster = JtopManager()
         # Version package
         self.version = get_version()
+        # Load jetson_clocks status
+        self._jc = JetsonClocks(self._config)
 
     def attach(self, observer):
         """
@@ -108,12 +113,12 @@ class jtop(Thread):
         :return: true if jetson_clocks is running otherwise false
         :rtype: bool
         """
-        return jetson_clocks_alive(self._jc_show)
+        return self._jc
 
     @jetson_clocks.setter
     def jetson_clocks(self, value):
         if not isinstance(value, bool):
-            raise Exception("Use a boolean")
+            raise ValueError("Use a boolean")
         # Send status jetson_clocks
         self._controller.put({'jc': value})
 
@@ -241,12 +246,14 @@ class jtop(Thread):
             if 'PMIC' in tegrastats['TEMP']:
                 del tegrastats['TEMP']['PMIC']
         # Load jetson_clocks data
-        self._jc_show = data['jc']
+        jc_show = data['jc']
+        # Update status
+        self._jc._update(jc_show)
         # Store data in stats
-        if 'CPU' in self._jc_show:
+        if 'CPU' in jc_show:
             for k, v in tegrastats['CPU'].items():
                 # Extract jc_cpu info
-                jc_cpu = self._jc_show['CPU'].get(k, {})
+                jc_cpu = jc_show['CPU'].get(k, {})
                 # Update CPU information
                 v.update(jc_cpu)
                 tegrastats['CPU'][k] = v

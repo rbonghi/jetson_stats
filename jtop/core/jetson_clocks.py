@@ -25,9 +25,9 @@ import traceback
 import subprocess as sp
 from datetime import timedelta
 from threading import Thread
-# Get uptime
+# Local functions and classes
 from .common import get_uptime
-# Create logger for jplotlib
+# Create logger
 logger = logging.getLogger(__name__)
 
 CONFIG_DEFAULT_BOOT = False
@@ -69,7 +69,7 @@ def jetson_clocks_alive(show):
     #     stat += [emc['MaxFreq'] == emc['MinFreq']]
     #     stat += [emc['MaxFreq'] == emc['CurrentFreq']]
     if not stat:
-        raise JetsonClocks.JCException("Require super user")
+        raise JetsonClocksService.JCException("Require super user")
     return all(stat)
 
 
@@ -78,10 +78,45 @@ def locate_jetson_clocks():
         if os.path.isfile(f_fc):
             logger.info("Load jetson_clocks {}".format(f_fc))
             return f_fc
-    raise JetsonClocks.JCException("Tegrastats is not availabe on this board")
+    raise JetsonClocksService.JCException("Tegrastats is not availabe on this board")
 
 
 class JetsonClocks(object):
+
+    def __init__(self, config):
+        self._config = config
+
+    @property
+    def boot(self):
+        config = self._config.get('jetson_clocks', {})
+        return config.get('boot', CONFIG_DEFAULT_BOOT)
+
+    @boot.setter
+    def boot(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("Use a boolean")
+        # Extract configuration
+        config = self._config.get('jetson_clocks', {})
+        # Add new value
+        config['boot'] = value
+        # Set new jetson_clocks configuration
+        self._config.set('jetson_clocks', config)
+
+    @property
+    def is_alive(self):
+        return self._alive
+
+    def __nonzero__(self):
+        return self._alive
+
+    def __repr__(self):
+        return str(self._alive)
+
+    def _update(self, show):
+        self._alive = jetson_clocks_alive(show)
+
+
+class JetsonClocksService(object):
     """
         This controller manage the jetson_clocks service.
     """
@@ -89,19 +124,19 @@ class JetsonClocks(object):
     class JCException(Exception):
         pass
 
-    def __init__(self, path, config):
+    def __init__(self, config):
         self._thread = None
         self._error = None
         # Load configuration
         self.config = config.get('jetson_clocks', {})
         jetson_clocks_file = self.config.get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
         # Config file
-        self.config_l4t = path + "/" + jetson_clocks_file
+        self.config_l4t = config.path + "/" + jetson_clocks_file
         # Jetson Clocks path
         self.jc_bin = locate_jetson_clocks()
         # Check if running a root
         if os.getuid() != 0:
-            raise JetsonClocks.JCException("Need sudo")
+            raise JetsonClocksService.JCException("Need sudo")
 
     def initialization(self):
         # Check if exist configuration file
@@ -204,7 +239,7 @@ class JetsonClocks(object):
             # Extract result
             message = out.decode("utf-8")
             if message:
-                raise JetsonClocks.JCException("Error to start jetson_clocks: {message}".format(message=message))
+                raise JetsonClocksService.JCException("Error to start jetson_clocks: {message}".format(message=message))
             logger.info("jetson_clocks running")
         except Exception:
             # Run close loop
@@ -225,13 +260,13 @@ class JetsonClocks(object):
         if self.is_alive:
             return True
         if not self.is_running:
-                # Load jetson_clocks start up information
-                jetson_clocks_start = self.config.get('wait', CONFIG_DEFAULT_DELAY)
-                # Start thread Service client
-                self._thread = Thread(target=self._jetson_clocks_boot, args=[jetson_clocks_start])
-                self._thread.daemon = True
-                self._thread.start()
-                return True
+            # Load jetson_clocks start up information
+            jetson_clocks_start = self.config.get('wait', CONFIG_DEFAULT_DELAY)
+            # Start thread Service client
+            self._thread = Thread(target=self._jetson_clocks_boot, args=[jetson_clocks_start])
+            self._thread.daemon = True
+            self._thread.start()
+            return True
         return False
 
     def stop(self):
@@ -243,7 +278,7 @@ class JetsonClocks(object):
         # Extract result
         message = out.decode("utf-8")
         if message:
-            raise JetsonClocks.JCException("Error to start jetson_clocks: {message}".format(message=message))
+            raise JetsonClocksService.JCException("Error to start jetson_clocks: {message}".format(message=message))
         return True
 
     def _error_status(self):

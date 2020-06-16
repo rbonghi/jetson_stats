@@ -21,13 +21,12 @@ import logging
 import os
 import sys
 import stat
-import json
 import traceback
 from grp import getgrnam
 from multiprocessing import Process, Queue, Event
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
-from .core import Tegrastats, JetsonClocks
+from .core import Tegrastats, JetsonClocksService, Config
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -37,12 +36,9 @@ except ImportError:
     import Queue as queue
 
 # Pipe configuration
-PATH_FOLDER = '/local/jetson_stats'
 PIPE_JTOP = '/tmp/jtop'
 PIPE_JTOP_USER = 'jetson_stats'
 AUTHKEY = 'aaabbcc'
-# Service configuration
-CONFIG_JTOP = "config.json"
 
 
 class JtopManager(SyncManager):
@@ -72,14 +68,9 @@ class JtopServer(Process):
         """ Jtop general exception """
         pass
 
-    def __init__(self, path, gain_timeout=2):
-        # Configuration dictionary
-        self.config = {}
-        # Load configuration path
-        config_path = path + PATH_FOLDER
-        self.config_file = config_path + '/' + CONFIG_JTOP
+    def __init__(self, gain_timeout=2):
         # Load configuration
-        self.load()
+        self.config = Config()
         # Error queue
         self._error = Queue()
         # Timeout control command
@@ -99,25 +90,11 @@ class JtopServer(Process):
         JtopManager.register('sync_event', callable=lambda: self.event)
         self.broadcaster = JtopManager()
         # Initialize jetson_clocks controller
-        self.jetson_clocks = JetsonClocks(config_path, self.config)
+        self.jetson_clocks = JetsonClocksService(self.config)
         # Run setup
         self.jetson_clocks.initialization()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
-
-    def load(self):
-        # Load configuration if exist
-        if not os.path.isfile(self.config_file):
-            return
-        logger.info("Load config from {path}".format(path=self.config_file))
-        with open(self.config_file) as json_file:
-            self.config = json.load(json_file)
-
-    def store(self):
-        logger.info("Stor config to {path}".format(path=self.config_file))
-        # Write configuration
-        with open(self.config_file, 'w') as outfile:
-            json.dump(self.config, outfile)
 
     def run(self):
         timeout = None

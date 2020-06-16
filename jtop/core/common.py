@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import abc
 import os
 # Launch command
 import subprocess as sp
@@ -26,12 +25,8 @@ import socket
 import fcntl
 import struct
 import array
-
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
-# Initialization abstract class
-# In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
-ABC = abc.ABCMeta('ABC', (object,), {})
 
 
 def import_os_variables(SOURCE, PATTERN):

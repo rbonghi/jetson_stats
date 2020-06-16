@@ -20,10 +20,11 @@
 from .nvpmodel import NVPmodel
 from .tegrastats import Tegrastats
 from .fan import Fan
-from .jetson_clocks import JetsonClocks, jetson_clocks_alive
+from .jetson_clocks import JetsonClocks, JetsonClocksService
 from .swap import Swap
 from .cpu import cpuinfo
 from .engine import nvjpg
+from .config import Config
 from .common import (import_os_variables,
                      get_uptime,
                      status_disk,

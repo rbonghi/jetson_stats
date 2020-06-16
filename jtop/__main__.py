@@ -17,7 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import sys
 import time
 # Logging
 import logging
@@ -53,9 +52,8 @@ class bcolors:
 
 
 def service():
-    path = sys.prefix
     # jtop service
-    server = JtopServer(path)
+    server = JtopServer()
     print("Service started")
     try:
         server.loop_for_ever()
