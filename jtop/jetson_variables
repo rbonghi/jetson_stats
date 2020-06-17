@@ -65,8 +65,9 @@ jetson_jetpack()
 # Detection NVIDIA Jetson
 # Jetson TK1 can be detected with chip id
 # Reference:
-# 1. https://github.com/rbonghi/jetson_stats/issues/48
-# 2. https://github.com/rbonghi/jetson_stats/issues/57
+# 1. https://docs.nvidia.com/jetson/l4t/index.html (Devices Supported by This Document)
+# 2. https://github.com/rbonghi/jetson_stats/issues/48
+# 3. https://github.com/rbonghi/jetson_stats/issues/57
 jetson_board()
 {
     local JETSON_CHIP_ID=$1
@@ -78,11 +79,13 @@ jetson_board()
         P3310*) JETSON_TYPE="TX2" ;;
         P3489-0080*) JETSON_TYPE="TX2 4GB" ;;
         P3489*) JETSON_TYPE="TX2i" ;;
-        P2888-0060*) JETSON_TYPE="AGX Xavier 8GB" ;;
-        P2888*) JETSON_TYPE="AGX Xavier" ;;
-        P3448-0020*) JETSON_TYPE="Nano" ;;
+        P2888-0006*) JETSON_TYPE="AGX Xavier [8GB]" ;;
+        P2888-0001*|P2888-0004*) JETSON_TYPE="AGX Xavier [16GB]" ;;
+        P2888*) JETSON_TYPE="AGX Xavier [32GB]" ;;
+        P3448-0002*) JETSON_TYPE="Nano" ;;
         P3448*) JETSON_TYPE="Nano (Developer Kit Version)" ;;
-        P3668*) JETSON_TYPE="Xavier NX" ;;
+        P3668-0001*) JETSON_TYPE="Xavier NX" ;;
+        P3668*) JETSON_TYPE="Xavier NX (Developer Kit Version)" ;;
         *) JETSON_TYPE="" ;;
     esac
     # if JETSON_TYPE empty, check CHIP_ID for jetson TK1
