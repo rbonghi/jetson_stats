@@ -36,7 +36,9 @@ except ImportError:
     import Queue as queue
 
 # Pipe configuration
-JTOP_PIPE = '/tmp/jtop'
+# https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
+# https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
+JTOP_PIPE = '/run/jtop.socket'
 JTOP_USER = 'jetson_stats'
 AUTHKEY = 'aaabbcc'
 

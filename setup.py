@@ -115,7 +115,14 @@ Add in installer create group
 sudo groupadd jetson_stats
 sudo usermod -a -G jetson_stats $USER
 
-# https://stackoverflow.com/questions/35448758/using-setup-py-to-install-python-project-as-a-systemd-service
+- https://stackoverflow.com/questions/16420092/how-to-make-python-script-run-as-service
+- https://tecadmin.net/setup-autorun-python-script-using-systemd/
+
+- https://stackoverflow.com/questions/35448758/using-setup-py-to-install-python-project-as-a-systemd-service
+- https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files
+
+
+- https://github.com/torfsen/python-systemd-tutorial
 """
 
 

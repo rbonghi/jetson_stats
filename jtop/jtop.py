@@ -148,7 +148,7 @@ class jtop(Thread):
     @jetson_clocks.setter
     def jetson_clocks(self, value):
         if not isinstance(value, bool):
-            raise ValueError("Use a boolean")
+            raise TypeError("Use a boolean")
         # Check if service is not started otherwise skip
         if self._jc.status == 'activating':
             return

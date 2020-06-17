@@ -75,6 +75,8 @@ class NVPModel(object):
             print("string", value)
         elif isinstance(value, int):
             print("Number", value)
+        else:
+            raise TypeError("Data type not allowed {type}".format(type=type(value)))
         return value
 
     def __add__(self, number):
