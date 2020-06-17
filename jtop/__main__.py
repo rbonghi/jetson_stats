@@ -24,6 +24,8 @@ import logging
 from .service import JtopServer
 # Tegrastats objext reader
 from .jtop import jtop, get_version
+# jtop exception
+from .core import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 
@@ -92,7 +94,7 @@ def main():
                 print(jetson.gpu)
                 # Sleep
                 time.sleep(interval)
-    except jtop.JtopException as e:
+    except JtopException as e:
         print(e)
 
 

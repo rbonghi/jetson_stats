@@ -36,15 +36,15 @@ except ImportError:
     import Queue as queue
 
 # Pipe configuration
-PIPE_JTOP = '/tmp/jtop'
-PIPE_JTOP_USER = 'jetson_stats'
+JTOP_PIPE = '/tmp/jtop'
+JTOP_USER = 'jetson_stats'
 AUTHKEY = 'aaabbcc'
 
 
 class JtopManager(SyncManager):
 
     def __init__(self, authkey=AUTHKEY):
-        super(JtopManager, self).__init__(address=(PIPE_JTOP), authkey=authkey.encode("utf-8"))
+        super(JtopManager, self).__init__(address=(JTOP_PIPE), authkey=authkey.encode("utf-8"))
 
     def get_queue(self):
         pass
@@ -92,8 +92,8 @@ class JtopServer(Process):
         # Initialize nvpmodel controller
         try:
             self._nvp = NVPModelService()
-        except JtopException as e:
-            print(e)
+        except JtopException:
+            self._nvp = None
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
 
@@ -121,6 +121,12 @@ class JtopServer(Process):
                                 logger.info("jetson_clocks stopped")
                             else:
                                 logger.info("jetson_clocks already stopped")
+                    # Decode nvp model
+                    if 'nvp' in control:
+                        mode = control['nvp']
+                        logger.info("Set new NV Power Mode {mode}".format(mode=mode))
+                        # Set new NV Power Mode
+                        self._nvp.set(mode)
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         local_timeout = control['interval']
@@ -156,14 +162,14 @@ class JtopServer(Process):
         self.jetson_clocks.initialization()
         # Initialize socket
         try:
-            gid = getgrnam(PIPE_JTOP_USER).gr_gid
+            gid = getgrnam(JTOP_USER).gr_gid
         except KeyError:
             # User does not exist
-            raise Exception("Group {jtop_user} does not exist!".format(jtop_user=PIPE_JTOP_USER))
+            raise JtopException("Group {jtop_user} does not exist!".format(jtop_user=JTOP_USER))
         # Remove old pipes if exists
-        if force and os.path.exists(PIPE_JTOP):
-            logger.info("Remove pipe {pipe}".format(pipe=PIPE_JTOP))
-            os.remove(PIPE_JTOP)
+        if force and os.path.exists(JTOP_PIPE):
+            logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
+            os.remove(JTOP_PIPE)
         # Start broadcaster
         try:
             self.broadcaster.start()
@@ -173,11 +179,11 @@ class JtopServer(Process):
         self.sync_data = self.broadcaster.sync_data()
         self.sync_event = self.broadcaster.sync_event()
         # Change owner
-        os.chown(PIPE_JTOP, os.getuid(), gid)
+        os.chown(JTOP_PIPE, os.getuid(), gid)
         # Change mode cotroller and stats
         # https://www.tutorialspoint.com/python/os_chmod.htm
         # Equivalent permission 660 srw-rw----
-        os.chmod(PIPE_JTOP, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
+        os.chmod(JTOP_PIPE, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
         # Run the Control server
         self.daemon = True
         super(JtopServer, self).start()

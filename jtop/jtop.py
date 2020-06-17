@@ -131,7 +131,9 @@ class jtop(Thread):
     def nvpmodel(self, value):
         if self._nvp is None:
             return
-        print(value)
+        mode = self._nvp.set(value)
+        # Send new nvpmodel
+        self._controller.put({'nvp': mode})
 
     @property
     def jetson_clocks(self):

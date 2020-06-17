@@ -20,8 +20,6 @@ import re
 import logging
 # Launch command
 import subprocess as sp
-# Functions and decorators
-from functools import wraps
 # Import exceptions
 from .exceptions import JtopException
 # Create logger
@@ -29,25 +27,6 @@ logger = logging.getLogger(__name__)
 # Regular expressions
 REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
 REGPM = re.compile(r'NV Power Mode: ((.*))')
-
-
-def jetson_clocks_checks(func):
-    """ Enable and disable Jetson Clocks after NVP model change """
-    @wraps(func)
-    def wrapped(self, level):
-        # Disable the jetson_clocks (only if is it active) before change NVPmodel level
-        if self.jetson_clocks is not None:
-            old_status = self.jetson_clocks.start
-            if old_status:
-                self.jetson_clocks.start = False
-        status = func(self, level)
-        # Enable again the jetson_clocks status
-        if self.jetson_clocks is not None:
-            if old_status:
-                self.jetson_clocks.start = True
-        # Return status function
-        return status
-    return wrapped
 
 
 class NVPModel(object):
@@ -91,6 +70,13 @@ class NVPModel(object):
     def modes(self):
         return self._nvpm
 
+    def set(self, value):
+        if isinstance(value, str):
+            print("string", value)
+        elif isinstance(value, int):
+            print("Number", value)
+        return value
+
     def __add__(self, number):
         pass
 
@@ -121,9 +107,25 @@ class NVPModelService(object):
             raise JtopException("NVPmodel does not exist for this board")
 
     def set(self, value):
-        print(value)
+        if self.jetson_clocks is None:
+            # Set NV Power Mode
+            return self._mode(value)
+        # Otherwise disable the jetson_clocks
+        old_status = self.jetson_clocks.is_alive
+        if old_status:
+            self.jetson_clocks.stop()
+            # Check jetson_clocks is off
+            while self.jetson_clocks.is_alive:
+                pass
+        # Set NV Power Mode
+        status = self._mode(value)
+        # Enable again the jetson_clocks status
+        if old_status:
+            self.jetson_clocks.start()
+        # Return status
+        return status
 
-    def mode(self, level):
+    def _mode(self, level):
         """ Set nvpmodel to a new status """
         self.selected = level
         # Set the new nvpmodel status

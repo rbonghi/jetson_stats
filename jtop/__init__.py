@@ -17,7 +17,7 @@
 
 # flake8: noqa
 
-from .jtop import jtop, import_jetson_variables
+from .jtop import jtop, import_jetson_variables, JtopException
 
 __author__ = "Raffaello Bonghi <raffaello@rnext.it>"
 # Version package

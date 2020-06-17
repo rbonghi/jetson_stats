@@ -26,7 +26,7 @@ from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 # Configurations
-PIPE_JTOP_USER = 'jetson_stats'
+JTOP_USER = 'jetson_stats'
 PATH_FOLDER = '/local/jetson_stats'
 CONFIG_JTOP = 'config.json'
 
@@ -42,10 +42,10 @@ class Config:
         # Initialize configuration
         if not os.path.isfile(self.config_file):
             try:
-                gid = getgrnam(PIPE_JTOP_USER).gr_gid
+                gid = getgrnam(JTOP_USER).gr_gid
             except KeyError:
                 # User does not exist
-                raise JtopException("Group {jtop_user} does not exist!".format(jtop_user=PIPE_JTOP_USER))
+                raise JtopException("Group {jtop_user} does not exist!".format(jtop_user=JTOP_USER))
             # Make file
             with open(self.config_file, 'w') as outfile:
                 json.dump(self._config, outfile)
