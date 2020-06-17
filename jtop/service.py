@@ -26,7 +26,7 @@ from grp import getgrnam
 from multiprocessing import Process, Queue, Event
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
-from .core import Tegrastats, JetsonClocksService, Config
+from .core import Tegrastats, JetsonClocksService, Config, NVPModelService, JtopException
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -65,9 +65,6 @@ class JtopServer(Process):
         - https://stackoverflow.com/questions/2545961/how-to-synchronize-a-python-dict-with-multiprocessing
         - https://docs.python.org/2.7/reference/datamodel.html
     """
-    class Exception(Exception):
-        """ Jtop general exception """
-        pass
 
     def __init__(self, gain_timeout=2):
         # Load configuration
@@ -92,6 +89,11 @@ class JtopServer(Process):
         self.broadcaster = JtopManager()
         # Initialize jetson_clocks controller
         self.jetson_clocks = JetsonClocksService(self.config)
+        # Initialize nvpmodel controller
+        try:
+            self._nvp = NVPModelService()
+        except JtopException as e:
+            print(e)
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
 
@@ -142,7 +144,7 @@ class JtopServer(Process):
         except Exception:
             # Close tegra
             if self.tegra.close():
-                print("tegrastats close")
+                logger.info("tegrastats close")
             # Catch exception
             ex_type, ex_value, tb = sys.exc_info()
             error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
@@ -160,13 +162,13 @@ class JtopServer(Process):
             raise Exception("Group {jtop_user} does not exist!".format(jtop_user=PIPE_JTOP_USER))
         # Remove old pipes if exists
         if force and os.path.exists(PIPE_JTOP):
-            print("Remove pipe {pipe}".format(pipe=PIPE_JTOP))
+            logger.info("Remove pipe {pipe}".format(pipe=PIPE_JTOP))
             os.remove(PIPE_JTOP)
         # Start broadcaster
         try:
             self.broadcaster.start()
         except EOFError:
-            raise JtopServer.Exception("Server already alive")
+            raise JtopException("Server already alive")
         # Initialize synchronized data and conditional
         self.sync_data = self.broadcaster.sync_data()
         self.sync_event = self.broadcaster.sync_event()
@@ -201,7 +203,7 @@ class JtopServer(Process):
 
     def tegra_stats(self, stats):
         data = {}
-        logger.info("tegrastats read")
+        logger.debug("tegrastats read")
         # Load data stats
         data['stats'] = stats
         # Load status jetson_clocks

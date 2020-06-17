@@ -22,9 +22,13 @@ import logging
 import subprocess as sp
 # Functions and decorators
 from functools import wraps
-
-# Create logger for jplotlib
+# Import exceptions
+from .exceptions import JtopException
+# Create logger
 logger = logging.getLogger(__name__)
+# Regular expressions
+REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
+REGPM = re.compile(r'NV Power Mode: ((.*))')
 
 
 def jetson_clocks_checks(func):
@@ -46,7 +50,7 @@ def jetson_clocks_checks(func):
     return wrapped
 
 
-class NVPmodel():
+class NVPModel(object):
     """
         This controller read the status from your NVIDIA Jetson and you can control
         performance and status.
@@ -56,104 +60,104 @@ class NVPmodel():
         * AGX Xavier: https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
         * Nano: https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/
     """
-    REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
-    REGPM = re.compile(r'NV Power Mode: ((.*))')
+    def __init__(self):
+        # Read all lines and extract modes
+        self._nvpm = {}
+        try:
+            nvpmodel_p = sp.Popen(['nvpmodel', '-p', '--verbose'], stdout=sp.PIPE)
+            out, _ = nvpmodel_p.communicate()
+            # Decode lines
+            lines = out.decode("utf-8")
+            for line in lines.split("\n"):
+                # Search configuration NVPmodel
+                match = REGEXP.search(line)
+                # if match extract name and number
+                if match:
+                    # Extract id and name
+                    mode_id = int(match.group(1))
+                    mode_name = str(match.group(2)).replace("MODE_", "").replace("_", " ")
+                    # Save in nvpm list
+                    self._nvpm[mode_id] = {'name': mode_name}
+        except OSError:
+            logger.warning("This board does not have NVP Model")
+            raise JtopException("NVPmodel does not exist for this board")
+        except AttributeError:
+            logger.error("Wrong open")
+            raise JtopException("Wrong open")
+        # Initialize mode
+        self._mode = ""
 
-    class NVPmodelException(Exception):
+    @property
+    def modes(self):
+        return self._nvpm
+
+    def __add__(self, number):
         pass
+
+    def __sub__(self, number):
+        pass
+
+    def __iadd__(self, number):
+        pass
+
+    def __isub__(self, number):
+        pass
+
+    def __repr__(self):
+        return self._mode
+
+    def _update(self, mode):
+        self._mode = mode
+
+
+class NVPModelService(object):
 
     def __init__(self, jetson_clocks=None):
         self.jetson_clocks = jetson_clocks
         try:
-            nvpmodel_p = sp.Popen(['nvpmodel', '-p', '--verbose'], stdout=sp.PIPE)
-            out, _ = nvpmodel_p.communicate()
-            # Log value
-            logger.debug('nvqmodel status %s', out)
-            # Decode lines
-            lines = out.decode("utf-8")
-            # Read all lines and extract modes
-            self.board = []
-            for line in lines.split("\n"):
-                # Search configuration NVPmodel
-                match = NVPmodel.REGEXP.search(line)
-                # if match extract name and number
-                if match:
-                    mode = str(match.group(2))
-                    pm = {"ID": int(match.group(1)), "Name": mode.replace("MODE_", "").replace("_", " "), "status": True}
-                    self.board += [pm]
+            NVPModelService.query()
         except OSError:
-            logger.info("This board does not have NVP Model")
-            raise NVPmodel.NVPmodelException("NVPmodel does not exist for this board")
-        except AttributeError:
-            logger.info("Wrong open")
-            raise NVPmodel.NVPmodelException("Wrong open")
-        # Initialize mode and num
-        self.update()
-        # Initialize with first configuration number
-        self.selected = self.num
+            logger.warning("This board does not have NVP Model")
+            raise JtopException("NVPmodel does not exist for this board")
 
-    @property
-    def modes(self):
-        return self.board
+    def set(self, value):
+        print(value)
 
-    @jetson_clocks_checks
-    def set(self, level):
+    def mode(self, level):
         """ Set nvpmodel to a new status """
-        try:
-            self.selected = level
-            # Set the new nvpmodel status
-            sep_nvp = sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
-            out, _ = sep_nvp.communicate()
-            if "NVPM ERROR" in out.decode("utf-8"):
-                self.board[level]["status"] = False
-                return False
-            else:
-                self.board[level]["status"] = True
-                return True
-        except OSError:
-            logger.info("NVP Model does not exist")
-            return False
-        except AttributeError:
-            logger.info("Wrong open")
-            return False
+        self.selected = level
+        # Set the new nvpmodel status
+        sep_nvp = sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
+        out, _ = sep_nvp.communicate()
+        # If there are no errors return the NV Power mode
+        return "NVPM ERROR" not in out.decode("utf-8")
 
-    def increase(self):
-        if self.selected + 1 < len(self.modes):
-            self.selected += 1
-            return self.set(self.selected)
-        else:
-            return False
+    def get(self):
+        # Initialize mode and num
+        _, mode = NVPModelService.query()
+        # Return the mode
+        return mode
 
-    def decrease(self):
-        if self.selected - 1 >= 0:
-            self.selected -= 1
-            return self.set(self.selected)
-        else:
-            return False
-
-    def update(self):
+    @staticmethod
+    def query():
         """ Read nvpmodel to know the status of the board """
-        try:
-            nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE, stderr=sp.PIPE)
-            out, _ = nvpmodel_p.communicate()
-            # Log value
-            logger.debug('nvqmodel status %s', out)
-            # Decode lines and split
-            lines = out.decode("utf-8").split("\n")
-            # Extract lines
-            for idx, line in enumerate(lines):
-                # Search configuration NVPmodel
-                match = NVPmodel.REGPM.search(line)
-                # if match extract name and number
-                if match:
-                    # Extract NV Power Mode
-                    mode = str(match.group(1))
-                    self.mode = mode.replace("MODE_", "").replace("_", " ")
-                    # Extract number
-                    self.num = int(lines[idx + 1])
-                    break
-        except OSError:
-            logger.info("NVP Model does not exist")
-        except AttributeError:
-            logger.info("Wrong open")
+        num = -1
+        mode = ""
+        nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = nvpmodel_p.communicate()
+        # Decode lines and split
+        lines = out.decode("utf-8").split("\n")
+        # Extract lines
+        for idx, line in enumerate(lines):
+            # Search configuration NVPmodel
+            match = REGPM.search(line)
+            # if match extract name and number
+            if match:
+                # Extract NV Power Mode
+                mode = str(match.group(1))
+                mode = mode.replace("MODE_", "").replace("_", " ")
+                # Extract number
+                num = int(lines[idx + 1])
+                break
+        return num, mode
 # EOF

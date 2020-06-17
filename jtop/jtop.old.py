@@ -37,7 +37,7 @@ Or manually start up with the basic function `open/close`
     stat = jetson.stats
     jetson.close()
 
-Jtop include all informations about your board. The default properties are:
+Jtop include all information about your board. The default properties are:
  * stats
  * nvpmodel
  * fan
@@ -64,8 +64,7 @@ from .core import (import_os_variables,
                    status_disk,
                    get_local_interfaces,
                    StatusObserver)
-
-# Create logger for jplotlib
+# Create logger
 logger = logging.getLogger(__name__)
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)

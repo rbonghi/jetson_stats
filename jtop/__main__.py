@@ -24,7 +24,7 @@ import logging
 from .service import JtopServer
 # Tegrastats objext reader
 from .jtop import jtop, get_version
-# Create logger for jplotlib
+# Create logger
 logger = logging.getLogger(__name__)
 
 

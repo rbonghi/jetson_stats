@@ -27,6 +27,8 @@ from datetime import timedelta
 from threading import Thread
 # Local functions and classes
 from .common import get_uptime
+# Import exceptions
+from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,9 @@ GPU_REGEXP = re.compile(r'GPU MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=((.*))')
 # EMC regex
 # EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
 EMC_REGEXP = re.compile(r'EMC MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=(.+?) FreqOverride=((.*))')
+# NVP Model
+# NV Power Mode: MAXN
+NVP_REGEXP = re.compile(r'NV Power Mode: ((.*))')
 
 
 def jetson_clocks_alive(show):
@@ -54,7 +59,7 @@ def jetson_clocks_alive(show):
     stat = []
     if 'CPU' in show:
         for cpu in show['CPU'].values():
-            # Check status CPUs
+            # Check status CPU
             stat += [cpu['MaxFreq'] == cpu['MinFreq']]
             stat += [cpu['MaxFreq'] == cpu['CurrentFreq']]
     # Check status GPU
@@ -69,7 +74,7 @@ def jetson_clocks_alive(show):
     #     stat += [emc['MaxFreq'] == emc['MinFreq']]
     #     stat += [emc['MaxFreq'] == emc['CurrentFreq']]
     if not stat:
-        raise JetsonClocksService.JCException("Require super user")
+        raise JtopException("Require super user")
     return all(stat)
 
 
@@ -78,7 +83,7 @@ def locate_jetson_clocks():
         if os.path.isfile(f_fc):
             logger.info("Load jetson_clocks {}".format(f_fc))
             return f_fc
-    raise JetsonClocksService.JCException("Tegrastats is not availabe on this board")
+    raise JtopException("Tegrastats is not availabe on this board")
 
 
 class JetsonClocks(object):
@@ -135,9 +140,6 @@ class JetsonClocksService(object):
         This controller manage the jetson_clocks service.
     """
 
-    class JCException(Exception):
-        pass
-
     def __init__(self, config):
         self._thread = None
         self._error = None
@@ -150,7 +152,7 @@ class JetsonClocksService(object):
         self.jc_bin = locate_jetson_clocks()
         # Check if running a root
         if os.getuid() != 0:
-            raise JetsonClocksService.JCException("Need sudo")
+            raise JtopException("Need sudo")
 
     def initialization(self):
         # Check if exist configuration file
@@ -164,7 +166,7 @@ class JetsonClocksService(object):
         # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
         # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
         # Temporary disabled to find a best way to start this service.
-        # The service ondemand disabled doesn't improve the performance of the start-up
+        # The service on demand disabled doesn't improve the performance of the start-up
         # If jetson_clocks on boot run a thread
         if self.config.get('boot', CONFIG_DEFAULT_BOOT):
             # Start thread Service client
@@ -209,6 +211,12 @@ class JetsonClocksService(object):
                                  "CurrentFreq": int(match.group(3)),
                                  "FreqOverride": int(match.group(4))}
                 continue
+            # Search configuration NV Power Model
+            match = NVP_REGEXP.search(line)
+            # Load NV Power Model
+            if match:
+                status["NVP"] = str(match.group(1))
+                continue
             # Search configuration CPU Cluster config
             match = CPU_CLUSTER_REGEXP.search(line)
             # Load EMC match
@@ -219,7 +227,6 @@ class JetsonClocksService(object):
             # SOC family:tegra210  Machine:NVIDIA Jetson Nano Developer Kit
             # Online CPUs: 0-3
             # Fan: speed=0
-            # NV Power Mode: MAXN
         return status
 
     @property
@@ -253,7 +260,7 @@ class JetsonClocksService(object):
             # Extract result
             message = out.decode("utf-8")
             if message:
-                raise JetsonClocksService.JCException("Error to start jetson_clocks: {message}".format(message=message))
+                raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
             logger.info("jetson_clocks running")
         except Exception:
             # Run close loop
@@ -269,7 +276,7 @@ class JetsonClocksService(object):
         # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
         # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
         # Temporary disabled to find a best way to start this service.
-        # The service ondemand disabled doesn't improve the performance of the start-up
+        # The service on demand disabled doesn't improve the performance of the start-up
         # If jetson_clocks on boot run a thread
         if self.is_alive:
             return True
@@ -292,7 +299,7 @@ class JetsonClocksService(object):
         # Extract result
         message = out.decode("utf-8")
         if message:
-            raise JetsonClocksService.JCException("Error to start jetson_clocks: {message}".format(message=message))
+            raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
         return True
 
     def _error_status(self):

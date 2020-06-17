@@ -15,19 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
 
-from .nvpmodel import NVPModel, NVPModelService
-from .tegrastats import Tegrastats
-from .fan import Fan
-from .jetson_clocks import JetsonClocks, JetsonClocksService
-from .swap import Swap
-from .cpu import cpuinfo
-from .engine import nvjpg
-from .config import Config
-from .common import (import_os_variables,
-                     get_uptime,
-                     status_disk,
-                     get_local_interfaces)
-from .exceptions import JtopException
+class JtopException(Exception):
+    """ Jtop general exception """
+    pass
 # EOF

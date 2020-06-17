@@ -22,7 +22,8 @@ import sys
 import stat
 from grp import getgrnam
 import copy
-# Create logger for jplotlib
+from .exceptions import JtopException
+# Create logger
 logger = logging.getLogger(__name__)
 # Configurations
 PIPE_JTOP_USER = 'jetson_stats'
@@ -44,7 +45,7 @@ class Config:
                 gid = getgrnam(PIPE_JTOP_USER).gr_gid
             except KeyError:
                 # User does not exist
-                raise Exception("Group {jtop_user} does not exist!".format(jtop_user=PIPE_JTOP_USER))
+                raise JtopException("Group {jtop_user} does not exist!".format(jtop_user=PIPE_JTOP_USER))
             # Make file
             with open(self.config_file, 'w') as outfile:
                 json.dump(self._config, outfile)

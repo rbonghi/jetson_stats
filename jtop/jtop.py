@@ -24,11 +24,13 @@ import traceback
 from threading import Thread
 from .service import JtopManager
 from .core import (Config,
+                   NVPModel,
                    import_os_variables,
                    get_uptime,
                    status_disk,
                    get_local_interfaces,
-                   JetsonClocks)
+                   JetsonClocks,
+                   JtopException)
 try:
     FileNotFoundError
 except NameError:
@@ -59,9 +61,13 @@ def get_version():
 
 
 class jtop(Thread):
-    class JtopException(Exception):
-        """ Jtop general exception """
-        pass
+    """
+    jtop library is the reference to control your NVIDIA Jetson board with python.
+    This object can be open like a file, or you can use a with callback function
+
+    :param interval: Interval update tegrastats and other statistic function
+    :type interval: float
+    """
 
     def __init__(self, interval=0.5):
         Thread.__init__(self)
@@ -86,6 +92,12 @@ class jtop(Thread):
         self.version = get_version()
         # Load jetson_clocks status
         self._jc = JetsonClocks(self._config)
+        # Load NV Power Mode
+        try:
+            self._nvp = NVPModel()
+        except JtopException as e:
+            print(e)
+            self._nvp = None
 
     def attach(self, observer):
         """
@@ -104,6 +116,22 @@ class jtop(Thread):
         :type observer: function
         """
         self._observers.discard(observer)
+
+    @property
+    def nvpmodel(self):
+        """
+        Status NV Power Mode
+
+        :return: Return the name of NV Power Mode
+        :rtype: string
+        """
+        return self._nvp
+
+    @nvpmodel.setter
+    def nvpmodel(self, value):
+        if self._nvp is None:
+            return
+        print(value)
 
     @property
     def jetson_clocks(self):
@@ -239,7 +267,7 @@ class jtop(Thread):
         """
         Internal decode function to decode and refactoring data
         """
-        # Read tegrastat
+        # Read tegrastats
         tegrastats = data['stats']
         if 'WATT' in tegrastats:
             # Refactor names
@@ -264,6 +292,8 @@ class jtop(Thread):
             tegrastats['GR3D'].update(jc_show['GPU'])
         # Store the updated stats from tegrastats
         self._stats = tegrastats
+        # Update NVIDIA Power mode
+        self._nvp._update(jc_show.get('NVP', ''))
         # Notify all observers
         for observer in self._observers:
             # Call all observer in list
@@ -300,12 +330,12 @@ class jtop(Thread):
             # Read stats from jtop service
             data = self._sync_data.copy()
             if not data:
-                raise jtop.JtopException("Error connection")
+                raise JtopException("Error connection")
             # Clear event
             self._sync_event.clear()
         except EOFError:
             # Raise jtop exception
-            raise jtop.JtopException("Lost connection with jtop server")
+            raise JtopException("Lost connection with jtop server")
         return data
 
     def start(self):
@@ -315,14 +345,14 @@ class jtop(Thread):
         except FileNotFoundError as e:
             if e.errno == 2:  # Message error: 'No such file or directory'
                 # TODO: Fixe message error
-                raise jtop.JtopException("jetson_stats service not active, please run sudo ... ")
+                raise JtopException("jetson_stats service not active, please run sudo ... ")
             elif e.errno == 13:  # Message error: 'Permission denied'
-                raise jtop.JtopException("I can't access to server, check group ")
+                raise JtopException("I can't access to server, check group ")
             else:
                 raise FileNotFoundError(e)
         except ValueError:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
-            raise jtop.JtopException("mismatch python version between library and service")
+            raise JtopException("mismatch python version between library and service")
         # Initialize synchronized data and condition
         self._controller = self._broadcaster.get_queue()
         self._sync_data = self._broadcaster.sync_data()
