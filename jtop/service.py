@@ -117,7 +117,7 @@ class JtopServer(Process):
                         # Enable or disable
                         if control['jc']:
                             if self.jetson_clocks.start():
-                                logger.info("jetson_clocks stared")
+                                logger.info("jetson_clocks started")
                             else:
                                 logger.warning("jetson_clocks already running")
                         else:
@@ -131,10 +131,11 @@ class JtopServer(Process):
                         logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
                         self._nvp.set(mode)
+                    # Config message
                     if 'config' in control:
                         config = control['config']
+                        # Update jetson_clocks configuration
                         if 'jc' in config:
-                            print(config['jc'])
                             self.jetson_clocks.boot = config['jc']
                     # Initialize tegrastats speed
                     if 'interval' in control:

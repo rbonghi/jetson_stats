@@ -116,7 +116,6 @@ class JetsonClocks(object):
         # Don't send a message if value is the same
         if value == self._boot:
             return
-        print(value, self._boot)
         # Set new jetson_clocks configuration
         self._controller.put({'config': {'jc': value}})
 
