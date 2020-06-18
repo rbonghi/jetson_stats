@@ -26,7 +26,7 @@ from grp import getgrnam
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
-from .core import Tegrastats, JetsonClocksService, Config, NVPModelService, JtopException
+from .core import JtopException, Tegrastats, JetsonClocksService, Config, NVPModelService, FanService
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -69,6 +69,9 @@ class JtopServer(Process):
     """
 
     def __init__(self, gain_timeout=2):
+        # Check if running a root
+        if os.getuid() != 0:
+            raise JtopException("jetson_clocks need sudo to work")
         # Load configuration
         self.config = Config()
         # Error queue
@@ -91,8 +94,13 @@ class JtopServer(Process):
         JtopManager.register("sync_data", callable=lambda: self.data)
         JtopManager.register('sync_event', callable=lambda: self.event)
         self.broadcaster = JtopManager()
+        # Initialize Fan
+        try:
+            self.fan = FanService(self.config)
+        except JtopException:
+            self.fan = None
         # Initialize jetson_clocks controller
-        self.jetson_clocks = JetsonClocksService(self.config)
+        self.jetson_clocks = JetsonClocksService(self.config, self.fan)
         # Initialize nvpmodel controller
         try:
             self._nvp = NVPModelService()
@@ -226,6 +234,9 @@ class JtopServer(Process):
         # Load status jetson_clocks
         data['jc'] = self.jetson_clocks.show()
         data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
+        # Update status fan speed
+        if self.fan is not None:
+            data['fan'] = self.fan.update()
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)

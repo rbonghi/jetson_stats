@@ -19,7 +19,7 @@
 
 from .nvpmodel import NVPModel, NVPModelService
 from .tegrastats import Tegrastats
-from .fan import Fan
+from .fan import Fan, FanService
 from .jetson_clocks import JetsonClocks, JetsonClocksService
 from .swap import Swap
 from .cpu import cpuinfo

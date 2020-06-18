@@ -24,6 +24,8 @@ import traceback
 import subprocess as sp
 # Threading
 from threading import Thread
+# Exceptions
+from .exceptions import JtopException
 # Tegrastats parser
 from .tegra_parse import VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, WATTS
 # Create logger for tegrastats
@@ -35,7 +37,7 @@ def locate_tegrastats():
         if os.path.isfile(f_tegra):
             logger.info("Load tegrastats {}".format(f_tegra))
             return f_tegra
-    raise Tegrastats.TegrastatsException("Tegrastats is not availabe on this board")
+    raise JtopException("Tegrastats is not availabe on this board")
 
 
 class Tegrastats:
@@ -45,9 +47,6 @@ class Tegrastats:
         - Property
         https://www.programiz.com/python-programming/property
     """
-
-    class TegrastatsException(Exception):
-        pass
 
     def __init__(self, callback):
         # Error message from thread

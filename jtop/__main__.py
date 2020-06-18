@@ -68,7 +68,7 @@ def main():
         interval = float(args.refresh / 1000.0)
         with jtop(interval=interval) as jetson:
             # Status connection
-            while jetson.is_alive:
+            while jetson.ok():
                 print(jetson.cpu)
                 print(jetson.gpu)
                 # Sleep

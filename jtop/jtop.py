@@ -301,10 +301,6 @@ class jtop(Thread):
             # Call all observer in list
             observer(self)
 
-    @property
-    def is_alive(self):
-        return self._running
-
     def run(self):
         # https://gist.github.com/schlamar/2311116
         # https://stackoverflow.com/questions/13074847/catching-exception-in-context-manager-enter
@@ -378,7 +374,7 @@ class jtop(Thread):
     def loop_for_ever(self):
         self.start()
         # Blocking function to catch exceptions
-        while self._running:
+        while self.ok():
             try:
                 self.join(timeout=0.1)
             except (KeyboardInterrupt, SystemExit):
@@ -386,14 +382,20 @@ class jtop(Thread):
         # Close jtop
         self.close()
 
-    def close(self):
-        # Switch off broadcaster thread
-        self._running = False
+    def ok(self):
         # Catch exception if exist
         if self._error:
             ex_type, ex_value, tb_str = self._error
             message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
             raise ex_type(message)
+        # Return the status
+        return self._running
+
+    def close(self):
+        # Check exceptions
+        self.ok()
+        # Switch off broadcaster thread
+        self._running = False
 
     def __enter__(self):
         """ Enter function for 'with' statement """

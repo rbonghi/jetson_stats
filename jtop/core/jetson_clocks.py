@@ -143,7 +143,7 @@ class JetsonClocksService(object):
         This controller manage the jetson_clocks service.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, fan):
         self._thread = None
         self._error = None
         # Load configuration
@@ -153,9 +153,8 @@ class JetsonClocksService(object):
         self.config_l4t = config.path + "/" + jetson_clocks_file
         # Jetson Clocks path
         self.jc_bin = locate_jetson_clocks()
-        # Check if running a root
-        if os.getuid() != 0:
-            raise JtopException("jetson_clocks need sudo to work")
+        # Fan configuration
+        self.fan = fan
 
     def initialization(self):
         # Check if exist configuration file
