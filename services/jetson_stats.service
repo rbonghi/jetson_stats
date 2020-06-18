@@ -1,6 +1,5 @@
-# -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -14,16 +13,15 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+[Unit]
+Description=jetson_stats service
+After=multi-user.target
+Conflicts=getty@tty1.service
 
-# flake8: noqa
+[Service]
+Type=simple
+ExecStart=/usr/local/jetson_stats/jetson_stats.py
+StandardInput=tty-force
 
-from .service import JtopServer
-from .core import JtopException
-from .jtop import jtop, import_jetson_variables
-
-__author__ = "Raffaello Bonghi"
-__email__ = "raffaello@rnext.it"
-# Version package
-# https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "3.0.0"
-# EOF
+[Install]
+WantedBy=multi-user.target

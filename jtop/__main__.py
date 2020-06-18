@@ -52,39 +52,21 @@ class bcolors:
     def fail(message="ERR"):
         return bcolors.FAIL + message + bcolors.ENDC
 
-
-def service():
-    # jtop service
-    server = JtopServer()
-    print("Service started")
-    try:
-        server.loop_for_ever()
-    except Exception as e:
-        print(e)
-    # Close stats server
-    print("Close service")
-
-
 def main():
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
-    parser.add_argument('--service', help=argparse.SUPPRESS, action="store_true", default=False)
     parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('-p', '--page', dest="page", help='Open fix page', type=int, default=1)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
 
-    # Run service
-    if args.service:
-        # Initialize logging level
-        logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
-        # Run service
-        service()
-        exit(0)
+    # Initialize logging level
+    # logging.basicConfig()
+    # Initialize logging level
+    logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    
     # Run the client
     try:
-        # Initialize logging level
-        logging.basicConfig()
         # Convert refresh to second
         interval = float(args.refresh / 1000.0)
         with jtop(interval=interval) as jetson:

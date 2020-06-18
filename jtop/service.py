@@ -23,7 +23,7 @@ import sys
 import stat
 import traceback
 from grp import getgrnam
-from multiprocessing import Process, Queue, Event
+from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
 from .core import Tegrastats, JetsonClocksService, Config, NVPModelService, JtopException
@@ -77,6 +77,8 @@ class JtopServer(Process):
         self.gain_timeout = gain_timeout
         # Command queue
         self.q = Queue()
+        # Speed interval
+        self.interval = Value('d', 0.0)
         # Dictionary to sync
         self.data = {}
         # Event lock
@@ -101,7 +103,7 @@ class JtopServer(Process):
 
     def run(self):
         timeout = None
-        local_timeout = 1
+        interval = 1
         try:
             while True:
                 try:
@@ -131,15 +133,15 @@ class JtopServer(Process):
                         self._nvp.set(mode)
                     # Initialize tegrastats speed
                     if 'interval' in control:
-                        local_timeout = control['interval']
-                        # Set timeout
-                        interval = int(local_timeout * 1000)
+                        interval = control['interval']
                         # Run stats
                         if self.tegra.open(interval=interval):
+                            # Set interval value
+                            self.interval.value = interval
                             # Status start tegrastats
-                            logger.info("tegrastats started {interval}ms".format(interval=interval))
+                            logger.info("tegrastats started {interval}ms".format(interval=int(interval * 1000)))
                     # Update timeout interval
-                    timeout = local_timeout * self.gain_timeout
+                    timeout = interval * self.gain_timeout
                 except queue.Empty:
                     # Close and log status
                     if self.tegra.close():
@@ -210,7 +212,8 @@ class JtopServer(Process):
         self.broadcaster.shutdown()
 
     def tegra_stats(self, stats):
-        data = {}
+        # Make configuration dict
+        data = {'config': {'interval': self.interval.value, 'boot': self.jetson_clocks.boot}}
         logger.debug("tegrastats read")
         # Load data stats
         data['stats'] = stats

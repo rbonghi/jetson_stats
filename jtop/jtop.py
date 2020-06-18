@@ -23,8 +23,7 @@ import copy
 import traceback
 from threading import Thread
 from .service import JtopManager
-from .core import (Config,
-                   NVPModel,
+from .core import (NVPModel,
                    import_os_variables,
                    get_uptime,
                    status_disk,
@@ -72,7 +71,7 @@ class jtop(Thread):
     def __init__(self, interval=0.5):
         Thread.__init__(self)
         # Load configuration
-        self._config = Config()
+        self._config = {}
         # Error message from thread
         self._error = None
         # Start server
@@ -91,7 +90,7 @@ class jtop(Thread):
         # Version package
         self.version = get_version()
         # Load jetson_clocks status
-        self._jc = JetsonClocks(self._config)
+        self._jc = JetsonClocks()
         # Load NV Power Mode
         try:
             self._nvp = NVPModel()
@@ -189,7 +188,7 @@ class jtop(Thread):
         gpu = copy.copy(self._stats['GR3D'])
         return gpu
 
-    def _total_power(self, dpower):
+    def _total_power(self, power):
         """
         Private function to measure the total watt
 
@@ -200,7 +199,7 @@ class jtop(Thread):
         # https://forums.developer.nvidia.com/t/power-consumption-monitoring/73608/8
         # https://github.com/rbonghi/jetson_stats/issues/51
         total_name = ""
-        for val in dpower:
+        for val in power:
             if "_IN" in val:
                 total_name = val
                 break
@@ -209,15 +208,15 @@ class jtop(Thread):
         # Example for Jetson Xavier
         # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
         if total_name:
-            total = dpower[total_name]
-            del dpower[total_name]
-            return {'Total': total}, dpower
+            total = power[total_name]
+            del power[total_name]
+            return {'Total': total}, power
         # Otherwise measure all total power
         total = {'cur': 0, 'avg': 0}
-        for power in dpower.values():
+        for power in power.values():
             total['cur'] += power['cur']
             total['avg'] += power['avg']
-        return {'Total': total}, dpower
+        return {'Total': total}, power
 
     @property
     def power(self):
@@ -229,12 +228,12 @@ class jtop(Thread):
         """
         if 'WATT' not in self._stats:
             return {}
-        dpower = copy.copy(self._stats['WATT'])
+        power = copy.copy(self._stats['WATT'])
         # Measure total power
-        total, dpower = self._total_power(dpower)
+        total, power = self._total_power(power)
         # Add total power
-        dpower.update(total)
-        return dpower
+        power.update(total)
+        return power
 
     @property
     def temperature(self):
@@ -269,6 +268,8 @@ class jtop(Thread):
         """
         Internal decode function to decode and refactoring data
         """
+        # Extract configuration
+        self._config = data['config']
         # Read tegrastats
         tegrastats = data['stats']
         if 'WATT' in tegrastats:
@@ -365,6 +366,10 @@ class jtop(Thread):
         data = self._get_data()
         # Decode and update all jtop data
         self._decode(data)
+        # Send a warning message if there is a mismatch between request speed and server speed
+        if self._interval != self._config['interval']:
+            logger.warning("I can't set this speed. Another jtop set speed to {interval}s".format(interval=self._config['interval']))
+        #if self._interval 
         # Run thread reader
         self._running = True
         self.daemon = True

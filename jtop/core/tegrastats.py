@@ -121,7 +121,9 @@ class Tegrastats:
             # Reset variable
             self.p = None
 
-    def open(self, interval=500):
+    def open(self, interval=0.5):
+        # Set timeout
+        interval = int(interval * 1000)
         # Check if thread or process exist
         if self.p is not None:
             return False

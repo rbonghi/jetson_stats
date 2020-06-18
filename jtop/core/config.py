@@ -27,47 +27,32 @@ from .exceptions import JtopException
 logger = logging.getLogger(__name__)
 # Configurations
 JTOP_USER = 'jetson_stats'
-PATH_FOLDER = '/local/jetson_stats'
-CONFIG_JTOP = 'config.json'
 
 
 class Config:
 
     def __init__(self):
         # Load configuration path
-        self.config_file = self.path + '/' + CONFIG_JTOP
+        self.config_file = self.path + '/config.json'
         # Load configuration
         self._config = self._load()
         self._last_config = copy.deepcopy(self._config)
-        # Initialize configuration
-        if not os.path.isfile(self.config_file):
-            try:
-                gid = getgrnam(JTOP_USER).gr_gid
-            except KeyError:
-                # User does not exist
-                raise JtopException("Group {jtop_user} does not exist!".format(jtop_user=JTOP_USER))
-            # Make file
-            with open(self.config_file, 'w') as outfile:
-                json.dump(self._config, outfile)
-            # Change owner
-            os.chown(self.config_file, os.getuid(), gid)
-            # Set configuration
-            # https://www.tutorialspoint.com/python/os_chmod.htm
-            os.chmod(self.config_file, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP | stat.S_IROTH)
-            logger.info("Initialization configuration file {path}".format(path=self.config_file))
 
     def set(self, instance, data):
         # Update configuration
         self._config[instance] = data
         # Store configuration
-        self._store()
+        if self._last_config != self._config:
+            self._store()
+            # Update last configuration
+            self._last_config = copy.deepcopy(self._config)
 
     def get(self, instance, data):
         return self._config.get(instance, data)
 
     @property
     def path(self):
-        return sys.prefix + PATH_FOLDER
+        return sys.prefix + '/local/jetson_stats'
 
     def _load(self):
         config = {}
@@ -80,12 +65,8 @@ class Config:
         return config
 
     def _store(self):
-        if self._last_config == self._config:
-            return
         logger.info("Store config to {path}".format(path=self.config_file))
         # Write configuration
         with open(self.config_file, 'w') as outfile:
             json.dump(self._config, outfile, sort_keys=True, indent=4)
-        # Update last configuration
-        self._last_config = copy.deepcopy(self._config)
 # EOF

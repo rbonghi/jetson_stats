@@ -92,25 +92,8 @@ class JetsonClocks(object):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self, config):
-        self._config = config
+    def __init__(self):
         self._show = {}
-
-    @property
-    def boot(self):
-        config = self._config.get('jetson_clocks', {})
-        return config.get('boot', CONFIG_DEFAULT_BOOT)
-
-    @boot.setter
-    def boot(self, value):
-        if not isinstance(value, bool):
-            raise ValueError("Use a boolean")
-        # Extract configuration
-        config = self._config.get('jetson_clocks', {})
-        # Add new value
-        config['boot'] = value
-        # Set new jetson_clocks configuration
-        self._config.set('jetson_clocks', config)
 
     @property
     def status(self):
@@ -144,8 +127,8 @@ class JetsonClocksService(object):
         self._thread = None
         self._error = None
         # Load configuration
-        self.config = config.get('jetson_clocks', {})
-        jetson_clocks_file = self.config.get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
+        self._config = config.get('jetson_clocks', {})
+        jetson_clocks_file = self._config.get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
         # Config file
         self.config_l4t = config.path + "/" + jetson_clocks_file
         # Jetson Clocks path
@@ -168,9 +151,25 @@ class JetsonClocksService(object):
         # Temporary disabled to find a best way to start this service.
         # The service on demand disabled doesn't improve the performance of the start-up
         # If jetson_clocks on boot run a thread
-        if self.config.get('boot', CONFIG_DEFAULT_BOOT):
+        if self._config.get('boot', CONFIG_DEFAULT_BOOT):
             # Start thread Service client
             self.start()
+
+    @property
+    def boot(self):
+        config = self._config.get('jetson_clocks', {})
+        return config.get('boot', CONFIG_DEFAULT_BOOT)
+
+    @boot.setter
+    def boot(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("Use a boolean")
+        # Extract configuration
+        config = self._config.get('jetson_clocks', {})
+        # Add new value
+        config['boot'] = value
+        # Set new jetson_clocks configuration
+        self._config.set('jetson_clocks', config)
 
     def show(self):
         p = sp.Popen([self.jc_bin, '--show'], stdout=sp.PIPE, stderr=sp.PIPE)
@@ -282,7 +281,7 @@ class JetsonClocksService(object):
             return True
         if not self.is_running:
             # Load jetson_clocks start up information
-            jetson_clocks_start = self.config.get('wait', CONFIG_DEFAULT_DELAY)
+            jetson_clocks_start = self._config.get('wait', CONFIG_DEFAULT_DELAY)
             # Start thread Service client
             self._thread = Thread(target=self._jetson_clocks_boot, args=[jetson_clocks_start])
             self._thread.daemon = True

@@ -54,9 +54,9 @@ class NVPModel(object):
                 if match:
                     # Extract id and name
                     mode_id = int(match.group(1))
-                    mode_name = str(match.group(2)).replace("MODE_", "").replace("_", " ")
+                    mode_name = str(match.group(2))
                     # Save in nvpm list
-                    self._nvpm[mode_id] = {'name': mode_name}
+                    self._nvpm[mode_id] = {'name': mode_name, 'error': False}
         except OSError:
             logger.warning("This board does not have NVP Model")
             raise JtopException("NVPmodel does not exist for this board")
@@ -68,16 +68,30 @@ class NVPModel(object):
 
     @property
     def modes(self):
-        return self._nvpm
+        # Make sorted list
+        return [self._nvpm[k]['name'] for k in sorted(self._nvpm)]
+
+    def _get_id(self, value):
+        try:
+            mode_id = self.modes.index(value)
+        except ValueError:
+            raise JtopException("This mode {value} does not exists".format(value=value))
+        return mode_id
 
     def set(self, value):
         if isinstance(value, str):
-            print("string", value)
+            # Convert MODE to ID
+            mode_id = self._get_id(value)
         elif isinstance(value, int):
-            print("Number", value)
+            # Check if ID is in list
+            if value < 0 or value > len(self.modes):
+                raise JtopException("This ID {value} does not exists".format(value=value))
+            mode_id = value
         else:
             raise TypeError("Data type not allowed {type}".format(type=type(value)))
-        return value
+
+        print("mode_id", mode_id)
+        return mode_id
 
     def __add__(self, number):
         pass
@@ -86,16 +100,19 @@ class NVPModel(object):
         pass
 
     def __iadd__(self, number):
-        pass
+        # Get new number
+        return self._id + number
 
     def __isub__(self, number):
-        pass
+        # Get new number
+        return self._id - number
 
     def __repr__(self):
         return self._mode
 
     def _update(self, mode):
         self._mode = mode
+        self._id = self._get_id(mode)
 
 
 class NVPModelService(object):
@@ -109,6 +126,7 @@ class NVPModelService(object):
             raise JtopException("NVPmodel does not exist for this board")
 
     def set(self, value):
+        print(value)
         if self.jetson_clocks is None:
             # Set NV Power Mode
             return self._mode(value)
@@ -159,7 +177,6 @@ class NVPModelService(object):
             if match:
                 # Extract NV Power Mode
                 mode = str(match.group(1))
-                mode = mode.replace("MODE_", "").replace("_", " ")
                 # Extract number
                 num = int(lines[idx + 1])
                 break

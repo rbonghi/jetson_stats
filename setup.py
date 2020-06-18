@@ -178,7 +178,7 @@ setup(
                nvidia Jetson XavierNX Nano Xavier TX2 TX1 process viewer"
               ),
     classifiers=["Development Status :: 5 - Production/Stable",
-                 # Audiencence and topics
+                 # Audience and topics
                  "Intended Audience :: Developers",
                  "Topic :: Software Development :: Embedded Systems",
                  "Topic :: Software Development :: Debuggers",
