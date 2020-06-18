@@ -19,7 +19,8 @@
 import logging
 # Launch command
 import subprocess as sp
-# Create logger for jplotlib
+from .exceptions import JtopException
+# Create logger
 logger = logging.getLogger(__name__)
 
 SWAP_MAX_SIZE = 15
@@ -27,9 +28,10 @@ SWAP_MIN_SIZE = 2
 
 
 class Swap(object):
+    pass
 
-    class SwapException(Exception):
-        pass
+
+class SwapService(object):
 
     def __init__(self, dir_swap="", default=8, swap_name="swfile"):
         # Set default folder swap
@@ -42,9 +44,8 @@ class Swap(object):
         # Initialize auto mount
         self.auto = True
         # Check if exist jetson_swap
-        exist = sp.call('command -v jetson_swap >> /dev/null', shell=True)
-        if exist != 0:
-            raise Swap.SwapException("jetson_swap does not exist!")
+        if sp.call('command -v jetson_swap >> /dev/null', shell=True) != 0:
+            raise JtopException("jetson_swap does not exist!")
         # Load swap information
         self.update()
 
@@ -54,7 +55,7 @@ class Swap(object):
         if out:
             swap_data = out.decode("utf-8")
             swap_data = swap_data.split("\t")
-            # Load swap informations
+            # Load swap information
             self.swap_info['file'] = swap_data[0].strip()
             self.swap_info['type'] = swap_data[1].strip()
             self.swap_info['size'] = int(swap_data[2].strip()) / 1000000.0

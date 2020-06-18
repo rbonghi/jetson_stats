@@ -23,8 +23,7 @@ from .exceptions import JtopException
 import logging
 # Compile decoder PWM table
 FAN_PWM_TABLE_RE = re.compile(r'\((.*?)\)')
-
-# Create logger for jplotlib
+# Create logger
 logger = logging.getLogger(__name__)
 
 
@@ -49,38 +48,35 @@ def locate_fan():
             return fan
     raise JtopException("No Fans availabe on this board")
 
+
+# Fan configurations
 CONFIGS = ["jetson_clocks", "manual", "system"]
 
 
 class Fan(object):
 
+    def __init__(self, controller):
+        self._controller = controller
+        self._status = {}
 
-    def __init__(self):
-        pass
+    def set(self, value):
+        if not self._status["status"]:
+            raise JtopException("Fan does not exist")
 
+    def mode(self, mode):
+        if mode not in CONFIGS:
+            raise JtopException("Control does not available")
 
-    def PWMtoValue(self, pwm):
-        return pwm * 100.0 / self._status["cap"]
+    def _update(self, status):
+        self._status = status
+        # Load status as a dictionary
+        self.__dict__.update(**self._status)
 
-    def ValueToPWM(self, value):
-        return ceil(self._status["cap"] * value / 100.0)
+    def _init(self, controller):
+        self._controller = controller
 
-
-    def increase(self, step=10):
-        # Round speed
-        spd = (self.speed // 10) * 10
-        # Increase the speed
-        if spd + step <= 100:
-            self.speed = spd + step
-
-    def decrease(self, step=10):
-        # Round speed
-        spd = (self.speed // 10) * 10
-        # Increase the speed
-        if spd - step >= 0:
-            self.speed = spd - step
-        if self.speed < step:
-            self.speed = 0
+    def __repr__(self):
+        return str(self._status)
 
 
 class FanService(object):
@@ -95,16 +91,16 @@ class FanService(object):
         self.isCPWM = os.path.isfile(self.path + "cur_pwm")
         self.isTPWM = os.path.isfile(self.path + "target_pwm")
         self.isCTRL = os.path.isfile(self.path + "temp_control")
-        # Initalize dictionary status
+        # Initialize dictionary status
         self._status = {}
         # Max value PWM
-        self._status["cap"] = int(self.read_status("pwm_cap")) if os.path.isfile(self.path + "pwm_cap") else 255
+        self._pwm_cap = int(self.read_status("pwm_cap")) if os.path.isfile(self.path + "pwm_cap") else 255
         # PWM RPM table
         self.table = load_table(self.path) if os.path.isfile(self.path + "pwm_rpm_table") else {}
         # Step time
         self._status["step"] = int(self.read_status("step_time")) if os.path.isfile(self.path + "step_time") else 0
         # Status FAN
-        self._status["status"] = 'ON' if os.path.isfile(self.path + "target_pwm") else 'OFF'
+        self._status["status"] = os.path.isfile(self.path + "target_pwm")
 
     @property
     def speed(self):
@@ -112,12 +108,16 @@ class FanService(object):
 
     @speed.setter
     def speed(self, value):
+        if not isinstance(value, float):
+            raise ValueError("Need a float number")
         # Check limit speed
-        if value < 0 or value > 255:
-            raise ValueError("Wrong speed")
+        if value < 0.0 or value > 1.0:
+            raise ValueError("Wrong speed, number between [0, 1]")
+        # Convert in PWM
+        pwm = self.ValueToPWM(value)
         # Write PWM value
         with open(self.path + "target_pwm", 'w') as f:
-            f.write(str(value))
+            f.write(str(pwm))
 
     @property
     def auto(self):
@@ -133,18 +133,26 @@ class FanService(object):
         with open(self.path + "temp_control", 'w') as f:
             f.write(str(value))
 
+    def PWMtoValue(self, pwm):
+        return pwm / self._pwm_cap
+
+    def ValueToPWM(self, value):
+        return ceil(self._pwm_cap * value)
+
     def update(self):
         # Control temperature
         if self.isCTRL:
-            self._status["ctrl"] = True if int(self.read_status("temp_control")) == 1 else False
+            temperature_control = self.read_status("temp_control")
+            logger.debug('{} status temperature_control {}'.format(self.path, temperature_control))
+            self._status["ctrl"] = bool(temperature_control)
         # Read PWM
         if self.isTPWM:
-            fan_level = float(self.read_status("target_pwm")) / 255.0 * 100.0
+            fan_level = float(self.read_status("target_pwm")) / 255.0
             logger.debug('{} status PWM CTRL {}'.format(self.path, fan_level))
             self._status["tpwm"] = int(fan_level)
         # Read current
         if self.isCPWM:
-            fan_level = float(self.read_status("cur_pwm")) / 255.0 * 100.0
+            fan_level = float(self.read_status("cur_pwm")) / 255.0
             logger.debug('{} status PWM CUR {}'.format(self.path, fan_level))
             self._status["cpwm"] = int(fan_level)
         # Read RPM fan
