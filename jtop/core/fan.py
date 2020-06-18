@@ -94,7 +94,7 @@ class FanService(object):
         # Initialize dictionary status
         self._status = {}
         # Max value PWM
-        self._pwm_cap = int(self.read_status("pwm_cap")) if os.path.isfile(self.path + "pwm_cap") else 255
+        self._pwm_cap = float(self.read_status("pwm_cap")) if os.path.isfile(self.path + "pwm_cap") else 255
         # PWM RPM table
         self.table = load_table(self.path) if os.path.isfile(self.path + "pwm_rpm_table") else {}
         # Step time
@@ -133,10 +133,10 @@ class FanService(object):
         with open(self.path + "temp_control", 'w') as f:
             f.write(str(value))
 
-    def PWMtoValue(self, pwm):
+    def _PWMtoValue(self, pwm):
         return pwm / self._pwm_cap
 
-    def ValueToPWM(self, value):
+    def _ValueToPWM(self, value):
         return ceil(self._pwm_cap * value)
 
     def update(self):
@@ -147,19 +147,19 @@ class FanService(object):
             self._status["ctrl"] = bool(temperature_control)
         # Read PWM
         if self.isTPWM:
-            fan_level = float(self.read_status("target_pwm")) / 255.0
+            fan_level = self._PWMtoValue(self.read_status("target_pwm"))
             logger.debug('{} status PWM CTRL {}'.format(self.path, fan_level))
-            self._status["tpwm"] = int(fan_level)
+            self._status["tpwm"] = fan_level
         # Read current
         if self.isCPWM:
-            fan_level = float(self.read_status("cur_pwm")) / 255.0
+            fan_level = self._PWMtoValue(self.read_status("cur_pwm"))
             logger.debug('{} status PWM CUR {}'.format(self.path, fan_level))
-            self._status["cpwm"] = int(fan_level)
+            self._status["cpwm"] = fan_level
         # Read RPM fan
-        # if self.with_rpm:
-        #     rpm_measured = int(self.read_status("rpm_measured"))
-        #     logger.debug('{} status RPM {}'.format(self.path, rpm_measured))
-        #     self._status["rpm"] = rpm_measured
+        if self.isRPM:
+            rpm_measured = self.read_status("rpm_measured")
+            logger.debug('{} status RPM {}'.format(self.path, rpm_measured))
+            self._status["rpm"] = int(rpm_measured)
         return self._status
 
     def read_status(self, file_read):
