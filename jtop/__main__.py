@@ -20,8 +20,6 @@ import argparse
 import time
 # Logging
 import logging
-# Jtop server
-from .service import JtopServer
 # Tegrastats objext reader
 from .jtop import jtop, get_version
 # jtop exception
@@ -52,6 +50,7 @@ class bcolors:
     def fail(message="ERR"):
         return bcolors.FAIL + message + bcolors.ENDC
 
+
 def main():
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
     parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
@@ -61,10 +60,8 @@ def main():
     args = parser.parse_args()
 
     # Initialize logging level
-    # logging.basicConfig()
-    # Initialize logging level
     logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
-    
+
     # Run the client
     try:
         # Convert refresh to second

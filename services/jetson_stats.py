@@ -23,13 +23,13 @@ import logging
 # Create logger
 logger = logging.getLogger(__name__)
 
+
 def main():
 
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=jtop.__version__))
     # Parse arguments
-    args = parser.parse_args()
-
+    # args = parser.parse_args()
 
     # Initialize logging level
     logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')

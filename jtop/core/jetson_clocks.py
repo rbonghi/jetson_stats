@@ -94,6 +94,8 @@ class JetsonClocks(object):
 
     def __init__(self):
         self._show = {}
+        self._controller = None
+        self._boot = False
 
     @property
     def status(self):
@@ -102,6 +104,21 @@ class JetsonClocks(object):
             return 'running'
         # Otherwise check status thread jetson_clocks
         return 'activating' if self._show.get('thread', False) else 'inactive'
+
+    @property
+    def boot(self):
+        return self._boot
+
+    @boot.setter
+    def boot(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("Use a boolean")
+        # Don't send a message if value is the same
+        if value == self._boot:
+            return
+        print(value, self._boot)
+        # Set new jetson_clocks configuration
+        self._controller.put({'config': {'jc': value}})
 
     @property
     def is_alive(self):
@@ -116,6 +133,10 @@ class JetsonClocks(object):
     def _update(self, show):
         self._show = show
         self._alive = jetson_clocks_alive(show)
+        self._boot = show['boot']
+
+    def _init(self, controller):
+        self._controller = controller
 
 
 class JetsonClocksService(object):
@@ -127,15 +148,15 @@ class JetsonClocksService(object):
         self._thread = None
         self._error = None
         # Load configuration
-        self._config = config.get('jetson_clocks', {})
-        jetson_clocks_file = self._config.get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
+        self._config = config
+        jetson_clocks_file = config.get('jetson_clocks', {}).get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
         # Config file
         self.config_l4t = config.path + "/" + jetson_clocks_file
         # Jetson Clocks path
         self.jc_bin = locate_jetson_clocks()
         # Check if running a root
         if os.getuid() != 0:
-            raise JtopException("Need sudo")
+            raise JtopException("jetson_clocks need sudo to work")
 
     def initialization(self):
         # Check if exist configuration file

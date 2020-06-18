@@ -70,8 +70,6 @@ class jtop(Thread):
 
     def __init__(self, interval=0.5):
         Thread.__init__(self)
-        # Load configuration
-        self._config = {}
         # Error message from thread
         self._error = None
         # Start server
@@ -151,8 +149,9 @@ class jtop(Thread):
         # Check if service is not started otherwise skip
         if self._jc.status == 'activating':
             return
-        # Send status jetson_clocks
-        self._controller.put({'jc': value})
+        if value != self._jc.is_alive:
+            # Send status jetson_clocks
+            self._controller.put({'jc': value})
 
     @property
     def stats(self):
@@ -269,7 +268,7 @@ class jtop(Thread):
         Internal decode function to decode and refactoring data
         """
         # Extract configuration
-        self._config = data['config']
+        self._server_interval = data['speed']
         # Read tegrastats
         tegrastats = data['stats']
         if 'WATT' in tegrastats:
@@ -362,14 +361,15 @@ class jtop(Thread):
         self._sync_event = self._broadcaster.sync_event()
         # Send alive message
         self._controller.put({'interval': self._interval})
+        # Initialize jetson_clocks sender
+        self._jc._init(self._controller)
         # Wait first value
         data = self._get_data()
         # Decode and update all jtop data
         self._decode(data)
         # Send a warning message if there is a mismatch between request speed and server speed
-        if self._interval != self._config['interval']:
-            logger.warning("I can't set this speed. Another jtop set speed to {interval}s".format(interval=self._config['interval']))
-        #if self._interval 
+        if self._interval != self._server_interval:
+            logger.warning("I can't set this speed. Another jtop set speed to {interval}s".format(interval=self._server_interval))
         # Run thread reader
         self._running = True
         self.daemon = True

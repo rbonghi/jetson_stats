@@ -19,10 +19,7 @@ import logging
 import os
 import json
 import sys
-import stat
-from grp import getgrnam
 import copy
-from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 # Configurations

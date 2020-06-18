@@ -131,6 +131,11 @@ class JtopServer(Process):
                         logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
                         self._nvp.set(mode)
+                    if 'config' in control:
+                        config = control['config']
+                        if 'jc' in config:
+                            print(config['jc'])
+                            self.jetson_clocks.boot = config['jc']
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
@@ -213,13 +218,13 @@ class JtopServer(Process):
 
     def tegra_stats(self, stats):
         # Make configuration dict
-        data = {'config': {'interval': self.interval.value, 'boot': self.jetson_clocks.boot}}
+        data = {'speed': self.interval.value}
         logger.debug("tegrastats read")
         # Load data stats
         data['stats'] = stats
         # Load status jetson_clocks
         data['jc'] = self.jetson_clocks.show()
-        data['jc'].update({'thread': self.jetson_clocks.is_running})
+        data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)
