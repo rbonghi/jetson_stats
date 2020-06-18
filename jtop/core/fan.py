@@ -114,7 +114,7 @@ class FanService(object):
         if value < 0.0 or value > 1.0:
             raise ValueError("Wrong speed, number between [0, 1]")
         # Convert in PWM
-        pwm = self.ValueToPWM(value)
+        pwm = self._ValueToPWM(value)
         # Write PWM value
         with open(self.path + "target_pwm", 'w') as f:
             f.write(str(pwm))
