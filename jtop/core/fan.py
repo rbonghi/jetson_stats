@@ -126,7 +126,7 @@ class FanService(object):
         # Load configuration
         config_fan = self._config.get('fan', {})
         # Set default speed
-        self._control = config_fan.get('control', CONFIG_DEFAULT_FAN_SPEED)
+        self._speed = config_fan.get('speed', CONFIG_DEFAULT_FAN_SPEED)
         # Set default mode
         self.mode = config_fan.get('mode', CONFIG_DEFAULT_FAN_MODE)
 
@@ -145,11 +145,13 @@ class FanService(object):
             # Set in auto only if jetson_clocks in not active
             if not self._jc.is_alive:
                 self.auto = True
+            else:
+                self.speed = 100
         if value == 'manual':
             # Switch off speed
             self.auto = False
             # Initialize default speed
-            self.control = self._control
+            self.speed = self._speed
         # Store mode
         self._status['mode'] = value
         # Extract configuration

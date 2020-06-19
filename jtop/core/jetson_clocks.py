@@ -264,17 +264,16 @@ class JetsonClocksService(object):
 
     def _fix_fan(self, speed):
         # Configure fan
-        if self.fan is not None:
-            if self.fan.mode == 'system':
-                # Read status
-                self.fan.speed = speed
-                # Set mode
-                self.fan.auto = True
-            elif self.fan.mode == 'manual':
-                # Read status
-                self.fan.speed = speed
-                # Set mode
-                self.fan.auto = False
+        if self.fan.mode == 'system':
+            # Read status
+            self.fan.speed = speed
+            # Set mode
+            self.fan.auto = True
+        elif self.fan.mode == 'manual':
+            # Read status
+            self.fan.speed = speed
+            # Set mode
+            self.fan.auto = False
 
     def _jetson_clocks_boot(self, boot_time):
         # Measure remaining time from boot
@@ -294,7 +293,8 @@ class JetsonClocksService(object):
             # Extract result
             message = out.decode("utf-8")
             # Fix fan speed
-            self._fix_fan(speed)
+            if self.fan is not None:
+                self._fix_fan(speed)
             if message:
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
             logger.info("jetson_clocks running")
@@ -329,6 +329,7 @@ class JetsonClocksService(object):
     def stop(self):
         # If there are exception raise
         self._error_status()
+        # Read fan speed
         if self.fan is not None:
             speed = self.fan.speed
         # Run jetson_clocks
@@ -337,7 +338,8 @@ class JetsonClocksService(object):
         # Extract result
         message = out.decode("utf-8")
         # Fix fan speed
-        self._fix_fan(speed)
+        if self.fan is not None:
+            self._fix_fan(speed)
         if message:
             raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
         return True

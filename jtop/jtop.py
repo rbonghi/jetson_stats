@@ -276,7 +276,7 @@ class jtop(Thread):
         if 'fan' in data:
             self._fan._update(data['fan'])
         # Extract configuration
-        self._server_interval = data['speed']
+        self._server_interval = data['interval']
         # Read tegrastats
         tegrastats = data['stats']
         if 'WATT' in tegrastats:

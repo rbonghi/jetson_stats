@@ -238,7 +238,7 @@ class JtopServer(Process):
 
     def tegra_stats(self, stats):
         # Make configuration dict
-        data = {'speed': self.interval.value}
+        data = {'interval': self.interval.value}
         logger.debug("tegrastats read")
         # Load data stats
         data['stats'] = stats
@@ -246,8 +246,8 @@ class JtopServer(Process):
         data['jc'] = self.jetson_clocks.show()
         data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
         # Update status fan speed
-        #if self.fan is not None:
-        #    data['fan'] = self.fan.update()
+        if self.fan is not None:
+            data['fan'] = self.fan.update()
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)
