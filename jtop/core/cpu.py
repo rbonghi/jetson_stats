@@ -19,41 +19,58 @@
 import re
 REGEXP = re.compile(r'(.+?): ((.*))')
 
+def info():
+    cpus = {}
+    with open("/proc/cpuinfo", "r") as fp:
+        for line in fp:
+            # Search line
+            match = REGEXP.search(line)
+            if match:
+                key = match.group(1).rstrip()
+                value = match.group(2).rstrip()
+                # Load value or if it is a new processor initialize a new field
+                if key == "processor":
+                    n_proc = int(value)
+                    cpus[n_proc] = {}
+                else:
+                    # Load cpu info
+                    cpus[n_proc][key] = value
+    return cpus
 
-class cpuinfo():
+
+def models():
+    # Load cpuinfo
+    cpus = info()
+    models = {}
+    # Find all models
+    for cpu in cpus.values():
+        model = cpu.get("model name", "")
+        if model not in models:
+            models[model] = 1
+        else:
+            models[model] += 1
+    return models
+
+
+class CPU(object):
     """
     Find in cpuinfo information about the board
     """
-    @staticmethod
-    def info():
-        cpus = {}
-        with open("/proc/cpuinfo", "r") as fp:
-            for line in fp:
-                # Search line
-                match = REGEXP.search(line)
-                if match:
-                    key = match.group(1).rstrip()
-                    value = match.group(2).rstrip()
-                    # Load value or if it is a new processor initialize a new field
-                    if key == "processor":
-                        n_proc = int(value)
-                        cpus[n_proc] = {}
-                    else:
-                        # Load cpu info
-                        cpus[n_proc][key] = value
-        return cpus
+    def __init__(self):
+        # Load models
+        self.model = models()
+        # Initialize CPU status
+        self.cpu = {}
 
-    @staticmethod
-    def models():
-        # Load cpuinfo
-        cpus = cpuinfo.info()
-        models = {}
-        # Find all models
-        for cpu in cpus.values():
-            model = cpu.get("model name", "")
-            if model not in models:
-                models[model] = 1
-            else:
-                models[model] += 1
-        return models
+    def _update(self, tegra_cpu, jc_show):
+        if 'CPU' in jc_show:
+            for k, v in tegra_cpu.items():
+                # Extract jc_cpu info
+                jc_cpu = jc_show['CPU'].get(k, {})
+                # Update CPU information
+                v.update(jc_cpu)
+                self.cpu[k] = v
+
+    def __repr__(self):
+        return str(self.cpu)
 # EOF

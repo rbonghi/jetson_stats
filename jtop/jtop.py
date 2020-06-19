@@ -23,7 +23,9 @@ import copy
 import traceback
 from threading import Thread
 from .service import JtopManager
-from .core import (NVPModel,
+from .core import (CPU,
+                   Fan,
+                   NVPModel,
                    import_os_variables,
                    get_uptime,
                    status_disk,
@@ -85,8 +87,8 @@ class jtop(Thread):
         JtopManager.register("sync_data")
         JtopManager.register('sync_event')
         self._broadcaster = JtopManager()
-        # Version package
-        self.version = get_version()
+        # Initialize fan
+        self._fan = Fan()
         # Load jetson_clocks status
         self._jc = JetsonClocks()
         # Load NV Power Mode
@@ -95,6 +97,8 @@ class jtop(Thread):
         except JtopException as e:
             print(e)
             self._nvp = None
+        # Initialize CPU
+        self._cpu = CPU()
 
     def attach(self, observer):
         """
@@ -113,6 +117,10 @@ class jtop(Thread):
         :type observer: function
         """
         self._observers.discard(observer)
+
+    @property
+    def fan(self):
+        return self._fan
 
     @property
     def nvpmodel(self):
@@ -173,11 +181,8 @@ class jtop(Thread):
 
     @property
     def cpu(self):
-        if 'CPU' not in self._stats:
-            return {}
-        # Extract CPU
-        cpus = copy.copy(self._stats['CPU'])
-        return cpus
+        # Return CPU status
+        return self._cpu
 
     @property
     def gpu(self):
@@ -267,6 +272,9 @@ class jtop(Thread):
         """
         Internal decode function to decode and refactoring data
         """
+        # Update status fan
+        if 'fan' in data:
+            self._fan._update(data['fan'])
         # Extract configuration
         self._server_interval = data['speed']
         # Read tegrastats
@@ -283,13 +291,8 @@ class jtop(Thread):
         # Update status
         self._jc._update(jc_show)
         # Store data in stats
-        if 'CPU' in jc_show:
-            for k, v in tegrastats['CPU'].items():
-                # Extract jc_cpu info
-                jc_cpu = jc_show['CPU'].get(k, {})
-                # Update CPU information
-                v.update(jc_cpu)
-                tegrastats['CPU'][k] = v
+        self._cpu._update(tegrastats['CPU'], jc_show)
+        # Update GPU status
         if 'GPU' in jc_show:
             tegrastats['GR3D'].update(jc_show['GPU'])
         # Store the updated stats from tegrastats
@@ -359,6 +362,7 @@ class jtop(Thread):
         self._controller.put({'interval': self._interval})
         # Initialize jetson_clocks sender
         self._jc._init(self._controller)
+        self._fan._init(self._controller)
         # Wait first value
         data = self._get_data()
         # Decode and update all jtop data

@@ -101,6 +101,9 @@ class JtopServer(Process):
             self.fan = None
         # Initialize jetson_clocks controller
         self.jetson_clocks = JetsonClocksService(self.config, self.fan)
+        # Initialize jetson_fan
+        if self.fan is not None:
+            self.fan.initialization(self.jetson_clocks)
         # Initialize nvpmodel controller
         try:
             self._nvp = NVPModelService()
@@ -133,6 +136,14 @@ class JtopServer(Process):
                                 logger.info("jetson_clocks stopped")
                             else:
                                 logger.info("jetson_clocks already stopped")
+                    if 'fan' in control:
+                        fan = control['fan']
+                        for key, value in fan.items():
+                            logger.info('Fan config {} {}'.format(key, value))
+                            if key == 'mode':
+                                self.fan.mode = value
+                            elif key == 'speed':
+                                self.fan.speed = value
                     # Decode nvp model
                     if 'nvp' in control:
                         mode = control['nvp']
@@ -235,8 +246,8 @@ class JtopServer(Process):
         data['jc'] = self.jetson_clocks.show()
         data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
         # Update status fan speed
-        if self.fan is not None:
-            data['fan'] = self.fan.update()
+        #if self.fan is not None:
+        #    data['fan'] = self.fan.update()
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)

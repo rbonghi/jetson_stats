@@ -262,6 +262,20 @@ class JetsonClocksService(object):
                 return True
         return False
 
+    def _fix_fan(self, speed):
+        # Configure fan
+        if self.fan is not None:
+            if self.fan.mode == 'system':
+                # Read status
+                self.fan.speed = speed
+                # Set mode
+                self.fan.auto = True
+            elif self.fan.mode == 'manual':
+                # Read status
+                self.fan.speed = speed
+                # Set mode
+                self.fan.auto = False
+
     def _jetson_clocks_boot(self, boot_time):
         # Measure remaining time from boot
         boot_time = timedelta(seconds=boot_time)
@@ -272,11 +286,15 @@ class JetsonClocksService(object):
             logger.info("Starting jetson_clocks in: {delta}s".format(delta=delta))
             time.sleep(delta)
         try:
+            if self.fan is not None:
+                speed = self.fan.speed
             # Start jetson_clocks
             p = sp.Popen([self.jc_bin], stdout=sp.PIPE, stderr=sp.PIPE)
             out, _ = p.communicate()
             # Extract result
             message = out.decode("utf-8")
+            # Fix fan speed
+            self._fix_fan(speed)
             if message:
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
             logger.info("jetson_clocks running")
@@ -311,11 +329,15 @@ class JetsonClocksService(object):
     def stop(self):
         # If there are exception raise
         self._error_status()
+        if self.fan is not None:
+            speed = self.fan.speed
         # Run jetson_clocks
         p = sp.Popen([self.jc_bin, '--restore', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = p.communicate()
         # Extract result
         message = out.decode("utf-8")
+        # Fix fan speed
+        self._fix_fan(speed)
         if message:
             raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
         return True
