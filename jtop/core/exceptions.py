@@ -18,7 +18,7 @@
 
 class JtopException(Exception):
     """ Jtop general exception """
-    
+
     def __init__(self, message, errors=""):
         super(JtopException, self).__init__(message, errors)
         # Now for your custom code...

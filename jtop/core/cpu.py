@@ -19,6 +19,7 @@
 import re
 REGEXP = re.compile(r'(.+?): ((.*))')
 
+
 def info():
     cpus = {}
     with open("/proc/cpuinfo", "r") as fp:
