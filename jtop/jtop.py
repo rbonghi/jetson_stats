@@ -88,7 +88,10 @@ class jtop(Thread):
         JtopManager.register('sync_event')
         self._broadcaster = JtopManager()
         # Initialize fan
-        self._fan = Fan()
+        try:
+            self._fan = Fan()
+        except JtopException:
+            self._fan = None
         # Load jetson_clocks status
         self._jc = JetsonClocks()
         # Load NV Power Mode
@@ -362,7 +365,8 @@ class jtop(Thread):
         self._controller.put({'interval': self._interval})
         # Initialize jetson_clocks sender
         self._jc._init(self._controller)
-        self._fan._init(self._controller)
+        if self._fan is not None:
+            self._fan._init(self._controller)
         # Wait first value
         data = self._get_data()
         # Decode and update all jtop data
