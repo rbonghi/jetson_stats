@@ -102,7 +102,7 @@ class SwapService(object):
             self.swap_info = {}
 
     def set(self, value, on_boot=False):
-        if not isinstance(value, (int, long, float)):
+        if not isinstance(value, (int, float)):
             raise ValueError("Need a Number")
         # List swap command
         swap_cmd = [JETSON_SWAP_PATH, '--size', str(value), '--dir', self.dir, '--name', self.swap_name]
