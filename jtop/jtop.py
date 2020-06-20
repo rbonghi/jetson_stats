@@ -23,7 +23,8 @@ import copy
 import traceback
 from threading import Thread
 from .service import JtopManager
-from .core import (CPU,
+from .core import (Swap,
+                   CPU,
                    Fan,
                    NVPModel,
                    get_uptime,
@@ -41,7 +42,7 @@ logger = logging.getLogger(__name__)
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 # Gain timeout lost connection
-TIMEOUT_GAIN = 4
+TIMEOUT_GAIN = 3
 
 
 def import_jetson_variables():
@@ -106,6 +107,8 @@ class jtop(Thread):
             self._nvp = None
         # Initialize CPU
         self._cpu = CPU()
+        # Initialze swap
+        self._swap = Swap()
 
     def attach(self, observer):
         """
@@ -158,6 +161,10 @@ class jtop(Thread):
             self._board = {"info": info, "board": board, "libraries": libraries}
         # Return board status
         return self._board
+
+    @property
+    def swap(self):
+        return self._swap
 
     @property
     def fan(self):

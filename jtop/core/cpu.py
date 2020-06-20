@@ -68,8 +68,11 @@ class CPU(object):
             for k, v in tegra_cpu.items():
                 # Extract jc_cpu info
                 jc_cpu = jc_show['CPU'].get(k, {})
-                # Update CPU information
-                v.update(jc_cpu)
+                if jc_cpu['Online']:
+                    # Remvove online info
+                    del jc_cpu['Online']
+                    # Update CPU information
+                    v.update(jc_cpu)
                 self.cpu[k] = v
 
     def __repr__(self):

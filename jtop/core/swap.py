@@ -23,33 +23,55 @@ from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 
+JETSON_SWAP_PATH = '/usr/local/bin/jetson_swap'
 SWAP_MAX_SIZE = 15
 SWAP_MIN_SIZE = 2
+
+
+def list_swaps():
+    swap_status = sp.Popen(['swapon', '--show', '--raw', '--byte'], stdout=sp.PIPE, stderr=sp.PIPE)
+    out, _ = swap_status.communicate()
+    swaps = {}
+    if out:
+        swap_data = out.decode("utf-8")
+        # Read all data
+        names = []
+        for line in swap_data.split("\n"):
+            # Extract names
+            # The names are: name, type, size, used, prio
+            if not names:
+                names = line.split()
+                continue
+            # Extract data
+            datas = line.split()
+            if not datas:
+                continue
+            # Decode swap info
+            info = {}
+            n_swap = ''
+            for name, data in zip(names, datas):
+                name  = name.lower()
+                if name != 'name':
+                    info[name] = int(data) if data.isdigit() else data
+                else:
+                    n_swap = data
+            # Add swap in list
+            swaps[n_swap] = info
+    return swaps
 
 
 class Swap(object):
 
     def __init__(self):
-        self.new_size = default
+        pass
 
-    def increase(self):
-        if self.size + 1 <= SWAP_MAX_SIZE:
-            self.size += 1
-            return True
-        else:
-            return False
-
-    def decrease(self):
-        if self.size - 1 >= SWAP_MIN_SIZE:
-            self.size -= 1
-            return True
-        else:
-            return False
+    def __repr__(self):
+        return str(list_swaps())
 
 
 class SwapService(object):
 
-    def __init__(self, dir_swap="", default=8, swap_name="swfile"):
+    def __init__(self, dir_swap="", swap_name="swfile"):
         # Set default folder swap
         self.dir = dir_swap
         self.swap_name = swap_name
@@ -58,14 +80,11 @@ class SwapService(object):
         self.actual_size = 0
         # Initialize auto mount
         self.auto = True
-        # Check if exist jetson_swap
-        if sp.call('command -v jetson_swap >> /dev/null', shell=True) != 0:
-            raise JtopException("jetson_swap does not exist!")
         # Load swap information
         self.update()
 
     def update(self):
-        swap_status = sp.Popen(['jetson_swap', '--status', '--dir', self.dir, '--name', self.swap_name], stdout=sp.PIPE, stderr=sp.PIPE)
+        swap_status = sp.Popen([JETSON_SWAP_PATH, '--status', '--dir', self.dir, '--name', self.swap_name], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = swap_status.communicate()
         if out:
             swap_data = out.decode("utf-8")
@@ -80,26 +99,6 @@ class SwapService(object):
             self.actual_size = int(self.swap_info['size'])
         else:
             self.swap_info = {}
-
-    def swaps(self):
-        swap_status = sp.Popen(['swapon', '--show', '--raw', '--byte'], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = swap_status.communicate()
-        swaps = []
-        if out:
-            swap_data = out.decode("utf-8")
-            # Read all data
-            names = []
-            for line in swap_data.split("\n"):
-                # Extract names
-                # The names are: name, type, size, used, prio
-                if not names:
-                    names = line.split()
-                    continue
-                # Extract data
-                datas = line.split()
-                if datas:
-                    swaps += [{name.lower(): int(data) if data.isdigit() else data for name, data in zip(names, datas)}]
-        return swaps
 
     @property
     def file(self):
@@ -141,7 +140,7 @@ class SwapService(object):
 
     def _enable(self):
         # List swap command
-        swap_cmd = ['jetson_swap', '--size', str(self.new_size), '--dir', self.dir, '--name', self.swap_name]
+        swap_cmd = [JETSON_SWAP_PATH, '--size', str(self.new_size), '--dir', self.dir, '--name', self.swap_name]
         # Add auto command if request
         if self.auto:
             swap_cmd += ['--auto']
@@ -150,7 +149,7 @@ class SwapService(object):
 
     def _disable(self):
         # List swap command
-        swap_cmd = ['jetson_swap', '--off', '--dir', self.dir, '--name', self.swap_name]
+        swap_cmd = [JETSON_SWAP_PATH, '--off', '--dir', self.dir, '--name', self.swap_name]
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
         # Remove swapfile if exist

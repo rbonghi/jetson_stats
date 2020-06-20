@@ -42,7 +42,7 @@ JTOP_PIPE = '/run/jtop.socket'
 JTOP_USER = 'jetson_stats'
 AUTHKEY = 'aaabbcc'
 # Gain timeout lost connection
-TIMEOUT_GAIN = 4
+TIMEOUT_GAIN = 3
 
 
 class JtopManager(SyncManager):

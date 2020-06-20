@@ -21,7 +21,7 @@ from .nvpmodel import NVPModel, NVPModelService
 from .tegrastats import Tegrastats
 from .fan import Fan, FanService
 from .jetson_clocks import JetsonClocks, JetsonClocksService
-from .swap import Swap
+from .swap import Swap, SwapService
 from .cpu import CPU
 from .engine import nvjpg
 from .config import Config
