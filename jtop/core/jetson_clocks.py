@@ -60,19 +60,19 @@ def jetson_clocks_alive(show):
     if 'CPU' in show:
         for cpu in show['CPU'].values():
             # Check status CPU
-            stat += [cpu['MaxFreq'] == cpu['MinFreq']]
-            stat += [cpu['MaxFreq'] == cpu['CurrentFreq']]
+            stat += [cpu['max_freq'] == cpu['min_freq']]
+            stat += [cpu['max_freq'] == cpu['current_freq']]
     # Check status GPU
     if 'GPU' in show:
         gpu = show['GPU']
-        stat += [gpu['MaxFreq'] == gpu['MinFreq']]
-        stat += [gpu['MaxFreq'] == gpu['CurrentFreq']]
+        stat += [gpu['max_freq'] == gpu['min_freq']]
+        stat += [gpu['max_freq'] == gpu['current_freq']]
     # Don't need to check EMC frequency
     # Check status EMC
     # if 'EMC' in show:
     #     emc = show['EMC']
-    #     stat += [emc['MaxFreq'] == emc['MinFreq']]
-    #     stat += [emc['MaxFreq'] == emc['CurrentFreq']]
+    #     stat += [emc['max_freq'] == emc['min_freq']]
+    #     stat += [emc['max_freq'] == emc['current_freq']]
     if not stat:
         raise JtopException("Require super user")
     return all(stat)
@@ -211,9 +211,9 @@ class JetsonClocksService(object):
                 # Load CPU information
                 cpu = {"Online": True if int(match.group(2)) == 1 else False,
                        "Governor": str(match.group(3)),
-                       "MinFreq": int(match.group(4)),
-                       "MaxFreq": int(match.group(5)),
-                       "CurrentFreq": int(match.group(6)),
+                       "min_freq": int(match.group(4)),
+                       "max_freq": int(match.group(5)),
+                       "current_freq": int(match.group(6)),
                        "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).split()}}
                 # Store in CPU list
                 idx_cpu = int(match.group(1)) + 1
@@ -223,17 +223,17 @@ class JetsonClocksService(object):
             match = GPU_REGEXP.search(line)
             # Load GPU match
             if match:
-                status["GPU"] = {"MinFreq": int(match.group(1)),
-                                 "MaxFreq": int(match.group(2)),
-                                 "CurrentFreq": int(match.group(3))}
+                status["GPU"] = {"min_freq": int(match.group(1)),
+                                 "max_freq": int(match.group(2)),
+                                 "current_freq": int(match.group(3))}
                 continue
             # Search configuration EMC config
             match = EMC_REGEXP.search(line)
             # Load EMC match
             if match:
-                status["EMC"] = {"MinFreq": int(match.group(1)),
-                                 "MaxFreq": int(match.group(2)),
-                                 "CurrentFreq": int(match.group(3)),
+                status["EMC"] = {"min_freq": int(match.group(1)),
+                                 "max_freq": int(match.group(2)),
+                                 "current_freq": int(match.group(3)),
                                  "FreqOverride": int(match.group(4))}
                 continue
             # Search configuration NV Power Model

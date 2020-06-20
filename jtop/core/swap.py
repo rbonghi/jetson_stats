@@ -71,27 +71,28 @@ class Swap(object):
 
 class SwapService(object):
 
-    def __init__(self, dir_swap="", swap_name="swfile"):
+    def __init__(self, config):
+        self.config = config
         # Set default folder swap
-        self.dir = dir_swap
-        self.swap_name = swap_name
+        self.dir = "dir_swap"
+        self.swap_name = "swap_name"
         self.swap_info = {}
         # Define actual size and new size variable
         self.actual_size = 0
         # Initialize auto mount
         self.auto = True
         # Load swap information
-        self.update()
+        # self.update()
 
-    def update(self):
+    def _update(self):
         swap_status = sp.Popen([JETSON_SWAP_PATH, '--status', '--dir', self.dir, '--name', self.swap_name], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = swap_status.communicate()
         if out:
             swap_data = out.decode("utf-8")
             swap_data = swap_data.split("\t")
             # Load swap information
-            self.swap_info['file'] = swap_data[0].strip()
-            self.swap_info['type'] = swap_data[1].strip()
+            self.swap_info['file'] = str(swap_data[0].strip())
+            self.swap_info['type'] = str(swap_data[1].strip())
             self.swap_info['size'] = int(swap_data[2].strip()) / 1000000.0
             self.swap_info['used'] = int(swap_data[3].strip()) / 1000.0
             self.swap_info['priority'] = int(swap_data[4].strip())
@@ -100,54 +101,18 @@ class SwapService(object):
         else:
             self.swap_info = {}
 
-    @property
-    def file(self):
-        return self.dir + "/" + self.swap_name
-
-    @property
-    def size(self):
-        return self.new_size
-
-    @size.setter
-    def size(self, val):
-        self.new_size = val
-
-    def __len__(self):
-        return self.actual_size
-
-    def clearCache(self):
-        """
-        Clear cache following https://coderwall.com/p/ef1gcw/managing-ram-and-swap
-        """
-        clear_cache = sp.Popen(['sysctl', 'vm.drop_caches=3'], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = clear_cache.communicate()
-        return True if out else False
-
-    @property
-    def enable(self):
-        self.update()
-        return True if self.swap_info else False
-
-    @enable.setter
-    def enable(self, value):
-        if not isinstance(value, bool):
-            raise Exception("Use a boolean")
-        # Enable or disable swap
-        if value:
-            self._enable()
-        else:
-            self._disable()
-
-    def _enable(self):
+    def set(self, value, on_boot=False):
+        if not isinstance(value, (int, long, float)):
+            raise ValueError("Need a Number")
         # List swap command
-        swap_cmd = [JETSON_SWAP_PATH, '--size', str(self.new_size), '--dir', self.dir, '--name', self.swap_name]
+        swap_cmd = [JETSON_SWAP_PATH, '--size', str(value), '--dir', self.dir, '--name', self.swap_name]
         # Add auto command if request
-        if self.auto:
+        if on_boot:
             swap_cmd += ['--auto']
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
 
-    def _disable(self):
+    def deactivate(self):
         # List swap command
         swap_cmd = [JETSON_SWAP_PATH, '--off', '--dir', self.dir, '--name', self.swap_name]
         # Run script

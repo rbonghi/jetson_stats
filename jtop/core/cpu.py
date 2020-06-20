@@ -69,8 +69,10 @@ class CPU(object):
                 # Extract jc_cpu info
                 jc_cpu = jc_show['CPU'].get(k, {})
                 if jc_cpu['Online']:
-                    # Remvove online info
+                    # Remove online info
                     del jc_cpu['Online']
+                    # Remove current frequency
+                    del jc_cpu['current_freq']
                     # Update CPU information
                     v.update(jc_cpu)
                 self.cpu[k] = v

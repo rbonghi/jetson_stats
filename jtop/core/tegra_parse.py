@@ -32,7 +32,7 @@ TEMP_RE = re.compile(r'\b(\w+)@(-?[0-9.]+)C\b')
 def val_freq(val):
     if '@' in val:
         match = VAL_FRE_RE.search(val)
-        return {'val': int(match.group(1)), 'frq': int(match.group(2))}
+        return {'val': int(match.group(1)), 'frq': int(match.group(2)) * 1000}
     else:
         return {'val': int(val)}
 

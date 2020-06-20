@@ -26,7 +26,7 @@ from grp import getgrnam
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
-from .core import JtopException, Tegrastats, JetsonClocksService, Config, NVPModelService, FanService
+from .core import JtopException, Tegrastats, JetsonClocksService, Config, NVPModelService, FanService, SwapService
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -111,6 +111,8 @@ class JtopServer(Process):
             self._nvp = None
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
+        # Swap manager
+        self.swap = SwapService(self.config)
 
     def run(self):
         timeout = None
@@ -123,6 +125,10 @@ class JtopServer(Process):
                     # Check if control is not empty
                     if not control:
                         continue
+                    # Manage swap
+                    if 'swap' in control:
+                        swap = control['swap']
+                        print(swap)
                     # Manage jetson_clocks
                     if 'jc' in control:
                         # Enable or disable
