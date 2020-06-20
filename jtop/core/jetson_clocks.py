@@ -146,7 +146,10 @@ class JetsonClocksService(object):
     def __init__(self, config, fan):
         self._thread_start = None
         self._thread_stop = None
+        self._thread_show = None
         self._error = None
+        self._show = {}
+        self._thread_show_running = False
         # Load configuration
         self._config = config
         jetson_clocks_file = config.get('jetson_clocks', {}).get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
@@ -191,7 +194,7 @@ class JetsonClocksService(object):
         # Set new jetson_clocks configuration
         self._config.set('jetson_clocks', config)
 
-    def show(self):
+    def show_function(self):
         p = sp.Popen([self.jc_bin, '--show'], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = p.communicate()
         # Decode lines
@@ -248,12 +251,56 @@ class JetsonClocksService(object):
             # Fan: speed=0
         return status
 
+    def show(self):
+        return self._show
+
+    def _thread_jetson_clocks_loop(self):
+        try:
+            while self._thread_show_running:
+                # Update status jetson_clocks
+                self._show = self.show_function()
+        except Exception:
+            # Store exception
+            ex_type, ex_value, tb = sys.exc_info()
+            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
+            # Write error message
+            self._error = error
+        # Reset running boolean
+        self._thread_show_running = False
+
+    def show_running(self):
+        if self._thread_show is None:
+            return False
+        return self._thread_show.isAlive()
+        
+
+    def show_start(self):
+        # If there are exception raise
+        self._error_status()
+        # Check if thread show is running or not
+        if not self.show_running():
+            self._thread_show_running = True
+            # Start thread Service client
+            self._thread_show = Thread(target=self._thread_jetson_clocks_loop, args=[])
+            self._thread_show.daemon = True
+            self._thread_show.start()
+            return True
+        return False
+
+    def show_stop(self):
+        # If there are exception raise
+        self._error_status()
+        # Check if thread show is running or not
+        if self.show_running():
+            # Stop service
+            self._thread_show_running = False
+            return True
+        return False
+
     @property
     def is_alive(self):
-        # Load status jetson_clocks
-        show = self.show()
         # Make statistics
-        return jetson_clocks_alive(show)
+        return jetson_clocks_alive(self._show)
 
     @property
     def is_running(self):

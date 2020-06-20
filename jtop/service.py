@@ -161,6 +161,8 @@ class JtopServer(Process):
                         interval = control['interval']
                         # Run stats
                         if self.tegra.open(interval=interval):
+                            # Start jetson_clocks
+                            self.jetson_clocks.show_start()
                             # Set interval value
                             self.interval.value = interval
                             # Status start tegrastats
@@ -170,8 +172,10 @@ class JtopServer(Process):
                 except queue.Empty:
                     # Close and log status
                     if self.tegra.close():
-                        logger.info("tegrastats close")
                         self.sync_event.clear()
+                        # Start jetson_clocks
+                        status_jc = self.jetson_clocks.show_stop()
+                        logger.info("tegrastats close {}".format(status_jc))
                     # Disable timeout
                     timeout = None
         except (KeyboardInterrupt, SystemExit):
@@ -179,7 +183,10 @@ class JtopServer(Process):
         except Exception:
             # Close tegra
             if self.tegra.close():
-                logger.info("tegrastats close")
+                self.sync_event.clear()
+                # Start jetson_clocks
+                status_jc = self.jetson_clocks.show_stop()
+                logger.info("tegrastats close {}".format(status_jc))
             # Catch exception
             ex_type, ex_value, tb = sys.exc_info()
             error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
