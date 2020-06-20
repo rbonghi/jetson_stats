@@ -103,7 +103,7 @@ class JetsonClocks(object):
         if self.is_alive:
             return 'running'
         # Otherwise check status thread jetson_clocks
-        return 'activating' if self._show.get('thread', False) else 'inactive'
+        return self._show['thread']
 
     @property
     def boot(self):
@@ -144,7 +144,8 @@ class JetsonClocksService(object):
     """
 
     def __init__(self, config, fan):
-        self._thread = None
+        self._thread_start = None
+        self._thread_stop = None
         self._error = None
         # Load configuration
         self._config = config
@@ -257,10 +258,13 @@ class JetsonClocksService(object):
     @property
     def is_running(self):
         # Check status thread
-        if self._thread is not None:
-            if self._thread.isAlive():
-                return True
-        return False
+        if self._thread_start is not None:
+            if self._thread_start.isAlive():
+                return 'activating'
+        if self._thread_stop is not None:
+            if self._thread_stop.isAlive():
+                return 'deactivating'
+        return 'inactive'
 
     def _fix_fan(self, speed):
         # Configure fan
@@ -316,33 +320,53 @@ class JetsonClocksService(object):
         # If jetson_clocks on boot run a thread
         if self.is_alive:
             return True
-        if not self.is_running:
+        if self.is_running == 'inactive':
             # Load jetson_clocks start up information
             jetson_clocks_start = self._config.get('wait', CONFIG_DEFAULT_DELAY)
             # Start thread Service client
-            self._thread = Thread(target=self._jetson_clocks_boot, args=[jetson_clocks_start])
-            self._thread.daemon = True
-            self._thread.start()
+            self._thread_start = Thread(target=self._jetson_clocks_boot, args=[jetson_clocks_start])
+            self._thread_start.daemon = True
+            self._thread_start.start()
             return True
         return False
+
+
+    def _thread_jetson_clocks_stop(self):
+        try:
+            # Read fan speed
+            if self.fan is not None:
+                speed = self.fan.speed
+            # Run jetson_clocks
+            p = sp.Popen([self.jc_bin, '--restore', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
+            out, _ = p.communicate()
+            # Extract result
+            message = out.decode("utf-8")
+            # Fix fan speed
+            if self.fan is not None:
+                self._fix_fan(speed)
+            if message:
+                raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
+            logger.info("jetson_clocks stop")
+        except Exception:
+            # Run close loop
+            ex_type, ex_value, tb = sys.exc_info()
+            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
+            # Write error message
+            self._error = error
 
     def stop(self):
         # If there are exception raise
         self._error_status()
-        # Read fan speed
-        if self.fan is not None:
-            speed = self.fan.speed
-        # Run jetson_clocks
-        p = sp.Popen([self.jc_bin, '--restore', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = p.communicate()
-        # Extract result
-        message = out.decode("utf-8")
-        # Fix fan speed
-        if self.fan is not None:
-            self._fix_fan(speed)
-        if message:
-            raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-        return True
+        # Check if jetson_clocks is already running
+        if not self.is_alive:
+            return True
+        if self.is_running == 'inactive':
+            # Start thread Service client
+            self._thread_stop = Thread(target=self._thread_jetson_clocks_stop)
+            self._thread_stop.daemon = True
+            self._thread_stop.start()
+            return True
+        return False
 
     def _error_status(self):
         # Catch exception if exist

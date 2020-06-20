@@ -40,6 +40,8 @@ except NameError:
 logger = logging.getLogger(__name__)
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
+# Gain timeout lost connection
+TIMEOUT_GAIN = 4
 
 
 def import_jetson_variables():
@@ -330,7 +332,7 @@ class jtop(Thread):
         try:
             # Check if is not set event otherwise wait
             if not self._sync_event.is_set():
-                self._sync_event.wait(self._interval * 2)
+                self._sync_event.wait(self._interval * TIMEOUT_GAIN)
             # Read stats from jtop service
             data = self._sync_data.copy()
             if not data:

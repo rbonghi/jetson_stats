@@ -68,7 +68,7 @@ class JtopServer(Process):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self, gain_timeout=2):
+    def __init__(self, gain_timeout=4):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jetson_clocks need sudo to work")
