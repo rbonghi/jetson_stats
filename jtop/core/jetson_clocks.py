@@ -159,6 +159,8 @@ class JetsonClocksService(object):
         self.jc_bin = locate_jetson_clocks()
         # Fan configuration
         self.fan = fan
+        # Update status jetson_clocks
+        self._show = self.show_function()
 
     def initialization(self):
         # Check if exist configuration file
