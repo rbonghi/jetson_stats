@@ -26,7 +26,7 @@ from grp import getgrnam
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
-from .core import JtopException, Tegrastats, JetsonClocksService, Config, NVPModelService, FanService
+from .core import import_os_variables, JtopException, Tegrastats, JetsonClocksService, Config, NVPModelService, FanService
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -41,6 +41,8 @@ except ImportError:
 JTOP_PIPE = '/run/jtop.socket'
 JTOP_USER = 'jetson_stats'
 AUTHKEY = 'aaabbcc'
+# Gain timeout lost connection
+TIMEOUT_GAIN = 4
 
 
 class JtopManager(SyncManager):
@@ -68,7 +70,7 @@ class JtopServer(Process):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self, gain_timeout=4):
+    def __init__(self):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jetson_clocks need sudo to work")
@@ -76,8 +78,6 @@ class JtopServer(Process):
         self.config = Config()
         # Error queue
         self._error = Queue()
-        # Timeout control command
-        self.gain_timeout = gain_timeout
         # Command queue
         self.q = Queue()
         # Speed interval
@@ -168,7 +168,7 @@ class JtopServer(Process):
                             # Status start tegrastats
                             logger.info("tegrastats started {interval}ms".format(interval=int(interval * 1000)))
                     # Update timeout interval
-                    timeout = interval * self.gain_timeout
+                    timeout = interval * TIMEOUT_GAIN
                 except queue.Empty:
                     # Close and log status
                     if self.tegra.close():

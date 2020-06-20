@@ -28,7 +28,23 @@ SWAP_MIN_SIZE = 2
 
 
 class Swap(object):
-    pass
+
+    def __init__(self):
+        self.new_size = default
+
+    def increase(self):
+        if self.size + 1 <= SWAP_MAX_SIZE:
+            self.size += 1
+            return True
+        else:
+            return False
+
+    def decrease(self):
+        if self.size - 1 >= SWAP_MIN_SIZE:
+            self.size -= 1
+            return True
+        else:
+            return False
 
 
 class SwapService(object):
@@ -40,7 +56,6 @@ class SwapService(object):
         self.swap_info = {}
         # Define actual size and new size variable
         self.actual_size = 0
-        self.new_size = default
         # Initialize auto mount
         self.auto = True
         # Check if exist jetson_swap
@@ -85,20 +100,6 @@ class SwapService(object):
                 if datas:
                     swaps += [{name.lower(): int(data) if data.isdigit() else data for name, data in zip(names, datas)}]
         return swaps
-
-    def increase(self):
-        if self.size + 1 <= SWAP_MAX_SIZE:
-            self.size += 1
-            return True
-        else:
-            return False
-
-    def decrease(self):
-        if self.size - 1 >= SWAP_MIN_SIZE:
-            self.size -= 1
-            return True
-        else:
-            return False
 
     @property
     def file(self):

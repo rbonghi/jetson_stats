@@ -19,11 +19,11 @@
 
 from .service import JtopServer
 from .core import JtopException
-from .jtop import jtop, import_jetson_variables
+from .jtop import jtop
 
 __author__ = "Raffaello Bonghi"
 __email__ = "raffaello@rnext.it"
 # Version package
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "3.0.0"
+__version__ = "3.0.0rc1"
 # EOF

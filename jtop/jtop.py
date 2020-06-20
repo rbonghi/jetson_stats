@@ -26,9 +26,9 @@ from .service import JtopManager
 from .core import (CPU,
                    Fan,
                    NVPModel,
-                   import_os_variables,
                    get_uptime,
                    status_disk,
+                   import_os_variables,
                    get_local_interfaces,
                    JetsonClocks,
                    JtopException)
@@ -89,6 +89,8 @@ class jtop(Thread):
         JtopManager.register("sync_data")
         JtopManager.register('sync_event')
         self._broadcaster = JtopManager()
+        # Initialize board variable
+        self._board = {}
         # Initialize fan
         try:
             self._fan = Fan()
@@ -122,6 +124,40 @@ class jtop(Thread):
         :type observer: function
         """
         self._observers.discard(observer)
+
+    @property
+    def board(self):
+        # Load all Jetson variables if variable is empty
+        if not self._board:
+            env = {}
+            logger.info("Load jetson variables from script")
+            for k, v in import_jetson_variables().items():
+                env[k] = v
+            # Make dictionaries
+            info = {"Machine": env["JETSON_MACHINE"],
+                    "Jetpack": env["JETSON_JETPACK"],
+                    "L4T": env["JETSON_L4T"]}
+            board = {"TYPE": env["JETSON_TYPE"],
+                    "CODENAME": env["JETSON_CODENAME"],
+                    "SOC": env["JETSON_SOC"],
+                    "CHIP_ID": env["JETSON_CHIP_ID"],
+                    "BOARDIDS": env["JETSON_BOARDIDS"],
+                    "MODULE": env["JETSON_MODULE"],
+                    "BOARD": env["JETSON_BOARD"],
+                    "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
+                    "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
+            libraries = {"CUDA": env["JETSON_CUDA"],
+                        "cuDNN": env["JETSON_CUDNN"],
+                        "TensorRT": env["JETSON_TENSORRT"],
+                        "VisionWorks": env["JETSON_VISIONWORKS"],
+                        "OpenCV": env["JETSON_OPENCV"],
+                        "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
+                        "VPI": env["JETSON_VPI"],
+                        "Vulkan": env["JETSON_VULKAN_INFO"]}
+            # make board information
+            self._board = {"info": info, "board": board, "libraries": libraries}
+        # Return board status
+        return self._board
 
     @property
     def fan(self):

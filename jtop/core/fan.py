@@ -154,12 +154,14 @@ class FanService(object):
             self.speed = self._speed
         # Store mode
         self._status['mode'] = value
-        # Extract configuration
-        config = self._config.get('fan', {})
-        # Add new value
-        config['mode'] = value
-        # Set new jetson_clocks configuration
-        self._config.set('fan', config)
+        # Store only if value is different
+        if self.mode != value:
+            # Extract configuration
+            config = self._config.get('fan', {})
+            # Add new value
+            config['mode'] = value
+            # Set new jetson_clocks configuration
+            self._config.set('fan', config)
 
     @property
     def speed(self):
