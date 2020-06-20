@@ -26,7 +26,7 @@ from grp import getgrnam
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
-from .core import import_os_variables, JtopException, Tegrastats, JetsonClocksService, Config, NVPModelService, FanService
+from .core import JtopException, Tegrastats, JetsonClocksService, Config, NVPModelService, FanService
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3

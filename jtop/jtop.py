@@ -141,22 +141,22 @@ class jtop(Thread):
                     "Jetpack": env["JETSON_JETPACK"],
                     "L4T": env["JETSON_L4T"]}
             board = {"TYPE": env["JETSON_TYPE"],
-                    "CODENAME": env["JETSON_CODENAME"],
-                    "SOC": env["JETSON_SOC"],
-                    "CHIP_ID": env["JETSON_CHIP_ID"],
-                    "BOARDIDS": env["JETSON_BOARDIDS"],
-                    "MODULE": env["JETSON_MODULE"],
-                    "BOARD": env["JETSON_BOARD"],
-                    "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
-                    "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
+                     "CODENAME": env["JETSON_CODENAME"],
+                     "SOC": env["JETSON_SOC"],
+                     "CHIP_ID": env["JETSON_CHIP_ID"],
+                     "BOARDIDS": env["JETSON_BOARDIDS"],
+                     "MODULE": env["JETSON_MODULE"],
+                     "BOARD": env["JETSON_BOARD"],
+                     "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
+                     "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
             libraries = {"CUDA": env["JETSON_CUDA"],
-                        "cuDNN": env["JETSON_CUDNN"],
-                        "TensorRT": env["JETSON_TENSORRT"],
-                        "VisionWorks": env["JETSON_VISIONWORKS"],
-                        "OpenCV": env["JETSON_OPENCV"],
-                        "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
-                        "VPI": env["JETSON_VPI"],
-                        "Vulkan": env["JETSON_VULKAN_INFO"]}
+                         "cuDNN": env["JETSON_CUDNN"],
+                         "TensorRT": env["JETSON_TENSORRT"],
+                         "VisionWorks": env["JETSON_VISIONWORKS"],
+                         "OpenCV": env["JETSON_OPENCV"],
+                         "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
+                         "VPI": env["JETSON_VPI"],
+                         "Vulkan": env["JETSON_VULKAN_INFO"]}
             # make board information
             self._board = {"info": info, "board": board, "libraries": libraries}
         # Return board status

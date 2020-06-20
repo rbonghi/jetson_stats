@@ -275,7 +275,6 @@ class JetsonClocksService(object):
         if self._thread_show is None:
             return False
         return self._thread_show.isAlive()
-        
 
     def show_start(self):
         # If there are exception raise
@@ -379,7 +378,6 @@ class JetsonClocksService(object):
             self._thread_start.start()
             return True
         return False
-
 
     def _thread_jetson_clocks_stop(self):
         try:

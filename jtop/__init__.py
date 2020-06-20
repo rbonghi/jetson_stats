@@ -19,7 +19,7 @@
 
 from .service import JtopServer
 from .core import JtopException
-from .jtop import jtop
+from .jtop import jtop, import_jetson_variables
 
 __author__ = "Raffaello Bonghi"
 __email__ = "raffaello@rnext.it"

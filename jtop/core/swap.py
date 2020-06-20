@@ -19,7 +19,7 @@
 import logging
 # Launch command
 import subprocess as sp
-from .exceptions import JtopException
+# from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def list_swaps():
             info = {}
             n_swap = ''
             for name, data in zip(names, datas):
-                name  = name.lower()
+                name = name.lower()
                 if name != 'name':
                     info[name] = int(data) if data.isdigit() else data
                 else:
