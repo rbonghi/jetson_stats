@@ -110,7 +110,7 @@ class jtop(Thread):
             self._nvp = None
         # Initialize CPU
         self._cpu = CPU()
-        # Initialze swap
+        # Initialize swap
         self._swap = Swap()
 
     def _load_jetson_variables(self):
@@ -144,7 +144,7 @@ class jtop(Thread):
                 "Vulkan": env["JETSON_VULKAN_INFO"]}
             # make board information
             self._board = {'info': info, 'hardware': hardware, 'libraries': libraries}
-            # Loadeded from script
+            # Loaded from script
             logger.debug("Loaded jetson_variables variables")
         except Exception:
             # Run close loop
@@ -426,6 +426,7 @@ class jtop(Thread):
         # Send alive message
         self._controller.put({'interval': self._interval})
         # Initialize jetson_clocks sender
+        self._swap._init(self._controller)
         self._jc._init(self._controller)
         if self._fan is not None:
             self._fan._init(self._controller)

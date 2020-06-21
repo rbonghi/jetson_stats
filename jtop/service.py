@@ -146,7 +146,7 @@ class JtopServer(Process):
                                     logger.info("jetson_clocks already stopped")
                         # Update jetson_clocks configuration
                         if 'boot' in jc:
-                            self.jetson_clocks.boot = config['jc']
+                            self.jetson_clocks.boot = jc['boot']
                     # Speed Fan and configuration
                     if 'fan' in control:
                         fan = control['fan']
