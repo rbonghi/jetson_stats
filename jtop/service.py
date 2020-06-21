@@ -131,17 +131,23 @@ class JtopServer(Process):
                         print(swap)
                     # Manage jetson_clocks
                     if 'jc' in control:
-                        # Enable or disable
-                        if control['jc']:
-                            if self.jetson_clocks.start():
-                                logger.info("jetson_clocks started")
+                        jc = control['jc']
+                        # Enable / disable jetson_clocks
+                        if 'enable' in jc:
+                            if jc['enable']:
+                                if self.jetson_clocks.start():
+                                    logger.info("jetson_clocks started")
+                                else:
+                                    logger.warning("jetson_clocks already running")
                             else:
-                                logger.warning("jetson_clocks already running")
-                        else:
-                            if self.jetson_clocks.stop():
-                                logger.info("jetson_clocks stopped")
-                            else:
-                                logger.info("jetson_clocks already stopped")
+                                if self.jetson_clocks.stop():
+                                    logger.info("jetson_clocks stopped")
+                                else:
+                                    logger.info("jetson_clocks already stopped")
+                        # Update jetson_clocks configuration
+                        if 'boot' in jc:
+                            self.jetson_clocks.boot = config['jc']
+                    # Speed Fan and configuration
                     if 'fan' in control:
                         fan = control['fan']
                         for key, value in fan.items():
@@ -156,12 +162,6 @@ class JtopServer(Process):
                         logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
                         self._nvp.set(mode)
-                    # Config message
-                    if 'config' in control:
-                        config = control['config']
-                        # Update jetson_clocks configuration
-                        if 'jc' in config:
-                            self.jetson_clocks.boot = config['jc']
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']

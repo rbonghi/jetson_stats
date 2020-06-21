@@ -23,6 +23,8 @@ import subprocess as sp
 # Create logger
 logger = logging.getLogger(__name__)
 
+CONFIG_DEFAULT_SWAP_DIRECTORY = ''
+CONFIG_DEFAULT_SWAP_NAME = 'swfile'
 JETSON_SWAP_PATH = '/usr/local/bin/jetson_swap'
 SWAP_MAX_SIZE = 15
 SWAP_MIN_SIZE = 2
@@ -63,7 +65,20 @@ def list_swaps():
 class Swap(object):
 
     def __init__(self):
-        pass
+        self._controller = None
+
+    def _init(self, controller):
+        self._controller = controller
+
+    def set(self, value, on_boot=False):
+        if not isinstance(value, (int, float)):
+            raise ValueError("Need a Number")
+        # Set new swap size configuration
+        self._controller.put({'swap': {'size': value, 'boot': on_boot}})
+
+    def deactivate(self):
+        # Set new swap size configuration
+        self._controller.put({'swap': {}})
 
     def __repr__(self):
         return str(list_swaps())
@@ -73,39 +88,39 @@ class SwapService(object):
 
     def __init__(self, config):
         self.config = config
-        # Set default folder swap
-        self.dir = "dir_swap"
-        self.swap_name = "swap_name"
-        self.swap_info = {}
-        # Define actual size and new size variable
-        self.actual_size = 0
-        # Initialize auto mount
-        self.auto = True
         # Load swap information
         # self.update()
 
     def _update(self):
-        swap_status = sp.Popen([JETSON_SWAP_PATH, '--status', '--dir', self.dir, '--name', self.swap_name], stdout=sp.PIPE, stderr=sp.PIPE)
+        config = self._config.get('swap', {})
+        directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
+        swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
+        # Update swap
+        swap_status = sp.Popen([JETSON_SWAP_PATH, '--status', '--dir', directory, '--name', swap_name], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = swap_status.communicate()
+        swap_info = {}
         if out:
             swap_data = out.decode("utf-8")
             swap_data = swap_data.split("\t")
             # Load swap information
-            self.swap_info['file'] = str(swap_data[0].strip())
-            self.swap_info['type'] = str(swap_data[1].strip())
-            self.swap_info['size'] = int(swap_data[2].strip()) / 1000000.0
-            self.swap_info['used'] = int(swap_data[3].strip()) / 1000.0
-            self.swap_info['priority'] = int(swap_data[4].strip())
+            swap_info['file'] = str(swap_data[0].strip())
+            swap_info['type'] = str(swap_data[1].strip())
+            swap_info['size'] = int(swap_data[2].strip()) / 1000000.0
+            swap_info['used'] = int(swap_data[3].strip()) / 1000.0
+            swap_info['priority'] = int(swap_data[4].strip())
             # Update size
-            self.actual_size = int(self.swap_info['size'])
-        else:
-            self.swap_info = {}
+            # self.actual_size = int(self.swap_info['size'])
+        return swap_info
 
     def set(self, value, on_boot=False):
         if not isinstance(value, (int, float)):
             raise ValueError("Need a Number")
+        # Load swap configuration
+        config = self._config.get('swap', {})
+        directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
+        swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
         # List swap command
-        swap_cmd = [JETSON_SWAP_PATH, '--size', str(value), '--dir', self.dir, '--name', self.swap_name]
+        swap_cmd = [JETSON_SWAP_PATH, '--size', str(value), '--dir', directory, '--name', swap_name]
         # Add auto command if request
         if on_boot:
             swap_cmd += ['--auto']
@@ -113,9 +128,12 @@ class SwapService(object):
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
 
     def deactivate(self):
+        # Load swap configuration
+        config = self._config.get('swap', {})
+        directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
+        swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
         # List swap command
-        swap_cmd = [JETSON_SWAP_PATH, '--off', '--dir', self.dir, '--name', self.swap_name]
+        swap_cmd = [JETSON_SWAP_PATH, '--off', '--dir', directory, '--name', swap_name]
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
-        # Remove swapfile if exist
 # EOF

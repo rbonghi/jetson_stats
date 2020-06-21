@@ -117,7 +117,7 @@ class JetsonClocks(object):
         if value == self._boot:
             return
         # Set new jetson_clocks configuration
-        self._controller.put({'config': {'jc': value}})
+        self._controller.put({'jc': {'boot': value}})
 
     @property
     def is_alive(self):
@@ -176,7 +176,8 @@ class JetsonClocksService(object):
         # Temporary disabled to find a best way to start this service.
         # The service on demand disabled doesn't improve the performance of the start-up
         # If jetson_clocks on boot run a thread
-        if self._config.get('boot', CONFIG_DEFAULT_BOOT):
+        config = self._config.get('jetson_clocks', {})
+        if config.get('boot', CONFIG_DEFAULT_BOOT):
             # Start thread Service client
             self.start()
 

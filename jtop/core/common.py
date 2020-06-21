@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 
 def import_os_variables(SOURCE, PATTERN):
     if os.path.isfile(SOURCE):
-        logger.info("Open source file {}".format(SOURCE))
-        proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE, stderr=sp.PIPE)
+        logger.debug("Open source file {source}".format(source=SOURCE))
+        proc = sp.Popen(['bash', '-c', 'source {source} && env'.format(source=SOURCE)], stdout=sp.PIPE, stderr=sp.PIPE)
         # Load variables
         source_env = {}
         for tup in map(lambda s: s.decode("utf-8").strip().split('=', 1), proc.stdout):

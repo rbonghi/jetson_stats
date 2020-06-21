@@ -92,6 +92,9 @@ class jtop(Thread):
         self._broadcaster = JtopManager()
         # Initialize board variable
         self._board = {}
+        self._thread_libraries = Thread(target=self._load_jetson_variables, args=[])
+        self._thread_libraries.daemon = True
+        self._thread_libraries.start()
         # Initialize fan
         try:
             self._fan = Fan()
@@ -109,6 +112,47 @@ class jtop(Thread):
         self._cpu = CPU()
         # Initialze swap
         self._swap = Swap()
+
+    def _load_jetson_variables(self):
+        try:
+            env = {}
+            for k, v in import_jetson_variables().items():
+                env[k] = v
+            # Make dictionaries
+            info = {
+                "Machine": env["JETSON_MACHINE"],
+                "Jetpack": env["JETSON_JETPACK"],
+                "L4T": env["JETSON_L4T"]}
+            hardware = {
+                "TYPE": env["JETSON_TYPE"],
+                "CODENAME": env["JETSON_CODENAME"],
+                "SOC": env["JETSON_SOC"],
+                "CHIP_ID": env["JETSON_CHIP_ID"],
+                "BOARDIDS": env["JETSON_BOARDIDS"],
+                "MODULE": env["JETSON_MODULE"],
+                "BOARD": env["JETSON_BOARD"],
+                "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
+                "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
+            libraries = {
+                "CUDA": env["JETSON_CUDA"],
+                "cuDNN": env["JETSON_CUDNN"],
+                "TensorRT": env["JETSON_TENSORRT"],
+                "VisionWorks": env["JETSON_VISIONWORKS"],
+                "OpenCV": env["JETSON_OPENCV"],
+                "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
+                "VPI": env["JETSON_VPI"],
+                "Vulkan": env["JETSON_VULKAN_INFO"]}
+            # make board information
+            self._board = {'info': info, 'hardware': hardware, 'libraries': libraries}
+            # Loadeded from script
+            logger.debug("Loaded jetson_variables variables")
+        except Exception:
+            # Run close loop
+            self._running = False
+            ex_type, ex_value, tb = sys.exc_info()
+            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
+            # Write error message
+            self._error = error
 
     def attach(self, observer):
         """
@@ -130,35 +174,8 @@ class jtop(Thread):
 
     @property
     def board(self):
-        # Load all Jetson variables if variable is empty
-        if not self._board:
-            env = {}
-            logger.info("Load jetson variables from script")
-            for k, v in import_jetson_variables().items():
-                env[k] = v
-            # Make dictionaries
-            info = {"Machine": env["JETSON_MACHINE"],
-                    "Jetpack": env["JETSON_JETPACK"],
-                    "L4T": env["JETSON_L4T"]}
-            board = {"TYPE": env["JETSON_TYPE"],
-                     "CODENAME": env["JETSON_CODENAME"],
-                     "SOC": env["JETSON_SOC"],
-                     "CHIP_ID": env["JETSON_CHIP_ID"],
-                     "BOARDIDS": env["JETSON_BOARDIDS"],
-                     "MODULE": env["JETSON_MODULE"],
-                     "BOARD": env["JETSON_BOARD"],
-                     "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
-                     "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
-            libraries = {"CUDA": env["JETSON_CUDA"],
-                         "cuDNN": env["JETSON_CUDNN"],
-                         "TensorRT": env["JETSON_TENSORRT"],
-                         "VisionWorks": env["JETSON_VISIONWORKS"],
-                         "OpenCV": env["JETSON_OPENCV"],
-                         "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
-                         "VPI": env["JETSON_VPI"],
-                         "Vulkan": env["JETSON_VULKAN_INFO"]}
-            # make board information
-            self._board = {"info": info, "board": board, "libraries": libraries}
+        # Wait thread end
+        self._thread_libraries.join()
         # Return board status
         return self._board
 
@@ -207,7 +224,7 @@ class jtop(Thread):
             return
         if value != self._jc.is_alive:
             # Send status jetson_clocks
-            self._controller.put({'jc': value})
+            self._controller.put({'jc': {'enable': value}})
 
     @property
     def stats(self):
