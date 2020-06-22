@@ -21,6 +21,7 @@ import re
 import sys
 import copy
 import traceback
+from multiprocessing import Event
 from threading import Thread
 from .service import JtopManager
 from .core import (Swap,
@@ -74,7 +75,10 @@ class jtop(Thread):
     """
 
     def __init__(self, interval=0.5):
+        # Initialize Thread super class
         Thread.__init__(self)
+        # Local Event thread
+        self._trigger = Event()
         # Error message from thread
         self._error = None
         # Start server
@@ -364,6 +368,8 @@ class jtop(Thread):
         self._stats = tegrastats
         # Update NVIDIA Power mode
         self._nvp._update(jc_show.get('NVP', ''))
+        # Set trigger
+        self._trigger.set()
         # Notify all observers
         for observer in self._observers:
             # Call all observer in list
@@ -453,13 +459,19 @@ class jtop(Thread):
         # Close jtop
         self.close()
 
-    def ok(self):
+    def ok(self, spin=False):
         # Catch exception if exist
         if self._error:
             ex_type, ex_value, tb_str = self._error
             err_message = str(ex_value)  # ex_value.message
-            message = '{emessage} (in subprocess)\n{traceback}'.format(emessage=err_message, traceback=tb_str)
+            message = '{e_message} (in subprocess)\n{traceback}'.format(e_message=err_message, traceback=tb_str)
             raise ex_type(message)
+        # Wait if trigger is set
+        if not self._trigger.is_set() and not spin:
+            status_wait = self._trigger.wait(self._interval * TIMEOUT_GAIN)
+            if not status_wait:
+                raise JtopException("Lost connection with jtop server")
+        self._trigger.clear()
         # Return the status
         return self._running
 
