@@ -23,7 +23,6 @@ import curses
 # Graphics elements
 from .lib.common import (check_curses,
                          strfdelta,
-                         label_freq,
                          plot_name_info,
                          size_min)
 from .lib.linear_gauge import linear_gauge, GaugeName
@@ -33,7 +32,8 @@ from ..core.jetson_clocks import JetsonClocks
 @check_curses
 def plot_CPUs(stdscr, offest, list_cpus, width):
     max_bar = int(float(width) / 2.0)
-    for idx, cpu in enumerate(list_cpus):
+    for idx, name in enumerate(sorted(list_cpus)):
+        cpu = list_cpus[name]
         # Split in double list
         start = max_bar if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 0
         off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
@@ -41,17 +41,21 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         percent = ""
         if 'val' in cpu and 'governor' in cpu:
             percent = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=cpu['val'])
+        # Unit data
+        label = ''
+        if 'frq' in cpu:
+            szw, _, unit = size_min(cpu['frq'], start='k')
+            label = '{tot:2.1f}{unit}Hz'.format(tot=szw, unit=unit)
         # Show linear gauge
-        linear_gauge(stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
-                     name=GaugeName(cpu['name'], color=curses.color_pair(6)),
-                     value=cpu.get('val', 0),
-                     status=cpu['status'],
-                     percent=percent,
-                     label=label_freq(cpu))
-    if len(list_cpus) > 4:
-        return int(offest + idx / 2 + 1)
-    else:
-        return int(offest + idx + 1)
+        linear_gauge(
+            stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
+            name=GaugeName(name, color=curses.color_pair(6)),
+            value=cpu.get('val', 0),
+            status='ON' if cpu else 'OFF',
+            percent=percent,
+            label=label)
+    # Size block CPU
+    return int(offest + idx / 2 + 1) if len(list_cpus) > 4 else int(offest + idx + 1)
 
 
 @check_curses

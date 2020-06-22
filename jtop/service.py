@@ -21,7 +21,6 @@ import logging
 import os
 import sys
 import stat
-import traceback
 from grp import getgrnam
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
@@ -196,11 +195,8 @@ class JtopServer(Process):
                 # Start jetson_clocks
                 status_jc = self.jetson_clocks.show_stop()
                 logger.info("tegrastats close {}".format(status_jc))
-            # Catch exception
-            ex_type, ex_value, tb = sys.exc_info()
-            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
             # Write error message
-            self._error.put(error)
+            self._error.put(sys.exc_info())
 
     def start(self, force=False):
         # Run setup
@@ -242,10 +238,7 @@ class JtopServer(Process):
             # Raise error if exist
             if error:
                 ex_type, ex_value, tb_str = error
-                err_message = str(ex_value)  # ex_value.message
-                message = '{emessage} (in subprocess)\n{traceback}'.format(emessage=err_message, traceback=tb_str)
-                raise ex_type(message)
-                raise ex_value
+                raise (ex_type, ex_value, tb_str)
         except (KeyboardInterrupt, SystemExit):
             pass
         # Close communication

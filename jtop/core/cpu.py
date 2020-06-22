@@ -77,6 +77,18 @@ class CPU(object):
                     v.update(jc_cpu)
                 self.cpu[k] = v
 
+    def __getitem__(self, name):
+        return self.cpu[name]
+
+    def __iter__(self):
+        return iter(self.cpu)
+
+    def __next__(self):
+        return next(self.cpu)
+
+    def __len__(self):
+        return len(self.cpu)
+
     def __repr__(self):
         return str(self.cpu)
 # EOF

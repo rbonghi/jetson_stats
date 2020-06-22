@@ -20,7 +20,6 @@ import os
 import re
 import sys
 import copy
-import traceback
 from multiprocessing import Event
 from threading import Thread
 from .service import JtopManager
@@ -76,7 +75,7 @@ class jtop(Thread):
 
     def __init__(self, interval=0.5):
         # Initialize Thread super class
-        Thread.__init__(self)
+        super(jtop, self).__init__()
         # Local Event thread
         self._trigger = Event()
         # Error message from thread
@@ -121,7 +120,7 @@ class jtop(Thread):
         try:
             env = {}
             for k, v in import_jetson_variables().items():
-                env[k] = v
+                env[k] = str(v)
             # Make dictionaries
             info = {
                 "Machine": env["JETSON_MACHINE"],
@@ -151,12 +150,8 @@ class jtop(Thread):
             # Loaded from script
             logger.debug("Loaded jetson_variables variables")
         except Exception:
-            # Run close loop
-            self._running = False
-            ex_type, ex_value, tb = sys.exc_info()
-            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
             # Write error message
-            self._error = error
+            self._error = sys.exc_info()
 
     def attach(self, observer):
         """
@@ -387,12 +382,8 @@ class jtop(Thread):
                 # Decode and update all jtop data
                 self._decode(data)
         except Exception:
-            # Run close loop
-            self._running = False
-            ex_type, ex_value, tb = sys.exc_info()
-            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
-            # Write error message
-            self._error = error
+            # Store error message
+            self._error = sys.exc_info()
 
     def _get_data(self):
         try:
@@ -455,29 +446,29 @@ class jtop(Thread):
             try:
                 self.join(timeout=0.1)
             except (KeyboardInterrupt, SystemExit):
-                break
-        # Close jtop
-        self.close()
+                # Close jtop
+                self.close()
 
     def ok(self, spin=False):
+        # Wait if trigger is set
+        try:
+            if not self._trigger.is_set() and not spin:
+                if not self._trigger.wait(self._interval * TIMEOUT_GAIN):
+                    self._running = False
+        except (KeyboardInterrupt, SystemExit):
+            self._running = False
         # Catch exception if exist
         if self._error:
+            # Extract exception and raise
             ex_type, ex_value, tb_str = self._error
-            err_message = str(ex_value)  # ex_value.message
-            message = '{e_message} (in subprocess)\n{traceback}'.format(e_message=err_message, traceback=tb_str)
-            raise ex_type(message)
-        # Wait if trigger is set
-        if not self._trigger.is_set() and not spin:
-            status_wait = self._trigger.wait(self._interval * TIMEOUT_GAIN)
-            if not status_wait:
-                raise JtopException("Lost connection with jtop server")
-        self._trigger.clear()
+            raise (ex_type, ex_value, tb_str)
+        # If there are not errors clear the event
+        if self._running:
+            self._trigger.clear()
         # Return the status
         return self._running
 
     def close(self):
-        # Check exceptions
-        self.ok()
         # Switch off broadcaster thread
         self._running = False
 
@@ -488,6 +479,7 @@ class jtop(Thread):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """ Exit function for 'with' statement """
-        self.close()
+        if exc_tb is not None:
+            return False
         return True
 # EOF

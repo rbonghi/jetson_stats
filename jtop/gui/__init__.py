@@ -17,10 +17,11 @@
 
 # flake8: noqa
 
-from .pinfo import INFO
-from .pcontrol import CTRL
+from .jtopgui import JTOPGUI
+from .pall import ALL
 from .pcpu import CPU
 from .pgpu import GPU
-from .pall import ALL
-from .jtopgui import JTOPGUI
 from .pmem import MEM
+from .pcontrol import CTRL
+from .pinfo import INFO
+# EOF

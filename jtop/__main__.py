@@ -17,15 +17,21 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import time
+# control command line
+import curses
 # Logging
 import logging
 # Tegrastats objext reader
 from .jtop import jtop, get_version
 # jtop exception
 from .core import JtopException
+# GUI jtop interface
+from .gui import JTOPGUI, ALL
 # Create logger
 logger = logging.getLogger(__name__)
+# Reference repository
+REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
+LOOP_SECONDS = 5
 
 
 class bcolors:
@@ -55,25 +61,22 @@ def main():
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
     parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('-p', '--page', dest="page", help='Open fix page', type=int, default=1)
+    parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
 
     # Initialize logging level
-    logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    # logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig()
 
     # Run the client
     try:
         # Convert refresh to second
         interval = float(args.refresh / 1000.0)
         with jtop(interval=interval) as jetson:
-            # Status connection
-            while jetson.ok():
-                print(jetson.swap)
-                print(jetson.cpu)
-                print(jetson.gpu)
-                # Sleep
-                time.sleep(interval)
+            # Call the curses wrapper
+            curses.wrapper(JTOPGUI, jetson, [ALL], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
     except JtopException as e:
         print(e)
 

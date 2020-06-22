@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import abc
 import curses
-import signal
 # Logging
 import logging
 # Timer
@@ -25,8 +25,7 @@ from datetime import datetime, timedelta
 # Graphics elements
 from .lib.common import (check_size,
                          check_curses,
-                         set_xterm_title,
-                         xterm_line)
+                         set_xterm_title)
 # Create logger for jplotlib
 logger = logging.getLogger(__name__)
 # Initialization abstract class
@@ -46,7 +45,7 @@ class Page(ABC):
         height, width = self.stdscr.getmaxyx()
         first = 0
         # Remove a line for sudo header
-        if self.jetson.userid != 0:
+        if os.getuid() == 0:
             height -= 1
             first = 1
         return height, width, first
@@ -69,7 +68,7 @@ class JTOPGUI:
     """
     COLORS = {"RED": 1, "GREEN": 2, "YELLOW": 3, "BLUE": 4, "MAGENTA": 5, "CYAN": 6}
 
-    def __init__(self, stdscr, refresh, jetson, pages, init_page=0, start=True, loop=False, seconds=5):
+    def __init__(self, stdscr, jetson, pages, init_page=0, start=True, loop=False, seconds=5):
         # Define pairing colors
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -80,11 +79,12 @@ class JTOPGUI:
         # background
         curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_RED)
         curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_GREEN)
-        curses.init_pair(9, curses.COLOR_WHITE, curses.COLOR_YELLOW)
+        curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_YELLOW)
         curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLUE)
         curses.init_pair(11, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
         curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_CYAN)
         # Set curses reference, refresh and jetson controller
+        refresh = 0.5
         self.stdscr = stdscr
         self.refresh = refresh
         self.jetson = jetson
@@ -98,19 +98,9 @@ class JTOPGUI:
         self.old_key = -1
         # Initialize mouse
         self.mouse = ()
-        # Initialize signal
-        self.signal = True
-        # Catch all signals
-        for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
-            signal.signal(sig, self.handler)
         # Run the GUI
         if start:
             self.run(loop, seconds)
-
-    def handler(self, signum=None, frame=None):
-        logger.info("Signal handler called with signal {signum}".format(signum=signum))
-        # Close gui
-        self.signal = False
 
     def run(self, loop, seconds):
         # In this program, we don't want keystrokes echoed to the console,
@@ -137,7 +127,7 @@ class JTOPGUI:
         # Using current time
         old = datetime.now()
         # Here is the loop of our program, we keep clearing and redrawing in this loop
-        while not self.events() and self.signal:
+        while not self.events() and self.jetson.ok():
             # Draw pages
             self.draw()
             # Increase page automatically if loop enabled
@@ -159,8 +149,6 @@ class JTOPGUI:
         self.menu()
         # Draw the screen
         self.stdscr.refresh()
-        # Set a timeout and read keystroke
-        self.stdscr.timeout(self.refresh)
 
     def increase(self, loop=False):
         # check reset
@@ -187,17 +175,22 @@ class JTOPGUI:
     def header(self):
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
+        # if "GR3D" in jetson.stats:
+        #     gpu = jetson.stats["GR3D"]['val']
+        #     str_xterm += " - GPU {gpu: 3}% {label}".format(gpu=gpu, label=label_freq(jetson.stats["GR3D"]))
+        nvp = self.jetson.nvpmodel
+        str_xterm = ' - {}'.format(nvp) if nvp is not None else ''
         # Print jtop basic info
-        set_xterm_title("jtop" + xterm_line(self.jetson))
+        set_xterm_title("jtop {hardware}{nvp}".format(hardware=self.jetson.board['hardware']["TYPE"], nvp=str_xterm))
         # Write first line
         board = self.jetson.board["info"]
         # Add extra Line if without sudo
         idx = 0
-        if self.jetson.userid != 0:
+        if os.getuid() == 0:
             _, width = self.stdscr.getmaxyx()
-            self.stdscr.addstr(0, 0, ("{0:<" + str(width) + "}").format(" "), curses.color_pair(11))
-            string_sudo = "SUDO SUGGESTED"
-            self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(11))
+            self.stdscr.addstr(0, 0, ("{0:<" + str(width) + "}").format(" "), curses.color_pair(9))
+            string_sudo = "SUDO NOT MORE NEEDED"
+            self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
         self.stdscr.addstr(idx, 0, board["Machine"] + " - Jetpack " + board["Jetpack"], curses.A_BOLD)
 

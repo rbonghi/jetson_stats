@@ -23,17 +23,6 @@ import curses
 from functools import wraps
 
 
-def xterm_line(jetson):
-    str_xterm = " " + jetson.board["board"]["TYPE"]
-    nvp = jetson.nvpmodel
-    # if "GR3D" in jetson.stats:
-    #     gpu = jetson.stats["GR3D"]['val']
-    #     str_xterm += " - GPU {gpu: 3}% {label}".format(gpu=gpu, label=label_freq(jetson.stats["GR3D"]))
-    if nvp is not None:
-        str_xterm += " - {}".format(nvp.mode)
-    return str_xterm
-
-
 def set_xterm_title(title):
     '''
     Set XTerm title using escape sequences.

@@ -44,7 +44,8 @@ class ALL(Page):
         height, width, first = self.size_page()
         line_counter = first + 1
         # Plot Status CPU
-        line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.stats['CPU'], width)
+        line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.cpu, width)
+        return
         # Plot MTS
         if 'MTS' in self.jetson.stats:
             line_counter += 1

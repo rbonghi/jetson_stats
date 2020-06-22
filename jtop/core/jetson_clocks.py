@@ -211,7 +211,7 @@ class JetsonClocksService(object):
             if match:
                 # Load CPU information
                 cpu = {"Online": True if int(match.group(2)) == 1 else False,
-                       "Governor": str(match.group(3)),
+                       "governor": str(match.group(3)),
                        "min_freq": int(match.group(4)),
                        "max_freq": int(match.group(5)),
                        "current_freq": int(match.group(6)),
