@@ -457,7 +457,8 @@ class jtop(Thread):
         # Catch exception if exist
         if self._error:
             ex_type, ex_value, tb_str = self._error
-            message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
+            err_message = str(ex_value)  # ex_value.message
+            message = '{emessage} (in subprocess)\n{traceback}'.format(emessage=err_message, traceback=tb_str)
             raise ex_type(message)
         # Return the status
         return self._running

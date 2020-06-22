@@ -66,6 +66,7 @@ class Swap(object):
 
     def __init__(self):
         self._controller = None
+        self._list_swaps = list_swaps()
 
     def _init(self, controller):
         self._controller = controller
@@ -81,13 +82,14 @@ class Swap(object):
         self._controller.put({'swap': {}})
 
     def __repr__(self):
-        return str(list_swaps())
+        self._list_swaps = list_swaps()
+        return str(self._list_swaps)
 
 
 class SwapService(object):
 
     def __init__(self, config):
-        self.config = config
+        self._config = config
         # Load swap information
         # self.update()
 

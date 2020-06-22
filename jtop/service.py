@@ -128,7 +128,10 @@ class JtopServer(Process):
                     # Manage swap
                     if 'swap' in control:
                         swap = control['swap']
-                        print(swap)
+                        if swap:
+                            self.swap.set(swap['size'], swap['boot'])
+                        else:
+                            self.swap.deactivate()
                     # Manage jetson_clocks
                     if 'jc' in control:
                         jc = control['jc']
@@ -239,8 +242,10 @@ class JtopServer(Process):
             # Raise error if exist
             if error:
                 ex_type, ex_value, tb_str = error
-                message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
+                err_message = str(ex_value)  # ex_value.message
+                message = '{emessage} (in subprocess)\n{traceback}'.format(emessage=err_message, traceback=tb_str)
                 raise ex_type(message)
+                raise ex_value
         except (KeyboardInterrupt, SystemExit):
             pass
         # Close communication
