@@ -23,16 +23,18 @@ import copy
 from multiprocessing import Event
 from threading import Thread
 from .service import JtopManager
-from .core import (Swap,
-                   CPU,
-                   Fan,
-                   NVPModel,
-                   get_uptime,
-                   status_disk,
-                   import_os_variables,
-                   get_local_interfaces,
-                   JetsonClocks,
-                   JtopException)
+from .core import (
+    Swap,
+    CPU,
+    Fan,
+    NVPModel,
+    get_var,
+    get_uptime,
+    status_disk,
+    import_os_variables,
+    get_local_interfaces,
+    JetsonClocks,
+    JtopException)
 try:
     FileNotFoundError
 except NameError:
@@ -57,12 +59,7 @@ def get_version():
     :return: Version number
     :rtype: string
     """
-    # Load version package
-    here = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(here, "__init__.py")) as fp:
-        VERSION = VERSION_RE.match(fp.read()).group(1)
-    return VERSION
-
+    return get_var(VERSION_RE)
 
 class jtop(Thread):
     """

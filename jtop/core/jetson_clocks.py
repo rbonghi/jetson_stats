@@ -264,11 +264,8 @@ class JetsonClocksService(object):
                 # Update status jetson_clocks
                 self._show = self.show_function()
         except Exception:
-            # Store exception
-            ex_type, ex_value, tb = sys.exc_info()
-            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
-            # Write error message
-            self._error = error
+            # Store error message
+            self._error = sys.exc_info()
         # Reset running boolean
         self._thread_show_running = False
 
@@ -353,11 +350,8 @@ class JetsonClocksService(object):
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
             logger.info("jetson_clocks running")
         except Exception:
-            # Run close loop
-            ex_type, ex_value, tb = sys.exc_info()
-            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
-            # Write error message
-            self._error = error
+            # Store error message
+            self._error = sys.exc_info()
 
     def start(self):
         # If there are exception raise
@@ -397,11 +391,8 @@ class JetsonClocksService(object):
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
             logger.info("jetson_clocks stop")
         except Exception:
-            # Run close loop
-            ex_type, ex_value, tb = sys.exc_info()
-            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
-            # Write error message
-            self._error = error
+            # Store error message
+            self._error = sys.exc_info()
 
     def stop(self):
         # If there are exception raise
@@ -420,12 +411,9 @@ class JetsonClocksService(object):
     def _error_status(self):
         # Catch exception if exist
         if self._error:
-            # Make error with traceback
+            # Extract exception and raise
             ex_type, ex_value, tb_str = self._error
-            message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
-            # Clean error
-            self._error = None
-            raise ex_type(message)
+            raise (ex_type, ex_value, tb_str)
 
     def store(self):
         # Store configuration jetson_clocks

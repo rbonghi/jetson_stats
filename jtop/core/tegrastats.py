@@ -105,11 +105,8 @@ class Tegrastats:
             # Error when is close the process
             pass
         except Exception:
-            # Run close loop
-            ex_type, ex_value, tb = sys.exc_info()
-            error = ex_type, ex_value, ''.join(traceback.format_tb(tb))
             # Write error message
-            self._error = error
+            self._error = sys.exc_info()
         # Kill process if alive
         if self.p is not None:
             # Kill
@@ -137,12 +134,9 @@ class Tegrastats:
         self._thread = None
         # Catch exception if exist
         if self._error:
-            # Make error with traceback
+            # Extract exception and raise
             ex_type, ex_value, tb_str = self._error
-            message = '%s (in subprocess)\n%s' % (ex_value.message, tb_str)
-            # Clean error
-            self._error = None
-            raise ex_type(message)
+            raise (ex_type, ex_value, tb_str)
         # Check if thread and process are already empty
         if self.p is None:
             return False

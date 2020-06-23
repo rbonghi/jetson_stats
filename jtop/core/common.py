@@ -16,6 +16,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from random import choice
+from string import ascii_letters
 # Launch command
 import subprocess as sp
 # Logging
@@ -25,7 +27,7 @@ import socket
 import fcntl
 import struct
 import array
-# Create logger for jplotlib
+# Create logger
 logger = logging.getLogger(__name__)
 
 
@@ -44,6 +46,20 @@ def import_os_variables(SOURCE, PATTERN):
     else:
         logger.error("File does not exist")
         return {}
+
+
+def get_var(MATCH_RE):
+    """
+    Show the version of this package
+
+    :return: Version number
+    :rtype: string
+    """
+    # Load version package
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../', "__init__.py")) as fp:
+        match = MATCH_RE.match(fp.read())
+        value = match.group(1) if match else ''.join(choice(ascii_letters) for i in range(16))
+    return value
 
 
 def get_uptime():

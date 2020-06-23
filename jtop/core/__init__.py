@@ -25,9 +25,11 @@ from .swap import Swap, SwapService
 from .cpu import CPU
 from .engine import nvjpg
 from .config import Config
-from .common import (import_os_variables,
-                     get_uptime,
-                     status_disk,
-                     get_local_interfaces)
+from .common import (
+    import_os_variables,
+    get_var,
+    get_uptime,
+    status_disk,
+    get_local_interfaces)
 from .exceptions import JtopException
 # EOF
