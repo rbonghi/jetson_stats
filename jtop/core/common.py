@@ -15,9 +15,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import os
 from random import choice
 from string import ascii_letters
+from base64 import b64encode
+import uuid
 # Launch command
 import subprocess as sp
 # Logging
@@ -27,6 +30,8 @@ import socket
 import fcntl
 import struct
 import array
+# Load Author
+AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 # Create logger
 logger = logging.getLogger(__name__)
 
@@ -143,7 +148,9 @@ def get_local_interfaces():
     return {"hostname": hostname, "interfaces": ip_dict}
 
 
-def key_generator():
-    return 'aabbcc'
-
+def key_generator(AUTH_PATH):
+    key = str(uuid.uuid4())
+    with open(AUTH_PATH, 'w') as t:
+        t.write(b64encode(key + get_var(AUTH_RE)))
+    return key
 # EOF

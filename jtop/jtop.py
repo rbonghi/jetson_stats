@@ -22,7 +22,7 @@ import sys
 import copy
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
-from .service import JtopManager
+from .service import JtopManager, key_reader
 from .core import (
     Swap,
     CPU,
@@ -43,6 +43,7 @@ except NameError:
 logger = logging.getLogger(__name__)
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
+AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
 
@@ -61,8 +62,6 @@ def get_version():
     """
     return get_var(VERSION_RE)
 
-def key_reader():
-    return 'aabbccd'
 
 class jtop(Thread):
     """
@@ -92,7 +91,7 @@ class jtop(Thread):
         JtopManager.register('get_queue')
         JtopManager.register("sync_data")
         JtopManager.register('sync_event')
-        key = key_reader()
+        key = key_reader(AUTH_RE)
         self._broadcaster = JtopManager(key)
         # Initialize board variable
         self._board = {}

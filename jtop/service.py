@@ -22,6 +22,7 @@ import os
 import sys
 import stat
 from grp import getgrnam
+from base64 import b64decode
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
@@ -33,7 +34,8 @@ from .core import (
     NVPModelService,
     FanService,
     SwapService,
-    key_generator)
+    key_generator,
+    get_var)
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -46,9 +48,16 @@ except ImportError:
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 JTOP_PIPE = '/run/jtop.socket'
+AUTH_PATH = '/run/jtop.auth'
 JTOP_USER = 'jetson_stats'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+
+
+def key_reader(AUTH_RE):
+    with open(AUTH_PATH, 'r') as f:
+        key = b64decode(f.readline())
+    return key.replace(get_var(AUTH_RE), '')
 
 
 class JtopManager(SyncManager):
@@ -99,7 +108,7 @@ class JtopServer(Process):
         JtopManager.register('get_queue', callable=lambda: self.q)
         JtopManager.register("sync_data", callable=lambda: self.data)
         JtopManager.register('sync_event', callable=lambda: self.event)
-        key = key_generator()
+        key = key_generator(AUTH_PATH)
         self.broadcaster = JtopManager(key)
         # Initialize Fan
         try:

@@ -19,7 +19,6 @@
 import logging
 import os
 import sys
-import traceback
 # Launch command
 import subprocess as sp
 # Threading

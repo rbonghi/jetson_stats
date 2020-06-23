@@ -20,7 +20,6 @@ import os
 import time
 import logging
 import sys
-import traceback
 # Launch command
 import subprocess as sp
 from datetime import timedelta
