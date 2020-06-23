@@ -20,7 +20,7 @@ import os
 import re
 import sys
 import copy
-from multiprocessing import Event
+from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
 from .core import (
@@ -61,6 +61,9 @@ def get_version():
     """
     return get_var(VERSION_RE)
 
+def key_reader():
+    return 'aabbccd'
+
 class jtop(Thread):
     """
     jtop library is the reference to control your NVIDIA Jetson board with python.
@@ -89,7 +92,8 @@ class jtop(Thread):
         JtopManager.register('get_queue')
         JtopManager.register("sync_data")
         JtopManager.register('sync_event')
-        self._broadcaster = JtopManager()
+        key = key_reader()
+        self._broadcaster = JtopManager(key)
         # Initialize board variable
         self._board = {}
         self._thread_libraries = Thread(target=self._load_jetson_variables, args=[])
@@ -413,6 +417,8 @@ class jtop(Thread):
         except ValueError:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
             raise JtopException("mismatch python version between library and service")
+        except AuthenticationError:
+            raise JtopException("Authentication mismatch with jetson-stats server")
         # Initialize synchronized data and condition
         self._controller = self._broadcaster.get_queue()
         self._sync_data = self._broadcaster.sync_data()

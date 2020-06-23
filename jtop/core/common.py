@@ -141,4 +141,9 @@ def get_local_interfaces():
     if 'lo' in ip_dict:
         del ip_dict['lo']
     return {"hostname": hostname, "interfaces": ip_dict}
+
+
+def key_generator():
+    return 'aabbcc'
+
 # EOF
