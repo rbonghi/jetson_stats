@@ -244,6 +244,14 @@ class jtop(Thread):
         return ram
 
     @property
+    def mts(self):
+        if 'MTS' not in self._stats:
+            return {}
+        # Extract RAM
+        mts = copy.copy(self._stats['MTS'])
+        return mts
+
+    @property
     def cpu(self):
         # Return CPU status
         return self._cpu
