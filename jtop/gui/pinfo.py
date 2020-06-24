@@ -34,8 +34,8 @@ EMAIL_RE = re.compile(r""".*__email__ = ["'](.*?)['"]""", re.S)
 
 class INFO(Page):
 
-    def __init__(self, stdscr, jetson, refresh):
-        super(INFO, self).__init__("INFO", stdscr, jetson, refresh)
+    def __init__(self, stdscr, jetson):
+        super(INFO, self).__init__("INFO", stdscr, jetson)
 
     def info_variable(self, start, offset, name, value, spacing=18):
         self.stdscr.addstr(start, offset, name + ":")

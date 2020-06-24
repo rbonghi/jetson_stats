@@ -26,7 +26,7 @@ from .jtop import jtop, get_version
 # jtop exception
 from .core import JtopException
 # GUI jtop interface
-from .gui import JTOPGUI, ALL, INFO
+from .gui import JTOPGUI, ALL, GPU, INFO
 # Create logger
 logger = logging.getLogger(__name__)
 # Reference repository

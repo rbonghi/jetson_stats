@@ -35,11 +35,10 @@ ABC = abc.ABCMeta('ABC', (object,), {})
 
 class Page(ABC):
 
-    def __init__(self, name, stdscr, jetson, refresh):
+    def __init__(self, name, stdscr, jetson):
         self.name = name
         self.stdscr = stdscr
         self.jetson = jetson
-        self.refresh = refresh
 
     def size_page(self):
         height, width = self.stdscr.getmaxyx()
@@ -84,12 +83,10 @@ class JTOPGUI:
         curses.init_pair(11, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
         curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_CYAN)
         # Set curses reference, refresh and jetson controller
-        refresh = 0.5
         self.stdscr = stdscr
-        self.refresh = refresh
         self.jetson = jetson
         # Initialize all Object pages
-        self.pages = [obj(stdscr, jetson, refresh) for obj in pages]
+        self.pages = [obj(stdscr, jetson) for obj in pages]
         # Set default page
         self.n_page = 0
         self.set(init_page)
