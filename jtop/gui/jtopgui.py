@@ -181,10 +181,8 @@ class JTOPGUI:
         nvp = self.jetson.nvpmodel
         str_xterm = ' - {}'.format(nvp) if nvp is not None else ''
         # Print jtop basic info
-        set_xterm_title("jtop {hardware}{nvp}".format(hardware=self.jetson.board['hardware']["TYPE"], nvp=str_xterm))
-        # Write first line
-        board = self.jetson.board["info"]
-        # Add extra Line if without sudo
+        set_xterm_title("jtop {hardware}{nvp}".format(hardware=self.jetson.board.hardware["TYPE"], nvp=str_xterm))
+        # Add extra Line if with sudo
         idx = 0
         if os.getuid() == 0:
             _, width = self.stdscr.getmaxyx()
@@ -192,7 +190,9 @@ class JTOPGUI:
             string_sudo = "SUDO NOT MORE NEEDED"
             self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
-        self.stdscr.addstr(idx, 0, board["Machine"] + " - Jetpack " + board["Jetpack"], curses.A_BOLD)
+        # Write first line
+        message = "{info[machine]} - Jetpack {info[jetpack]} [L4T {info[L4T]}]".format(info=self.jetson.board.info)
+        self.stdscr.addstr(idx, 0, message, curses.A_BOLD)
 
     @check_curses
     def menu(self):

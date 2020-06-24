@@ -63,6 +63,12 @@ def get_version():
     return get_var(VERSION_RE)
 
 
+class Board:
+
+    def __init__(self, board):
+        self.__dict__.update(**board)
+
+
 class jtop(Thread):
     """
     jtop library is the reference to control your NVIDIA Jetson board with python.
@@ -94,7 +100,7 @@ class jtop(Thread):
         key = key_reader(AUTH_RE)
         self._broadcaster = JtopManager(key)
         # Initialize board variable
-        self._board = {}
+        self._board = None
         self._thread_libraries = Thread(target=self._load_jetson_variables, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
@@ -123,8 +129,8 @@ class jtop(Thread):
                 env[k] = str(v)
             # Make dictionaries
             info = {
-                "Machine": env["JETSON_MACHINE"],
-                "Jetpack": env["JETSON_JETPACK"],
+                "machine": env["JETSON_MACHINE"],
+                "jetpack": env["JETSON_JETPACK"],
                 "L4T": env["JETSON_L4T"]}
             hardware = {
                 "TYPE": env["JETSON_TYPE"],
@@ -146,7 +152,7 @@ class jtop(Thread):
                 "VPI": env["JETSON_VPI"],
                 "Vulkan": env["JETSON_VULKAN_INFO"]}
             # make board information
-            self._board = {'info': info, 'hardware': hardware, 'libraries': libraries}
+            self._board = Board({'info': info, 'hardware': hardware, 'libraries': libraries})
             # Loaded from script
             logger.debug("Loaded jetson_variables variables")
         except Exception:
@@ -177,10 +183,6 @@ class jtop(Thread):
         self._thread_libraries.join()
         # Return board status
         return self._board
-
-    @property
-    def swap(self):
-        return self._swap
 
     @property
     def fan(self):
@@ -236,6 +238,26 @@ class jtop(Thread):
         return self._stats
 
     @property
+    def swap(self):
+        return self._swap
+
+    @property
+    def emc(self):
+        if 'EMC' not in self._stats:
+            return {}
+        # Extract EMC
+        emc = copy.copy(self._stats['EMC'])
+        return emc
+
+    @property
+    def iram(self):
+        if 'IRAM' not in self._stats:
+            return {}
+        # Extract IRAM
+        iram = copy.copy(self._stats['IRAM'])
+        return iram
+
+    @property
     def ram(self):
         if 'RAM' not in self._stats:
             return {}
@@ -247,7 +269,7 @@ class jtop(Thread):
     def mts(self):
         if 'MTS' not in self._stats:
             return {}
-        # Extract RAM
+        # Extract MTS
         mts = copy.copy(self._stats['MTS'])
         return mts
 
@@ -358,6 +380,8 @@ class jtop(Thread):
             # Remove PMIC temperature
             if 'PMIC' in tegrastats['TEMP']:
                 del tegrastats['TEMP']['PMIC']
+        # Update swap status
+        self._swap._update(tegrastats['SWAP'])
         # Load jetson_clocks data
         jc_show = data['jc']
         # Update status

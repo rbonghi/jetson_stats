@@ -48,10 +48,10 @@ def SWAP(text):
     if match:
         return {'use': int(match.group(1)),
                 'tot': int(match.group(2)),
-                'unit': match.group(3),
+                'unit': str(match.group(3)),
                 # group 4 is an optional space
                 'cached': {'size': int(match.group(5)),
-                           'unit': match.group(6)}}
+                           'unit': str(match.group(6))}}
     else:
         return {}
 

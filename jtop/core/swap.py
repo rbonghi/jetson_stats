@@ -67,6 +67,7 @@ class Swap(object):
     def __init__(self):
         self._controller = None
         self._list_swaps = list_swaps()
+        self._all = {}
 
     def _init(self, controller):
         self._controller = controller
@@ -81,9 +82,30 @@ class Swap(object):
         # Set new swap size configuration
         self._controller.put({'swap': {}})
 
-    def __repr__(self):
+    def _update(self, tegra_cpu):
+        # Update status swaps
         self._list_swaps = list_swaps()
-        return str(self._list_swaps)
+        # Update status swap
+        self._all.update(tegra_cpu)
+
+    @property
+    def all(self):
+        return self._list_swaps
+
+    def get(self, key, value):
+        return self._all[key] if key in self._all else value
+
+    def __getitem__(self, key):
+        return self._all[key]
+
+    def __iter__(self):
+        return iter(self._all)
+
+    def __next__(self):
+        return next(self._all)
+
+    def __repr__(self):
+        return str(self._all)
 
 
 class SwapService(object):
