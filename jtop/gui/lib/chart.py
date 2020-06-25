@@ -52,7 +52,7 @@ class Chart(object):
         self.active = True
         self.message = "OFF"
         # Attach the chart for every update from jtop
-        jetson.attach(self)
+        jetson.attach(self.update)
 
     def statusChart(self, active, message):
         self.active = active

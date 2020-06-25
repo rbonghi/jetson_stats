@@ -134,7 +134,7 @@ class ALL(Page):
         # Make rectangle
         rectangle(self.stdscr, line_counter + 1, 0, line_counter + 1 + column_height, width - 1)
         # Plot compact info
-        # TODO Enable: compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, column_height, self.jetson)
+        compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, column_height, self.jetson)
         # Plot temperatures
         if self.jetson.temperature:
             self.add_line(line_counter + 1, column_width + 2, column_height)

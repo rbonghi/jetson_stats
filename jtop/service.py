@@ -27,6 +27,7 @@ from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
 from .core import (
+    nvjpg,
     JtopException,
     Tegrastats,
     JetsonClocksService,
@@ -270,6 +271,8 @@ class JtopServer(Process):
         logger.debug("tegrastats read")
         # Load data stats
         data['stats'] = stats
+        # Add NVJPG engine
+        data['stats']['NVJPG'] = nvjpg()
         # Load status jetson_clocks
         data['jc'] = self.jetson_clocks.show()
         data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})

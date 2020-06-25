@@ -22,26 +22,26 @@ from .lib.common import check_curses
 # Graphic library
 from .lib.chart import Chart
 from .lib.button import Button, ButtonList
-# Jetson Clock event
-from ..core.jetson_clocks import JetsonClocks
+# Exception
+from ..core import JtopException
 
 
 class CTRL(Page):
 
-    def __init__(self, stdscr, jetson, refresh):
-        super(CTRL, self).__init__("CTRL", stdscr, jetson, refresh)
+    def __init__(self, stdscr, jetson):
+        super(CTRL, self).__init__("CTRL", stdscr, jetson)
         # Only if exist a fan will be load a chart
         # Initialize FAN chart
-        self.chart_fan = Chart(jetson, "FAN", refresh, self.update_chart, line="o", color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
-        if 'FAN' not in self.jetson.stats:
-            self.chart_fan.statusChart(False, "NO FAN")
+        self.chart_fan = Chart(jetson, "FAN", self.update_chart, line="o", color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
+        #if not self.jetson.fan:
+        #    self.chart_fan.statusChart(False, "NO FAN")
         # Initialize buttons
         self.service_start = Button(stdscr, key="s", action=self.action_service_start)
         self.service_enable = Button(stdscr, key="e", action=self.action_service_enable)
         # NVP Model controller
         self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
         self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
-        mode_names = [mode["Name"] for mode in self.jetson.nvpmodel.modes]
+        mode_names = self.jetson.nvpmodel.modes
         self.nvp_list = ButtonList(stdscr, range(len(mode_names)), mode_names, action=self.action_nvp)
         # Fan controller
         self.fan_status = Button(stdscr, key="f", action=self.action_fan_status)
@@ -49,80 +49,66 @@ class CTRL(Page):
         self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
 
     def action_nvp_increase(self, key):
-        if self.jetson.userid == 0:
-            # NVPmodel controller
-            nvpmodel = self.jetson.nvpmodel
-            if nvpmodel is not None:
-                nvpmodel.increase()
+        # NVPmodel controller
+        nvpmodel = self.jetson.nvpmodel
+        if nvpmodel is not None:
+            nvpmodel.increase()
 
     def action_nvp_decrease(self, key):
-        if self.jetson.userid == 0:
-            # NVPmodel controller
-            nvpmodel = self.jetson.nvpmodel
-            if nvpmodel is not None:
-                nvpmodel.decrease()
+        # NVPmodel controller
+        nvpmodel = self.jetson.nvpmodel
+        if nvpmodel is not None:
+            nvpmodel.decrease()
 
     def action_nvp(self, key):
-        if self.jetson.userid == 0:
-            # Run nvpmodel on number selected
-            nvpmodel = self.jetson.nvpmodel
-            if nvpmodel is not None:
-                # Read number
-                number = int(key)
-                # Set new nvpmodel
-                nvpmodel.set(number)
+        # Run nvpmodel on number selected
+        nvpmodel = self.jetson.nvpmodel
+        if nvpmodel is not None:
+            # Read number
+            number = int(key)
+            # Set new nvpmodel
+            nvpmodel.set(number)
 
     def action_service_enable(self, key):
-        if self.jetson.userid == 0:
-            # Start jetson_clocks
-            self.jetson.jetson_clocks.enable = not self.jetson.jetson_clocks.enable
+        # Start jetson_clocks
+        self.jetson.jetson_clocks.boot = not self.jetson.jetson_clocks.boot
 
     def action_service_start(self, key):
-        if self.jetson.userid == 0:
-            # Start jetson_clocks
-            self.jetson.jetson_clocks.start = not self.jetson.jetson_clocks.start
+        # Start jetson_clocks
+        self.jetson.jetson_clocks.start = not self.jetson.jetson_clocks.start
 
     def action_fan_status(self, key):
-        if self.jetson.userid == 0:
-            # FAN controller
-            fan = self.jetson.fan
-            if fan is not None:
-                # Go to next configuration
-                fan.conf_next()
-                # Store configuration
-                fan.store()
+        # FAN controller
+        fan = self.jetson.fan
+        if fan is not None:
+            # Go to next configuration
+            fan.conf_next()
+            # Store configuration
+            fan.store()
 
     def action_fan_increase(self, key):
-        if self.jetson.userid == 0:
-            # FAN controller
-            fan = self.jetson.fan
-            if fan is not None:
-                fan.increase()
-                # Store configuration
-                fan.store()
+        # FAN controller
+        fan = self.jetson.fan
+        if fan is not None:
+            fan.increase()
+            # Store configuration
+            fan.store()
 
     def action_fan_decrease(self, key):
-        if self.jetson.userid == 0:
-            # FAN controller
-            fan = self.jetson.fan
-            if fan is not None:
-                fan.decrease()
-                # Store configuration
-                fan.store()
+        # FAN controller
+        fan = self.jetson.fan
+        if fan is not None:
+            fan.decrease()
+            # Store configuration
+            fan.store()
 
     def update_chart(self, jetson, name):
-        parameter = jetson.stats.get("FAN", {})
-        value = 'cpwm' if 'cpwm' in parameter else 'tpwm'
-        # Get max value if is present
-        max_val = parameter.get("max_val", 100)
-        # Get unit
-        unit = parameter.get("unit", "%")
         # Append in list
+        if jetson.fan is None:
+            return {}
         return {
-            'value': [parameter.get(value, 0)],
-            'max': max_val,
-            'unit': unit,
-            'active': 'FAN' in jetson.stats
+            'value': [jetson.fan.speed],
+            'active': jetson.fan is not None
         }
 
     @check_curses
@@ -137,47 +123,40 @@ class CTRL(Page):
         jc_field = "jetson_clocks"
         # Show status jetson_clocks
         self.stdscr.addstr(start_y + 1, start_x + 1, jc_field, curses.A_BOLD)
-        try:
-            status = self.jetson.jetson_clocks.status
-            color = curses.color_pair(2) if status else curses.A_NORMAL
-            jc_status_name = "Running" if status else "Stopped"
-        except JetsonClocks.JCException:
-            status = False
-            # Fix error color
-            color = curses.color_pair(11)
-            jc_status_name = "SUDO SUGGESTED"
+        # Status jetson_clocks
+        # Running (Green) or Normal (Grey)
+        color = curses.color_pair(2) if self.jetson.jetson_clocks else curses.A_NORMAL
+        # Write status jetson_clocks
+        jc_status_name = self.jetson.jetson_clocks.status
+
         self.stdscr.addstr(start_y + 1, start_x + len(jc_field) + 2, jc_status_name, color)
         # Show service status
-        service = self.jetson.jetson_clocks.service
-        jc_manual = status and service != "active"
-        if self.jetson.userid == 0 and not jc_manual:
-            # button start/stop jetson clocks
-            self.service_start.draw(start_y + 2, start_x, key, mouse)
+        self.service_start.draw(start_y + 2, start_x, key, mouse)
         # Field service
-        service_string = "service"
+        service_string = "boot"
         self.stdscr.addstr(start_y + 3, start_x + 5, service_string, curses.A_UNDERLINE)
         self.stdscr.addstr(start_y + 6, start_x + 5, service_string, curses.A_UNDERLINE)
         # Read status jetson_clocks
-        if service == "active":
+        if jc_status_name == "active":
             color = curses.A_BOLD         # Running (Bold)
-        elif service == "inactive":
+        elif jc_status_name == "inactive":
             color = curses.A_NORMAL       # Normal (Grey)
-        elif "ing" in service:
+        elif "ing" in jc_status_name:
             color = curses.color_pair(3)  # Warning (Yellow)
         else:
             color = curses.color_pair(1)  # Error (Red)
         # Status service
         self.stdscr.addstr(start_y + 3, start_x + len(service_string) + 6,
-                           service.capitalize(),
+                           jc_status_name.capitalize(),
                            color)
         # button start/stop jetson clocks
-        if self.jetson.userid == 0 and not jc_manual:
-            self.service_enable.draw(start_y + 5, start_x, key, mouse)
+        self.service_enable.draw(start_y + 5, start_x, key, mouse)
         # Read status jetson_clocks
-        enabled = self.jetson.jetson_clocks.enable
+        boot = self.jetson.jetson_clocks.boot
         self.stdscr.addstr(start_y + 6, start_x + len(service_string) + 6,
-                           "Enable" if enabled else "Disable",
-                           curses.A_BOLD if enabled else curses.A_NORMAL)
+                           "Enable" if boot else "Disable",
+                           curses.A_BOLD if boot else curses.A_NORMAL)
+        return
         # Build NVP model list
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:

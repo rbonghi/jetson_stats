@@ -71,6 +71,14 @@ class NVPModel(object):
         # Make sorted list
         return [self._nvpm[k]['name'] for k in sorted(self._nvpm)]
 
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._mode
+
     def _get_id(self, value):
         try:
             mode_id = self.modes.index(value)

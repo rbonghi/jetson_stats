@@ -24,6 +24,7 @@ from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager, key_reader
 from .core import (
+    Engine,
     Swap,
     CPU,
     Fan,
@@ -121,6 +122,8 @@ class jtop(Thread):
         self._cpu = CPU()
         # Initialize swap
         self._swap = Swap()
+        # Engines
+        self._engine = Engine()
 
     def _load_jetson_variables(self):
         try:
@@ -178,6 +181,10 @@ class jtop(Thread):
         self._observers.discard(observer)
 
     @property
+    def engine(self):
+        return self._engine
+
+    @property
     def board(self):
         # Wait thread end
         self._thread_libraries.join()
@@ -227,15 +234,15 @@ class jtop(Thread):
             # Send status jetson_clocks
             self._controller.put({'jc': {'enable': value}})
 
-    @property
-    def stats(self):
+    # @property
+    # def stats(self):
         """
         A dictionary with the status of the board
 
         :return: Compacts jetson statistics
         :rtype: dict
         """
-        return self._stats
+    #    return self._stats
 
     @property
     def swap(self):
@@ -308,13 +315,13 @@ class jtop(Thread):
         if total_name:
             total = power[total_name]
             del power[total_name]
-            return {'Total': total}, power
+            return total, power
         # Otherwise measure all total power
         total = {'cur': 0, 'avg': 0}
-        for power in power.values():
-            total['cur'] += power['cur']
-            total['avg'] += power['avg']
-        return {'Total': total}, power
+        for value in power.values():
+            total['cur'] += value['cur']
+            total['avg'] += value['avg']
+        return total, power
 
     @property
     def power(self):
@@ -329,9 +336,7 @@ class jtop(Thread):
         power = copy.copy(self._stats['WATT'])
         # Measure total power
         total, power = self._total_power(power)
-        # Add total power
-        power.update(total)
-        return power
+        return total, power
 
     @property
     def temperature(self):
@@ -388,6 +393,8 @@ class jtop(Thread):
         self._jc._update(jc_show)
         # Store data in stats
         self._cpu._update(tegrastats['CPU'], jc_show)
+        # Update engines
+        self._engine._update(tegrastats)
         # Update GPU status
         if 'GPU' in jc_show:
             tegrastats['GR3D'].update(jc_show['GPU'])

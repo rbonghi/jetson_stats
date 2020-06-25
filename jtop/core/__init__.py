@@ -23,7 +23,7 @@ from .fan import Fan, FanService
 from .jetson_clocks import JetsonClocks, JetsonClocksService
 from .swap import Swap, SwapService
 from .cpu import CPU
-from .engine import nvjpg
+from .engine import Engine, nvjpg
 from .config import Config
 from .common import (
     import_os_variables,
