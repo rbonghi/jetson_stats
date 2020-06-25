@@ -22,8 +22,6 @@ from .lib.common import check_curses
 # Graphic library
 from .lib.chart import Chart
 from .lib.button import Button, ButtonList
-# Exception
-from ..core import JtopException
 
 
 class CTRL(Page):
@@ -33,7 +31,7 @@ class CTRL(Page):
         # Only if exist a fan will be load a chart
         # Initialize FAN chart
         self.chart_fan = Chart(jetson, "FAN", self.update_chart, line="o", color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
-        #if not self.jetson.fan:
+        # TODO Fix: if not self.jetson.fan:
         #    self.chart_fan.statusChart(False, "NO FAN")
         # Initialize buttons
         self.service_start = Button(stdscr, key="s", action=self.action_service_start)

@@ -16,7 +16,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-from copy import deepcopy
 from datetime import timedelta
 # control command line
 import curses

@@ -26,11 +26,13 @@ from datetime import datetime, timedelta
 from .lib.common import (check_size,
                          check_curses,
                          set_xterm_title)
-# Create logger for jplotlib
+# Create logger
 logger = logging.getLogger(__name__)
 # Initialization abstract class
 # In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
 ABC = abc.ABCMeta('ABC', (object,), {})
+# Gui refresh rate
+GUI_REFRESH = 1000 // 30
 
 
 class Page(ABC):
@@ -124,7 +126,7 @@ class JTOPGUI:
         # Using current time
         old = datetime.now()
         # Here is the loop of our program, we keep clearing and redrawing in this loop
-        while not self.events() and self.jetson.ok():
+        while not self.events() and self.jetson.ok(spin=True):
             # Draw pages
             self.draw()
             # Increase page automatically if loop enabled
@@ -146,6 +148,8 @@ class JTOPGUI:
         self.menu()
         # Draw the screen
         self.stdscr.refresh()
+        # Set a timeout and read keystroke
+        self.stdscr.timeout(GUI_REFRESH)
 
     def increase(self, loop=False):
         # check reset
