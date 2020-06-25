@@ -209,12 +209,13 @@ class JetsonClocksService(object):
             # if match extract name and number
             if match:
                 # Load CPU information
-                cpu = {"Online": True if int(match.group(2)) == 1 else False,
-                       "governor": str(match.group(3)),
-                       "min_freq": int(match.group(4)),
-                       "max_freq": int(match.group(5)),
-                       "current_freq": int(match.group(6)),
-                       "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).split()}}
+                cpu = {
+                    "Online": int(match.group(2)) == 1,
+                    "governor": str(match.group(3)),
+                    "min_freq": int(match.group(4)),
+                    "max_freq": int(match.group(5)),
+                    "current_freq": int(match.group(6)),
+                    "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).split()}}
                 # Store in CPU list
                 idx_cpu = int(match.group(1)) + 1
                 status["CPU"]["CPU{num}".format(num=idx_cpu)] = cpu
@@ -223,18 +224,20 @@ class JetsonClocksService(object):
             match = GPU_REGEXP.search(line)
             # Load GPU match
             if match:
-                status["GPU"] = {"min_freq": int(match.group(1)),
-                                 "max_freq": int(match.group(2)),
-                                 "current_freq": int(match.group(3))}
+                status["GPU"] = {
+                    "min_freq": int(match.group(1)),
+                    "max_freq": int(match.group(2)),
+                    "current_freq": int(match.group(3))}
                 continue
             # Search configuration EMC config
             match = EMC_REGEXP.search(line)
             # Load EMC match
             if match:
-                status["EMC"] = {"min_freq": int(match.group(1)),
-                                 "max_freq": int(match.group(2)),
-                                 "current_freq": int(match.group(3)),
-                                 "FreqOverride": int(match.group(4))}
+                status["EMC"] = {
+                    "min_freq": int(match.group(1)),
+                    "max_freq": int(match.group(2)),
+                    "current_freq": int(match.group(3)),
+                    "FreqOverride": int(match.group(4))}
                 continue
             # Search configuration NV Power Model
             match = NVP_REGEXP.search(line)
