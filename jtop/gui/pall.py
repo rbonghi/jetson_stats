@@ -105,18 +105,16 @@ class ALL(Page):
                      status='ON' if swap_status else 'OFF')
         # EMC linear gauge info
         line_counter += 1
-        emc = self.jetson.emc
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name=GaugeName('EMC', color=curses.color_pair(6)),
-                     value=emc.get('val', 0),
-                     label=label_freq(emc))
+                     value=self.jetson.emc.get('val', 0),
+                     label=label_freq(self.jetson.emc['frq'], start='k'))
         # GPU linear gauge info
         line_counter += 2
-        gpu = self.jetson.gpu
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name=GaugeName('GPU', color=curses.color_pair(6)),
-                     value=gpu.get('val', 0),
-                     label=label_freq(gpu))
+                     value=self.jetson.gpu.get('val', 0),
+                     label=label_freq(self.jetson.gpu['frq'], start='k'))
         # Status disk
         line_counter += 1
         disk_status = self.jetson.disk

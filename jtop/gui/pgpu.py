@@ -53,7 +53,7 @@ class GPU(Page):
         size_x = [1, width - 2]
         size_y = [first + 1, height * 2 // 3]
         # Draw the GPU chart
-        frq = label_freq(self.jetson.gpu)
+        frq = label_freq(self.jetson.gpu['frq'], start='k')
         label_chart_gpu = "{percent: >2}%".format(percent=self.jetson.gpu['val'])
         if frq:
             label_chart_gpu += " - {frq}".format(frq=frq)
@@ -62,7 +62,7 @@ class GPU(Page):
         linear_gauge(self.stdscr, offset=first + height * 2 // 3 + 1, start=1, size=width // 2,
                      name=GaugeName('GPU', color=curses.color_pair(6)),
                      value=self.jetson.gpu.get('val', 0),
-                     label=label_freq(self.jetson.gpu))
+                     label=label_freq(self.jetson.gpu['frq'], start='k'))
         # Temperature GPU
         if 'GPU' in self.jetson.temperature:
             temp_gpu = self.jetson.temperature['GPU']

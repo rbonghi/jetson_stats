@@ -105,15 +105,15 @@ def strfdelta(tdelta, fmt):
     return fmt.format(**d)
 
 
-def label_freq(value):
-    if 'frq' in value:
-        freq = value['frq']
-        if freq >= 1000:
-            return "{0:2.1f}GHz".format(freq / 1000.0)
-        else:
-            return str(freq) + "MHz"
+def label_freq(frq, start='k'):
+    szw, _, k_unit = size_min(frq, start=start)
+    if szw >= 100:
+        label = '{tot:2.0f}{unit}Hz'.format(tot=szw, unit=k_unit)
+    elif szw >= 10:
+        label = '{tot:2.0f} {unit}Hz'.format(tot=szw, unit=k_unit)
     else:
-        return ""
+        label = '{tot:2.1f}{unit}Hz'.format(tot=szw, unit=k_unit)
+    return label
 
 
 def size_min(num, divider=1.0, n=0, start=''):

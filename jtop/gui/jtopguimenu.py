@@ -23,9 +23,14 @@ import curses
 from .lib.common import (check_curses,
                          strfdelta,
                          plot_name_info,
-                         size_min)
+                         size_min,
+                         label_freq)
 from .lib.linear_gauge import linear_gauge, GaugeName
 from ..core import JtopException
+
+
+def jetson_clocks_gui():
+    pass
 
 
 @check_curses
@@ -40,11 +45,6 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         percent = ""
         if 'val' in cpu and 'governor' in cpu:
             percent = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=cpu['val'])
-        # Unit data
-        label = ''
-        if 'frq' in cpu:
-            szw, _, unit = size_min(cpu['frq'], start='k')
-            label = '{tot:2.1f}{unit}Hz'.format(tot=szw, unit=unit)
         # Show linear gauge
         linear_gauge(
             stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
@@ -52,7 +52,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
             value=cpu.get('val', 0),
             status='ON' if cpu else 'OFF',
             percent=percent,
-            label=label)
+            label=label_freq(cpu['frq'], start='k') if 'frq' in cpu else '')
     # Size block CPU
     return int(offest + idx / 2 + 1) if len(list_cpus) > 4 else int(offest + idx + 1)
 
@@ -136,21 +136,13 @@ def compact_info(stdscr, start, offset, width, height, jetson):
         stdscr.hline(offset + counter, start + 1, curses.ACS_BLOCK, width, curses.color_pair(3))
         stdscr.addstr(offset + counter, start + (width - 8) // 2, " NO FAN ", curses.color_pair(3))
     counter += 1
-    # Jetson clocks status
-    try:
-        # Running (Green) or Normal (Grey)
-        color = curses.color_pair(2) if jetson.jetson_clocks else curses.A_NORMAL
-        # Write status jetson_clocks
-        jc_status_name = jetson.jetson_clocks.status
-        # Show if JetsonClock is enabled or not
-        if jetson.jetson_clocks.boot:
-            jc_status_name = "[" + jc_status_name + "]"
-    except JtopException:
-        # Fix error color
-        color = curses.color_pair(11)
-        # SUDO SUGGESTED is too long, change with a series of spaces
-        # The number 16 = len("jetson clocks: ") + 1
-        jc_status_name = (width - 16) * " "
+    # Jetson clocks status: Running (Green) or Normal (Grey)
+    color = curses.color_pair(2) if jetson.jetson_clocks else curses.A_NORMAL
+    # Write status jetson_clocks
+    jc_status_name = jetson.jetson_clocks.status
+    # Show if JetsonClock is enabled or not
+    if jetson.jetson_clocks.boot:
+        jc_status_name = "[" + jc_status_name + "]"
     # Show status jetson_clocks
     plot_name_info(stdscr, offset + counter, start + 1, "Jetson clocks", jc_status_name, color)
     counter += 1

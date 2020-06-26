@@ -33,7 +33,7 @@ class Chart(object):
         self.name = name
         self.callback = callback
         # Set shape
-        self.refresh = 500
+        self.refresh = jetson.interval * 1000
         # Design chart shape
         self.line = line
         self.color = color
@@ -145,12 +145,14 @@ class Chart(object):
 
     def _plot_values(self, stdscr, size_x, size_y, displayX, displayY, label=True):
         """ Plot values """
-        val = float(displayX - 2) / float(len(self.values))
+        # https://stackoverflow.com/questions/30107212/add-to-a-deque-being-iterated-in-python
+        list_values = list(self.values)
+        val = float(displayX - 2) / float(len(list_values))
         time_block = int(ceil(val))
 
         label_x = size_x[1] - 5 if label else size_x[1]
 
-        for idx, values in enumerate(reversed(self.values)):
+        for idx, values in enumerate(reversed(list_values)):
             # TODO: n = n if n <= self.max_val else self.max_val
             x_val = label_x - idx * time_block - 3
             # Draw chart

@@ -480,6 +480,10 @@ class jtop(Thread):
         self.daemon = True
         super(jtop, self).start()
 
+    @property
+    def interval(self):
+        return self._server_interval
+
     def loop_for_ever(self):
         self.start()
         # Blocking function to catch exceptions
@@ -492,16 +496,18 @@ class jtop(Thread):
 
     def ok(self, spin=False):
         # Wait if trigger is set
-        try:
-            if not self._trigger.is_set() and not spin:
-                if not self._trigger.wait(self._interval * TIMEOUT_GAIN):
-                    self._running = False
-        except (KeyboardInterrupt, SystemExit):
-            self._running = False
+        if not spin:
+            try:
+                if not self._trigger.is_set():
+                    if not self._trigger.wait(self._interval * TIMEOUT_GAIN):
+                        self._running = False
+            except (KeyboardInterrupt, SystemExit):
+                self._running = False
         # Catch exception if exist
         if self._error:
             # Extract exception and raise
             ex_type, ex_value, tb_str = self._error
+            print(self._error)
             raise (ex_type, ex_value, tb_str)
         # If there are not errors clear the event
         if self._running:
