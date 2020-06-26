@@ -20,7 +20,8 @@ Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/jetson_stats/jetson_stats.py
+ExecStart=/usr/local/bin/jtop service
+Restart=always
 StandardInput=tty-force
 
 [Install]
