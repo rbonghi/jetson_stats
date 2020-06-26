@@ -39,7 +39,7 @@ class CTRL(Page):
         # NVP Model controller
         self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
         self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
-        mode_names = [name.replace('MODE_','').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
+        mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
         self.nvp_list = ButtonList(stdscr, range(len(mode_names)), mode_names, action=self.action_nvp)
         # Fan controller
         self.fan_status = Button(stdscr, key="f", action=self.action_fan_status)
@@ -173,7 +173,7 @@ class CTRL(Page):
         # Add plot fan status
         if self.jetson.fan is None:
             # Mode
-            if 'ctrl' in fan:
+            if self.jetson.fan.auto:
                 self.fan_status.draw(start_y, start_x + width // 2, key, mouse)
                 self.stdscr.addstr(start_y + 1, start_x + width // 2 + 6, self.jetson.fan.config.capitalize(), curses.A_BOLD)
             # Show speed buttons only if is in manual

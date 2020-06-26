@@ -45,7 +45,7 @@ def set_xterm_title(title):
 
 
 def nvp_model_gui(stdscr, offset, start, jetson):
-    name = jetson.nvpmodel.name.replace('MODE_','').replace('_', ' ')
+    name = jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')
     plot_name_info(stdscr, offset, start, "NV Power[" + str(jetson.nvpmodel.id) + "]", name)
 
 
