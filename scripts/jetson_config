@@ -360,7 +360,7 @@ status_service()
     fi
     # Check status service
     local JETSON_STATS_STATUS="$(systemctl is-active jetson_stats.service)"
-    if [ $JETSON_STATS_STATUS = "failed" ] ; then
+    if [ $JETSON_STATS_STATUS != "active" ] ; then
         echo 1
         return
     fi

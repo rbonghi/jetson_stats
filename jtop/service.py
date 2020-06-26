@@ -109,6 +109,7 @@ class JtopServer(Process):
         JtopManager.register('get_queue', callable=lambda: self.q)
         JtopManager.register("sync_data", callable=lambda: self.data)
         JtopManager.register('sync_event', callable=lambda: self.event)
+        # Generate key and open broadcaster
         key = key_generator(AUTH_PATH)
         self.broadcaster = JtopManager(key)
         # Initialize Fan
@@ -249,7 +250,7 @@ class JtopServer(Process):
 
     def loop_for_ever(self):
         try:
-            self.start()
+            self.start(force=True)
             # Get exception
             error = self._error.get()
             self.join()
@@ -264,6 +265,10 @@ class JtopServer(Process):
 
     def close(self):
         self.broadcaster.shutdown()
+        # Remove authentication file
+        if os.path.exists(AUTH_PATH):
+            logger.info("Remove authentication {auth}".format(auth=AUTH_PATH))
+            os.remove(AUTH_PATH)
 
     def tegra_stats(self, stats):
         # Make configuration dict
