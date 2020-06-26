@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2020 Raffaello Bonghi.
@@ -21,7 +20,9 @@ import argparse
 import curses
 # Logging
 import logging
-# Tegrastats objext reader
+# jtop service
+from .service import JtopServer
+# jtop client
 from .jtop import jtop, get_version
 # jtop exception
 from .core import JtopException
@@ -59,21 +60,44 @@ class bcolors:
 
 def main():
     parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
+    parser.add_argument('service', nargs='?', help=argparse.SUPPRESS, default=False)
+    parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
+    parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
     parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('-p', '--page', dest="page", help='Open fix page', type=int, default=1)
-    parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
-
+    # Run jtop service
+    if args.service:
+        # Initialize logging level
+        logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+        # Run service
+        try:
+            # Initialize stats server
+            server = JtopServer()
+            logger.info("Service started")
+            server.loop_for_ever()
+            # Close stats server
+            logger.info("Close service")
+        except JtopException as e:
+            print(e)
+        # Close service
+        exit(0)
     # Initialize logging level
-    # logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
     logging.basicConfig()
-
-    # Run the client
+    # Convert refresh to second
+    interval = float(args.refresh / 1000.0)
+    # Restore option
+    if args.restore:
+        with jtop(interval=interval) as jetson:
+            if jetson.ok():
+                print('Restore')
+        # Close service
+        exit(0)
+    # jtop client start
     try:
-        # Convert refresh to second
-        interval = float(args.refresh / 1000.0)
+        # Open jtop client
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper
             curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)

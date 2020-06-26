@@ -17,7 +17,6 @@
 
 # flake8: noqa
 
-from .service import JtopServer
 from .core import JtopException
 from .jtop import jtop, import_jetson_variables
 
