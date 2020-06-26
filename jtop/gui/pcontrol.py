@@ -121,10 +121,9 @@ class CTRL(Page):
         # Field service
         jetson_clocks_string = "jetson_clocks"
         self.stdscr.addstr(start_y + 2, start_x + 5, jetson_clocks_string, curses.A_UNDERLINE)
-        
         # Read status jetson_clocks
         if jc_status_name == "running":
-            color = (curses.A_BOLD | curses.color_pair(2))         # Running (Bold)
+            color = (curses.A_BOLD | curses.color_pair(2))  # Running (Bold)
         elif jc_status_name == "inactive":
             color = curses.A_NORMAL       # Normal (Grey)
         elif "ing" in jc_status_name:
@@ -151,7 +150,7 @@ class CTRL(Page):
             # Draw keys to decrease nvpmodel
             self.nvp_decrease.draw(start_y + 8, start_x + 10, key, mouse)
             # Draw selected number
-            #self.stdscr.addstr(start_y + 9, start_x + 16, str(nvpmodel.selected), curses.A_NORMAL)
+            # TODO Fix: self.stdscr.addstr(start_y + 9, start_x + 16, str(nvpmodel.selected), curses.A_NORMAL)
             # Draw keys to increase nvpmodel
             self.nvp_increase.draw(start_y + 8, start_x + 18, key, mouse)
             # Write list of available modes

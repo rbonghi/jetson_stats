@@ -24,13 +24,10 @@ from .lib.common import (check_curses,
                          strfdelta,
                          plot_name_info,
                          size_min,
-                         label_freq)
+                         label_freq,
+                         jetson_clocks_gui,
+                         nvp_model_gui)
 from .lib.linear_gauge import linear_gauge, GaugeName
-from ..core import JtopException
-
-
-def jetson_clocks_gui():
-    pass
 
 
 @check_curses
@@ -137,19 +134,11 @@ def compact_info(stdscr, start, offset, width, height, jetson):
         stdscr.addstr(offset + counter, start + (width - 8) // 2, " NO FAN ", curses.color_pair(3))
     counter += 1
     # Jetson clocks status: Running (Green) or Normal (Grey)
-    color = curses.color_pair(2) if jetson.jetson_clocks else curses.A_NORMAL
-    # Write status jetson_clocks
-    jc_status_name = jetson.jetson_clocks.status
-    # Show if JetsonClock is enabled or not
-    if jetson.jetson_clocks.boot:
-        jc_status_name = "[" + jc_status_name + "]"
-    # Show status jetson_clocks
-    plot_name_info(stdscr, offset + counter, start + 1, "Jetson clocks", jc_status_name, color)
+    jetson_clocks_gui(stdscr, offset + counter, start + 1, jetson)
     counter += 1
     # NVP Model
-    nvpmodel = jetson.nvpmodel
-    if nvpmodel is not None:
-        plot_name_info(stdscr, offset + counter, start + 1, "NV Power[" + str(nvpmodel.id) + "]", nvpmodel.name)
+    if jetson.nvpmodel is not None:
+        nvp_model_gui(stdscr, offset + counter, start + 1, jetson)
         counter += 1
     # Write all engines
     engines(stdscr, start, offset + counter, width, height, jetson)

@@ -19,7 +19,9 @@ import curses
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import (plot_name_info,
-                         label_freq)
+                         label_freq,
+                         jetson_clocks_gui,
+                         nvp_model_gui)
 from .lib.linear_gauge import linear_gauge, GaugeName
 from .lib.chart import Chart
 
@@ -68,28 +70,7 @@ class GPU(Page):
             temp_gpu = self.jetson.temperature['GPU']
             plot_name_info(self.stdscr, first + height * 2 // 3 + 1, width // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
         # Jetson clocks status
-        jc_status = self.jetson.jetson_clocks
-        # Running (Green) or Normal (Grey)
-        jc_color = curses.color_pair(2) if jc_status else curses.A_NORMAL
-        # Write status jetson_clocks
-        jc_status_name = "Running" if self.jetson.jetson_clocks.status else "Stopped"
-        return
-        # Status service
-        jc_service = jc.service
-        if jc_service == "active":
-            color = curses.color_pair(2)  # Running (Green)
-        elif jc_service == "inactive":
-            color = curses.A_NORMAL       # Normal (Grey)
-        elif "ing" in jc_service:
-            color = curses.color_pair(3)  # Warning (Yellow)
-        else:
-            color = curses.color_pair(1)  # Error (Red)
-        # Show if JetsonClock is enabled or not
-        if jc.enable:
-            jc_service = "[" + jc_service + "]"
-        plot_name_info(self.stdscr, first + height * 2 // 3 + 2, 1, "Jetson Clocks", jc_status_name, jc_color)
-        plot_name_info(self.stdscr, first + height * 2 // 3 + 3, 1, "Jetson Clocks Service", jc_service, color)
+        jetson_clocks_gui(self.stdscr, first + height * 2 // 3 + 3, 1, self.jetson)
         # NVP Model
-        nvpmodel = self.jetson.nvpmodel
-        if nvpmodel is not None:
-            plot_name_info(self.stdscr, first + height * 2 // 3 + 4, 1, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
+        if self.jetson.nvpmodel is not None:
+            nvp_model_gui(self.stdscr, first + height * 2 // 3 + 4, 1, self.jetson)

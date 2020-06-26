@@ -44,6 +44,29 @@ def set_xterm_title(title):
         sys.stdout.flush()
 
 
+def nvp_model_gui(stdscr, offset, start, jetson):
+    plot_name_info(stdscr, offset, start, "NV Power[" + str(jetson.nvpmodel.id) + "]", jetson.nvpmodel.name)
+
+
+def jetson_clocks_gui(stdscr, offset, start, jetson):
+    # Write status jetson_clocks
+    jc_status_name = jetson.jetson_clocks.status
+    # Read status jetson_clocks
+    if jc_status_name == "running":
+        color = (curses.A_BOLD | curses.color_pair(2))  # Running (Bold)
+    elif jc_status_name == "inactive":
+        color = curses.A_NORMAL       # Normal (Grey)
+    elif "ing" in jc_status_name:
+        color = curses.color_pair(3)  # Warning (Yellow)
+    else:
+        color = curses.color_pair(1)  # Error (Red)
+    # Show if JetsonClock is enabled or not
+    if jetson.jetson_clocks.boot:
+        jc_status_name = "[" + jc_status_name + "]"
+    # Show status jetson_clocks
+    plot_name_info(stdscr, offset, start, "Jetson Clocks", jc_status_name, color)
+
+
 def check_size(height_max, width_max):
     """ Check curses size window """
     def check_size_window(func):
