@@ -446,8 +446,7 @@ class jtop(Thread):
             self._broadcaster.connect()
         except FileNotFoundError as e:
             if e.errno == 2:  # Message error: 'No such file or directory'
-                # TODO: Fixe message error
-                raise JtopException("jetson_stats service not active, please run sudo ... ")
+                raise JtopException("jetson_stats service not active. Please run: sudo systemctl start jetson_stats.service")
             elif e.errno == 13:  # Message error: 'Permission denied'
                 raise JtopException("I can't access to server, check group ")
             else:

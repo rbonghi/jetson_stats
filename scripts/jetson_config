@@ -19,6 +19,10 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
+# Load sudo user nane
+if [ ! -z $SUDO_USER ] ; then
+    USER=$SUDO_USER
+fi
 TITLE="jetson-stats configurator"
 INTERACTIVE=true
 FORCE=false
@@ -31,6 +35,7 @@ FORCE=false
 HEALTH_FUNCTIONS=("commands" "Check all commands if are installed"\
                   "folders" "Check folders"\
                   "variables" "Check variables status"\
+                  "permissions" "Check status permissions for $USER"\
                   "service" "Status jetson-stats service")
 # Jetson-stats main folder
 JETSON_STATS_FOLDER="/usr/local/jetson_stats"
@@ -206,6 +211,61 @@ folders()
     health
 }
 
+fix_permissions()
+{
+    local group="jetson_stats"
+    # Make jetson_stats group
+    sudo groupadd $group
+    # Add jetson_stats user group to local user
+    sudo usermod -a -G $group $USER
+    # Require reboot
+    if [ ! -f /var/run/reboot-required ] ; then
+        sudo sh -c 'echo "*** System Restart Required ***" > /var/run/reboot-required'
+    fi
+}
+
+uninstall_permissions()
+{
+    echo "Nothing to do"
+}
+
+status_permissions()
+{
+    local group="jetson_stats"
+    # Check if exist group
+    if ! grep -q $group /etc/group ; then
+        echo 1
+        return
+    fi
+    # Check if user is in group
+    if ! groups $USER | grep -q '\bjetson_stats\b'; then
+        echo 1
+        return
+    fi
+    # Everything is fine
+    echo 0
+}
+
+permissions()
+{
+    # Load text
+    local TEXT="jtop to read all data from jetson_stats service \
+need to be in jetson_stats group."
+    # Check status status_variables
+    if [ $(status_permissions) -eq 1 ] ; then
+        TEXT+="\n\nThe does not have proper permissions.\nDo you want fix?"
+        # Run script to fix variables
+        if (whiptail --title "$TITLE" --yesno "$TEXT" 11 78); then
+            fix_service
+        fi
+    else
+        # Run Message
+        whiptail --title "$TITLE" --msgbox "$TEXT" 10 78
+    fi
+    # Return to healt function
+    health
+}
+
 fix_service()
 {
     # Remove old jetson_performance.service and jetson_stats_boot.service
@@ -272,6 +332,9 @@ uninstall_service()
         # Update service list
         sudo systemctl daemon-reload
     fi
+    # Remove all jtop files
+    sudo rm /run/jtop.sock
+    sudo rm /run/jtop.auth
 }
 
 status_service()
@@ -857,7 +920,7 @@ usage()
     echo "options,"
     echo "   -h|--help    | This help"
     echo "   -p|--option  | Select page to open the script"
-    echo "   -u|--user    | Change user to run the script"
+    echo "   -u|--user    | Change user to run this script"
     echo "   --install    | Run installer. Equivalent to fix jetson-stats in health"
     echo "   --uninstall  | Run uninstaller for all packages"
 }
