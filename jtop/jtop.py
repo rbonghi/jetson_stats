@@ -305,7 +305,7 @@ class jtop(Thread):
         # https://github.com/rbonghi/jetson_stats/issues/51
         total_name = ""
         for val in power:
-            if "_IN" in val:
+            if "IN" in val:
                 total_name = val
                 break
         # Extract the total from list
