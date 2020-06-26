@@ -113,22 +113,12 @@ def compact_info(stdscr, start, offset, width, height, jetson):
     counter += 1
     # FAN status
     if jetson.fan:
-        fan = jetson.fan
-        if 'cpwm' in fan:
-            if 'ctrl' in fan:
-                ctrl = "Ta" if fan.get("ctrl", False) else "Tm"
-            else:
-                ctrl = "T"
-            label = "{ctrl}={target: >3}%".format(ctrl=ctrl, target=fan.get("tpwm", 0))
-            value = fan.get('cpwm', 0)
-        else:
-            label = ''
-            value = fan.get('tpwm', 0)
+        ctrl = "Ta" if jetson.fan.auto else "Tm"
+        label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=jetson.fan.speed)
         linear_gauge(stdscr, offset=offset + counter, start=start + 1, size=width,
                      name=GaugeName('FAN', color=curses.color_pair(6)),
-                     value=value,
-                     label=label,
-                     status=fan['status'])
+                     value=jetson.fan.measure,
+                     label=label)
     else:
         stdscr.hline(offset + counter, start + 1, curses.ACS_BLOCK, width, curses.color_pair(3))
         stdscr.addstr(offset + counter, start + (width - 8) // 2, " NO FAN ", curses.color_pair(3))

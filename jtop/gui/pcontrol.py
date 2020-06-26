@@ -39,7 +39,7 @@ class CTRL(Page):
         # NVP Model controller
         self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
         self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
-        mode_names = self.jetson.nvpmodel.modes
+        mode_names = [name.replace('MODE_','').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
         self.nvp_list = ButtonList(stdscr, range(len(mode_names)), mode_names, action=self.action_nvp)
         # Fan controller
         self.fan_status = Button(stdscr, key="f", action=self.action_fan_status)
@@ -166,21 +166,12 @@ class CTRL(Page):
         # Add label
         label = ""
         if self.jetson.fan is not None:
-            fan = self.jetson.stats['FAN']
             # Read status control fan
-            if 'ctrl' in fan:
-                ctrl_stat = "CTRL=" + ("Enable" if fan['ctrl'] else "Disable")
-            else:
-                ctrl_stat = ""
+            ctrl_stat = "CTRL=" + ("Enable" if self.jetson.fan.auto else "Disable")
             # Add label
-            if 'cpwm' in fan:
-                label = "{current: >3}% of {target: >3}% {ctrl}".format(current=fan.get("cpwm", 0), target=fan.get("tpwm", 0), ctrl=ctrl_stat)
-            else:
-                label = "Target: {target: >3}% {ctrl}".format(target=fan.get("tpwm", 0), ctrl=ctrl_stat)
-        # Draw the GPU chart
-        self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
+            label = "{current: >3.0f}% of {target: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, target=self.jetson.fan.speed, ctrl=ctrl_stat)
         # Add plot fan status
-        if self.jetson.fan is not None:
+        if self.jetson.fan is None:
             # Mode
             if 'ctrl' in fan:
                 self.fan_status.draw(start_y, start_x + width // 2, key, mouse)
@@ -196,4 +187,6 @@ class CTRL(Page):
                 self.stdscr.addstr(start_y + 1, blk + 6, speed_str, curses.A_NORMAL)
                 # Draw keys to increase fan speed
                 self.fan_status_increase.draw(start_y, blk + 13, key, mouse)
+        # Draw the GPU chart
+        self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
 # EOF

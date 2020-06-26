@@ -25,8 +25,9 @@ class Engine(object):
 
     def _update(self, tegrastats):
         self.ape = tegrastats['APE']
-        self.nvenc = tegrastats['NVENC']
-        self.nvdec = tegrastats['NVDEC']
+        self.nvenc = tegrastats['NVENC'] if 'NVENC' in tegrastats else {}
+        self.nvdec = tegrastats['NVDEC'] if 'NVDEC' in tegrastats else {}
+        self.msenc = tegrastats['MSENC'] if 'MSENC' in tegrastats else {}
         self.nvjpg = tegrastats['NVJPG']
 
 

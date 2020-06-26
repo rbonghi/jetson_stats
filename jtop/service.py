@@ -55,12 +55,6 @@ JTOP_USER = 'jetson_stats'
 TIMEOUT_GAIN = 3
 
 
-def key_reader(AUTH_RE):
-    with open(AUTH_PATH, 'r') as f:
-        key = b64decode(f.readline())
-    return key.replace(get_var(AUTH_RE), '')
-
-
 class JtopManager(SyncManager):
 
     def __init__(self, authkey):
@@ -293,4 +287,10 @@ class JtopServer(Process):
 
     def __del__(self):
         self.close()
+
+
+def key_reader(AUTH_RE):
+    with open(AUTH_PATH, 'r') as f:
+        key = b64decode(f.readline()).decode('utf-8').replace(get_var(AUTH_RE), '')
+    return key
 # EOF

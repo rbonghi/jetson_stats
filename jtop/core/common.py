@@ -150,7 +150,7 @@ def get_local_interfaces():
 
 def key_generator(AUTH_PATH):
     key = str(uuid.uuid4())
-    with open(AUTH_PATH, 'w') as t:
-        t.write(b64encode(key + get_var(AUTH_RE)))
+    with open(AUTH_PATH, 'wb') as t:
+        t.write(b64encode((key + get_var(AUTH_RE)).encode("utf-8")))
     return key
 # EOF

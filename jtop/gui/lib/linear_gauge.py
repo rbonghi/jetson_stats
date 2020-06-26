@@ -35,7 +35,7 @@ class GaugeBar:
 def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", bar="|"):
     name = GaugeName(name) if isinstance(name, str) else name
     label = GaugeName(label) if isinstance(label, str) else label
-    values = (GaugeBar(value, curses.color_pair(2)), ) if isinstance(value, int) else value
+    values = (GaugeBar(value, curses.color_pair(2)), ) if isinstance(value, (int, float)) else value
     # Evaluate size withuout short name
     name_size = len(name.text)
     size_bar = size - name_size - 4
@@ -54,7 +54,7 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
         if n_bar >= 0:
             # Build progress barr string
             str_progress_bar = bar * n_bar
-            percent_label = percent if percent else str(total) + "%"
+            percent_label = percent if percent else "{:.0f}%".format(total)
             str_progress_bar = str_progress_bar[:size_bar - len(percent_label)] + percent_label
             # Split string in green and grey part
             counter = 0
