@@ -251,7 +251,8 @@ class JtopServer(Process):
             # Raise error if exist
             if error:
                 ex_type, ex_value, tb_str = error
-                raise (ex_type, ex_value, tb_str)
+                ex_value.__traceback__ = tb_str
+                raise ex_value
         except (KeyboardInterrupt, SystemExit):
             pass
         # Close communication

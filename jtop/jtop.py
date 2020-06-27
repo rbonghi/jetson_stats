@@ -512,7 +512,6 @@ class jtop(Thread):
         if self._error:
             # Extract exception and raise
             ex_type, ex_value, tb_str = self._error
-            #raise (ex_type, ex_value, tb_str)
             ex_value.__traceback__ = tb_str
             raise ex_value
         # If there are not errors clear the event

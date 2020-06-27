@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
 REGPM = re.compile(r'NV Power Mode: ((.*))')
 
+
 def NVP_get_id(modes, value):
     try:
         mode_id = modes.index(value)

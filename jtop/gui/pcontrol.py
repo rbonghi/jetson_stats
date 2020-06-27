@@ -44,10 +44,11 @@ class CTRL(Page):
         mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
         self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
         # Fan controller
-        self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
-        self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
-        # Fan options
-        self.fan_list = ButtonList(stdscr, self.jetson.fan.configs, action=self.action_fan)
+        if self.jetson.fan is not None:
+            self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
+            self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
+            # Fan options
+            self.fan_list = ButtonList(stdscr, self.jetson.fan.configs, action=self.action_fan)
 
     def action_fan(self, key):
         # Get config name
@@ -76,7 +77,7 @@ class CTRL(Page):
         self.jetson.jetson_clocks = not self.jetson.jetson_clocks
 
     def action_fan_increase(self, key):
-        speed  = self.jetson.fan.speed
+        speed = self.jetson.fan.speed
         # Round speed
         spd = (speed // 10) * 10
         # Increase the speed
@@ -84,14 +85,14 @@ class CTRL(Page):
             self.jetson.fan.speed = spd + FAN_STEP
 
     def action_fan_decrease(self, key):
-        speed  = self.jetson.fan.speed
+        speed = self.jetson.fan.speed
         # Round speed
         spd = (speed // 10) * 10
         # Increase the speed
         if spd - FAN_STEP >= 0:
             self.jetson.fan.speed = spd - FAN_STEP
         if self.jetson.fan.speed < FAN_STEP:
-            self.jetson.fan .speed= 0
+            self.jetson.fan.speed = 0
 
     def update_chart(self, jetson, name):
         # Append in list

@@ -135,7 +135,8 @@ class Tegrastats:
         if self._error:
             # Extract exception and raise
             ex_type, ex_value, tb_str = self._error
-            raise (ex_type, ex_value, tb_str)
+            ex_value.__traceback__ = tb_str
+            raise ex_value
         # Check if thread and process are already empty
         if self.p is None:
             return False
