@@ -98,7 +98,7 @@ class ButtonList:
         # draw buttons
         x_line = 0
         y_line = 0
-        lstatus = lstatus if lstatus else [False] * len(self.buttons)
+        lstatus = lstatus if lstatus else [True] * len(self.buttons)
         for idx, (button, status) in enumerate(zip(self.buttons, lstatus)):
             # Find next position
             b_width = button.sizeX()

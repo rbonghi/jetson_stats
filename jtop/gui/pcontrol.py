@@ -52,6 +52,8 @@ class CTRL(Page):
     def action_fan(self, key):
         # Get config name
         name = self.jetson.fan.configs[int(key)]
+        # Set new fan mode
+        self.jetson.fan.mode = name
 
     def action_nvp_increase(self, key):
         # NVPmodel controller
@@ -145,12 +147,12 @@ class CTRL(Page):
             # Draw keys to decrease nvpmodel
             self.nvp_decrease.draw(start_y + 8, start_x + 10, key, mouse)
             # Draw selected number
-            # TODO Fix: self.stdscr.addstr(start_y + 9, start_x + 16, str(nvpmodel.selected), curses.A_NORMAL)
+            self.stdscr.addstr(start_y + 9, start_x + 16, str(nvpmodel.id), curses.A_NORMAL)
             # Draw keys to increase nvpmodel
             self.nvp_increase.draw(start_y + 8, start_x + 18, key, mouse)
             # Write list of available modes
             self.nvp_list.draw(start_y + 11, start_x, width // 2 - start_x, key, mouse,
-                               lstatus=nvpmodel.modes,
+                               lstatus=nvpmodel.status,
                                select=nvpmodel.id)
         # Evaluate size chart
         size_x = [start_x + width // 2 + 1, width - start_x - 1]
@@ -161,7 +163,7 @@ class CTRL(Page):
             # Change size chart
             size_y = [start_y + 3, height - 3]
             # Read status control fan
-            ctrl_stat = "CTRL=" + ("Enable" if self.jetson.fan.auto else "Disable")
+            ctrl_stat = "Auto=" + ("Enable" if self.jetson.fan.auto else "Disable")
             # Add label
             label = "{current: >3.0f}% of {target: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, target=self.jetson.fan.speed, ctrl=ctrl_stat)
             # Fan label
@@ -176,7 +178,10 @@ class CTRL(Page):
             self.fan_status_increase.draw(start_y, start_x + 16, key, mouse)
             # Write list of available modes
             self.stdscr.addstr(start_y + 1, start_x + 22, "Modes", curses.A_BOLD)
-            self.fan_list.draw(start_y, start_x + 28, width, key, mouse, select=nvpmodel.id)
+            # Get ID from fan mode
+            fan_mode = self.jetson.fan.mode
+            fan_id = self.jetson.fan.configs.index(fan_mode)
+            self.fan_list.draw(start_y, start_x + 28, width, key, mouse, select=fan_id)
         # Draw the GPU chart
         self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
 # EOF

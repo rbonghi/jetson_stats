@@ -29,6 +29,13 @@ logger = logging.getLogger(__name__)
 REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
 REGPM = re.compile(r'NV Power Mode: ((.*))')
 
+def NVP_get_id(modes, value):
+    try:
+        mode_id = modes.index(value)
+    except ValueError:
+        raise JtopException("This mode {value} does not exists".format(value=value))
+    return mode_id
+
 
 class NVPModel(object):
     """
@@ -41,6 +48,73 @@ class NVPModel(object):
         * Nano: https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/
     """
     def __init__(self):
+        self._nvpm = {}
+        # Initialize mode
+        self._mode = ""
+
+    @property
+    def status(self):
+        return [self._nvpm[k]['status'] for k in sorted(self._nvpm)]
+
+    @property
+    def modes(self):
+        # Make sorted list
+        return [self._nvpm[k]['name'] for k in sorted(self._nvpm)]
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._mode
+
+    def set(self, value):
+        if isinstance(value, str):
+            # Convert MODE to ID
+            mode_id = NVP_get_id(self.modes, value)
+        elif isinstance(value, int):
+            # Check if ID is in list
+            if value < 0 or value > len(self.modes):
+                raise JtopException("This ID {value} does not exists".format(value=value))
+            mode_id = value
+        else:
+            raise TypeError("Data type not allowed {type}".format(type=type(value)))
+        return mode_id
+
+    def __add__(self, number):
+        # TODO: Implement
+        pass
+
+    def __sub__(self, number):
+        # TODO: Implement
+        pass
+
+    def __iadd__(self, number):
+        # Get new number
+        return self._id + number
+
+    def __isub__(self, number):
+        # Get new number
+        return self._id - number
+
+    def __repr__(self):
+        return self._mode
+
+    def _update(self, mode, modes):
+        # Update nvpm modes
+        self._nvpm = modes
+        self._mode = mode
+        self._id = NVP_get_id(self.modes, mode)
+
+
+class NVPModelService(object):
+
+    def __init__(self, jetson_clocks=None):
+        # Initialize thread
+        self._thread = None
+        # Initialize jetson_clocks config
+        self.jetson_clocks = jetson_clocks
         # Read all lines and extract modes
         self._nvpm = {}
         try:
@@ -57,86 +131,10 @@ class NVPModel(object):
                     mode_id = int(match.group(1))
                     mode_name = str(match.group(2))
                     # Save in nvpm list
-                    self._nvpm[mode_id] = {'name': mode_name, 'error': False}
+                    self._nvpm[mode_id] = {'name': mode_name, 'status': True}
         except OSError:
             logger.warning("This board does not have NVP Model")
             raise JtopException("NVPmodel does not exist for this board")
-        except AttributeError:
-            logger.error("Wrong open")
-            raise JtopException("Wrong open")
-        # Initialize mode
-        self._mode = ""
-
-    @property
-    def modes(self):
-        # Make sorted list
-        return [self._nvpm[k]['name'] for k in sorted(self._nvpm)]
-
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def name(self):
-        return self._mode
-
-    def _get_id(self, value):
-        try:
-            mode_id = self.modes.index(value)
-        except ValueError:
-            raise JtopException("This mode {value} does not exists".format(value=value))
-        return mode_id
-
-    def set(self, value):
-        if isinstance(value, str):
-            # Convert MODE to ID
-            mode_id = self._get_id(value)
-        elif isinstance(value, int):
-            # Check if ID is in list
-            if value < 0 or value > len(self.modes):
-                raise JtopException("This ID {value} does not exists".format(value=value))
-            mode_id = value
-        else:
-            raise TypeError("Data type not allowed {type}".format(type=type(value)))
-        return mode_id
-
-    def __add__(self, number):
-        pass
-
-    def __sub__(self, number):
-        pass
-
-    def __iadd__(self, number):
-        # Get new number
-        return self._id + number
-
-    def __isub__(self, number):
-        # Get new number
-        return self._id - number
-
-    def __repr__(self):
-        return self._mode
-
-    def _update(self, mode, status):
-        self._mode = mode
-        self._id = self._get_id(mode)
-
-
-class NVPModelService(object):
-
-    def __init__(self, jetson_clocks=None):
-        try:
-            num, _ = NVPModelService.query()
-        except OSError:
-            logger.warning("This board does not have NVP Model")
-            raise JtopException("NVPmodel does not exist for this board")
-        # Initialize thread
-        self._thread = None
-        # Initialize jetson_clocks config
-        self.jetson_clocks = jetson_clocks
-        # Initialize status
-        self._status = True
-        self._id = num
 
     def _thread_set_nvp_model(self, value):
         if self.jetson_clocks is None:
@@ -146,18 +144,21 @@ class NVPModelService(object):
         old_status = self.jetson_clocks.is_alive
         if old_status:
             self.jetson_clocks.stop()
-            print("Stop")
             # Check jetson_clocks is off
             while self.jetson_clocks.is_alive:
                 pass
-        print("Set value", value)
         # Set NV Power Mode
-        self._status = self._mode(value)
-        self._id = value
+        status = self._mode(value)
+        # Update status
+        self._nvpm[value]['status'] = status
         # Enable again the jetson_clocks status
         if old_status:
-            print("Start")
             self.jetson_clocks.start()
+            # Check jetson_clocks is off
+            logger.info("Jetson Clocks status {status}".format(status=self.jetson_clocks.is_alive))
+            while not self.jetson_clocks.is_alive:
+                pass
+        logger.info("NVPmodel started {value}".format(value=value))
 
     def is_running(self):
         if self._thread is None:
@@ -173,8 +174,8 @@ class NVPModelService(object):
         self._thread.start()
         return True
 
-    def status(self):
-        return {'status': self._status, 'id': self._id}
+    def modes(self):
+        return self._nvpm
 
     def _mode(self, level):
         """ Set nvpmodel to a new status """

@@ -402,9 +402,9 @@ class jtop(Thread):
         self._stats = tegrastats
         # Read status NVP model selected
         if 'nvp' in data:
-            status = data['nvp']
+            modes = data['nvp']
             # Update NVIDIA Power mode
-            self._nvp._update(jc_show.get('NVP', ''), status)
+            self._nvp._update(jc_show.get('NVP', ''), modes)
         # Set trigger
         self._trigger.set()
         # Notify all observers
@@ -512,8 +512,9 @@ class jtop(Thread):
         if self._error:
             # Extract exception and raise
             ex_type, ex_value, tb_str = self._error
-            print(self._error)
-            raise (ex_type, ex_value, tb_str)
+            #raise (ex_type, ex_value, tb_str)
+            ex_value.__traceback__ = tb_str
+            raise ex_value
         # If there are not errors clear the event
         if self._running:
             self._trigger.clear()

@@ -277,7 +277,7 @@ class JtopServer(Process):
         data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
         # Read status NVPmodel
         if self.nvpmodel is not None:
-            data['nvp'] = self.nvpmodel.status()
+            data['nvp'] = self.nvpmodel.modes()
         # Update status fan speed
         if self.fan is not None:
             data['fan'] = self.fan.update()

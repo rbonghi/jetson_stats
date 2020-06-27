@@ -418,7 +418,9 @@ class JetsonClocksService(object):
         if self._error:
             # Extract exception and raise
             ex_type, ex_value, tb_str = self._error
-            raise (ex_type, ex_value, tb_str)
+            #raise (ex_type, ex_value, tb_str)
+            ex_value.__traceback__ = tb_str
+            raise ex_value
 
     def store(self):
         # Store configuration jetson_clocks
