@@ -82,6 +82,10 @@ class Fan(object):
         # Set new jetson_clocks configuration
         self._controller.put({'fan': {name: value}})
 
+    @property
+    def configs(self):
+        return CONFIGS
+
     def _update(self, status):
         self._status = status
         # Load status as a dictionary

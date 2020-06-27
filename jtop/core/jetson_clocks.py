@@ -125,6 +125,9 @@ class JetsonClocks(object):
     def __nonzero__(self):
         return self._alive
 
+    def __bool__(self):
+        return self._alive
+
     def __repr__(self):
         return str(self._alive)
 

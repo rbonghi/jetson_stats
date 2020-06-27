@@ -118,9 +118,9 @@ class JtopServer(Process):
             self.fan.initialization(self.jetson_clocks)
         # Initialize nvpmodel controller
         try:
-            self._nvp = NVPModelService()
+            self.nvpmodel = NVPModelService(self.jetson_clocks)
         except JtopException:
-            self._nvp = None
+            self.nvpmodel = None
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
         # Swap manager
@@ -176,7 +176,7 @@ class JtopServer(Process):
                         mode = control['nvp']
                         logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
-                        self._nvp.set(mode)
+                        self.nvpmodel.set(mode)
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
@@ -275,6 +275,9 @@ class JtopServer(Process):
         # Load status jetson_clocks
         data['jc'] = self.jetson_clocks.show()
         data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
+        # Read status NVPmodel
+        if self.nvpmodel is not None:
+            data['nvp'] = self.nvpmodel.status()
         # Update status fan speed
         if self.fan is not None:
             data['fan'] = self.fan.update()

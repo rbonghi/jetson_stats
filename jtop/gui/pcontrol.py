@@ -23,6 +23,8 @@ from .lib.common import check_curses
 from .lib.chart import Chart
 from .lib.button import Button, ButtonList
 
+FAN_STEP = 10
+
 
 class CTRL(Page):
 
@@ -40,11 +42,16 @@ class CTRL(Page):
         self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
         self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
         mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
-        self.nvp_list = ButtonList(stdscr, range(len(mode_names)), mode_names, action=self.action_nvp)
+        self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
         # Fan controller
-        self.fan_status = Button(stdscr, key="f", action=self.action_fan_status)
         self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
         self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
+        # Fan options
+        self.fan_list = ButtonList(stdscr, self.jetson.fan.configs, action=self.action_fan)
+
+    def action_fan(self, key):
+        # Get config name
+        name = self.jetson.fan.configs[int(key)]
 
     def action_nvp_increase(self, key):
         # NVPmodel controller
@@ -55,13 +62,8 @@ class CTRL(Page):
         self.jetson.nvpmodel -= 1
 
     def action_nvp(self, key):
-        # Run nvpmodel on number selected
-        nvpmodel = self.jetson.nvpmodel
-        if nvpmodel is not None:
-            # Read number
-            number = int(key)
-            # Set new nvpmodel
-            nvpmodel.set(number)
+        # Set new nvpmodel
+        self.jetson.nvpmodel = int(key)
 
     def action_service_enable(self, key):
         # Start jetson_clocks
@@ -71,37 +73,30 @@ class CTRL(Page):
         # Start jetson_clocks
         self.jetson.jetson_clocks = not self.jetson.jetson_clocks
 
-    def action_fan_status(self, key):
-        # FAN controller
-        fan = self.jetson.fan
-        if fan is not None:
-            # Go to next configuration
-            fan.conf_next()
-            # Store configuration
-            fan.store()
-
     def action_fan_increase(self, key):
-        # FAN controller
-        fan = self.jetson.fan
-        if fan is not None:
-            fan.increase()
-            # Store configuration
-            fan.store()
+        speed  = self.jetson.fan.speed
+        # Round speed
+        spd = (speed // 10) * 10
+        # Increase the speed
+        if spd + FAN_STEP <= 100:
+            self.jetson.fan.speed = spd + FAN_STEP
 
     def action_fan_decrease(self, key):
-        # FAN controller
-        fan = self.jetson.fan
-        if fan is not None:
-            fan.decrease()
-            # Store configuration
-            fan.store()
+        speed  = self.jetson.fan.speed
+        # Round speed
+        spd = (speed // 10) * 10
+        # Increase the speed
+        if spd - FAN_STEP >= 0:
+            self.jetson.fan.speed = spd - FAN_STEP
+        if self.jetson.fan.speed < FAN_STEP:
+            self.jetson.fan .speed= 0
 
     def update_chart(self, jetson, name):
         # Append in list
         if jetson.fan is None:
             return {}
         return {
-            'value': [jetson.fan.speed],
+            'value': [jetson.fan.measure],
             'active': jetson.fan is not None
         }
 
@@ -117,10 +112,10 @@ class CTRL(Page):
         # Write status jetson_clocks
         jc_status_name = self.jetson.jetson_clocks.status
         # Show service status
-        self.service_start.draw(start_y + 1, start_x, key, mouse)
+        self.service_start.draw(start_y + 3, start_x, key, mouse)
         # Field service
         jetson_clocks_string = "jetson_clocks"
-        self.stdscr.addstr(start_y + 2, start_x + 5, jetson_clocks_string, curses.A_UNDERLINE)
+        self.stdscr.addstr(start_y + 4, start_x + 5, jetson_clocks_string, curses.A_UNDERLINE)
         # Read status jetson_clocks
         if jc_status_name == "running":
             color = (curses.A_BOLD | curses.color_pair(2))  # Running (Bold)
@@ -131,16 +126,16 @@ class CTRL(Page):
         else:
             color = curses.color_pair(1)  # Error (Red)
         # Status jetson_clocks
-        self.stdscr.addstr(start_y + 2, start_x + len(jetson_clocks_string) + 6,
+        self.stdscr.addstr(start_y + 4, start_x + len(jetson_clocks_string) + 6,
                            jc_status_name.capitalize(),
                            color)
         # button start/stop jetson clocks
-        self.service_enable.draw(start_y + 4, start_x, key, mouse)
+        self.service_enable.draw(start_y + 6, start_x, key, mouse)
         # Read status jetson_clocks
         jetson_clocks_boot_string = "boot"
-        self.stdscr.addstr(start_y + 5, start_x + 5, jetson_clocks_boot_string, curses.A_UNDERLINE)
+        self.stdscr.addstr(start_y + 7, start_x + 5, jetson_clocks_boot_string, curses.A_UNDERLINE)
         boot = self.jetson.jetson_clocks.boot
-        self.stdscr.addstr(start_y + 5, start_x + len(jetson_clocks_boot_string) + 6,
+        self.stdscr.addstr(start_y + 7, start_x + len(jetson_clocks_boot_string) + 6,
                            "Enable" if boot else "Disable",
                            curses.A_BOLD if boot else curses.A_NORMAL)
         # Build NVP model list
@@ -159,34 +154,29 @@ class CTRL(Page):
                                select=nvpmodel.id)
         # Evaluate size chart
         size_x = [start_x + width // 2 + 1, width - start_x - 1]
-        if self.jetson.fan is not None:
-            size_y = [start_y + 3, height - 3]
-        else:
-            size_y = [start_y, height - 3]
+        size_y = [start_y, height - 3]
         # Add label
-        label = ""
+        label = ''
         if self.jetson.fan is not None:
+            # Change size chart
+            size_y = [start_y + 3, height - 3]
             # Read status control fan
             ctrl_stat = "CTRL=" + ("Enable" if self.jetson.fan.auto else "Disable")
             # Add label
             label = "{current: >3.0f}% of {target: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, target=self.jetson.fan.speed, ctrl=ctrl_stat)
-        # Add plot fan status
-        if self.jetson.fan is None:
-            # Mode
-            if self.jetson.fan.auto:
-                self.fan_status.draw(start_y, start_x + width // 2, key, mouse)
-                self.stdscr.addstr(start_y + 1, start_x + width // 2 + 6, self.jetson.fan.config.capitalize(), curses.A_BOLD)
-            # Show speed buttons only if is in manual
-            if self.jetson.fan.conf == 'manual':
-                blk = start_x + width // 2 + 13
-                # Draw keys to decrease fan speed
-                self.fan_status_decrease.draw(start_y, blk, key, mouse)
-                # Draw selected number
-                self.stdscr.addstr(start_y, blk + 6, "Speed", curses.A_BOLD)
-                speed_str = "{speed: 3}%".format(speed=self.jetson.fan.speed)
-                self.stdscr.addstr(start_y + 1, blk + 6, speed_str, curses.A_NORMAL)
-                # Draw keys to increase fan speed
-                self.fan_status_increase.draw(start_y, blk + 13, key, mouse)
+            # Fan label
+            self.stdscr.addstr(start_y + 1, start_x, "Fan", curses.A_BOLD)
+            # Draw keys to decrease fan speed
+            self.fan_status_decrease.draw(start_y, start_x + 4, key, mouse)
+            # Draw selected number
+            self.stdscr.addstr(start_y, start_x + 10, "Speed", curses.A_BOLD)
+            speed_str = "{speed: 3.0f}%".format(speed=self.jetson.fan.speed)
+            self.stdscr.addstr(start_y + 1, start_x + 10, speed_str, curses.A_NORMAL)
+            # Draw keys to increase fan speed
+            self.fan_status_increase.draw(start_y, start_x + 16, key, mouse)
+            # Write list of available modes
+            self.stdscr.addstr(start_y + 1, start_x + 22, "Modes", curses.A_BOLD)
+            self.fan_list.draw(start_y, start_x + 28, width, key, mouse, select=nvpmodel.id)
         # Draw the GPU chart
         self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
 # EOF

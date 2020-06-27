@@ -101,6 +101,8 @@ def main():
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper
             curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
+    except (KeyboardInterrupt, SystemExit):
+        pass
     except JtopException as e:
         print(e)
 

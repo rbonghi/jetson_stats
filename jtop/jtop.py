@@ -228,7 +228,7 @@ class jtop(Thread):
         if not isinstance(value, bool):
             raise TypeError("Use a boolean")
         # Check if service is not started otherwise skip
-        if self._jc.status == 'activating':
+        if self._jc.status in ['activating', 'deactivating']:
             return
         if value != self._jc.is_alive:
             # Send status jetson_clocks
@@ -400,8 +400,11 @@ class jtop(Thread):
             tegrastats['GR3D'].update(jc_show['GPU'])
         # Store the updated stats from tegrastats
         self._stats = tegrastats
-        # Update NVIDIA Power mode
-        self._nvp._update(jc_show.get('NVP', ''))
+        # Read status NVP model selected
+        if 'nvp' in data:
+            status = data['nvp']
+            # Update NVIDIA Power mode
+            self._nvp._update(jc_show.get('NVP', ''), status)
         # Set trigger
         self._trigger.set()
         # Notify all observers

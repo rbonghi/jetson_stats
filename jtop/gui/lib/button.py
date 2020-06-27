@@ -25,13 +25,15 @@ SIZE_BUTTON_HEIGHT = 2
 
 class Button:
 
-    def __init__(self, stdscr, key, label="", action=None, underline=True, keyboard=True):
+    def __init__(self, stdscr, key, label="", action=None, underline=True, keyboard=True, thread_mode=False, hide_key=False):
         self.stdscr = stdscr
         self.key = key
         self.label = label
         self.action = action
         self.underline = underline
         self.keyboard = keyboard
+        self.thread_mode = thread_mode
+        self.hide_key = hide_key
 
     def draw(self, posy, posx, key, mouse, color=curses.A_REVERSE, exstatus=False):
         # Draw rectangle
@@ -40,23 +42,26 @@ class Button:
         # status
         status = self._keyPressed(key) or self._mousePressed(posy, posx, width, mouse)
         # Write key letter
-        if self.key:
+        if self.key and not self.hide_key:
             underline = curses.A_UNDERLINE if self.underline else curses.A_NORMAL
             pressed = color if status or exstatus and not self.label else curses.A_NORMAL
             self.stdscr.addstr(posy + 1, posx + 2, self.key, underline | pressed)
         # Write label
         if self.label:
-            posx_label = 4 if self.key else 2
+            posx_label = 4 if self.key and not self.hide_key else 2
             pressed = color if status or exstatus else curses.A_NORMAL
             self.stdscr.addstr(posy + 1, posx + posx_label, self.label, pressed)
         # Run action
         if status and self.action is not None:
             # Run a thread
-            th = Thread(target=self.action, args=(self.key))
-            th.start()
+            if self.thread_mode:
+                th = Thread(target=self.action, args=(self.key))
+                th.start()
+            else:
+                self.action(self.key)
 
     def sizeX(self):
-        width = 4 if self.key else 2
+        width = 4 if self.key and not self.hide_key else 2
         return width + len(self.label) + 1 if self.label else width
 
     def _keyPressed(self, key):
@@ -76,13 +81,16 @@ class Button:
 
 class ButtonList:
 
-    def __init__(self, stdscr, keys, labels, action=None):
+    def __init__(self, stdscr, labels, keys=None, action=None, hide_keys=True):
         self.stdscr = stdscr
         # List of buttons
         self.buttons = []
+        if keys is None:
+            keys = range(len(labels))
+        # Make button list
         for key, label in zip(keys, labels):
             key = str(key) if not isinstance(key, str) else key
-            self.buttons += [Button(stdscr, key, label=label, underline=False, keyboard=False, action=action)]
+            self.buttons += [Button(stdscr, key, label=label, underline=False, keyboard=False, action=action, hide_key=hide_keys)]
 
     def draw(self, posy, posx, width, key, mouse, lstatus=[], select=-1):
         # Box max size

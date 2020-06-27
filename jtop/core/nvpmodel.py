@@ -16,6 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import re
+from threading import Thread
 # Logging
 import logging
 # Launch command
@@ -97,8 +98,6 @@ class NVPModel(object):
             mode_id = value
         else:
             raise TypeError("Data type not allowed {type}".format(type=type(value)))
-
-        print("mode_id", mode_id)
         return mode_id
 
     def __add__(self, number):
@@ -118,7 +117,7 @@ class NVPModel(object):
     def __repr__(self):
         return self._mode
 
-    def _update(self, mode):
+    def _update(self, mode, status):
         self._mode = mode
         self._id = self._get_id(mode)
 
@@ -126,15 +125,20 @@ class NVPModel(object):
 class NVPModelService(object):
 
     def __init__(self, jetson_clocks=None):
-        self.jetson_clocks = jetson_clocks
         try:
-            NVPModelService.query()
+            num, _ = NVPModelService.query()
         except OSError:
             logger.warning("This board does not have NVP Model")
             raise JtopException("NVPmodel does not exist for this board")
+        # Initialize thread
+        self._thread = None
+        # Initialize jetson_clocks config
+        self.jetson_clocks = jetson_clocks
+        # Initialize status
+        self._status = True
+        self._id = num
 
-    def set(self, value):
-        print(value)
+    def _thread_set_nvp_model(self, value):
         if self.jetson_clocks is None:
             # Set NV Power Mode
             return self._mode(value)
@@ -142,16 +146,35 @@ class NVPModelService(object):
         old_status = self.jetson_clocks.is_alive
         if old_status:
             self.jetson_clocks.stop()
+            print("Stop")
             # Check jetson_clocks is off
             while self.jetson_clocks.is_alive:
                 pass
+        print("Set value", value)
         # Set NV Power Mode
-        status = self._mode(value)
+        self._status = self._mode(value)
+        self._id = value
         # Enable again the jetson_clocks status
         if old_status:
+            print("Start")
             self.jetson_clocks.start()
-        # Return status
-        return status
+
+    def is_running(self):
+        if self._thread is None:
+            return False
+        return self._thread.isAlive()
+
+    def set(self, value):
+        if self.is_running():
+            return False
+        # Start thread Service client
+        self._thread = Thread(target=self._thread_set_nvp_model, args=[value])
+        self._thread.daemon = True
+        self._thread.start()
+        return True
+
+    def status(self):
+        return {'status': self._status, 'id': self._id}
 
     def _mode(self, level):
         """ Set nvpmodel to a new status """
