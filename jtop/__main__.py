@@ -27,7 +27,7 @@ from .jtop import jtop, get_version
 # jtop exception
 from .core import JtopException
 # GUI jtop interface
-from .gui import JTOPGUI, ALL, GPU, CTRL, INFO
+from .gui import JTOPGUI, ALL, CPU, GPU, MEM, CTRL, INFO
 # Create logger
 logger = logging.getLogger(__name__)
 # Reference repository
@@ -100,7 +100,7 @@ def main():
         # Open jtop client
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper
-            curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
+            curses.wrapper(JTOPGUI, jetson, [ALL, CPU, GPU, MEM, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
     except (KeyboardInterrupt, SystemExit):
         pass
     except JtopException as e:

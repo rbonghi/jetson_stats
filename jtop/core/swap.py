@@ -78,6 +78,12 @@ class Swap(object):
         # Set new swap size configuration
         self._controller.put({'swap': {'size': value, 'boot': on_boot}})
 
+    def enable(self):
+        return False
+
+    def size(self):
+        return 0
+
     def deactivate(self):
         # Set new swap size configuration
         self._controller.put({'swap': {}})
