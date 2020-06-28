@@ -26,8 +26,6 @@ logger = logging.getLogger(__name__)
 CONFIG_DEFAULT_SWAP_DIRECTORY = ''
 CONFIG_DEFAULT_SWAP_NAME = 'swfile'
 JETSON_SWAP_PATH = '/usr/local/bin/jetson_swap'
-SWAP_MAX_SIZE = 15
-SWAP_MIN_SIZE = 2
 
 
 def list_swaps():
@@ -66,7 +64,6 @@ class Swap(object):
 
     def __init__(self):
         self._controller = None
-        self._list_swaps = list_swaps()
         self._all = {}
 
     def _init(self, controller):
@@ -78,19 +75,23 @@ class Swap(object):
         # Set new swap size configuration
         self._controller.put({'swap': {'size': value, 'boot': on_boot}})
 
-    def enable(self):
-        return False
+    @property
+    def is_enable(self):
+        return self._this_swap in self._list_swaps
 
     def size(self):
+        if self._this_swap in self._list_swaps:
+            return self._list_swaps[self._this_swap]['size']
         return 0
 
     def deactivate(self):
         # Set new swap size configuration
         self._controller.put({'swap': {}})
 
-    def _update(self, tegra_cpu):
+    def _update(self, tegra_cpu, info):
         # Update status swaps
-        self._list_swaps = list_swaps()
+        self._list_swaps = info['all']
+        self._this_swap = info['this']
         # Update status swap
         self._all.update(tegra_cpu)
 
@@ -141,6 +142,13 @@ class SwapService(object):
             # Update size
             # self.actual_size = int(self.swap_info['size'])
         return swap_info
+
+    def all(self):
+        all_swap = list_swaps()
+        config = self._config.get('swap', {})
+        directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
+        swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
+        return {'all': all_swap, 'this': directory + "/" + swap_name}
 
     def set(self, value, on_boot=False):
         if not isinstance(value, (int, float)):

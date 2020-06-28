@@ -98,7 +98,15 @@ class jtop(Thread):
         JtopManager.register('get_queue')
         JtopManager.register("sync_data")
         JtopManager.register('sync_event')
-        key = key_reader(AUTH_RE)
+        # Load authentication key
+        try:
+            key = key_reader(AUTH_RE)
+        except FileNotFoundError as e:
+            if e.errno == 2:  # Message error: 'No such file or directory'
+                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl start jetson_stats.service")
+            else:
+                FileNotFoundError(e)
+        # Initialize broadcaser manager
         self._broadcaster = JtopManager(key)
         # Initialize board variable
         self._board = None
@@ -386,7 +394,7 @@ class jtop(Thread):
             if 'PMIC' in tegrastats['TEMP']:
                 del tegrastats['TEMP']['PMIC']
         # Update swap status
-        self._swap._update(tegrastats['SWAP'])
+        self._swap._update(tegrastats['SWAP'], data['swap'])
         # Load jetson_clocks data
         jc_show = data['jc']
         # Update status

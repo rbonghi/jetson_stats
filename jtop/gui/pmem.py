@@ -26,6 +26,9 @@ from .lib.linear_gauge import linear_gauge, GaugeName
 from .lib.chart import Chart
 from .lib.button import Button
 
+SWAP_MAX_SIZE = 15
+SWAP_MIN_SIZE = 2
+
 
 class MEM(Page):
 
@@ -43,25 +46,26 @@ class MEM(Page):
         self.button_decrease = Button(stdscr, "-", action=self.action_decrease, underline=False)
         # Size swap
         self._swap_size = 2
+        self._swap_old_size = self._swap_size
 
     def action_cache(self, key):
         self.jetson.swap.clearCache()
 
     def action_swap(self, key):
         # Change status swap
-        self.jetson.swap.enable = not self.jetson.swap.enable
+        if not self.jetson.swap.is_enable:
+            self.jetson.swap.set(self._swap_size, on_boot=True)
+            self._swap_old_size = self._swap_size
+        else:
+            self.jetson.swap.deactivate()
 
     def action_increase(self, key):
-        swap_enable = self.jetson.swap.enable
-        # Enable nvpmodel control
-        if not swap_enable:
-            self.jetson.swap.increase()
+        if self._swap_size < SWAP_MAX_SIZE:
+            self._swap_size += 1
 
     def action_decrease(self, key):
-        swap_enable = self.jetson.swap.enable
-        # Enable nvpmodel control
-        if not swap_enable:
-            self.jetson.swap.decrease()
+        if self._swap_size > SWAP_MIN_SIZE:
+            self._swap_size -= 1
 
     def update_chart(self, jetson, name):
         parameter = jetson.ram
@@ -180,7 +184,7 @@ class MEM(Page):
         enable_swap = "Swap"
         self.stdscr.addstr(first + height - 3, 7, enable_swap, curses.A_NORMAL)
         # Status swap
-        swap_enable = self.jetson.swap.enable()
+        swap_enable = self.jetson.swap.is_enable
         self.stdscr.addstr(first + height - 4, 11 + len(enable_swap), "Status", curses.A_UNDERLINE)
         self.stdscr.addstr(first + height - 3, 11 + len(enable_swap),
                             "Enabled" if swap_enable else "Disable",
@@ -191,15 +195,13 @@ class MEM(Page):
             # Draw keys to decrease size swap
             self.button_decrease.draw(first + height - 4, start_pos + 10, key, mouse)
             # Draw selected number
-            size_swap = self.jetson.swap.size()
-            swp_size = self._swap_size
-            if swp_size > size_swap:
+            if self._swap_size > self._swap_old_size:
                 color = curses.color_pair(2)
-            elif swp_size < size_swap:
+            elif self._swap_size < self._swap_old_size:
                 color = curses.color_pair(3)
             else:
                 color = curses.A_NORMAL
-            self.stdscr.addstr(first + height - 3, start_pos + 16, "{size: <2}".format(size=swp_size), color)
+            self.stdscr.addstr(first + height - 3, start_pos + 16, "{size: <2}".format(size=self._swap_size), color)
             self.stdscr.addstr(first + height - 3, start_pos + 18, "Gb", curses.A_BOLD)
             # Draw keys to increase size swap
             self.button_increase.draw(first + height - 4, start_pos + 21, key, mouse)

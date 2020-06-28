@@ -282,6 +282,8 @@ class JtopServer(Process):
         # Update status fan speed
         if self.fan is not None:
             data['fan'] = self.fan.update()
+        # Swap status
+        data['swap'] = self.swap.all()
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)
