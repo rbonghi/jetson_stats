@@ -69,7 +69,7 @@ class CPU(Page):
         release = release[:x_offset - (first + 3) - 4]
         plot_name_info(self.stdscr, first + 3, 2, "Rel", release)
         # Architecture CPU cores
-        #architecture = self.jetson.architecture
+        # architecture = self.jetson.architecture
         offset_table = 5
         for idx, name in enumerate(self.jetson.cpu):
             cpu = self.jetson.cpu[name]
@@ -78,12 +78,10 @@ class CPU(Page):
             frq = label_freq(cpu['frq'], start='k') if 'frq' in cpu else ''
             # Load model architecture
             model = ""
-            #if idx in architecture:
+            # if idx in architecture:
             #    cpu_arch = architecture[idx]
             #    model = cpu_arch.get("model name", "").split()[0]
             #    model = model[:x_offset - (first + 3) - 4]
-            # Write label CPU name
-            #cpu_name = "CPU {n}:".format(n=idx + 1)
             # Draw info
             color = curses.color_pair(8) if active else curses.color_pair(7)
             self.stdscr.addstr(first + offset_table + idx * 2, 2, name, color)
@@ -101,18 +99,18 @@ class CPU(Page):
         # Measure offset label
         offest_label = width - (2 + x_offset + x_size * (n_cpu // 2))
         # Plot all CPUs
-        idxn = 0
+        idx_n = 0
         for idx, (chart, name) in enumerate(zip(self.chart_cpus, self.jetson.cpu)):
             data = copy.deepcopy(self.jetson.cpu[name])
             # status CPU
             status = True if data else False
             if not status:
                 continue
-            y_label = idxn % (n_cpu // 2) == (n_cpu // 2) - 1
+            y_label = idx_n % (n_cpu // 2) == (n_cpu // 2) - 1
             # Select line
-            line = 1 if idxn >= n_cpu // 2 else 0
+            line = 1 if idx_n >= n_cpu // 2 else 0
             # Incrase counter
-            counter = idxn - line * (n_cpu // 2)
+            counter = idx_n - line * (n_cpu // 2)
             # Evaluate size chart
             add_size = offest_label if y_label else 0
             size_x = [x_offset + 2 + (counter * (x_size)), x_offset + x_size * (1 + counter) + add_size]
@@ -123,5 +121,5 @@ class CPU(Page):
                 percent = data.get('val', 0)
                 label_chart_cpu = "{percent: >2}% {governor}".format(percent=percent, governor=governor.capitalize())
                 chart.draw(self.stdscr, size_x, size_y, label=label_chart_cpu, y_label=y_label)
-            idxn += 1
+            idx_n += 1
 # EOF

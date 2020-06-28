@@ -186,9 +186,10 @@ class MEM(Page):
         # Status swap
         swap_enable = self.jetson.swap.is_enable
         self.stdscr.addstr(first + height - 4, 11 + len(enable_swap), "Status", curses.A_UNDERLINE)
-        self.stdscr.addstr(first + height - 3, 11 + len(enable_swap),
-                            "Enabled" if swap_enable else "Disable",
-                            curses.A_BOLD if swap_enable else curses.A_NORMAL)
+        self.stdscr.addstr(
+            first + height - 3, 11 + len(enable_swap),
+            "Enabled" if swap_enable else "Disable",
+            curses.A_BOLD if swap_enable else curses.A_NORMAL)
         # Swap boxes
         start_pos = 10 + len(enable_swap)
         if not swap_enable:
