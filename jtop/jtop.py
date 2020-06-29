@@ -106,7 +106,7 @@ class jtop(Thread):
                 raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl start jetson_stats.service")
             else:
                 FileNotFoundError(e)
-        # Initialize broadcaser manager
+        # Initialize broadcaster manager
         self._broadcaster = JtopManager(key)
         # Initialize board variable
         self._board = None

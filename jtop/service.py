@@ -260,6 +260,11 @@ class JtopServer(Process):
 
     def close(self):
         self.broadcaster.shutdown()
+        # Close tegrastats
+        if self.tegra.close():
+            # Start jetson_clocks
+            status_jc = self.jetson_clocks.show_stop()
+            logger.info("tegrastats close {}".format(status_jc))
         # Remove authentication file
         if os.path.exists(AUTH_PATH):
             logger.info("Remove authentication {auth}".format(auth=AUTH_PATH))

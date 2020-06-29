@@ -69,7 +69,7 @@ def main():
     # Parse arguments
     args = parser.parse_args()
     # Run jtop service
-    if args.service:
+    if args.service == 'service':
         # Initialize logging level
         logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
         # Run service

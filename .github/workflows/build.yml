@@ -18,7 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -26,11 +26,10 @@ jobs:
         # Install test dependencies
         sudo ./tests/develop.sh -s
         # Upgrade pip
-        python -m pip install --upgrade pip
+        sudo -H python -m pip install --upgrade pip
         # Install tox
-        sudo apt-get install tox
+        sudo -H pip install tox tox-gh-actions
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
     - name: Test with tox
-      run: |
-        sudo tox -e py${{ matrix.python-version }}
+      run: sudo tox

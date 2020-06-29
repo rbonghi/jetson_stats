@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,28 +15,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import curses
-from jtop import jtop
-# Import gui test
-from jtop.gui import JTOPGUI, ALL, GPU, CTRL, INFO
+import logging
+import pytest
+from ..service import JtopServer
+# Create logger
+logger = logging.getLogger(__name__)
 
 
-def openGUI(stdscr, jetson):
-    # Initialization Menu
-    pages = JTOPGUI(stdscr, 500, jetson, [ALL, GPU, CTRL, INFO], start=False)
-    return pages
-
-
-def test_openGUI():
-    # Load command line controller
-    stdscr = curses.initscr()
-    # Initialize colors
-    curses.start_color()
-    # Run jtop
-    with jtop() as jetson:
-        # Open JTOPGUI
-        pages = openGUI(stdscr, jetson)
-        # Start with selected page
-        pages.set(0)
-    assert True
+@pytest.fixture(scope="module")
+def jtop_server():
+    logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    print("Initialize jtop service")
+    jtop_server = JtopServer()
+    jtop_server.start(force=True)
+    yield jtop_server
+    status = jtop_server.close()
+    print("Close jtop service {}".format(status))
 # EOF

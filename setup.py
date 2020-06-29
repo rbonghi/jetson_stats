@@ -114,26 +114,38 @@ class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-        # Install services (copying)
-        install_services(copy=True)
+        if not hasattr(sys, 'real_prefix'):
+            sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+            # Install services (copying)
+            install_services(copy=True)
+        else:
+            print("Skip uninstall on virtual environment")
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/jetson_config --install'))
+        if not hasattr(sys, 'real_prefix'):
+            sp.call(shlex.split('./scripts/jetson_config --install'))
+        else:
+            print("Skip install on virtual environment")
 
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-        # Install services (linking)
-        install_services()
+        if not hasattr(sys, 'real_prefix'):
+            sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+            # Install services (linking)
+            install_services()
+        else:
+            print("Skip uninstall on virtual environment")
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/jetson_config --install'))
+        if not hasattr(sys, 'real_prefix'):
+            sp.call(shlex.split('./scripts/jetson_config --install'))
+        else:
+            print("Skip install on virtual environment")
 
 
 # Configuration setup module
@@ -154,7 +166,7 @@ setup(
         "Bug Reports": (project_homepage + "/issues"),
         "Source": (project_homepage + "/tree/master")
     },
-    packages=find_packages(exclude=['examples', 'scripts', 'tests']),  # Required
+    packages=find_packages(exclude=['examples', 'scripts', 'tests', 'jtop.tests']),  # Required
     # Load jetson_variables
     package_data={"jtop": ["jetson_variables"]},
     # Define research keywords

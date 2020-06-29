@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,33 +15,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-from jtop import Fan
-from jtop import JetsonClocks
+
+from jtop import jtop
 
 
-def test_wrong_open():
-    jc = JetsonClocks(sys.prefix + "/local/jetson_stats")
-    # Initialize object
-    try:
-        Fan('wrong_path', jc, sys.prefix + "/local/jetson_stats")
-        assert False
-    except Fan.FanException:
-        assert True
+def test_load(jtop_server):
+    with jtop() as jetson:
+        board = jetson.board
+        assert board is not None
 
 
-def test_open():
-    jc = JetsonClocks(sys.prefix + "/local/jetson_stats")
-    # Init fan
-    fan = Fan('tests/fan/', jc, sys.prefix + "/local/jetson_stats")
-    # Update
-    fan.update()
-    # Check dictionary
-    assert 'cap' in fan.status
-    assert 'step' in fan.status
-    assert 'cpwm' in fan.status
-    assert 'tpwm' in fan.status
-    assert 'status' in fan.status
-    # Read status fan
-    assert fan.status['tpwm'] == 100
+def test_env(jtop_server):
+    with jtop() as jetson:
+        # Check contain JETSON_BOARD
+        assert len(jetson.board.info) > 0
+        # Check contain JETSON_L4T
+        assert len(jetson.board.hardware) > 0
+        # Check contain JETSON_CUDA
+        assert len(jetson.board.libraries) > 0
 # EOF
