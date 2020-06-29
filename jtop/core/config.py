@@ -29,6 +29,9 @@ JTOP_USER = 'jetson_stats'
 class Config:
 
     def __init__(self):
+        if not os.path.isdir(self.path):
+            # Make folder directory
+            os.makedirs(self.path)
         # Load configuration path
         self.config_file = self.path + '/config.json'
         # Load configuration
@@ -49,6 +52,7 @@ class Config:
 
     @property
     def path(self):
+        # Return directory folder
         return sys.prefix + '/local/jetson_stats'
 
     def _load(self):
