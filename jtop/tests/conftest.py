@@ -22,7 +22,7 @@ from ..service import JtopServer
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="package")
 def jtop_server():
     logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
     print("Initialize jtop service")
