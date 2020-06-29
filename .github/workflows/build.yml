@@ -35,4 +35,4 @@ jobs:
       run: python -c "import sys; print(sys.version)"
     - name: Test with tox
       run: |
-        sudo PYTHONPATH=$pythonLocation tox -vv -e py${{ matrix.python-version }}
+        sudo tox -e py${{ matrix.python-version }}
