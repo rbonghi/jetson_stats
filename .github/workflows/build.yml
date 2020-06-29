@@ -34,4 +34,4 @@ jobs:
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
     - name: Test with tox
-      run: sudo tox -vv -e py${{ matrix.python-version }}
+      run: sudo -E tox -vv
