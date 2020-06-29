@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019 Raffaello Bonghi.
 #
@@ -71,7 +71,6 @@ cpu5: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100
 GPU MinFreq=76800000 MaxFreq=921600000 CurrentFreq=100000
 EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
 Fan: speed=0
-NV Power Mode: TEST
 EOF
 }
 
@@ -91,17 +90,19 @@ cpu5: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=14
 GPU MinFreq=921600000 MaxFreq=921600000 CurrentFreq=921600000
 EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
 Fan: speed=255
-NV Power Mode: TEST
 EOF
 }
 
 show()
 {
+    local level_name=$1
+    # Show status
     if [ -f "/tmp/jetson_clocks_test" ] ; then
         show_on
     else
         show_off
     fi
+    echo "NV Power Mode: $level_name"
 }
 
 main()
@@ -111,6 +112,12 @@ main()
     local SHOW="False"
     local STORE="False"
     local RESTORE="False"
+    local modes=("MAXTEST" "TEST" "MINTEST" "MIN_MAX_TEST")
+    local level=0
+    # Load level from temp file
+    if [ -f /tmp/nvp_model_test ] ; then
+        level=$(cat /tmp/nvp_model_test)
+    fi
     # Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
@@ -150,7 +157,7 @@ main()
     # Run show message
     if [ "$SHOW" = "True" ] ; then
         # Show data
-        show
+        show ${modes[level]}
         exit 0
     fi
     # Make a temporary file to show the status of the board
