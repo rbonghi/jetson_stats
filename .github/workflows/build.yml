@@ -30,13 +30,9 @@ jobs:
         # Upgrade pip
         sudo -H python -m pip install --upgrade pip
         # Install tox
-        sudo -H pip install tox tox-gh-actions
+        sudo -H pip install tox
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
     - name: Test with tox
       run: |
-        echo $pythonLocation
-        echo $PYTHONPATH
-        export PYTHONPATH=$pythonLocation
-        echo $PYTHONPATH
         sudo -E tox -vv -e py${{ matrix.python-version }}
