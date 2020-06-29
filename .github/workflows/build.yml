@@ -23,6 +23,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        # Make group jetson_stats
+        sudo groupadd jetson_stats
         # Install test dependencies
         sudo ./tests/develop.sh -s
         # Upgrade pip
