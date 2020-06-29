@@ -39,4 +39,4 @@ jobs:
         echo $PYTHONPATH
         export PYTHONPATH=$pythonLocation
         echo $PYTHONPATH
-        sudo tox -vv
+        sudo -E tox -vv -e py${{ matrix.python-version }}
