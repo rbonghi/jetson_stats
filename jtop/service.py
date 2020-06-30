@@ -36,6 +36,7 @@ from .core import (
     FanService,
     SwapService,
     key_generator,
+    import_os_variables,
     get_var)
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
@@ -53,6 +54,34 @@ AUTH_PATH = '/run/jtop.auth'
 JTOP_USER = 'jetson_stats'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+
+
+def import_jetson_variables():
+    JTOP_FOLDER, _ = os.path.split(__file__)
+    return import_os_variables(JTOP_FOLDER + "/jetson_variables", "JETSON_")
+
+
+def load_jetson_variables():
+    env = {}
+    for k, v in import_jetson_variables().items():
+        env[k] = str(v)
+    # Make dictionaries
+    info = {
+        "machine": env["JETSON_MACHINE"],
+        "jetpack": env["JETSON_JETPACK"],
+        "L4T": env["JETSON_L4T"]}
+    hardware = {
+        "TYPE": env["JETSON_TYPE"],
+        "CODENAME": env["JETSON_CODENAME"],
+        "SOC": env["JETSON_SOC"],
+        "CHIP_ID": env["JETSON_CHIP_ID"],
+        "BOARDIDS": env["JETSON_BOARDIDS"],
+        "MODULE": env["JETSON_MODULE"],
+        "BOARD": env["JETSON_BOARD"],
+        "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
+        "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
+    # Board information
+    return {'info': info, 'hardware': hardware}
 
 
 class JtopManager(SyncManager):
@@ -106,6 +135,8 @@ class JtopServer(Process):
         # Generate key and open broadcaster
         key = key_generator(AUTH_PATH)
         self.broadcaster = JtopManager(key)
+        # Load board information
+        self.board = load_jetson_variables()
         # Initialize Fan
         try:
             self.fan = FanService(self.config)
@@ -180,6 +211,8 @@ class JtopServer(Process):
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
+                        # send configuration board
+                        self.q.put({'board': self.board})
                         # Run stats
                         if self.tegra.open(interval=interval):
                             # Start jetson_clocks

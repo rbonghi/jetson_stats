@@ -49,9 +49,9 @@ AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 TIMEOUT_GAIN = 3
 
 
-def import_jetson_variables():
+def import_jetson_libraries():
     JTOP_FOLDER, _ = os.path.split(__file__)
-    return import_os_variables(JTOP_FOLDER + "/jetson_variables", "JETSON_")
+    return import_os_variables(JTOP_FOLDER + "/jetson_libraries", "JETSON_")
 
 
 def get_version():
@@ -66,8 +66,10 @@ def get_version():
 
 class Board:
 
-    def __init__(self, board):
-        self.__dict__.update(**board)
+    def __init__(self):
+        self.info = {}
+        self.hardware = {}
+        self.libraries = {}
 
 
 class jtop(Thread):
@@ -109,8 +111,8 @@ class jtop(Thread):
         # Initialize broadcaster manager
         self._broadcaster = JtopManager(key)
         # Initialize board variable
-        self._board = None
-        self._thread_libraries = Thread(target=self._load_jetson_variables, args=[])
+        self._board = Board()
+        self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
         # Initialize fan
@@ -133,27 +135,13 @@ class jtop(Thread):
         # Engines
         self._engine = Engine()
 
-    def _load_jetson_variables(self):
+    def _load_jetson_libraries(self):
         try:
             env = {}
-            for k, v in import_jetson_variables().items():
+            for k, v in import_jetson_libraries().items():
                 env[k] = str(v)
             # Make dictionaries
-            info = {
-                "machine": env["JETSON_MACHINE"],
-                "jetpack": env["JETSON_JETPACK"],
-                "L4T": env["JETSON_L4T"]}
-            hardware = {
-                "TYPE": env["JETSON_TYPE"],
-                "CODENAME": env["JETSON_CODENAME"],
-                "SOC": env["JETSON_SOC"],
-                "CHIP_ID": env["JETSON_CHIP_ID"],
-                "BOARDIDS": env["JETSON_BOARDIDS"],
-                "MODULE": env["JETSON_MODULE"],
-                "BOARD": env["JETSON_BOARD"],
-                "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
-                "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
-            libraries = {
+            self._board.libraries = {
                 "CUDA": env["JETSON_CUDA"],
                 "cuDNN": env["JETSON_CUDNN"],
                 "TensorRT": env["JETSON_TENSORRT"],
@@ -162,8 +150,6 @@ class jtop(Thread):
                 "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
                 "VPI": env["JETSON_VPI"],
                 "Vulkan": env["JETSON_VULKAN_INFO"]}
-            # make board information
-            self._board = Board({'info': info, 'hardware': hardware, 'libraries': libraries})
             # Loaded from script
             logger.debug("Loaded jetson_variables variables")
         except Exception:
@@ -451,6 +437,15 @@ class jtop(Thread):
             raise JtopException("Lost connection with jtop server")
         return data
 
+    def _get_configuration(self):
+        while True:
+            # Send configuration connection
+            self._controller.put({'interval': self._interval})
+            # Return configuration
+            data = self._controller.get()
+            if 'board' in data:
+                return data['board']
+
     def start(self):
         # Connected to broadcaster
         try:
@@ -476,6 +471,10 @@ class jtop(Thread):
         self._sync_event = self._broadcaster.sync_event()
         # Send alive message
         self._controller.put({'interval': self._interval})
+        # Load configurations
+        board = self._get_configuration()
+        self._board.info = board['info']
+        self._board.hardware = board['hardware']
         # Initialize jetson_clocks sender
         self._swap._init(self._controller)
         self._jc._init(self._controller)

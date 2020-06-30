@@ -18,7 +18,7 @@
 # flake8: noqa
 
 from .core import JtopException
-from .jtop import jtop, import_jetson_variables
+from .jtop import jtop
 
 __author__ = "Raffaello Bonghi"
 __email__ = "raffaello@rnext.it"

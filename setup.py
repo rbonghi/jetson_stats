@@ -29,7 +29,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from jtop import import_jetson_variables
+from jtop.service import import_jetson_variables
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
 # and accepts an argument to specify the text encoding
@@ -168,40 +168,40 @@ setup(
     },
     packages=find_packages(exclude=['examples', 'scripts', 'tests', 'jtop.tests']),  # Required
     # Load jetson_variables
-    package_data={"jtop": ["jetson_variables"]},
+    package_data={"jtop": ["jetson_variables", "jetson_libraries"]},
     # Define research keywords
     keywords=("jetson_stats jtop python system-monitor docker \
                nvidia Jetson XavierNX Nano Xavier TX2 TX1 process viewer"
               ),
-    classifiers=["Development Status :: 5 - Production/Stable",
-                 # Audience and topics
-                 "Intended Audience :: Developers",
-                 "Topic :: Software Development :: Embedded Systems",
-                 "Topic :: Software Development :: Debuggers",
-                 "Topic :: Software Development :: Libraries",
-                 "Topic :: Software Development :: User Interfaces",
-                 "Topic :: System :: Hardware",
-                 "Topic :: System :: Logging",
-                 "Topic :: System :: Monitoring",
-                 "Topic :: System :: Operating System",
-                 "Topic :: System :: Operating System Kernels",
-                 "Topic :: System :: Shells",
-                 "Topic :: System :: Systems Administration",
-                 "Topic :: Terminals",
-                 # License
-                 "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
-                 # Programming and Operative system
-                 "Programming Language :: Unix Shell",
-                 "Programming Language :: Python :: 2",
-                 "Programming Language :: Python :: 2.7",
-                 "Programming Language :: Python :: 3",
-                 "Programming Language :: Python :: 3.4",
-                 "Programming Language :: Python :: 3.5",
-                 "Programming Language :: Python :: 3.6",
-                 "Programming Language :: Python :: 3.7",
-                 "Programming Language :: Python :: 3.8",
-                 "Operating System :: POSIX :: Linux",
-                 ],
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        # Audience and topics
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Embedded Systems",
+        "Topic :: Software Development :: Debuggers",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: User Interfaces",
+        "Topic :: System :: Hardware",
+        "Topic :: System :: Logging",
+        "Topic :: System :: Monitoring",
+        "Topic :: System :: Operating System",
+        "Topic :: System :: Operating System Kernels",
+        "Topic :: System :: Shells",
+        "Topic :: System :: Systems Administration",
+        "Topic :: Terminals",
+        # License
+        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+        # Programming and Operative system
+        "Programming Language :: Unix Shell",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Operating System :: POSIX :: Linux"],
     # Requisites
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
