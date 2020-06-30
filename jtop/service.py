@@ -211,8 +211,6 @@ class JtopServer(Process):
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
-                        # send configuration board
-                        self.q.put({'board': self.board})
                         # Run stats
                         if self.tegra.open(interval=interval):
                             # Start jetson_clocks
@@ -221,6 +219,9 @@ class JtopServer(Process):
                             self.interval.value = interval
                             # Status start tegrastats
                             logger.info("tegrastats started {interval}ms".format(interval=int(interval * 1000)))
+                        # send configuration board
+                        init = {'board': self.board, 'interval': self.interval.value, 'swap': self.swap.path}
+                        self.q.put({'init': init})
                     # Update timeout interval
                     timeout = interval * TIMEOUT_GAIN
                 except queue.Empty:
@@ -305,7 +306,7 @@ class JtopServer(Process):
 
     def tegra_stats(self, stats):
         # Make configuration dict
-        data = {'interval': self.interval.value}
+        data = {}
         logger.debug("tegrastats read")
         # Load data stats
         data['stats'] = stats

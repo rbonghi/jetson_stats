@@ -368,8 +368,6 @@ class jtop(Thread):
         # Update status fan
         if 'fan' in data:
             self._fan._update(data['fan'])
-        # Extract configuration
-        self._server_interval = data['interval']
         # Read tegrastats
         tegrastats = data['stats']
         if 'WATT' in tegrastats:
@@ -442,9 +440,9 @@ class jtop(Thread):
             # Send configuration connection
             self._controller.put({'interval': self._interval})
             # Return configuration
-            data = self._controller.get()
-            if 'board' in data:
-                return data['board']
+            data = self._controller.get(self._interval * TIMEOUT_GAIN)
+            if 'init' in data:
+                return data['init']
 
     def start(self):
         # Connected to broadcaster
@@ -469,14 +467,16 @@ class jtop(Thread):
         self._controller = self._broadcaster.get_queue()
         self._sync_data = self._broadcaster.sync_data()
         self._sync_event = self._broadcaster.sync_event()
-        # Send alive message
-        self._controller.put({'interval': self._interval})
-        # Load configurations
-        board = self._get_configuration()
+        # Initialize connection
+        init = self._get_configuration()
+        # Load server speed
+        self._server_interval = init['interval']
+        # Load board information
+        board = init['board']
         self._board.info = board['info']
         self._board.hardware = board['hardware']
         # Initialize jetson_clocks sender
-        self._swap._init(self._controller)
+        self._swap._init(self._controller, init['swap'])
         self._jc._init(self._controller)
         if self._fan is not None:
             self._fan._init(self._controller)

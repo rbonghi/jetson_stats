@@ -66,8 +66,9 @@ class Swap(object):
         self._controller = None
         self._all = {}
 
-    def _init(self, controller):
+    def _init(self, controller, path):
         self._controller = controller
+        self._this_swap = path
 
     def set(self, value, on_boot=False):
         if not isinstance(value, (int, float)):
@@ -90,8 +91,7 @@ class Swap(object):
 
     def _update(self, tegra_cpu, info):
         # Update status swaps
-        self._list_swaps = info['all']
-        self._this_swap = info['this']
+        self._list_swaps = info
         # Update status swap
         self._all.update(tegra_cpu)
 
@@ -143,12 +143,17 @@ class SwapService(object):
             # self.actual_size = int(self.swap_info['size'])
         return swap_info
 
-    def all(self):
-        all_swap = list_swaps()
+    @property
+    def path(self):
         config = self._config.get('swap', {})
         directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
         swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
-        return {'all': all_swap, 'this': directory + "/" + swap_name}
+        return directory + "/" + swap_name
+
+    def all(self):
+        all_swap = list_swaps()
+        # Return all swap in list
+        return all_swap
 
     def set(self, value, on_boot=False):
         if not isinstance(value, (int, float)):
