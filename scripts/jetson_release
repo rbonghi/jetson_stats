@@ -41,6 +41,7 @@ jetson_release()
         exit 1
     fi
     source $JTOP_VARIABLE/jetson_variables
+    source $JTOP_VARIABLE/jetson_libraries
 
     # Load NVP model status
     if hash nvpmodel 2>/dev/null; then
@@ -51,7 +52,7 @@ jetson_release()
         NVPModel=$(echo $NVPModel | cut -d' ' -f 1)
     fi
     # Read status jetson_performance service
-    JE_PERFOMANCE_STATUS="$(systemctl is-active jetson_performance.service)"
+    JETSON_STATS_SERVICE_STATUS="$(systemctl is-active jetson_stats.service)"
     # Extract jetson-stats version
     JETSON_STATS_VERSION="$(jtop -v  2>&1 | cut -d " " -f2)"
 
@@ -65,10 +66,10 @@ jetson_release()
         echo "   * NV Power Mode: ${green}$NVPModel${reset} - Type: ${green}$NVPModel_type${reset}"
     fi
     # Print status Jetson Performance service
-    if [ $JE_PERFOMANCE_STATUS = "active" ] ; then
-        echo "   * jetson_clocks service: ${green}$JE_PERFOMANCE_STATUS${reset}"
+    if [ $JETSON_STATS_SERVICE_STATUS = "active" ] ; then
+        echo "   * jetson_stats service: ${green}$JETSON_STATS_SERVICE_STATUS${reset}"
     else
-        echo "   * jetson_clocks service: ${red}$JE_PERFOMANCE_STATUS${reset}"
+        echo "   * jetson_stats service: ${red}$JETSON_STATS_SERVICE_STATUS${reset}"
     fi
 
     if $VERBOSE ; then
