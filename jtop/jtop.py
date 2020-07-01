@@ -122,7 +122,7 @@ class jtop(Thread):
         # Initialize engines
         self._engine = Engine()
         # Initialize CPU
-        self._cpu = None
+        self._cpu = CPU()
         # Initialize fan
         self._fan = None
         # Load NV Power Mode
@@ -377,7 +377,7 @@ class jtop(Thread):
         # Update status
         self._jc._update(jc_show)
         # Store data in stats
-        self._cpu._update(tegrastats['CPU'], jc_show)
+        self._cpu._update(tegrastats['CPU'], jc_show, data['cpu'])
         # Update engines
         self._engine._update(tegrastats)
         # Update GPU status
@@ -472,8 +472,6 @@ class jtop(Thread):
         self._swap._init(self._controller, init['swap'])
         # Initialize jetson_clock
         self._jc._init(self._controller)
-        # Read CPU
-        self._cpu = CPU(init['cpu'])
         # Init FAN (If exist)
         if init['fan']:
             self._fan = Fan(self._controller)

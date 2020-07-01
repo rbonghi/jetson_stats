@@ -31,7 +31,8 @@ def cpu_info():
                 value = match.group(2).rstrip()
                 # Load value or if it is a new processor initialize a new field
                 if key == "processor":
-                    name = "CPU{value}".format(value=value)
+                    idx = int(value) + 1
+                    name = "CPU{idx}".format(idx=idx)
                     list_cpu[name] = {}
                 else:
                     # Load cpu info
@@ -49,15 +50,18 @@ def cpu_models():
     return models
 
 
-class CPU(object):
+class CPUS(object):
     """
     Find in cpuinfo information about the board
     """
-    def __init__(self, model):
+    def __init__(self):
         # Initialize CPU status
         self.cpu = {}
 
-    def _update(self, tegra_cpu, jc_show):
+    def _update(self, tegra_cpu, jc_show, proc_info):
+        for info in proc_info:
+            print(info)
+        # Update data from jetson_clocks show
         if 'CPU' in jc_show:
             for k, v in tegra_cpu.items():
                 # Extract jc_cpu info

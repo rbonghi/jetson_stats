@@ -136,8 +136,6 @@ class JtopServer(Process):
         # Generate key and open broadcaster
         key = key_generator(AUTH_PATH)
         self.broadcaster = JtopManager(key)
-        # Read CPU information
-        self.list_cpu = cpu_models()
         # Load board information
         self.board = load_jetson_variables()
         # Initialize Fan
@@ -227,7 +225,6 @@ class JtopServer(Process):
                             'board': self.board,
                             'interval': self.interval.value,
                             'swap': self.swap.path,
-                            'cpu': self.list_cpu,
                             'fan': self.fan is not None,
                             'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
@@ -321,6 +318,8 @@ class JtopServer(Process):
         data['stats'] = stats
         # Add NVJPG engine
         data['stats']['NVJPG'] = nvjpg()
+        # Read CPU information
+        data['cpu'] = cpu_models()
         # Load status jetson_clocks
         data['jc'] = self.jetson_clocks.show()
         data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
