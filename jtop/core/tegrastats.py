@@ -17,14 +17,11 @@
 
 # Logging
 import logging
-import os
 import sys
 # Launch command
 import subprocess as sp
 # Threading
 from threading import Thread
-# Exceptions
-from .exceptions import JtopException
 # Tegrastats parser
 from .tegra_parse import VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, WATTS
 from .common import locate_commands
