@@ -144,15 +144,15 @@ class CTRL(Page):
         # Build NVP model list
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:
-            self.stdscr.addstr(start_y + 9, start_x, "NVP model", curses.A_BOLD)
+            self.stdscr.addstr(start_y + 10, start_x, "NVP model", curses.A_BOLD)
             # Draw keys to decrease nvpmodel
-            self.nvp_decrease.draw(start_y + 8, start_x + 10, key, mouse)
+            self.nvp_decrease.draw(start_y + 9, start_x + 10, key, mouse)
             # Draw selected number
-            self.stdscr.addstr(start_y + 9, start_x + 16, str(nvpmodel.id), curses.A_NORMAL)
+            self.stdscr.addstr(start_y + 10, start_x + 16, str(nvpmodel.id), curses.A_NORMAL)
             # Draw keys to increase nvpmodel
-            self.nvp_increase.draw(start_y + 8, start_x + 18, key, mouse)
+            self.nvp_increase.draw(start_y + 9, start_x + 18, key, mouse)
             # Write list of available modes
-            self.nvp_list.draw(start_y + 11, start_x, width // 2 - start_x, key, mouse,
+            self.nvp_list.draw(start_y + 12, start_x, width // 2 - start_x, key, mouse,
                                lstatus=nvpmodel.status,
                                select=nvpmodel.id)
         # Evaluate size chart

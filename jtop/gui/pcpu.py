@@ -77,11 +77,8 @@ class CPU(Page):
             active = True if cpu else False
             frq = label_freq(cpu['frq'], start='k') if 'frq' in cpu else ''
             # Load model architecture
-            model = ""
-            # if idx in architecture:
-            #    cpu_arch = architecture[idx]
-            #    model = cpu_arch.get("model name", "").split()[0]
-            #    model = model[:x_offset - (first + 3) - 4]
+            model = cpu['model'].split()[0]
+            model = model[:x_offset - (first + 3) - 4]
             # Draw info
             color = curses.color_pair(8) if active else curses.color_pair(7)
             self.stdscr.addstr(first + offset_table + idx * 2, 2, name, color)
