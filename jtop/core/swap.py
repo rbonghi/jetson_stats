@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 CONFIG_DEFAULT_SWAP_DIRECTORY = ''
 CONFIG_DEFAULT_SWAP_NAME = 'swfile'
-JETSON_SWAP_PATH = '/usr/local/bin/jetson_swap'
 
 
 def list_swaps():
@@ -124,7 +123,7 @@ class SwapService(object):
         directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
         swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
         # Update swap
-        swap_status = sp.Popen([JETSON_SWAP_PATH, '--status', '--dir', directory, '--name', swap_name], stdout=sp.PIPE, stderr=sp.PIPE)
+        swap_status = sp.Popen(['jetson_swap', '--status', '--dir', directory, '--name', swap_name], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = swap_status.communicate()
         swap_info = {}
         if out:
@@ -160,7 +159,7 @@ class SwapService(object):
         directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
         swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
         # List swap command
-        swap_cmd = [JETSON_SWAP_PATH, '--size', str(value), '--dir', directory, '--name', swap_name]
+        swap_cmd = ['jetson_swap', '--size', str(value), '--dir', directory, '--name', swap_name]
         # Add auto command if request
         if on_boot:
             swap_cmd += ['--auto']
@@ -173,7 +172,7 @@ class SwapService(object):
         directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
         swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
         # List swap command
-        swap_cmd = [JETSON_SWAP_PATH, '--off', '--dir', directory, '--name', swap_name]
+        swap_cmd = ['jetson_swap', '--off', '--dir', directory, '--name', swap_name]
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
 # EOF

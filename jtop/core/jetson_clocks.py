@@ -25,7 +25,7 @@ import subprocess as sp
 from datetime import timedelta
 from threading import Thread
 # Local functions and classes
-from .common import get_uptime
+from .common import get_uptime, locate_commands
 # Import exceptions
 from .exceptions import JtopException
 # Create logger
@@ -75,14 +75,6 @@ def jetson_clocks_alive(show):
     if not stat:
         raise JtopException("Require super user")
     return all(stat)
-
-
-def locate_jetson_clocks():
-    for f_fc in ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']:
-        if os.path.isfile(f_fc):
-            logger.info("Load jetson_clocks {}".format(f_fc))
-            return f_fc
-    raise JtopException("Tegrastats is not availabe on this board")
 
 
 class JetsonClocks(object):
@@ -142,7 +134,7 @@ class JetsonClocksService(object):
         This controller manage the jetson_clocks service.
     """
 
-    def __init__(self, config, fan):
+    def __init__(self, config, fan, jetson_clocks_path):
         self._thread_start = None
         self._thread_stop = None
         self._thread_show = None
@@ -155,7 +147,7 @@ class JetsonClocksService(object):
         # Config file
         self.config_l4t = config.path + "/" + jetson_clocks_file
         # Jetson Clocks path
-        self.jc_bin = locate_jetson_clocks()
+        self.jc_bin = locate_commands("jetson_clocks", jetson_clocks_path)
         # Fan configuration
         self.fan = fan
         # Update status jetson_clocks

@@ -18,6 +18,7 @@
 import re
 import os
 from math import ceil
+from .common import locate_commands
 from .exceptions import JtopException
 # Logging
 import logging
@@ -44,14 +45,6 @@ def load_table(path):
             else:
                 title = line
     return table
-
-
-def locate_fan():
-    for fan in ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']:
-        if os.path.isdir(fan):
-            logger.info('Fan folder in {}'.format(fan))
-            return fan
-    raise JtopException('No Fans availabe on this board')
 
 
 class Fan(object):
@@ -102,11 +95,11 @@ class FanService(object):
      - table
      - step
     """
-    def __init__(self, config):
+    def __init__(self, config, fan_path):
         # Configuration
         self._config = config
         # Initialize number max records to record
-        self.path = locate_fan()
+        self.path = locate_commands("fan", fan_path)
         # Init status fan
         self.isRPM = os.path.isfile(self.path + 'rpm_measured')
         self.isCPWM = os.path.isfile(self.path + 'cur_pwm')

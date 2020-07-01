@@ -48,6 +48,9 @@ try:
 except ImportError:
     import Queue as queue
 
+PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
+PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
+PATH_FAN = ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']
 # Pipe configuration
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
@@ -111,7 +114,7 @@ class JtopServer(Process):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self):
+    def __init__(self, tegrastats_path=PATH_TEGRASTATS, jetson_clocks_path=PATH_JETSON_CLOCKS, fan_path=PATH_FAN):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jetson_clocks need sudo to work")
@@ -141,11 +144,11 @@ class JtopServer(Process):
         self.board = load_jetson_variables()
         # Initialize Fan
         try:
-            self.fan = FanService(self.config)
+            self.fan = FanService(self.config, fan_path)
         except JtopException:
             self.fan = None
         # Initialize jetson_clocks controller
-        self.jetson_clocks = JetsonClocksService(self.config, self.fan)
+        self.jetson_clocks = JetsonClocksService(self.config, self.fan, jetson_clocks_path)
         # Initialize jetson_fan
         if self.fan is not None:
             self.fan.initialization(self.jetson_clocks)
@@ -157,7 +160,7 @@ class JtopServer(Process):
         # Setup memory servive
         self.memory = MemoryService()
         # Setup tegrastats
-        self.tegra = Tegrastats(self.tegra_stats)
+        self.tegra = Tegrastats(self.tegra_stats, tegrastats_path)
         # Swap manager
         self.swap = SwapService(self.config)
 

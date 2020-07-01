@@ -30,10 +30,19 @@ import socket
 import fcntl
 import struct
 import array
+from exceptions import JtopException
 # Load Author
 AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 # Create logger
 logger = logging.getLogger(__name__)
+
+
+def locate_commands(name, commands):
+    for cmd in commands:
+        if os.path.isfile(cmd):
+            logger.info("{name} loaded on {cmd}".format(name=name, cmd=cmd))
+            return cmd
+    raise JtopException("{name} is not availabe on this board".format(name=name))
 
 
 def import_os_variables(SOURCE, PATTERN):
