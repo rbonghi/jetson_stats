@@ -20,8 +20,8 @@ import re
 REGEXP = re.compile(r'(.+?): ((.*))')
 
 
-def info():
-    cpus = {}
+def cpu_info():
+    list_cpu = {}
     with open("/proc/cpuinfo", "r") as fp:
         for line in fp:
             # Search line
@@ -31,25 +31,21 @@ def info():
                 value = match.group(2).rstrip()
                 # Load value or if it is a new processor initialize a new field
                 if key == "processor":
-                    n_proc = int(value)
-                    cpus[n_proc] = {}
+                    name = "CPU{value}".format(value=value)
+                    list_cpu[name] = {}
                 else:
                     # Load cpu info
-                    cpus[n_proc][key] = value
-    return cpus
+                    list_cpu[name][key] = value
+    return list_cpu
 
 
-def models():
+def cpu_models():
     # Load cpuinfo
-    cpus = info()
+    list_cpu = cpu_info()
     models = {}
     # Find all models
-    for cpu in cpus.values():
-        model = cpu.get("model name", "")
-        if model not in models:
-            models[model] = 1
-        else:
-            models[model] += 1
+    for name, info in list_cpu.items():
+        models[name] = info.get("model name", "")
     return models
 
 
@@ -57,9 +53,7 @@ class CPU(object):
     """
     Find in cpuinfo information about the board
     """
-    def __init__(self):
-        # Load models
-        self.model = models()
+    def __init__(self, model):
         # Initialize CPU status
         self.cpu = {}
 

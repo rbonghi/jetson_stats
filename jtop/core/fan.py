@@ -56,9 +56,8 @@ def locate_fan():
 
 class Fan(object):
 
-    def __init__(self):
-        # Initialize number max records to record
-        locate_fan()
+    def __init__(self, controller):
+        self._controller = controller
         # Initialize fan
         self._status = {}
         self._mode = ''
@@ -90,9 +89,6 @@ class Fan(object):
         self._status = status
         # Load status as a dictionary
         self.__dict__.update(**self._status)
-
-    def _init(self, controller):
-        self._controller = controller
 
     def __repr__(self):
         return str(self._status)

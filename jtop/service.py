@@ -27,6 +27,7 @@ from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
 from .core import (
+    cpu_models,
     nvjpg,
     JtopException,
     Tegrastats,
@@ -135,6 +136,8 @@ class JtopServer(Process):
         # Generate key and open broadcaster
         key = key_generator(AUTH_PATH)
         self.broadcaster = JtopManager(key)
+        # Read CPU information
+        self.list_cpu = cpu_models()
         # Load board information
         self.board = load_jetson_variables()
         # Initialize Fan
@@ -220,7 +223,13 @@ class JtopServer(Process):
                             # Status start tegrastats
                             logger.info("tegrastats started {interval}ms".format(interval=int(interval * 1000)))
                         # send configuration board
-                        init = {'board': self.board, 'interval': self.interval.value, 'swap': self.swap.path}
+                        init = {
+                            'board': self.board,
+                            'interval': self.interval.value,
+                            'swap': self.swap.path,
+                            'cpu': self.list_cpu,
+                            'fan': self.fan is not None,
+                            'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
                     # Update timeout interval
                     timeout = interval * TIMEOUT_GAIN

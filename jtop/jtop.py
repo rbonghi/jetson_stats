@@ -115,25 +115,18 @@ class jtop(Thread):
         self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
-        # Initialize fan
-        try:
-            self._fan = Fan()
-        except JtopException:
-            self._fan = None
         # Load jetson_clocks status
         self._jc = JetsonClocks()
-        # Load NV Power Mode
-        try:
-            self._nvp = NVPModel()
-        except JtopException as e:
-            print(e)
-            self._nvp = None
-        # Initialize CPU
-        self._cpu = CPU()
         # Initialize swap
         self._swap = Swap()
-        # Engines
+        # Initialize engines
         self._engine = Engine()
+        # Initialize CPU
+        self._cpu = None
+        # Initialize fan
+        self._fan = None
+        # Load NV Power Mode
+        self._nvp = None
 
     def _load_jetson_libraries(self):
         try:
@@ -477,9 +470,16 @@ class jtop(Thread):
         self._board.hardware = board['hardware']
         # Initialize jetson_clocks sender
         self._swap._init(self._controller, init['swap'])
+        # Initialize jetson_clock
         self._jc._init(self._controller)
-        if self._fan is not None:
-            self._fan._init(self._controller)
+        # Read CPU
+        self._cpu = CPU(init['cpu'])
+        # Init FAN (If exist)
+        if init['fan']:
+            self._fan = Fan(self._controller)
+        # Init NVP model (if exist)
+        if init['nvpmodel']:
+            self._nvp = NVPModel()
         # Wait first value
         data = self._get_data()
         # Decode and update all jtop data
