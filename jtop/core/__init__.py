@@ -25,6 +25,7 @@ from .swap import Swap, SwapService
 from .cpu import CPU, cpu_models
 from .engine import Engine, nvjpg
 from .config import Config
+from .memory import Memory, MemoryService
 from .common import (
     import_os_variables,
     get_var,

@@ -24,6 +24,16 @@ import subprocess as sp
 logger = logging.getLogger(__name__)
 
 
+class Memory(object):
+
+
+    def __init__(self):
+        pass
+
+    def _update(self):
+        pass
+
+
 class MemoryService(object):
 
     def __init__(self):

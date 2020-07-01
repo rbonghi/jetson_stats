@@ -29,6 +29,7 @@ from multiprocessing.managers import SyncManager
 from .core import (
     cpu_models,
     nvjpg,
+    MemoryService,
     JtopException,
     Tegrastats,
     JetsonClocksService,
@@ -153,6 +154,8 @@ class JtopServer(Process):
             self.nvpmodel = NVPModelService(self.jetson_clocks)
         except JtopException:
             self.nvpmodel = None
+        # Setup memory servive
+        self.memory = MemoryService()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats)
         # Swap manager
@@ -209,6 +212,9 @@ class JtopServer(Process):
                         logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
                         self.nvpmodel.set(mode)
+                    if 'memory'  in control:
+                        # Clear cache
+                        self.memory.clear_cache()
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
