@@ -26,12 +26,40 @@ logger = logging.getLogger(__name__)
 
 class Memory(object):
 
+    def __init__(self, controller):
+        self._controller = controller
+        self._ram = {}
 
-    def __init__(self):
-        pass
+    def clear_cache(self):
+        # Set new swap size configuration
+        self._controller.put({'memory': ''})
 
-    def _update(self):
-        pass
+    def _update(self, ram):
+        self._ram = ram
+
+    def get(self, name, value):
+        if name in self._ram:
+            return self._ram[name]
+        else:
+            return value
+
+    def items(self):
+        return self._ram.items()
+
+    def __getitem__(self, name):
+        return self._ram[name]
+
+    def __iter__(self):
+        return iter(self._ram)
+
+    def __next__(self):
+        return next(self._ram)
+
+    def __len__(self):
+        return len(self._ram)
+
+    def __repr__(self):
+        return str(self._ram)
 
 
 class MemoryService(object):

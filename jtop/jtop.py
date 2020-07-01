@@ -24,6 +24,7 @@ from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager, key_reader
 from .core import (
+    Memory,
     Engine,
     Swap,
     CPU,
@@ -115,14 +116,16 @@ class jtop(Thread):
         self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
-        # Load jetson_clocks status
-        self._jc = JetsonClocks()
-        # Initialize swap
-        self._swap = Swap()
         # Initialize engines
         self._engine = Engine()
         # Initialize CPU
         self._cpu = CPU()
+        # Initialize swap
+        self._swap = None
+        # Initialize Memory
+        self._memory = None
+        # Load jetson_clocks status
+        self._jc = None
         # Initialize fan
         self._fan = None
         # Load NV Power Mode
@@ -253,11 +256,7 @@ class jtop(Thread):
 
     @property
     def ram(self):
-        if 'RAM' not in self._stats:
-            return {}
-        # Extract RAM
-        ram = copy.copy(self._stats['RAM'])
-        return ram
+        return self._memory
 
     @property
     def mts(self):
@@ -380,6 +379,8 @@ class jtop(Thread):
         self._cpu._update(tegrastats['CPU'], jc_show, data['cpu'])
         # Update engines
         self._engine._update(tegrastats)
+        # Update status memory
+        self._memory._update(tegrastats['RAM'])
         # Update GPU status
         if 'GPU' in jc_show:
             tegrastats['GR3D'].update(jc_show['GPU'])
@@ -469,9 +470,11 @@ class jtop(Thread):
         self._board.info = board['info']
         self._board.hardware = board['hardware']
         # Initialize jetson_clocks sender
-        self._swap._init(self._controller, init['swap'])
+        self._swap = Swap(self._controller, init['swap'])
         # Initialize jetson_clock
-        self._jc._init(self._controller)
+        self._jc = JetsonClocks(self._controller)
+        # Initialize Memory
+        self._memory = Memory(self._controller)
         # Init FAN (If exist)
         if init['fan']:
             self._fan = Fan(self._controller)

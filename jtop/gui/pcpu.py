@@ -33,11 +33,9 @@ class CPU(Page):
         super(CPU, self).__init__("CPU", stdscr, jetson)
         # List all CPU
         self.chart_cpus = []
-        for name in self.jetson.cpu:
-            self.chart_cpus += [Chart(jetson, name,
-                                      self.update_chart,
-                                      color=curses.color_pair(4),
-                                      color_chart=[curses.color_pair(10)])]
+        for name in sorted(self.jetson.cpu):
+            chart = Chart(jetson, name, self.update_chart, color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
+            self.chart_cpus += [chart]
 
     def update_chart(self, jetson, name):
         cpu = jetson.cpu[name]
@@ -71,13 +69,13 @@ class CPU(Page):
         # Architecture CPU cores
         # architecture = self.jetson.architecture
         offset_table = 5
-        for idx, name in enumerate(self.jetson.cpu):
+        for idx, name in enumerate(sorted(self.jetson.cpu)):
             cpu = self.jetson.cpu[name]
             status = 'ON' if cpu else 'OFF'
             active = True if cpu else False
             frq = label_freq(cpu['frq'], start='k') if 'frq' in cpu else ''
             # Load model architecture
-            model = cpu['model'].split()[0]
+            model = cpu['model'].split()[0] if 'model' in cpu else ''
             model = model[:x_offset - (first + 3) - 4]
             # Draw info
             color = curses.color_pair(8) if active else curses.color_pair(7)

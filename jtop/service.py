@@ -212,7 +212,8 @@ class JtopServer(Process):
                         logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
                         self.nvpmodel.set(mode)
-                    if 'memory'  in control:
+                    if 'memory' in control:
+                        logger.info("Clear cache")
                         # Clear cache
                         self.memory.clear_cache()
                     # Initialize tegrastats speed

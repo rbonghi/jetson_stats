@@ -49,7 +49,7 @@ class MEM(Page):
         self._swap_old_size = self._swap_size
 
     def action_cache(self, key):
-        self.jetson.swap.clearCache()
+        self.jetson.ram.clear_cache()
 
     def action_swap(self, key):
         # Change status swap

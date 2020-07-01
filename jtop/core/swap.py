@@ -62,11 +62,8 @@ def list_swaps():
 
 class Swap(object):
 
-    def __init__(self):
-        self._controller = None
+    def __init__(self, controller, path):
         self._all = {}
-
-    def _init(self, controller, path):
         self._controller = controller
         self._this_swap = path
 

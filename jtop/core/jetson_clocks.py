@@ -91,10 +91,10 @@ class JetsonClocks(object):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self):
+    def __init__(self, controller):
         self._show = {}
-        self._controller = None
         self._boot = False
+        self._controller = controller
 
     @property
     def status(self):
@@ -135,9 +135,6 @@ class JetsonClocks(object):
         self._show = show
         self._alive = jetson_clocks_alive(show)
         self._boot = show['boot']
-
-    def _init(self, controller):
-        self._controller = controller
 
 
 class JetsonClocksService(object):
