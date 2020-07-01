@@ -50,7 +50,7 @@ def cpu_models():
     return models
 
 
-class CPUS(object):
+class CPU(object):
     """
     Find in cpuinfo information about the board
     """
@@ -59,8 +59,8 @@ class CPUS(object):
         self.cpu = {}
 
     def _update(self, tegra_cpu, jc_show, proc_info):
-        for info in proc_info:
-            print(info)
+        for name in proc_info:
+            tegra_cpu[name]['model'] = proc_info[name]
         # Update data from jetson_clocks show
         if 'CPU' in jc_show:
             for k, v in tegra_cpu.items():
