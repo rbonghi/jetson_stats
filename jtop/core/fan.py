@@ -53,26 +53,54 @@ class Fan(object):
         self._controller = controller
         # Initialize fan
         self._status = {}
-        self._mode = ''
+        self._mode = None
+        self._speed = None
+        self._auto = None
+        self._measure = None
+        self._rpm = None
 
-    def __setattr__(self, name, value):
-        if name not in ['mode', 'speed']:
-            return object.__setattr__(self, name, value)
-        # Don't send a message if value is the same
-        if value == self._status[name]:
-            return object.__setattr__(self, name, value)
-        # Otherwise send the new speed to the server
-        if name == 'mode':
-            if value not in CONFIGS:
-                raise JtopException('Control does not available')
-        elif name == 'speed':
-            if not isinstance(value, (int, float)):
-                raise ValueError("Use a number")
-            # Check limit speed
-            if value < 0.0 or value > 100.0:
-                raise ValueError('Wrong speed. Number between [0, 100]')
+    @property
+    def rpm(self):
+        return self._rpm
+
+    @property
+    def measure(self):
+        return self._measure
+
+    @property
+    def auto(self):
+        return self._auto
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @mode.setter
+    def mode(self, value):
+        if value not in CONFIGS:
+            raise JtopException('Control does not available')
+        # If value is the same do not do nothing
+        if self._mode == value:
+            return
         # Set new jetson_clocks configuration
-        self._controller.put({'fan': {name: value}})
+        self._controller.put({'fan': {'mode': value}})
+
+    @property
+    def speed(self):
+        return self._speed
+
+    @speed.setter
+    def speed(self, value):
+        if not isinstance(value, (int, float)):
+            raise ValueError("Use a number")
+        # Check limit speed
+        if value < 0.0 or value > 100.0:
+            raise ValueError('Wrong speed. Number between [0, 100]')
+        # If value is the same do not do nothing
+        if self._speed == value:
+            return
+        # Set new jetson_clocks configuration
+        self._controller.put({'fan': {'speed': value}})
 
     @property
     def configs(self):
@@ -80,8 +108,16 @@ class Fan(object):
 
     def _update(self, status):
         self._status = status
-        # Load status as a dictionary
-        self.__dict__.update(**self._status)
+        if 'mode' in status:
+            self._mode = status['mode']
+        if 'speed' in status:
+            self._speed = status['speed']
+        if 'auto' in status:
+            self._auto = status['auto']
+        if 'measure' in status:
+            self._measure = status['measure']
+        if 'rpm' in status:
+            self._rpm = status['rpm']
 
     def __repr__(self):
         return str(self._status)

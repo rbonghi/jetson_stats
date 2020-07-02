@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import logging
 import pytest
 from ..service import JtopServer
@@ -22,24 +23,41 @@ from ..service import JtopServer
 logger = logging.getLogger(__name__)
 
 
+def remove_tests():
+    if os.path.isfile('/tmp/jetson_model'):
+        os.remove('/tmp/jetson_model')
+    if os.path.isfile('/tmp/jetson_clocks_test'):
+        os.remove('/tmp/jetson_clocks_test')
+    if os.path.isfile('/tmp/nvp_model_test'):
+        os.remove('/tmp/nvp_model_test')
+
+
 @pytest.fixture(scope="package")
 def jtop_server():
     logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+    # Clean test files
+    remove_tests()
     print("Initialize jtop service")
     jtop_server = JtopServer(fan_path=['tests/fan/'])
     jtop_server.start(force=True)
     yield jtop_server
     jtop_server.close()
     print("Close jtop service")
+    # Clean test files
+    remove_tests()
 
 
 @pytest.fixture(scope="package")
-def jtop_server_no_nvpmodel():
+def jtop_server_nothing():
     logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+    # Clean test files
+    remove_tests()
     print("Initialize jtop service")
-    jtop_server = JtopServer()
+    jtop_server = JtopServer(fan_path=[], jetson_clocks_path=[], tegrastats_path=[])
     jtop_server.start(force=True)
     yield jtop_server
     status = jtop_server.close()
     print("Close jtop service {}".format(status))
+    # Clean test files
+    remove_tests()
 # EOF
