@@ -76,8 +76,10 @@ class Tegrastats:
     def _read_tegrastats(self, interval, running):
         pts = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
         try:
-            # Reading loop   pts.poll() is None or 
+            # Reading loop
             while running.is_set():
+                if pts.poll() is not None:
+                    continue
                 out = pts.stdout
                 if out is not None:
                     # Read line process output

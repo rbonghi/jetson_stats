@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 def locate_commands(name, commands):
     for cmd in commands:
-        if os.path.isfile(cmd):
+        if os.path.exists(cmd):
             logger.info("{name} loaded on {cmd}".format(name=name, cmd=cmd))
             return cmd
     raise JtopException("{name} is not availabe on this board".format(name=name))

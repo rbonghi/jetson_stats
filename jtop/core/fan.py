@@ -101,10 +101,10 @@ class FanService(object):
         # Initialize number max records to record
         self.path = locate_commands("fan", fan_path)
         # Init status fan
-        self.isRPM = os.path.isfile(self.path + 'rpm_measured')
-        self.isCPWM = os.path.isfile(self.path + 'cur_pwm')
-        self.isTPWM = os.path.isfile(self.path + 'target_pwm')
-        self.isCTRL = os.path.isfile(self.path + 'temp_control')
+        self.isRPM = os.path.isfile(os.path.join(self.path, 'rpm_measured'))
+        self.isCPWM = os.path.isfile(os.path.join(self.path, 'cur_pwm'))
+        self.isTPWM = os.path.isfile(os.path.join(self.path, 'target_pwm'))
+        self.isCTRL = os.path.isfile(os.path.join(self.path, 'temp_control'))
         # Initialize dictionary status
         self._status = {}
         # Max value PWM
@@ -203,7 +203,7 @@ class FanService(object):
         return float(pwm) * 100.0 / self._pwm_cap
 
     def _ValueToPWM(self, value):
-        return ceil((self._pwm_cap - 1) * value / 100.0)
+        return int(ceil((self._pwm_cap - 1) * value / 100.0))
 
     def update(self):
         # Control temperature

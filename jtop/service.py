@@ -145,8 +145,8 @@ class JtopServer(Process):
         # Initialize Fan
         try:
             self.fan = FanService(self.config, fan_path)
-        except JtopException as e:
-            logger.info(e)
+        except JtopException as error:
+            logger.info("{error} in paths {path}".format(error=error, path=fan_path))
             self.fan = None
         # Initialize jetson_clocks controller
         self.jetson_clocks = JetsonClocksService(self.config, self.fan, jetson_clocks_path)
@@ -156,8 +156,8 @@ class JtopServer(Process):
         # Initialize nvpmodel controller
         try:
             self.nvpmodel = NVPModelService(self.jetson_clocks)
-        except JtopException as e:
-            logger.info(e)
+        except JtopException as error:
+            logger.info("{error} in paths {path}".format(error=error, path=fan_path))
             self.nvpmodel = None
         # Setup memory servive
         self.memory = MemoryService()
