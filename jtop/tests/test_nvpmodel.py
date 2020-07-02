@@ -80,8 +80,7 @@ def test_nvpmodel_decrement(jtop_server):
         assert jetson.nvpmodel.id != nvp_id
 
 
-def fix_test_nvpmodel_jetson_clocks(jtop_server):
-    # TODO Fix test with jetson_clocks
+def test_nvpmodel_jetson_clocks(jtop_server):
     with jtop() as jetson:
         # Enable jetson_clocks
         set_jetson_clocks(jetson, True)

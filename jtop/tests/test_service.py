@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2020 Raffaello Bonghi.
+# Copyright (c) 2019 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,50 +15,57 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import logging
-import pytest
+import time
+from jtop import jtop
 from ..service import JtopServer
 # Create logger
 logger = logging.getLogger(__name__)
-#https://docs.pytest.org/en/stable/fixture.html
 
 
-def remove_tests():
-    if os.path.isfile('/tmp/jetson_model'):
-        os.remove('/tmp/jetson_model')
-    if os.path.isfile('/tmp/jetson_clocks_test'):
-        os.remove('/tmp/jetson_clocks_test')
-    if os.path.isfile('/tmp/nvp_model_test'):
-        os.remove('/tmp/nvp_model_test')
-
-
-@pytest.fixture(scope="function")
-def jtop_server():
-    logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
-    # Clean test files
-    remove_tests()
-    print("Initialize jtop service")
+def test_service_full():
     jtop_server = JtopServer(path_fan=['tests/fan/'])
     jtop_server.start(force=True)
-    yield jtop_server
+    # Check if is alive
+    assert jtop_server.is_alive()
+    # Close service
     jtop_server.close()
-    print("Close jtop service")
-    # Clean test files
-    remove_tests()
+    # Check if service is off
+    assert not jtop_server.is_alive()
 
 
-@pytest.fixture(scope="function")
-def jtop_server_nothing():
-    logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
-    # Clean test files
-    remove_tests()
-    print("Initialize jtop service")
+def test_service_full_read():
+    jtop_server = JtopServer(path_fan=['tests/fan/'])
+    jtop_server.start(force=True)
+    # Check if is alive
+    assert jtop_server.is_alive()
+    # Init and open jtop
+    jetson = jtop()
+    jetson.start()
+    # Wait
+    time.sleep(0.5)
+    # Close service
+    jtop_server.close()
+    # Close jetson
+    jetson.close()
+    # Check if service is off
+    assert not jtop_server.is_alive()
+
+
+def test_service_nothing_read():
     jtop_server = JtopServer(path_fan=[], path_nvpmodel='')
     jtop_server.start(force=True)
-    yield jtop_server
-    status = jtop_server.close()
-    print("Close jtop service {}".format(status))
-    # Clean test files
-    remove_tests()
+    # Check if is alive
+    assert jtop_server.is_alive()
+    # Init and open jtop
+    jetson = jtop()
+    jetson.start()
+    # Wait
+    time.sleep(0.5)
+    # Close service
+    jtop_server.close()
+    # Close jetson
+    jetson.close()
+    # Check if service is off
+    assert not jtop_server.is_alive()
 # EOF

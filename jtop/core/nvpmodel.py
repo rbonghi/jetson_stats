@@ -111,7 +111,8 @@ class NVPModel(object):
 
 class NVPModelService(object):
 
-    def __init__(self, jetson_clocks=None):
+    def __init__(self, jetson_clocks, nvp_model):
+        self.nvpmodel_name = nvp_model
         # Initialize thread
         self._thread = None
         # Initialize jetson_clocks config
@@ -119,7 +120,7 @@ class NVPModelService(object):
         # Read all lines and extract modes
         self._nvpm = {}
         try:
-            nvpmodel_p = sp.Popen(['nvpmodel', '-p', '--verbose'], stdout=sp.PIPE)
+            nvpmodel_p = sp.Popen([nvp_model, '-p', '--verbose'], stdout=sp.PIPE)
             out, _ = nvpmodel_p.communicate()
             # Decode lines
             lines = out.decode("utf-8")
@@ -182,23 +183,23 @@ class NVPModelService(object):
         """ Set nvpmodel to a new status """
         self.selected = level
         # Set the new nvpmodel status
-        sep_nvp = sp.Popen(['nvpmodel', '-m', str(level)], stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
+        sep_nvp = sp.Popen([self.nvpmodel_name, '-m', str(level)], stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
         out, _ = sep_nvp.communicate()
         # If there are no errors return the NV Power mode
         return "NVPM ERROR" not in out.decode("utf-8")
 
     def get(self):
         # Initialize mode and num
-        _, mode = NVPModelService.query()
+        _, mode = NVPModelService.query(self.nvpmodel_name)
         # Return the mode
         return mode
 
     @staticmethod
-    def query():
+    def query(nvp_model):
         """ Read nvpmodel to know the status of the board """
         num = -1
         mode = ""
-        nvpmodel_p = sp.Popen(['nvpmodel', '-q'], stdout=sp.PIPE, stderr=sp.PIPE)
+        nvpmodel_p = sp.Popen([nvp_model, '-q'], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = nvpmodel_p.communicate()
         # Decode lines and split
         lines = out.decode("utf-8").split("\n")

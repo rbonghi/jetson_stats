@@ -18,7 +18,7 @@
 from jtop import jtop
 
 
-def test_set_true(jtop_server):
+def test_set_true_false(jtop_server):
     with jtop() as jetson:
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'inactive'
@@ -32,14 +32,6 @@ def test_set_true(jtop_server):
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'running'
         # Check if is true
-        assert bool(jetson.jetson_clocks)
-
-
-def test_set_false(jtop_server):
-    with jtop() as jetson:
-        # Check jetson_clocks status
-        assert jetson.jetson_clocks.status == 'running'
-        # Check status is false
         assert bool(jetson.jetson_clocks)
         # Switch off jetson_clocks
         jetson.jetson_clocks = False

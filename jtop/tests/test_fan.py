@@ -28,4 +28,10 @@ def test_read_fan_status(jtop_server):
         assert isinstance(jetson.fan.speed, float)
         # Check mode in config
         assert jetson.fan.mode in jetson.fan.configs
+
+
+def test_read_fan_error(jtop_server_nothing):
+    with jtop() as jetson:
+        # Read status jetson fan
+        assert jetson.fan is None
 # EOF

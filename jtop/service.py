@@ -51,6 +51,7 @@ except ImportError:
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
 PATH_FAN = ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']
+PATH_NVPMODEL = 'nvpmodel'
 # Pipe configuration
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
@@ -114,7 +115,7 @@ class JtopServer(Process):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self, tegrastats_path=PATH_TEGRASTATS, jetson_clocks_path=PATH_JETSON_CLOCKS, fan_path=PATH_FAN):
+    def __init__(self, path_tegrastats=PATH_TEGRASTATS, path_jetson_clocks=PATH_JETSON_CLOCKS, path_fan=PATH_FAN, path_nvpmodel=PATH_NVPMODEL):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jetson_clocks need sudo to work")
@@ -125,7 +126,7 @@ class JtopServer(Process):
         # Command queue
         self.q = Queue()
         # Speed interval
-        self.interval = Value('d', 0.0)
+        self.interval = Value('d', -1.0)
         # Dictionary to sync
         self.data = {}
         # Event lock
@@ -144,25 +145,25 @@ class JtopServer(Process):
         self.board = load_jetson_variables()
         # Initialize Fan
         try:
-            self.fan = FanService(self.config, fan_path)
+            self.fan = FanService(self.config, path_fan)
         except JtopException as error:
-            logger.info("{error} in paths {path}".format(error=error, path=fan_path))
+            logger.info("{error} in paths {path}".format(error=error, path=path_fan))
             self.fan = None
         # Initialize jetson_clocks controller
-        self.jetson_clocks = JetsonClocksService(self.config, self.fan, jetson_clocks_path)
+        self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)
         # Initialize jetson_fan
         if self.fan is not None:
             self.fan.initialization(self.jetson_clocks)
         # Initialize nvpmodel controller
         try:
-            self.nvpmodel = NVPModelService(self.jetson_clocks)
+            self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
         except JtopException as error:
-            logger.info("{error} in paths {path}".format(error=error, path=fan_path))
+            logger.info("{error} in paths {path}".format(error=error, path=path_fan))
             self.nvpmodel = None
         # Setup memory servive
         self.memory = MemoryService()
         # Setup tegrastats
-        self.tegra = Tegrastats(self.tegra_stats, tegrastats_path)
+        self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
         # Swap manager
         self.swap = SwapService(self.config)
 
@@ -252,6 +253,7 @@ class JtopServer(Process):
                             logger.info("jetson_clocks show closed")
                     # Disable timeout
                     timeout = None
+                    self.interval.value = -1.0
         except (KeyboardInterrupt, SystemExit):
             pass
         except Exception:
@@ -313,6 +315,10 @@ class JtopServer(Process):
 
     def close(self):
         self.broadcaster.shutdown()
+        # If process is in timeout manually terminate
+        if self.interval.value == -1.0:
+            logger.info("Terminate subprocess")
+            self.terminate()
         # Close tegrastats
         self.join()
         # Remove authentication file
