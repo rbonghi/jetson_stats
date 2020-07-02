@@ -24,7 +24,18 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="package")
 def jtop_server():
-    logging.basicConfig(level=logging.DEBUG, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+    print("Initialize jtop service")
+    jtop_server = JtopServer(fan_path=['fan'])
+    jtop_server.start(force=True)
+    yield jtop_server
+    jtop_server.close()
+    print("Close jtop service")
+
+
+@pytest.fixture(scope="package")
+def jtop_server_no_nvpmodel():
+    logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
     print("Initialize jtop service")
     jtop_server = JtopServer()
     jtop_server.start(force=True)

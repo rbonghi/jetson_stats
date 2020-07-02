@@ -21,7 +21,7 @@ import sys
 # Launch command
 import subprocess as sp
 # Threading
-from threading import Thread
+from threading import Thread, Event
 # Tegrastats parser
 from .tegra_parse import VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, WATTS
 from .common import locate_commands
@@ -38,15 +38,13 @@ class Tegrastats:
     """
 
     def __init__(self, callback, tegrastats_path):
+        self._running = Event()
         # Error message from thread
         self._error = None
-        # Initialize jetson stats
-        self._stats = {}
         # Start process tegrastats
         self.path = locate_commands("tegrastats", tegrastats_path)
         # Define Tegrastats process
         self._thread = None
-        self.p = None
         # Initialize callback
         self.callback = callback
 
@@ -75,52 +73,48 @@ class Tegrastats:
         stats['WATT'] = WATTS(text)
         return stats
 
-    def _read_tegrastats(self, interval):
+    def _read_tegrastats(self, interval, running):
+        pts = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
         try:
-            # Reading loop
-            while self.p.poll() is None:
-                out = self.p.stdout
+            # Reading loop   pts.poll() is None or 
+            while running.is_set():
+                out = pts.stdout
                 if out is not None:
                     # Read line process output
                     line = out.readline()
                     # Decode line in UTF-8
                     tegrastats_data = line.decode("utf-8")
                     # Decode and store
-                    self._stats = self._decode(tegrastats_data)
+                    stats = self._decode(tegrastats_data)
                     # Launch callback
-                    if self.p is not None:
-                        self.callback(self._stats)
+                    self.callback(stats)
         except AttributeError:
-            # Error when is close the process
+            pass
+        except IOError:
             pass
         except Exception:
             # Write error message
             self._error = sys.exc_info()
-        # Kill process if alive
-        if self.p is not None:
-            # Kill
+        finally:
+            # Kill process
             try:
-                self.p.kill()
+                pts.kill()
             except OSError:
                 pass
-            # Reset variable
-            self.p = None
 
     def open(self, interval=0.5):
+        if self._thread is not None:
+            return False
         # Set timeout
         interval = int(interval * 1000)
         # Check if thread or process exist
-        if self.p is not None:
-            return False
-        # Launch subprocess or raise and exception
-        self.p = sp.Popen([self.path, '--interval', str(interval)], stdout=sp.PIPE)
+        self._running.set()
         # Start thread Service client
-        self._thread = Thread(target=self._read_tegrastats, args=[interval])
+        self._thread = Thread(target=self._read_tegrastats, args=(interval, self._running, ))
         self._thread.start()
         return True
 
     def close(self):
-        self._thread = None
         # Catch exception if exist
         if self._error:
             # Extract exception and raise
@@ -128,13 +122,9 @@ class Tegrastats:
             ex_value.__traceback__ = tb_str
             raise ex_value
         # Check if thread and process are already empty
-        if self.p is None:
-            return False
-        try:
-            self.p.kill()
-        except OSError:
-            pass
-        # Clean process variable
-        self.p = None
+        self._running.clear()
+        if self._thread is not None:
+            self._thread.join()
+            self._thread = None
         return True
 # EOF

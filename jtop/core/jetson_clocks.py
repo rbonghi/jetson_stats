@@ -276,7 +276,6 @@ class JetsonClocksService(object):
             self._thread_show_running = True
             # Start thread Service client
             self._thread_show = Thread(target=self._thread_jetson_clocks_loop, args=[])
-            self._thread_show.daemon = True
             self._thread_show.start()
             return True
         return False
@@ -288,8 +287,7 @@ class JetsonClocksService(object):
         if self.show_running():
             # Stop service
             self._thread_show_running = False
-            return True
-        return False
+        return True
 
     @property
     def is_alive(self):

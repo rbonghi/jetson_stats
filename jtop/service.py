@@ -145,7 +145,8 @@ class JtopServer(Process):
         # Initialize Fan
         try:
             self.fan = FanService(self.config, fan_path)
-        except JtopException:
+        except JtopException as e:
+            logger.info(e)
             self.fan = None
         # Initialize jetson_clocks controller
         self.jetson_clocks = JetsonClocksService(self.config, self.fan, jetson_clocks_path)
@@ -155,7 +156,8 @@ class JtopServer(Process):
         # Initialize nvpmodel controller
         try:
             self.nvpmodel = NVPModelService(self.jetson_clocks)
-        except JtopException:
+        except JtopException as e:
+            logger.info(e)
             self.nvpmodel = None
         # Setup memory servive
         self.memory = MemoryService()
@@ -241,25 +243,27 @@ class JtopServer(Process):
                     # Update timeout interval
                     timeout = interval * TIMEOUT_GAIN
                 except queue.Empty:
+                    self.sync_event.clear()
                     # Close and log status
                     if self.tegra.close():
-                        self.sync_event.clear()
+                        logger.info("tegrastats close")
                         # Start jetson_clocks
-                        status_jc = self.jetson_clocks.show_stop()
-                        logger.info("tegrastats close {}".format(status_jc))
+                        if self.jetson_clocks.show_stop():
+                            logger.info("jetson_clocks show closed")
                     # Disable timeout
                     timeout = None
         except (KeyboardInterrupt, SystemExit):
             pass
         except Exception:
-            # Close tegra
-            if self.tegra.close():
-                self.sync_event.clear()
-                # Start jetson_clocks
-                status_jc = self.jetson_clocks.show_stop()
-                logger.info("tegrastats close {}".format(status_jc))
             # Write error message
             self._error.put(sys.exc_info())
+        finally:
+            # Close tegra
+            if self.tegra.close():
+                logger.info("tegrastats close")
+                # Start jetson_clocks
+                if self.jetson_clocks.show_stop():
+                    logger.info("jetson_clocks show closed")
 
     def start(self, force=False):
         # Run setup
@@ -289,7 +293,6 @@ class JtopServer(Process):
         # Equivalent permission 660 srw-rw----
         os.chmod(JTOP_PIPE, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
         # Run the Control server
-        self.daemon = True
         super(JtopServer, self).start()
 
     def loop_for_ever(self):
@@ -311,14 +314,12 @@ class JtopServer(Process):
     def close(self):
         self.broadcaster.shutdown()
         # Close tegrastats
-        if self.tegra.close():
-            # Start jetson_clocks
-            status_jc = self.jetson_clocks.show_stop()
-            logger.info("tegrastats close {}".format(status_jc))
+        self.join()
         # Remove authentication file
         if os.path.exists(AUTH_PATH):
             logger.info("Remove authentication {auth}".format(auth=AUTH_PATH))
             os.remove(AUTH_PATH)
+        return True
 
     def tegra_stats(self, stats):
         # Make configuration dict
