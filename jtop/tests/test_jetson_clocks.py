@@ -16,9 +16,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from jtop import jtop
+MAX_COUNT = 10
 
 
 def test_set_true_false(jtop_server):
+    counter = 0
     with jtop() as jetson:
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'inactive'
@@ -27,8 +29,10 @@ def test_set_true_false(jtop_server):
         # Set true jetson_clocks
         jetson.jetson_clocks = True
         # Wait jetson_clocks on
-        while not jetson.jetson_clocks:
-            pass
+        while jetson.ok():
+            if bool(jetson.jetson_clocks) or counter == MAX_COUNT:
+                break
+            counter += 1
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'running'
         # Check if is true
@@ -36,8 +40,10 @@ def test_set_true_false(jtop_server):
         # Switch off jetson_clocks
         jetson.jetson_clocks = False
         # Wait jetson_clocks on
-        while bool(jetson.jetson_clocks):
-            pass
+        while jetson.ok():
+            if not bool(jetson.jetson_clocks) or counter == MAX_COUNT:
+                break
+            counter += 1
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'inactive'
         # Set to false jetson_clocks
@@ -45,19 +51,24 @@ def test_set_true_false(jtop_server):
 
 
 def test_set_boot(jtop_server):
+    counter = 0
     with jtop() as jetson:
         # Check status boot
         jetson.jetson_clocks.boot = True
         # Wait jetson_clocks boot
-        while not bool(jetson.jetson_clocks.boot):
-            pass
+        while jetson.ok():
+            if jetson.jetson_clocks.boot or counter == MAX_COUNT:
+                break
+            counter += 1
         # Check if is not set
         assert jetson.jetson_clocks.boot
         # Check status boot
         jetson.jetson_clocks.boot = False
         # Wait jetson_clocks boot
-        while bool(jetson.jetson_clocks.boot):
-            pass
+        while jetson.ok():
+            if not jetson.jetson_clocks.boot or counter == MAX_COUNT:
+                break
+            counter += 1
         # Check if is not set
         assert not jetson.jetson_clocks.boot
 # EOF

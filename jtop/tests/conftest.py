@@ -16,12 +16,15 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import time
 import logging
 import pytest
 from ..service import JtopServer
 # Create logger
 logger = logging.getLogger(__name__)
-#https://docs.pytest.org/en/stable/fixture.html
+# pytest fixture reference
+# https://docs.pytest.org/en/stable/fixture.html
+DELAY_START = 0.5
 
 
 def remove_tests():
@@ -41,6 +44,10 @@ def jtop_server():
     print("Initialize jtop service")
     jtop_server = JtopServer(path_fan=['tests/fan/'])
     jtop_server.start(force=True)
+    time.sleep(DELAY_START)
+    # Check if is alive
+    assert jtop_server.is_alive()
+    # yeld server
     yield jtop_server
     jtop_server.close()
     print("Close jtop service")
@@ -56,9 +63,13 @@ def jtop_server_nothing():
     print("Initialize jtop service")
     jtop_server = JtopServer(path_fan=[], path_nvpmodel='')
     jtop_server.start(force=True)
+    time.sleep(DELAY_START)
+    # Check if is alive
+    assert jtop_server.is_alive()
+    # yeld server
     yield jtop_server
-    status = jtop_server.close()
-    print("Close jtop service {}".format(status))
+    jtop_server.close()
+    print("Close jtop service")
     # Clean test files
     remove_tests()
 # EOF

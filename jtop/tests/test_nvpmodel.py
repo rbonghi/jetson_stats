@@ -16,28 +16,37 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from jtop import jtop
+MAX_COUNT = 10
 
 
 def set_jetson_clocks(jetson, status):
+    counter = 0
     # Check if status is different
     if bool(jetson.jetson_clocks) != status:
         # Set true jetson_clocks
-        jetson.jetson_clocks = status
+        if jetson.ok():
+            jetson.jetson_clocks = status
         # Wait jetson_clocks on
-        while bool(jetson.jetson_clocks) != status:
-            pass
+        while jetson.ok():
+            if bool(jetson.jetson_clocks) == status or counter == MAX_COUNT:
+                break
+            counter += 1
     # Check if is true
     assert bool(jetson.jetson_clocks) == status
 
 
 def set_nvp_mode(jetson, mode):
+    counter = 0
     # Check if status is different
     if str(jetson.nvpmodel) != mode:
         # Check status nvpmodel
-        jetson.nvpmodel = mode
+        if jetson.ok():
+            jetson.nvpmodel = mode
         # Wait change nvpmodel
-        while str(jetson.nvpmodel) != mode:
-            pass
+        while jetson.ok():
+            if str(jetson.nvpmodel) == mode or counter == MAX_COUNT:
+                break
+            counter += 1
     # Check if is same model
     assert str(jetson.nvpmodel) == mode
     # Check name variable
@@ -50,34 +59,31 @@ def test_nvpmodel(jtop_server):
         set_nvp_mode(jetson, "MIN_MAX_TEST")
 
 
-def test_nvpmodel_increment(jtop_server):
+def test_nvpmodel_increment_decrement(jtop_server):
+    counter = 0
     with jtop() as jetson:
-        if jetson.nvpmodel.name != "TEST":
-            set_nvp_mode(jetson, "TEST")
         # Save nvp ID
         nvp_id = jetson.nvpmodel.id
         # Set new NVP mode
         jetson.nvpmodel += 1
         # Wait change nvpmodel
-        while jetson.nvpmodel.id != 2:
-            pass
+        while jetson.ok():
+            if jetson.nvpmodel.id == nvp_id + 1 or counter == MAX_COUNT:
+                break
+            counter += 1
         # Check if is same model
-        assert jetson.nvpmodel.id != nvp_id
-
-
-def test_nvpmodel_decrement(jtop_server):
-    with jtop() as jetson:
-        if jetson.nvpmodel.name != "TEST":
-            set_nvp_mode(jetson, "TEST")
+        assert jetson.nvpmodel.id == nvp_id + 1
         # Save nvp ID
         nvp_id = jetson.nvpmodel.id
         # Set new NVP mode
         jetson.nvpmodel -= 1
         # Wait change nvpmodel
-        while jetson.nvpmodel.id != 0:
-            pass
+        while jetson.ok():
+            if jetson.nvpmodel.id == nvp_id - 1 or counter == MAX_COUNT:
+                break
+            counter += 1
         # Check if is same model
-        assert jetson.nvpmodel.id != nvp_id
+        assert jetson.nvpmodel.id == nvp_id - 1
 
 
 def test_nvpmodel_jetson_clocks(jtop_server):
