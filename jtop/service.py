@@ -376,9 +376,6 @@ class JtopServer(Process):
         if not self.sync_event.is_set():
             self.sync_event.set()
 
-    def __del__(self):
-        self.close()
-
 
 def key_reader(AUTH_RE):
     with open(AUTH_PATH, 'r') as f:
