@@ -72,8 +72,6 @@ def jetson_clocks_alive(show):
     #     emc = show['EMC']
     #     stat += [emc['max_freq'] == emc['min_freq']]
     #     stat += [emc['max_freq'] == emc['current_freq']]
-    if not stat:
-        raise JtopException("Require super user")
     return all(stat)
 
 
@@ -126,7 +124,7 @@ class JetsonClocks(object):
     def _update(self, show):
         self._show = show
         self._alive = jetson_clocks_alive(show)
-        self._boot = show['boot']
+        self._boot = show.get('boot', False)
 
 
 class JetsonClocksService(object):
@@ -275,7 +273,7 @@ class JetsonClocksService(object):
         if not self.show_running():
             self._thread_show_running = True
             # Start thread Service client
-            self._thread_show = Thread(target=self._thread_jetson_clocks_loop, args=[])
+            self._thread_show = Thread(target=self._thread_jetson_clocks_loop)
             self._thread_show.start()
             return True
         return False
@@ -360,8 +358,8 @@ class JetsonClocksService(object):
             # Load jetson_clocks start up information
             jetson_clocks_start = self._config.get('wait', CONFIG_DEFAULT_DELAY)
             # Start thread Service client
-            self._thread_start = Thread(target=self._jetson_clocks_boot, args=[jetson_clocks_start])
-            self._thread_start.daemon = True
+            self._thread_start = Thread(target=self._jetson_clocks_boot, args=(jetson_clocks_start, ))
+            # self._thread_start.daemon = True
             self._thread_start.start()
             return True
         return False
@@ -395,7 +393,7 @@ class JetsonClocksService(object):
         if self.is_running == 'inactive':
             # Start thread Service client
             self._thread_stop = Thread(target=self._thread_jetson_clocks_stop)
-            self._thread_stop.daemon = True
+            # self._thread_stop.daemon = True
             self._thread_stop.start()
             return True
         return False
@@ -407,6 +405,21 @@ class JetsonClocksService(object):
             ex_type, ex_value, tb_str = self._error
             ex_value.__traceback__ = tb_str
             raise ex_value
+
+    def close(self):
+        # Check start jetson_clocks
+        if self._thread_start is not None:
+            if self._thread_start.isAlive():
+                self._thread_start.join()
+        # Check stop jetson_clocks
+        if self._thread_stop is not None:
+            if self._thread_stop.isAlive():
+                self._thread_stop.join()
+        # Close show
+        if self._thread_show is not None:
+            self.show_stop()
+            if self._thread_show.isAlive():
+                self._thread_show.join()
 
     def store(self):
         # Store configuration jetson_clocks

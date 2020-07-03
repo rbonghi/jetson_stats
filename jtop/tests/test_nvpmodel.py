@@ -15,12 +15,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import warnings
 from jtop import jtop
-MAX_COUNT = 10
+# TEST NVP MODELS:
+# - [0] MAXTEST (DEFAULT)
+# - [1] TEST
+# - [2] MINTEST
+# - [3] MIN_MAX_TEST
+# Max count to wait
+MAX_COUNT = 15
 
 
 def set_jetson_clocks(jetson, status):
     counter = 0
+    if jetson.jetson_clocks is None:
+        warnings.warn("jetson_clocks does not exists, please check file", UserWarning)
+        return
     # Check if status is different
     if bool(jetson.jetson_clocks) != status:
         # Set true jetson_clocks
@@ -31,6 +41,8 @@ def set_jetson_clocks(jetson, status):
             if bool(jetson.jetson_clocks) == status or counter == MAX_COUNT:
                 break
             counter += 1
+    if counter == MAX_COUNT:
+        warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
     # Check if is true
     assert bool(jetson.jetson_clocks) == status
 
@@ -47,6 +59,8 @@ def set_nvp_mode(jetson, mode):
             if str(jetson.nvpmodel) == mode or counter == MAX_COUNT:
                 break
             counter += 1
+    if counter == MAX_COUNT:
+        warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
     # Check if is same model
     assert str(jetson.nvpmodel) == mode
     # Check name variable
@@ -71,6 +85,8 @@ def test_nvpmodel_increment_decrement(jtop_server):
             if jetson.nvpmodel.id == nvp_id + 1 or counter == MAX_COUNT:
                 break
             counter += 1
+        if counter == MAX_COUNT:
+            warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
         # Check if is same model
         assert jetson.nvpmodel.id == nvp_id + 1
         # Save nvp ID
@@ -82,6 +98,8 @@ def test_nvpmodel_increment_decrement(jtop_server):
             if jetson.nvpmodel.id == nvp_id - 1 or counter == MAX_COUNT:
                 break
             counter += 1
+        if counter == MAX_COUNT:
+            warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
         # Check if is same model
         assert jetson.nvpmodel.id == nvp_id - 1
 

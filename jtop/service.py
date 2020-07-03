@@ -150,7 +150,11 @@ class JtopServer(Process):
             logger.info("{error} in paths {path}".format(error=error, path=path_fan))
             self.fan = None
         # Initialize jetson_clocks controller
-        self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)
+        try:
+            self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)
+        except JtopException as error:
+            logger.info("{error} in paths {path}".format(error=error, path=path_nvpmodel))
+            self.jetson_clocks = None
         # Initialize jetson_fan
         if self.fan is not None:
             self.fan.initialization(self.jetson_clocks)
@@ -158,7 +162,7 @@ class JtopServer(Process):
         try:
             self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
         except JtopException as error:
-            logger.info("{error} in paths {path}".format(error=error, path=path_fan))
+            logger.info("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
         # Setup memory servive
         self.memory = MemoryService()
@@ -178,6 +182,7 @@ class JtopServer(Process):
                     # Check if control is not empty
                     if not control:
                         continue
+                    logger.info("SERVICE control message {control}".format(control=control))
                     # Manage swap
                     if 'swap' in control:
                         swap = control['swap']
@@ -228,7 +233,8 @@ class JtopServer(Process):
                         # Run stats
                         if self.tegra.open(interval=interval):
                             # Start jetson_clocks
-                            self.jetson_clocks.show_start()
+                            if self.jetson_clocks is not None:
+                                self.jetson_clocks.show_start()
                             # Set interval value
                             self.interval.value = interval
                             # Status start tegrastats
@@ -238,6 +244,7 @@ class JtopServer(Process):
                             'board': self.board,
                             'interval': self.interval.value,
                             'swap': self.swap.path,
+                            'jc': self.jetson_clocks is not None,
                             'fan': self.fan is not None,
                             'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
@@ -249,8 +256,9 @@ class JtopServer(Process):
                     if self.tegra.close():
                         logger.info("tegrastats close")
                         # Start jetson_clocks
-                        if self.jetson_clocks.show_stop():
-                            logger.info("jetson_clocks show closed")
+                        if self.jetson_clocks is not None:
+                            if self.jetson_clocks.show_stop():
+                                logger.info("jetson_clocks show closed")
                     # Disable timeout
                     timeout = None
                     self.interval.value = -1.0
@@ -264,12 +272,14 @@ class JtopServer(Process):
             if self.tegra.close():
                 logger.info("tegrastats close")
                 # Start jetson_clocks
-                if self.jetson_clocks.show_stop():
-                    logger.info("jetson_clocks show closed")
+            if self.jetson_clocks is not None:
+                if self.jetson_clocks.close():
+                    logger.info("jetson_clocks closed")
 
     def start(self, force=False):
         # Run setup
-        self.jetson_clocks.initialization()
+        if self.jetson_clocks is not None:
+            self.jetson_clocks.initialization()
         # Initialize socket
         try:
             gid = getgrnam(JTOP_USER).gr_gid
@@ -300,27 +310,34 @@ class JtopServer(Process):
     def loop_for_ever(self):
         try:
             self.start(force=True)
-            # Get exception
-            error = self._error.get()
             self.join()
-            # Raise error if exist
-            if error:
-                ex_type, ex_value, tb_str = error
-                ex_value.__traceback__ = tb_str
-                raise ex_value
         except (KeyboardInterrupt, SystemExit):
             pass
-        # Close communication
-        self.close()
+        finally:
+            # Close communication
+            self.close()
 
     def close(self):
+        # Terminate broadcaster
         self.broadcaster.shutdown()
         # If process is in timeout manually terminate
         if self.interval.value == -1.0:
             logger.info("Terminate subprocess")
             self.terminate()
+        # If process is alive wait to quit
+        if self.is_alive():
+            logger.info("Wait shutdown subprocess")
+            self.join()
         # Close tegrastats
-        self.join()
+        try:
+            error = self._error.get(timeout=0.5)
+            # Raise error if exist
+            if error:
+                ex_type, ex_value, tb_str = error
+                ex_value.__traceback__ = tb_str
+                raise ex_value
+        except queue.Empty:
+            pass
         # Remove authentication file
         if os.path.exists(AUTH_PATH):
             logger.info("Remove authentication {auth}".format(auth=AUTH_PATH))
@@ -338,8 +355,12 @@ class JtopServer(Process):
         # Read CPU information
         data['cpu'] = cpu_models()
         # Load status jetson_clocks
-        data['jc'] = self.jetson_clocks.show()
-        data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
+        if self.jetson_clocks is not None:
+            data['jc'] = self.jetson_clocks.show()
+            data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
+        elif self.nvpmodel is not None:
+            data['jc'] = {}
+            data['jc']['NVP'] = self.nvpmodel.get()
         # Read status NVPmodel
         if self.nvpmodel is not None:
             data['nvp'] = self.nvpmodel.modes()

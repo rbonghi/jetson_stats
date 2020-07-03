@@ -149,6 +149,7 @@ class NVPModelService(object):
             # Check jetson_clocks is off
             while self.jetson_clocks.is_alive:
                 pass
+            logger.info("NVPmodel switch off jetson_clocks")
         # Set NV Power Mode
         status = self._mode(value)
         # Update status
@@ -157,9 +158,9 @@ class NVPModelService(object):
         if old_status:
             self.jetson_clocks.start()
             # Check jetson_clocks is off
-            logger.info("Jetson Clocks status {status}".format(status=self.jetson_clocks.is_alive))
             while not self.jetson_clocks.is_alive:
                 pass
+            logger.info("NVPmodel - Jetson Clocks status {status}".format(status=self.jetson_clocks.is_alive))
         logger.info("NVPmodel started {value}".format(value=value))
 
     def is_running(self):
@@ -171,8 +172,8 @@ class NVPModelService(object):
         if self.is_running():
             return False
         # Start thread Service client
-        self._thread = Thread(target=self._thread_set_nvp_model, args=[value])
-        self._thread.daemon = True
+        self._thread = Thread(target=self._thread_set_nvp_model, args=(value, ))
+        # self._thread.daemon = True
         self._thread.start()
         return True
 

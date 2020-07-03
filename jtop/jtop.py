@@ -202,6 +202,7 @@ class jtop(Thread):
         mode = self._nvp.set(value)
         # Send new nvpmodel
         self._controller.put({'nvp': mode})
+        logger.info("JTOP NVP message {mode}".format(mode=mode))
 
     @property
     def jetson_clocks(self):
@@ -223,6 +224,7 @@ class jtop(Thread):
         if value != self._jc.is_alive:
             # Send status jetson_clocks
             self._controller.put({'jc': {'enable': value}})
+            logger.info("JTOP jetson_clocks value:{value}".format(value=value))
 
     # @property
     # def stats(self):
@@ -372,9 +374,10 @@ class jtop(Thread):
         # Update swap status
         self._swap._update(tegrastats['SWAP'], data['swap'])
         # Load jetson_clocks data
-        jc_show = data['jc']
+        jc_show = data.get('jc', {})
         # Update status
-        self._jc._update(jc_show)
+        if self._jc is not None:
+            self._jc._update(jc_show)
         # Store data in stats
         self._cpu._update(tegrastats['CPU'], jc_show, data['cpu'])
         # Update engines
@@ -404,7 +407,8 @@ class jtop(Thread):
         try:
             while self._running:
                 # Send alive message
-                self._controller.put({})
+                if self._controller.empty():
+                    self._controller.put({})
                 # Read stats from jtop service
                 data = self._get_data()
                 # Decode and update all jtop data
@@ -472,7 +476,8 @@ class jtop(Thread):
         # Initialize jetson_clocks sender
         self._swap = Swap(self._controller, init['swap'])
         # Initialize jetson_clock
-        self._jc = JetsonClocks(self._controller)
+        if init['jc']:
+            self._jc = JetsonClocks(self._controller)
         # Initialize Memory
         self._memory = Memory(self._controller)
         # Init FAN (If exist)

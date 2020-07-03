@@ -174,10 +174,11 @@ class FanService(object):
             self.auto = True
         if value == 'jetson_clocks':
             # Set in auto only if jetson_clocks in not active
-            if not self._jc.is_alive:
-                self.auto = True
-            else:
-                self.speed = 100
+            if self._jc is not None:
+                if not self._jc.is_alive:
+                    self.auto = True
+                else:
+                    self.speed = 100
         if value == 'manual':
             # Switch off speed
             self.auto = False

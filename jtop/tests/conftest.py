@@ -17,11 +17,8 @@
 
 import os
 import time
-import logging
 import pytest
 from ..service import JtopServer
-# Create logger
-logger = logging.getLogger(__name__)
 # pytest fixture reference
 # https://docs.pytest.org/en/stable/fixture.html
 DELAY_START = 0.5
@@ -38,7 +35,6 @@ def remove_tests():
 
 @pytest.fixture(scope="function")
 def jtop_server():
-    logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
     # Clean test files
     remove_tests()
     print("Initialize jtop service")
@@ -57,11 +53,10 @@ def jtop_server():
 
 @pytest.fixture(scope="function")
 def jtop_server_nothing():
-    logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
     # Clean test files
     remove_tests()
     print("Initialize jtop service")
-    jtop_server = JtopServer(path_fan=[], path_nvpmodel='')
+    jtop_server = JtopServer(path_fan=[], path_nvpmodel='', path_jetson_clocks=[])
     jtop_server.start(force=True)
     time.sleep(DELAY_START)
     # Check if is alive
