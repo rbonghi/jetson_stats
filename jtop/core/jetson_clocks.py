@@ -21,7 +21,6 @@ import time
 import logging
 import sys
 # Launch command
-import subprocess as sp
 from datetime import timedelta
 from threading import Thread
 # Local functions and classes
