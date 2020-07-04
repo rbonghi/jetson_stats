@@ -16,12 +16,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import time
 import pytest
 from ..service import JtopServer
 # pytest fixture reference
 # https://docs.pytest.org/en/stable/fixture.html
-DELAY_START = 0.5
 
 
 def remove_tests():
@@ -40,7 +38,6 @@ def jtop_server():
     print("Initialize jtop service")
     jtop_server = JtopServer(path_fan=['tests/fan/'])
     jtop_server.start(force=True)
-    time.sleep(DELAY_START)
     # Check if is alive
     assert jtop_server.is_alive()
     # yeld server
@@ -58,7 +55,6 @@ def jtop_server_nothing():
     print("Initialize jtop service")
     jtop_server = JtopServer(path_fan=[], path_nvpmodel='', path_jetson_clocks=[])
     jtop_server.start(force=True)
-    time.sleep(DELAY_START)
     # Check if is alive
     assert jtop_server.is_alive()
     # yeld server

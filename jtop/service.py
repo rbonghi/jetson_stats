@@ -182,7 +182,7 @@ class JtopServer(Process):
                     # Check if control is not empty
                     if not control:
                         continue
-                    logger.info("SERVICE control message {control}".format(control=control))
+                    logger.debug("control message {control}".format(control=control))
                     # Manage swap
                     if 'swap' in control:
                         swap = control['swap']
@@ -235,7 +235,6 @@ class JtopServer(Process):
                             # Start jetson_clocks
                             if self.jetson_clocks is not None:
                                 self.jetson_clocks.show_start()
-                                # logger.info("jetson_clock_show START {}".format(jc_status))
                             # Set interval value
                             self.interval.value = interval
                             # Status start tegrastats

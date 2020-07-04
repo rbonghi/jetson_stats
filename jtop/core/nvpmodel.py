@@ -161,7 +161,6 @@ class NVPModelService(object):
             # Check jetson_clocks is off
             while not self.jetson_clocks.is_alive:
                 pass
-            logger.info("NVPmodel - Jetson Clocks status {status}".format(status=self.jetson_clocks.is_alive))
         logger.info("NVPmodel started {value}".format(value=value))
 
     def is_running(self):

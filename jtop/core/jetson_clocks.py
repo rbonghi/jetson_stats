@@ -54,6 +54,64 @@ EMC_REGEXP = re.compile(r'EMC MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=(.+?) Freq
 NVP_REGEXP = re.compile(r'NV Power Mode: ((.*))')
 
 
+def decode_show_message(lines):
+    # Load lines
+    status = {"CPU": {}}
+    for line in lines:
+        # Search configuration CPU config
+        match = CPU_REGEXP.search(line)
+        # if match extract name and number
+        if match:
+            # Load CPU information
+            cpu = {
+                "Online": int(match.group(2)) == 1,
+                "governor": str(match.group(3)),
+                "min_freq": int(match.group(4)),
+                "max_freq": int(match.group(5)),
+                "current_freq": int(match.group(6)),
+                "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).split()}}
+            # Store in CPU list
+            idx_cpu = int(match.group(1)) + 1
+            status["CPU"]["CPU{num}".format(num=idx_cpu)] = cpu
+            continue
+        # Search configuration GPU config
+        match = GPU_REGEXP.search(line)
+        # Load GPU match
+        if match:
+            status["GPU"] = {
+                "min_freq": int(match.group(1)),
+                "max_freq": int(match.group(2)),
+                "current_freq": int(match.group(3))}
+            continue
+        # Search configuration EMC config
+        match = EMC_REGEXP.search(line)
+        # Load EMC match
+        if match:
+            status["EMC"] = {
+                "min_freq": int(match.group(1)),
+                "max_freq": int(match.group(2)),
+                "current_freq": int(match.group(3)),
+                "FreqOverride": int(match.group(4))}
+            continue
+        # Search configuration NV Power Model
+        match = NVP_REGEXP.search(line)
+        # Load NV Power Model
+        if match:
+            status["NVP"] = str(match.group(1))
+            continue
+        # Search configuration CPU Cluster config
+        match = CPU_CLUSTER_REGEXP.search(line)
+        # Load EMC match
+        if match:
+            status["cluster"] = str(match.group(1))
+            continue
+        # All other lines of jetson_clocks show are skipped
+        # SOC family:tegra210  Machine:NVIDIA Jetson Nano Developer Kit
+        # Online CPUs: 0-3
+        # Fan: speed=0
+    return status
+
+
 def jetson_clocks_alive(show):
     # Make statistics
     stat = []
@@ -150,7 +208,9 @@ class JetsonClocksService(object):
         # Fan configuration
         self.fan = fan
         # Update status jetson_clocks
-        self._show = self.show_function()
+        cmd = Command([self.jc_bin, '--show'])
+        lines = cmd(timeout=COMMAND_TIMEOUT)
+        self._show = decode_show_message(lines)
 
     def initialization(self):
         # Check if exist configuration file
@@ -187,75 +247,16 @@ class JetsonClocksService(object):
         # Set new jetson_clocks configuration
         self._config.set('jetson_clocks', config)
 
-    def show_function(self):
-        cmd = Command([self.jc_bin, '--show'])
-        logger.info("************ AFTER POPEN")
-        lines = cmd(timeout=COMMAND_TIMEOUT)
-        logger.info("************ AFTER COMMUNICATE")
-        # Load lines
-        status = {"CPU": {}}
-        for line in lines:
-            # Search configuration CPU config
-            match = CPU_REGEXP.search(line)
-            # if match extract name and number
-            if match:
-                # Load CPU information
-                cpu = {
-                    "Online": int(match.group(2)) == 1,
-                    "governor": str(match.group(3)),
-                    "min_freq": int(match.group(4)),
-                    "max_freq": int(match.group(5)),
-                    "current_freq": int(match.group(6)),
-                    "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).split()}}
-                # Store in CPU list
-                idx_cpu = int(match.group(1)) + 1
-                status["CPU"]["CPU{num}".format(num=idx_cpu)] = cpu
-                continue
-            # Search configuration GPU config
-            match = GPU_REGEXP.search(line)
-            # Load GPU match
-            if match:
-                status["GPU"] = {
-                    "min_freq": int(match.group(1)),
-                    "max_freq": int(match.group(2)),
-                    "current_freq": int(match.group(3))}
-                continue
-            # Search configuration EMC config
-            match = EMC_REGEXP.search(line)
-            # Load EMC match
-            if match:
-                status["EMC"] = {
-                    "min_freq": int(match.group(1)),
-                    "max_freq": int(match.group(2)),
-                    "current_freq": int(match.group(3)),
-                    "FreqOverride": int(match.group(4))}
-                continue
-            # Search configuration NV Power Model
-            match = NVP_REGEXP.search(line)
-            # Load NV Power Model
-            if match:
-                status["NVP"] = str(match.group(1))
-                continue
-            # Search configuration CPU Cluster config
-            match = CPU_CLUSTER_REGEXP.search(line)
-            # Load EMC match
-            if match:
-                status["cluster"] = str(match.group(1))
-                continue
-            # All other lines of jetson_clocks show are skipped
-            # SOC family:tegra210  Machine:NVIDIA Jetson Nano Developer Kit
-            # Online CPUs: 0-3
-            # Fan: speed=0
-        return status
-
     def show(self):
         return self._show
 
     def _thread_jetson_clocks_loop(self):
+        cmd = Command([self.jc_bin, '--show'])
         try:
             while self._thread_show_running:
                 try:
-                    self._show = self.show_function()
+                    lines = cmd(timeout=COMMAND_TIMEOUT)
+                    self._show = decode_show_message(lines)
                 except Command.TimeoutException as e:
                     logger.warning("Timeout {}".format(e))
         except Exception as e:
@@ -334,13 +335,15 @@ class JetsonClocksService(object):
                 speed = self.fan.speed
             # Start jetson_clocks
             cmd = Command([self.jc_bin])
-            message = cmd(timeout=COMMAND_TIMEOUT)
-            # Fix fan speed
-            if self.fan is not None:
-                self._fix_fan(speed)
-            if message:
+            try:
+                message = cmd(timeout=COMMAND_TIMEOUT)
+                logger.info("jetson_clocks running")
+            except Command.TimeoutException:
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-            logger.info("jetson_clocks running")
+            finally:
+                # Fix fan speed
+                if self.fan is not None:
+                    self._fix_fan(speed)
         except Exception:
             # Store error message
             self._error = sys.exc_info()
@@ -373,13 +376,15 @@ class JetsonClocksService(object):
                 speed = self.fan.speed
             # Run jetson_clocks
             cmd = Command([self.jc_bin, '--restore', self.config_l4t])
-            message = cmd(timeout=COMMAND_TIMEOUT)
-            # Fix fan speed
-            if self.fan is not None:
-                self._fix_fan(speed)
-            if message:
+            try:
+                message = cmd(timeout=COMMAND_TIMEOUT)
+                logger.info("jetson_clocks stop")
+            except Command.TimeoutException:
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-            logger.info("jetson_clocks stop")
+            finally:
+                # Fix fan speed
+                if self.fan is not None:
+                    self._fix_fan(speed)
         except Exception:
             # Store error message
             self._error = sys.exc_info()
@@ -424,7 +429,10 @@ class JetsonClocksService(object):
     def store(self):
         # Store configuration jetson_clocks
         cmd = Command([self.jc_bin, '--store', self.config_l4t])
-        message = cmd(timeout=COMMAND_TIMEOUT)
+        try:
+            message = cmd(timeout=COMMAND_TIMEOUT)
+        except Command.TimeoutException:
+            return False
         # Extract result
         return True if message else False
 
@@ -433,6 +441,5 @@ class JetsonClocksService(object):
             # Remove configuration file
             os.remove(self.config_l4t)
             return True
-        else:
-            return False
+        return False
 # EOF

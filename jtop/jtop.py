@@ -202,7 +202,6 @@ class jtop(Thread):
         mode = self._nvp.set(value)
         # Send new nvpmodel
         self._controller.put({'nvp': mode})
-        logger.info("JTOP NVP message {mode}".format(mode=mode))
 
     @property
     def jetson_clocks(self):
@@ -224,7 +223,6 @@ class jtop(Thread):
         if value != self._jc.is_alive:
             # Send status jetson_clocks
             self._controller.put({'jc': {'enable': value}})
-            logger.info("JTOP jetson_clocks value:{value}".format(value=value))
 
     # @property
     # def stats(self):
