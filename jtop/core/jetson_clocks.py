@@ -25,12 +25,14 @@ import subprocess as sp
 from datetime import timedelta
 from threading import Thread
 # Local functions and classes
+from .command import Command
 from .common import get_uptime, locate_commands
 # Import exceptions
 from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 
+COMMAND_TIMEOUT = 3.0
 CONFIG_DEFAULT_BOOT = False
 CONFIG_DEFAULT_DELAY = 60  # In seconds
 CONFIG_DEFAULT_L4T_FILE = "l4t_dfs.conf"
@@ -187,13 +189,13 @@ class JetsonClocksService(object):
         self._config.set('jetson_clocks', config)
 
     def show_function(self):
-        p = sp.Popen([self.jc_bin, '--show'], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = p.communicate()
-        # Decode lines
-        lines = out.decode("utf-8")
+        cmd = Command([self.jc_bin, '--show'])
+        logger.info("************ AFTER POPEN")
+        lines = cmd(timeout=COMMAND_TIMEOUT)
+        logger.info("************ AFTER COMMUNICATE")
         # Load lines
         status = {"CPU": {}}
-        for line in lines.split("\n"):
+        for line in lines:
             # Search configuration CPU config
             match = CPU_REGEXP.search(line)
             # if match extract name and number
@@ -253,9 +255,12 @@ class JetsonClocksService(object):
     def _thread_jetson_clocks_loop(self):
         try:
             while self._thread_show_running:
-                # Update status jetson_clocks
-                self._show = self.show_function()
-        except Exception:
+                try:
+                    self._show = self.show_function()
+                except Command.TimeoutException as e:
+                    logger.warning("Timeout {}".format(e))
+        except Exception as e:
+            logger.error("Exception jetson_clocks_show {}".format(e))
             # Store error message
             self._error = sys.exc_info()
         # Reset running boolean
@@ -329,10 +334,8 @@ class JetsonClocksService(object):
             if self.fan is not None:
                 speed = self.fan.speed
             # Start jetson_clocks
-            p = sp.Popen([self.jc_bin], stdout=sp.PIPE, stderr=sp.PIPE)
-            out, _ = p.communicate()
-            # Extract result
-            message = out.decode("utf-8")
+            cmd = Command([self.jc_bin])
+            message = cmd(timeout=COMMAND_TIMEOUT)
             # Fix fan speed
             if self.fan is not None:
                 self._fix_fan(speed)
@@ -370,10 +373,8 @@ class JetsonClocksService(object):
             if self.fan is not None:
                 speed = self.fan.speed
             # Run jetson_clocks
-            p = sp.Popen([self.jc_bin, '--restore', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
-            out, _ = p.communicate()
-            # Extract result
-            message = out.decode("utf-8")
+            cmd = Command([self.jc_bin, '--restore', self.config_l4t])
+            message = cmd(timeout=COMMAND_TIMEOUT)
             # Fix fan speed
             if self.fan is not None:
                 self._fix_fan(speed)
@@ -423,13 +424,10 @@ class JetsonClocksService(object):
 
     def store(self):
         # Store configuration jetson_clocks
-        p = sp.Popen([self.jc_bin, '--store', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = p.communicate()
+        cmd = Command([self.jc_bin, '--store', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
+        message = cmd(timeout=COMMAND_TIMEOUT)
         # Extract result
-        if out.decode("utf-8"):
-            return True
-        else:
-            return False
+        return True if message else False
 
     def clear(self):
         if os.path.isfile(self.config_l4t):

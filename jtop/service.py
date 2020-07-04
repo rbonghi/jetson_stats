@@ -235,6 +235,7 @@ class JtopServer(Process):
                             # Start jetson_clocks
                             if self.jetson_clocks is not None:
                                 self.jetson_clocks.show_start()
+                                # logger.info("jetson_clock_show START {}".format(jc_status))
                             # Set interval value
                             self.interval.value = interval
                             # Status start tegrastats
@@ -363,7 +364,7 @@ class JtopServer(Process):
             data['jc']['NVP'] = self.nvpmodel.get()
         # Read status NVPmodel
         if self.nvpmodel is not None:
-            data['nvp'] = self.nvpmodel.modes()
+            data['nvp'] = {'modes': self.nvpmodel.modes(), 'ser': self.nvpmodel.is_running()}
         # Update status fan speed
         if self.fan is not None:
             data['fan'] = self.fan.update()
