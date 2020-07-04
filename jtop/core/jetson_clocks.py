@@ -424,7 +424,7 @@ class JetsonClocksService(object):
 
     def store(self):
         # Store configuration jetson_clocks
-        cmd = Command([self.jc_bin, '--store', self.config_l4t], stdout=sp.PIPE, stderr=sp.PIPE)
+        cmd = Command([self.jc_bin, '--store', self.config_l4t])
         message = cmd(timeout=COMMAND_TIMEOUT)
         # Extract result
         return True if message else False
