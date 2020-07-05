@@ -16,14 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-
-# Shell infromation
+# Shell information
 # os.environ['SHELL']
 
 
-def jetpack_missing(repository, version):
-    l4t = os.environ["JETSON_L4T"]
+def jetpack_missing(repository, jetson, version):
+    l4t = jetson.board.info["L4T"]
     # Title
     title = "Jetpack missing [L4T {l4t}]".format(l4t=l4t)
     # Template
@@ -40,8 +38,8 @@ def jetpack_missing(repository, version):
     return hyperlink(url, title)
 
 
-def board_missing(repository, version):
-    board = os.environ["JETSON_BOARD"]
+def board_missing(repository, jetson, version):
+    board = jetson.board.hardware["BOARD"]
     # Title
     title = "Board missing {board}".format(board=board)
     # Template
@@ -50,13 +48,13 @@ def board_missing(repository, version):
     body = "Please update jetson-stats with this board\n\n"
     body += "**Board**\n"
     body += " - Board(s): " + board + "\n"
-    body += " - Boardis: " + os.environ["JETSON_BOARDIDS"] + "\n"
-    body += " - SOC: " + os.environ["JETSON_SOC"] + "\n"
-    body += " - ID: " + os.environ["JETSON_CHIP_ID"] + "\n"
-    body += " - Code Name: " + os.environ["JETSON_CODENAME"] + "\n\n"
+    body += " - Boardis: " + jetson.board.hardware["BOARDIDS"] + "\n"
+    body += " - SOC: " + jetson.board.hardware["SOC"] + "\n"
+    body += " - ID: " + jetson.board.hardware["CHIP_ID"] + "\n"
+    body += " - Code Name: " + jetson.board.hardware["CODENAME"] + "\n\n"
     body += "**Jetpack**\n"
-    body += " - Jetpack: " + os.environ["JETSON_JETPACK"] + "\n"
-    body += " - L4T: " + os.environ["JETSON_L4T"] + "\n\n"
+    body += " - Jetpack: " + jetson.board.info["jetpack"] + "\n"
+    body += " - L4T: " + jetson.board.info["L4T"] + "\n\n"
     body += "**Jetson-Stats**\n"
     body += " - version: " + version + "\n"
     # Make url

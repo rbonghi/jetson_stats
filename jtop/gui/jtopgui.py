@@ -185,10 +185,12 @@ class JTOPGUI:
         set_xterm_title("jtop {hardware}{nvp}".format(hardware=self.jetson.board.hardware["TYPE"], nvp=str_xterm))
         # Add extra Line if with sudo
         idx = 0
-        if os.getuid() == 0:
+        if self.jetson.interval != self.jetson.interval_user:
             _, width = self.stdscr.getmaxyx()
             self.stdscr.addstr(0, 0, ("{0:<" + str(width) + "}").format(" "), curses.color_pair(9))
-            string_sudo = "SUDO NOT MORE NEEDED"
+            user = int(self.jetson.interval_user * 1000)
+            interval = int(self.jetson.interval * 1000)
+            string_sudo = "I CANNOT SET SPEED AT {user}ms. SERVER AT {interval}ms".format(user=user, interval=interval)
             self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
         # Write first line

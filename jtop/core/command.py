@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 import logging
 import threading
 # Launch command
@@ -51,28 +52,39 @@ class Command(object):
         self.command = command
 
     def __call__(self, timeout=None):
-        def target(out_queue):
+        def target(out_queue, err_queue):
             # Run process
-            self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE)
-            # Read lines output
-            for line in iter(self.process.stdout.readline, b''):
-                line = line.decode('utf-8')
-                line = str(line.strip())
-                out_queue.put(line)
-            # Close and terminate
-            self.process.stdout.close()
-            self.process.wait()
+            try:
+                self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE)
+                # Read lines output
+                for line in iter(self.process.stdout.readline, b''):
+                    line = line.decode('utf-8')
+                    line = str(line.strip())
+                    out_queue.put(line)
+                # Close and terminate
+                self.process.stdout.close()
+                self.process.wait()
+            except Exception:
+                # Store error message
+                err_queue.put(sys.exc_info())
         # Initialize lists
         out_queue = queue.Queue()
-        thread = threading.Thread(target=target, args=(out_queue, ))
+        err_queue = queue.Queue()
+        thread = threading.Thread(target=target, args=(out_queue, err_queue, ))
         thread.start()
         # Wait timeout process
         thread.join(timeout)
         if thread.is_alive():
             logger.error('Terminating process')
-            self.process.terminate()
+            if self.process:
+                self.process.terminate()
             thread.join()
         # Read the output
+        # Extract exception and raise
+        if not err_queue.empty():
+            ex_type, ex_value, tb_str = err_queue.get()
+            ex_value.__traceback__ = tb_str
+            raise ex_value
         if not out_queue.queue and self.process.returncode != 0:
             raise Command.TimeoutException('Process does not replied in time', self.process.returncode)
         return list(out_queue.queue)

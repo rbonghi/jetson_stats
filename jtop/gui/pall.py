@@ -19,16 +19,16 @@ import curses
 from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
-from .lib.common import (size_min,
-                         label_freq)
+from .lib.common import (
+    size_min,
+    label_freq)
 from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
 # Menu GUI pages
-from .jtopguimenu import (plot_watts,
-                          compact_info,
-                          plot_temperatures,
-                          plot_CPUs)
-# Actual variable printed
-# LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
+from .jtopguimenu import (
+    plot_watts,
+    compact_info,
+    plot_temperatures,
+    plot_CPUs)
 
 
 class ALL(Page):

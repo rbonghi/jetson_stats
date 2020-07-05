@@ -61,6 +61,7 @@ AUTH_PATH = '/run/jtop.auth'
 JTOP_USER = 'jetson_stats'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
 
 
 def import_jetson_variables():
@@ -183,6 +184,10 @@ class JtopServer(Process):
                     # Check if control is not empty
                     if not control:
                         continue
+                    # If service read the same init message resend it
+                    if 'init' in control:
+                        self.q.put(control)
+                        continue
                     logger.debug("control message {control}".format(control=control))
                     # Manage swap
                     if 'swap' in control:
@@ -192,6 +197,11 @@ class JtopServer(Process):
                         else:
                             self.swap.deactivate()
                     # Manage jetson_clocks
+                    if 'config' in control:
+                        command = control['config']
+                        if command == 'reset':
+                            logger.info('Reset configuration')
+                            self.config.clear()
                     if 'jc' in control:
                         jc = control['jc']
                         # Enable / disable jetson_clocks
@@ -250,7 +260,7 @@ class JtopServer(Process):
                             'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
                     # Update timeout interval
-                    timeout = interval * TIMEOUT_GAIN
+                    timeout = TIMEOUT_GAIN  # TODO: Check timeout interval * TIMEOUT_GAIN
                 except queue.Empty:
                     self.sync_event.clear()
                     # Close and log status
@@ -380,9 +390,9 @@ class JtopServer(Process):
 
     def tegra_stats(self, tegrastats):
         # Make configuration dict
+        # logger.debug("tegrastats read")
         data = {}
         jetson_clocks_show = copy.deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
-        logger.debug("tegrastats read")
         # -- Engines --
         data['engines'] = {
             'APE': tegrastats['APE'],
@@ -444,7 +454,7 @@ class JtopServer(Process):
             'list': self.swap.all(),
             'all': tegrastats['SWAP']}
         # -- OTHER --
-
+        data['other'] = dict((k, tegrastats[k]) for k in tegrastats if k not in LIST_PRINT)
         # -- FAN --
         # Update status fan speed
         if self.fan is not None:

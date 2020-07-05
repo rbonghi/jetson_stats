@@ -169,6 +169,51 @@ class jtop(Thread):
         """
         self._observers.discard(observer)
 
+    def restore(self):
+        status = {}
+        # Reset jetson_clocks
+        if self.jetson_clocks is not None:
+            # Disable jetson_clocks
+            self.jetson_clocks = False
+            # Wait jetson_clocks boot
+            while self.ok():
+                if not self.jetson_clocks:
+                    break
+            status['jetson_clocks'] = self.jetson_clocks
+            # Disable jetson_clocks on boot
+            self.jetson_clocks.boot = False
+            # Wait jetson_clocks boot
+            while self.ok():
+                if not self.jetson_clocks.boot:
+                    break
+            status['jetson_clocks boot'] = self.jetson_clocks.boot
+        # Reset fan control
+        if self.fan is not None:
+            # Reset mode fan
+            self.fan.mode = 'jetson_clocks'
+            while self.ok():
+                if self.fan.mode == 'jetson_clocks':
+                    break
+            status['fan mode'] = self.fan.mode
+            # Reset speed to zero
+            self.fan.speed = 0
+            while self.ok():
+                if self.fan.measure == 0:
+                    break
+            status['fan speed'] = self.fan.speed
+        # Switch off swap
+        if self.swap.is_enable:
+            # Deactivate swap
+            self.swap.deactivate()
+            while self.ok():
+                if not self.swap.is_enable:
+                    break
+        status['swap'] = self.swap.is_enable
+        # Clear config file
+        self._controller.put({'config': 'reset'})
+        status['config'] = False
+        return status
+
     @property
     def engine(self):
         return self._engine
@@ -427,9 +472,6 @@ class jtop(Thread):
         data = self._get_data()
         # Decode and update all jtop data
         self._decode(data)
-        # Send a warning message if there is a mismatch between request speed and server speed
-        if self._interval != self._server_interval:
-            logger.warning("I can't set this speed. Another jtop set speed to {interval}s".format(interval=self._server_interval))
         # Run thread reader
         self._running = True
         self.daemon = True
@@ -438,6 +480,10 @@ class jtop(Thread):
     @property
     def interval(self):
         return self._server_interval
+
+    @property
+    def interval_user(self):
+        return self._interval
 
     def loop_for_ever(self):
         self.start()

@@ -20,7 +20,7 @@ from threading import Thread
 # Logging
 import logging
 # Launch command
-import subprocess as sp
+from .command import Command
 # Import exceptions
 from .exceptions import JtopException
 # Create logger
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 # Regular expressions
 REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
 REGPM = re.compile(r'NV Power Mode: ((.*))')
+COMMAND_TIMEOUT = 3.0
 
 
 def NVP_get_id(modes, value):
@@ -120,11 +121,10 @@ class NVPModelService(object):
         # Read all lines and extract modes
         self._nvpm = {}
         try:
-            nvpmodel_p = sp.Popen([nvp_model, '-p', '--verbose'], stdout=sp.PIPE)
-            out, _ = nvpmodel_p.communicate()
+            nvpmodel_p = Command([nvp_model, '-p', '--verbose'])
+            lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
             # Decode lines
-            lines = out.decode("utf-8")
-            for line in lines.split("\n"):
+            for line in lines:
                 # Search configuration NVPmodel
                 match = REGEXP.search(line)
                 # if match extract name and number
@@ -134,7 +134,7 @@ class NVPModelService(object):
                     mode_name = str(match.group(2))
                     # Save in nvpm list
                     self._nvpm[mode_id] = {'name': mode_name, 'status': True}
-        except OSError:
+        except (OSError, Command.TimeoutException):
             logger.warning("This board does not have NVP Model")
             raise JtopException("NVPmodel does not exist for this board")
 
@@ -183,10 +183,13 @@ class NVPModelService(object):
         """ Set nvpmodel to a new status """
         self.selected = level
         # Set the new nvpmodel status
-        sep_nvp = sp.Popen([self.nvpmodel_name, '-m', str(level)], stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
-        out, _ = sep_nvp.communicate()
-        # If there are no errors return the NV Power mode
-        return "NVPM ERROR" not in out.decode("utf-8")
+        nvpmodel_p = Command([self.nvpmodel_name, '-m', str(level)])
+        try:
+            # If there are no errors return the NV Power mode
+            lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+            return "NVPM ERROR" not in lines
+        except Command.TimeoutException:
+            return False
 
     def get(self):
         # Initialize mode and num
@@ -199,10 +202,8 @@ class NVPModelService(object):
         """ Read nvpmodel to know the status of the board """
         num = -1
         mode = ""
-        nvpmodel_p = sp.Popen([nvp_model, '-q'], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = nvpmodel_p.communicate()
-        # Decode lines and split
-        lines = out.decode("utf-8").split("\n")
+        nvpmodel_p = Command([nvp_model, '-q'])
+        lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
         # Extract lines
         for idx, line in enumerate(lines):
             # Search configuration NVPmodel

@@ -118,7 +118,7 @@ fi
 
 # Code name
 JETSON_CODENAME=""
-JETSON_TYPE=""
+JETSON_TYPE="UNKNOWN"
 JETSON_MODULE="UNKNOWN"
 JETSON_BOARD="UNKNOWN"
 list_hw_boards()
@@ -166,10 +166,6 @@ fi
 JETSON_MACHINE=""
 if [ ! -z "$JETSON_TYPE" ] ; then
     JETSON_MACHINE="NVIDIA Jetson $JETSON_TYPE"
-fi
-# Desktop PC detection
-if [ -z "$JETSON_TYPE" ] && [ -z "$JETSON_SOC" ] ; then
-    JETSON_MACHINE="DEBUG - Desktop PC"
 fi
 # Export variables
 export JETSON_CHIP_ID

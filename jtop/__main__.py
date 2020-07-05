@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import argparse
 # control command line
 import curses
@@ -28,6 +29,8 @@ from .jtop import jtop, get_version
 from .core import JtopException
 # GUI jtop interface
 from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
+# Load colors
+from .github import jetpack_missing, board_missing
 # Create logger
 logger = logging.getLogger(__name__)
 # Reference repository
@@ -58,11 +61,26 @@ class bcolors:
         return bcolors.FAIL + message + bcolors.ENDC
 
 
+def warning_messages(jetson, no_warnings=False):
+    if no_warnings:
+        return
+    # Check if is running on sudo
+    if os.getuid() == 0:
+        print("[{status}] SUPER USER is not more required".format(status=bcolors.warning()))
+    # Check if jetpack is missing
+    if jetson.board.hardware['TYPE'] == "UNKNOWN" and jetson.board.hardware['BOARD'] and 'JETSON_DEBUG' not in os.environ:
+        print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, jetson, get_version())))
+    # Check if jetpack is missing
+    if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
+        print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, jetson, get_version())))
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='jtop is system monitoring utility and runs on terminal',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('service', nargs='?', help=argparse.SUPPRESS, default=False)
+    parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
     parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
@@ -94,7 +112,12 @@ def main():
     if args.restore:
         with jtop(interval=interval) as jetson:
             if jetson.ok():
-                print('Restore')
+                restore = jetson.restore()
+                for name in sorted(restore):
+                    status = bcolors.ok() if not restore[name] else bcolors.fail()
+                    print("[{status}] Restore: {name}".format(name=name.capitalize(), status=status))
+            # Write warnings
+            warning_messages(jetson, args.no_warnings)
         # Close service
         exit(0)
     # jtop client start
@@ -103,6 +126,8 @@ def main():
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper
             curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
+            # Write warnings
+            warning_messages(jetson, args.no_warnings)
     except (KeyboardInterrupt, SystemExit):
         pass
     except JtopException as e:
