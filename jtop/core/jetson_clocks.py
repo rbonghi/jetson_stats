@@ -438,6 +438,7 @@ class JetsonClocksService(object):
 
     def clear(self):
         if os.path.isfile(self.config_l4t):
+            logger.info("Clear jetson_clocks config in {path}".format(path=self.config_l4t))
             # Remove configuration file
             os.remove(self.config_l4t)
             return True

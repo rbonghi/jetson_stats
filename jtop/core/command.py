@@ -26,6 +26,13 @@ except ImportError:
     import Queue as queue
 # Create logger
 logger = logging.getLogger(__name__)
+# Reference:
+# https://eli.thegreenplace.net/2017/interacting-with-a-long-running-child-process-in-python/
+# https://stackoverflow.com/questions/37942022/returncode-of-popen-object-is-none-after-the-process-is-terminated/42376107
+# https://stackoverflow.com/questions/375427/non-blocking-read-on-a-subprocess-pipe-in-python
+# https://docs.python.org/3/tutorial/errors.html
+# https://stackoverflow.com/questions/10756383/timeout-on-subprocess-readline-in-python
+# https://stackoverflow.com/questions/3733270/python-subprocess-timeout
 
 
 class Command(object):

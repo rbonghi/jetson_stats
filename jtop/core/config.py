@@ -70,4 +70,14 @@ class Config:
         # Write configuration
         with open(self.config_file, 'w') as outfile:
             json.dump(self._config, outfile, sort_keys=True, indent=4)
+
+    def clear(self):
+        self._config = {}
+        self._last_config = {}
+        if os.path.isfile(self.config_file):
+            logger.info("Clear config in {path}".format(path=self.config_file))
+            # Remove configuration file
+            os.remove(self.config_file)
+            return True
+        return False
 # EOF

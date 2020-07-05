@@ -15,7 +15,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import logging
 from jtop import jtop
+from multiprocessing.pool import Pool
+# Create logger
+logger = logging.getLogger(__name__)
+NUM_PROCESSES = 20
 
 
 def test_open(jtop_server):
@@ -52,4 +58,23 @@ def test_open_callback(jtop_server):
     jetson.attach(jtop_callback)
     # start jtop
     jetson.start()
+
+
+def jtop_worker(x):
+    with jtop() as jetson:
+        logger.info("[{x}] jtop started on PID {pid}".format(x=x, pid=os.getpid()))
+        # Check status OK
+        for _ in range(10):
+            assert jetson.ok()
+    return True
+
+
+def test_multiple_run(jtop_server):
+    p = Pool(NUM_PROCESSES)
+    pool_output = p.map(jtop_worker, range(NUM_PROCESSES))
+    # Check all return true
+    assert all(pool_output)
+    # Close pool
+    p.close()
+    p.join()
 # EOF
