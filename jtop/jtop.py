@@ -40,6 +40,9 @@ try:
     FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
+# Fix connection refused for python 2.7
+if sys.version_info[0] == 2:
+    from socket import error as ConnectionRefusedError
 # Create logger
 logger = logging.getLogger(__name__)
 # Version match
@@ -434,7 +437,7 @@ class jtop(Thread):
         try:
             self._broadcaster.connect()
         except FileNotFoundError as e:
-            if e.errno == 2:  # Message error: 'No such file or directory'
+            if e.errno == 2 or e.errno == 111:  # Message error: 'No such file or directory' or 'Connection refused'
                 raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
             elif e.errno == 13:  # Message error: 'Permission denied'
                 raise JtopException("I can't access to server, check group")
