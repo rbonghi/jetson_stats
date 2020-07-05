@@ -435,14 +435,17 @@ class jtop(Thread):
             self._broadcaster.connect()
         except FileNotFoundError as e:
             if e.errno == 2:  # Message error: 'No such file or directory'
-                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl start jetson_stats.service")
+                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
             elif e.errno == 13:  # Message error: 'Permission denied'
                 raise JtopException("I can't access to server, check group")
-            elif e.errno == 111:  # Connection refused
-                # When server is off but socket files exists in /run
-                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl start jetson_stats.service")
             else:
                 raise FileNotFoundError(e)
+        except ConnectionRefusedError as e:
+            if e.errno == 111:  # Connection refused
+                # When server is off but socket files exists in /run
+                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
+            else:
+                raise ConnectionRefusedError(e)
         except ValueError:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
             raise JtopException("mismatch python version between library and service")
