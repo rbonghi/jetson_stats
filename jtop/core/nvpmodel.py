@@ -156,7 +156,8 @@ class NVPModelService(object):
         # Otherwise disable the jetson_clocks
         old_status = self.jetson_clocks.is_alive
         if old_status:
-            self.jetson_clocks.stop()
+            while not self.jetson_clocks.stop():
+                pass
             # Check jetson_clocks is off
             while self.jetson_clocks.is_alive:
                 pass
@@ -167,7 +168,8 @@ class NVPModelService(object):
         self._nvpm[value]['status'] = status
         # Enable again the jetson_clocks status
         if old_status:
-            self.jetson_clocks.start()
+            while not self.jetson_clocks.start():
+                pass
             # Check jetson_clocks is off
             while not self.jetson_clocks.is_alive:
                 pass

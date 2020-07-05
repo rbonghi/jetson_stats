@@ -144,7 +144,7 @@ class FanService(object):
         # Initialize dictionary status
         self._status = {}
         # Max value PWM
-        self._pwm_cap = float(self._read_status('pwm_cap')) + 1 if os.path.isfile(self.path + 'pwm_cap') else 256
+        self._pwm_cap = float(self._read_status('pwm_cap')) if os.path.isfile(self.path + 'pwm_cap') else 255
         # PWM RPM table
         self.table = load_table(self.path) if os.path.isfile(self.path + 'pwm_rpm_table') else {}
         # Step time
@@ -236,11 +236,11 @@ class FanService(object):
             f.write(str(value))
 
     def _PWMtoValue(self, pwm):
-        pwm = int(pwm) + 1
-        return float(pwm) * 100.0 / self._pwm_cap
+        pwm = int(pwm)
+        return float(pwm) * 100.0 / (self._pwm_cap)
 
     def _ValueToPWM(self, value):
-        return int(ceil((self._pwm_cap - 1) * value / 100.0))
+        return int(ceil((self._pwm_cap) * value / 100.0))
 
     def update(self):
         # Control temperature
