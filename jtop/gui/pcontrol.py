@@ -115,7 +115,8 @@ class CTRL(Page):
         # Write status jetson_clocks
         jc_status_name = self.jetson.jetson_clocks.status
         # Show service status
-        self.service_start.draw(start_y + 3, start_x, key, mouse)
+        if self.jetson.jetson_clocks.is_config:
+            self.service_start.draw(start_y + 3, start_x, key, mouse)
         # Field service
         jetson_clocks_string = "jetson_clocks"
         self.stdscr.addstr(start_y + 4, start_x + 5, jetson_clocks_string, curses.A_UNDERLINE)

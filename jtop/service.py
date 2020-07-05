@@ -181,6 +181,11 @@ class JtopServer(Process):
                 try:
                     # Decode control message
                     control = self.q.get(timeout=timeout)
+                    # Check if the configuration exist
+                    if self.jetson_clocks:
+                        if not self.jetson_clocks.is_config():
+                            if not self.jetson_clocks.is_alive:
+                                self.jetson_clocks.store()
                     # Check if control is not empty
                     if not control:
                         continue
@@ -464,6 +469,7 @@ class JtopServer(Process):
             data['jc'] = {
                 'status': self.jetson_clocks.is_alive,
                 'thread': self.jetson_clocks.is_running,
+                'config': self.jetson_clocks.is_config(),
                 'boot': self.jetson_clocks.boot}
         # -- NVP MODEL --
         if self.nvpmodel is not None:

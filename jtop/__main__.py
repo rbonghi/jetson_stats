@@ -64,9 +64,13 @@ class bcolors:
 def warning_messages(jetson, no_warnings=False):
     if no_warnings:
         return
+    # Check is well stored the default jetson_clocks configuration
+    if jetson.jetson_clocks:
+        if not jetson.jetson_clocks.is_config:
+            print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
     # Check if is running on sudo
     if os.getuid() == 0:
-        print("[{status}] SUPER USER is not more required".format(status=bcolors.warning()))
+        print("[{status}] SUDO is no more required".format(status=bcolors.warning()))
     # Check if jetpack is missing
     if jetson.board.hardware['TYPE'] == "UNKNOWN" and jetson.board.hardware['BOARD'] and 'JETSON_DEBUG' not in os.environ:
         print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, jetson, get_version())))

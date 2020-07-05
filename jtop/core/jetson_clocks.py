@@ -155,6 +155,10 @@ class JetsonClocks(object):
         return self._thread
 
     @property
+    def is_config(self):
+        return self._config
+
+    @property
     def boot(self):
         return self._boot
 
@@ -182,6 +186,7 @@ class JetsonClocks(object):
         return str(self._alive)
 
     def _update(self, jc_status):
+        self._config = jc_status['config']
         self._alive = jc_status['status']
         self._boot = jc_status['boot']
         self._thread = jc_status['thread']
@@ -214,12 +219,13 @@ class JetsonClocksService(object):
         self._show = decode_show_message(lines)
 
     def initialization(self):
+        status = True
         # Check if exist configuration file
         if not os.path.isfile(self.config_l4t):
             if self.is_alive:
                 logger.warning("I can't store jetson_clocks is already running")
+                status = False
             else:
-                logger.info("Store jetson_clocks configuration in {file}".format(file=self.config_l4t))
                 self.store()
         # Check which version is L4T is loaded
         # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
@@ -231,6 +237,7 @@ class JetsonClocksService(object):
         if config.get('boot', CONFIG_DEFAULT_BOOT):
             # Start thread Service client
             self.start()
+        return status
 
     @property
     def boot(self):
@@ -360,6 +367,9 @@ class JetsonClocksService(object):
         # If jetson_clocks on boot run a thread
         if self.is_alive:
             return True
+        # Check if restore config exist
+        if not self.is_config():
+            self.store()
         if self.is_running == 'inactive':
             # Load jetson_clocks start up information
             jetson_clocks_start = self._config.get('wait', CONFIG_DEFAULT_DELAY)
@@ -393,6 +403,9 @@ class JetsonClocksService(object):
     def stop(self):
         # If there are exception raise
         self._error_status()
+        # Check if restore config exist
+        if not self.is_config():
+            return False
         # Check if jetson_clocks is already running
         if not self.is_alive:
             return True
@@ -427,6 +440,9 @@ class JetsonClocksService(object):
             if self._thread_show.isAlive():
                 self._thread_show.join()
 
+    def is_config(self):
+        return os.path.isfile(self.config_l4t)
+
     def store(self):
         # Store configuration jetson_clocks
         cmd = Command([self.jc_bin, '--store', self.config_l4t])
@@ -434,6 +450,7 @@ class JetsonClocksService(object):
             message = cmd(timeout=COMMAND_TIMEOUT)
         except Command.TimeoutException:
             return False
+        logger.info("Store jetson_clocks configuration in {file}".format(file=self.config_l4t))
         # Extract result
         return True if message else False
 

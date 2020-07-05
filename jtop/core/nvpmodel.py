@@ -141,7 +141,14 @@ class NVPModelService(object):
     def _thread_set_nvp_model(self, value):
         if self.jetson_clocks is None:
             # Set NV Power Mode
-            return self._mode(value)
+            status = self._mode(value)
+            self._nvpm[value]['status'] = status
+            return status
+        if not self.jetson_clocks.is_config():
+            # Set NV Power Mode
+            status = self._mode(value)
+            self._nvpm[value]['status'] = status
+            return status
         # Otherwise disable the jetson_clocks
         old_status = self.jetson_clocks.is_alive
         if old_status:

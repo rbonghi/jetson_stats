@@ -261,6 +261,8 @@ class jtop(Thread):
     def jetson_clocks(self, value):
         if not isinstance(value, bool):
             raise TypeError("Use a boolean")
+        if not self._jc.is_config and not value:
+            raise JtopException("I cannot set jetson_clocks.\nPlease shutdown manually jetson_clocks")
         # Check if service is not started otherwise skip
         if self._jc.status in ['activating', 'deactivating']:
             return
