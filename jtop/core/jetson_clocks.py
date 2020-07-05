@@ -141,8 +141,9 @@ class JetsonClocks(object):
     """
 
     def __init__(self, controller):
-        self._show = {}
+        self._alive = False
         self._boot = False
+        self._thread = ''
         self._controller = controller
 
     @property
@@ -151,7 +152,7 @@ class JetsonClocks(object):
         if self.is_alive:
             return 'running'
         # Otherwise check status thread jetson_clocks
-        return self._show['thread']
+        return self._thread
 
     @property
     def boot(self):
@@ -180,10 +181,10 @@ class JetsonClocks(object):
     def __repr__(self):
         return str(self._alive)
 
-    def _update(self, show):
-        self._show = show
-        self._alive = jetson_clocks_alive(show)
-        self._boot = show.get('boot', False)
+    def _update(self, jc_status):
+        self._alive = jc_status['status']
+        self._boot = jc_status['boot']
+        self._thread = jc_status['thread']
 
 
 class JetsonClocksService(object):

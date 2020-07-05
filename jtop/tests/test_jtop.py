@@ -24,21 +24,7 @@ logger = logging.getLogger(__name__)
 NUM_PROCESSES = 20
 
 
-def test_open(jtop_server):
-    with jtop() as jetson:
-        # Check status OK
-        assert jetson.ok()
-        # uptime
-        assert isinstance(jetson.uptime, float)
-        # Status disk
-        assert isinstance(jetson.disk, dict)
-        # local interfaces
-        assert isinstance(jetson.local_interfaces, dict)
-        # Status disk
-        assert isinstance(jetson.disk, dict)
-
-
-def jtop_callback(jetson):
+def check_attributes(jetson):
     # uptime
     assert isinstance(jetson.uptime, float)
     # Status disk
@@ -47,6 +33,38 @@ def jtop_callback(jetson):
     assert isinstance(jetson.local_interfaces, dict)
     # Status disk
     assert isinstance(jetson.disk, dict)
+    # Check power
+    assert isinstance(jetson.power, tuple)
+    total, power = jetson.power
+    assert isinstance(power, dict)
+    assert len(power) > 0
+    assert isinstance(total, dict)
+    assert len(total) > 0
+    # Check temperature
+    assert isinstance(jetson.temperature, dict)
+    assert len(jetson.temperature) > 0
+    # Check MTS
+    assert isinstance(jetson.mts, dict)
+    assert len(jetson.mts) > 0
+    # Check EMC
+    assert isinstance(jetson.emc, dict)
+    assert len(jetson.emc) > 0
+    # Check IRAM
+    assert isinstance(jetson.iram, dict)
+    # assert len(jetson.iram) > 0
+
+
+def test_open(jtop_server):
+    with jtop() as jetson:
+        # Check status OK
+        assert jetson.ok()
+        # Check all attributes
+        check_attributes(jetson)
+
+
+def jtop_callback(jetson):
+    # Check all attributes
+    check_attributes(jetson)
     # Close connection
     jetson.close()
 

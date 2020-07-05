@@ -18,6 +18,7 @@
 # Logging
 import logging
 # Operative system
+import copy
 import os
 import sys
 import stat
@@ -280,6 +281,9 @@ class JtopServer(Process):
         # Run setup
         if self.jetson_clocks is not None:
             self.jetson_clocks.initialization()
+        if self.nvpmodel is not None:
+            # Read nvp_mode
+            self.nvp_mode = self.nvpmodel.get()
         # Initialize socket
         try:
             gid = getgrnam(JTOP_USER).gr_gid
@@ -344,31 +348,125 @@ class JtopServer(Process):
             os.remove(AUTH_PATH)
         return True
 
-    def tegra_stats(self, stats):
+    def _total_power(self, power):
+        """
+        Private function to measure the total watt
+
+        :return: Total power and a second dictionary with all other measures
+        :rtype: dict, dict
+        """
+        # In according with:
+        # https://forums.developer.nvidia.com/t/power-consumption-monitoring/73608/8
+        # https://github.com/rbonghi/jetson_stats/issues/51
+        total_name = ""
+        for val in power:
+            if "IN" in val:
+                total_name = val
+                break
+        # Extract the total from list
+        # Otherwise sum all values
+        # Example for Jetson Xavier
+        # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
+        if total_name:
+            total = power[total_name]
+            del power[total_name]
+            return total, power
+        # Otherwise measure all total power
+        total = {'cur': 0, 'avg': 0}
+        for value in power.values():
+            total['cur'] += value['cur']
+            total['avg'] += value['avg']
+        return total, power
+
+    def tegra_stats(self, tegrastats):
         # Make configuration dict
         data = {}
+        jetson_clocks_show = copy.deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
         logger.debug("tegrastats read")
-        # Load data stats
-        data['stats'] = stats
-        # Add NVJPG engine
-        data['stats']['NVJPG'] = nvjpg()
-        # Read CPU information
-        data['cpu'] = cpu_models()
-        # Load status jetson_clocks
-        if self.jetson_clocks is not None:
-            data['jc'] = self.jetson_clocks.show()
-            data['jc'].update({'thread': self.jetson_clocks.is_running, 'boot': self.jetson_clocks.boot})
-        elif self.nvpmodel is not None:
-            data['jc'] = {}
-            data['jc']['NVP'] = self.nvpmodel.get()
-        # Read status NVPmodel
-        if self.nvpmodel is not None:
-            data['nvp'] = {'modes': self.nvpmodel.modes(), 'ser': self.nvpmodel.is_running()}
+        # -- Engines --
+        data['engines'] = {
+            'APE': tegrastats['APE'],
+            'NVENC': tegrastats['NVENC'] if 'NVENC' in tegrastats else {},
+            'NVDEC': tegrastats['NVDEC'] if 'NVDEC' in tegrastats else {},
+            'MSENC': tegrastats['MSENC'] if 'MSENC' in tegrastats else {},
+            'NVJPG': nvjpg()}
+        # -- Power --
+        # Refactor names
+        power = {k.replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in tegrastats['WATT'].items()}
+        total, power = self._total_power(power)
+        data['power'] = {'all': total, 'power': power}
+        # -- Temperature --
+        # Remove PMIC temperature
+        if 'PMIC' in tegrastats['TEMP']:
+            del tegrastats['TEMP']['PMIC']
+        data['temperature'] = tegrastats['TEMP']
+        # -- CPU --
+        data['cpu'] = tegrastats['CPU']
+        # Update data from jetson_clocks show
+        if 'CPU' in jetson_clocks_show:
+            for name, v in tegrastats['CPU'].items():
+                # Extract jc_cpu info
+                jc_cpu = jetson_clocks_show['CPU'].get(name, {})
+                if jc_cpu['Online']:
+                    # Remove online info
+                    del jc_cpu['Online']
+                    # Remove current frequency
+                    del jc_cpu['current_freq']
+                    # Update CPU information
+                    v.update(jc_cpu)
+                data['cpu'][name] = v
+        for name, value in cpu_models().items():
+            data['cpu'][name]['model'] = value
+        # -- MTS --
+        if 'MTS' in tegrastats:
+            data['mts'] = tegrastats['MTS']
+        # -- GPU --
+        data['gpu'] = tegrastats['GR3D']
+        if 'GPU' in jetson_clocks_show:
+            data['gpu'].update(jetson_clocks_show['GPU'])
+            # Remove current_freq data
+            del data['gpu']['current_freq']
+        # -- RAM --
+        if 'RAM' in tegrastats:
+            data['ram'] = tegrastats['RAM']
+        # -- IRAM --
+        if 'IRAM' in tegrastats:
+            data['iram'] = tegrastats['IRAM']
+        # -- EMC --
+        if 'EMC' in tegrastats:
+            data['emc'] = tegrastats['EMC']
+            if self.jetson_clocks is not None:
+                data['emc'].update(jetson_clocks_show['EMC'])
+                # Remove current_freq data
+                del data['emc']['current_freq']
+        # -- SWAP --
+        data['swap'] = {
+            'list': self.swap.all(),
+            'all': tegrastats['SWAP']}
+        # -- OTHER --
+
+        # -- FAN --
         # Update status fan speed
         if self.fan is not None:
             data['fan'] = self.fan.update()
-        # Swap status
-        data['swap'] = self.swap.all()
+        # -- JETSON_CLOCKS --
+        if self.jetson_clocks is not None:
+            data['jc'] = {
+                'status': self.jetson_clocks.is_alive,
+                'thread': self.jetson_clocks.is_running,
+                'boot': self.jetson_clocks.boot}
+        # -- NVP MODEL --
+        if self.nvpmodel is not None:
+            # Read nvp_mode
+            nvp_mode = jetson_clocks_show['NVP'] if 'NVP' in jetson_clocks_show else self.nvpmodel.get()
+            if not self.nvpmodel.is_running():
+                self.nvp_mode = nvp_mode
+            data['nvp'] = {
+                'modes': self.nvpmodel.modes(),
+                'mode': self.nvp_mode}
+        # -- Cluster --
+        if 'cluster' in jetson_clocks_show:
+            data['cluster'] = jetson_clocks_show['cluster']
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)

@@ -19,7 +19,6 @@ import logging
 import os
 import re
 import sys
-import copy
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager, key_reader
@@ -240,19 +239,17 @@ class jtop(Thread):
 
     @property
     def emc(self):
-        if 'EMC' not in self._stats:
+        if 'emc' not in self._stats:
             return {}
         # Extract EMC
-        emc = copy.copy(self._stats['EMC'])
-        return emc
+        return self._stats['emc']
 
     @property
     def iram(self):
-        if 'IRAM' not in self._stats:
+        if 'iram' not in self._stats:
             return {}
         # Extract IRAM
-        iram = copy.copy(self._stats['IRAM'])
-        return iram
+        return self._stats['iram']
 
     @property
     def ram(self):
@@ -260,11 +257,10 @@ class jtop(Thread):
 
     @property
     def mts(self):
-        if 'MTS' not in self._stats:
+        if 'mts' not in self._stats:
             return {}
         # Extract MTS
-        mts = copy.copy(self._stats['MTS'])
-        return mts
+        return self._stats['mts']
 
     @property
     def cpu(self):
@@ -273,41 +269,8 @@ class jtop(Thread):
 
     @property
     def gpu(self):
-        if 'GR3D' not in self._stats:
-            return {}
         # Extract GPU
-        gpu = copy.copy(self._stats['GR3D'])
-        return gpu
-
-    def _total_power(self, power):
-        """
-        Private function to measure the total watt
-
-        :return: Total power and a second dictionary with all other measures
-        :rtype: dict, dict
-        """
-        # In according with:
-        # https://forums.developer.nvidia.com/t/power-consumption-monitoring/73608/8
-        # https://github.com/rbonghi/jetson_stats/issues/51
-        total_name = ""
-        for val in power:
-            if "IN" in val:
-                total_name = val
-                break
-        # Extract the total from list
-        # Otherwise sum all values
-        # Example for Jetson Xavier
-        # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
-        if total_name:
-            total = power[total_name]
-            del power[total_name]
-            return total, power
-        # Otherwise measure all total power
-        total = {'cur': 0, 'avg': 0}
-        for value in power.values():
-            total['cur'] += value['cur']
-            total['avg'] += value['avg']
-        return total, power
+        return self._stats['gpu']
 
     @property
     def power(self):
@@ -317,11 +280,8 @@ class jtop(Thread):
         :return: Detailed information about power consumption
         :rtype: dict
         """
-        if 'WATT' not in self._stats:
-            return {}
-        power = copy.copy(self._stats['WATT'])
-        # Measure total power
-        total, power = self._total_power(power)
+        total = self._stats['power']['all']
+        power = self._stats['power']['power']
         return total, power
 
     @property
@@ -332,11 +292,7 @@ class jtop(Thread):
         :return: Detailed information about temperature
         :rtype: dict
         """
-        if 'TEMP' not in self._stats:
-            return {}
-        # Extract temperatures
-        temperatures = copy.copy(self._stats['TEMP'])
-        return temperatures
+        return self._stats['temperature']
 
     @property
     def local_interfaces(self):
@@ -357,41 +313,24 @@ class jtop(Thread):
         """
         Internal decode function to decode and refactoring data
         """
-        # Update status fan
+        self._stats = data
+        # -- ENGINES --
+        self._engine._update(data['engines'])
+        # -- CPU --
+        self._cpu._update(data['cpu'])
+        # -- RAM --
+        self._memory._update(data['ram'])
+        # -- SWAP --
+        self._swap._update(data['swap'])
+        # -- FAN --
         if 'fan' in data:
             self._fan._update(data['fan'])
-        # Read tegrastats
-        tegrastats = data['stats']
-        if 'WATT' in tegrastats:
-            # Refactor names
-            tegrastats['WATT'] = {k.replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in tegrastats['WATT'].items()}
-        if 'TEMP' in tegrastats:
-            # Remove PMIC temperature
-            if 'PMIC' in tegrastats['TEMP']:
-                del tegrastats['TEMP']['PMIC']
-        # Update swap status
-        self._swap._update(tegrastats['SWAP'], data['swap'])
-        # Load jetson_clocks data
-        jc_show = data.get('jc', {})
-        # Update status
-        if self._jc is not None:
-            self._jc._update(jc_show)
-        # Store data in stats
-        self._cpu._update(tegrastats['CPU'], jc_show, data['cpu'])
-        # Update engines
-        self._engine._update(tegrastats)
-        # Update status memory
-        self._memory._update(tegrastats['RAM'])
-        # Update GPU status
-        if 'GPU' in jc_show:
-            tegrastats['GR3D'].update(jc_show['GPU'])
-        # Store the updated stats from tegrastats
-        self._stats = tegrastats
-        # Read status NVP model selected
+        # -- JETSON_CLOCKS --
+        if 'jc' in data:
+            self._jc._update(data['jc'])
+        # -- NVP Model --
         if 'nvp' in data:
-            modes = data['nvp']
-            # Update NVIDIA Power mode
-            self._nvp._update(jc_show.get('NVP', ''), modes)
+            self._nvp._update(data['nvp'])
         # Set trigger
         self._trigger.set()
         # Notify all observers

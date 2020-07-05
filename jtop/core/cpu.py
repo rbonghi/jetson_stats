@@ -58,22 +58,8 @@ class CPU(object):
         # Initialize CPU status
         self.cpu = {}
 
-    def _update(self, tegra_cpu, jc_show, proc_info):
-        for name in proc_info:
-            tegra_cpu[name]['model'] = proc_info[name]
-        # Update data from jetson_clocks show
-        if 'CPU' in jc_show:
-            for k, v in tegra_cpu.items():
-                # Extract jc_cpu info
-                jc_cpu = jc_show['CPU'].get(k, {})
-                if jc_cpu['Online']:
-                    # Remove online info
-                    del jc_cpu['Online']
-                    # Remove current frequency
-                    del jc_cpu['current_freq']
-                    # Update CPU information
-                    v.update(jc_cpu)
-                self.cpu[k] = v
+    def _update(self, cpu_status):
+        self.cpu.update(cpu_status)
 
     def items(self):
         return self.cpu.items()

@@ -102,11 +102,10 @@ class NVPModel(object):
     def __repr__(self):
         return self._mode
 
-    def _update(self, mode, modes):
+    def _update(self, nvp_status):
         # Update nvpm modes
-        self._nvpm = modes['modes']
-        if not modes['ser']:
-            self._mode = mode
+        self._nvpm = nvp_status['modes']
+        self._mode = nvp_status['mode']
         self._id = NVP_get_id(self.modes, self._mode)
 
 

@@ -49,11 +49,11 @@ def list_swaps():
             info = {}
             n_swap = ''
             for name, data in zip(names, datas):
-                name = name.lower()
+                name = str(name.lower())
                 if name != 'name':
-                    info[name] = int(data) if data.isdigit() else data
+                    info[name] = int(data) if data.isdigit() else str(data)
                 else:
-                    n_swap = data
+                    n_swap = str(data)
             # Add swap in list
             swaps[n_swap] = info
     return swaps
@@ -85,11 +85,11 @@ class Swap(object):
         # Set new swap size configuration
         self._controller.put({'swap': {}})
 
-    def _update(self, tegra_cpu, info):
+    def _update(self, swap_status):
         # Update status swaps
-        self._list_swaps = info
+        self._list_swaps = swap_status['list']
         # Update status swap
-        self._all.update(tegra_cpu)
+        self._all.update(swap_status['all'])
 
     @property
     def all(self):
