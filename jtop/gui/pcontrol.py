@@ -130,9 +130,10 @@ class CTRL(Page):
         else:
             color = curses.color_pair(1)  # Error (Red)
         # Status jetson_clocks
-        self.stdscr.addstr(start_y + 4, start_x + len(jetson_clocks_string) + 6,
-                           jc_status_name.capitalize(),
-                           color)
+        self.stdscr.addstr(
+            start_y + 4, start_x + len(jetson_clocks_string) + 6,
+            jc_status_name.capitalize(),
+            color)
         # button start/stop jetson clocks
         self.service_enable.draw(start_y + 6, start_x, key, mouse)
         # Read status jetson_clocks
@@ -145,17 +146,21 @@ class CTRL(Page):
         # Build NVP model list
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:
+            nvp_id = nvpmodel.id
             self.stdscr.addstr(start_y + 10, start_x, "NVP model", curses.A_BOLD)
             # Draw keys to decrease nvpmodel
-            self.nvp_decrease.draw(start_y + 9, start_x + 10, key, mouse)
+            if nvp_id != 0:
+                self.nvp_decrease.draw(start_y + 9, start_x + 10, key, mouse)
             # Draw selected number
-            self.stdscr.addstr(start_y + 10, start_x + 16, str(nvpmodel.id), curses.A_NORMAL)
+            self.stdscr.addstr(start_y + 10, start_x + 16, str(nvp_id), curses.A_NORMAL)
             # Draw keys to increase nvpmodel
-            self.nvp_increase.draw(start_y + 9, start_x + 18, key, mouse)
+            if nvp_id != len(self.jetson.nvpmodel.modes) - 1:
+                self.nvp_increase.draw(start_y + 9, start_x + 18, key, mouse)
             # Write list of available modes
-            self.nvp_list.draw(start_y + 12, start_x, width // 2 - start_x, key, mouse,
-                               lstatus=nvpmodel.status,
-                               select=nvpmodel.id)
+            self.nvp_list.draw(
+                start_y + 12, start_x, width // 2 - start_x, key, mouse,
+                lstatus=nvpmodel.status,
+                select=nvp_id)
         # Evaluate size chart
         size_x = [start_x + width // 2 + 1, width - start_x - 1]
         size_y = [start_y, height - 3]

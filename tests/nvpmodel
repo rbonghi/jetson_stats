@@ -393,8 +393,11 @@ set_level()
       echo "Please run as root"
       exit 1
     fi
-    
-    if [ "$level" -ge "0" ] && [ "$level" -lt "4" ] ; then
+
+    if [ "$level" -eq "2" ] ; then
+        echo "NVPM ERROR: I can't set this model!"
+        echo "NVPM ERROR: Need a reboot"
+    elif [ "$level" -ge "0" ] && [ "$level" -lt "4" ] ; then
         echo "Save"
         echo "$level" > /tmp/nvp_model_test
     else

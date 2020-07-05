@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import abc
 import curses
 # Logging
@@ -42,11 +41,14 @@ class Page(ABC):
         self.stdscr = stdscr
         self.jetson = jetson
 
+    def setcontroller(self, controller):
+        self.controller = controller
+
     def size_page(self):
         height, width = self.stdscr.getmaxyx()
         first = 0
         # Remove a line for sudo header
-        if os.getuid() == 0:
+        if self.controller.message:
             height -= 1
             first = 1
         return height, width, first
@@ -87,8 +89,13 @@ class JTOPGUI:
         # Set curses reference, refresh and jetson controller
         self.stdscr = stdscr
         self.jetson = jetson
+        self.message = False
         # Initialize all Object pages
-        self.pages = [obj(stdscr, jetson) for obj in pages]
+        self.pages = []
+        for obj in pages:
+            page = obj(stdscr, jetson)
+            page.setcontroller(self)
+            self.pages += [page]
         # Set default page
         self.n_page = 0
         self.set(init_page)
@@ -186,11 +193,12 @@ class JTOPGUI:
         # Add extra Line if with sudo
         idx = 0
         if self.jetson.interval != self.jetson.interval_user:
+            self.message = True
             _, width = self.stdscr.getmaxyx()
             self.stdscr.addstr(0, 0, ("{0:<" + str(width) + "}").format(" "), curses.color_pair(9))
             user = int(self.jetson.interval_user * 1000)
             interval = int(self.jetson.interval * 1000)
-            string_sudo = "I CANNOT SET SPEED AT {user}ms. SERVER AT {interval}ms".format(user=user, interval=interval)
+            string_sudo = "I CANNOT SET SPEED AT {user}ms - SERVER AT {interval}ms".format(user=user, interval=interval)
             self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
         # Write first line

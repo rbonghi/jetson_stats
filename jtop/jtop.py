@@ -179,14 +179,14 @@ class jtop(Thread):
             while self.ok():
                 if not self.jetson_clocks:
                     break
-            status['jetson_clocks'] = self.jetson_clocks
+            status['jetson_clocks'] = bool(self.jetson_clocks)
             # Disable jetson_clocks on boot
             self.jetson_clocks.boot = False
             # Wait jetson_clocks boot
             while self.ok():
                 if not self.jetson_clocks.boot:
                     break
-            status['jetson_clocks boot'] = self.jetson_clocks.boot
+            status['jetson_clocks boot'] = bool(self.jetson_clocks.boot)
         # Reset fan control
         if self.fan is not None:
             # Reset mode fan
@@ -194,13 +194,13 @@ class jtop(Thread):
             while self.ok():
                 if self.fan.mode == 'jetson_clocks':
                     break
-            status['fan mode'] = self.fan.mode
+            status['fan mode'] = False
             # Reset speed to zero
             self.fan.speed = 0
             while self.ok():
                 if self.fan.measure == 0:
                     break
-            status['fan speed'] = self.fan.speed
+            status['fan speed'] = False
         # Switch off swap
         if self.swap.is_enable:
             # Deactivate swap
@@ -208,7 +208,7 @@ class jtop(Thread):
             while self.ok():
                 if not self.swap.is_enable:
                     break
-        status['swap'] = self.swap.is_enable
+            status['swap'] = bool(self.swap.is_enable)
         # Clear config file
         self._controller.put({'config': 'reset'})
         status['config'] = False
@@ -244,6 +244,9 @@ class jtop(Thread):
         if self._nvp is None:
             return
         mode = self._nvp.set(value)
+        # Do not send messages if nvpmodel is the same
+        if mode == self._nvp.id:
+            return
         # Send new nvpmodel
         self._controller.put({'nvp': mode})
 

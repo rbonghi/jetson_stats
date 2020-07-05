@@ -23,7 +23,7 @@ from jtop import jtop
 # - [2] MINTEST
 # - [3] MIN_MAX_TEST
 # Max count to wait
-MAX_COUNT = 25
+MAX_COUNT = 15
 
 
 def set_jetson_clocks(jetson, status):
@@ -73,6 +73,23 @@ def test_nvpmodel(jtop_server):
         set_nvp_mode(jetson, "MIN_MAX_TEST")
 
 
+def test_nvpmodel_fail(jtop_server):
+    with jtop() as jetson:
+        counter = 0
+        # Check status nvpmodel
+        if jetson.ok():
+            jetson.nvpmodel = "MINTEST"
+        # Wait change nvpmodel
+        while jetson.ok():
+            if str(jetson.nvpmodel) == "MINTEST" or counter == MAX_COUNT:
+                break
+            counter += 1
+        # Check if is same model
+        assert str(jetson.nvpmodel) != "MINTEST"
+        # Check name variable
+        assert jetson.nvpmodel.name != "MINTEST"
+
+
 def test_nvpmodel_increment_decrement(jtop_server):
     counter = 0
     with jtop() as jetson:
@@ -92,7 +109,7 @@ def test_nvpmodel_increment_decrement(jtop_server):
         # Save nvp ID
         nvp_id = jetson.nvpmodel.id
         # Set new NVP mode
-        jetson.nvpmodel -= 1
+        jetson.nvpmodel = jetson.nvpmodel - 1
         # Wait change nvpmodel
         while jetson.ok():
             if jetson.nvpmodel.id == nvp_id - 1 or counter == MAX_COUNT:
@@ -113,5 +130,5 @@ def test_nvpmodel_jetson_clocks(jtop_server):
         # Disable jetson_clocks
         set_jetson_clocks(jetson, False)
         # Check status nvpmodel
-        set_nvp_mode(jetson, "MAXTEST")
+        set_nvp_mode(jetson, "MIN_MAX_TEST")
 # EOF

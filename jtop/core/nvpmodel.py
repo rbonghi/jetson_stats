@@ -77,20 +77,24 @@ class NVPModel(object):
             mode_id = NVP_get_id(self.modes, value)
         elif isinstance(value, int):
             # Check if ID is in list
-            if value < 0 or value > len(self.modes):
-                raise JtopException("This ID {value} does not exists".format(value=value))
+            if value < 0 or value > len(self.modes) - 1:
+                raise JtopException("NV Power Model ID {value} does not exists! Range [0, {max}]".format(value=value, max=len(self.modes) - 1))
             mode_id = value
         else:
             raise TypeError("Data type not allowed {type}".format(type=type(value)))
         return mode_id
 
     def __add__(self, number):
-        # TODO: Implement
-        pass
+        return self._id + number
+
+    def __radd__(self, number):
+        return self._id + number
 
     def __sub__(self, number):
-        # TODO: Implement
-        pass
+        return self._id - number
+
+    def __rsub__(self, number):
+        return self._id - number
 
     def __iadd__(self, number):
         # Get new number
@@ -167,7 +171,10 @@ class NVPModelService(object):
             # Check jetson_clocks is off
             while not self.jetson_clocks.is_alive:
                 pass
-        logger.info("NVPmodel started {value}".format(value=value))
+        if status:
+            logger.info("NVPmodel started {value}".format(value=value))
+        else:
+            logger.warning("Error to set NVPmodel {value}".format(value=value))
 
     def is_running(self):
         if self._thread is None:
@@ -194,9 +201,13 @@ class NVPModelService(object):
         try:
             # If there are no errors return the NV Power mode
             lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
-            return "NVPM ERROR" not in lines
+            # Check if error is in vector
+            for line in lines:
+                if "NVPM ERROR" in line:
+                    return False
         except Command.TimeoutException:
             return False
+        return True
 
     def get(self):
         # Initialize mode and num
