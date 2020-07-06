@@ -296,8 +296,10 @@ fix_service()
     # sudo ln -s "$JETSON_STATS_FOLDER/jetson_stats.service" "/etc/systemd/system/jetson_stats.service" 2> /dev/null
     # Update service list
     sudo systemctl daemon-reload
-    # Enable jetson fan at startup
+    # Enable jetson_stats at startup
     sudo systemctl enable jetson_stats.service
+    # Start service
+    sudo systemctl start jetson_stats.service
 }
 
 uninstall_service()
@@ -308,6 +310,7 @@ uninstall_service()
         if [ $(systemctl is-active jetson_performance.service) = "active" ] ; then
             # Stop the service
             sudo systemctl stop jetson_performance.service
+            echo "Stop jetson_performance.service"
         fi
         # Disable the service
         sudo systemctl disable jetson_performance.service
@@ -316,7 +319,7 @@ uninstall_service()
         # Update service list
         sudo systemctl daemon-reload
     fi
-    # Disable service
+    # Disable old service jetson_stats_boot
     if [ -f "/etc/systemd/system/jetson_stats_boot.service" ] ; then
         sudo systemctl disable jetson_stats_boot.service
         # Remove fan service from /etc/init.d
@@ -326,6 +329,13 @@ uninstall_service()
     fi
     # Disable service jetson_stats.service
     if [ -f "/etc/systemd/system/jetson_stats.service" ] ; then
+        # Uninstall the service
+        if [ $(systemctl is-active jetson_stats.service) = "active" ] ; then
+            # Stop the service
+            sudo systemctl stop jetson_stats.service
+            echo "Stop jetson_stats.service"
+        fi
+        # Disable the service
         sudo systemctl disable jetson_stats.service
         # Remove fan service from /etc/init.d
         sudo rm "/etc/systemd/system/jetson_stats.service"

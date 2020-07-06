@@ -15,14 +15,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 [Unit]
 Description=jetson_stats service
-After=multi-user.target
-Conflicts=getty@tty1.service
 
 [Service]
-Type=simple
+Type=exec
 ExecStart=/usr/local/bin/jtop service
-Restart=always
-StandardInput=tty-force
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=60s
+TimeoutStopSec=60s
 
 [Install]
 WantedBy=multi-user.target

@@ -18,6 +18,7 @@
 # Logging
 import logging
 # Operative system
+import signal
 import copy
 import os
 import sys
@@ -28,6 +29,7 @@ from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
 from .core import (
+    Command,
     cpu_models,
     nvjpg,
     MemoryService,
@@ -117,7 +119,8 @@ class JtopServer(Process):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self, path_tegrastats=PATH_TEGRASTATS, path_jetson_clocks=PATH_JETSON_CLOCKS, path_fan=PATH_FAN, path_nvpmodel=PATH_NVPMODEL):
+    def __init__(self, force=False, path_tegrastats=PATH_TEGRASTATS, path_jetson_clocks=PATH_JETSON_CLOCKS, path_fan=PATH_FAN, path_nvpmodel=PATH_NVPMODEL):
+        self.force = force
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jetson_clocks need sudo to work")
@@ -141,6 +144,9 @@ class JtopServer(Process):
         JtopManager.register("sync_data", callable=lambda: self.data)
         JtopManager.register('sync_event', callable=lambda: self.event)
         # Generate key and open broadcaster
+        # Remove old pipes if exists
+        if not force and os.path.exists(AUTH_PATH):
+            raise JtopException("Service already active! Please check before run it again")
         key = key_generator(AUTH_PATH)
         self.broadcaster = JtopManager(key)
         # Load board information
@@ -292,7 +298,7 @@ class JtopServer(Process):
                 if self.jetson_clocks.close():
                     logger.info("jetson_clocks closed")
 
-    def start(self, force=False):
+    def start(self):
         # Run setup
         if self.jetson_clocks is not None:
             self.jetson_clocks.initialization()
@@ -306,9 +312,12 @@ class JtopServer(Process):
             # User does not exist
             raise JtopException("Group {jtop_user} does not exist!".format(jtop_user=JTOP_USER))
         # Remove old pipes if exists
-        if force and os.path.exists(JTOP_PIPE):
-            logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
-            os.remove(JTOP_PIPE)
+        if os.path.exists(JTOP_PIPE):
+            if self.force:
+                logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
+                os.remove(JTOP_PIPE)
+            else:
+                raise JtopException("Service already active! Please check before run it again")
         # Start broadcaster
         try:
             self.broadcaster.start()
@@ -325,16 +334,28 @@ class JtopServer(Process):
         os.chmod(JTOP_PIPE, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
         # Run the Control server
         super(JtopServer, self).start()
+        # Initialize signals
+        # signal.signal(signal.SIGINT, self.exit_signal)  # Do not needed equivalent to exception KeyboardInterrupt
+        signal.signal(signal.SIGTERM, self.exit_signal)
 
     def loop_for_ever(self):
         try:
-            self.start(force=True)
+            self.start()
+        except JtopException as e:
+            logger.error(e)
+            return
+        # Join main subprocess
+        try:
             self.join()
         except (KeyboardInterrupt, SystemExit):
             pass
         finally:
             # Close communication
             self.close()
+
+    def exit_signal(self, signum, frame):
+        logger.info("Close service by signal {signum}".format(signum=signum))
+        self.close()
 
     def close(self):
         # Terminate broadcaster
@@ -361,6 +382,12 @@ class JtopServer(Process):
         if os.path.exists(AUTH_PATH):
             logger.info("Remove authentication {auth}".format(auth=AUTH_PATH))
             os.remove(AUTH_PATH)
+        # If exist remove pipe
+        if os.path.exists(JTOP_PIPE):
+            logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
+            os.remove(JTOP_PIPE)
+        # Close stats server
+        logger.info("Service closed")
         return True
 
     def _total_power(self, power):

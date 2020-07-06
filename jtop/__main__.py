@@ -84,6 +84,7 @@ def main():
         description='jtop is system monitoring utility and runs on terminal',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('service', nargs='?', help=argparse.SUPPRESS, default=False)
+    parser.add_argument('--force', dest='force', help=argparse.SUPPRESS, action="store_true", default=False)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
@@ -99,11 +100,9 @@ def main():
         # Run service
         try:
             # Initialize stats server
-            server = JtopServer()
-            logger.info("Service started")
+            server = JtopServer(args.force)
+            logger.info("jetson_stats server loaded")
             server.loop_for_ever()
-            # Close stats server
-            logger.info("Close service")
         except JtopException as e:
             print(e)
         # Close service
