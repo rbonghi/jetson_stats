@@ -28,8 +28,8 @@ FAN_PWM_TABLE_RE = re.compile(r'\((.*?)\)')
 logger = logging.getLogger(__name__)
 
 # Fan configurations
-CONFIGS = ['jetson_clocks', 'manual', 'system']
-CONFIG_DEFAULT_FAN_MODE = 'jetson_clocks'
+CONFIGS = ['default', 'manual', 'system']
+CONFIG_DEFAULT_FAN_MODE = 'default'
 CONFIG_DEFAULT_FAN_SPEED = 0.0
 
 
@@ -172,7 +172,7 @@ class FanService(object):
             raise JtopException('This control does not available')
         if value == 'system':
             self.auto = True
-        if value == 'jetson_clocks':
+        if value == 'default':
             # Set in auto only if jetson_clocks in not active
             if self._jc is not None:
                 if not self._jc.is_alive:

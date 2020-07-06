@@ -193,9 +193,9 @@ class jtop(Thread):
         # Reset fan control
         if self.fan is not None:
             # Reset mode fan
-            self.fan.mode = 'jetson_clocks'
+            self.fan.mode = 'default'
             while self.ok():
-                if self.fan.mode == 'jetson_clocks':
+                if self.fan.mode == 'default':
                     break
             status['fan mode'] = False
             # Reset speed to zero
