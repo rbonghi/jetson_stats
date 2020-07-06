@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import sys
+from datetime import datetime
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager, key_reader
@@ -276,15 +277,58 @@ class jtop(Thread):
             # Send status jetson_clocks
             self._controller.put({'jc': {'enable': value}})
 
-    # @property
-    # def stats(self):
+    @property
+    def stats(self):
         """
         A dictionary with the status of the board
 
         :return: Compacts jetson statistics
         :rtype: dict
         """
-    #    return self._stats
+        stats = {'time': datetime.now(), 'uptime': self.uptime}
+        # -- jetson_clocks --
+        if self.jetson_clocks:
+            stats['jetson_clocks'] = 'ON' if self.jetson_clocks else 'OFF'
+        # -- NV Power Model --
+        if self.nvpmodel:
+            stats['nvp model'] = self.nvpmodel.name
+        # -- CPU --
+        for cpu in sorted(self.cpu):
+            stats[cpu] = self.cpu[cpu].get('val', 'OFF')
+        # -- GPU --
+        stats['GPU'] = self.gpu['val']
+        # -- MTS --
+        if self.mts:
+            stats['MTS FG'] = self.mts['fg']
+            stats['MTS BG'] = self.mts['bg']
+        # -- RAM --
+        stats['RAM'] = self.ram['use']
+        # -- EMC --
+        if self.emc:
+            stats['EMC'] = self.ram['use']
+        # -- IRAM --
+        if self.iram:
+            stats['IRAM'] = self.ram['use']
+        # -- SWAP --
+        stats['SWAP'] = self.swap['use']
+        # -- Engines --
+        stats['APE'] = self.engine.ape['val']
+        stats['NVENC'] = self.engine.nvenc['val'] if self.engine.nvenc else 'OFF'
+        stats['NVDEC'] = self.engine.nvdec['val'] if self.engine.nvdec else 'OFF'
+        stats['NVJPG'] = self.engine.nvjpg['rate'] if self.engine.nvjpg else 'OFF'
+        if not self.engine.nvdec:
+            stats['MSENC'] = self.engine.msenc
+        # -- FAN --
+        if self.fan:
+            stats['fan'] = self.fan.measure
+        # -- Temperature --
+        for temp in sorted(self.temperature):
+            stats["Temp {name}".format(name=temp)] = self.temperature[temp]
+        # -- Power --
+        total, _ = self.power
+        stats['power cur'] = total['cur']
+        stats['power avg'] = total['avg']
+        return stats
 
     @property
     def swap(self):
@@ -292,17 +336,13 @@ class jtop(Thread):
 
     @property
     def emc(self):
-        if 'emc' not in self._stats:
-            return {}
         # Extract EMC
-        return self._stats['emc']
+        return self._stats.get('emc', {})
 
     @property
     def iram(self):
-        if 'iram' not in self._stats:
-            return {}
         # Extract IRAM
-        return self._stats['iram']
+        return self._stats.get('iram', {})
 
     @property
     def ram(self):
@@ -310,10 +350,8 @@ class jtop(Thread):
 
     @property
     def mts(self):
-        if 'mts' not in self._stats:
-            return {}
         # Extract MTS
-        return self._stats['mts']
+        return self._stats.get('mts', {})
 
     @property
     def cpu(self):

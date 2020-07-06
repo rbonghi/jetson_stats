@@ -17,29 +17,29 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from jtop import jtop
-import time
+
 
 if __name__ == "__main__":
 
-    print("Simple Tegrastats reader")
+    print("Simple jtop reader")
 
     with jtop() as jetson:
-        while True:
+        # jetson.ok() will provide the proper update frequency 
+        while jetson.ok():
             # Read tegra stats
             print(jetson.stats)
+            # nvpmodel
+            print(jetson.nvpmodel)
+            # jetson_clocks
+            print(jetson.jetson_clocks)
             # Status disk
             print(jetson.disk)
             # Status fans
-            if hasattr(jetson, 'fan'):
-                print(jetson.fan)
+            print(jetson.fan)
             # uptime
             print(jetson.uptime)
-            # nvpmodel
-            print(jetson.nvpmodel)
             # local interfaces
             print(jetson.local_interfaces)
             # boards
             print(jetson.board)
-            # Sleep before send new stat
-            time.sleep(1)
 # EOF

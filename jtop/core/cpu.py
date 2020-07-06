@@ -64,6 +64,12 @@ class CPU(object):
     def items(self):
         return self.cpu.items()
 
+    def get(self, name, value=None):
+        if name in self.cpu:
+            return self.cpu[name]
+        else:
+            return value
+
     def __getitem__(self, name):
         return self.cpu[name]
 

@@ -17,12 +17,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-from jtop import jtop
+from jtop import jtop, JtopException
 import socket
 import json
 import argparse
 
-parser = argparse.ArgumentParser(description='Simple Tegrastats server.')
+parser = argparse.ArgumentParser(description='Simple jtop server.')
 
 # Standard loopback interface address (localhost)
 parser.add_argument('--host', action="store", dest="host", default="127.0.0.1")
@@ -37,16 +37,16 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
 
-    print("Simple Tegrastats server")
+    print("Simple jtop server")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind((args.host, args.port))
     print("Open server jtop to {}:{}".format(args.host, args.port))
     sock.listen(1)
 
-    with jtop() as jetson:
-        try:
-            while True:
+    try:
+        with jtop() as jetson:
+            while jetson.ok():
                 # Wait socket request
                 conn, addr = sock.accept()
                 print("Connected to {}".format(conn))
@@ -60,6 +60,10 @@ if __name__ == "__main__":
                     conn.send(stats.encode())
                 # Close connection
                 conn.close()
-        except Exception:
-            sock.close()
+    except JtopException as e:
+        print(e)
+    except Exception as e:
+        print(e)
+    finally:
+        sock.close()
 # EOF
