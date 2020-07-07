@@ -27,9 +27,9 @@ from grp import getgrnam
 from base64 import b64decode
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
+import shutil
 # jetson_stats imports
 from .core import (
-    Command,
     cpu_models,
     nvjpg,
     MemoryService,
@@ -54,12 +54,12 @@ except ImportError:
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
 PATH_FAN = ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']
-PATH_NVPMODEL = 'nvpmodel'
+PATH_NVPMODEL = ['nvpmodel']
 # Pipe configuration
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
-JTOP_PIPE = '/run/jtop.socket'
-AUTH_PATH = '/run/jtop.auth'
+JTOP_PIPE = '/run/jtop/jtop.socket'
+AUTH_PATH = '/run/jtop/jtop.auth'
 JTOP_USER = 'jetson_stats'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
@@ -124,6 +124,12 @@ class JtopServer(Process):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jetson_clocks need sudo to work")
+        # Make folder if does not exist
+        if self.force and os.path.isdir('/run/jtop'):
+            logger.info("Remove jtop folder in /run")
+            shutil.rmtree('/run/jtop')
+        if not os.path.isdir('/run/jtop'):
+            os.makedirs('/run/jtop')
         # Load configuration
         self.config = Config()
         # Error queue
@@ -378,6 +384,12 @@ class JtopServer(Process):
                 raise ex_value
         except queue.Empty:
             pass
+        self.remove_files()
+        # Close stats server
+        logger.info("Service closed")
+        return True
+
+    def remove_files(self):
         # Remove authentication file
         if os.path.exists(AUTH_PATH):
             logger.info("Remove authentication {auth}".format(auth=AUTH_PATH))
@@ -386,9 +398,10 @@ class JtopServer(Process):
         if os.path.exists(JTOP_PIPE):
             logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
             os.remove(JTOP_PIPE)
-        # Close stats server
-        logger.info("Service closed")
-        return True
+        # Remove folder
+        if os.path.isdir('/run/jtop'):
+            logger.info("Remove jtop folder in /run")
+            shutil.rmtree('/run/jtop')
 
     def _total_power(self, power):
         """

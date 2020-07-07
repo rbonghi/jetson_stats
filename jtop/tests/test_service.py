@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 def test_service_full():
-    jtop_server = JtopServer(path_fan=['tests/fan/'])
-    jtop_server.start(force=True)
+    jtop_server = JtopServer(force=True, path_fan=['tests/fan/'])
+    jtop_server.start()
     # Check if is alive
     assert jtop_server.is_alive()
     # Close service
@@ -35,8 +35,8 @@ def test_service_full():
 
 
 def test_service_full_read():
-    jtop_server = JtopServer(path_fan=['tests/fan/'])
-    jtop_server.start(force=True)
+    jtop_server = JtopServer(force=True, path_fan=['tests/fan/'])
+    jtop_server.start()
     # Check if is alive
     assert jtop_server.is_alive()
     # Init and open jtop
@@ -53,8 +53,8 @@ def test_service_full_read():
 
 
 def test_service_nothing_read():
-    jtop_server = JtopServer(path_fan=[], path_nvpmodel='')
-    jtop_server.start(force=True)
+    jtop_server = JtopServer(force=True, path_fan=[], path_nvpmodel='')
+    jtop_server.start()
     # Check if is alive
     assert jtop_server.is_alive()
     # Init and open jtop

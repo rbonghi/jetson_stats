@@ -41,7 +41,7 @@ if __name__ == "__main__":
                 writer.writeheader()
                 # Write first row
                 writer.writerow(stats)
-            # Start loop 
+            # Start loop
             while jetson.ok():
                 stats = jetson.stats
                 # Write row

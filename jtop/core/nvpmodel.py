@@ -117,7 +117,7 @@ class NVPModel(object):
 class NVPModelService(object):
 
     def __init__(self, jetson_clocks, nvp_model):
-        self.nvpmodel_name = nvp_model
+        self.nvpmodel_name = "".join(nvp_model)
         # Initialize thread
         self._thread = None
         # Initialize jetson_clocks config
@@ -125,7 +125,7 @@ class NVPModelService(object):
         # Read all lines and extract modes
         self._nvpm = {}
         try:
-            nvpmodel_p = Command([nvp_model, '-p', '--verbose'])
+            nvpmodel_p = Command([self.nvpmodel_name, '-p', '--verbose'])
             lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
             # Decode lines
             for line in lines:

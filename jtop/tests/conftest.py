@@ -18,6 +18,7 @@
 import os
 import pytest
 from ..service import JtopServer
+from ..core import JtopException
 # pytest fixture reference
 # https://docs.pytest.org/en/stable/fixture.html
 
@@ -36,8 +37,12 @@ def jtop_server():
     # Clean test files
     remove_tests()
     print("Initialize jtop service")
-    jtop_server = JtopServer(path_fan=['tests/fan/'])
-    jtop_server.start(force=True)
+    jtop_server = JtopServer(force=True, path_fan=['tests/fan/'])
+    try:
+        jtop_server.start()
+    except JtopException as e:
+        print(e)
+        jtop_server.remove_files()
     # Check if is alive
     assert jtop_server.is_alive()
     # yeld server
@@ -46,6 +51,8 @@ def jtop_server():
     print("Close jtop service")
     # Clean test files
     remove_tests()
+    if os.path.isdir('/run/jtop'):
+        os.remove('/run/jtop')
 
 
 @pytest.fixture(scope="function")
@@ -53,8 +60,12 @@ def jtop_server_nothing():
     # Clean test files
     remove_tests()
     print("Initialize jtop service")
-    jtop_server = JtopServer(path_fan=[], path_nvpmodel='', path_jetson_clocks=[])
-    jtop_server.start(force=True)
+    jtop_server = JtopServer(force=True, path_fan=[], path_nvpmodel=[], path_jetson_clocks=[])
+    try:
+        jtop_server.start()
+    except JtopException as e:
+        print(e)
+        jtop_server.remove_files()
     # Check if is alive
     assert jtop_server.is_alive()
     # yeld server
@@ -63,4 +74,6 @@ def jtop_server_nothing():
     print("Close jtop service")
     # Clean test files
     remove_tests()
+    if os.path.isdir('/run/jtop'):
+        os.remove('/run/jtop')
 # EOF

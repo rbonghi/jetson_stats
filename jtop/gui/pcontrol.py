@@ -172,17 +172,21 @@ class CTRL(Page):
             # Read status control fan
             ctrl_stat = "Auto=" + ("Enable" if self.jetson.fan.auto else "Disable")
             # Add label
-            label = "{current: >3.0f}% of {target: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, target=self.jetson.fan.speed, ctrl=ctrl_stat)
+            if self.jetson.fan.speed:
+                label = "{current: >3.0f}% of {target: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, target=self.jetson.fan.speed, ctrl=ctrl_stat)
+            else:
+                label = "{current: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, ctrl=ctrl_stat)
             # Fan label
             self.stdscr.addstr(start_y + 1, start_x, "Fan", curses.A_BOLD)
-            # Draw keys to decrease fan speed
-            self.fan_status_decrease.draw(start_y, start_x + 4, key, mouse)
-            # Draw selected number
-            self.stdscr.addstr(start_y, start_x + 10, "Speed", curses.A_BOLD)
-            speed_str = "{speed: 3.0f}%".format(speed=self.jetson.fan.speed)
-            self.stdscr.addstr(start_y + 1, start_x + 10, speed_str, curses.A_NORMAL)
-            # Draw keys to increase fan speed
-            self.fan_status_increase.draw(start_y, start_x + 16, key, mouse)
+            if self.jetson.fan.speed:
+                # Draw keys to decrease fan speed
+                self.fan_status_decrease.draw(start_y, start_x + 4, key, mouse)
+                # Draw selected number
+                self.stdscr.addstr(start_y, start_x + 10, "Speed", curses.A_BOLD)
+                speed_str = "{speed: 3.0f}%".format(speed=self.jetson.fan.speed)
+                self.stdscr.addstr(start_y + 1, start_x + 10, speed_str, curses.A_NORMAL)
+                # Draw keys to increase fan speed
+                self.fan_status_increase.draw(start_y, start_x + 16, key, mouse)
             # Write list of available modes
             self.stdscr.addstr(start_y + 1, start_x + 22, "Modes", curses.A_BOLD)
             # Get ID from fan mode

@@ -24,7 +24,7 @@ if __name__ == "__main__":
     print("Simple jtop reader")
 
     with jtop() as jetson:
-        # jetson.ok() will provide the proper update frequency 
+        # jetson.ok() will provide the proper update frequency
         while jetson.ok():
             # Read tegra stats
             print(jetson.stats)

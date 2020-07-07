@@ -114,7 +114,10 @@ def compact_info(stdscr, start, offset, width, height, jetson):
     # FAN status
     if jetson.fan:
         ctrl = "Ta" if jetson.fan.auto else "Tm"
-        label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=jetson.fan.speed)
+        if jetson.fan.speed:
+            label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=jetson.fan.speed)
+        else:
+            label = "{ctrl}".format(ctrl=ctrl)
         linear_gauge(stdscr, offset=offset + counter, start=start + 1, size=width,
                      name=GaugeName('FAN', color=curses.color_pair(6)),
                      value=jetson.fan.measure,

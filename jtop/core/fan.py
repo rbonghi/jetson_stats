@@ -91,6 +91,8 @@ class Fan(object):
 
     @speed.setter
     def speed(self, value):
+        if 'speed' not in self._status:
+            raise JtopException('You can not set a speed for this fan')
         if not isinstance(value, (int, float)):
             raise ValueError("Use a number")
         # Check limit speed
@@ -194,6 +196,10 @@ class FanService(object):
             config['mode'] = value
             # Set new jetson_clocks configuration
             self._config.set('fan', config)
+
+    @property
+    def is_speed(self):
+        return self.isTPWM
 
     @property
     def speed(self):

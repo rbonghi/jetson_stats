@@ -100,7 +100,7 @@ def main():
         # Run service
         try:
             # Initialize stats server
-            server = JtopServer(args.force)
+            server = JtopServer(force=args.force, path_fan=['/tmp/fan/'])
             logger.info("jetson_stats server loaded")
             server.loop_for_ever()
         except JtopException as e:

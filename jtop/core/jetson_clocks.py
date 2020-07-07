@@ -320,12 +320,14 @@ class JetsonClocksService(object):
         # Configure fan
         if self.fan.mode == 'system':
             # Read status
-            self.fan.speed = speed
+            if self.fan.is_speed:
+                self.fan.speed = speed
             # Set mode
             self.fan.auto = True
         elif self.fan.mode == 'manual':
             # Read status
-            self.fan.speed = speed
+            if self.fan.is_speed:
+                self.fan.speed = speed
             # Set mode
             self.fan.auto = False
 
@@ -339,8 +341,8 @@ class JetsonClocksService(object):
             logger.info("Starting jetson_clocks in: {delta}s".format(delta=delta))
             time.sleep(delta)
         try:
-            if self.fan is not None:
-                speed = self.fan.speed
+            if self.fan:
+                speed = self.fan.speed if self.fan.is_speed else 0
             # Start jetson_clocks
             cmd = Command([self.jc_bin])
             try:
@@ -383,8 +385,8 @@ class JetsonClocksService(object):
     def _thread_jetson_clocks_stop(self):
         try:
             # Read fan speed
-            if self.fan is not None:
-                speed = self.fan.speed
+            if self.fan:
+                speed = self.fan.speed if self.fan.is_speed else 0
             # Run jetson_clocks
             cmd = Command([self.jc_bin, '--restore', self.config_l4t])
             try:
