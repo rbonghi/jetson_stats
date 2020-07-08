@@ -479,6 +479,11 @@ class jtop(Thread):
                 raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
             else:
                 raise ConnectionRefusedError(e)
+        except PermissionError as e:
+            if e.errno == 13:  # Permission denied
+                raise JtopException("I can't access to jetson_stats.service.\nPlease logout or reboot this board.")
+            else:
+                raise PermissionError(e)
         except ValueError:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
             raise JtopException("mismatch python version between library and service")
