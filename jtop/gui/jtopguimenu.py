@@ -114,7 +114,7 @@ def compact_info(stdscr, start, offset, width, height, jetson):
     # FAN status
     if jetson.fan:
         ctrl = "Ta" if jetson.fan.auto else "Tm"
-        if jetson.fan.speed:
+        if jetson.fan.speed is not None:
             label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=jetson.fan.speed)
         else:
             label = "{ctrl}".format(ctrl=ctrl)

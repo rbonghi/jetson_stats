@@ -172,13 +172,13 @@ class CTRL(Page):
             # Read status control fan
             ctrl_stat = "Auto=" + ("Enable" if self.jetson.fan.auto else "Disable")
             # Add label
-            if self.jetson.fan.speed:
+            if self.jetson.fan.speed is not None:
                 label = "{current: >3.0f}% of {target: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, target=self.jetson.fan.speed, ctrl=ctrl_stat)
             else:
                 label = "{current: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, ctrl=ctrl_stat)
             # Fan label
             self.stdscr.addstr(start_y + 1, start_x, "Fan", curses.A_BOLD)
-            if self.jetson.fan.speed:
+            if self.jetson.fan.speed is not None:
                 # Draw keys to decrease fan speed
                 self.fan_status_decrease.draw(start_y, start_x + 4, key, mouse)
                 # Draw selected number

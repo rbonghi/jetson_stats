@@ -37,11 +37,15 @@ from .core import (
     get_local_interfaces,
     JetsonClocks,
     JtopException)
+# Fix connection refused for python 2.7
 try:
     FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
-# Fix connection refused for python 2.7
+try:
+    PermissionError
+except NameError:
+    PermissionError = OSError
 if sys.version_info[0] == 2:
     from socket import error as ConnectionRefusedError
 # Create logger
@@ -470,7 +474,7 @@ class jtop(Thread):
             if e.errno == 2 or e.errno == 111:  # Message error: 'No such file or directory' or 'Connection refused'
                 raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
             elif e.errno == 13:  # Message error: 'Permission denied'
-                raise JtopException("I can't access to server, check group")
+                raise JtopException("I can't access to jetson_stats.service.\nPlease logout or reboot this board.")
             else:
                 raise FileNotFoundError(e)
         except ConnectionRefusedError as e:
