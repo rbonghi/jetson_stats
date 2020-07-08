@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # Regular expressions
 REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
 REGPM = re.compile(r'NV Power Mode: ((.*))')
-COMMAND_TIMEOUT = 3.0
+COMMAND_TIMEOUT = 4.0
 
 
 def NVP_get_id(modes, value):

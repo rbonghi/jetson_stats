@@ -51,8 +51,6 @@ def jtop_server():
     print("Close jtop service")
     # Clean test files
     remove_tests()
-    if os.path.isdir('/run/jtop'):
-        os.remove('/run/jtop')
 
 
 @pytest.fixture(scope="function")
@@ -74,6 +72,4 @@ def jtop_server_nothing():
     print("Close jtop service")
     # Clean test files
     remove_tests()
-    if os.path.isdir('/run/jtop'):
-        os.remove('/run/jtop')
 # EOF

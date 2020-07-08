@@ -20,7 +20,6 @@ import os
 from random import choice
 from string import ascii_letters
 from base64 import b64encode
-import uuid
 # Launch command
 import subprocess as sp
 # Logging
@@ -157,9 +156,6 @@ def get_local_interfaces():
     return {"hostname": hostname, "interfaces": ip_dict}
 
 
-def key_generator(AUTH_PATH):
-    key = str(uuid.uuid4())
-    with open(AUTH_PATH, 'wb') as t:
-        t.write(b64encode((key + get_var(AUTH_RE)).encode("utf-8")))
-    return key
+def get_key():
+    return str(b64encode(get_var(AUTH_RE).encode("utf-8")))
 # EOF

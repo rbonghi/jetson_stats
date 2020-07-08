@@ -343,8 +343,8 @@ uninstall_service()
         sudo systemctl daemon-reload
     fi
     # Remove all jtop files
-    if [ -d "/run/jtop" ] ; then
-        sudo rm -R "/run/jtop"
+    if [ -f "/run/jtop.sock" ] ; then
+        sudo rm "/run/jtop.sock"
     fi
 }
 

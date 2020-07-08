@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import signal
 import os
+import sys
 import argparse
 # control command line
 import curses
@@ -79,6 +81,11 @@ def warning_messages(jetson, no_warnings=False):
         print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, jetson, get_version())))
 
 
+def exit_signal(signum, frame):
+    logger.info("Close service by signal {signum}".format(signum=signum))
+    sys.exit(0)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='jtop is system monitoring utility and runs on terminal',
@@ -93,6 +100,9 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
+    # Initialize signals
+    # signal.signal(signal.SIGINT, exit_signal)  # Do not needed equivalent to exception KeyboardInterrupt
+    signal.signal(signal.SIGTERM, exit_signal)
     # Run jtop service
     if args.service == 'service':
         # Initialize logging level
@@ -100,7 +110,7 @@ def main():
         # Run service
         try:
             # Initialize stats server
-            server = JtopServer(force=args.force, path_fan=['/tmp/fan/'])
+            server = JtopServer(force=args.force)
             logger.info("jetson_stats server loaded")
             server.loop_for_ever()
         except JtopException as e:

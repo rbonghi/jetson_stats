@@ -134,6 +134,16 @@ def jetson_clocks_alive(show):
     return all(stat)
 
 
+def run_command(cmd, repeat=5):
+    for idx in range(repeat):
+        try:
+            message = cmd(timeout=COMMAND_TIMEOUT)
+            return True, message
+        except Command.TimeoutException as error:
+            logger.error("[{idx}] {error}".format(idx=idx, error=error))
+    return False, ''
+
+
 class JetsonClocks(object):
     """
         Reference:
@@ -341,19 +351,19 @@ class JetsonClocksService(object):
             logger.info("Starting jetson_clocks in: {delta}s".format(delta=delta))
             time.sleep(delta)
         try:
-            if self.fan:
-                speed = self.fan.speed if self.fan.is_speed else 0
+            if self.fan is not None:
+                if self.fan.is_speed:
+                    speed = self.fan.speed
+                else:
+                    speed = 0
             # Start jetson_clocks
             cmd = Command([self.jc_bin])
-            try:
-                message = cmd(timeout=COMMAND_TIMEOUT)
-                logger.info("jetson_clocks running")
-            except Command.TimeoutException:
+            status, message = run_command(cmd, repeat=5)
+            if not status:
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-            finally:
-                # Fix fan speed
-                if self.fan is not None:
-                    self._fix_fan(speed)
+            # Fix fan speed
+            if self.fan is not None:
+                self._fix_fan(speed)
         except Exception:
             # Store error message
             self._error = sys.exc_info()
@@ -385,19 +395,19 @@ class JetsonClocksService(object):
     def _thread_jetson_clocks_stop(self):
         try:
             # Read fan speed
-            if self.fan:
-                speed = self.fan.speed if self.fan.is_speed else 0
+            if self.fan is not None:
+                if self.fan.is_speed:
+                    speed = self.fan.speed
+                else:
+                    speed = 0
             # Run jetson_clocks
             cmd = Command([self.jc_bin, '--restore', self.config_l4t])
-            try:
-                message = cmd(timeout=COMMAND_TIMEOUT)
-                logger.info("jetson_clocks stop")
-            except Command.TimeoutException:
+            status, message = run_command(cmd, repeat=5)
+            if not status:
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-            finally:
-                # Fix fan speed
-                if self.fan is not None:
-                    self._fix_fan(speed)
+            # Fix fan speed
+            if self.fan is not None:
+                self._fix_fan(speed)
         except Exception:
             # Store error message
             self._error = sys.exc_info()

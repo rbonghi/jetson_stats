@@ -18,16 +18,14 @@
 # Logging
 import logging
 # Operative system
-import signal
+# import signal
 import copy
 import os
 import sys
 import stat
 from grp import getgrnam
-from base64 import b64decode
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
-import shutil
 # jetson_stats imports
 from .core import (
     cpu_models,
@@ -40,9 +38,8 @@ from .core import (
     NVPModelService,
     FanService,
     SwapService,
-    key_generator,
-    import_os_variables,
-    get_var)
+    get_key,
+    import_os_variables)
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
@@ -58,8 +55,7 @@ PATH_NVPMODEL = ['nvpmodel']
 # Pipe configuration
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
-JTOP_PIPE = '/run/jtop/jtop.socket'
-AUTH_PATH = '/run/jtop/jtop.auth'
+JTOP_PIPE = '/run/jtop.sock'
 JTOP_USER = 'jetson_stats'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
@@ -96,8 +92,10 @@ def load_jetson_variables():
 
 class JtopManager(SyncManager):
 
-    def __init__(self, authkey):
-        super(JtopManager, self).__init__(address=(JTOP_PIPE), authkey=authkey.encode("utf-8"))
+    def __init__(self, authkey=None):
+        if authkey is None:
+            authkey = get_key().encode("utf-8")
+        super(JtopManager, self).__init__(address=(JTOP_PIPE), authkey=authkey)
 
     def get_queue(self):
         pass
@@ -124,12 +122,6 @@ class JtopServer(Process):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jetson_clocks need sudo to work")
-        # Make folder if does not exist
-        if self.force and os.path.isdir('/run/jtop'):
-            logger.info("Remove jtop folder in /run")
-            shutil.rmtree('/run/jtop')
-        if not os.path.isdir('/run/jtop'):
-            os.makedirs('/run/jtop')
         # Load configuration
         self.config = Config()
         # Error queue
@@ -150,11 +142,7 @@ class JtopServer(Process):
         JtopManager.register("sync_data", callable=lambda: self.data)
         JtopManager.register('sync_event', callable=lambda: self.event)
         # Generate key and open broadcaster
-        # Remove old pipes if exists
-        if not force and os.path.exists(AUTH_PATH):
-            raise JtopException("Service already active! Please check before run it again")
-        key = key_generator(AUTH_PATH)
-        self.broadcaster = JtopManager(key)
+        self.broadcaster = JtopManager()
         # Load board information
         self.board = load_jetson_variables()
         # Initialize Fan
@@ -340,9 +328,6 @@ class JtopServer(Process):
         os.chmod(JTOP_PIPE, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
         # Run the Control server
         super(JtopServer, self).start()
-        # Initialize signals
-        # signal.signal(signal.SIGINT, self.exit_signal)  # Do not needed equivalent to exception KeyboardInterrupt
-        signal.signal(signal.SIGTERM, self.exit_signal)
 
     def loop_for_ever(self):
         try:
@@ -359,12 +344,7 @@ class JtopServer(Process):
             # Close communication
             self.close()
 
-    def exit_signal(self, signum, frame):
-        logger.info("Close service by signal {signum}".format(signum=signum))
-        self.close()
-
     def close(self):
-        # Terminate broadcaster
         self.broadcaster.shutdown()
         # If process is in timeout manually terminate
         if self.interval.value == -1.0:
@@ -390,18 +370,10 @@ class JtopServer(Process):
         return True
 
     def remove_files(self):
-        # Remove authentication file
-        if os.path.exists(AUTH_PATH):
-            logger.info("Remove authentication {auth}".format(auth=AUTH_PATH))
-            os.remove(AUTH_PATH)
         # If exist remove pipe
         if os.path.exists(JTOP_PIPE):
             logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
             os.remove(JTOP_PIPE)
-        # Remove folder
-        if os.path.isdir('/run/jtop'):
-            logger.info("Remove jtop folder in /run")
-            shutil.rmtree('/run/jtop')
 
     def _total_power(self, power):
         """
@@ -529,10 +501,4 @@ class JtopServer(Process):
         # Set event for all clients
         if not self.sync_event.is_set():
             self.sync_event.set()
-
-
-def key_reader(AUTH_RE):
-    with open(AUTH_PATH, 'r') as f:
-        key = b64decode(f.readline()).decode('utf-8').replace(get_var(AUTH_RE), '')
-    return key
 # EOF

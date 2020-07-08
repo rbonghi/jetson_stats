@@ -22,7 +22,7 @@ import sys
 from datetime import datetime
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
-from .service import JtopManager, key_reader
+from .service import JtopManager
 from .core import (
     Memory,
     Engine,
@@ -104,16 +104,8 @@ class jtop(Thread):
         JtopManager.register('get_queue')
         JtopManager.register("sync_data")
         JtopManager.register('sync_event')
-        # Load authentication key
-        try:
-            key = key_reader(AUTH_RE)
-        except FileNotFoundError as e:
-            if e.errno == 2:  # Message error: 'No such file or directory'
-                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl start jetson_stats.service")
-            else:
-                FileNotFoundError(e)
         # Initialize broadcaster manager
-        self._broadcaster = JtopManager(key)
+        self._broadcaster = JtopManager()
         # Initialize board variable
         self._board = Board()
         self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])

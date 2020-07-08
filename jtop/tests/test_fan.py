@@ -23,6 +23,15 @@ import shutil
 MAX_COUNT = 10
 
 
+def remove_tests():
+    if os.path.isfile('/tmp/jetson_model'):
+        os.remove('/tmp/jetson_model')
+    if os.path.isfile('/tmp/jetson_clocks_test'):
+        os.remove('/tmp/jetson_clocks_test')
+    if os.path.isfile('/tmp/nvp_model_test'):
+        os.remove('/tmp/nvp_model_test')
+
+
 def copyDirectory(src, dest):
     try:
         shutil.copytree(src, dest)
@@ -35,6 +44,7 @@ def copyDirectory(src, dest):
 
 
 def test_write_fan_speed():
+    remove_tests()
     # Copy folder in temp
     if os.path.isdir('/tmp/fan/'):
         shutil.rmtree('/tmp/fan/')
@@ -60,10 +70,12 @@ def test_write_fan_speed():
     # remove test fan folder
     if os.path.isdir('/tmp/fan/'):
         shutil.rmtree('/tmp/fan/')
+    remove_tests()
 
 
 def test_no_speed_control():
     counter = 0
+    remove_tests()
     # Copy folder in temp
     if os.path.isdir('/tmp/fan/'):
         shutil.rmtree('/tmp/fan/')
@@ -98,6 +110,7 @@ def test_no_speed_control():
     # remove test fan folder
     if os.path.isdir('/tmp/fan/'):
         shutil.rmtree('/tmp/fan/')
+    remove_tests()
 
 
 def test_read_fan_status(jtop_server):

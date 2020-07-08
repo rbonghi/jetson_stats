@@ -17,7 +17,7 @@
 
 import logging
 import time
-from jtop import jtop
+from jtop import jtop, JtopException
 from ..service import JtopServer
 # Create logger
 logger = logging.getLogger(__name__)
@@ -29,7 +29,10 @@ def test_service_full():
     # Check if is alive
     assert jtop_server.is_alive()
     # Close service
-    jtop_server.close()
+    try:
+        jtop_server.close()
+    except JtopException:
+        pass
     # Check if service is off
     assert not jtop_server.is_alive()
 
@@ -47,7 +50,10 @@ def test_service_full_read():
     # Close service
     jtop_server.close()
     # Close jetson
-    jetson.close()
+    try:
+        jetson.close()
+    except JtopException:
+        pass
     # Check if service is off
     assert not jtop_server.is_alive()
 
@@ -65,7 +71,10 @@ def test_service_nothing_read():
     # Close service
     jtop_server.close()
     # Close jetson
-    jetson.close()
+    try:
+        jetson.close()
+    except JtopException:
+        pass
     # Check if service is off
     assert not jtop_server.is_alive()
 # EOF

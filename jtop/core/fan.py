@@ -180,12 +180,14 @@ class FanService(object):
                 if not self._jc.is_alive:
                     self.auto = True
                 else:
-                    self.speed = 100
+                    if self.is_speed:
+                        self.speed = 100
         if value == 'manual':
             # Switch off speed
             self.auto = False
             # Initialize default speed
-            self.speed = self._speed
+            if self.is_speed:
+                self.speed = self._speed
         # Store mode
         self._status['mode'] = value
         # Store only if value is different

@@ -33,7 +33,7 @@ from .common import (
     get_var,
     get_uptime,
     status_disk,
-    get_local_interfaces,
-    key_generator)
+    get_key,
+    get_local_interfaces)
 from .exceptions import JtopException
 # EOF

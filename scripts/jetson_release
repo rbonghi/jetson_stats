@@ -67,9 +67,9 @@ jetson_release()
     fi
     # Print status Jetson Performance service
     if [ $JETSON_STATS_SERVICE_STATUS = "active" ] ; then
-        echo "   * jetson_stats service: ${green}$JETSON_STATS_SERVICE_STATUS${reset}"
+        echo "   * jetson_stats.service: ${green}$JETSON_STATS_SERVICE_STATUS${reset}"
     else
-        echo "   * jetson_stats service: ${red}$JETSON_STATS_SERVICE_STATUS${reset}"
+        echo "   * jetson_stats.service: ${red}$JETSON_STATS_SERVICE_STATUS${reset}"
     fi
 
     if $VERBOSE ; then
