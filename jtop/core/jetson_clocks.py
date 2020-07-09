@@ -214,6 +214,8 @@ class JetsonClocksService(object):
         self._error = None
         self._show = {}
         self._thread_show_running = False
+        # nvpmodel
+        self.nvpmodel = None
         # Load configuration
         self._config = config
         jetson_clocks_file = config.get('jetson_clocks', {}).get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
@@ -227,6 +229,9 @@ class JetsonClocksService(object):
         cmd = Command([self.jc_bin, '--show'])
         lines = cmd(timeout=COMMAND_TIMEOUT)
         self._show = decode_show_message(lines)
+
+    def set_nvpmodel(self, nvpmodel):
+        self.nvpmodel = nvpmodel
 
     def initialization(self):
         status = True
@@ -341,7 +346,7 @@ class JetsonClocksService(object):
             # Set mode
             self.fan.auto = False
 
-    def _jetson_clocks_boot(self, boot_time):
+    def _jetson_clocks_boot(self, boot_time, reset):
         # Measure remaining time from boot
         boot_time = timedelta(seconds=boot_time)
         up_time = timedelta(seconds=get_uptime())
@@ -364,11 +369,14 @@ class JetsonClocksService(object):
             # Fix fan speed
             if self.fan is not None:
                 self._fix_fan(speed)
+            # Reset nvpmodel
+            if reset and self.nvpmodel is not None:
+                self.nvpmodel.reset()
         except Exception:
             # Store error message
             self._error = sys.exc_info()
 
-    def start(self):
+    def start(self, reset=False):
         # If there are exception raise
         self._error_status()
         # Check which version is L4T is loaded
@@ -386,13 +394,13 @@ class JetsonClocksService(object):
             # Load jetson_clocks start up information
             jetson_clocks_start = self._config.get('wait', CONFIG_DEFAULT_DELAY)
             # Start thread Service client
-            self._thread_start = Thread(target=self._jetson_clocks_boot, args=(jetson_clocks_start, ))
+            self._thread_start = Thread(target=self._jetson_clocks_boot, args=(jetson_clocks_start, reset, ))
             # self._thread_start.daemon = True
             self._thread_start.start()
             return True
         return False
 
-    def _thread_jetson_clocks_stop(self):
+    def _thread_jetson_clocks_stop(self, reset):
         try:
             # Read fan speed
             if self.fan is not None:
@@ -408,11 +416,14 @@ class JetsonClocksService(object):
             # Fix fan speed
             if self.fan is not None:
                 self._fix_fan(speed)
+            # Reset nvpmodel
+            if reset and self.nvpmodel is not None:
+                self.nvpmodel.reset()
         except Exception:
             # Store error message
             self._error = sys.exc_info()
 
-    def stop(self):
+    def stop(self, reset=False):
         # If there are exception raise
         self._error_status()
         # Check if restore config exist
@@ -423,7 +434,7 @@ class JetsonClocksService(object):
             return True
         if self.is_running == 'inactive':
             # Start thread Service client
-            self._thread_stop = Thread(target=self._thread_jetson_clocks_stop)
+            self._thread_stop = Thread(target=self._thread_jetson_clocks_stop, args=(reset, ))
             # self._thread_stop.daemon = True
             self._thread_stop.start()
             return True

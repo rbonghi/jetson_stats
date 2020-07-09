@@ -121,7 +121,7 @@ class JtopServer(Process):
         self.force = force
         # Check if running a root
         if os.getuid() != 0:
-            raise JtopException("jetson_clocks need sudo to work")
+            raise JtopException("jtop service need sudo to work")
         # Load configuration
         self.config = Config()
         # Error queue
@@ -149,13 +149,13 @@ class JtopServer(Process):
         try:
             self.fan = FanService(self.config, path_fan)
         except JtopException as error:
-            logger.info("{error} in paths {path}".format(error=error, path=path_fan))
+            logger.warning("{error} in paths {path}".format(error=error, path=path_fan))
             self.fan = None
         # Initialize jetson_clocks controller
         try:
             self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)
         except JtopException as error:
-            logger.info("{error} in paths {path}".format(error=error, path=path_nvpmodel))
+            logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.jetson_clocks = None
         # Initialize jetson_fan
         if self.fan is not None:
@@ -164,8 +164,11 @@ class JtopServer(Process):
         try:
             self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
         except JtopException as error:
-            logger.info("{error} in paths {path}".format(error=error, path=path_nvpmodel))
+            logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
+        # config nvpmodel on jetson_clocks
+        if self.jetson_clocks is not None:
+            self.jetson_clocks.set_nvpmodel(self.nvpmodel)
         # Setup memory servive
         self.memory = MemoryService()
         # Setup tegrastats
@@ -217,7 +220,7 @@ class JtopServer(Process):
                                 else:
                                     logger.warning("jetson_clocks already running")
                             else:
-                                if self.jetson_clocks.stop():
+                                if self.jetson_clocks.stop(reset=True):
                                     logger.info("jetson_clocks stopped")
                                 else:
                                     logger.info("jetson_clocks already stopped")
@@ -265,7 +268,7 @@ class JtopServer(Process):
                             'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
                     # Update timeout interval
-                    timeout = TIMEOUT_GAIN  # TODO: Check timeout interval * TIMEOUT_GAIN
+                    timeout = TIMEOUT_GAIN if interval <= TIMEOUT_GAIN else interval * TIMEOUT_GAIN
                 except queue.Empty:
                     self.sync_event.clear()
                     # Close and log status

@@ -138,6 +138,8 @@ class NVPModelService(object):
                     mode_name = str(match.group(2))
                     # Save in nvpm list
                     self._nvpm[mode_id] = {'name': mode_name, 'status': True}
+            # Get starting model
+            self.selected, _ = NVPModelService.query(self.nvpmodel_name)
         except (OSError, Command.TimeoutException):
             logger.warning("This board does not have NVP Model")
             raise JtopException("NVPmodel does not exist for this board")
@@ -192,12 +194,18 @@ class NVPModelService(object):
         self._thread.start()
         return True
 
+    def reset(self):
+        status = self._mode(self.selected)
+        if status:
+            logger.info("RESET nvpmodel to {ID}".format(ID=self.selected))
+        else:
+            logger.error("Fail to reset nvpmodel to {ID}".format(ID=self.selected))
+
     def modes(self):
         return self._nvpm
 
     def _mode(self, level):
         """ Set nvpmodel to a new status """
-        self.selected = level
         # Set the new nvpmodel status
         nvpmodel_p = Command([self.nvpmodel_name, '-m', str(level)])
         try:
@@ -206,9 +214,13 @@ class NVPModelService(object):
             # Check if error is in vector
             for line in lines:
                 if "NVPM ERROR" in line:
+                    text = "\n".join(lines)
+                    logger.error("Error to set nvpmodel {level}. Message:\n{text}".format(level=level, text=text))
                     return False
         except Command.TimeoutException:
             return False
+        # If everithing go well save the new mode
+        self.selected = level
         return True
 
     def get(self):
