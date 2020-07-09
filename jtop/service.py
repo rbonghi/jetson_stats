@@ -414,12 +414,14 @@ class JtopServer(Process):
         data = {}
         jetson_clocks_show = copy.deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
         # -- Engines --
+        nvjpg_data = nvjpg()
         data['engines'] = {
             'APE': tegrastats['APE'],
             'NVENC': tegrastats['NVENC'] if 'NVENC' in tegrastats else {},
             'NVDEC': tegrastats['NVDEC'] if 'NVDEC' in tegrastats else {},
-            'MSENC': tegrastats['MSENC'] if 'MSENC' in tegrastats else {},
-            'NVJPG': nvjpg()}
+            'MSENC': tegrastats['MSENC'] if 'MSENC' in tegrastats else {}}
+        if nvjpg_data:
+            data['engines']['NVJPG'] = nvjpg_data['rate'] if nvjpg_data['status'] else {}
         # -- Power --
         # Refactor names
         power = {k.replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in tegrastats['WATT'].items()}

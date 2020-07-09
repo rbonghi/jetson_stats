@@ -21,14 +21,17 @@ import os
 class Engine(object):
 
     def __init__(self):
-        pass
+        self.nvjpg = None
+        self.msenc = None
 
     def _update(self, tegrastats):
         self.ape = tegrastats['APE']
         self.nvenc = tegrastats['NVENC']
         self.nvdec = tegrastats['NVDEC']
-        self.msenc = tegrastats['MSENC']
-        self.nvjpg = tegrastats['NVJPG']
+        if 'MSENC' in tegrastats:
+            self.msenc = tegrastats['MSENC']
+        if 'NVJPG' in tegrastats:
+            self.nvjpg = tegrastats['NVJPG']
 
 
 def nvjpg(path="/sys/kernel/debug/clk/nvjpg"):

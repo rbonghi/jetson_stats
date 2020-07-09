@@ -19,7 +19,7 @@ import logging
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
@@ -283,10 +283,10 @@ class jtop(Thread):
         """
         stats = {'time': datetime.now(), 'uptime': self.uptime}
         # -- jetson_clocks --
-        if self.jetson_clocks:
+        if self.jetson_clocks is not None:
             stats['jetson_clocks'] = 'ON' if self.jetson_clocks else 'OFF'
         # -- NV Power Model --
-        if self.nvpmodel:
+        if self.nvpmodel is not None:
             stats['nvp model'] = self.nvpmodel.name
         # -- CPU --
         for cpu in sorted(self.cpu):
@@ -312,7 +312,7 @@ class jtop(Thread):
         stats['NVENC'] = self.engine.nvenc['val'] if self.engine.nvenc else 'OFF'
         stats['NVDEC'] = self.engine.nvdec['val'] if self.engine.nvdec else 'OFF'
         stats['NVJPG'] = self.engine.nvjpg['rate'] if self.engine.nvjpg else 'OFF'
-        if not self.engine.nvdec:
+        if self.engine.nvdec:
             stats['MSENC'] = self.engine.msenc
         # -- FAN --
         if self.fan:
@@ -394,7 +394,7 @@ class jtop(Thread):
     @property
     def uptime(self):
         """ Up time """
-        return get_uptime()
+        return timedelta(seconds=get_uptime())
 
     def _decode(self, data):
         """

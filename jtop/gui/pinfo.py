@@ -52,7 +52,7 @@ class INFO(Page):
         start_pos = first + 2
         spacing = 18
         # Up time
-        uptime_string = strfdelta(timedelta(seconds=self.jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
+        uptime_string = strfdelta(self.jetson.uptime, "{days} days {hours}:{minutes}:{seconds}")
         self.stdscr.addstr(start_pos, posx, "- Up Time:", curses.A_BOLD)
         self.stdscr.addstr(start_pos, posx + spacing, uptime_string)
         start_pos += 1

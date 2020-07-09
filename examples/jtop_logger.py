@@ -41,12 +41,12 @@ if __name__ == "__main__":
                 writer.writeheader()
                 # Write first row
                 writer.writerow(stats)
-            # Start loop
-            while jetson.ok():
-                stats = jetson.stats
-                # Write row
-                writer.writerow(stats)
-                print("Logged at {time}".format(time=stats['time']))
+                # Start loop
+                while jetson.ok():
+                    stats = jetson.stats
+                    # Write row
+                    writer.writerow(stats)
+                    print("Log at {time}".format(time=stats['time']))
     except JtopException as e:
         print(e)
     except KeyboardInterrupt:

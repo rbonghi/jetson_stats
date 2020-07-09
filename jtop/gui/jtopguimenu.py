@@ -108,7 +108,7 @@ def compact_info(stdscr, start, offset, width, height, jetson):
     stdscr.addstr(offset, start + (width - 7) // 2, " [info] ", curses.A_BOLD)
     counter = 1
     # Model board information
-    uptime_string = strfdelta(timedelta(seconds=jetson.uptime), "{days} days {hours}:{minutes}:{seconds}")
+    uptime_string = strfdelta(jetson.uptime, "{days} days {hours}:{minutes}:{seconds}")
     plot_name_info(stdscr, offset + counter, start + 1, "UpT", uptime_string)
     counter += 1
     # FAN status
@@ -165,10 +165,9 @@ def engines(stdscr, start, offset, width, height, jetson):
     double_info(stdscr, start + 1, offset + counter, width, (enc_name, enc_val), (dec_name, dec_val))
     counter += 1
     # NVJPG
-    if jetson.engine.nvjpg:
-        status = jetson.engine.nvjpg['status']
-        if status:
-            value, _, unit = size_min(jetson.engine.nvjpg['rate'])
+    if jetson.engine.nvjpg is not None:
+        if jetson.engine.nvjpg:
+            value, _, unit = size_min(jetson.engine.nvjpg)
             value = "{value}{unit}Hz".format(value=value, unit=unit)
         else:
             value = "[OFF]"
