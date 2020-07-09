@@ -17,7 +17,6 @@
 
 import re
 import curses
-from datetime import timedelta
 # Find variable
 from ..core.common import get_var
 # Page class definition
