@@ -93,7 +93,7 @@ class MemoryService(object):
         out, _ = clear_cache.communicate()
         return True if out else False
 
-    def shared_memory(self):
+    def meminfo(self):
         """
         Extract all memory information about board.
         - NvMapMemUsed: Is the shared memory between CPU and GPU
@@ -102,5 +102,13 @@ class MemoryService(object):
         meminfo = {}
         if os.path.isfile("/proc/meminfo"):
             meminfo = mem_info()
-        return meminfo.get('NvMapMemUsed', {})
+        total = meminfo.get('MemTotal', {})
+        available = meminfo.get('MemAvailable', {})
+        shared = meminfo.get('NvMapMemUsed', {})
+        return {
+            'tot': total.get('val', 0),
+            'use': total.get('val', 0) - available.get('val', 0),
+            'shared': shared.get('val', 0),
+            'unit': total.get('unit', 'k')
+        }
 # EOF

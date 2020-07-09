@@ -22,7 +22,7 @@ from .jtopgui import Page
 # Graphics elements
 from .lib.common import (label_freq,
                          size_min)
-from .lib.linear_gauge import linear_gauge, GaugeName
+from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
 from .lib.chart import Chart
 from .lib.button import Button
 
@@ -145,11 +145,15 @@ class MEM(Page):
         self.chart_ram.draw(self.stdscr, size_x, size_y, label="{percent} - {lfb}".format(percent=percent, lfb=label_lfb))
         # Make swap list file
         self.swap_menu(lc=first, start=size_x[1] + 3, size=size_x[1] - 13, width=width)
-        # Draw the Memory gague
+        # Plot Linear Gauge
+        cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
+        shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
+        cpu_bar = GaugeBar(cpu_val, curses.color_pair(4))
+        gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
         linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
                      start=1,
                      name=GaugeName('Mem', color=curses.color_pair(6)),
-                     value=int(ram_status['use'] / float(ram_status['tot']) * 100.0),
+                     value=(cpu_bar, gpu_bar, ),
                      label=label_lfb,
                      percent=percent)
         # IRAM linear gauge info

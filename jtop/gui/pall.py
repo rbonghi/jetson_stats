@@ -68,10 +68,13 @@ class ALL(Page):
                                                           size=lfb_status['size'],
                                                           unit=lfb_status['unit'])
         # Plot Linear Gauge
-        ram_bar = GaugeBar(int(ram_status['use'] / float(ram_status['tot']) * 100.0), curses.color_pair(6))
+        cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
+        shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
+        cpu_bar = GaugeBar(cpu_val, curses.color_pair(4))
+        gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
         linear_gauge(self.stdscr, offset=line_counter, size=width,
                      name=GaugeName('Mem', color=curses.color_pair(6)),
-                     value=(ram_bar, ),
+                     value=(cpu_bar, gpu_bar, ),
                      label=label_lfb,
                      percent=percent)
         # IRAM linear gauge info
