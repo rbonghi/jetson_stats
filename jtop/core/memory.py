@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import re
 # Logging
 import logging
 # Launch command
@@ -22,6 +24,22 @@ import subprocess as sp
 # from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
+# Memory regular exception
+REGEXP = re.compile(r'(.+?):\s+(.+?) (.?)B')
+
+
+def mem_info(path="/proc/meminfo"):
+    list_memory = {}
+    with open(path, "r") as fp:
+        for line in fp:
+            # Search line
+            match = REGEXP.search(line)
+            if match:
+                key = str(match.group(1).strip())
+                value = int(match.group(2).strip())
+                unit = str(match.group(3).strip())
+                list_memory[key] = {'val': value, 'unit': unit}
+    return list_memory
 
 
 class Memory(object):
@@ -74,4 +92,15 @@ class MemoryService(object):
         clear_cache = sp.Popen(['sysctl', 'vm.drop_caches=3'], stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = clear_cache.communicate()
         return True if out else False
+
+    def shared_memory(self):
+        """
+        Extract all memory information about board.
+        - NvMapMemUsed: Is the shared memory between CPU and GPU
+        - NvMapMemFree: To be define
+        """
+        meminfo = {}
+        if os.path.isfile("/proc/meminfo"):
+            meminfo = mem_info()
+        return meminfo.get('NvMapMemUsed', {})
 # EOF
