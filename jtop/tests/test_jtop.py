@@ -16,6 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from datetime import timedelta
 import logging
 from jtop import jtop
 from multiprocessing.pool import Pool
@@ -26,7 +27,7 @@ NUM_PROCESSES = 20
 
 def check_attributes(jetson):
     # uptime
-    assert isinstance(jetson.uptime, float)
+    assert isinstance(jetson.uptime, timedelta)
     # Status disk
     assert isinstance(jetson.disk, dict)
     # local interfaces
