@@ -15,22 +15,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
-from jtop import import_jetson_variables
-
-
-def test_load():
-    JETSONS = import_jetson_variables()
-    assert len(JETSONS) > 0
+import curses
+from jtop import jtop
+# Import gui test
+from ..gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 
 
-def test_env():
-    JETSONS = import_jetson_variables()
-    # Check contain JETSON_BOARD
-    assert "JETSON_BOARD" in JETSONS
-    # Check contain JETSON_L4T
-    assert "JETSON_L4T" in JETSONS
-    # Check contain JETSON_CUDA
-    assert "JETSON_CUDA" in JETSONS
+def openGUI(stdscr, jetson):
+    # Initialization Menu
+    pages = JTOPGUI(stdscr, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], start=False)
+    return pages
 
+
+def test_openGUI(jtop_server):
+    # Load command line controller
+    stdscr = curses.initscr()
+    # Initialize colors
+    curses.start_color()
+    # Run jtop
+    with jtop() as jetson:
+        if jetson.ok():
+            # Open JTOPGUI
+            pages = openGUI(stdscr, jetson)
+            # Start with selected page
+            pages.set(0)
+    assert True
 # EOF

@@ -26,5 +26,6 @@ fi
 # Load variables only if not empty the variable
 if [ ! -z $JTOP_VARIABLE ] ; then
     . $JTOP_VARIABLE/jetson_variables
+    . $JTOP_VARIABLE/jetson_libraries
 fi
 # EOF

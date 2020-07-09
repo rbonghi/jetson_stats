@@ -28,12 +28,12 @@ class Chart(object):
     Chart draw object
     http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
     """
-    def __init__(self, jetson, name, interval, callback, type_value=int, line="*", color=curses.A_NORMAL, color_chart=[], fill=True, time=10.0, tik=2):
+    def __init__(self, jetson, name, callback, type_value=int, line="*", color=curses.A_NORMAL, color_chart=[], fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
         self.callback = callback
         # Set shape
-        self.refresh = interval
+        self.refresh = jetson.interval * 1000
         # Design chart shape
         self.line = line
         self.color = color
@@ -43,16 +43,16 @@ class Chart(object):
         self.time = time
         self.tik = tik
         # Initialization chart
-        max_record = int(self.time * (float(1.0 / float(interval)) * 1000.0))
+        max_record = int(self.time * (float(1.0 / float(self.refresh)) * 1000.0))
         self.values = deque(max_record * [(len(self.color_chart) * [0])], maxlen=max_record)
-        # Initialzie default values and unit
+        # Initialize default values and unit
         self.unit = "%"
         self.type_value = type_value
         self.max_val = 100
         self.active = True
         self.message = "OFF"
         # Attach the chart for every update from jtop
-        jetson.attach(self)
+        jetson.attach(self.update)
 
     def statusChart(self, active, message):
         self.active = active
@@ -145,12 +145,14 @@ class Chart(object):
 
     def _plot_values(self, stdscr, size_x, size_y, displayX, displayY, label=True):
         """ Plot values """
-        val = float(displayX - 2) / float(len(self.values))
+        # https://stackoverflow.com/questions/30107212/add-to-a-deque-being-iterated-in-python
+        list_values = list(self.values)
+        val = float(displayX - 2) / float(len(list_values))
         time_block = int(ceil(val))
 
         label_x = size_x[1] - 5 if label else size_x[1]
 
-        for idx, values in enumerate(reversed(self.values)):
+        for idx, values in enumerate(reversed(list_values)):
             # TODO: n = n if n <= self.max_val else self.max_val
             x_val = label_x - idx * time_block - 3
             # Draw chart

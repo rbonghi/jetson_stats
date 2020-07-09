@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2020 Raffaello Bonghi.
@@ -16,28 +15,25 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""
-    Graphic reference:
-    - http://urwid.org/examples/index.html
-    - https://npyscreen.readthedocs.io/
-    - https://github.com/chubin/cheat.sh
-    - https://stackoverflow.com/questions/6840420/python-rewrite-multiple-lines-in-the-console
-    - https://docs.python.org/3.3/howto/curses.html#attributes-and-color
-    - http://toilers.mines.edu/~jrosenth/101python/code/curses_plot/
-"""
+import signal
 import os
+import sys
 import argparse
-# Logging
-import logging
 # control command line
 import curses
+# Logging
+import logging
+# jtop service
+from .service import JtopServer
+# jtop client
+from .jtop import jtop, get_version
+# jtop exception
+from .core import JtopException
+# GUI jtop interface
+from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 # Load colors
 from .github import jetpack_missing, board_missing
-# Tegrastats objext reader
-from .jtop import jtop, get_version
-# GUI jtop interface
-from .gui import JTOPGUI, ALL, CPU, GPU, MEM, CTRL, INFO
-# Create logger for jplotlib
+# Create logger
 logger = logging.getLogger(__name__)
 # Reference repository
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
@@ -55,22 +51,47 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
     @staticmethod
-    def ok():
-        return bcolors.OKGREEN + "OK" + bcolors.ENDC
+    def ok(message="OK"):
+        return bcolors.OKGREEN + message + bcolors.ENDC
 
     @staticmethod
-    def warning():
-        return bcolors.WARNING + "WARN" + bcolors.ENDC
+    def warning(message="WARN"):
+        return bcolors.WARNING + message + bcolors.ENDC
 
     @staticmethod
-    def fail():
-        return bcolors.FAIL + "ERR" + bcolors.ENDC
+    def fail(message="ERR"):
+        return bcolors.FAIL + message + bcolors.ENDC
+
+
+def warning_messages(jetson, no_warnings=False):
+    if no_warnings:
+        return
+    # Check is well stored the default jetson_clocks configuration
+    if jetson.jetson_clocks:
+        if not jetson.jetson_clocks.is_config:
+            print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
+    # Check if is running on sudo
+    if os.getuid() == 0:
+        print("[{status}] SUDO is no more required".format(status=bcolors.warning()))
+    # Check if jetpack is missing
+    if jetson.board.hardware['TYPE'] == "UNKNOWN" and jetson.board.hardware['BOARD'] and 'JETSON_DEBUG' not in os.environ:
+        print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, jetson, get_version())))
+    # Check if jetpack is missing
+    if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
+        print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, jetson, get_version())))
+
+
+def exit_signal(signum, frame):
+    logger.info("Close service by signal {signum}".format(signum=signum))
+    sys.exit(0)
 
 
 def main():
-    # Add arg parser
-    parser = argparse.ArgumentParser(description='jtop is system monitoring utility and runs on terminal')
-    parser.add_argument('--debug', dest="debug", help='Run with debug logger', action="store_true", default=False)
+    parser = argparse.ArgumentParser(
+        description='jtop is system monitoring utility and runs on terminal',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('service', nargs='?', help=argparse.SUPPRESS, default=False)
+    parser.add_argument('--force', dest='force', help=argparse.SUPPRESS, action="store_true", default=False)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
@@ -79,63 +100,51 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
     # Parse arguments
     args = parser.parse_args()
-    # Set logging level
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG, filename='jtop.log', filemode='w',
-                            format='%(name)s - %(levelname)s - %(message)s')
-    else:
-        logging.basicConfig()
-    # Open tegrastats reader and run the curses wrapper
+    # Initialize signals
+    # signal.signal(signal.SIGINT, exit_signal)  # Do not needed equivalent to exception KeyboardInterrupt
+    signal.signal(signal.SIGTERM, exit_signal)
+    # Run jtop service
+    if args.service == 'service':
+        # Initialize logging level
+        logging.basicConfig(level=logging.INFO, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+        # Run service
+        try:
+            # Initialize stats server
+            server = JtopServer(force=args.force)
+            logger.info("jetson_stats server loaded")
+            server.loop_for_ever()
+        except JtopException as e:
+            print(e)
+        # Close service
+        exit(0)
+    # Initialize logging level
+    logging.basicConfig()
+    # Convert refresh to second
+    interval = float(args.refresh / 1000.0)
+    # Restore option
+    if args.restore:
+        with jtop(interval=interval) as jetson:
+            if jetson.ok():
+                restore = jetson.restore()
+                for name in sorted(restore):
+                    status = bcolors.ok() if not restore[name] else bcolors.fail()
+                    print("[{status}] Restore: {name}".format(name=name.capitalize(), status=status))
+            # Write warnings
+            warning_messages(jetson, args.no_warnings)
+        # Close service
+        exit(0)
+    # jtop client start
     try:
-        with jtop(interval=args.refresh) as jetson:
-            if not args.restore:
-                try:
-                    # Call the curses wrapper
-                    curses.wrapper(JTOPGUI, args.refresh, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
-                except KeyboardInterrupt as x:
-                    # Catch keyboard interrupt and close
-                    logger.info("Closed with CTRL-C [{status}]".format(status=x))
-                except SystemExit as x:
-                    # Catch keyboard interrupt and close
-                    logger.info("System exit {status}".format(status=x))
-            else:
-                if jetson.userid == 0:
-                    # If enable restore:
-                    # * Disable jetson_clocks
-                    if jetson.jetson_clocks:
-                        jetson.jetson_clocks.start = False
-                        print("[{status}] Stop jetson_clocks service".format(status=bcolors.ok()))
-                        jetson.jetson_clocks.enable = False
-                        print("[{status}] Disable jetson_clocks service".format(status=bcolors.ok()))
-                    # * Set fan speed to 0
-                    if jetson.fan:
-                        jetson.fan.speed = 0
-                        print("[{status}] Fan speed = 0".format(status=bcolors.ok()))
-                        jetson.fan.control = True
-                        print("[{status}] Fan temp_control = 1".format(status=bcolors.ok()))
-                    # * Delete fan_configuration
-                        clear = jetson.fan.clear()
-                        status = bcolors.ok() if clear else bcolors.fail()
-                        print("[{status}] Clear Fan Configuration".format(status=status))
-                    # * Delete jetson_clocks configuration
-                    if jetson.jetson_clocks:
-                        clear = jetson.jetson_clocks.clear()
-                        status = bcolors.ok() if clear else bcolors.fail()
-                        print("[{status}] Clear Jetson Clock Configuration".format(status=status))
-                else:
-                    print("[{status}] Please run with sudo".format(status=bcolors.fail()))
-        if not args.no_warnings:
-            # Check if jetpack is missing
-            if not os.environ["JETSON_TYPE"] and os.environ["JETSON_BOARD"] and "DEBUG" not in os.environ["JETSON_MACHINE"]:
-                print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, get_version())))
-            # Check if jetpack is missing
-            if os.environ["JETSON_JETPACK"] == "UNKNOWN" and os.environ["JETSON_L4T"] != "N.N.N":
-                print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, get_version())))
-    except jtop.JtopException as e:
-        # Print error and close
-        print("[{status}] {error}".format(status=bcolors.fail(), error=e.message))
-        print("Run jetson_config (health page) to fix it")
-        print("or open an issue on {url}".format(url=REPOSITORY))
+        # Open jtop client
+        with jtop(interval=interval) as jetson:
+            # Call the curses wrapper
+            curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
+            # Write warnings
+            warning_messages(jetson, args.no_warnings)
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    except JtopException as e:
+        print(e)
 
 
 if __name__ == "__main__":

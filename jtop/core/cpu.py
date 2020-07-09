@@ -20,40 +20,68 @@ import re
 REGEXP = re.compile(r'(.+?): ((.*))')
 
 
-class cpuinfo():
+def cpu_info():
+    list_cpu = {}
+    with open("/proc/cpuinfo", "r") as fp:
+        for line in fp:
+            # Search line
+            match = REGEXP.search(line)
+            if match:
+                key = match.group(1).rstrip()
+                value = match.group(2).rstrip()
+                # Load value or if it is a new processor initialize a new field
+                if key == "processor":
+                    idx = int(value) + 1
+                    name = "CPU{idx}".format(idx=idx)
+                    list_cpu[name] = {}
+                else:
+                    # Load cpu info
+                    list_cpu[name][key] = value
+    return list_cpu
+
+
+def cpu_models():
+    # Load cpuinfo
+    list_cpu = cpu_info()
+    models = {}
+    # Find all models
+    for name, info in list_cpu.items():
+        models[name] = info.get("model name", "")
+    return models
+
+
+class CPU(object):
     """
     Find in cpuinfo information about the board
     """
-    @staticmethod
-    def info():
-        cpus = {}
-        with open("/proc/cpuinfo", "r") as fp:
-            for line in fp:
-                # Search line
-                match = REGEXP.search(line)
-                if match:
-                    key = match.group(1).rstrip()
-                    value = match.group(2).rstrip()
-                    # Load value or if it is a new processor initialize a new field
-                    if key == "processor":
-                        n_proc = int(value)
-                        cpus[n_proc] = {}
-                    else:
-                        # Load cpu info
-                        cpus[n_proc][key] = value
-        return cpus
+    def __init__(self):
+        # Initialize CPU status
+        self.cpu = {}
 
-    @staticmethod
-    def models():
-        # Load cpuinfo
-        cpus = cpuinfo.info()
-        models = {}
-        # Find all models
-        for cpu in cpus.values():
-            model = cpu.get("model name", "")
-            if model not in models:
-                models[model] = 1
-            else:
-                models[model] += 1
-        return models
+    def _update(self, cpu_status):
+        self.cpu.update(cpu_status)
+
+    def items(self):
+        return self.cpu.items()
+
+    def get(self, name, value=None):
+        if name in self.cpu:
+            return self.cpu[name]
+        else:
+            return value
+
+    def __getitem__(self, name):
+        return self.cpu[name]
+
+    def __iter__(self):
+        return iter(self.cpu)
+
+    def __next__(self):
+        return next(self.cpu)
+
+    def __len__(self):
+        return len(self.cpu)
+
+    def __repr__(self):
+        return str(self.cpu)
 # EOF

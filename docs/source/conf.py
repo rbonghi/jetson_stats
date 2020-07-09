@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 import os
 import sys
+import jtop
 sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
@@ -24,7 +25,7 @@ copyright = '2020, Raffaello Bonghi'
 author = 'Raffaello Bonghi'
 
 # The full version, including alpha/beta/rc tags
-release = '1.8.0'
+release = jtop.__version__
 
 # -- General configuration ---------------------------------------------------
 
