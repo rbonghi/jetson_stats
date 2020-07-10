@@ -167,7 +167,7 @@ class Chart(object):
                     if self.fill:
                         for n in range(counter + 1, counter + y_val + 1):
                             try:
-                                 stdscr.addstr(size_y[1] - 1 - n, x_val, " ", color)
+                                stdscr.addstr(size_y[1] - 1 - n, x_val, " ", color)
                             except curses.error:
                                 pass
                     else:
