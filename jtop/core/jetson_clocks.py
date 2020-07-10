@@ -337,13 +337,13 @@ class JetsonClocksService(object):
         if self.fan.mode == 'system':
             # Read status
             if self.fan.is_speed:
-                self.fan.speed = speed
+                self.fan.set_speed(speed)
             # Set mode
             self.fan.auto = True
         elif self.fan.mode == 'manual':
             # Read status
             if self.fan.is_speed:
-                self.fan.speed = speed
+                self.fan.set_speed(speed)
             # Set mode
             self.fan.auto = False
         elif self.fan.mode == 'default':
