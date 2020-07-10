@@ -17,6 +17,7 @@
 
 from os import path
 import curses
+from curses.textpad import rectangle
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
@@ -125,6 +126,37 @@ class MEM(Page):
                      percent=percent,
                      status='ON' if swap_status else 'OFF')
 
+    def memory_legend(self, start_y, height, width, first):
+        r_height = 6
+        r_width = 20
+        #start_y = height - (r_height + 2)
+        start_x = width - r_width - 1
+        # Draw border legend
+        rectangle(self.stdscr, start_y, start_x, start_y + r_height, start_x + r_width)
+        # Draw name
+        self.stdscr.addstr(start_y + 1, start_x + 3, "RAM Legend", curses.A_BOLD)
+        # Draw CPU
+        self.stdscr.addstr(start_y + 2, start_x + 2, "CPU:", (curses.color_pair(12) | curses.A_BOLD))
+        self.stdscr.addstr(start_y + 3, start_x + 2, "GPU:", (curses.color_pair(8) | curses.A_BOLD))
+        # Line
+        self.stdscr.hline(start_y + 4, start_x + 2, curses.ACS_HLINE, r_width - 3)
+        # Total used
+        self.stdscr.addstr(start_y + 5, start_x + 2, "USE:", curses.A_BOLD)
+        # Draw values
+        cpu_val = (self.jetson.ram['use'] - self.jetson.ram['shared'])
+        cpu_val, divider, cpu_unit = size_min(cpu_val, start=self.jetson.ram['unit'])
+        gpu_val = self.jetson.ram['shared']
+        gpu_val, divider, gpu_unit = size_min(gpu_val, start=self.jetson.ram['unit'])
+        use_val = self.jetson.ram['use']
+        use_val, divider, use_unit = size_min(use_val, start=self.jetson.ram['unit'])
+        self.stdscr.addstr(start_y + 2, start_x + 7, "{value: 3.1f}".format(value=cpu_val), curses.A_NORMAL)
+        self.stdscr.addstr(start_y + 3, start_x + 7, "{value: 3.1f}".format(value=gpu_val), curses.A_NORMAL)
+        self.stdscr.addstr(start_y + 5, start_x + 7, "{value: 3.1f}".format(value=use_val), curses.A_NORMAL)
+        # Unit
+        self.stdscr.addstr(start_y + 2, start_x + 16, "{unit}B".format(unit=cpu_unit), curses.A_NORMAL)
+        self.stdscr.addstr(start_y + 3, start_x + 16, "{unit}B".format(unit=gpu_unit), curses.A_NORMAL)
+        self.stdscr.addstr(start_y + 5, start_x + 16, "{unit}B".format(unit=use_unit), curses.A_NORMAL)
+
     def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
@@ -179,6 +211,8 @@ class MEM(Page):
                      name=GaugeName('EMC', color=curses.color_pair(6)),
                      value=self.jetson.emc.get('val', 0),
                      label=label_freq(self.jetson.emc['frq'], start='k'))
+        # Write memory legend
+        self.memory_legend(line_counter + 1, height, width, first)
         # Clear cache button
         self.button_cache.draw(first + height - 7, 1, key, mouse)
         clear_cache = "Clear cache"
