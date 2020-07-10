@@ -203,7 +203,7 @@ class FanService(object):
             # Set new jetson_clocks configuration
             self._config.set('fan', config)
             # Fan setting
-            logger.info("Config {config}".format(config=config))
+            logger.debug("Config {config}".format(config=config))
 
     @property
     def is_speed(self):
@@ -227,7 +227,7 @@ class FanService(object):
         # Set new jetson_clocks configuration
         self._config.set('fan', config)
         # Fan setting
-        logger.info("Config {config}".format(config=config))
+        logger.debug("Config {config}".format(config=config))
 
     def set_speed(self, value):
         # Check type

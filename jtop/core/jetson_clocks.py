@@ -332,7 +332,7 @@ class JetsonClocksService(object):
         return 'inactive'
 
     def _fix_fan(self, speed):
-        logger.info("fan mode: {mode} - speed {speed}".format(mode=self.fan.mode, speed=self.fan.speed))
+        logger.debug("fan mode: {mode} - speed {speed}".format(mode=self.fan.mode, speed=self.fan.speed))
         # Configure fan
         if self.fan.mode == 'system':
             # Read status
