@@ -129,7 +129,7 @@ class MEM(Page):
     def memory_legend(self, start_y, height, width, first):
         r_height = 6
         r_width = 20
-        #start_y = height - (r_height + 2)
+        # start_y = height - (r_height + 2)
         start_x = width - r_width - 1
         # Draw border legend
         rectangle(self.stdscr, start_y, start_x, start_y + r_height, start_x + r_width)
