@@ -1,8 +1,10 @@
 name: Publish
 
+# https://github.community/t/how-to-run-github-actions-workflow-only-for-new-tags/16075/20
 on:
-  create:
+  push:
     tags:
+    - '*'
 
 jobs:
   deploy:
