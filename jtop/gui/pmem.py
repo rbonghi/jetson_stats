@@ -38,7 +38,7 @@ class MEM(Page):
         self.chart_ram = Chart(jetson, "RAM", self.update_chart,
                                type_value=float,
                                color=curses.color_pair(6),
-                               color_chart=[curses.color_pair(12)])
+                               color_chart=[curses.color_pair(12), curses.color_pair(8)])
         # Initialize buttons
         self.button_cache = Button(stdscr, "c", action=self.action_cache)
         self.button_swap = Button(stdscr, "s", action=self.action_swap)
@@ -72,15 +72,16 @@ class MEM(Page):
         # Get max value if is present
         max_val = parameter.get("tot", 100)
         # Get unit
-        unit = parameter.get("unit", "M")
+        unit = parameter.get("unit", "k")
         # Get value
-        value = parameter.get("use", 0)
-        info = size_min(max_val, start=unit)
+        cpu_val = parameter.get("use", 0) - parameter.get("shared", 0)
+        gpu_val = parameter.get("shared", 0)
+        szw, divider, unit = size_min(max_val, start=unit)
         # Append in list
         return {
-            'value': [value / info[1]],
-            'max': info[0],
-            'unit': info[2]
+            'value': [cpu_val / divider, gpu_val / divider],
+            'max': szw,
+            'unit': unit
         }
 
     def swap_menu(self, lc, size, start, width):
@@ -148,7 +149,7 @@ class MEM(Page):
         # Plot Linear Gauge
         cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
         shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
-        cpu_bar = GaugeBar(cpu_val, curses.color_pair(4))
+        cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
         gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
         linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
                      start=1,
