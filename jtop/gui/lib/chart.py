@@ -146,25 +146,28 @@ class Chart(object):
     def _plot_values(self, stdscr, size_x, size_y, displayX, displayY, label=True):
         """ Plot values """
         # https://stackoverflow.com/questions/30107212/add-to-a-deque-being-iterated-in-python
-        list_values = list(self.values)
-        val = float(displayX - 2) / float(len(list_values))
-        time_block = int(ceil(val))
+
+        val = float(displayX - 2) / float(len(self.values))
+        points = []
+        for n in self.values:
+            # n = n if n <= self.max_val else self.max_val
+            points += [n] * int(ceil(val))
 
         label_x = size_x[1] - 5 if label else size_x[1]
-
-        for idx, values in enumerate(reversed(list_values)):
-            # TODO: n = n if n <= self.max_val else self.max_val
-            x_val = label_x - idx * time_block - 3
+        for idx, values in enumerate(reversed(points)):
+            x_val = label_x - 1 - idx
             # Draw chart
             counter = 0
+            ceil_part = 0
             for value, color in zip(values, self.color_chart):
-                y_val = int((float(displayY - 1) / self.max_val) * value)
+                y_val = int((float(displayY - 1) / self.max_val) * (value + ceil_part))
+                ceil_part = value - int((float(displayY - 1) / self.max_val) * (value))
 
                 if x_val >= size_x[0]:
                     if self.fill:
                         for n in range(counter + 1, counter + y_val + 1):
                             try:
-                                stdscr.addstr(size_y[1] - 1 - n, x_val, " " * time_block, color)
+                                stdscr.addstr(size_y[1] - 1 - n, x_val, " ", color)
                             except curses.error:
                                 pass
                     else:

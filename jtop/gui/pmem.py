@@ -17,12 +17,13 @@
 
 from os import path
 import curses
+from curses.textpad import rectangle
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import (label_freq,
                          size_min)
-from .lib.linear_gauge import linear_gauge, GaugeName
+from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
 from .lib.chart import Chart
 from .lib.button import Button
 
@@ -38,7 +39,7 @@ class MEM(Page):
         self.chart_ram = Chart(jetson, "RAM", self.update_chart,
                                type_value=float,
                                color=curses.color_pair(6),
-                               color_chart=[curses.color_pair(12)])
+                               color_chart=[curses.color_pair(12), curses.color_pair(8)])
         # Initialize buttons
         self.button_cache = Button(stdscr, "c", action=self.action_cache)
         self.button_swap = Button(stdscr, "s", action=self.action_swap)
@@ -72,15 +73,16 @@ class MEM(Page):
         # Get max value if is present
         max_val = parameter.get("tot", 100)
         # Get unit
-        unit = parameter.get("unit", "M")
+        unit = parameter.get("unit", "k")
         # Get value
-        value = parameter.get("use", 0)
-        info = size_min(max_val, start=unit)
+        cpu_val = parameter.get("use", 0) - parameter.get("shared", 0)
+        gpu_val = parameter.get("shared", 0)
+        szw, divider, unit = size_min(max_val, start=unit)
         # Append in list
         return {
-            'value': [value / info[1]],
-            'max': info[0],
-            'unit': info[2]
+            'value': [cpu_val / divider, gpu_val / divider],
+            'max': szw,
+            'unit': unit
         }
 
     def swap_menu(self, lc, size, start, width):
@@ -124,6 +126,37 @@ class MEM(Page):
                      percent=percent,
                      status='ON' if swap_status else 'OFF')
 
+    def memory_legend(self, start_y, height, width, first):
+        r_height = 6
+        r_width = 20
+        # start_y = height - (r_height + 2)
+        start_x = width - r_width - 1
+        # Draw border legend
+        rectangle(self.stdscr, start_y, start_x, start_y + r_height, start_x + r_width)
+        # Draw name
+        self.stdscr.addstr(start_y + 1, start_x + 3, "RAM Legend", curses.A_BOLD)
+        # Draw CPU
+        self.stdscr.addstr(start_y + 2, start_x + 2, "CPU:", (curses.color_pair(12) | curses.A_BOLD))
+        self.stdscr.addstr(start_y + 3, start_x + 2, "GPU:", (curses.color_pair(8) | curses.A_BOLD))
+        # Line
+        self.stdscr.hline(start_y + 4, start_x + 2, curses.ACS_HLINE, r_width - 3)
+        # Total used
+        self.stdscr.addstr(start_y + 5, start_x + 2, "USE:", curses.A_BOLD)
+        # Draw values
+        cpu_val = (self.jetson.ram['use'] - self.jetson.ram['shared'])
+        cpu_val, divider, cpu_unit = size_min(cpu_val, start=self.jetson.ram['unit'])
+        gpu_val = self.jetson.ram['shared']
+        gpu_val, divider, gpu_unit = size_min(gpu_val, start=self.jetson.ram['unit'])
+        use_val = self.jetson.ram['use']
+        use_val, divider, use_unit = size_min(use_val, start=self.jetson.ram['unit'])
+        self.stdscr.addstr(start_y + 2, start_x + 7, "{value: 3.1f}".format(value=cpu_val), curses.A_NORMAL)
+        self.stdscr.addstr(start_y + 3, start_x + 7, "{value: 3.1f}".format(value=gpu_val), curses.A_NORMAL)
+        self.stdscr.addstr(start_y + 5, start_x + 7, "{value: 3.1f}".format(value=use_val), curses.A_NORMAL)
+        # Unit
+        self.stdscr.addstr(start_y + 2, start_x + 16, "{unit}B".format(unit=cpu_unit), curses.A_NORMAL)
+        self.stdscr.addstr(start_y + 3, start_x + 16, "{unit}B".format(unit=gpu_unit), curses.A_NORMAL)
+        self.stdscr.addstr(start_y + 5, start_x + 16, "{unit}B".format(unit=use_unit), curses.A_NORMAL)
+
     def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
@@ -145,11 +178,15 @@ class MEM(Page):
         self.chart_ram.draw(self.stdscr, size_x, size_y, label="{percent} - {lfb}".format(percent=percent, lfb=label_lfb))
         # Make swap list file
         self.swap_menu(lc=first, start=size_x[1] + 3, size=size_x[1] - 13, width=width)
-        # Draw the Memory gague
+        # Plot Linear Gauge
+        cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
+        shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
+        cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
+        gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
         linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
                      start=1,
                      name=GaugeName('Mem', color=curses.color_pair(6)),
-                     value=int(ram_status['use'] / float(ram_status['tot']) * 100.0),
+                     value=(cpu_bar, gpu_bar, ),
                      label=label_lfb,
                      percent=percent)
         # IRAM linear gauge info
@@ -174,6 +211,8 @@ class MEM(Page):
                      name=GaugeName('EMC', color=curses.color_pair(6)),
                      value=self.jetson.emc.get('val', 0),
                      label=label_freq(self.jetson.emc['frq'], start='k'))
+        # Write memory legend
+        self.memory_legend(line_counter + 1, height, width, first)
         # Clear cache button
         self.button_cache.draw(first + height - 7, 1, key, mouse)
         clear_cache = "Clear cache"
