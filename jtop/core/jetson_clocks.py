@@ -22,7 +22,7 @@ import logging
 import sys
 # Launch command
 from datetime import timedelta
-from threading import Thread
+from threading import Thread, Event
 # Local functions and classes
 from .command import Command
 from .common import get_uptime, locate_commands
@@ -229,6 +229,8 @@ class JetsonClocksService(object):
         cmd = Command([self.jc_bin, '--show'])
         lines = cmd(timeout=COMMAND_TIMEOUT)
         self._show = decode_show_message(lines)
+        # Show event
+        self.event_show = Event()
 
     def set_nvpmodel(self, nvpmodel):
         self.nvpmodel = nvpmodel
@@ -237,7 +239,7 @@ class JetsonClocksService(object):
         status = True
         # Check if exist configuration file
         if not os.path.isfile(self.config_l4t):
-            if self.is_alive:
+            if self.alive(wait=False):
                 logger.warning("I can't store jetson_clocks is already running")
                 status = False
             else:
@@ -273,13 +275,17 @@ class JetsonClocksService(object):
     def show(self):
         return self._show
 
-    def _thread_jetson_clocks_loop(self):
+    def _thread_jetson_clocks_loop(self, event_show):
         cmd = Command([self.jc_bin, '--show'])
         try:
             while self._thread_show_running:
                 try:
                     lines = cmd(timeout=COMMAND_TIMEOUT)
                     self._show = decode_show_message(lines)
+                    # Set event from jetson_clocks
+                    if not event_show.is_set():
+                        logger.debug("Set event")
+                        event_show.set()
                 except Command.TimeoutException as e:
                     logger.warning("Timeout {}".format(e))
         except Exception as e:
@@ -301,7 +307,7 @@ class JetsonClocksService(object):
         if not self.show_running():
             self._thread_show_running = True
             # Start thread Service client
-            self._thread_show = Thread(target=self._thread_jetson_clocks_loop)
+            self._thread_show = Thread(target=self._thread_jetson_clocks_loop, args=(self.event_show, ))
             self._thread_show.start()
             return True
         return False
@@ -315,9 +321,13 @@ class JetsonClocksService(object):
             self._thread_show_running = False
         return True
 
-    @property
-    def is_alive(self):
-        # Make statistics
+    def alive(self, wait=True, timeout=None):
+        if wait and not self.event_show.is_set():
+            logger.info("Wait from jetson_clocks show")
+            if not self.event_show.wait(timeout=timeout):
+                raise JtopException("Lost connection from jtop")
+        self.event_show.clear()
+        # Return status jetson_clocks
         return jetson_clocks_alive(self._show)
 
     @property
@@ -369,9 +379,6 @@ class JetsonClocksService(object):
             status, message = run_command(cmd, repeat=5)
             if not status:
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-            # Check if jetson_clocks is running
-            while not self.is_alive:
-                pass
             # Fix fan speed
             if self.fan is not None:
                 self._fix_fan(speed)
@@ -391,7 +398,7 @@ class JetsonClocksService(object):
         # Temporary disabled to find a best way to start this service.
         # The service on demand disabled doesn't improve the performance of the start-up
         # If jetson_clocks on boot run a thread
-        if self.is_alive:
+        if self.alive(wait=False):
             return True
         # Check if restore config exist
         if not self.is_config():
@@ -419,9 +426,6 @@ class JetsonClocksService(object):
             status, message = run_command(cmd, repeat=5)
             if not status:
                 raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-            # Check if jetson_clocks is running
-            while self.is_alive:
-                pass
             # Fix fan speed
             if self.fan is not None:
                 self._fix_fan(speed)
@@ -439,7 +443,7 @@ class JetsonClocksService(object):
         if not self.is_config():
             return False
         # Check if jetson_clocks is already running
-        if not self.is_alive:
+        if not self.alive(wait=False):
             return True
         if self.is_running == 'inactive':
             # Start thread Service client

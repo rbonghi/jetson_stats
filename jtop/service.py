@@ -24,6 +24,7 @@ import os
 import sys
 import stat
 from grp import getgrnam
+from threading import Thread
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
@@ -486,7 +487,7 @@ class JtopServer(Process):
         # -- JETSON_CLOCKS --
         if self.jetson_clocks is not None:
             data['jc'] = {
-                'status': self.jetson_clocks.is_alive,
+                'status': self.jetson_clocks.alive(wait=False),
                 'thread': self.jetson_clocks.is_running,
                 'config': self.jetson_clocks.is_config(),
                 'boot': self.jetson_clocks.boot}
