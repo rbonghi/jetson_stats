@@ -21,8 +21,8 @@ Description=jetson_stats service
 ExecStart=/usr/local/bin/jtop service --force
 Restart=on-failure
 RestartSec=10s
-TimeoutStartSec=60s
-TimeoutStopSec=60s
+TimeoutStartSec=30s
+TimeoutStopSec=30s
 
 [Install]
 WantedBy=multi-user.target
