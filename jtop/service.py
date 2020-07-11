@@ -24,7 +24,6 @@ import os
 import sys
 import stat
 from grp import getgrnam
-from threading import Thread
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 # jetson_stats imports
@@ -188,7 +187,7 @@ class JtopServer(Process):
                     # Check if the configuration exist
                     if self.jetson_clocks:
                         if not self.jetson_clocks.is_config():
-                            if not self.jetson_clocks.is_alive:
+                            if not self.jetson_clocks.alive(wait=False):
                                 self.jetson_clocks.store()
                     # Check if control is not empty
                     if not control:

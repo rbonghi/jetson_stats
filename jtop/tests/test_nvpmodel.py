@@ -23,7 +23,7 @@ from jtop import jtop
 # - [2] MINTEST
 # - [3] MIN_MAX_TEST
 # Max count to wait
-MAX_COUNT = 15
+MAX_COUNT = 20
 
 
 def set_jetson_clocks(jetson, status):

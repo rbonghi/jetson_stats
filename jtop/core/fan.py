@@ -179,13 +179,14 @@ class FanService(object):
             # Set in auto only if jetson_clocks in not active
             if self._jc is not None:
                 # Only if jetson_clocks is alive set max speed for fan
-                if self._jc.is_alive:
+                jc_status = self._jc.alive(wait=False)
+                if jc_status:
                     if self.is_speed:
                         self.set_speed(100)
                 # Set automatic mode:
                 # - True if jetson_clocks is off
                 # - False if jetson_clocks is running
-                self.auto = not self._jc.is_alive
+                self.auto = not jc_status
         if value == 'manual':
             # Switch off speed
             self.auto = False
