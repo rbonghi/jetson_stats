@@ -339,6 +339,11 @@ class JetsonClocksService(object):
         if self._thread_stop is not None:
             if self._thread_stop.isAlive():
                 return 'deactivating'
+        # Load jetson_clocks start up information
+        boot_time = self._config.get('wait', CONFIG_DEFAULT_DELAY)
+        # If needtime make a sleep
+        if self.boot and timedelta(seconds=get_uptime()) < timedelta(seconds=boot_time):
+            return 'booting'
         return 'inactive'
 
     def _fix_fan(self, speed):
