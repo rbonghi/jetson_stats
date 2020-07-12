@@ -355,6 +355,11 @@ class jtop(Thread):
         return self._cpu
 
     @property
+    def cluster(self):
+        # Return status cluster
+        return self._stats.get('cluster', '')
+
+    @property
     def gpu(self):
         # Extract GPU
         return self._stats['gpu']
