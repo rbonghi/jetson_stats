@@ -1,15 +1,18 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>jtop package &mdash; jetson-stats 1.8.0 documentation</title>
+  <title>jtop package &mdash; jetson-stats 3.0.0 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
 
   
   
@@ -17,7 +20,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -29,10 +34,6 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 </head>
@@ -48,7 +49,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> jetson-stats
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> jetson-stats
           
 
           
@@ -71,6 +72,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -90,6 +92,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -128,7 +131,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>jtop package</li>
     
@@ -153,38 +156,12 @@
 <h1>jtop package<a class="headerlink" href="#jtop-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-jtop.jtop">
 <span id="jtop-jtop-module"></span><h2>jtop.jtop module<a class="headerlink" href="#module-jtop.jtop" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>JTOP is a complete controller of all systems in your NVIDIA Jetson</dt><dd><ul class="simple">
-<li><p>Tegrastats</p></li>
-<li><p>NVP Model</p></li>
-<li><p>Fan</p></li>
-<li><p>Status board (i.g. Model version, Jetpack, … )</p></li>
-</ul>
-</dd>
-</dl>
-<p>You can initialize the jtop node like a file i.g.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
-    <span class="n">stat</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">stats</span>
-</pre></div>
-</div>
-<p>Or manually start up with the basic function <cite>open/close</cite></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span> <span class="o">=</span> <span class="n">jtop</span><span class="p">()</span>
-<span class="n">jetson</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
-<span class="n">stat</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">stats</span>
-<span class="n">jetson</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>Jtop include all informations about your board. The default properties are:</dt><dd><ul class="simple">
-<li><p>stats</p></li>
-<li><p>nvpmodel</p></li>
-<li><p>fan</p></li>
-<li><p>board</p></li>
-<li><p>disk</p></li>
-</ul>
-</dd>
-</dl>
-<p>Follow the next attributes to know in detail how it works.</p>
+<dl class="class">
+<dt id="jtop.jtop.Board">
+<em class="property">class </em><code class="sig-prename descclassname">jtop.jtop.</code><code class="sig-name descname">Board</code><a class="headerlink" href="#jtop.jtop.Board" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
 <dl class="function">
 <dt id="jtop.jtop.get_version">
 <code class="sig-prename descclassname">jtop.jtop.</code><code class="sig-name descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.get_version" title="Permalink to this definition">¶</a></dt>
@@ -200,37 +177,25 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="jtop.jtop.import_jetson_variables">
-<code class="sig-prename descclassname">jtop.jtop.</code><code class="sig-name descname">import_jetson_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.import_jetson_variables" title="Permalink to this definition">¶</a></dt>
+<dt id="jtop.jtop.import_jetson_libraries">
+<code class="sig-prename descclassname">jtop.jtop.</code><code class="sig-name descname">import_jetson_libraries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.import_jetson_libraries" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
 <dt id="jtop.jtop.jtop">
-<em class="property">class </em><code class="sig-prename descclassname">jtop.jtop.</code><code class="sig-name descname">jtop</code><span class="sig-paren">(</span><em class="sig-param">interval=500</em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">jtop.core.common.StatusObserver</span></code></p>
-<p>with this class you can control your jtop statistics and manage your board</p>
+<em class="property">class </em><code class="sig-prename descclassname">jtop.jtop.</code><code class="sig-name descname">jtop</code><span class="sig-paren">(</span><em class="sig-param">interval=0.5</em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Thread</span></code></p>
+<p>jtop library is the reference to control your NVIDIA Jetson board with python.
+This object can be open like a file, or you can use a with callback function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>interval</strong> (<em>int</em>) – Interval update tegrastats and other statistic function</p>
+<dd class="field-odd"><p><strong>interval</strong> (<em>float</em>) – Interval update tegrastats and other statistic function</p>
 </dd>
 </dl>
-<dl class="exception">
-<dt id="jtop.jtop.jtop.JtopException">
-<em class="property">exception </em><code class="sig-name descname">JtopException</code><a class="headerlink" href="#jtop.jtop.jtop.JtopException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-<p>Jtop general exception</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="jtop.jtop.jtop.architecture">
-<em class="property">property </em><code class="sig-name descname">architecture</code><a class="headerlink" href="#jtop.jtop.jtop.architecture" title="Permalink to this definition">¶</a></dt>
-<dd><p>CPU architecture</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="jtop.jtop.jtop.attach">
 <code class="sig-name descname">attach</code><span class="sig-paren">(</span><em class="sig-param">observer</em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.attach" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attach an obserber to read the status of jtop</p>
+<dd><p>Attach an observer to read the status of jtop</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>observer</strong> (<em>function</em>) – The function to call</p>
@@ -241,27 +206,27 @@
 <dl class="method">
 <dt id="jtop.jtop.jtop.board">
 <em class="property">property </em><code class="sig-name descname">board</code><a class="headerlink" href="#jtop.jtop.jtop.board" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Detailed information of your board, with a complete list of:</dt><dd><ul class="simple">
-<li><p>Jetpack</p></li>
-<li><p>L4T</p></li>
-<li><p>Serial Number</p></li>
-<li><p>…</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="jtop.jtop.jtop.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close tegrastats app</p>
-</dd></dl>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.cluster">
+<em class="property">property </em><code class="sig-name descname">cluster</code><a class="headerlink" href="#jtop.jtop.jtop.cluster" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.cpu">
+<em class="property">property </em><code class="sig-name descname">cpu</code><a class="headerlink" href="#jtop.jtop.jtop.cpu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="jtop.jtop.jtop.detach">
 <code class="sig-name descname">detach</code><span class="sig-paren">(</span><em class="sig-param">observer</em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.detach" title="Permalink to this definition">¶</a></dt>
-<dd><p>Detach an obserber from jtop</p>
+<dd><p>Detach an observer from jtop</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>observer</strong> (<em>function</em>) – The function to detach</p>
@@ -276,15 +241,52 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="jtop.jtop.jtop.emc">
+<em class="property">property </em><code class="sig-name descname">emc</code><a class="headerlink" href="#jtop.jtop.jtop.emc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.engine">
+<em class="property">property </em><code class="sig-name descname">engine</code><a class="headerlink" href="#jtop.jtop.jtop.engine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="jtop.jtop.jtop.fan">
 <em class="property">property </em><code class="sig-name descname">fan</code><a class="headerlink" href="#jtop.jtop.jtop.fan" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fan object controller</p>
-</dd></dl>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.gpu">
+<em class="property">property </em><code class="sig-name descname">gpu</code><a class="headerlink" href="#jtop.jtop.jtop.gpu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.interval">
+<em class="property">property </em><code class="sig-name descname">interval</code><a class="headerlink" href="#jtop.jtop.jtop.interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.interval_user">
+<em class="property">property </em><code class="sig-name descname">interval_user</code><a class="headerlink" href="#jtop.jtop.jtop.interval_user" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.iram">
+<em class="property">property </em><code class="sig-name descname">iram</code><a class="headerlink" href="#jtop.jtop.jtop.iram" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="jtop.jtop.jtop.jetson_clocks">
 <em class="property">property </em><code class="sig-name descname">jetson_clocks</code><a class="headerlink" href="#jtop.jtop.jtop.jetson_clocks" title="Permalink to this definition">¶</a></dt>
-<dd><p>JetsonClock controller</p>
+<dd><p>Status jetson_clocks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if jetson_clocks is running otherwise false</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -294,44 +296,107 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="jtop.jtop.jtop.nvjpg">
-<em class="property">property </em><code class="sig-name descname">nvjpg</code><a class="headerlink" href="#jtop.jtop.jtop.nvjpg" title="Permalink to this definition">¶</a></dt>
+<dt id="jtop.jtop.jtop.loop_for_ever">
+<code class="sig-name descname">loop_for_ever</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.loop_for_ever" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.mts">
+<em class="property">property </em><code class="sig-name descname">mts</code><a class="headerlink" href="#jtop.jtop.jtop.mts" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="jtop.jtop.jtop.nvpmodel">
 <em class="property">property </em><code class="sig-name descname">nvpmodel</code><a class="headerlink" href="#jtop.jtop.jtop.nvpmodel" title="Permalink to this definition">¶</a></dt>
-<dd><p>NVPmodel is the controller of your NVP model.
-From this object you read and set the status of your NVIDIA Jetson.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="jtop.jtop.jtop.open">
-<code class="sig-name descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.open" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open tegrastats app and read all stats</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="jtop.jtop.jtop.stats">
-<em class="property">property </em><code class="sig-name descname">stats</code><a class="headerlink" href="#jtop.jtop.jtop.stats" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Detailed information of your board, with a complete list of:</dt><dd><ul class="simple">
-<li><p>Jetpack</p></li>
-<li><p>L4T</p></li>
-<li><p>Serial Number</p></li>
-<li><p>…</p></li>
-</ul>
+<dd><p>Status NV Power Mode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return the name of NV Power Mode</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>string</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="jtop.jtop.jtop.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">stats</em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the status of jtop passing stats</p>
+<dt id="jtop.jtop.jtop.ok">
+<code class="sig-name descname">ok</code><span class="sig-paren">(</span><em class="sig-param">spin=False</em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.ok" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.power">
+<em class="property">property </em><code class="sig-name descname">power</code><a class="headerlink" href="#jtop.jtop.jtop.power" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary with all power consumption</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>stats</strong> (<em>dict</em>) – Statistic dictionary</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Detailed information about power consumption</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.ram">
+<em class="property">property </em><code class="sig-name descname">ram</code><a class="headerlink" href="#jtop.jtop.jtop.ram" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.restore">
+<code class="sig-name descname">restore</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.restore" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method representing the thread’s activity.</p>
+<p>You may override this method in a subclass. The standard run() method
+invokes the callable object passed to the object’s constructor as the
+target argument, if any, with sequential and keyword arguments taken
+from the args and kwargs arguments, respectively.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the thread’s activity.</p>
+<p>It must be called at most once per thread object. It arranges for the
+object’s run() method to be invoked in a separate thread of control.</p>
+<p>This method will raise a RuntimeError if called more than once on the
+same thread object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.stats">
+<em class="property">property </em><code class="sig-name descname">stats</code><a class="headerlink" href="#jtop.jtop.jtop.stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary with the status of the board</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Compacts jetson statistics</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.swap">
+<em class="property">property </em><code class="sig-name descname">swap</code><a class="headerlink" href="#jtop.jtop.jtop.swap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="jtop.jtop.jtop.temperature">
+<em class="property">property </em><code class="sig-name descname">temperature</code><a class="headerlink" href="#jtop.jtop.jtop.temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary with board temperatures</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Detailed information about temperature</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -340,12 +405,6 @@ From this object you read and set the status of your NVIDIA Jetson.</p>
 <dt id="jtop.jtop.jtop.uptime">
 <em class="property">property </em><code class="sig-name descname">uptime</code><a class="headerlink" href="#jtop.jtop.jtop.uptime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Up time</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="jtop.jtop.jtop.userid">
-<em class="property">property </em><code class="sig-name descname">userid</code><a class="headerlink" href="#jtop.jtop.jtop.userid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Linux User ID</p>
 </dd></dl>
 
 </dd></dl>
@@ -367,11 +426,19 @@ From this object you read and set the status of your NVIDIA Jetson.</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Raffaello Bonghi
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -382,7 +449,6 @@ From this object you read and set the status of your NVIDIA Jetson.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
