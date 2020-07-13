@@ -375,10 +375,7 @@ class JetsonClocksService(object):
             time.sleep(delta)
         try:
             if self.fan is not None:
-                if self.fan.is_speed:
-                    speed = self.fan.speed
-                else:
-                    speed = 0
+                speed = self.fan.speed if self.fan.is_speed else 0
             # Start jetson_clocks
             cmd = Command([self.jc_bin])
             status, message = run_command(cmd, repeat=5)
@@ -422,10 +419,7 @@ class JetsonClocksService(object):
         try:
             # Read fan speed
             if self.fan is not None:
-                if self.fan.is_speed:
-                    speed = self.fan.speed
-                else:
-                    speed = 0
+                speed = self.fan.speed if self.fan.is_speed else 0
             # Run jetson_clocks
             cmd = Command([self.jc_bin, '--restore', self.config_l4t])
             status, message = run_command(cmd, repeat=5)

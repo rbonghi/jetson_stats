@@ -20,7 +20,6 @@ MAX_COUNT = 10
 
 
 def test_set_true_false(jtop_server):
-    counter = 0
     with jtop() as jetson:
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'inactive'
@@ -29,6 +28,7 @@ def test_set_true_false(jtop_server):
         # Set true jetson_clocks
         jetson.jetson_clocks = True
         # Wait jetson_clocks on
+        counter = 0
         while jetson.ok():
             if bool(jetson.jetson_clocks) or counter == MAX_COUNT:
                 break
@@ -40,6 +40,7 @@ def test_set_true_false(jtop_server):
         # Switch off jetson_clocks
         jetson.jetson_clocks = False
         # Wait jetson_clocks on
+        counter = 0
         while jetson.ok():
             if not bool(jetson.jetson_clocks) or counter == MAX_COUNT:
                 break
@@ -51,11 +52,11 @@ def test_set_true_false(jtop_server):
 
 
 def test_set_boot(jtop_server):
-    counter = 0
     with jtop() as jetson:
         # Check status boot
         jetson.jetson_clocks.boot = True
         # Wait jetson_clocks boot
+        counter = 0
         while jetson.ok():
             if jetson.jetson_clocks.boot or counter == MAX_COUNT:
                 break
@@ -65,6 +66,7 @@ def test_set_boot(jtop_server):
         # Check status boot
         jetson.jetson_clocks.boot = False
         # Wait jetson_clocks boot
+        counter = 0
         while jetson.ok():
             if not jetson.jetson_clocks.boot or counter == MAX_COUNT:
                 break
