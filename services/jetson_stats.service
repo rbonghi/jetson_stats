@@ -1,6 +1,5 @@
-# -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -14,23 +13,16 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+[Unit]
+Description=jetson_stats service
 
+[Service]
+# Type=exec
+ExecStart=/usr/local/bin/jtop service --force
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=30s
+TimeoutStopSec=30s
 
-from jtop import import_jetson_variables
-
-
-def test_load():
-    JETSONS = import_jetson_variables()
-    assert len(JETSONS) > 0
-
-
-def test_env():
-    JETSONS = import_jetson_variables()
-    # Check contain JETSON_BOARD
-    assert "JETSON_BOARD" in JETSONS
-    # Check contain JETSON_L4T
-    assert "JETSON_L4T" in JETSONS
-    # Check contain JETSON_CUDA
-    assert "JETSON_CUDA" in JETSONS
-
-# EOF
+[Install]
+WantedBy=multi-user.target

@@ -14,66 +14,52 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-JTOP is a complete controller of all systems in your NVIDIA Jetson
- * Tegrastats
- * NVP Model
- * Fan
- * Status board (i.g. Model version, Jetpack, ... )
 
-You can initialize the jtop node like a file i.g.
-
-.. code-block:: python
-
-    with jtop() as jetson:
-        stat = jetson.stats
-
-Or manually start up with the basic function `open/close`
-
-.. code-block:: python
-
-    jetson = jtop()
-    jetson.open()
-    stat = jetson.stats
-    jetson.close()
-
-Jtop include all informations about your board. The default properties are:
- * stats
- * nvpmodel
- * fan
- * board
- * disk
-
-Follow the next attributes to know in detail how it works.
-"""
-import re
-import os
-import sys
-# Logging
 import logging
-
-from .core import NVPmodel
-from .core import Tegrastats
-from .core import Fan
-from .core import JetsonClocks
-from .core import Swap
-from .core import cpuinfo
-from .core import nvjpg
-from .core import (import_os_variables,
-                   get_uptime,
-                   status_disk,
-                   get_local_interfaces,
-                   StatusObserver)
-
-# Create logger for jplotlib
+import os
+import re
+import sys
+from datetime import datetime, timedelta
+from multiprocessing import Event, AuthenticationError
+from threading import Thread
+from .service import JtopManager
+from .core import (
+    Memory,
+    Engine,
+    Swap,
+    CPU,
+    Fan,
+    NVPModel,
+    get_var,
+    get_uptime,
+    status_disk,
+    import_os_variables,
+    get_local_interfaces,
+    JetsonClocks,
+    JtopException)
+# Fix connection refused for python 2.7
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+try:
+    PermissionError
+except NameError:
+    PermissionError = OSError
+if sys.version_info[0] == 2:
+    from socket import error as ConnectionRefusedError
+# Create logger
 logger = logging.getLogger(__name__)
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
+AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
+# Gain timeout lost connection
+TIMEOUT_GAIN = 3
 
 
-def import_jetson_variables():
+def import_jetson_libraries():
     JTOP_FOLDER, _ = os.path.split(__file__)
-    return import_os_variables(JTOP_FOLDER + "/jetson_variables", "JETSON_")
+    return import_os_variables(JTOP_FOLDER + "/jetson_libraries", "JETSON_")
 
 
 def get_version():
@@ -83,116 +69,322 @@ def get_version():
     :return: Version number
     :rtype: string
     """
-    # Load version package
-    here = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(here, "__init__.py")) as fp:
-        VERSION = VERSION_RE.match(fp.read()).group(1)
-    return VERSION
+    return get_var(VERSION_RE)
 
 
-class jtop(StatusObserver):
+class Board:
+
+    def __init__(self):
+        self.info = {}
+        self.hardware = {}
+        self.libraries = {}
+
+
+class jtop(Thread):
     """
-    with this class you can control your jtop statistics and manage your board
+    jtop library is the reference to control your NVIDIA Jetson board with python.
+    This object can be open like a file, or you can use a with callback function
 
     :param interval: Interval update tegrastats and other statistic function
-    :type interval: int
+    :type interval: float
     """
-    class JtopException(Exception):
-        """ Jtop general exception """
-        pass
 
-    def __init__(self, interval=500):
-        # Load configuration file path
-        config_file = sys.prefix + "/local/jetson_stats"
-        # Version package
-        self.version = get_version()
+    def __init__(self, interval=0.5):
+        # Initialize Thread super class
+        super(jtop, self).__init__()
+        # Local Event thread
+        self._trigger = Event()
+        # Error message from thread
+        self._error = None
+        # Start server
+        self._running = False
+        # Load interval
+        self._interval = float(interval)
         # Initialize observer
         self._observers = set()
-        self._started = False
-        # Load all Jetson variables
-        logger.info("Load jetson variables from script")
-        for k, v in import_jetson_variables().items():
-            logger.debug("New Enviroment variable {}:{}".format(k, v))
-            os.environ[k] = v
-        # Initialize jetson_clocks controller
-        try:
-            self.jc = JetsonClocks(config_file)
-        except JetsonClocks.JCException as e:
-            raise jtop.JtopException(e)
-        # Initialize NVP model
-        try:
-            self.nvp = NVPmodel(jetson_clocks=self.jc)
-        except NVPmodel.NVPmodelException:
-            self.nvp = None
-        # Find all fans availables
-        self.qfan = None
-        LIST_FANS = [('/sys/kernel/debug/tegra_fan/', False), ('/sys/devices/pwm-fan/', True)]
-        for path, temp_control in LIST_FANS:
-            try:
-                self.qfan = Fan(path, self.jc, config_file, temp_control=temp_control)
-                logger.info("Fan {} loaded!".format(path))
-                break
-            except Fan.FanException:
-                logger.info("Fan {} not loaded".format(path))
-        # Start process tegrastats
-        tegrastats_file = ""
-        for f_tegra in ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']:
-            if os.path.isfile(f_tegra):
-                logger.info("Load tegrastats {}".format(f_tegra))
-                tegrastats_file = f_tegra
-                break
-        if not tegrastats_file:
-            raise jtop.JtopException("Tegrastats is not availabe on this board")
-        try:
-            # Initialize Swap controller
-            self.swap = Swap()
-        except Swap.SwapException as e:
-            raise jtop.JtopException(e)
-        # Initialize Tegrastats controller
+        # Stats read from service
         self._stats = {}
-        self.tegrastats = Tegrastats(tegrastats_file, interval)
+        # Read stats
+        JtopManager.register('get_queue')
+        JtopManager.register("sync_data")
+        JtopManager.register('sync_event')
+        # Initialize broadcaster manager
+        self._broadcaster = JtopManager()
+        # Initialize board variable
+        self._board = Board()
+        self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
+        self._thread_libraries.daemon = True
+        self._thread_libraries.start()
+        # Initialize engines
+        self._engine = Engine()
+        # Initialize CPU
+        self._cpu = CPU()
+        # Initialize swap
+        self._swap = None
+        # Initialize Memory
+        self._memory = None
+        # Load jetson_clocks status
+        self._jc = None
+        # Initialize fan
+        self._fan = None
+        # Load NV Power Mode
+        self._nvp = None
+
+    def _load_jetson_libraries(self):
+        try:
+            env = {}
+            for k, v in import_jetson_libraries().items():
+                env[k] = str(v)
+            # Make dictionaries
+            self._board.libraries = {
+                "CUDA": env["JETSON_CUDA"],
+                "cuDNN": env["JETSON_CUDNN"],
+                "TensorRT": env["JETSON_TENSORRT"],
+                "VisionWorks": env["JETSON_VISIONWORKS"],
+                "OpenCV": env["JETSON_OPENCV"],
+                "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
+                "VPI": env["JETSON_VPI"],
+                "Vulkan": env["JETSON_VULKAN_INFO"]}
+            # Loaded from script
+            logger.debug("Loaded jetson_variables variables")
+        except Exception:
+            # Write error message
+            self._error = sys.exc_info()
+
+    def attach(self, observer):
+        """
+        Attach an observer to read the status of jtop
+
+        :param observer: The function to call
+        :type observer: function
+        """
+        self._observers.add(observer)
+
+    def detach(self, observer):
+        """
+        Detach an observer from jtop
+
+        :param observer:  The function to detach
+        :type observer: function
+        """
+        self._observers.discard(observer)
+
+    def restore(self):
+        status = {}
+        # Reset jetson_clocks
+        if self.jetson_clocks is not None:
+            # Disable jetson_clocks
+            self.jetson_clocks = False
+            # Wait jetson_clocks boot
+            while self.ok():
+                if not self.jetson_clocks:
+                    break
+            status['jetson_clocks'] = bool(self.jetson_clocks)
+            # Disable jetson_clocks on boot
+            self.jetson_clocks.boot = False
+            # Wait jetson_clocks boot
+            while self.ok():
+                if not self.jetson_clocks.boot:
+                    break
+            status['jetson_clocks boot'] = bool(self.jetson_clocks.boot)
+        # Reset fan control
+        if self.fan is not None:
+            # Reset mode fan
+            self.fan.mode = 'default'
+            while self.ok():
+                if self.fan.mode == 'default':
+                    break
+            status['fan mode'] = False
+            # Reset speed to zero
+            self.fan.speed = 0
+            while self.ok():
+                if self.fan.measure == 0:
+                    break
+            status['fan speed'] = False
+        # Switch off swap
+        if self.swap.is_enable:
+            # Deactivate swap
+            self.swap.deactivate()
+            while self.ok():
+                if not self.swap.is_enable:
+                    break
+            status['swap'] = bool(self.swap.is_enable)
+        # Clear config file
+        self._controller.put({'config': 'reset'})
+        status['config'] = False
+        return status
 
     @property
-    def userid(self):
-        """ Linux User ID """
-        return os.getuid()
+    def engine(self):
+        return self._engine
 
     @property
-    def architecture(self):
-        """ CPU architecture """
-        return cpuinfo.info()
+    def board(self):
+        # Wait thread end
+        self._thread_libraries.join()
+        # Return board status
+        return self._board
 
     @property
     def fan(self):
-        """ Fan object controller """
-        return self.qfan
-
-    @property
-    def disk(self):
-        """ Disk status properties """
-        return status_disk()
-
-    @property
-    def jetson_clocks(self):
-        """ JetsonClock controller """
-        return self.jc
-
-    @property
-    def uptime(self):
-        """ Up time """
-        return get_uptime()
+        return self._fan
 
     @property
     def nvpmodel(self):
         """
-        NVPmodel is the controller of your NVP model.
-        From this object you read and set the status of your NVIDIA Jetson.
+        Status NV Power Mode
+
+        :return: Return the name of NV Power Mode
+        :rtype: string
         """
-        return self.nvp
+        return self._nvp
+
+    @nvpmodel.setter
+    def nvpmodel(self, value):
+        if self._nvp is None:
+            return
+        mode = self._nvp.set(value)
+        # Do not send messages if nvpmodel is the same
+        if mode == self._nvp.id:
+            return
+        # Send new nvpmodel
+        self._controller.put({'nvp': mode})
 
     @property
-    def nvjpg(self):
-        return nvjpg()
+    def jetson_clocks(self):
+        """
+        Status jetson_clocks
+
+        :return: true if jetson_clocks is running otherwise false
+        :rtype: bool
+        """
+        return self._jc
+
+    @jetson_clocks.setter
+    def jetson_clocks(self, value):
+        if not isinstance(value, bool):
+            raise TypeError("Use a boolean")
+        if not self._jc.is_config and not value:
+            raise JtopException("I cannot set jetson_clocks.\nPlease shutdown manually jetson_clocks")
+        # Check if service is not started otherwise skip
+        if self._jc.status in ['activating', 'deactivating']:
+            return
+        if value != self._jc.is_alive:
+            # Send status jetson_clocks
+            self._controller.put({'jc': {'enable': value}})
+
+    @property
+    def stats(self):
+        """
+        A dictionary with the status of the board
+
+        :return: Compacts jetson statistics
+        :rtype: dict
+        """
+        stats = {'time': datetime.now(), 'uptime': self.uptime}
+        # -- jetson_clocks --
+        if self.jetson_clocks is not None:
+            stats['jetson_clocks'] = 'ON' if self.jetson_clocks else 'OFF'
+        # -- NV Power Model --
+        if self.nvpmodel is not None:
+            stats['nvp model'] = self.nvpmodel.name
+        # -- CPU --
+        for cpu in sorted(self.cpu):
+            stats[cpu] = self.cpu[cpu].get('val', 'OFF')
+        # -- GPU --
+        stats['GPU'] = self.gpu['val']
+        # -- MTS --
+        if self.mts:
+            stats['MTS FG'] = self.mts['fg']
+            stats['MTS BG'] = self.mts['bg']
+        # -- RAM --
+        stats['RAM'] = self.ram['use']
+        # -- EMC --
+        if self.emc:
+            stats['EMC'] = self.ram['use']
+        # -- IRAM --
+        if self.iram:
+            stats['IRAM'] = self.ram['use']
+        # -- SWAP --
+        stats['SWAP'] = self.swap['use']
+        # -- Engines --
+        stats['APE'] = self.engine.ape['val']
+        stats['NVENC'] = self.engine.nvenc['val'] if self.engine.nvenc else 'OFF'
+        stats['NVDEC'] = self.engine.nvdec['val'] if self.engine.nvdec else 'OFF'
+        stats['NVJPG'] = self.engine.nvjpg['rate'] if self.engine.nvjpg else 'OFF'
+        if self.engine.nvdec:
+            stats['MSENC'] = self.engine.msenc
+        # -- FAN --
+        if self.fan:
+            stats['fan'] = self.fan.measure
+        # -- Temperature --
+        for temp in sorted(self.temperature):
+            stats["Temp {name}".format(name=temp)] = self.temperature[temp]
+        # -- Power --
+        total, _ = self.power
+        stats['power cur'] = total['cur']
+        stats['power avg'] = total['avg']
+        return stats
+
+    @property
+    def swap(self):
+        return self._swap
+
+    @property
+    def emc(self):
+        # Extract EMC
+        return self._stats.get('emc', {})
+
+    @property
+    def iram(self):
+        # Extract IRAM
+        return self._stats.get('iram', {})
+
+    @property
+    def ram(self):
+        return self._memory
+
+    @property
+    def mts(self):
+        # Extract MTS
+        return self._stats.get('mts', {})
+
+    @property
+    def cpu(self):
+        # Return CPU status
+        return self._cpu
+
+    @property
+    def cluster(self):
+        # Return status cluster
+        return self._stats.get('cluster', '')
+
+    @property
+    def gpu(self):
+        # Extract GPU
+        return self._stats['gpu']
+
+    @property
+    def power(self):
+        """
+        A dictionary with all power consumption
+
+        :return: Detailed information about power consumption
+        :rtype: dict
+        """
+        total = self._stats['power']['all']
+        power = self._stats['power']['power']
+        return total, power
+
+    @property
+    def temperature(self):
+        """
+        A dictionary with board temperatures
+
+        :return: Detailed information about temperature
+        :rtype: dict
+        """
+        return self._stats['temperature']
 
     @property
     def local_interfaces(self):
@@ -200,115 +392,197 @@ class jtop(StatusObserver):
         return get_local_interfaces()
 
     @property
-    def board(self):
-        """
-        Detailed information of your board, with a complete list of:
-         * Jetpack
-         * L4T
-         * Serial Number
-         * ...
-        """
-        info = {"Machine": os.environ["JETSON_MACHINE"],
-                "Jetpack": os.environ["JETSON_JETPACK"] + " [L4T " + os.environ["JETSON_L4T"] + "]"}
-        board = {"TYPE": os.environ["JETSON_TYPE"],
-                 "CODENAME": os.environ["JETSON_CODENAME"],
-                 "SOC": os.environ["JETSON_SOC"],
-                 "CHIP_ID": os.environ["JETSON_CHIP_ID"],
-                 "BOARDIDS": os.environ["JETSON_BOARDIDS"],
-                 "MODULE": os.environ["JETSON_MODULE"],
-                 "BOARD": os.environ["JETSON_BOARD"],
-                 "CUDA_ARCH_BIN": os.environ["JETSON_CUDA_ARCH_BIN"],
-                 "SERIAL_NUMBER": os.environ["JETSON_SERIAL_NUMBER"].upper()}
-        libraries = {"CUDA": os.environ["JETSON_CUDA"],
-                     "cuDNN": os.environ["JETSON_CUDNN"],
-                     "TensorRT": os.environ["JETSON_TENSORRT"],
-                     "VisionWorks": os.environ["JETSON_VISIONWORKS"],
-                     "OpenCV": os.environ["JETSON_OPENCV"],
-                     "OpenCV-Cuda": os.environ["JETSON_OPENCV_CUDA"],
-                     "VPI": os.environ["JETSON_VPI"],
-                     "Vulkan": os.environ["JETSON_VULKAN_INFO"]}
-        return {"info": info, "board": board, "libraries": libraries}
+    def disk(self):
+        """ Disk status properties """
+        return status_disk()
 
     @property
-    def stats(self):
-        """
-        Detailed information of your board, with a complete list of:
-         * Jetpack
-         * L4T
-         * Serial Number
-         * ...
-        """
-        # Wait the deque not empty
-        while not self._stats:
-            pass
-        # Return dictionary parsed
-        return self._stats
+    def uptime(self):
+        """ Up time """
+        return timedelta(seconds=get_uptime())
 
-    def open(self):
-        """ Open tegrastats app and read all stats """
-        if not self._started:
+    def _decode(self, data):
+        """
+        Internal decode function to decode and refactoring data
+        """
+        self._stats = data
+        # -- ENGINES --
+        self._engine._update(data['engines'])
+        # -- CPU --
+        self._cpu._update(data['cpu'])
+        # -- RAM --
+        self._memory._update(data['ram'])
+        # -- SWAP --
+        self._swap._update(data['swap'])
+        # -- FAN --
+        if 'fan' in data:
+            self._fan._update(data['fan'])
+        # -- JETSON_CLOCKS --
+        if 'jc' in data:
+            self._jc._update(data['jc'])
+        # -- NVP Model --
+        if 'nvp' in data:
+            self._nvp._update(data['nvp'])
+        # Set trigger
+        self._trigger.set()
+        # Notify all observers
+        for observer in self._observers:
+            # Call all observer in list
+            observer(self)
+
+    def run(self):
+        # https://gist.github.com/schlamar/2311116
+        # https://stackoverflow.com/questions/13074847/catching-exception-in-context-manager-enter
+        try:
+            while self._running:
+                # Send alive message
+                if self._controller.empty():
+                    self._controller.put({})
+                # Read stats from jtop service
+                data = self._get_data()
+                # Decode and update all jtop data
+                self._decode(data)
+        except Exception:
+            # Store error message
+            self._error = sys.exc_info()
+
+    def _get_data(self):
+        try:
+            # Check if is not set event otherwise wait
+            if not self._sync_event.is_set():
+                self._sync_event.wait(self._interval * TIMEOUT_GAIN)
+            # Read stats from jtop service
+            data = self._sync_data.copy()
+            if not data:
+                raise JtopException("Error connection")
+            # Clear event
+            self._sync_event.clear()
+        except EOFError:
+            # Raise jtop exception
+            raise JtopException("Lost connection with jtop server")
+        return data
+
+    def _get_configuration(self):
+        while True:
+            # Send configuration connection
+            self._controller.put({'interval': self._interval})
+            # Return configuration
+            data = self._controller.get(self._interval * TIMEOUT_GAIN)
+            if 'init' in data:
+                return data['init']
+
+    def start(self):
+        # Connected to broadcaster
+        try:
+            self._broadcaster.connect()
+        except FileNotFoundError as e:
+            if e.errno == 2 or e.errno == 111:  # Message error: 'No such file or directory' or 'Connection refused'
+                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
+            elif e.errno == 13:  # Message error: 'Permission denied'
+                raise JtopException("I can't access to jetson_stats.service.\nPlease logout or reboot this board.")
+            else:
+                raise FileNotFoundError(e)
+        except ConnectionRefusedError as e:
+            if e.errno == 111:  # Connection refused
+                # When server is off but socket files exists in /run
+                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
+            else:
+                raise ConnectionRefusedError(e)
+        except PermissionError as e:
+            if e.errno == 13:  # Permission denied
+                raise JtopException("I can't access to jetson_stats.service.\nPlease logout or reboot this board.")
+            else:
+                raise PermissionError(e)
+        except ValueError:
+            # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
+            raise JtopException("mismatch python version between library and service")
+        except AuthenticationError:
+            raise JtopException("Authentication mismatch with jetson-stats server")
+        # Initialize synchronized data and condition
+        self._controller = self._broadcaster.get_queue()
+        self._sync_data = self._broadcaster.sync_data()
+        self._sync_event = self._broadcaster.sync_event()
+        # Initialize connection
+        init = self._get_configuration()
+        # Load server speed
+        self._server_interval = init['interval']
+        # Load board information
+        board = init['board']
+        self._board.info = board['info']
+        self._board.hardware = board['hardware']
+        # Initialize jetson_clocks sender
+        self._swap = Swap(self._controller, init['swap'])
+        # Initialize jetson_clock
+        if init['jc']:
+            self._jc = JetsonClocks(self._controller)
+        # Initialize Memory
+        self._memory = Memory(self._controller)
+        # Init FAN (If exist)
+        if init['fan']:
+            self._fan = Fan(self._controller)
+        # Init NVP model (if exist)
+        if init['nvpmodel']:
+            self._nvp = NVPModel()
+        # Wait first value
+        data = self._get_data()
+        # Decode and update all jtop data
+        self._decode(data)
+        # Run thread reader
+        self._running = True
+        self.daemon = True
+        super(jtop, self).start()
+
+    @property
+    def interval(self):
+        return self._server_interval
+
+    @property
+    def interval_user(self):
+        return self._interval
+
+    def loop_for_ever(self):
+        self.start()
+        # Blocking function to catch exceptions
+        while self.ok():
             try:
-                self.tegrastats.open(self)
-                self._started = True
-            except Tegrastats.TegrastatsException as e:
-                raise jtop.JtopException(e)
+                self.join(timeout=0.1)
+            except (KeyboardInterrupt, SystemExit):
+                # Close jtop
+                self.close()
+
+    def ok(self, spin=False):
+        # Wait if trigger is set
+        if not spin:
+            try:
+                if not self._trigger.is_set():
+                    if not self._trigger.wait(self._interval * TIMEOUT_GAIN):
+                        self._running = False
+            except (KeyboardInterrupt, SystemExit):
+                self._running = False
+        # Catch exception if exist
+        if self._error:
+            # Extract exception and raise
+            ex_type, ex_value, tb_str = self._error
+            ex_value.__traceback__ = tb_str
+            raise ex_value
+        # If there are not errors clear the event
+        if self._running:
+            self._trigger.clear()
+        # Return the status
+        return self._running
 
     def close(self):
-        """ Close tegrastats app """
-        self.tegrastats.close()
-        self._started = False
-
-    def attach(self, observer):
-        """
-        Attach an obserber to read the status of jtop
-
-        :param observer: The function to call
-        :type observer: function
-        """
-        self._observers.add(observer)
-        # Autostart the jtop if is off
-        if self._observers:
-            self.open()
-
-    def detach(self, observer):
-        """
-        Detach an obserber from jtop
-
-        :param observer:  The function to detach
-        :type observer: function
-        """
-        self._observers.discard(observer)
-
-    def update(self, stats):
-        """
-        Update the status of jtop passing stats
-
-        :param stats:  Statistic dictionary
-        :type stats: dict
-        """
-        # Update nvpmodel
-        if self.nvp is not None:
-            self.nvp.update()
-        # Update status from fan
-        if self.qfan is not None:
-            self.qfan.update()
-            # Add fan status
-            stats["FAN"] = self.qfan.status
-        # Update status
-        self._stats = stats
-        # Notifiy all observers
-        for observer in self._observers:
-            if callable(observer):
-                observer(self.stats)
-            else:
-                observer.update(self)
+        # Switch off broadcaster thread
+        self._running = False
 
     def __enter__(self):
         """ Enter function for 'with' statement """
-        self.open()
+        self.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """ Exit function for 'with' statement """
-        self.close()
+        if exc_tb is not None:
+            return False
+        return True
 # EOF

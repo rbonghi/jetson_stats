@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import abc
+import re
 import os
+from random import choice
+from string import ascii_letters
+from base64 import b64encode
 # Launch command
 import subprocess as sp
 # Logging
@@ -26,25 +29,25 @@ import socket
 import fcntl
 import struct
 import array
-
-# Create logger for jplotlib
+from .exceptions import JtopException
+# Load Author
+AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
+# Create logger
 logger = logging.getLogger(__name__)
-# Initialization abstract class
-# In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
-ABC = abc.ABCMeta('ABC', (object,), {})
 
 
-class StatusObserver(ABC):
-
-    @abc.abstractmethod
-    def update(self, stats):
-        pass
+def locate_commands(name, commands):
+    for cmd in commands:
+        if os.path.exists(cmd):
+            logger.info("{name} loaded on {cmd}".format(name=name, cmd=cmd))
+            return cmd
+    raise JtopException("{name} is not availabe on this board".format(name=name))
 
 
 def import_os_variables(SOURCE, PATTERN):
     if os.path.isfile(SOURCE):
-        logger.info("Open source file {}".format(SOURCE))
-        proc = sp.Popen(['bash', '-c', 'source {} && env'.format(SOURCE)], stdout=sp.PIPE, stderr=sp.PIPE)
+        logger.debug("Open source file {source}".format(source=SOURCE))
+        proc = sp.Popen(['bash', '-c', 'source {source} && env'.format(source=SOURCE)], stdout=sp.PIPE, stderr=sp.PIPE)
         # Load variables
         source_env = {}
         for tup in map(lambda s: s.decode("utf-8").strip().split('=', 1), proc.stdout):
@@ -56,6 +59,20 @@ def import_os_variables(SOURCE, PATTERN):
     else:
         logger.error("File does not exist")
         return {}
+
+
+def get_var(MATCH_RE):
+    """
+    Show the version of this package
+
+    :return: Version number
+    :rtype: string
+    """
+    # Load version package
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../', "__init__.py")) as fp:
+        match = MATCH_RE.match(fp.read())
+        value = match.group(1) if match else ''.join(choice(ascii_letters) for i in range(16))
+    return value
 
 
 def get_uptime():
@@ -137,4 +154,8 @@ def get_local_interfaces():
     if 'lo' in ip_dict:
         del ip_dict['lo']
     return {"hostname": hostname, "interfaces": ip_dict}
+
+
+def get_key():
+    return str(b64encode(get_var(AUTH_RE).encode("utf-8")))
 # EOF

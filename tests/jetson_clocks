@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019 Raffaello Bonghi.
 #
@@ -66,10 +66,11 @@ cpu0: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100
 cpu1: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 c6=1 c8=1
 cpu2: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
 cpu3: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
+cpu4: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
+cpu5: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
 GPU MinFreq=76800000 MaxFreq=921600000 CurrentFreq=100000
 EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
 Fan: speed=0
-NV Power Mode: TEST
 EOF
 }
 
@@ -83,21 +84,30 @@ CPU Cluster Switching: Disabled
 cpu0: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1
 cpu1: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 
 cpu2: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 C1=1
-cpu3: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 
+cpu3: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
+cpu4: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
+cpu5: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
 GPU MinFreq=921600000 MaxFreq=921600000 CurrentFreq=921600000
 EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
 Fan: speed=255
-NV Power Mode: TEST
 EOF
 }
 
 show()
 {
+    local modes=("MAXTEST" "TEST" "MINTEST" "MIN_MAX_TEST")
+    local level=0
+    # Load level from temp file
+    if [ -f "/tmp/nvp_model_test" ] ; then
+        level=$(cat /tmp/nvp_model_test)
+    fi
+    # Show status
     if [ -f "/tmp/jetson_clocks_test" ] ; then
         show_on
     else
         show_off
     fi
+    echo "NV Power Mode: ${modes[level]}"
 }
 
 main()
@@ -140,8 +150,12 @@ main()
         exit 1
     fi
 
+    # Go to sleep for an interval
+    sleep $TIME_SLEEP
+
     # Run show message
     if [ "$SHOW" = "True" ] ; then
+        # Show data
         show
         exit 0
     fi
@@ -150,15 +164,11 @@ main()
         if [ -f "/tmp/jetson_clocks_test" ] ; then
             # Remove fake test file
             rm "/tmp/jetson_clocks_test"
-            # Go to sleep for an interval
-            sleep $TIME_SLEEP
         fi
     elif [ "$STORE" = "True" ] ; then
         touch $conf
     else
         touch "/tmp/jetson_clocks_test"
-        # Go to sleep for an interval
-        sleep $TIME_SLEEP
     fi
 }
 

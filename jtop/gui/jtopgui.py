@@ -17,7 +17,6 @@
 
 import abc
 import curses
-import signal
 # Logging
 import logging
 # Timer
@@ -25,28 +24,31 @@ from datetime import datetime, timedelta
 # Graphics elements
 from .lib.common import (check_size,
                          check_curses,
-                         set_xterm_title,
-                         xterm_line)
-# Create logger for jplotlib
+                         set_xterm_title)
+# Create logger
 logger = logging.getLogger(__name__)
 # Initialization abstract class
 # In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
 ABC = abc.ABCMeta('ABC', (object,), {})
+# Gui refresh rate
+GUI_REFRESH = 1000 // 20
 
 
 class Page(ABC):
 
-    def __init__(self, name, stdscr, jetson, refresh):
+    def __init__(self, name, stdscr, jetson):
         self.name = name
         self.stdscr = stdscr
         self.jetson = jetson
-        self.refresh = refresh
+
+    def setcontroller(self, controller):
+        self.controller = controller
 
     def size_page(self):
         height, width = self.stdscr.getmaxyx()
         first = 0
         # Remove a line for sudo header
-        if self.jetson.userid != 0:
+        if self.controller.message:
             height -= 1
             first = 1
         return height, width, first
@@ -69,7 +71,7 @@ class JTOPGUI:
     """
     COLORS = {"RED": 1, "GREEN": 2, "YELLOW": 3, "BLUE": 4, "MAGENTA": 5, "CYAN": 6}
 
-    def __init__(self, stdscr, refresh, jetson, pages, init_page=0, start=True, loop=False, seconds=5):
+    def __init__(self, stdscr, jetson, pages, init_page=0, start=True, loop=False, seconds=5):
         # Define pairing colors
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -80,16 +82,20 @@ class JTOPGUI:
         # background
         curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_RED)
         curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_GREEN)
-        curses.init_pair(9, curses.COLOR_WHITE, curses.COLOR_YELLOW)
+        curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_YELLOW)
         curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLUE)
         curses.init_pair(11, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
         curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_CYAN)
         # Set curses reference, refresh and jetson controller
         self.stdscr = stdscr
-        self.refresh = refresh
         self.jetson = jetson
+        self.message = False
         # Initialize all Object pages
-        self.pages = [obj(stdscr, jetson, refresh) for obj in pages]
+        self.pages = []
+        for obj in pages:
+            page = obj(stdscr, jetson)
+            page.setcontroller(self)
+            self.pages += [page]
         # Set default page
         self.n_page = 0
         self.set(init_page)
@@ -98,19 +104,9 @@ class JTOPGUI:
         self.old_key = -1
         # Initialize mouse
         self.mouse = ()
-        # Initialize signal
-        self.signal = True
-        # Catch all signals
-        for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
-            signal.signal(sig, self.handler)
         # Run the GUI
         if start:
             self.run(loop, seconds)
-
-    def handler(self, signum=None, frame=None):
-        logger.info("Signal handler called with signal {signum}".format(signum=signum))
-        # Close gui
-        self.signal = False
 
     def run(self, loop, seconds):
         # In this program, we don't want keystrokes echoed to the console,
@@ -137,7 +133,7 @@ class JTOPGUI:
         # Using current time
         old = datetime.now()
         # Here is the loop of our program, we keep clearing and redrawing in this loop
-        while not self.events() and self.signal:
+        while not self.events() and self.jetson.ok(spin=True):
             # Draw pages
             self.draw()
             # Increase page automatically if loop enabled
@@ -160,7 +156,7 @@ class JTOPGUI:
         # Draw the screen
         self.stdscr.refresh()
         # Set a timeout and read keystroke
-        self.stdscr.timeout(self.refresh)
+        self.stdscr.timeout(GUI_REFRESH)
 
     def increase(self, loop=False):
         # check reset
@@ -187,19 +183,28 @@ class JTOPGUI:
     def header(self):
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
+        status = [self.jetson.board.hardware["TYPE"]]
+        if self.jetson.jetson_clocks is not None:
+            status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks)]
+        if self.jetson.nvpmodel is not None:
+            status += [self.jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')]
+        str_xterm = ' - '.join(status)
         # Print jtop basic info
-        set_xterm_title("jtop" + xterm_line(self.jetson))
-        # Write first line
-        board = self.jetson.board["info"]
-        # Add extra Line if without sudo
+        set_xterm_title("jtop {name}".format(name=str_xterm))
+        # Add extra Line if with sudo
         idx = 0
-        if self.jetson.userid != 0:
+        if self.jetson.interval != self.jetson.interval_user:
+            self.message = True
             _, width = self.stdscr.getmaxyx()
-            self.stdscr.addstr(0, 0, ("{0:<" + str(width) + "}").format(" "), curses.color_pair(11))
-            string_sudo = "SUDO SUGGESTED"
-            self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(11))
+            self.stdscr.addstr(0, 0, ("{0:<" + str(width) + "}").format(" "), curses.color_pair(9))
+            user = int(self.jetson.interval_user * 1000)
+            interval = int(self.jetson.interval * 1000)
+            string_sudo = "I CANNOT SET SPEED AT {user}ms - SERVER AT {interval}ms".format(user=user, interval=interval)
+            self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
-        self.stdscr.addstr(idx, 0, board["Machine"] + " - Jetpack " + board["Jetpack"], curses.A_BOLD)
+        # Write first line
+        message = "{info[machine]} - Jetpack {info[jetpack]} [L4T {info[L4T]}]".format(info=self.jetson.board.info)
+        self.stdscr.addstr(idx, 0, message, curses.A_BOLD)
 
     @check_curses
     def menu(self):

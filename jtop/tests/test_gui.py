@@ -15,33 +15,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-from jtop import Fan
-from jtop import JetsonClocks
+import curses
+from jtop import jtop
+# Import gui test
+from ..gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 
 
-def test_wrong_open():
-    jc = JetsonClocks(sys.prefix + "/local/jetson_stats")
-    # Initialize object
-    try:
-        Fan('wrong_path', jc, sys.prefix + "/local/jetson_stats")
-        assert False
-    except Fan.FanException:
-        assert True
+def openGUI(stdscr, jetson):
+    # Initialization Menu
+    pages = JTOPGUI(stdscr, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], start=False)
+    return pages
 
 
-def test_open():
-    jc = JetsonClocks(sys.prefix + "/local/jetson_stats")
-    # Init fan
-    fan = Fan('tests/fan/', jc, sys.prefix + "/local/jetson_stats")
-    # Update
-    fan.update()
-    # Check dictionary
-    assert 'cap' in fan.status
-    assert 'step' in fan.status
-    assert 'cpwm' in fan.status
-    assert 'tpwm' in fan.status
-    assert 'status' in fan.status
-    # Read status fan
-    assert fan.status['tpwm'] == 100
+def test_openGUI(jtop_server):
+    # Load command line controller
+    stdscr = curses.initscr()
+    # Initialize colors
+    curses.start_color()
+    # Run jtop
+    with jtop() as jetson:
+        if jetson.ok():
+            # Open JTOPGUI
+            pages = openGUI(stdscr, jetson)
+            # Start with selected page
+            pages.set(0)
+    assert True
 # EOF

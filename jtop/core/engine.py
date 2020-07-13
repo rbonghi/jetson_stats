@@ -18,6 +18,22 @@
 import os
 
 
+class Engine(object):
+
+    def __init__(self):
+        self.nvjpg = None
+        self.msenc = None
+
+    def _update(self, tegrastats):
+        self.ape = tegrastats['APE']
+        self.nvenc = tegrastats['NVENC']
+        self.nvdec = tegrastats['NVDEC']
+        if 'MSENC' in tegrastats:
+            self.msenc = tegrastats['MSENC']
+        if 'NVJPG' in tegrastats:
+            self.nvjpg = tegrastats['NVJPG']
+
+
 def nvjpg(path="/sys/kernel/debug/clk/nvjpg"):
     # Read status enable
     nvjpg = {}

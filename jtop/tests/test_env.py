@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,28 +15,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import curses
+
 from jtop import jtop
-# Import gui test
-from jtop.gui import JTOPGUI, ALL, GPU, CTRL, INFO
 
 
-def openGUI(stdscr, jetson):
-    # Initialization Menu
-    pages = JTOPGUI(stdscr, 500, jetson, [ALL, GPU, CTRL, INFO], start=False)
-    return pages
-
-
-def test_openGUI():
-    # Load command line controller
-    stdscr = curses.initscr()
-    # Initialize colors
-    curses.start_color()
-    # Run jtop
+def test_load(jtop_server):
     with jtop() as jetson:
-        # Open JTOPGUI
-        pages = openGUI(stdscr, jetson)
-        # Start with selected page
-        pages.set(0)
-    assert True
+        board = jetson.board
+        assert board is not None
+
+
+def test_env(jtop_server):
+    with jtop() as jetson:
+        # Check contain JETSON_BOARD
+        assert len(jetson.board.info) > 0
+        # Check contain JETSON_L4T
+        assert len(jetson.board.hardware) > 0
+        # Check contain JETSON_CUDA
+        assert len(jetson.board.libraries) > 0
 # EOF

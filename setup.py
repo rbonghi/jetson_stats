@@ -29,7 +29,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from jtop import import_jetson_variables
+from jtop.service import import_jetson_variables
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
 # and accepts an argument to specify the text encoding
@@ -114,26 +114,38 @@ class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-        # Install services (copying)
-        install_services(copy=True)
+        if not hasattr(sys, 'real_prefix'):
+            sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+            # Install services (copying)
+            install_services(copy=True)
+        else:
+            print("Skip uninstall on virtual environment")
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/jetson_config --install'))
+        if not hasattr(sys, 'real_prefix'):
+            sp.call(shlex.split('./scripts/jetson_config --install'))
+        else:
+            print("Skip install on virtual environment")
 
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-        # Install services (linking)
-        install_services()
+        if not hasattr(sys, 'real_prefix'):
+            sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+            # Install services (linking)
+            install_services()
+        else:
+            print("Skip uninstall on virtual environment")
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        sp.call(shlex.split('./scripts/jetson_config --install'))
+        if not hasattr(sys, 'real_prefix'):
+            sp.call(shlex.split('./scripts/jetson_config --install'))
+        else:
+            print("Skip install on virtual environment")
 
 
 # Configuration setup module
@@ -154,42 +166,42 @@ setup(
         "Bug Reports": (project_homepage + "/issues"),
         "Source": (project_homepage + "/tree/master")
     },
-    packages=find_packages(exclude=['examples', 'scripts', 'tests']),  # Required
+    packages=find_packages(exclude=['examples', 'scripts', 'tests', 'jtop.tests']),  # Required
     # Load jetson_variables
-    package_data={"jtop": ["jetson_variables"]},
+    package_data={"jtop": ["jetson_variables", "jetson_libraries"]},
     # Define research keywords
     keywords=("jetson_stats jtop python system-monitor docker \
                nvidia Jetson XavierNX Nano Xavier TX2 TX1 process viewer"
               ),
-    classifiers=["Development Status :: 5 - Production/Stable",
-                 # Audiencence and topics
-                 "Intended Audience :: Developers",
-                 "Topic :: Software Development :: Embedded Systems",
-                 "Topic :: Software Development :: Debuggers",
-                 "Topic :: Software Development :: Libraries",
-                 "Topic :: Software Development :: User Interfaces",
-                 "Topic :: System :: Hardware",
-                 "Topic :: System :: Logging",
-                 "Topic :: System :: Monitoring",
-                 "Topic :: System :: Operating System",
-                 "Topic :: System :: Operating System Kernels",
-                 "Topic :: System :: Shells",
-                 "Topic :: System :: Systems Administration",
-                 "Topic :: Terminals",
-                 # License
-                 "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
-                 # Programming and Operative system
-                 "Programming Language :: Unix Shell",
-                 "Programming Language :: Python :: 2",
-                 "Programming Language :: Python :: 2.7",
-                 "Programming Language :: Python :: 3",
-                 "Programming Language :: Python :: 3.4",
-                 "Programming Language :: Python :: 3.5",
-                 "Programming Language :: Python :: 3.6",
-                 "Programming Language :: Python :: 3.7",
-                 "Programming Language :: Python :: 3.8",
-                 "Operating System :: POSIX :: Linux",
-                 ],
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        # Audience and topics
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Embedded Systems",
+        "Topic :: Software Development :: Debuggers",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: User Interfaces",
+        "Topic :: System :: Hardware",
+        "Topic :: System :: Logging",
+        "Topic :: System :: Monitoring",
+        "Topic :: System :: Operating System",
+        "Topic :: System :: Operating System Kernels",
+        "Topic :: System :: Shells",
+        "Topic :: System :: Systems Administration",
+        "Topic :: Terminals",
+        # License
+        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+        # Programming and Operative system
+        "Programming Language :: Unix Shell",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Operating System :: POSIX :: Linux"],
     # Requisites
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',

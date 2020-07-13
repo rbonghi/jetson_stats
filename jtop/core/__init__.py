@@ -17,16 +17,23 @@
 
 # flake8: noqa
 
-from .nvpmodel import NVPmodel
+from .nvpmodel import NVPModel, NVPModelService
 from .tegrastats import Tegrastats
-from .fan import Fan
-from .jetson_clocks import JetsonClocks
-from .swap import Swap
-from .cpu import cpuinfo
-from .engine import nvjpg
-from .common import (import_os_variables,
-                     get_uptime,
-                     status_disk,
-                     get_local_interfaces,
-                     StatusObserver)
+from .fan import Fan, FanService
+from .jetson_clocks import JetsonClocks, JetsonClocksService
+from .swap import Swap, SwapService
+from .cpu import CPU, cpu_models
+from .engine import Engine, nvjpg
+from .config import Config
+from .memory import Memory, MemoryService
+from .command import Command
+from .common import (
+    locate_commands,
+    import_os_variables,
+    get_var,
+    get_uptime,
+    status_disk,
+    get_key,
+    get_local_interfaces)
+from .exceptions import JtopException
 # EOF

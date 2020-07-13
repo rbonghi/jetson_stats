@@ -18,22 +18,28 @@
 import re
 import os
 from math import ceil
+from .common import locate_commands
+from .exceptions import JtopException
 # Logging
 import logging
 # Compile decoder PWM table
 FAN_PWM_TABLE_RE = re.compile(r'\((.*?)\)')
-
-# Create logger for jplotlib
+# Create logger
 logger = logging.getLogger(__name__)
+
+# Fan configurations
+CONFIGS = ['default', 'manual', 'system']
+CONFIG_DEFAULT_FAN_MODE = 'default'
+CONFIG_DEFAULT_FAN_SPEED = 0.0
 
 
 def load_table(path):
     table = []
-    with open(path + "pwm_rpm_table", 'r') as fp:
+    with open(path + 'pwm_rpm_table', 'r') as fp:
         title = []
         for line in fp.readlines():
             match = FAN_PWM_TABLE_RE.search(line)
-            line = [l.strip() for l in match.group(1).split(",")]
+            line = [tab.strip() for tab in match.group(1).split(",")]
             if title:
                 table += [{title[idx]: val for idx, val in enumerate(line) if idx > 0}]
             else:
@@ -43,206 +49,238 @@ def load_table(path):
 
 class Fan(object):
 
-    class FanException(Exception):
-        pass
-
-    def __init__(self, path, jetson_clocks, config_file, temp_control=True):
-        # Config file
-        self.config_file = config_file + "/fan_config"
-        self.jetson_clocks = jetson_clocks
-        # Initialize number max records to record
-        self.path = path
-        self.temp_control = temp_control
-        self.CONFIGS = ["jc", "manual"]
-        self.old_speed = 0
-        # Check exist path
-        if not os.path.isdir(path):
-            raise Fan.FanException("Fan does not exist")
-        # Init status config with first config
-        self.conf = self.CONFIGS[0]
-        # Init status fan
+    def __init__(self, controller):
+        self._controller = controller
+        # Initialize fan
         self._status = {}
-        self.isRPM = os.path.isfile(self.path + "rpm_measured")
-        self.isCPWM = os.path.isfile(self.path + "cur_pwm")
-        self.isTPWM = os.path.isfile(self.path + "target_pwm")
-        self.isCTRL = os.path.isfile(self.path + "temp_control")
-        # Max value PWM
-        self._status["cap"] = int(self.read_status("pwm_cap")) if os.path.isfile(self.path + "pwm_cap") else 255
-        # PWM RPM table
-        self.table = load_table(self.path) if os.path.isfile(self.path + "pwm_rpm_table") else {}
-        # Step time
-        self._status["step"] = int(self.read_status("step_time")) if os.path.isfile(self.path + "step_time") else 0
-        # Status FAN
-        if os.path.isfile(self.path + "target_pwm"):
-            self._status["status"] = 'ON'
-        elif os.getuid() != 0:
-            self._status["status"] = 'SUDO SUGGESTED'
-        else:
-            self._status["status"] = 'OFF'
-        # Load configuration if exist
-        self.load()
-        # Run first time update status fan
-        self.update()
+        self._mode = None
+        self._speed = None
+        self._auto = None
+        self._measure = None
+        self._rpm = None
+
+    @property
+    def rpm(self):
+        return self._rpm
+
+    @property
+    def measure(self):
+        return self._measure
+
+    @property
+    def auto(self):
+        return self._auto
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @mode.setter
+    def mode(self, value):
+        if value not in CONFIGS:
+            raise JtopException('Control does not available')
+        # If value is the same do not do nothing
+        if self._mode == value:
+            return
+        # Set new jetson_clocks configuration
+        self._controller.put({'fan': {'mode': value}})
 
     @property
     def speed(self):
-        return self._status.get("tpwm", 0)
+        return self._speed
 
     @speed.setter
     def speed(self, value):
+        if 'speed' not in self._status:
+            raise JtopException('You can not set a speed for this fan')
+        if not isinstance(value, (int, float)):
+            raise ValueError("Use a number")
         # Check limit speed
-        if os.access(self.path + "target_pwm", os.W_OK):
-            value = 100.0 if value > 100.0 else value
-            value = 0 if value < 0 else value
-            # Convert in PWM value
-            pwm = self.ValueToPWM(value)
-            # Write PWM value
-            with open(self.path + "target_pwm", 'w') as f:
-                f.write(str(pwm))
+        if value < 0.0 or value > 100.0:
+            raise ValueError('Wrong speed. Number between [0, 100]')
+        # If value is the same do not do nothing
+        if self._speed == value:
+            return
+        # Set new jetson_clocks configuration
+        self._controller.put({'fan': {'speed': value}})
 
     @property
-    def control(self):
-        return self._status.get("ctrl", False)
+    def configs(self):
+        return CONFIGS
 
-    @control.setter
-    def control(self, value):
-        # Check limit speed
-        if os.access(self.path + "temp_control", os.W_OK) and self.temp_control:
-            value = 1 if value else 0
-            # Write status control value
-            with open(self.path + "temp_control", 'w') as f:
-                f.write(str(value))
+    def _update(self, status):
+        self._status = status
+        if 'mode' in status:
+            self._mode = status['mode']
+        if 'speed' in status:
+            self._speed = status['speed']
+        if 'auto' in status:
+            self._auto = status['auto']
+        if 'measure' in status:
+            self._measure = status['measure']
+        if 'rpm' in status:
+            self._rpm = status['rpm']
+
+    def __repr__(self):
+        return str(self._status)
+
+
+class FanService(object):
+    """
+    Fan controller
+
+    Unused variables:
+     - table
+     - step
+    """
+    def __init__(self, config, fan_path):
+        # Configuration
+        self._config = config
+        # Initialize number max records to record
+        self.path = locate_commands("fan", fan_path)
+        # Init status fan
+        self.isRPM = os.path.isfile(os.path.join(self.path, 'rpm_measured'))
+        self.isCPWM = os.path.isfile(os.path.join(self.path, 'cur_pwm'))
+        self.isTPWM = os.path.isfile(os.path.join(self.path, 'target_pwm'))
+        self.isCTRL = os.path.isfile(os.path.join(self.path, 'temp_control'))
+        # Initialize dictionary status
+        self._status = {}
+        # Max value PWM
+        self._pwm_cap = float(self._read_status('pwm_cap')) if os.path.isfile(self.path + 'pwm_cap') else 255
+        # PWM RPM table
+        self.table = load_table(self.path) if os.path.isfile(self.path + 'pwm_rpm_table') else {}
+        # Step time
+        self.step = int(self._read_status('step_time')) if os.path.isfile(self.path + 'step_time') else 0
+        # Update variables
+        self.update()
+
+    def initialization(self, jc):
+        self._jc = jc
+        # Load configuration
+        config_fan = self._config.get('fan', {})
+        # Set default speed
+        self._speed = config_fan.get('speed', CONFIG_DEFAULT_FAN_SPEED)
+        # Set default mode
+        self.mode = config_fan.get('mode', CONFIG_DEFAULT_FAN_MODE)
 
     @property
-    def config(self):
-        return self.conf
+    def mode(self):
+        config_fan = self._config.get('fan', {})
+        return config_fan.get('mode', CONFIG_DEFAULT_FAN_MODE)
 
-    @config.setter
-    def config(self, value):
-        if self.temp_control:
-            if value == "manual":
-                self.control = True
-                self.speed = self.old_speed
-            elif value == "jc":
-                if self.jetson_clocks.start:
-                    self.control = False
-                    # Store speed status
-                    self.old_speed = self.speed
-                    # Set max speed
-                    self.speed = 100
-                else:
-                    self.speed = 0
-        self.conf = value
+    @mode.setter
+    def mode(self, value):
+        if value not in CONFIGS:
+            raise JtopException('This control does not available')
+        if value == 'system':
+            self.auto = True
+        logger.info("Mode set {mode}".format(mode=value))
+        if value == 'default':
+            # Set in auto only if jetson_clocks in not active
+            if self._jc is not None:
+                # Only if jetson_clocks is alive set max speed for fan
+                jc_status = self._jc.alive(wait=False)
+                if jc_status:
+                    if self.is_speed:
+                        self.set_speed(100)
+                # Set automatic mode:
+                # - True if jetson_clocks is off
+                # - False if jetson_clocks is running
+                self.auto = not jc_status
+        if value == 'manual':
+            # Switch off speed
+            self.auto = False
+            # Initialize default speed
+            if self.is_speed:
+                self.speed = self._speed
+        # Store mode
+        self._status['mode'] = value
+        # Store only if value is different
+        if self.mode != value:
+            # Extract configuration
+            config = self._config.get('fan', {})
+            # Add new value
+            config['mode'] = value
+            # Set new jetson_clocks configuration
+            self._config.set('fan', config)
+            # Fan setting
+            logger.debug("Config {config}".format(config=config))
 
-    def conf_next(self):
-        try:
-            # Extract index  from name configuration
-            idx = self.CONFIGS.index(self.conf)
-            # Go to next index and normalize for size len
-            idx = (idx + 1) % len(self.CONFIGS)
-        except ValueError:
-            idx = 0
-        # Update with new config name
-        self.config = self.CONFIGS[idx]
+    @property
+    def is_speed(self):
+        return self.isTPWM
 
-    def conf_prev(self):
-        try:
-            # Extract index  from name configuration
-            idx = self.CONFIGS.index(self.conf)
-            # Go to previous index and normalize for size len
-            idx = (idx - 1) % len(self.CONFIGS)
-        except ValueError:
-            idx = 0
-        # Update with new config name
-        self.config = self.CONFIGS[idx]
+    @property
+    def speed(self):
+        if not self.isTPWM:
+            raise JtopException('You can not set a speed for this fan')
+        return self._status['speed']
 
-    def increase(self, step=10):
-        # Round speed
-        spd = (self.speed // 10) * 10
-        # Increase the speed
-        if spd + step <= 100:
-            self.speed = spd + step
+    @speed.setter
+    def speed(self, value):
+        self.set_speed(value)
+        # Extract configuration
+        config = self._config.get('fan', {})
+        # Add new value
+        config['speed'] = value
+        # Update speed status
+        self._speed = value
+        # Set new jetson_clocks configuration
+        self._config.set('fan', config)
+        # Fan setting
+        logger.debug("Config {config}".format(config=config))
 
-    def decrease(self, step=10):
-        # Round speed
-        spd = (self.speed // 10) * 10
-        # Increase the speed
-        if spd - step >= 0:
-            self.speed = spd - step
-        if self.speed < step:
-            self.speed = 0
+    def set_speed(self, value):
+        # Check type
+        if not isinstance(value, (int, float)):
+            raise ValueError('Need a number')
+        # Check limit speed
+        if value < 0.0 or value > 100.0:
+            raise ValueError('Wrong speed. Number between [0, 100]')
+        # Convert in PWM
+        pwm = self._ValueToPWM(value)
+        # Write PWM value
+        with open(self.path + 'target_pwm', 'w') as f:
+            f.write(str(pwm))
 
-    def clear(self):
-        if os.path.isfile(self.config_file):
-            # Remove configuration file
-            try:
-                os.remove(self.config_file)
-            except OSError:
-                return False
-        return True
+    @property
+    def auto(self):
+        return self._status.get('auto', False)
 
-    def load(self):
-        if os.path.isfile(self.config_file):
-            with open(self.config_file, 'r') as f:
-                line = f.readline()
-                if line:
-                    # Load configuration
-                    self.conf = line.lower().strip()
-                line = f.readline()
-                if line:
-                    # Load old speed
-                    try:
-                        speed = int(line.lower().strip())
-                        self.old_speed = self.PWMtoValue(speed)
-                    except ValueError:
-                        pass
+    @auto.setter
+    def auto(self, value):
+        if not isinstance(value, bool):
+            raise ValueError('Need a boolean')
+        # Check limit speed
+        value = 1 if value else 0
+        # Write status control value
+        with open(self.path + 'temp_control', 'w') as f:
+            f.write(str(value))
 
-    def store(self):
-        with open(self.config_file, 'w') as f:
-            # Save actual configuration
-            f.write(self.conf.upper() + '\n')
-            if not self.jetson_clocks.start:
-                # Save PWM defined
-                f.write(self.read_status("target_pwm"))
-            else:
-                pwm = int(self.ValueToPWM(self.old_speed))
-                f.write(str(pwm) + "\n")
+    def _PWMtoValue(self, pwm):
+        pwm = int(pwm)
+        return float(pwm) * 100.0 / (self._pwm_cap)
 
-    def read_status(self, file_read):
-        with open(self.path + file_read, 'r') as f:
-            return f.read()
-        return None
-
-    def PWMtoValue(self, pwm):
-        return pwm * 100.0 / self._status["cap"]
-
-    def ValueToPWM(self, value):
-        return ceil(self._status["cap"] * value / 100.0)
+    def _ValueToPWM(self, value):
+        return int(ceil((self._pwm_cap) * value / 100.0))
 
     def update(self):
         # Control temperature
         if self.isCTRL:
-            self._status["ctrl"] = True if int(self.read_status("temp_control")) == 1 else False
+            self._status['auto'] = bool(int(self._read_status('temp_control')) == 1)
         # Read PWM
         if self.isTPWM:
-            fan_level = float(self.read_status("target_pwm")) / 255.0 * 100.0
-            logger.debug('{} status PWM CTRL {}'.format(self.path, fan_level))
-            self._status["tpwm"] = int(fan_level)
+            self._status['speed'] = self._PWMtoValue(self._read_status('target_pwm'))
         # Read current
         if self.isCPWM:
-            fan_level = float(self.read_status("cur_pwm")) / 255.0 * 100.0
-            logger.debug('{} status PWM CUR {}'.format(self.path, fan_level))
-            self._status["cpwm"] = int(fan_level)
+            self._status['measure'] = self._PWMtoValue(self._read_status('cur_pwm'))
         # Read RPM fan
-        # if self.with_rpm:
-        #     rpm_measured = int(self.read_status("rpm_measured"))
-        #     logger.debug('{} status RPM {}'.format(self.path, rpm_measured))
-        #     self._status["rpm"] = rpm_measured
-
-    @property
-    def status(self):
-        # TODO Improve RPM read
-        # if self.with_rpm and self.rpm[-1] != 0:
-        #     fan['label'] = str(self.rpm[-1]) + "RPM"
+        if self.isRPM:
+            self._status['rpm'] = int(self._read_status('rpm_measured'))
         return self._status
+
+    def _read_status(self, file_read):
+        with open(self.path + file_read, 'r') as f:
+            return f.read()
+        return None
 # EOF

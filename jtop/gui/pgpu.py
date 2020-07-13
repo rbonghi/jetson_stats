@@ -19,28 +19,28 @@ import curses
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import (plot_name_info,
-                         label_freq)
-from .lib.linear_gauge import linear_gauge
+                         label_freq,
+                         jetson_clocks_gui,
+                         nvp_model_gui)
+from .lib.linear_gauge import linear_gauge, GaugeName
 from .lib.chart import Chart
-from ..core.jetson_clocks import JetsonClocks
 
 
 class GPU(Page):
 
-    def __init__(self, stdscr, jetson, refresh):
-        super(GPU, self).__init__("GPU", stdscr, jetson, refresh)
+    def __init__(self, stdscr, jetson):
+        super(GPU, self).__init__("GPU", stdscr, jetson)
         # Initialize GPU chart
-        self.chart_gpu = Chart(jetson, "GPU", refresh, self.update_chart, color=curses.color_pair(2), color_chart=curses.color_pair(8))
+        self.chart_gpu = Chart(jetson, "GPU", self.update_chart, color=curses.color_pair(2), color_chart=[curses.color_pair(8)])
 
     def update_chart(self, jetson, name):
-        parameter = jetson.stats.get("GR3D", {})
         # Get max value if is present
-        max_val = parameter.get("max_val", 100)
+        max_val = jetson.gpu.get("max_val", 100)
         # Get unit
-        unit = parameter.get("unit", "%")
+        unit = jetson.gpu.get("unit", "%")
         # Append in list
         return {
-            'value': parameter.get("val", 0),
+            'value': [jetson.gpu.get("val", 0)],
             'max': max_val,
             'unit': unit,
         }
@@ -55,53 +55,22 @@ class GPU(Page):
         size_x = [1, width - 2]
         size_y = [first + 1, height * 2 // 3]
         # Draw the GPU chart
-        if 'GR3D' in self.jetson.stats:
-            frq = label_freq(self.jetson.stats['GR3D'])
-            label_chart_gpu = "{percent: >2}%".format(percent=self.jetson.stats['GR3D']['val'])
-            if frq:
-                label_chart_gpu += " - {frq}".format(frq=frq)
-            self.chart_gpu.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
+        frq = label_freq(self.jetson.gpu['frq'], start='k')
+        label_chart_gpu = "{percent: >2}%".format(percent=self.jetson.gpu['val'])
+        if frq:
+            label_chart_gpu += " - {frq}".format(frq=frq)
+        self.chart_gpu.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
         # Percent Gauge GPU
-        gpu = self.jetson.stats.get('GR3D', {})
         linear_gauge(self.stdscr, offset=first + height * 2 // 3 + 1, start=1, size=width // 2,
-                     name='GPU',
-                     value=gpu.get('val', 0),
-                     label=label_freq(gpu),
-                     status='ON' if gpu else 'SUDO SUGGESTED',
-                     color=curses.color_pair(6))
+                     name=GaugeName('GPU', color=curses.color_pair(6)),
+                     value=self.jetson.gpu.get('val', 0),
+                     label=label_freq(self.jetson.gpu['frq'], start='k'))
         # Temperature GPU
-        if "GPU" in self.jetson.stats['TEMP']:
-            temp_gpu = self.jetson.stats['TEMP']['GPU']
+        if 'GPU' in self.jetson.temperature:
+            temp_gpu = self.jetson.temperature['GPU']
             plot_name_info(self.stdscr, first + height * 2 // 3 + 1, width // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
         # Jetson clocks status
-        jc = self.jetson.jetson_clocks
-        if jc is not None:
-            try:
-                jc_status = jc.status
-                # Running (Green) or Normal (Grey)
-                jc_color = curses.color_pair(2) if jc_status else curses.A_NORMAL
-                # Write status jetson_clocks
-                jc_status_name = "Running" if jc_status else "Stopped"
-            except JetsonClocks.JCException:
-                # Fix error color
-                jc_color = curses.color_pair(11)
-                jc_status_name = "SUDO SUGGESTED"
-            # Status service
-            jc_service = jc.service
-            if jc_service == "active":
-                color = curses.color_pair(2)  # Running (Green)
-            elif jc_service == "inactive":
-                color = curses.A_NORMAL       # Normal (Grey)
-            elif "ing" in jc_service:
-                color = curses.color_pair(3)  # Warning (Yellow)
-            else:
-                color = curses.color_pair(1)  # Error (Red)
-            # Show if JetsonClock is enabled or not
-            if jc.enable:
-                jc_service = "[" + jc_service + "]"
-            plot_name_info(self.stdscr, first + height * 2 // 3 + 2, 1, "Jetson Clocks", jc_status_name, jc_color)
-            plot_name_info(self.stdscr, first + height * 2 // 3 + 3, 1, "Jetson Clocks Service", jc_service, color)
+        jetson_clocks_gui(self.stdscr, first + height * 2 // 3 + 3, 1, self.jetson)
         # NVP Model
-        nvpmodel = self.jetson.nvpmodel
-        if nvpmodel is not None:
-            plot_name_info(self.stdscr, first + height * 2 // 3 + 4, 1, "NV Power[" + str(nvpmodel.num) + "]", nvpmodel.mode)
+        if self.jetson.nvpmodel is not None:
+            nvp_model_gui(self.stdscr, first + height * 2 // 3 + 4, 1, self.jetson)

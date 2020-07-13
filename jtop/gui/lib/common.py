@@ -23,17 +23,6 @@ import curses
 from functools import wraps
 
 
-def xterm_line(jetson):
-    str_xterm = " " + jetson.board["board"]["TYPE"]
-    nvp = jetson.nvpmodel
-    # if "GR3D" in jetson.stats:
-    #     gpu = jetson.stats["GR3D"]['val']
-    #     str_xterm += " - GPU {gpu: 3}% {label}".format(gpu=gpu, label=label_freq(jetson.stats["GR3D"]))
-    if nvp is not None:
-        str_xterm += " - {}".format(nvp.mode)
-    return str_xterm
-
-
 def set_xterm_title(title):
     '''
     Set XTerm title using escape sequences.
@@ -53,6 +42,30 @@ def set_xterm_title(title):
                                   ):
         sys.stdout.write('\33]0;' + title + '\a')
         sys.stdout.flush()
+
+
+def nvp_model_gui(stdscr, offset, start, jetson):
+    name = jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')
+    plot_name_info(stdscr, offset, start, "NV Power[" + str(jetson.nvpmodel.id) + "]", name)
+
+
+def jetson_clocks_gui(stdscr, offset, start, jetson):
+    # Write status jetson_clocks
+    jc_status_name = jetson.jetson_clocks.status
+    # Read status jetson_clocks
+    if jc_status_name == "running":
+        color = (curses.A_BOLD | curses.color_pair(2))  # Running (Bold)
+    elif jc_status_name == "inactive":
+        color = curses.A_NORMAL       # Normal (Grey)
+    elif "ing" in jc_status_name:
+        color = curses.color_pair(3)  # Warning (Yellow)
+    else:
+        color = curses.color_pair(1)  # Error (Red)
+    # Show if JetsonClock is enabled or not
+    if jetson.jetson_clocks.boot:
+        jc_status_name = "[" + jc_status_name + "]"
+    # Show status jetson_clocks
+    plot_name_info(stdscr, offset, start, "Jetson Clocks", jc_status_name, color)
 
 
 def check_size(height_max, width_max):
@@ -116,15 +129,15 @@ def strfdelta(tdelta, fmt):
     return fmt.format(**d)
 
 
-def label_freq(value):
-    if 'frq' in value:
-        freq = value['frq']
-        if freq >= 1000:
-            return "{0:2.1f}GHz".format(freq / 1000.0)
-        else:
-            return str(freq) + "MHz"
+def label_freq(frq, start='k'):
+    szw, _, k_unit = size_min(frq, start=start)
+    if szw >= 100:
+        label = '{tot:2.0f}{unit}Hz'.format(tot=szw, unit=k_unit)
+    elif szw >= 10:
+        label = '{tot:2.0f} {unit}Hz'.format(tot=szw, unit=k_unit)
     else:
-        return ""
+        label = '{tot:2.1f}{unit}Hz'.format(tot=szw, unit=k_unit)
+    return label
 
 
 def size_min(num, divider=1.0, n=0, start=''):
