@@ -17,7 +17,7 @@ jobs:
         persist-credentials: false
 
     - name: Install jtop
-      run: python setup.py install
+      run: sudo python setup.py install
     - name: Sphinx Build
       # Follow: https://github.com/marketplace/actions/sphinx-build
       uses: ammaraskar/sphinx-action@0.3
