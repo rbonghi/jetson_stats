@@ -66,9 +66,10 @@ class CPU(Page):
         release = platform.release()
         release = release[:x_offset - (first + 3) - 4]
         plot_name_info(self.stdscr, first + 3, 2, "Rel", release)
+        plot_name_info(self.stdscr, first + 4, 2, "Cluster", self.jetson.cluster)
         # Architecture CPU cores
         # architecture = self.jetson.architecture
-        offset_table = 5
+        offset_table = 6
         for idx, name in enumerate(sorted(self.jetson.cpu)):
             cpu = self.jetson.cpu[name]
             status = 'ON' if cpu else 'OFF'
@@ -83,7 +84,7 @@ class CPU(Page):
             try:
                 if active:
                     self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, model, curses.A_NORMAL)
-                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, frq, curses.A_NORMAL)
+                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, "Frq: {}".format(frq), curses.A_NORMAL)
                 else:
                     self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, status, curses.A_NORMAL)
             except curses.error:
@@ -114,7 +115,7 @@ class CPU(Page):
             if status:
                 governor = data.get('governor', '')[:x_size + add_size - 12]
                 percent = data.get('val', 0)
-                label_chart_cpu = "{percent: >2}% {governor}".format(percent=percent, governor=governor.capitalize())
+                label_chart_cpu = "{percent: >3d}% {governor}".format(percent=percent, governor=governor.capitalize())
                 chart.draw(self.stdscr, size_x, size_y, label=label_chart_cpu, y_label=y_label)
             idx_n += 1
 # EOF

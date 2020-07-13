@@ -55,7 +55,7 @@ class Command(object):
         def target(out_queue, err_queue):
             # Run process
             try:
-                self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE)
+                self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
                 # Read lines output
                 for line in iter(self.process.stdout.readline, b''):
                     line = line.decode('utf-8')

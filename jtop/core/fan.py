@@ -174,14 +174,19 @@ class FanService(object):
             raise JtopException('This control does not available')
         if value == 'system':
             self.auto = True
+        logger.info("Mode set {mode}".format(mode=value))
         if value == 'default':
             # Set in auto only if jetson_clocks in not active
             if self._jc is not None:
-                if not self._jc.is_alive:
-                    self.auto = True
-                else:
+                # Only if jetson_clocks is alive set max speed for fan
+                jc_status = self._jc.alive(wait=False)
+                if jc_status:
                     if self.is_speed:
-                        self.speed = 100
+                        self.set_speed(100)
+                # Set automatic mode:
+                # - True if jetson_clocks is off
+                # - False if jetson_clocks is running
+                self.auto = not jc_status
         if value == 'manual':
             # Switch off speed
             self.auto = False
@@ -198,6 +203,8 @@ class FanService(object):
             config['mode'] = value
             # Set new jetson_clocks configuration
             self._config.set('fan', config)
+            # Fan setting
+            logger.debug("Config {config}".format(config=config))
 
     @property
     def is_speed(self):
@@ -211,6 +218,19 @@ class FanService(object):
 
     @speed.setter
     def speed(self, value):
+        self.set_speed(value)
+        # Extract configuration
+        config = self._config.get('fan', {})
+        # Add new value
+        config['speed'] = value
+        # Update speed status
+        self._speed = value
+        # Set new jetson_clocks configuration
+        self._config.set('fan', config)
+        # Fan setting
+        logger.debug("Config {config}".format(config=config))
+
+    def set_speed(self, value):
         # Check type
         if not isinstance(value, (int, float)):
             raise ValueError('Need a number')
@@ -222,12 +242,6 @@ class FanService(object):
         # Write PWM value
         with open(self.path + 'target_pwm', 'w') as f:
             f.write(str(pwm))
-        # Extract configuration
-        config = self._config.get('fan', {})
-        # Add new value
-        config['speed'] = value
-        # Set new jetson_clocks configuration
-        self._config.set('fan', config)
 
     @property
     def auto(self):

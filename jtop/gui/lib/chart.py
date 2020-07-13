@@ -146,10 +146,10 @@ class Chart(object):
     def _plot_values(self, stdscr, size_x, size_y, displayX, displayY, label=True):
         """ Plot values """
         # https://stackoverflow.com/questions/30107212/add-to-a-deque-being-iterated-in-python
-
-        val = float(displayX - 2) / float(len(self.values))
+        list_values = list(self.values)
+        val = float(displayX - 2) / float(len(list_values))
         points = []
-        for n in self.values:
+        for n in list_values:
             # n = n if n <= self.max_val else self.max_val
             points += [n] * int(ceil(val))
 

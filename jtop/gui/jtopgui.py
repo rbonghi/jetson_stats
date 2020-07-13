@@ -183,13 +183,14 @@ class JTOPGUI:
     def header(self):
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
-        # if "GR3D" in jetson.stats:
-        #     gpu = jetson.stats["GR3D"]['val']
-        #     str_xterm += " - GPU {gpu: 3}% {label}".format(gpu=gpu, label=label_freq(jetson.stats["GR3D"]))
-        nvp = self.jetson.nvpmodel
-        str_xterm = ' - {}'.format(nvp) if nvp is not None else ''
+        status = [self.jetson.board.hardware["TYPE"]]
+        if self.jetson.jetson_clocks is not None:
+            status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks)]
+        if self.jetson.nvpmodel is not None:
+            status += [self.jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')]
+        str_xterm = ' - '.join(status)
         # Print jtop basic info
-        set_xterm_title("jtop {hardware}{nvp}".format(hardware=self.jetson.board.hardware["TYPE"], nvp=str_xterm))
+        set_xterm_title("jtop {name}".format(name=str_xterm))
         # Add extra Line if with sudo
         idx = 0
         if self.jetson.interval != self.jetson.interval_user:

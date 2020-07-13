@@ -187,7 +187,7 @@ class JtopServer(Process):
                     # Check if the configuration exist
                     if self.jetson_clocks:
                         if not self.jetson_clocks.is_config():
-                            if not self.jetson_clocks.is_alive:
+                            if not self.jetson_clocks.alive(wait=False):
                                 self.jetson_clocks.store()
                     # Check if control is not empty
                     if not control:
@@ -486,7 +486,7 @@ class JtopServer(Process):
         # -- JETSON_CLOCKS --
         if self.jetson_clocks is not None:
             data['jc'] = {
-                'status': self.jetson_clocks.is_alive,
+                'status': self.jetson_clocks.alive(wait=False),
                 'thread': self.jetson_clocks.is_running,
                 'config': self.jetson_clocks.is_config(),
                 'boot': self.jetson_clocks.boot}
