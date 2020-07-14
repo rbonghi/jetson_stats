@@ -134,15 +134,6 @@ def jetson_clocks_alive(show):
     return all(stat)
 
 
-def run_command(cmd, repeat=5):
-    for idx in range(repeat):
-        try:
-            return cmd(timeout=COMMAND_TIMEOUT)
-        except Command.TimeoutException as error:
-            logger.error("[{idx}] {error}".format(idx=idx, error=error))
-    raise JtopException("Error to start jetson_clocks")
-
-
 class JetsonClocks(object):
     """
         Reference:
@@ -288,8 +279,7 @@ class JetsonClocksService(object):
         if self.fan is not None:
             speed = self.fan.speed if self.fan.is_speed else 0
         # Start jetson_clocks
-        cmd = Command([self.jc_bin])
-        run_command(cmd, repeat=5)
+        Command.run_command([self.jc_bin], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
         if self.fan is not None:
             self._fix_fan(speed)
@@ -303,8 +293,7 @@ class JetsonClocksService(object):
         if self.fan is not None:
             speed = self.fan.speed if self.fan.is_speed else 0
         # Run jetson_clocks
-        cmd = Command([self.jc_bin, '--restore', self.config_l4t])
-        run_command(cmd, repeat=5)
+        Command.run_command([self.jc_bin, '--restore', self.config_l4t], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
         if self.fan is not None:
             self._fix_fan(speed)

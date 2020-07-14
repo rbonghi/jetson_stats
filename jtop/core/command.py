@@ -48,6 +48,16 @@ class Command(object):
         def __str__(self):
             return "[errno:{errno}] {message}".format(message=self.message, errno=self.errno)
 
+    @staticmethod
+    def run_command(command, repeat=5, timeout=2):
+        cmd = Command(command)
+        for idx in range(repeat):
+            try:
+                return cmd(timeout=timeout)
+            except Command.TimeoutException as error:
+                logger.error("[{idx}] {error}".format(idx=idx, error=error))
+        raise Command.TimeoutException("Error to start {command}".format(command=command))
+
     def __init__(self, command):
         self.process = None
         self.command = command

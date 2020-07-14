@@ -168,7 +168,7 @@ class NVPModelService(object):
                 logger.error("I cannot set jetson_clocks")
             logger.info("NVPmodel switch off jetson_clocks")
         # Set NV Power Mode
-        status = self.resend_set_mode(value)
+        status = self.set_mode(value)
         # Update status
         self._nvpm[value]['status'] = status
         # Enable again the jetson_clocks status
@@ -209,22 +209,12 @@ class NVPModelService(object):
     def modes(self):
         return self._nvpm
 
-    def resend_set_mode(self, value):
-        for _ in range(3):
-            try:
-                status = self.set_mode(value)
-                return status
-            except JtopException:
-                logger.warning("Timeout send set message")
-        raise JtopException("nvpmodel does not reply in time")
-
     def set_mode(self, level):
         """ Set nvpmodel to a new status """
         # Set the new nvpmodel status
-        nvpmodel_p = Command([self.nvpmodel_name, '-m', str(level)])
         try:
             # If there are no errors return the NV Power mode
-            lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+            lines = Command.run_command([self.nvpmodel_name, '-m', str(level)], repeat=5, timeout=COMMAND_TIMEOUT)
             # Check if error is in vector
             for line in lines:
                 if "NVPM ERROR" in line:
