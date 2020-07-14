@@ -156,33 +156,27 @@ class NVPModelService(object):
             self._nvpm[value]['status'] = status
             return status
         # Otherwise disable the jetson_clocks
-        try:
-            old_status = self.jetson_clocks.alive(timeout=COMMAND_TIMEOUT)
-        except JtopException:
-            logger.error("I cannot set jetson_clocks")
-            old_status = False
+        old_status = self.jetson_clocks.alive(wait=False)
         # Switch off jetson_clocks if is running
         if old_status:
-            while not self.jetson_clocks.stop():
-                pass
+            self.jetson_clocks.set(False)
             # Check jetson_clocks is off
             try:
-                while self.jetson_clocks.alive(timeout=COMMAND_TIMEOUT):
+                while self.jetson_clocks.alive():
                     pass
             except JtopException:
                 logger.error("I cannot set jetson_clocks")
             logger.info("NVPmodel switch off jetson_clocks")
         # Set NV Power Mode
-        status = self.set_mode(value)
+        status = self.resend_set_mode(value)
         # Update status
         self._nvpm[value]['status'] = status
         # Enable again the jetson_clocks status
         if old_status:
-            while not self.jetson_clocks.start():
-                pass
+            self.jetson_clocks.set(True)
             # Check jetson_clocks is off
             try:
-                while not self.jetson_clocks.alive(timeout=COMMAND_TIMEOUT):
+                while not self.jetson_clocks.alive():
                     pass
             except JtopException:
                 logger.error("I cannot set jetson_clocks")
@@ -215,6 +209,15 @@ class NVPModelService(object):
     def modes(self):
         return self._nvpm
 
+    def resend_set_mode(self, value):
+        for _ in range(3):
+            try:
+                status = self.set_mode(value)
+                return status
+            except JtopException:
+                logger.warning("Timeout send set message")
+        raise JtopException("nvpmodel does not reply in time")
+
     def set_mode(self, level):
         """ Set nvpmodel to a new status """
         # Set the new nvpmodel status
@@ -229,7 +232,7 @@ class NVPModelService(object):
                     logger.error("Error to set nvpmodel {level}. Message:\n{text}".format(level=level, text=text))
                     return False
         except Command.TimeoutException:
-            return False
+            raise JtopException("nvpmodel does not reply in time")
         # If everithing go well save the new mode
         self.selected = level
         return True

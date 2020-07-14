@@ -166,9 +166,6 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
-        # config nvpmodel on jetson_clocks
-        if self.jetson_clocks is not None:
-            self.jetson_clocks.set_nvpmodel(self.nvpmodel)
         # Setup memory servive
         self.memory = MemoryService()
         # Setup tegrastats
@@ -214,16 +211,7 @@ class JtopServer(Process):
                         jc = control['jc']
                         # Enable / disable jetson_clocks
                         if 'enable' in jc:
-                            if jc['enable']:
-                                if self.jetson_clocks.start():
-                                    logger.info("jetson_clocks started")
-                                else:
-                                    logger.warning("jetson_clocks already running")
-                            else:
-                                if self.jetson_clocks.stop(reset=True):
-                                    logger.info("jetson_clocks stopped")
-                                else:
-                                    logger.info("jetson_clocks already stopped")
+                            self.jetson_clocks.set(jc['enable'])
                         # Update jetson_clocks configuration
                         if 'boot' in jc:
                             self.jetson_clocks.boot = jc['boot']
@@ -253,7 +241,7 @@ class JtopServer(Process):
                         if self.tegra.open(interval=interval):
                             # Start jetson_clocks
                             if self.jetson_clocks is not None:
-                                self.jetson_clocks.show_start()
+                                self.jetson_clocks.start()
                             # Set interval value
                             self.interval.value = interval
                             # Status start tegrastats
@@ -276,14 +264,15 @@ class JtopServer(Process):
                         logger.info("tegrastats close")
                         # Start jetson_clocks
                         if self.jetson_clocks is not None:
-                            if self.jetson_clocks.show_stop():
-                                logger.info("jetson_clocks show closed")
+                            self.jetson_clocks.stop()
+                            logger.info("jetson_clocks show closed")
                     # Disable timeout
                     timeout = None
                     self.interval.value = -1.0
         except (KeyboardInterrupt, SystemExit):
             pass
-        except Exception:
+        except Exception as e:
+            logger.error("Error subprocess {error}".format(error=e))
             # Write error message
             self._error.put(sys.exc_info())
         finally:
@@ -291,14 +280,13 @@ class JtopServer(Process):
             if self.tegra.close():
                 logger.info("tegrastats close")
                 # Start jetson_clocks
-            if self.jetson_clocks is not None:
-                if self.jetson_clocks.close():
-                    logger.info("jetson_clocks closed")
+                if self.jetson_clocks is not None:
+                    self.jetson_clocks.close()
 
     def start(self):
         # Run setup
         if self.jetson_clocks is not None:
-            self.jetson_clocks.initialization()
+            self.jetson_clocks.initialization(self.nvpmodel)
         if self.nvpmodel is not None:
             # Read nvp_mode
             self.nvp_mode = self.nvpmodel.get()
@@ -487,7 +475,7 @@ class JtopServer(Process):
         if self.jetson_clocks is not None:
             data['jc'] = {
                 'status': self.jetson_clocks.alive(wait=False),
-                'thread': self.jetson_clocks.is_running,
+                'thread': self.jetson_clocks.is_running(),
                 'config': self.jetson_clocks.is_config(),
                 'boot': self.jetson_clocks.boot}
         # -- NVP MODEL --

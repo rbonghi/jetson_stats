@@ -137,11 +137,10 @@ def jetson_clocks_alive(show):
 def run_command(cmd, repeat=5):
     for idx in range(repeat):
         try:
-            message = cmd(timeout=COMMAND_TIMEOUT)
-            return True, message
+            return cmd(timeout=COMMAND_TIMEOUT)
         except Command.TimeoutException as error:
             logger.error("[{idx}] {error}".format(idx=idx, error=error))
-    return False, ''
+    raise JtopException("Error to start jetson_clocks")
 
 
 class JetsonClocks(object):
@@ -208,12 +207,13 @@ class JetsonClocksService(object):
     """
 
     def __init__(self, config, fan, jetson_clocks_path):
-        self._thread_start = None
-        self._thread_stop = None
-        self._thread_show = None
-        self._error = None
-        self._show = {}
-        self._thread_show_running = False
+        # Thread event show
+        self._running = True
+        self.event_show = Event()
+        self._thread = Thread(target=self._th_show)
+        # Thread event jetson_clocks set
+        self._set_jc = None
+        self._set_status = 'inactive'
         # nvpmodel
         self.nvpmodel = None
         # Load configuration
@@ -223,25 +223,21 @@ class JetsonClocksService(object):
         self.config_l4t = config.path + "/" + jetson_clocks_file
         # Jetson Clocks path
         self.jc_bin = locate_commands("jetson_clocks", jetson_clocks_path)
+        # Error message
+        self._error = None
         # Fan configuration
         self.fan = fan
         # Update status jetson_clocks
         cmd = Command([self.jc_bin, '--show'])
         lines = cmd(timeout=COMMAND_TIMEOUT)
         self._show = decode_show_message(lines)
-        # Show event
-        self.event_show = Event()
 
-    def set_nvpmodel(self, nvpmodel):
+    def initialization(self, nvpmodel):
         self.nvpmodel = nvpmodel
-
-    def initialization(self):
-        status = True
         # Check if exist configuration file
         if not os.path.isfile(self.config_l4t):
             if self.alive(wait=False):
                 logger.warning("I can't store jetson_clocks is already running")
-                status = False
             else:
                 self.store()
         # Check which version is L4T is loaded
@@ -252,99 +248,9 @@ class JetsonClocksService(object):
         # If jetson_clocks on boot run a thread
         config = self._config.get('jetson_clocks', {})
         if config.get('boot', CONFIG_DEFAULT_BOOT):
+            self._set_status = 'booting'
             # Start thread Service client
-            self.start()
-        return status
-
-    @property
-    def boot(self):
-        config = self._config.get('jetson_clocks', {})
-        return config.get('boot', CONFIG_DEFAULT_BOOT)
-
-    @boot.setter
-    def boot(self, value):
-        if not isinstance(value, bool):
-            raise ValueError("Use a boolean")
-        # Extract configuration
-        config = self._config.get('jetson_clocks', {})
-        # Add new value
-        config['boot'] = value
-        # Set new jetson_clocks configuration
-        self._config.set('jetson_clocks', config)
-
-    def show(self):
-        return self._show
-
-    def _thread_jetson_clocks_loop(self, event_show):
-        cmd = Command([self.jc_bin, '--show'])
-        try:
-            while self._thread_show_running:
-                try:
-                    lines = cmd(timeout=COMMAND_TIMEOUT)
-                    self._show = decode_show_message(lines)
-                    # Set event from jetson_clocks
-                    if not event_show.is_set():
-                        logger.debug("Set event")
-                        event_show.set()
-                except Command.TimeoutException as e:
-                    logger.warning("Timeout {}".format(e))
-        except Exception as e:
-            logger.error("Exception jetson_clocks_show {}".format(e))
-            # Store error message
-            self._error = sys.exc_info()
-        # Reset running boolean
-        self._thread_show_running = False
-
-    def show_running(self):
-        if self._thread_show is None:
-            return False
-        return self._thread_show.isAlive()
-
-    def show_start(self):
-        # If there are exception raise
-        self._error_status()
-        # Check if thread show is running or not
-        if not self.show_running():
-            self._thread_show_running = True
-            # Start thread Service client
-            self._thread_show = Thread(target=self._thread_jetson_clocks_loop, args=(self.event_show, ))
-            self._thread_show.start()
-            return True
-        return False
-
-    def show_stop(self):
-        # If there are exception raise
-        self._error_status()
-        # Check if thread show is running or not
-        if self.show_running():
-            # Stop service
-            self._thread_show_running = False
-        return True
-
-    def alive(self, wait=True, timeout=None):
-        if wait and not self.event_show.is_set():
-            logger.info("Wait from jetson_clocks show")
-            if not self.event_show.wait(timeout=timeout):
-                raise JtopException("Lost connection from jtop")
-        self.event_show.clear()
-        # Return status jetson_clocks
-        return jetson_clocks_alive(self._show)
-
-    @property
-    def is_running(self):
-        # Check status thread
-        if self._thread_start is not None:
-            if self._thread_start.isAlive():
-                return 'activating'
-        if self._thread_stop is not None:
-            if self._thread_stop.isAlive():
-                return 'deactivating'
-        # Load jetson_clocks start up information
-        boot_time = self._config.get('wait', CONFIG_DEFAULT_DELAY)
-        # If needtime make a sleep
-        if self.boot and timedelta(seconds=get_uptime()) < timedelta(seconds=boot_time):
-            return 'booting'
-        return 'inactive'
+            self.set(True)
 
     def _fix_fan(self, speed):
         logger.debug("fan mode: {mode} - speed {speed}".format(mode=self.fan.mode, speed=self.fan.speed))
@@ -364,93 +270,158 @@ class JetsonClocksService(object):
         elif self.fan.mode == 'default':
             self.fan.mode = 'default'
 
-    def _jetson_clocks_boot(self, boot_time, reset):
+    def _th_start(self, reset):
+        # Check which version is L4T is loaded
+        # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
+        # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
+        # Temporary disabled to find a best way to start this service.
+        # The service on demand disabled doesn't improve the performance of the start-up
         # Measure remaining time from boot
-        boot_time = timedelta(seconds=boot_time)
+        boot_time = timedelta(seconds=self._config.get('wait', CONFIG_DEFAULT_DELAY))
         up_time = timedelta(seconds=get_uptime())
         # If needtime make a sleep
         if up_time < boot_time:
             delta = (boot_time - up_time).total_seconds()
             logger.info("Starting jetson_clocks in: {delta}s".format(delta=delta))
             time.sleep(delta)
-        try:
-            if self.fan is not None:
-                speed = self.fan.speed if self.fan.is_speed else 0
-            # Start jetson_clocks
-            cmd = Command([self.jc_bin])
-            status, message = run_command(cmd, repeat=5)
-            if not status:
-                raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-            # Fix fan speed
-            if self.fan is not None:
-                self._fix_fan(speed)
-            # Reset nvpmodel
-            if reset and self.nvpmodel is not None:
-                self.nvpmodel.reset()
-        except Exception:
-            # Store error message
-            self._error = sys.exc_info()
+        # Read fan speed
+        if self.fan is not None:
+            speed = self.fan.speed if self.fan.is_speed else 0
+        # Start jetson_clocks
+        cmd = Command([self.jc_bin])
+        run_command(cmd, repeat=5)
+        # Fix fan speed
+        if self.fan is not None:
+            self._fix_fan(speed)
+        # Reset nvpmodel
+        if reset and self.nvpmodel is not None:
+            self.nvpmodel.reset()
+        logger.info("jetson_clocks started")
 
-    def start(self, reset=False):
+    def _th_stop(self, reset):
+        # Read fan speed
+        if self.fan is not None:
+            speed = self.fan.speed if self.fan.is_speed else 0
+        # Run jetson_clocks
+        cmd = Command([self.jc_bin, '--restore', self.config_l4t])
+        run_command(cmd, repeat=5)
+        # Fix fan speed
+        if self.fan is not None:
+            self._fix_fan(speed)
+        # Reset nvpmodel
+        if reset and self.nvpmodel is not None:
+            self.nvpmodel.reset()
+        logger.info("jetson_clocks stopped")
+
+    def is_running(self):
+        if self._set_jc is not None:
+            if self._set_jc.is_alive():
+                return self._set_status
+        self._set_status = 'inactive'
+        return self._set_status
+
+    def set(self, status, reset=False):
         # If there are exception raise
         self._error_status()
-        # Check which version is L4T is loaded
-        # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
-        # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
-        # Temporary disabled to find a best way to start this service.
-        # The service on demand disabled doesn't improve the performance of the start-up
-        # If jetson_clocks on boot run a thread
-        if self.alive(wait=False):
-            return True
-        # Check if restore config exist
-        if not self.is_config():
-            self.store()
-        if self.is_running == 'inactive':
-            # Load jetson_clocks start up information
-            jetson_clocks_start = self._config.get('wait', CONFIG_DEFAULT_DELAY)
-            # Start thread Service client
-            self._thread_start = Thread(target=self._jetson_clocks_boot, args=(jetson_clocks_start, reset, ))
-            # self._thread_start.daemon = True
-            self._thread_start.start()
-            return True
-        return False
-
-    def _thread_jetson_clocks_stop(self, reset):
-        try:
-            # Read fan speed
-            if self.fan is not None:
-                speed = self.fan.speed if self.fan.is_speed else 0
-            # Run jetson_clocks
-            cmd = Command([self.jc_bin, '--restore', self.config_l4t])
-            status, message = run_command(cmd, repeat=5)
-            if not status:
-                raise JtopException("Error to start jetson_clocks: {message}".format(message=message))
-            # Fix fan speed
-            if self.fan is not None:
-                self._fix_fan(speed)
-            # Reset nvpmodel
-            if reset and self.nvpmodel is not None:
-                self.nvpmodel.reset()
-        except Exception:
-            # Store error message
-            self._error = sys.exc_info()
-
-    def stop(self, reset=False):
-        # If there are exception raise
-        self._error_status()
-        # Check if restore config exist
-        if not self.is_config():
+        # Check status jetson_clocks
+        running_status = self.is_running()
+        if running_status != 'inactive':
+            logger.warning("jetson_clocks is {status}".format(status=running_status))
             return False
-        # Check if jetson_clocks is already running
-        if not self.alive(wait=False):
-            return True
-        if self.is_running == 'inactive':
+        if status:
             # Start thread Service client
-            self._thread_stop = Thread(target=self._thread_jetson_clocks_stop, args=(reset, ))
+            self._set_jc = Thread(target=self._th_start, args=(reset, ))
+            # self._thread_start.daemon = True
+            self._set_jc.start()
+            self._set_status = 'activating'
+        else:
+            reset = False
+            # Start thread Service client
+            self._set_jc = Thread(target=self._th_stop, args=(reset, ))
             # self._thread_stop.daemon = True
-            self._thread_stop.start()
-            return True
-        return False
+            self._set_jc.start()
+            self._set_status = 'deactivating'
+
+    @property
+    def boot(self):
+        config = self._config.get('jetson_clocks', {})
+        return config.get('boot', CONFIG_DEFAULT_BOOT)
+
+    @boot.setter
+    def boot(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("Use a boolean")
+        # Extract configuration
+        config = self._config.get('jetson_clocks', {})
+        # Add new value
+        config['boot'] = value
+        # Set new jetson_clocks configuration
+        self._config.set('jetson_clocks', config)
+
+    def alive(self, wait=True):
+        if wait and not self.event_show.is_set():
+            logger.info("Wait from jetson_clocks show")
+            if not self.event_show.wait(timeout=COMMAND_TIMEOUT):
+                raise JtopException("Lost connection from jtop")
+        self.event_show.clear()
+        # Return status jetson_clocks
+        return jetson_clocks_alive(self._show)
+
+    def show(self):
+        return self._show
+
+    def _th_show(self):
+        cmd = Command([self.jc_bin, '--show'])
+        try:
+            while self._running:
+                try:
+                    lines = cmd(timeout=COMMAND_TIMEOUT)
+                    self._show = decode_show_message(lines)
+                    # Set event from jetson_clocks
+                    if not self.event_show.is_set():
+                        self.event_show.set()
+                except Command.TimeoutException as e:
+                    logger.warning("Timeout {}".format(e))
+        except Exception as e:
+            logger.error("Exception in 'jetson_clocks --show': {}".format(e))
+            # Store error message
+            self._error = sys.exc_info()
+        finally:
+            # Reset running boolean
+            self._running = False
+        # Reset running boolean
+        self._running = False
+        logger.debug("Close 'jetson_clocks --show' thread")
+
+    def start(self):
+        # If there are exception raise
+        self._error_status()
+        # Check if thread show is running or not
+        if not self._running:
+            logger.debug("Reinitialize thread jetson_clocks show")
+            self._thread = Thread(target=self._th_show)
+        # If thread is not alive start
+        if not self._thread.is_alive():
+            self._running = True
+            # Run service
+            self._thread.start()
+
+    def stop(self):
+        # If there are exception raise
+        self._error_status()
+        # Stop service
+        self._running = False
+
+    def close(self):
+        # Switch off thread jetson clocks
+        self._running = False
+        if self._thread.is_alive():
+            logger.warning("Wait switch off set jetson_clocks --show")
+            self._thread.join(COMMAND_TIMEOUT)
+        if self._set_jc is not None:
+            if self._set_jc.is_alive():
+                logger.warning("Wait switch off set jetson_clocks")
+                self._set_jc.join(COMMAND_TIMEOUT)
 
     def _error_status(self):
         # Catch exception if exist
@@ -459,21 +430,6 @@ class JetsonClocksService(object):
             ex_type, ex_value, tb_str = self._error
             ex_value.__traceback__ = tb_str
             raise ex_value
-
-    def close(self):
-        # Check start jetson_clocks
-        if self._thread_start is not None:
-            if self._thread_start.isAlive():
-                self._thread_start.join()
-        # Check stop jetson_clocks
-        if self._thread_stop is not None:
-            if self._thread_stop.isAlive():
-                self._thread_stop.join()
-        # Close show
-        if self._thread_show is not None:
-            self.show_stop()
-            if self._thread_show.isAlive():
-                self._thread_show.join()
 
     def is_config(self):
         return os.path.isfile(self.config_l4t)
