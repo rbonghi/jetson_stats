@@ -43,6 +43,11 @@ from .core import (
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
+# Fix connection refused for python 2.7
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 try:
     import queue
 except ImportError:
@@ -271,9 +276,11 @@ class JtopServer(Process):
                     self.interval.value = -1.0
         except (KeyboardInterrupt, SystemExit):
             pass
+        except FileNotFoundError:
+            pass
         except Exception as e:
-            logger.error("Error subprocess {error}".format(error=e))
-            # Write error message
+            logger.error("Error subprocess {error}".format(error=e), exc_info=1)
+            # Write error messag
             self._error.put(sys.exc_info())
         finally:
             # Close tegra
