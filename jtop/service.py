@@ -354,6 +354,7 @@ class JtopServer(Process):
                 self.terminate()
             logger.info("Wait shutdown subprocess")
             self.join(timeout=TIMEOUT_SWITCHOFF)
+            self.interval.value = -1.0
         # Close tegrastats
         try:
             error = self._error.get(timeout=0.5)

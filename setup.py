@@ -44,6 +44,15 @@ import sys
 import re
 
 
+# https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
+def is_virtualenv():
+    if hasattr(sys, 'real_prefix'):
+        return True
+    if hasattr(sys, 'base_prefix'):
+        return sys.prefix != sys.base_prefix
+    return False
+
+
 def list_scripts():
     JETSONS = import_jetson_variables()
     # Load scripts to install
@@ -114,7 +123,7 @@ class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        if not hasattr(sys, 'real_prefix'):
+        if not is_virtualenv():
             sp.call(shlex.split('./scripts/jetson_config --uninstall'))
             # Install services (copying)
             install_services(copy=True)
@@ -123,7 +132,7 @@ class PostInstallCommand(install):
         # Run the default installation script
         install.run(self)
         # Run the restart all services before to close the installer
-        if not hasattr(sys, 'real_prefix'):
+        if not is_virtualenv():
             sp.call(shlex.split('./scripts/jetson_config --install'))
         else:
             print("Skip install on virtual environment")
@@ -133,7 +142,7 @@ class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        if not hasattr(sys, 'real_prefix'):
+        if not is_virtualenv():
             sp.call(shlex.split('./scripts/jetson_config --uninstall'))
             # Install services (linking)
             install_services()
@@ -142,7 +151,7 @@ class PostDevelopCommand(develop):
         # Run the default installation script
         develop.run(self)
         # Run the restart all services before to close the installer
-        if not hasattr(sys, 'real_prefix'):
+        if not is_virtualenv():
             sp.call(shlex.split('./scripts/jetson_config --install'))
         else:
             print("Skip install on virtual environment")

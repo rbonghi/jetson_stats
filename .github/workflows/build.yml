@@ -12,7 +12,7 @@ jobs:
     name: Test on python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 1
+      # max-parallel: 1
       matrix:
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
         
