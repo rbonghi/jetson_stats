@@ -30,6 +30,8 @@ def remove_tests():
         os.remove('/tmp/jetson_clocks_test')
     if os.path.isfile('/tmp/nvp_model_test'):
         os.remove('/tmp/nvp_model_test')
+    if os.path.isfile('/usr/local/jetson_stats/config.json'):
+        os.remove('/usr/local/jetson_stats/config.json')
 
 
 @pytest.fixture(scope="function")

@@ -572,6 +572,8 @@ class jtop(Thread):
         return self._running
 
     def close(self):
+        # Wait thread end
+        self._thread_libraries.join()
         # Switch off broadcaster thread
         self._running = False
 

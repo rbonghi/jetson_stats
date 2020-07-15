@@ -64,6 +64,7 @@ JTOP_PIPE = '/run/jtop.sock'
 JTOP_USER = 'jetson_stats'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+TIMEOUT_SWITCHOFF = 3.0
 LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
 
 
@@ -171,6 +172,12 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
+        # Run setup
+        if self.jetson_clocks is not None:
+            self.jetson_clocks.initialization(self.nvpmodel)
+        if self.nvpmodel is not None:
+            # Read nvp_mode
+            self.nvp_mode = self.nvpmodel.get()
         # Setup memory servive
         self.memory = MemoryService()
         # Setup tegrastats
@@ -291,12 +298,6 @@ class JtopServer(Process):
                     self.jetson_clocks.close()
 
     def start(self):
-        # Run setup
-        if self.jetson_clocks is not None:
-            self.jetson_clocks.initialization(self.nvpmodel)
-        if self.nvpmodel is not None:
-            # Read nvp_mode
-            self.nvp_mode = self.nvpmodel.get()
         # Initialize socket
         try:
             gid = getgrnam(JTOP_USER).gr_gid
@@ -343,15 +344,16 @@ class JtopServer(Process):
             self.close()
 
     def close(self):
+        self.q.close()
         self.broadcaster.shutdown()
-        # If process is in timeout manually terminate
-        if self.interval.value == -1.0:
-            logger.info("Terminate subprocess")
-            self.terminate()
         # If process is alive wait to quit
-        if self.is_alive():
+        while self.is_alive():
+            # If process is in timeout manually terminate
+            if self.interval.value == -1.0:
+                logger.info("Terminate subprocess")
+                self.terminate()
             logger.info("Wait shutdown subprocess")
-            self.join()
+            self.join(timeout=TIMEOUT_SWITCHOFF)
         # Close tegrastats
         try:
             error = self._error.get(timeout=0.5)

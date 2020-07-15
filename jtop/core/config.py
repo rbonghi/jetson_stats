@@ -52,8 +52,13 @@ class Config:
 
     @property
     def path(self):
+        path = sys.prefix
+        if hasattr(sys, 'real_prefix'):
+            path = sys.real_prefix
+        if hasattr(sys, 'base_prefix'):
+            path = sys.base_prefix
         # Return directory folder
-        return sys.prefix + '/local/jetson_stats'
+        return path + '/local/jetson_stats'
 
     def _load(self):
         config = {}

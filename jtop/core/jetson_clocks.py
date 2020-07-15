@@ -203,8 +203,8 @@ class JetsonClocksService(object):
         self.event_show = Event()
         self._thread = Thread(target=self._th_show)
         # Thread event jetson_clocks set
-        self._set_jc = None
         self._set_status = 'inactive'
+        self._set_jc = None
         # nvpmodel
         self.nvpmodel = None
         # Load configuration
@@ -241,7 +241,8 @@ class JetsonClocksService(object):
         if config.get('boot', CONFIG_DEFAULT_BOOT):
             self._set_status = 'booting'
             # Start thread Service client
-            self.set(True)
+            self._set_jc = Thread(target=self._th_start, args=(False, ))
+            self._set_jc.start()
 
     def _fix_fan(self, speed):
         logger.debug("fan mode: {mode} - speed {speed}".format(mode=self.fan.mode, speed=self.fan.speed))
@@ -262,6 +263,7 @@ class JetsonClocksService(object):
             self.fan.mode = 'default'
 
     def _th_start(self, reset):
+        logger.debug("Start jetson_clocks with {status}".format(status=self._set_status))
         # Check which version is L4T is loaded
         # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
         # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
@@ -306,7 +308,8 @@ class JetsonClocksService(object):
         if self._set_jc is not None:
             if self._set_jc.is_alive():
                 return self._set_status
-        self._set_status = 'inactive'
+            else:
+                self._set_status = 'inactive'
         return self._set_status
 
     def set(self, status, reset=False):
@@ -317,19 +320,19 @@ class JetsonClocksService(object):
         if running_status != 'inactive':
             logger.warning("jetson_clocks is {status}".format(status=running_status))
             return False
+        logger.debug("Set jetson_clocks {status}".format(status=status))
         if status:
             # Start thread Service client
-            self._set_jc = Thread(target=self._th_start, args=(reset, ))
-            # self._thread_start.daemon = True
-            self._set_jc.start()
             self._set_status = 'activating'
+            self._set_jc = Thread(target=self._th_start, args=(reset, ))
+            self._set_jc.start()
         else:
             reset = False
             # Start thread Service client
-            self._set_jc = Thread(target=self._th_stop, args=(reset, ))
-            # self._thread_stop.daemon = True
-            self._set_jc.start()
             self._set_status = 'deactivating'
+            self._set_jc = Thread(target=self._th_stop, args=(reset, ))
+            self._set_jc.start()
+        return True
 
     @property
     def boot(self):

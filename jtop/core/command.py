@@ -28,6 +28,7 @@ except ImportError:
     import Queue as queue
 # Create logger
 logger = logging.getLogger(__name__)
+EXTRA_TIMEOUT = 1.0
 # Reference:
 # https://eli.thegreenplace.net/2017/interacting-with-a-long-running-child-process-in-python/
 # https://stackoverflow.com/questions/37942022/returncode-of-popen-object-is-none-after-the-process-is-terminated/42376107
@@ -89,9 +90,10 @@ class Command(object):
         thread.join(timeout)
         if thread.is_alive():
             logger.error('Terminating process: {command}'.format(command=self.command))
-            if self.process:
+            if self.process is not None:
                 self.process.terminate()
-            thread.join()
+            thread.join(timeout=EXTRA_TIMEOUT)
+            logger.warning('Process terminated: {command}'.format(command=self.command))
             is_timeout = True
         # Read the output
         # Extract exception and raise
