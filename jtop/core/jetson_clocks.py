@@ -43,6 +43,8 @@ CPU_CLUSTER_REGEXP = re.compile(r'CPU Cluster Switching: ((.*))')
 # NANO: cpu0: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
 # Xavier: cpu0: Online=1 Governor=schedutil MinFreq=1190400 MaxFreq=2265600 CurrentFreq=1574400 IdleStates: C1=1 c6=1
 CPU_REGEXP = re.compile(r'cpu(.+?): Online=(.+?) Governor=(.+?) MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=(.+?) IdleStates: ((.*))')
+# TX1 cpu0: Gonvernor=interactive MinFreq=102000 MaxFreq=1734000 CurrentFreq=510000
+CPUTX1_REGEXP = re.compile(r'cpu(.+?): Gonvernor=(.+?) MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=((.*))')
 # GPU regex
 # GPU MinFreq=76800000 MaxFreq=921600000 CurrentFreq=384000000
 GPU_REGEXP = re.compile(r'GPU MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=((.*))')
@@ -70,6 +72,20 @@ def decode_show_message(lines):
                 "max_freq": int(match.group(5)),
                 "current_freq": int(match.group(6)),
                 "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).split()}}
+            # Store in CPU list
+            idx_cpu = int(match.group(1)) + 1
+            status["CPU"]["CPU{num}".format(num=idx_cpu)] = cpu
+            continue
+        # Search CPU for TX1
+        match = CPUTX1_REGEXP.search(line)
+        # if match extract name and number
+        if match:
+            # Load CPU information
+            cpu = {
+                "governor": str(match.group(2)),
+                "min_freq": int(match.group(3)),
+                "max_freq": int(match.group(4)),
+                "current_freq": int(match.group(5))}
             # Store in CPU list
             idx_cpu = int(match.group(1)) + 1
             status["CPU"]["CPU{num}".format(num=idx_cpu)] = cpu

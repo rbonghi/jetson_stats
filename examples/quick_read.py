@@ -42,4 +42,8 @@ if __name__ == "__main__":
             print(jetson.local_interfaces)
             # boards
             print(jetson.board)
+            # Temperature
+            print(jetson.temperature)
+            # Power
+            print(jetson.power)
 # EOF

@@ -39,10 +39,11 @@ class CTRL(Page):
         self.service_start = Button(stdscr, key="s", action=self.action_service_start)
         self.service_enable = Button(stdscr, key="e", action=self.action_service_enable)
         # NVP Model controller
-        self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
-        self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
-        mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
-        self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
+        if self.jetson.nvpmodel is not None:
+            self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
+            self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
+            mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
+            self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
         # Fan controller
         if self.jetson.fan is not None:
             self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)

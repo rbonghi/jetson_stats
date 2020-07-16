@@ -439,13 +439,15 @@ class JtopServer(Process):
             for name, v in tegrastats['CPU'].items():
                 # Extract jc_cpu info
                 jc_cpu = jetson_clocks_show['CPU'].get(name, {})
-                if jc_cpu['Online']:
-                    # Remove online info
-                    del jc_cpu['Online']
-                    # Remove current frequency
-                    del jc_cpu['current_freq']
-                    # Update CPU information
-                    v.update(jc_cpu)
+                # Remove current frequency
+                del jc_cpu['current_freq']
+                # Fix online status
+                if 'Online' in jc_cpu:
+                    if jc_cpu['Online']:
+                        # Remove online info
+                        del jc_cpu['Online']
+                        # Update CPU information
+                        v.update(jc_cpu)
                 data['cpu'][name] = v
         for name, value in cpu_models().items():
             data['cpu'][name]['model'] = value
@@ -474,9 +476,10 @@ class JtopServer(Process):
                 # Remove current_freq data
                 del data['emc']['current_freq']
         # -- SWAP --
-        data['swap'] = {
-            'list': self.swap.all(),
-            'all': tegrastats['SWAP']}
+        if 'SWAP' in tegrastats:
+            data['swap'] = {
+                'list': self.swap.all(),
+                'all': tegrastats['SWAP']}
         # -- OTHER --
         data['other'] = dict((k, tegrastats[k]) for k in tegrastats if k not in LIST_PRINT)
         # -- FAN --

@@ -127,9 +127,10 @@ class ALL(Page):
                      percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
                      bar="#")
         # Last part of information
+        total, power = self.jetson.power
         mini_menu = 1
         mini_menu += 1 if self.jetson.temperature else 0
-        mini_menu += 1 if self.jetson.power else 0
+        mini_menu += 1 if power else 0
         column_width = (width) // (mini_menu)
         column_height = height - line_counter - 3 + first
         # Make rectangle
@@ -141,7 +142,7 @@ class ALL(Page):
             self.add_line(line_counter + 1, column_width + 2, column_height)
             plot_temperatures(self.stdscr, column_width + 2, line_counter + 1, column_width - 4, column_height, self.jetson)
         # plot watts
-        if self.jetson.power:
+        if power:
             self.add_line(line_counter + 1, 2 * column_width - 2, column_height)
             plot_watts(self.stdscr, 2 * column_width - 1, line_counter + 1, column_width + 2, column_height, self.jetson)
 

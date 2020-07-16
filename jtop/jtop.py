@@ -306,7 +306,8 @@ class jtop(Thread):
         if self.iram:
             stats['IRAM'] = self.ram['use']
         # -- SWAP --
-        stats['SWAP'] = self.swap['use']
+        if 'use' in self.swap:
+            stats['SWAP'] = self.swap['use']
         # -- Engines --
         stats['APE'] = self.engine.ape['val']
         stats['NVENC'] = self.engine.nvenc['val'] if self.engine.nvenc else 'OFF'
@@ -413,7 +414,8 @@ class jtop(Thread):
         # -- RAM --
         self._memory._update(data['ram'])
         # -- SWAP --
-        self._swap._update(data['swap'])
+        if 'swap' in data:
+            self._swap._update(data['swap'])
         # -- FAN --
         if 'fan' in data:
             self._fan._update(data['fan'])

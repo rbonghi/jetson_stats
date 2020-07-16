@@ -63,6 +63,7 @@ class Swap(object):
 
     def __init__(self, controller, path):
         self._all = {}
+        self._list_swaps = {}
         self._controller = controller
         self._this_swap = path
 
@@ -90,6 +91,9 @@ class Swap(object):
         self._list_swaps = swap_status['list']
         # Update status swap
         self._all.update(swap_status['all'])
+
+    def __len__(self):
+        return len(self._all)
 
     @property
     def all(self):
@@ -174,5 +178,6 @@ class SwapService(object):
         # List swap command
         swap_cmd = ['jetson_swap', '--off', '--dir', directory, '--name', swap_name]
         # Run script
+        logger.info("Deactivate {directory}/{name}".format(directory=directory, name=swap_name))
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
 # EOF
