@@ -197,13 +197,14 @@ class JetsonClocksService(object):
         This controller manage the jetson_clocks service.
     """
 
+    set_status = 'inactive'
+
     def __init__(self, config, fan, jetson_clocks_path):
         # Thread event show
         self._running = True
         self.event_show = Event()
         self._thread = Thread(target=self._th_show)
         # Thread event jetson_clocks set
-        self._set_status = 'inactive'
         self._set_jc = None
         # nvpmodel
         self.nvpmodel = None
@@ -239,9 +240,8 @@ class JetsonClocksService(object):
         # If jetson_clocks on boot run a thread
         config = self._config.get('jetson_clocks', {})
         if config.get('boot', CONFIG_DEFAULT_BOOT):
-            self._set_status = 'booting'
             # Start thread Service client
-            self._set_jc = Thread(target=self._th_start, args=(False, ))
+            self._set_jc = Thread(target=self._th_start, args=('booting', False, ))
             self._set_jc.start()
 
     def _fix_fan(self, speed):
@@ -262,8 +262,9 @@ class JetsonClocksService(object):
         elif self.fan.mode == 'default':
             self.fan.mode = 'default'
 
-    def _th_start(self, reset):
-        logger.debug("Start jetson_clocks with {status}".format(status=self._set_status))
+    def _th_start(self, status, reset):
+        JetsonClocksService.set_status = status
+        logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
         # Check which version is L4T is loaded
         # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
         # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
@@ -290,7 +291,9 @@ class JetsonClocksService(object):
             self.nvpmodel.reset()
         logger.info("jetson_clocks started")
 
-    def _th_stop(self, reset):
+    def _th_stop(self, status, reset):
+        JetsonClocksService.set_status = status
+        logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
         # Read fan speed
         if self.fan is not None:
             speed = self.fan.speed if self.fan.is_speed else 0
@@ -306,11 +309,9 @@ class JetsonClocksService(object):
 
     def is_running(self):
         if self._set_jc is not None:
-            if self._set_jc.is_alive():
-                return self._set_status
-            else:
-                self._set_status = 'inactive'
-        return self._set_status
+            if not self._set_jc.is_alive():
+                JetsonClocksService.set_status = 'inactive'
+        return JetsonClocksService.set_status
 
     def set(self, status, reset=False):
         # If there are exception raise
@@ -320,17 +321,15 @@ class JetsonClocksService(object):
         if running_status != 'inactive':
             logger.warning("jetson_clocks is {status}".format(status=running_status))
             return False
-        logger.debug("Set jetson_clocks {status}".format(status=status))
+        # logger.debug("Set jetson_clocks {status}".format(status=status))
         if status:
             # Start thread Service client
-            self._set_status = 'activating'
-            self._set_jc = Thread(target=self._th_start, args=(reset, ))
+            self._set_jc = Thread(target=self._th_start, args=('activating', reset, ))
             self._set_jc.start()
         else:
             reset = False
             # Start thread Service client
-            self._set_status = 'deactivating'
-            self._set_jc = Thread(target=self._th_stop, args=(reset, ))
+            self._set_jc = Thread(target=self._th_stop, args=('deactivating', reset, ))
             self._set_jc.start()
         return True
 

@@ -267,7 +267,7 @@ class jtop(Thread):
         if not self._jc.is_config and not value:
             raise JtopException("I cannot set jetson_clocks.\nPlease shutdown manually jetson_clocks")
         # Check if service is not started otherwise skip
-        if self._jc.status in ['activating', 'deactivating']:
+        if self._jc.status in ['booting', 'activating', 'deactivating']:
             return
         if value != self._jc.is_alive:
             # Send status jetson_clocks

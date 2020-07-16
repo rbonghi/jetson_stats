@@ -15,23 +15,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
+import time
 import pytest
 from ..service import JtopServer
 from ..core import JtopException
+# Test functions
+from .common import remove_tests
 # pytest fixture reference
 # https://docs.pytest.org/en/stable/fixture.html
-
-
-def remove_tests():
-    if os.path.isfile('/tmp/jetson_model'):
-        os.remove('/tmp/jetson_model')
-    if os.path.isfile('/tmp/jetson_clocks_test'):
-        os.remove('/tmp/jetson_clocks_test')
-    if os.path.isfile('/tmp/nvp_model_test'):
-        os.remove('/tmp/nvp_model_test')
-    if os.path.isfile('/usr/local/jetson_stats/config.json'):
-        os.remove('/usr/local/jetson_stats/config.json')
 
 
 @pytest.fixture(scope="function")
@@ -50,6 +41,7 @@ def jtop_server():
     # yeld server
     yield jtop_server
     jtop_server.close()
+    time.sleep(1.0)
     print("Close jtop service")
     # Clean test files
     remove_tests()
@@ -71,6 +63,7 @@ def jtop_server_nothing():
     # yeld server
     yield jtop_server
     jtop_server.close()
+    time.sleep(1.0)
     print("Close jtop service")
     # Clean test files
     remove_tests()

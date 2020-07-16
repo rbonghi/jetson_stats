@@ -172,12 +172,6 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
-        # Run setup
-        if self.jetson_clocks is not None:
-            self.jetson_clocks.initialization(self.nvpmodel)
-        if self.nvpmodel is not None:
-            # Read nvp_mode
-            self.nvp_mode = self.nvpmodel.get()
         # Setup memory servive
         self.memory = MemoryService()
         # Setup tegrastats
@@ -186,6 +180,13 @@ class JtopServer(Process):
         self.swap = SwapService(self.config)
 
     def run(self):
+        # Run setup
+        if self.jetson_clocks is not None:
+            self.jetson_clocks.initialization(self.nvpmodel)
+        # Read nvp_mode
+        if self.nvpmodel is not None:
+            self.nvp_mode = self.nvpmodel.get()
+        # Initialize variables
         timeout = None
         interval = 1
         try:
@@ -291,8 +292,8 @@ class JtopServer(Process):
             self._error.put(sys.exc_info())
         finally:
             # Close tegra
-            if self.tegra.close():
-                logger.info("tegrastats close")
+            if self.tegra.close(timeout=TIMEOUT_SWITCHOFF):
+                logger.info("Force tegrastats close")
                 # Start jetson_clocks
                 if self.jetson_clocks is not None:
                     self.jetson_clocks.close()
@@ -347,6 +348,7 @@ class JtopServer(Process):
         self.q.close()
         self.broadcaster.shutdown()
         # If process is alive wait to quit
+        # logger.debug("Status subprocess {status}".format(status=self.is_alive()))
         while self.is_alive():
             # If process is in timeout manually terminate
             if self.interval.value == -1.0:
