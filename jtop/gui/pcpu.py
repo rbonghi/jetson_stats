@@ -96,7 +96,7 @@ class CPU(Page):
         offest_label = width - (2 + x_offset + x_size * (n_cpu // 2))
         # Plot all CPUs
         idx_n = 0
-        for idx, (chart, name) in enumerate(zip(self.chart_cpus, self.jetson.cpu)):
+        for chart, name in zip(self.chart_cpus, self.jetson.cpu):
             data = copy.deepcopy(self.jetson.cpu[name])
             # status CPU
             status = True if data else False

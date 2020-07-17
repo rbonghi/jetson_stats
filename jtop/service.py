@@ -163,9 +163,6 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.jetson_clocks = None
-        # Initialize jetson_fan
-        if self.fan is not None:
-            self.fan.initialization(self.jetson_clocks)
         # Initialize nvpmodel controller
         try:
             self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
@@ -180,12 +177,15 @@ class JtopServer(Process):
         self.swap = SwapService(self.config)
 
     def run(self):
-        # Run setup
-        if self.jetson_clocks is not None:
-            self.jetson_clocks.initialization(self.nvpmodel)
         # Read nvp_mode
         if self.nvpmodel is not None:
             self.nvp_mode = self.nvpmodel.get()
+        # Run setup
+        if self.jetson_clocks is not None:
+            self.jetson_clocks.initialization(self.nvpmodel)
+        # Initialize jetson_fan
+        if self.fan is not None:
+            self.fan.initialization(self.jetson_clocks)
         # Initialize variables
         timeout = None
         interval = 1
@@ -265,7 +265,7 @@ class JtopServer(Process):
                             'interval': self.interval.value,
                             'swap': self.swap.path,
                             'jc': self.jetson_clocks is not None,
-                            'fan': self.fan is not None,
+                            'fan': self.fan.get_configs() if self.fan is not None else {},
                             'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
                     # Update timeout interval
@@ -448,6 +448,9 @@ class JtopServer(Process):
                         del jc_cpu['Online']
                         # Update CPU information
                         v.update(jc_cpu)
+                elif v:
+                    # Update CPU information
+                    v.update(jc_cpu)
                 data['cpu'][name] = v
         for name, value in cpu_models().items():
             data['cpu'][name]['model'] = value

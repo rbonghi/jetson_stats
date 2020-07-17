@@ -235,13 +235,15 @@ class JetsonClocksService(object):
         self._error = None
         # Fan configuration
         self.fan = fan
+
+    def initialization(self, nvpmodel):
+        self.nvpmodel = nvpmodel
         # Update status jetson_clocks
         cmd = Command([self.jc_bin, '--show'])
         lines = cmd(timeout=COMMAND_TIMEOUT)
         self._show = decode_show_message(lines)
-
-    def initialization(self, nvpmodel):
-        self.nvpmodel = nvpmodel
+        if not self.event_show.is_set():
+            self.event_show.set()
         # Check if exist configuration file
         if not os.path.isfile(self.config_l4t):
             if self.alive(wait=False):
@@ -260,7 +262,7 @@ class JetsonClocksService(object):
             self._set_jc = Thread(target=self._th_start, args=('booting', False, ))
             self._set_jc.start()
 
-    def _fix_fan(self, speed):
+    def _fix_fan(self, speed, status):
         logger.debug("fan mode: {mode} - speed {speed}".format(mode=self.fan.mode, speed=self.fan.speed))
         # Configure fan
         if self.fan.mode == 'system':
@@ -276,7 +278,7 @@ class JetsonClocksService(object):
             # Set mode
             self.fan.auto = False
         elif self.fan.mode == 'default':
-            self.fan.mode = 'default'
+            self.fan.set_mode('default', status)
 
     def _th_start(self, status, reset):
         JetsonClocksService.set_status = status
@@ -301,7 +303,7 @@ class JetsonClocksService(object):
         Command.run_command([self.jc_bin], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
         if self.fan is not None:
-            self._fix_fan(speed)
+            self._fix_fan(speed, True)
         # Reset nvpmodel
         if reset and self.nvpmodel is not None:
             self.nvpmodel.reset()
@@ -317,7 +319,7 @@ class JetsonClocksService(object):
         Command.run_command([self.jc_bin, '--restore', self.config_l4t], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
         if self.fan is not None:
-            self._fix_fan(speed)
+            self._fix_fan(speed, False)
         # Reset nvpmodel
         if reset and self.nvpmodel is not None:
             self.nvpmodel.reset()

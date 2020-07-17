@@ -521,7 +521,7 @@ class jtop(Thread):
         self._memory = Memory(self._controller)
         # Init FAN (If exist)
         if init['fan']:
-            self._fan = Fan(self._controller)
+            self._fan = Fan(self._controller, init['fan'])
         # Init NVP model (if exist)
         if init['nvpmodel']:
             self._nvp = NVPModel()

@@ -26,10 +26,7 @@ import logging
 FAN_PWM_TABLE_RE = re.compile(r'\((.*?)\)')
 # Create logger
 logger = logging.getLogger(__name__)
-
 # Fan configurations
-CONFIGS = ['default', 'manual', 'system']
-CONFIG_DEFAULT_FAN_MODE = 'default'
 CONFIG_DEFAULT_FAN_SPEED = 0.0
 
 
@@ -49,8 +46,9 @@ def load_table(path):
 
 class Fan(object):
 
-    def __init__(self, controller):
+    def __init__(self, controller, CONFIGS):
         self._controller = controller
+        self._CONFIGS = CONFIGS
         # Initialize fan
         self._status = {}
         self._mode = None
@@ -77,7 +75,7 @@ class Fan(object):
 
     @mode.setter
     def mode(self, value):
-        if value not in CONFIGS:
+        if value not in self._CONFIGS:
             raise JtopException('Control does not available')
         # If value is the same do not do nothing
         if self._mode == value:
@@ -106,7 +104,7 @@ class Fan(object):
 
     @property
     def configs(self):
-        return CONFIGS
+        return self._CONFIGS
 
     def _update(self, status):
         self._status = status
@@ -138,6 +136,9 @@ class FanService(object):
         self._config = config
         # Initialize number max records to record
         self.path = locate_commands("fan", fan_path)
+        # Configs
+        self.is_debug = 'debug' in self.path
+        self.CONFIGS = ['default', 'system', 'manual'] if not self.is_debug else ['default', 'manual']
         # Init status fan
         self.isRPM = os.path.isfile(os.path.join(self.path, 'rpm_measured'))
         self.isCPWM = os.path.isfile(os.path.join(self.path, 'cur_pwm'))
@@ -161,32 +162,39 @@ class FanService(object):
         # Set default speed
         self._speed = config_fan.get('speed', CONFIG_DEFAULT_FAN_SPEED)
         # Set default mode
-        self.mode = config_fan.get('mode', CONFIG_DEFAULT_FAN_MODE)
+        mode = config_fan.get('mode', self.CONFIGS[0])
+        self.set_mode(mode, False)
+
+    def get_configs(self):
+        return self.CONFIGS
 
     @property
     def mode(self):
         config_fan = self._config.get('fan', {})
-        return config_fan.get('mode', CONFIG_DEFAULT_FAN_MODE)
+        return config_fan.get('mode', self.CONFIGS[0])
 
     @mode.setter
     def mode(self, value):
-        if value not in CONFIGS:
+        if value not in self.CONFIGS:
             raise JtopException('This control does not available')
+        jc_status = self._jc.alive(wait=False) if self._jc is not None else False
+        self.set_mode(value, jc_status)
+
+    def set_mode(self, value, status):
+        logger.info("Mode set {mode} status={status}".format(mode=value, status=status))
+        # Set mode fan
         if value == 'system':
             self.auto = True
-        logger.info("Mode set {mode}".format(mode=value))
         if value == 'default':
             # Set in auto only if jetson_clocks in not active
             if self._jc is not None:
-                # Only if jetson_clocks is alive set max speed for fan
-                jc_status = self._jc.alive(wait=False)
-                if jc_status:
-                    if self.is_speed:
-                        self.set_speed(100)
+                if self.is_speed:
+                    # Only if jetson_clocks is alive set max speed for fan
+                    self.set_speed(100 if status else 0)
                 # Set automatic mode:
                 # - True if jetson_clocks is off
                 # - False if jetson_clocks is running
-                self.auto = not jc_status
+                self.auto = not status
         if value == 'manual':
             # Switch off speed
             self.auto = False
@@ -251,6 +259,8 @@ class FanService(object):
     def auto(self, value):
         if not isinstance(value, bool):
             raise ValueError('Need a boolean')
+        # Override if fan is in debug folder
+        value = True if self.is_debug else value
         # Check limit speed
         value = 1 if value else 0
         # Write status control value
