@@ -435,23 +435,22 @@ class JtopServer(Process):
         # -- CPU --
         data['cpu'] = tegrastats['CPU']
         # Update data from jetson_clocks show
-        if 'CPU' in jetson_clocks_show:
-            for name, v in tegrastats['CPU'].items():
-                # Extract jc_cpu info
-                jc_cpu = jetson_clocks_show['CPU'].get(name, {})
-                # Remove current frequency
-                del jc_cpu['current_freq']
-                # Fix online status
-                if 'Online' in jc_cpu:
-                    if jc_cpu['Online']:
-                        # Remove online info
-                        del jc_cpu['Online']
-                        # Update CPU information
-                        v.update(jc_cpu)
-                elif v:
+        for name, v in tegrastats['CPU'].items():
+            # Extract jc_cpu info
+            jc_cpu = jetson_clocks_show['CPU'].get(name, {})
+            # Remove current frequency
+            del jc_cpu['current_freq']
+            # Fix online status
+            if 'Online' in jc_cpu:
+                if jc_cpu['Online']:
+                    # Remove online info
+                    del jc_cpu['Online']
                     # Update CPU information
                     v.update(jc_cpu)
-                data['cpu'][name] = v
+            elif v:
+                # Update CPU information
+                v.update(jc_cpu)
+            data['cpu'][name] = v
         for name, value in cpu_models().items():
             data['cpu'][name]['model'] = value
         # -- MTS --
@@ -479,10 +478,9 @@ class JtopServer(Process):
                 # Remove current_freq data
                 del data['emc']['current_freq']
         # -- SWAP --
-        if 'SWAP' in tegrastats:
-            data['swap'] = {
-                'list': self.swap.all(),
-                'all': tegrastats['SWAP']}
+        data['swap'] = {
+            'list': self.swap.all(),
+            'all': tegrastats['SWAP'] if 'SWAP' in tegrastats else {}}
         # -- OTHER --
         data['other'] = dict((k, tegrastats[k]) for k in tegrastats if k not in LIST_PRINT)
         # -- FAN --

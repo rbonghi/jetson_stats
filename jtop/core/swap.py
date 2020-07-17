@@ -90,7 +90,7 @@ class Swap(object):
         # Update status swaps
         self._list_swaps = swap_status['list']
         # Update status swap
-        self._all.update(swap_status['all'])
+        self._all = swap_status['all']
 
     def __len__(self):
         return len(self._all)
@@ -167,6 +167,7 @@ class SwapService(object):
         # Add auto command if request
         if on_boot:
             swap_cmd += ['--auto']
+        logger.info("Activate {directory}/{name} auto={on_boot}".format(directory=directory, name=swap_name, on_boot=on_boot))
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
 

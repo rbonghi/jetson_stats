@@ -106,7 +106,7 @@ def main():
     # Run jtop service
     if args.service == 'service':
         # Initialize logging level
-        logging.basicConfig(level=logging.INFO, filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+        logging.basicConfig(level=logging.INFO, filemode='w', format='[%(levelname)s] %(name)s - %(message)s')
         # Run service
         try:
             # Initialize stats server

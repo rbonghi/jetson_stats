@@ -414,8 +414,7 @@ class jtop(Thread):
         # -- RAM --
         self._memory._update(data['ram'])
         # -- SWAP --
-        if 'swap' in data:
-            self._swap._update(data['swap'])
+        self._swap._update(data['swap'])
         # -- FAN --
         if 'fan' in data:
             self._fan._update(data['fan'])
