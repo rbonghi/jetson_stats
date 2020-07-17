@@ -265,7 +265,7 @@ class JtopServer(Process):
                             'interval': self.interval.value,
                             'swap': self.swap.path,
                             'jc': self.jetson_clocks is not None,
-                            'fan': self.fan.get_configs() if self.fan is not None else {},
+                            'fan': self.fan.get_configs() if self.fan is not None else False,
                             'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
                     # Update timeout interval
@@ -435,22 +435,23 @@ class JtopServer(Process):
         # -- CPU --
         data['cpu'] = tegrastats['CPU']
         # Update data from jetson_clocks show
-        for name, v in tegrastats['CPU'].items():
-            # Extract jc_cpu info
-            jc_cpu = jetson_clocks_show['CPU'].get(name, {})
-            # Remove current frequency
-            del jc_cpu['current_freq']
-            # Fix online status
-            if 'Online' in jc_cpu:
-                if jc_cpu['Online']:
-                    # Remove online info
-                    del jc_cpu['Online']
+        if 'CPU' in jetson_clocks_show:
+            for name, v in tegrastats['CPU'].items():
+                # Extract jc_cpu info
+                jc_cpu = jetson_clocks_show['CPU'].get(name, {})
+                # Remove current frequency
+                del jc_cpu['current_freq']
+                # Fix online status
+                if 'Online' in jc_cpu:
+                    if jc_cpu['Online']:
+                        # Remove online info
+                        del jc_cpu['Online']
+                        # Update CPU information
+                        v.update(jc_cpu)
+                elif v:
                     # Update CPU information
                     v.update(jc_cpu)
-            elif v:
-                # Update CPU information
-                v.update(jc_cpu)
-            data['cpu'][name] = v
+                data['cpu'][name] = v
         for name, value in cpu_models().items():
             data['cpu'][name]['model'] = value
         # -- MTS --
