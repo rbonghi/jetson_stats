@@ -68,4 +68,7 @@ if __name__ == "__main__":
             # IRAM
             print('*** iram ***')
             print(jetson.iram)
+            # MTS
+            print('*** mts ***')
+            print(jetson.mts)
 # EOF

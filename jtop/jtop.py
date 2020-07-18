@@ -284,6 +284,48 @@ class jtop(Thread):
 
     @property
     def fan(self):
+        """
+        Fan status and control. From this property you can setup your board
+
+        If your board does not support a fan, the output will be `None`
+
+        The variable avalables are:
+
+        * **auto** - boolean with fan control.
+            * True = Automatic speed control enabled
+            * False = Automatic speed control disabled
+        * **speed** - Speed set. Value between [0, 100] (float)
+        * **measure** - Speed measured. Value between [0, 100] (float)
+        * **rpm** - Revolution Per Minute. This number can be 0 if the hardware does not implement this feature
+        * **mode** - Mode selected for your fan
+
+        If you want set a new speed, change the mode or know how many configurations are availables you can use:
+
+        .. code-block:: python
+
+            jetson.fan.speed = value
+
+        where *value* is a number between [0, 100] *(float)*
+
+        .. code-block:: python
+
+            jetson.fan.mode = name
+
+        where *name* is a **string** of the mode that you want use
+
+        .. code-block:: python
+
+            configs = jetson.fan.configs
+
+        Return a **list** of all available configurations:
+
+        * *default* - The fan is not manage, when jetson_clocks start will follow the jetson_clocks configurations
+        * *system* - The fan speed will be manage from the OS
+        * *manual* - The fan speed is the same that you have set in *jetson.fan.speed*
+
+        :return: Status Fan
+        :rtype: dict
+        """
         return self._fan
 
     @property
@@ -310,9 +352,40 @@ class jtop(Thread):
     @property
     def jetson_clocks(self):
         """
-        Status jetson_clocks
+        Status jetson_clocks, if you want change the jetson_clocks status you can simply write:
 
-        :return: true if jetson_clocks is running otherwise false
+        .. code-block:: python
+
+            jetson.jetson_clocks = value
+
+        where *value* is a boolean value
+
+        There are availabe other extra properties:
+
+        * **boot** - You can enable and disable on boot **jetson_clocks**
+        * **status** - A string with the current jetson_clocks status
+            * *running* - The service is running
+            * *booting* - jetson_clocks is in booting (When your board boot, jetson_clocks wait 60s before to start)
+            * *activating* - jetson_clocks is activating
+            * *deactivating* - jetson_clocks is deactivating
+
+        You can change and edit using this property:
+
+        .. code-block:: python
+
+            # Read jetson_clocks boot property
+            print(jetson.jetson_clocks.boot)
+            # Set a new value
+            jetson.jetson_clocks.boot = value  # True or False
+
+        Written jetson_clocks status
+
+        .. code-block:: python
+
+            # Status jetson_clocks
+            print(jetson.jetson_clocks.status)
+
+        :return: status jetson_clocks script
         :rtype: bool
         """
         return self._jc
@@ -431,6 +504,17 @@ class jtop(Thread):
 
     @property
     def mts(self):
+        """
+        MTS foreground and background tasks.
+
+        If your board support the MTS variable, the output will be:
+
+        * **fg** - foregroundtasks
+        * **bg** - background tasks
+
+        :return: mts status
+        :rtype: dict
+        """
         # Extract MTS
         return self._stats.get('mts', {})
 
@@ -508,7 +592,17 @@ class jtop(Thread):
 
     @property
     def local_interfaces(self):
-        """ Local interfaces information """
+        """
+        Local interfaces information and hostname
+
+        This dictionary the status of your local network
+
+        * **hostname** - Hostname board
+        * **interfaces** - A dictionary with name and IP address for all interfaces listed
+
+        :return: Local interfaces and hostaname
+        :rtype: dict
+        """
         return get_local_interfaces()
 
     @property
@@ -676,13 +770,42 @@ class jtop(Thread):
 
     @property
     def interval(self):
+        """
+        Speed jtop service. This speed can be different compare the speed specified in :func:`~jtop.jtop.jtop` constructor
+
+        :return: jtop interval (in seconds)
+        :rtype: float
+        """
         return self._server_interval
 
     @property
     def interval_user(self):
+        """
+        This is the same speed specified in :func:`~jtop.jtop.jtop` constructor
+
+        :return: jtop user interval (in seconds)
+        :rtype: float
+        """
         return self._interval
 
     def loop_for_ever(self):
+        """
+        This blocking method is needed when you design your python code to work only by callback.
+
+        Before to run this method remember to attach a callback using :func:`~jtop.jtop.jtop.attach`
+
+        A simple example to use this method is below
+
+        .. code-block:: python
+
+            def read_stats(jetson):
+                stats = jetson.stats
+
+            jetson = jtop()
+            jetson.attach(read_stats)
+            # Blocking method
+            jetson.loop_for_ever()
+        """
         self.start()
         # Blocking function to catch exceptions
         while self.ok():
