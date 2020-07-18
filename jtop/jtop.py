@@ -64,7 +64,6 @@ from threading import Thread
 from .service import JtopManager
 from .core import (
     Board,
-    Memory,
     Engine,
     Swap,
     CPU,
@@ -139,8 +138,6 @@ class jtop(Thread):
         self._cpu = CPU()
         # Initialize swap
         self._swap = None
-        # Initialize Memory
-        self._memory = None
         # Load jetson_clocks status
         self._jc = None
         # Initialize fan
@@ -325,16 +322,53 @@ class jtop(Thread):
 
         :return: Status Fan
         :rtype: dict
+        :raises ValueError: Wrong speed number or wrong mode name
         """
         return self._fan
 
     @property
     def nvpmodel(self):
         """
-        Status NV Power Mode
+        From this function you set and read NV Power Mode. If your NVIDIA Jetson does not use nvpmodel will return None
+
+        If you want set a new nvpmodel you can follow the NVIDIA Jetson documentation and write a string like below
+
+        .. code-block:: python
+
+            # You can write a string for a name or an integer for the ID
+            jetson.nvpmodel = name_or_id
+
+        If you need to increase or decrease the ID you can use
+
+        .. code-block:: python
+
+            jetson.nvpmodel += 1
+            # or
+            jetson.nvpmodel = jetson.nvpmodel + 1
+
+        There are other properties:
+
+        * **name** - mode name
+        * **id** - ID name
+        * **modes** - A list with all mode available in your board
+        * **status** - A list of status for each NVP model (False if the nvpmodel is in failure)
+
+        The access of this properities is available like below
+
+        .. code-block:: python
+
+            # NVP model name
+            print(jetson.nvpmodel.name)
+            # NVP model id
+            print(jetson.nvpmodel.id)
+            # NVP model list
+            print(jetson.nvpmodel.modes)
+            # NVP model status
+            print(jetson.nvpmodel.status)
 
         :return: Return the name of NV Power Mode
-        :rtype: string
+        :rtype: string or None
+        :raises JtopException: if the nvp model does not exist*
         """
         return self._nvp
 
@@ -387,6 +421,7 @@ class jtop(Thread):
 
         :return: status jetson_clocks script
         :rtype: bool
+        :raises ValueError: Wrong jetson_clocks value
         """
         return self._jc
 
@@ -486,11 +521,18 @@ class jtop(Thread):
         IRAM is memory local to the video hardware engine.
         If your board have the IRAM, the fields are:
 
-        * **use** - status iram used in kB
-        * **tot** - Total size IRAM in kB
+        * **use** - status iram used
+        * **tot** - Total size IRAM
+        * **unit** - Unit size IRAM, usually in kB
         * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
             * **size** - Size of the largest free block
             * **unit** - Unit size lfb
+
+        Largest Free Block (lfb) is a statistic about the memory allocator.
+        It refers to the largest contiguous block of physical memory
+        that can currently be allocated: at most 4 MB.
+        It can become smaller with memory fragmentation.
+        The physical allocations in virtual memory can be bigger.
 
         :return: iram status
         :rtype: dict
@@ -500,7 +542,28 @@ class jtop(Thread):
 
     @property
     def ram(self):
-        return self._memory
+        """
+        RAM available on your board.
+
+        * **use** - status iram used
+        * **shared** - status of shared memory used from GPU
+        * **tot** - Total size RAM
+        * **unit** - Unit size RAM, usually in kB
+        * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
+            * **nblock** - Number of block used
+            * **size** - Size of the largest free block
+            * **unit** - Unit size lfb
+
+        Largest Free Block (lfb) is a statistic about the memory allocator.
+        It refers to the largest contiguous block of physical memory
+        that can currently be allocated: at most 4 MB.
+        It can become smaller with memory fragmentation.
+        The physical allocations in virtual memory can be bigger.
+
+        :return: ram status
+        :rtype: dict
+        """
+        return self._stats['ram']
 
     @property
     def mts(self):
@@ -571,10 +634,18 @@ class jtop(Thread):
     @property
     def power(self):
         """
-        A dictionary with all power consumption
+        Two power dictionaries:
 
-        :return: Detailed information about power consumption
-        :rtype: dict
+        * **total** - The total power estimated is not available of the NVIDIA Jetson power comsumption
+        * **power** - A dictionary with all power comsumption
+
+        For each power comsumption there are two fields:
+
+        * **avg** - Average power consumption in milliwatts
+        * **cur** - Current power consumption in milliwatts
+
+        :return: Two dictionaries, total and a list of all power consumption available from the board
+        :rtype: dict, dict
         """
         total = self._stats['power']['all']
         power = self._stats['power']['power']
@@ -583,9 +654,11 @@ class jtop(Thread):
     @property
     def temperature(self):
         """
-        A dictionary with board temperatures
+        A dictionary with all NVIDIA Jetson temperatures.
 
-        :return: Detailed information about temperature
+        All temperatures are in Celsius
+
+        :return: Temperature dictionary
         :rtype: dict
         """
         return self._stats['temperature']
@@ -634,8 +707,6 @@ class jtop(Thread):
         self._engine._update(data['engines'])
         # -- CPU --
         self._cpu._update(data['cpu'])
-        # -- RAM --
-        self._memory._update(data['ram'])
         # -- SWAP --
         self._swap._update(data['swap'])
         # -- FAN --
@@ -700,15 +771,15 @@ class jtop(Thread):
         """
         The start() function start your jtop and you can start to read the NVIDIA Jetson status.
 
-        This method can raise **JtopException** if the connection with the server is lost,
-        not active or your user does not have the permission to connect to *jetson_stats.service*
-
         This method is **not** needed to close jtop if you have open jtop using `with` like:
 
         .. code-block:: python
 
             with jtop() as jetson:
                 pass
+
+        :raises JtopException: if the connection with the server is lost,
+            not active or your user does not have the permission to connect to *jetson_stats.service*
         """
         # Connected to broadcaster
         try:
@@ -751,8 +822,6 @@ class jtop(Thread):
         # Initialize jetson_clock
         if init['jc']:
             self._jc = JetsonClocks(self._controller)
-        # Initialize Memory
-        self._memory = Memory(self._controller)
         # Init FAN (If exist)
         if init['fan']:
             self._fan = Fan(self._controller, init['fan'])
@@ -816,6 +885,21 @@ class jtop(Thread):
                 self.close()
 
     def ok(self, spin=False):
+        """
+        This method is needed when you start jtop using `with` like below
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                while jetson.ok():
+                    stats = jetson.stats
+
+        This method is usually blocking, and is not needed to add in your script a sleep function,
+        when a new data will be available the function will release and you will read a new fresh data
+
+        :param spin: If True, this function will be not blocking
+        :type spin: bool
+        """
         # Wait if trigger is set
         if not spin:
             try:

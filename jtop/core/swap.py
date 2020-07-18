@@ -67,6 +67,10 @@ class Swap(object):
         self._controller = controller
         self._this_swap = path
 
+    def clear_cache(self):
+        # Set new swap size configuration
+        self._controller.put({'memory': ''})
+
     def set(self, value, on_boot=False):
         if not isinstance(value, (int, float)):
             raise ValueError("Need a Number")
@@ -121,6 +125,14 @@ class SwapService(object):
         self._config = config
         # Load swap information
         # self.update()
+
+    def clear_cache(self):
+        """
+        Clear cache following https://coderwall.com/p/ef1gcw/managing-ram-and-swap
+        """
+        clear_cache = sp.Popen(['sysctl', 'vm.drop_caches=3'], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = clear_cache.communicate()
+        return True if out else False
 
     def _update(self):
         config = self._config.get('swap', {})

@@ -66,6 +66,9 @@ if __name__ == "__main__":
             print('*** emc ***')
             print(jetson.emc)
             # IRAM
+            print('*** ram ***')
+            print(jetson.ram)
+            # IRAM
             print('*** iram ***')
             print(jetson.iram)
             # MTS

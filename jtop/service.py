@@ -246,7 +246,7 @@ class JtopServer(Process):
                     if 'memory' in control:
                         logger.info("Clear cache")
                         # Clear cache
-                        self.memory.clear_cache()
+                        self.swap.clear_cache()
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
