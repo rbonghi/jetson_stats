@@ -83,22 +83,22 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
 
 @check_curses
 def plot_watts(stdscr, start, offset, width, height, jetson):
+    start = start + (width - 6) // 2
     # Plot title
-    center_column = width // 2
-    stdscr.addstr(offset, start, " [Power/mW] ", curses.A_BOLD)
-    stdscr.addstr(offset, start + center_column - 1, " [Cur] ", curses.A_BOLD)
-    stdscr.addstr(offset, start + width - 8, " [Avr] ", curses.A_BOLD)
+    stdscr.addstr(offset, start - 11, " [Power/mW] ", curses.A_BOLD)
+    stdscr.addstr(offset, start + 2, " [Cur] ", curses.A_BOLD)
+    stdscr.addstr(offset, start + 9, " [Avr] ", curses.A_BOLD)
     # Plot watts
     total, power = jetson.power
     for idx, name in enumerate(sorted(power)):
         value = power[name]
-        stdscr.addstr(offset + idx + 1, start + 1, name, curses.A_NORMAL)
-        stdscr.addstr(offset + idx + 1, start + center_column, str(value['cur']), curses.A_NORMAL)
-        stdscr.addstr(offset + idx + 1, start + width - 7, str(value['avg']), curses.A_NORMAL)
+        stdscr.addstr(offset + idx + 1, start - 10, name, curses.A_NORMAL)
+        stdscr.addstr(offset + idx + 1, start + 3, str(value['cur']), curses.A_NORMAL)
+        stdscr.addstr(offset + idx + 1, start + 10, str(value['avg']), curses.A_NORMAL)
     # Plot totals before finishing
-    stdscr.addstr(offset + idx + 2, start + 1, 'ALL', curses.A_BOLD)
-    stdscr.addstr(offset + idx + 2, start + center_column, str(total['cur']), curses.A_BOLD)
-    stdscr.addstr(offset + idx + 2, start + width - 7, str(total['avg']), curses.A_BOLD)
+    stdscr.addstr(offset + idx + 2, start - 10, 'ALL', curses.A_BOLD)
+    stdscr.addstr(offset + idx + 2, start + 3, str(total['cur']), curses.A_BOLD)
+    stdscr.addstr(offset + idx + 2, start + 10, str(total['avg']), curses.A_BOLD)
 
 
 @check_curses
