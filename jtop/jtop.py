@@ -38,7 +38,8 @@ You can initialize the jtop, look these examples:
 .. code-block:: python
 
     with jtop() as jetson:
-        stats = jetson.stats
+        while jetson.ok():
+            stats = jetson.stats
 
 Or using a callback function
 
@@ -94,10 +95,15 @@ TIMEOUT_GAIN = 3
 
 class jtop(Thread):
     """
-    jtop library is the reference to control your NVIDIA Jetson board with python.
-    This object can be open like a file, or you can use a with callback function
+    This class control the access to your board, from here you can control your
+    NVIDIA Jetson board or read the jetson_clocks status or change the nvp model.
 
-    :param interval: Interval update tegrastats and other statistic function
+    When you initialize your jtop you can setup a communication speed **interval**,
+    if there is another jtop running this speed will be not used.
+
+    When jtop is started you can read the server speed in **interval** property.
+
+    :param interval: Interval to setup the jtop speed (in seconds)
     :type interval: float
     """
 
@@ -150,7 +156,7 @@ class jtop(Thread):
             for k, v in libraries.items():
                 env[k] = str(v)
             # Make dictionaries
-            self._board.libraries = {
+            self._board._update_libraries({
                 "CUDA": env["JETSON_CUDA"],
                 "cuDNN": env["JETSON_CUDNN"],
                 "TensorRT": env["JETSON_TENSORRT"],
@@ -158,7 +164,7 @@ class jtop(Thread):
                 "OpenCV": env["JETSON_OPENCV"],
                 "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
                 "VPI": env["JETSON_VPI"],
-                "Vulkan": env["JETSON_VULKAN_INFO"]}
+                "Vulkan": env["JETSON_VULKAN_INFO"]})
             # Loaded from script
             logger.debug("Loaded jetson_variables variables")
         except Exception:
@@ -167,7 +173,18 @@ class jtop(Thread):
 
     def attach(self, observer):
         """
-        Attach an observer to read the status of jtop
+        Attach an observer to read the status of jtop. You can add more observer that you want.
+
+        The function **must** be with this format:
+
+        .. code-block:: python
+
+            def observer(jetson):
+                pass
+
+        The input of your callback will be the jetson object.
+
+        To detach a function, please look :func:`~jtop.jtop.jtop.detach`
 
         :param observer: The function to call
         :type observer: function
@@ -177,6 +194,8 @@ class jtop(Thread):
     def detach(self, observer):
         """
         Detach an observer from jtop
+
+        To attach a function, please look :func:`~jtop.jtop.jtop.attach`
 
         :param observer:  The function to detach
         :type observer: function
@@ -230,10 +249,34 @@ class jtop(Thread):
 
     @property
     def engine(self):
+        """
+        Engine status, in this property you can find:
+
+        * **APE** in MHz
+        * **NVENC** in MHz
+        * **NVDEC** in MHz
+        * **NVJPG** in MHz (If supported in your board)
+
+        :return: List of all active engines
+        :rtype: dict
+        """
         return self._engine
 
     @property
     def board(self):
+        """
+        Board status, in this property you can find:
+
+        * info
+            * Board name
+            * Jetpack
+            * L4T (Linux for Tegra)
+        * hardware (All hardware information)
+        * libraries (All libraries installed)
+
+        :return: Status board, hardware and libraries
+        :rtype: dict
+        """
         # Wait thread end
         self._thread_libraries.join()
         # Return board status
@@ -347,11 +390,38 @@ class jtop(Thread):
 
     @property
     def emc(self):
+        """
+        EMC is the external memory controller, through which all sysmem/carve-out/GART memory accesses go.
+
+        If your board have the EMC, the fields are:
+
+        * **min_freq** - Minimum frequency in kHz
+        * **max_freq** - Maximum frequency in kHz
+        * **frq** - Running frequency in kHz
+        * **val** - Status EMC, value between [0, 100]
+        * **FreqOverride** - Status override
+
+        :return: emc status
+        :rtype: dict
+        """
         # Extract EMC
         return self._stats.get('emc', {})
 
     @property
     def iram(self):
+        """
+        IRAM is memory local to the video hardware engine.
+        If your board have the IRAM, the fields are:
+
+        * **use** - status iram used in kB
+        * **tot** - Total size IRAM in kB
+        * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
+            * **size** - Size of the largest free block
+            * **unit** - Unit size lfb
+
+        :return: iram status
+        :rtype: dict
+        """
         # Extract IRAM
         return self._stats.get('iram', {})
 
@@ -366,16 +436,51 @@ class jtop(Thread):
 
     @property
     def cpu(self):
+        """
+        CPU status. From this dictionary you can read the status of the CPU.
+
+        For each CPU all fields are:
+
+        * **min_freq** - Minimum frequency in kHz
+        * **max_freq** - Maximum frequency in kHz
+        * **frq** - Running frequency in kHz
+        * **governor** - Governor selected
+        * **val** - Status CPU, value between [0, 100]
+        * **model** - Model Architecture
+        * **IdleStates**
+
+        :return: CPU configuration, frequencies and speed
+        :rtype: dict
+        """
         # Return CPU status
         return self._cpu
 
     @property
     def cluster(self):
+        """
+        Cluster status of your board.
+
+        If this data is not available in your board will return an empty string
+
+        :return: Status cluster in your board
+        :rtype: string
+        """
         # Return status cluster
         return self._stats.get('cluster', '')
 
     @property
     def gpu(self):
+        """
+        GPU engine. The fields are:
+
+        * **min_freq** - Minimum frequency in kHz
+        * **max_freq** - Maximum frequency in kHz
+        * **frq** - Running frequency in kHz
+        * **val** - Status GPU, value between [0, 100]
+
+        :return: GPU engine, frequencies and speed
+        :rtype: dict
+        """
         # Extract GPU
         return self._stats['gpu']
 
@@ -408,7 +513,17 @@ class jtop(Thread):
 
     @property
     def disk(self):
-        """ Disk status properties """
+        """
+        Disk status properties, in dictionary are included
+
+        * **total** - Total disk space in GB
+        * **available** - Space available in GB
+        * **use** - Disk space used in GB
+        * **available_no_root**
+
+        :return: Disk information
+        :rtype: dict
+        """
         return status_disk()
 
     @property
@@ -446,6 +561,7 @@ class jtop(Thread):
             observer(self)
 
     def run(self):
+        """ """
         # https://gist.github.com/schlamar/2311116
         # https://stackoverflow.com/questions/13074847/catching-exception-in-context-manager-enter
         try:
@@ -487,6 +603,19 @@ class jtop(Thread):
                 return data['init']
 
     def start(self):
+        """
+        The start() function start your jtop and you can start to read the NVIDIA Jetson status.
+
+        This method can raise **JtopException** if the connection with the server is lost,
+        not active or your user does not have the permission to connect to *jetson_stats.service*
+
+        This method is **not** needed to close jtop if you have open jtop using `with` like:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                pass
+        """
         # Connected to broadcaster
         try:
             self._broadcaster.connect()
@@ -522,9 +651,7 @@ class jtop(Thread):
         # Load server speed
         self._server_interval = init['interval']
         # Load board information
-        board = init['board']
-        self._board.info = board['info']
-        self._board.hardware = board['hardware']
+        self._board._update_init(init['board'])
         # Initialize jetson_clocks sender
         self._swap = Swap(self._controller, init['swap'])
         # Initialize jetson_clock
@@ -587,6 +714,16 @@ class jtop(Thread):
         return self._running
 
     def close(self):
+        """
+        This method will close the jtop server.
+
+        This method is **not** needed to close jtop if you have open jtop using `with` like:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                pass
+        """
         # Wait thread end
         self._thread_libraries.join()
         # Switch off broadcaster thread
