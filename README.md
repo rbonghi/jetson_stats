@@ -10,7 +10,7 @@ When you install jetson-stats are included:
 * [jetson_config](#jetson_config)
 * [jetson_release](#jetson_release)
 * [jetson_swap](#jetson_swap)
-* [jetson_variables](#jetson_variables)
+* [jetson variables](#jetson_variables)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rbonghi.github.io/jetson_stats).
 
@@ -31,27 +31,27 @@ It is a system monitoring utility that runs on the terminal and see and **contro
 The prompt interface will be show like this image, **now clickable!**:
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif)
 
-You can run the jtop with (_Suggested_ to run with **sudo**)
+You can run the jtop simple using a simple command `jtop` and YES, Sudo is **not** more required!
 ```elm
-sudo jtop
+nvidia@jetson-xavier-nx:~/$ jtop
 ```
-Other options are availables with `-h` option:
+
+Other options are available with `-h` option:
 ```console
-nvidia@jetson-nano:~/$ sudo jtop -h
-usage: jtop [-h] [--debug] [--no-warnings] [--restore] [--loop] [-r REFRESH]
-            [-p PAGE] [-v]
+nvidia@jetson-xavier-nx:~/$ jtop -h
+usage: jtop [-h] [--no-warnings] [--restore] [--loop] [-r REFRESH] [-p PAGE]
+            [-v]
 
 jtop is system monitoring utility and runs on terminal
 
 optional arguments:
   -h, --help            show this help message and exit
-  --debug               Run with debug logger
-  --no-warnings         Do not show warnings
-  --restore             Reset Jetson configuration
-  --loop                Automatically switch page every 5s
+  --no-warnings         Do not show warnings (default: False)
+  --restore             Reset Jetson configuration (default: False)
+  --loop                Automatically switch page every 5s (default: False)
   -r REFRESH, --refresh REFRESH
-                        refresh interval
-  -p PAGE, --page PAGE  Open fix page
+                        refresh interval (default: 500)
+  -p PAGE, --page PAGE  Open fix page (default: 1)
   -v, --version         show program's version number and exit
 ```
 You can change page using _left_, _right_ arrow or _TAB_ to change page.
@@ -102,8 +102,8 @@ usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
   -h | --help   This message
 ```
 
-## [**jetson_variables**][jetson_variables]
-This script generate the easy environment variables to know which is your Hardware version of the Jetson and which Jetpack you have already installed
+## [**jetson variables**][jetson_variables]
+When you install jetson-stats in your bash will be available a list of new environment variables to know which which hardware version is available are you working, which Jetpack is installed and other variable show below
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
 
