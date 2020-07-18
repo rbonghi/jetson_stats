@@ -36,6 +36,17 @@ AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 logger = logging.getLogger(__name__)
 
 
+class Board:
+
+    def __init__(self):
+        self.info = {}
+        self.hardware = {}
+        self.libraries = {}
+
+    def __repr__(self):
+        return str({'info': self.info, 'hardware': self.hardware, 'libraries': self.libraries})
+
+
 def locate_commands(name, commands):
     for cmd in commands:
         if os.path.exists(cmd):

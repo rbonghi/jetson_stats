@@ -28,6 +28,7 @@ from .config import Config
 from .memory import Memory, MemoryService
 from .command import Command
 from .common import (
+    Board,
     locate_commands,
     import_os_variables,
     get_var,

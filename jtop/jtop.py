@@ -26,24 +26,27 @@ It read the status of your board using different native processes:
  * Disk
  * Network
 
-Decode the board information and status 
+Decode the board information and status
  * board name
  * Jetpack
  * L4T
  * Hardware configuration
  * Libraries installed
 
-You can initialize the jtop, look these examples::
+You can initialize the jtop, look these examples:
 
 .. code-block:: python
+
     with jtop() as jetson:
         stats = jetson.stats
 
 Or using a callback function
 
 .. code-block:: python
+
     def read_stats(jetson):
         stats = jetson.stats
+
     jetson = jtop()
     jetson.attach(read_stats)
     jetson.loop_for_ever()
@@ -53,20 +56,19 @@ Follow the next attributes to know in detail how you can you in your python proj
 """
 import logging
 import os
-import re
 import sys
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
 from .core import (
+    Board,
     Memory,
     Engine,
     Swap,
     CPU,
     Fan,
     NVPModel,
-    get_var,
     get_uptime,
     status_disk,
     import_os_variables,
@@ -86,37 +88,8 @@ if sys.version_info[0] == 2:
     from socket import error as ConnectionRefusedError
 # Create logger
 logger = logging.getLogger(__name__)
-# Version match
-VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
-AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
-
-
-def import_jetson_libraries():
-    JTOP_FOLDER, _ = os.path.split(__file__)
-    return import_os_variables(JTOP_FOLDER + "/jetson_libraries", "JETSON_")
-
-
-def get_version():
-    """
-    Show the version of this package
-
-    :return: Version number
-    :rtype: string
-    """
-    return get_var(VERSION_RE)
-
-
-class Board:
-
-    def __init__(self):
-        self.info = {}
-        self.hardware = {}
-        self.libraries = {}
-    
-    def __repr__(self):
-        return str({'info': self.info, 'hardware': self.hardware, 'libraries': self.libraries})
 
 
 class jtop(Thread):
@@ -172,7 +145,9 @@ class jtop(Thread):
     def _load_jetson_libraries(self):
         try:
             env = {}
-            for k, v in import_jetson_libraries().items():
+            JTOP_FOLDER, _ = os.path.split(__file__)
+            libraries = import_os_variables(JTOP_FOLDER + "/jetson_libraries", "JETSON_")
+            for k, v in libraries.items():
                 env[k] = str(v)
             # Make dictionaries
             self._board.libraries = {

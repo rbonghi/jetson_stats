@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import signal
 import os
 import sys
@@ -26,15 +27,17 @@ import logging
 # jtop service
 from .service import JtopServer
 # jtop client
-from .jtop import jtop, get_version
+from .jtop import jtop
 # jtop exception
-from .core import JtopException
+from .core import JtopException, get_var
 # GUI jtop interface
 from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 # Load colors
 from .github import jetpack_missing, board_missing
 # Create logger
 logger = logging.getLogger(__name__)
+# Version match
+VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 # Reference repository
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
 LOOP_SECONDS = 5
@@ -66,6 +69,8 @@ class bcolors:
 def warning_messages(jetson, no_warnings=False):
     if no_warnings:
         return
+    # Read status version
+    version = get_var(VERSION_RE)
     # Check is well stored the default jetson_clocks configuration
     if jetson.jetson_clocks:
         if not jetson.jetson_clocks.is_config:
@@ -75,10 +80,10 @@ def warning_messages(jetson, no_warnings=False):
         print("[{status}] SUDO is no more required".format(status=bcolors.warning()))
     # Check if jetpack is missing
     if jetson.board.hardware['TYPE'] == "UNKNOWN" and jetson.board.hardware['BOARD'] and 'JETSON_DEBUG' not in os.environ:
-        print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, jetson, get_version())))
+        print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, jetson, version)))
     # Check if jetpack is missing
     if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
-        print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, jetson, get_version())))
+        print("[{status}] {link}".format(status=bcolors.warning(), link=jetpack_missing(REPOSITORY, jetson, version)))
 
 
 def exit_signal(signum, frame):
@@ -97,7 +102,7 @@ def main():
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
     parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('-p', '--page', dest="page", help='Open fix page', type=int, default=1)
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_version()))
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_var(VERSION_RE)))
     # Parse arguments
     args = parser.parse_args()
     # Initialize signals
