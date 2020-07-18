@@ -179,7 +179,11 @@ class NVPModelService(object):
                     logger.error("I cannot set jetson_clocks")
                     break
         # Set NV Power Mode
-        status = self.set_mode(value)
+        try:
+            status = self.set_mode(value)
+        except JtopException as e:
+            logger.error(e)
+            status = False
         # Update status
         self._nvpm[value]['status'] = status
         # Enable again the jetson_clocks status
