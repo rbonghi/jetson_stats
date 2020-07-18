@@ -200,6 +200,22 @@ class jtop(Thread):
         self._observers.discard(observer)
 
     def restore(self):
+        """
+        This block method will restore all jtop configuration, in order:
+
+        * **switch off** jetson_clocks
+        * **Disable** jetson_clocks on boot
+        * **fan**
+            * set to **default**, please follow the fan reference :func:`~jtop.jtop.jtop.fan`
+            * set fan speed to 0 (This operation can require time)
+        * If active **disable** the jtop swap
+        * **Clear** the internal jtop configuration file
+
+        :return: List of all operations to restore your NVIDIA Jetson
+        :rtype: dict
+        :raises JtopException: if the connection with the server is lost,
+            not active or your user does not have the permission to connect to *jetson_stats.service*
+        """
         status = {}
         # Reset jetson_clocks
         if self.jetson_clocks is not None:
@@ -441,7 +457,34 @@ class jtop(Thread):
     @property
     def stats(self):
         """
-        A dictionary with the status of the board
+        This property return a simplified version of tegrastats,
+        it is simple to use if you want log the NVIDIA Jetson status with pandas or in a csv file.
+
+        This property is a simplified version of all data collected from your NVIDIA Jetson,
+        if you need more detailed information, please use the other jtop properties
+
+        The field listed are:
+
+        * **time** - A `datetime` variable with the local time in your board
+        * **uptime** - A `timedelta` with the up time of your board, same from :func:`~jtop.jtop.jtop.uptime`
+        * **jetson_clocks** - Status of jetson_clocks, human readable :func:`~jtop.jtop.jtop.jetson_clocks`
+        * **nvp model** - If exist, the NV Power Model name active :func:`~jtop.jtop.jtop.nvpmodel`
+        * **cpu X** - The status for each cpu in your board, if disabled you will read *OFF*
+        * **GPU** - Status of your GPU :func:`~jtop.jtop.jtop.gpu`
+        * **MTS FG** - Foreground tasks :func:`~jtop.jtop.jtop.mts`
+        * **MTS BG** - Background tasks :func:`~jtop.jtop.jtop.mts`
+        * **RAM** - Used ram :func:`~jtop.jtop.jtop.ram`
+        * **EMC** - If exist, the used emc :func:`~jtop.jtop.jtop.emc`
+        * **IRAM** - If exist, the used iram :func:`~jtop.jtop.jtop.iram`
+        * **SWAP** - If exist, the used swap :func:`~jtop.jtop.jtop.swap`
+        * **APE** - Frequency APE engine :func:`~jtop.jtop.jtop.engine`
+        * **NVENC** - Frequency NVENC engine :func:`~jtop.jtop.jtop.engine`
+        * **NVDEC** - Frequency NVDEC engine :func:`~jtop.jtop.jtop.engine`
+        * **NVJPG** - Frequency NVJPG engine :func:`~jtop.jtop.jtop.engine`
+        * **fan** - Status fan speed :func:`~jtop.jtop.jtop.fan`
+        * **Temp X** - X temperature :func:`~jtop.jtop.jtop.temperature`
+        * **power cur** - Total current power :func:`~jtop.jtop.jtop.power`
+        * **power avg** - Total average power :func:`~jtop.jtop.jtop.power`
 
         :return: Compacts jetson statistics
         :rtype: dict
@@ -494,6 +537,69 @@ class jtop(Thread):
 
     @property
     def swap(self):
+        """
+        SWAP manager and reader
+
+        If you want read the status of your board will return a dictionary with
+
+        * **use** - Amount of SWAP in use
+        * **tot** - Total amount of SWAP available for applications
+        * **unit** - Unit SWAP, usually in MB
+        * **cached**
+            * **size** - Cache size
+            * **unit** - Unit cache size
+
+        This property has other extra methods show below
+
+            * If you want know how many swap are active you can run this extra method
+
+        .. code-block:: python
+
+            all_swap = jetson.swap.all
+
+        The output will be a dictionary, where for each swap:
+
+                * **used** - Used Swap in kB
+                * **size** - Size in kB
+                * **type** - Type
+                * **prio** - Priority
+
+        * The method inside this property enable a new swap in your board.
+          To work need to write a *size* in GB and if you want this swap enable in boot you can set
+          *on_boot* on True (default False).
+          This method will create a new swap located usually in **"/"** and called **"swfile"**
+
+        .. code-block:: python
+
+            jetson.swap.set(size, on_boot=False)
+
+        * If you want disable the swap created you can run this method
+
+        .. code-block:: python
+
+            jetson.swap.deactivate()
+
+        * This method will show the status of your SWAP created
+
+        .. code-block:: python
+
+            status = jetson.swap.is_enable
+
+        * This method will show the current swap size created
+
+        .. code-block:: python
+
+            size = jetson.swap.size()
+
+        * If you need to clear the cache in your NVIDIA Jetson you can run this extra call
+
+        .. code-block:: python
+
+            jetson.swap.clear_cache()
+
+        :return: swap status
+        :rtype: dict
+        """
         return self._swap
 
     @property
@@ -695,7 +801,12 @@ class jtop(Thread):
 
     @property
     def uptime(self):
-        """ Up time """
+        """
+        Up time, The time since you turned on the NVIDIA Jetson
+
+        :return: Board up time
+        :rtype: timedelta
+        """
         return timedelta(seconds=get_uptime())
 
     def _decode(self, data):

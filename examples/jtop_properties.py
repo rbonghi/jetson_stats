@@ -24,6 +24,9 @@ if __name__ == "__main__":
     print("All accessible jtop properities")
 
     with jtop() as jetson:
+        # boards
+        print('*** board ***')
+        print(jetson.board)
         # jetson.ok() will provide the proper update frequency
         while jetson.ok():
             # CPU
@@ -53,9 +56,6 @@ if __name__ == "__main__":
             # local interfaces
             print('*** local interfaces ***')
             print(jetson.local_interfaces)
-            # boards
-            print('*** board ***')
-            print(jetson.board)
             # Temperature
             print('*** temperature ***')
             print(jetson.temperature)
