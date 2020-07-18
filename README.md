@@ -31,8 +31,10 @@ It is a system monitoring utility that runs on the terminal and see and **contro
 The prompt interface will be show like this image, **now clickable!**:
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif)
 
-You can run the jtop simple using a simple command `jtop` and YES, Sudo is **not** more required!
-```elm
+You can run the jtop simple using a simple command `jtop`
+
+YES! Sudo is **not** more required!
+```console
 nvidia@jetson-xavier-nx:~/$ jtop
 ```
 
