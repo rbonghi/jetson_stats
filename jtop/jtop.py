@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -14,7 +14,43 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+jtop is a simple package to monitoring and control your NVIDIA Jetson [Xavier NX, Nano, AGX Xavier, TX1, TX2].
 
+It read the status of your board using different native processes:
+ * tegrastats
+ * jetson_clocks
+ * NVP Model
+ * Fan
+ * Swap
+ * Disk
+ * Network
+
+Decode the board information and status 
+ * board name
+ * Jetpack
+ * L4T
+ * Hardware configuration
+ * Libraries installed
+
+You can initialize the jtop, look these examples::
+
+.. code-block:: python
+    with jtop() as jetson:
+        stats = jetson.stats
+
+Or using a callback function
+
+.. code-block:: python
+    def read_stats(jetson):
+        stats = jetson.stats
+    jetson = jtop()
+    jetson.attach(read_stats)
+    jetson.loop_for_ever()
+
+Other example are availables on https://github.com/rbonghi/jetson_stats/tree/master/examples
+Follow the next attributes to know in detail how you can you in your python project.
+"""
 import logging
 import os
 import re
@@ -78,6 +114,9 @@ class Board:
         self.info = {}
         self.hardware = {}
         self.libraries = {}
+    
+    def __repr__(self):
+        return str({'info': self.info, 'hardware': self.hardware, 'libraries': self.libraries})
 
 
 class jtop(Thread):
@@ -313,7 +352,7 @@ class jtop(Thread):
         stats['NVENC'] = self.engine.nvenc['val'] if self.engine.nvenc else 'OFF'
         stats['NVDEC'] = self.engine.nvdec['val'] if self.engine.nvdec else 'OFF'
         stats['NVJPG'] = self.engine.nvjpg['rate'] if self.engine.nvjpg else 'OFF'
-        if self.engine.nvdec:
+        if self.engine.msenc:
             stats['MSENC'] = self.engine.msenc
         # -- FAN --
         if self.fan:

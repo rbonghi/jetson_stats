@@ -185,7 +185,7 @@ class JTOPGUI:
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
         status = [self.jetson.board.hardware["TYPE"]]
         if self.jetson.jetson_clocks is not None:
-            status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks)]
+            status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks.status.capitalize())]
         if self.jetson.nvpmodel is not None:
             status += [self.jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')]
         str_xterm = ' - '.join(status)
