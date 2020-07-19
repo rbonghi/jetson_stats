@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 REGEXP = re.compile(r'POWER_MODEL: ID=(.+?) NAME=((.*))')
 REGPM = re.compile(r'NV Power Mode: ((.*))')
 COMMAND_TIMEOUT = 4.0
+NVP_RESEND_JETSON_CLOCKS_MESSAGE = 3
+NVP_COUNTER_ALIVE_JETSON_CLOCKS = 3
 
 
 def NVP_get_id(modes, value):
@@ -156,36 +158,53 @@ class NVPModelService(object):
             self._nvpm[value]['status'] = status
             return status
         # Otherwise disable the jetson_clocks
-        try:
-            old_status = self.jetson_clocks.alive(timeout=COMMAND_TIMEOUT)
-        except JtopException:
-            logger.error("I cannot set jetson_clocks")
-            old_status = False
+        old_status = self.jetson_clocks.alive(wait=False)
         # Switch off jetson_clocks if is running
         if old_status:
-            while not self.jetson_clocks.stop():
-                pass
-            # Check jetson_clocks is off
-            try:
-                while self.jetson_clocks.alive(timeout=COMMAND_TIMEOUT):
-                    pass
-            except JtopException:
-                logger.error("I cannot set jetson_clocks")
-            logger.info("NVPmodel switch off jetson_clocks")
+            for idx in range(NVP_RESEND_JETSON_CLOCKS_MESSAGE):
+                logger.debug("{idx} Counter switch on jetson_clocks".format(idx=idx))
+                self.jetson_clocks.set(False)
+                # Check jetson_clocks is off
+                counter = 0
+                try:
+                    while self.jetson_clocks.alive():
+                        counter += 1
+                        if counter > NVP_COUNTER_ALIVE_JETSON_CLOCKS:
+                            logger.info("Timeout wait jetson_clocks alive")
+                            break
+                    if counter <= NVP_COUNTER_ALIVE_JETSON_CLOCKS:
+                        logger.info("NVPmodel has switched off jetson_clocks")
+                        break
+                except JtopException:
+                    logger.error("I cannot set jetson_clocks")
+                    break
         # Set NV Power Mode
-        status = self.set_mode(value)
+        try:
+            status = self.set_mode(value)
+        except JtopException as e:
+            logger.error(e)
+            status = False
         # Update status
         self._nvpm[value]['status'] = status
         # Enable again the jetson_clocks status
         if old_status:
-            while not self.jetson_clocks.start():
-                pass
-            # Check jetson_clocks is off
-            try:
-                while not self.jetson_clocks.alive(timeout=COMMAND_TIMEOUT):
-                    pass
-            except JtopException:
-                logger.error("I cannot set jetson_clocks")
+            for idx in range(NVP_RESEND_JETSON_CLOCKS_MESSAGE):
+                logger.debug("{idx} Counter switch on jetson_clocks".format(idx=idx))
+                self.jetson_clocks.set(True)
+                # Check jetson_clocks is on
+                counter = 0
+                try:
+                    while not self.jetson_clocks.alive():
+                        counter += 1
+                        if counter > NVP_COUNTER_ALIVE_JETSON_CLOCKS:
+                            logger.info("Timeout wait jetson_clocks alive")
+                            break
+                    if counter <= NVP_COUNTER_ALIVE_JETSON_CLOCKS:
+                        logger.info("NVPmodel has switched on jetson_clocks")
+                        break
+                except JtopException:
+                    logger.error("I cannot set jetson_clocks")
+                    break
         if status:
             logger.info("NVPmodel started {value}".format(value=value))
         else:
@@ -218,10 +237,9 @@ class NVPModelService(object):
     def set_mode(self, level):
         """ Set nvpmodel to a new status """
         # Set the new nvpmodel status
-        nvpmodel_p = Command([self.nvpmodel_name, '-m', str(level)])
         try:
             # If there are no errors return the NV Power mode
-            lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+            lines = Command.run_command([self.nvpmodel_name, '-m', str(level)], repeat=5, timeout=COMMAND_TIMEOUT)
             # Check if error is in vector
             for line in lines:
                 if "NVPM ERROR" in line:
@@ -229,7 +247,7 @@ class NVPModelService(object):
                     logger.error("Error to set nvpmodel {level}. Message:\n{text}".format(level=level, text=text))
                     return False
         except Command.TimeoutException:
-            return False
+            raise JtopException("nvpmodel does not reply in time")
         # If everithing go well save the new mode
         self.selected = level
         return True

@@ -84,7 +84,8 @@ class CPU(Page):
             try:
                 if active:
                     self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, model, curses.A_NORMAL)
-                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, "Frq: {}".format(frq), curses.A_NORMAL)
+                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, "Frq:", curses.A_NORMAL)
+                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 7, "{}".format(frq), curses.A_BOLD)
                 else:
                     self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, status, curses.A_NORMAL)
             except curses.error:
@@ -96,7 +97,7 @@ class CPU(Page):
         offest_label = width - (2 + x_offset + x_size * (n_cpu // 2))
         # Plot all CPUs
         idx_n = 0
-        for idx, (chart, name) in enumerate(zip(self.chart_cpus, self.jetson.cpu)):
+        for chart, name in zip(self.chart_cpus, sorted(self.jetson.cpu)):
             data = copy.deepcopy(self.jetson.cpu[name])
             # status CPU
             status = True if data else False

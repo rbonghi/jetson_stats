@@ -28,18 +28,4 @@ if __name__ == "__main__":
         while jetson.ok():
             # Read tegra stats
             print(jetson.stats)
-            # nvpmodel
-            print(jetson.nvpmodel)
-            # jetson_clocks
-            print(jetson.jetson_clocks)
-            # Status disk
-            print(jetson.disk)
-            # Status fans
-            print(jetson.fan)
-            # uptime
-            print(jetson.uptime)
-            # local interfaces
-            print(jetson.local_interfaces)
-            # boards
-            print(jetson.board)
 # EOF

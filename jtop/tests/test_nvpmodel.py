@@ -17,54 +17,9 @@
 
 import warnings
 from jtop import jtop
-# TEST NVP MODELS:
-# - [0] MAXTEST (DEFAULT)
-# - [1] TEST
-# - [2] MINTEST
-# - [3] MIN_MAX_TEST
+from .common import set_jetson_clocks, set_nvp_mode
 # Max count to wait
-MAX_COUNT = 20
-
-
-def set_jetson_clocks(jetson, status):
-    if jetson.jetson_clocks is None:
-        warnings.warn("jetson_clocks does not exists, please check file", UserWarning)
-        return
-    # Check if status is different
-    if bool(jetson.jetson_clocks) != status:
-        # Set true jetson_clocks
-        if jetson.ok():
-            jetson.jetson_clocks = status
-        # Wait jetson_clocks on
-        counter = 0
-        while jetson.ok():
-            if bool(jetson.jetson_clocks) == status or counter == MAX_COUNT:
-                break
-            counter += 1
-    if counter == MAX_COUNT:
-        warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
-    # Check if is true
-    assert bool(jetson.jetson_clocks) == status
-
-
-def set_nvp_mode(jetson, mode):
-    counter = 0
-    # Check if status is different
-    if str(jetson.nvpmodel) != mode:
-        # Check status nvpmodel
-        if jetson.ok():
-            jetson.nvpmodel = mode
-        # Wait change nvpmodel
-        while jetson.ok():
-            if str(jetson.nvpmodel) == mode or counter == MAX_COUNT:
-                break
-            counter += 1
-    if counter == MAX_COUNT:
-        warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
-    # Check if is same model
-    assert str(jetson.nvpmodel) == mode
-    # Check name variable
-    assert jetson.nvpmodel.name == mode
+MAX_COUNT = 50
 
 
 def test_nvpmodel(jtop_server):

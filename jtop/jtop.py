@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2020 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -14,23 +14,61 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+jtop is a simple package to monitoring and control your NVIDIA Jetson [Xavier NX, Nano, AGX Xavier, TX1, TX2].
 
+It read the status of your board using different native processes:
+ * tegrastats
+ * jetson_clocks
+ * NVP Model
+ * Fan
+ * Swap
+ * Disk
+ * Network
+
+Decode the board information and status
+ * board name
+ * Jetpack
+ * L4T
+ * Hardware configuration
+ * Libraries installed
+
+You can initialize the jtop, look these examples:
+
+.. code-block:: python
+
+    with jtop() as jetson:
+        while jetson.ok():
+            stats = jetson.stats
+
+Or using a callback function
+
+.. code-block:: python
+
+    def read_stats(jetson):
+        stats = jetson.stats
+
+    jetson = jtop()
+    jetson.attach(read_stats)
+    jetson.loop_for_ever()
+
+Other example are availables on https://github.com/rbonghi/jetson_stats/tree/master/examples
+Follow the next attributes to know in detail how you can you in your python project.
+"""
 import logging
 import os
-import re
 import sys
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
 from .core import (
-    Memory,
+    Board,
     Engine,
     Swap,
     CPU,
     Fan,
     NVPModel,
-    get_var,
     get_uptime,
     status_disk,
     import_os_variables,
@@ -50,42 +88,21 @@ if sys.version_info[0] == 2:
     from socket import error as ConnectionRefusedError
 # Create logger
 logger = logging.getLogger(__name__)
-# Version match
-VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
-AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
 
 
-def import_jetson_libraries():
-    JTOP_FOLDER, _ = os.path.split(__file__)
-    return import_os_variables(JTOP_FOLDER + "/jetson_libraries", "JETSON_")
-
-
-def get_version():
-    """
-    Show the version of this package
-
-    :return: Version number
-    :rtype: string
-    """
-    return get_var(VERSION_RE)
-
-
-class Board:
-
-    def __init__(self):
-        self.info = {}
-        self.hardware = {}
-        self.libraries = {}
-
-
 class jtop(Thread):
     """
-    jtop library is the reference to control your NVIDIA Jetson board with python.
-    This object can be open like a file, or you can use a with callback function
+    This class control the access to your board, from here you can control your
+    NVIDIA Jetson board or read the jetson_clocks status or change the nvp model.
 
-    :param interval: Interval update tegrastats and other statistic function
+    When you initialize your jtop you can setup a communication speed **interval**,
+    if there is another jtop running this speed will be not used.
+
+    When jtop is started you can read the server speed in **interval** property.
+
+    :param interval: Interval to setup the jtop speed (in seconds)
     :type interval: float
     """
 
@@ -121,8 +138,6 @@ class jtop(Thread):
         self._cpu = CPU()
         # Initialize swap
         self._swap = None
-        # Initialize Memory
-        self._memory = None
         # Load jetson_clocks status
         self._jc = None
         # Initialize fan
@@ -133,10 +148,12 @@ class jtop(Thread):
     def _load_jetson_libraries(self):
         try:
             env = {}
-            for k, v in import_jetson_libraries().items():
+            JTOP_FOLDER, _ = os.path.split(__file__)
+            libraries = import_os_variables(JTOP_FOLDER + "/jetson_libraries", "JETSON_")
+            for k, v in libraries.items():
                 env[k] = str(v)
             # Make dictionaries
-            self._board.libraries = {
+            self._board._update_libraries({
                 "CUDA": env["JETSON_CUDA"],
                 "cuDNN": env["JETSON_CUDNN"],
                 "TensorRT": env["JETSON_TENSORRT"],
@@ -144,7 +161,7 @@ class jtop(Thread):
                 "OpenCV": env["JETSON_OPENCV"],
                 "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
                 "VPI": env["JETSON_VPI"],
-                "Vulkan": env["JETSON_VULKAN_INFO"]}
+                "Vulkan": env["JETSON_VULKAN_INFO"]})
             # Loaded from script
             logger.debug("Loaded jetson_variables variables")
         except Exception:
@@ -153,7 +170,18 @@ class jtop(Thread):
 
     def attach(self, observer):
         """
-        Attach an observer to read the status of jtop
+        Attach an observer to read the status of jtop. You can add more observer that you want.
+
+        The function **must** be with this format:
+
+        .. code-block:: python
+
+            def observer(jetson):
+                pass
+
+        The input of your callback will be the jetson object.
+
+        To detach a function, please look :func:`~jtop.jtop.jtop.detach`
 
         :param observer: The function to call
         :type observer: function
@@ -164,12 +192,30 @@ class jtop(Thread):
         """
         Detach an observer from jtop
 
+        To attach a function, please look :func:`~jtop.jtop.jtop.attach`
+
         :param observer:  The function to detach
         :type observer: function
         """
         self._observers.discard(observer)
 
     def restore(self):
+        """
+        This block method will restore all jtop configuration, in order:
+
+        * **switch off** jetson_clocks
+        * **Disable** jetson_clocks on boot
+        * **fan**
+            * set to **default**, please follow the fan reference :func:`~jtop.jtop.jtop.fan`
+            * set fan speed to 0 (This operation can require time)
+        * If active **disable** the jtop swap
+        * **Clear** the internal jtop configuration file
+
+        :return: List of all operations to restore your NVIDIA Jetson
+        :rtype: dict
+        :raises JtopException: if the connection with the server is lost,
+            not active or your user does not have the permission to connect to *jetson_stats.service*
+        """
         status = {}
         # Reset jetson_clocks
         if self.jetson_clocks is not None:
@@ -216,10 +262,34 @@ class jtop(Thread):
 
     @property
     def engine(self):
+        """
+        Engine status, in this property you can find:
+
+        * **APE** in MHz
+        * **NVENC** in MHz
+        * **NVDEC** in MHz
+        * **NVJPG** in MHz (If supported in your board)
+
+        :return: List of all active engines
+        :rtype: dict
+        """
         return self._engine
 
     @property
     def board(self):
+        """
+        Board status, in this property you can find:
+
+        * info
+            * Board name
+            * Jetpack
+            * L4T (Linux for Tegra)
+        * hardware (All hardware information)
+        * libraries (All libraries installed)
+
+        :return: Status board, hardware and libraries
+        :rtype: dict
+        """
         # Wait thread end
         self._thread_libraries.join()
         # Return board status
@@ -227,15 +297,94 @@ class jtop(Thread):
 
     @property
     def fan(self):
+        """
+        Fan status and control. From this property you can setup your board
+
+        If your board does not support a fan, the output will be `None`
+
+        The variable avalables are:
+
+        * **auto** - boolean with fan control.
+            * True = Automatic speed control enabled
+            * False = Automatic speed control disabled
+        * **speed** - Speed set. Value between [0, 100] (float)
+        * **measure** - Speed measured. Value between [0, 100] (float)
+        * **rpm** - Revolution Per Minute. This number can be 0 if the hardware does not implement this feature
+        * **mode** - Mode selected for your fan
+
+        If you want set a new speed, change the mode or know how many configurations are availables you can use:
+
+        .. code-block:: python
+
+            jetson.fan.speed = value
+
+        where *value* is a number between [0, 100] *(float)*
+
+        .. code-block:: python
+
+            jetson.fan.mode = name
+
+        where *name* is a **string** of the mode that you want use
+
+        .. code-block:: python
+
+            configs = jetson.fan.configs
+
+        Return a **list** of all available configurations:
+
+        * *default* - The fan is not manage, when jetson_clocks start will follow the jetson_clocks configurations
+        * *system* - The fan speed will be manage from the OS
+        * *manual* - The fan speed is the same that you have set in *jetson.fan.speed*
+
+        :return: Status Fan
+        :rtype: dict
+        :raises ValueError: Wrong speed number or wrong mode name
+        """
         return self._fan
 
     @property
     def nvpmodel(self):
         """
-        Status NV Power Mode
+        From this function you set and read NV Power Mode. If your NVIDIA Jetson does not use nvpmodel will return None
+
+        If you want set a new nvpmodel you can follow the NVIDIA Jetson documentation and write a string like below
+
+        .. code-block:: python
+
+            # You can write a string for a name or an integer for the ID
+            jetson.nvpmodel = name_or_id
+
+        If you need to increase or decrease the ID you can use
+
+        .. code-block:: python
+
+            jetson.nvpmodel += 1
+            # or
+            jetson.nvpmodel = jetson.nvpmodel + 1
+
+        There are other properties:
+
+        * **name** - mode name
+        * **id** - ID name
+        * **modes** - A list with all mode available in your board
+        * **status** - A list of status for each NVP model (False if the nvpmodel is in failure)
+
+        The access of this properities is available like below
+
+        .. code-block:: python
+
+            # NVP model name
+            print(jetson.nvpmodel.name)
+            # NVP model id
+            print(jetson.nvpmodel.id)
+            # NVP model list
+            print(jetson.nvpmodel.modes)
+            # NVP model status
+            print(jetson.nvpmodel.status)
 
         :return: Return the name of NV Power Mode
-        :rtype: string
+        :rtype: string or None
+        :raises JtopException: if the nvp model does not exist*
         """
         return self._nvp
 
@@ -253,10 +402,42 @@ class jtop(Thread):
     @property
     def jetson_clocks(self):
         """
-        Status jetson_clocks
+        Status jetson_clocks, if you want change the jetson_clocks status you can simply write:
 
-        :return: true if jetson_clocks is running otherwise false
+        .. code-block:: python
+
+            jetson.jetson_clocks = value
+
+        where *value* is a boolean value
+
+        There are availabe other extra properties:
+
+        * **boot** - You can enable and disable on boot **jetson_clocks**
+        * **status** - A string with the current jetson_clocks status
+            * *running* - The service is running
+            * *booting* - jetson_clocks is in booting (When your board boot, jetson_clocks wait 60s before to start)
+            * *activating* - jetson_clocks is activating
+            * *deactivating* - jetson_clocks is deactivating
+
+        You can change and edit using this property:
+
+        .. code-block:: python
+
+            # Read jetson_clocks boot property
+            print(jetson.jetson_clocks.boot)
+            # Set a new value
+            jetson.jetson_clocks.boot = value  # True or False
+
+        Written jetson_clocks status
+
+        .. code-block:: python
+
+            # Status jetson_clocks
+            print(jetson.jetson_clocks.status)
+
+        :return: status jetson_clocks script
         :rtype: bool
+        :raises ValueError: Wrong jetson_clocks value
         """
         return self._jc
 
@@ -267,7 +448,7 @@ class jtop(Thread):
         if not self._jc.is_config and not value:
             raise JtopException("I cannot set jetson_clocks.\nPlease shutdown manually jetson_clocks")
         # Check if service is not started otherwise skip
-        if self._jc.status in ['activating', 'deactivating']:
+        if self._jc.status in ['booting', 'activating', 'deactivating']:
             return
         if value != self._jc.is_alive:
             # Send status jetson_clocks
@@ -276,7 +457,34 @@ class jtop(Thread):
     @property
     def stats(self):
         """
-        A dictionary with the status of the board
+        This property return a simplified version of tegrastats,
+        it is simple to use if you want log the NVIDIA Jetson status with pandas or in a csv file.
+
+        This property is a simplified version of all data collected from your NVIDIA Jetson,
+        if you need more detailed information, please use the other jtop properties
+
+        The field listed are:
+
+        * **time** - A `datetime` variable with the local time in your board
+        * **uptime** - A `timedelta` with the up time of your board, same from :func:`~jtop.jtop.jtop.uptime`
+        * **jetson_clocks** - Status of jetson_clocks, human readable :func:`~jtop.jtop.jtop.jetson_clocks`
+        * **nvp model** - If exist, the NV Power Model name active :func:`~jtop.jtop.jtop.nvpmodel`
+        * **cpu X** - The status for each cpu in your board, if disabled you will read *OFF*
+        * **GPU** - Status of your GPU :func:`~jtop.jtop.jtop.gpu`
+        * **MTS FG** - Foreground tasks :func:`~jtop.jtop.jtop.mts`
+        * **MTS BG** - Background tasks :func:`~jtop.jtop.jtop.mts`
+        * **RAM** - Used ram :func:`~jtop.jtop.jtop.ram`
+        * **EMC** - If exist, the used emc :func:`~jtop.jtop.jtop.emc`
+        * **IRAM** - If exist, the used iram :func:`~jtop.jtop.jtop.iram`
+        * **SWAP** - If exist, the used swap :func:`~jtop.jtop.jtop.swap`
+        * **APE** - Frequency APE engine :func:`~jtop.jtop.jtop.engine`
+        * **NVENC** - Frequency NVENC engine :func:`~jtop.jtop.jtop.engine`
+        * **NVDEC** - Frequency NVDEC engine :func:`~jtop.jtop.jtop.engine`
+        * **NVJPG** - Frequency NVJPG engine :func:`~jtop.jtop.jtop.engine`
+        * **fan** - Status fan speed :func:`~jtop.jtop.jtop.fan`
+        * **Temp X** - X temperature :func:`~jtop.jtop.jtop.temperature`
+        * **power cur** - Total current power :func:`~jtop.jtop.jtop.power`
+        * **power avg** - Total average power :func:`~jtop.jtop.jtop.power`
 
         :return: Compacts jetson statistics
         :rtype: dict
@@ -306,13 +514,14 @@ class jtop(Thread):
         if self.iram:
             stats['IRAM'] = self.ram['use']
         # -- SWAP --
-        stats['SWAP'] = self.swap['use']
+        if 'use' in self.swap:
+            stats['SWAP'] = self.swap['use']
         # -- Engines --
         stats['APE'] = self.engine.ape['val']
         stats['NVENC'] = self.engine.nvenc['val'] if self.engine.nvenc else 'OFF'
         stats['NVDEC'] = self.engine.nvdec['val'] if self.engine.nvdec else 'OFF'
         stats['NVJPG'] = self.engine.nvjpg['rate'] if self.engine.nvjpg else 'OFF'
-        if self.engine.nvdec:
+        if self.engine.msenc:
             stats['MSENC'] = self.engine.msenc
         # -- FAN --
         if self.fan:
@@ -328,49 +537,221 @@ class jtop(Thread):
 
     @property
     def swap(self):
+        """
+        SWAP manager and reader
+
+        If you want read the status of your board will return a dictionary with
+
+        * **use** - Amount of SWAP in use
+        * **tot** - Total amount of SWAP available for applications
+        * **unit** - Unit SWAP, usually in MB
+        * **cached**
+            * **size** - Cache size
+            * **unit** - Unit cache size
+
+        This property has other extra methods show below
+
+            * If you want know how many swap are active you can run this extra method
+
+        .. code-block:: python
+
+            all_swap = jetson.swap.all
+
+        The output will be a dictionary, where for each swap:
+
+                * **used** - Used Swap in kB
+                * **size** - Size in kB
+                * **type** - Type
+                * **prio** - Priority
+
+        * The method inside this property enable a new swap in your board.
+          To work need to write a *size* in GB and if you want this swap enable in boot you can set
+          *on_boot* on True (default False).
+          This method will create a new swap located usually in **"/"** and called **"swfile"**
+
+        .. code-block:: python
+
+            jetson.swap.set(size, on_boot=False)
+
+        * If you want disable the swap created you can run this method
+
+        .. code-block:: python
+
+            jetson.swap.deactivate()
+
+        * This method will show the status of your SWAP created
+
+        .. code-block:: python
+
+            status = jetson.swap.is_enable
+
+        * This method will show the current swap size created
+
+        .. code-block:: python
+
+            size = jetson.swap.size()
+
+        * If you need to clear the cache in your NVIDIA Jetson you can run this extra call
+
+        .. code-block:: python
+
+            jetson.swap.clear_cache()
+
+        :return: swap status
+        :rtype: dict
+        """
         return self._swap
 
     @property
     def emc(self):
+        """
+        EMC is the external memory controller, through which all sysmem/carve-out/GART memory accesses go.
+
+        If your board have the EMC, the fields are:
+
+        * **min_freq** - Minimum frequency in kHz
+        * **max_freq** - Maximum frequency in kHz
+        * **frq** - Running frequency in kHz
+        * **val** - Status EMC, value between [0, 100]
+        * **FreqOverride** - Status override
+
+        :return: emc status
+        :rtype: dict
+        """
         # Extract EMC
         return self._stats.get('emc', {})
 
     @property
     def iram(self):
+        """
+        IRAM is memory local to the video hardware engine.
+        If your board have the IRAM, the fields are:
+
+        * **use** - status iram used
+        * **tot** - Total size IRAM
+        * **unit** - Unit size IRAM, usually in kB
+        * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
+            * **size** - Size of the largest free block
+            * **unit** - Unit size lfb
+
+        Largest Free Block (lfb) is a statistic about the memory allocator.
+        It refers to the largest contiguous block of physical memory
+        that can currently be allocated: at most 4 MB.
+        It can become smaller with memory fragmentation.
+        The physical allocations in virtual memory can be bigger.
+
+        :return: iram status
+        :rtype: dict
+        """
         # Extract IRAM
         return self._stats.get('iram', {})
 
     @property
     def ram(self):
-        return self._memory
+        """
+        RAM available on your board.
+
+        * **use** - status iram used
+        * **shared** - status of shared memory used from GPU
+        * **tot** - Total size RAM
+        * **unit** - Unit size RAM, usually in kB
+        * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
+            * **nblock** - Number of block used
+            * **size** - Size of the largest free block
+            * **unit** - Unit size lfb
+
+        Largest Free Block (lfb) is a statistic about the memory allocator.
+        It refers to the largest contiguous block of physical memory
+        that can currently be allocated: at most 4 MB.
+        It can become smaller with memory fragmentation.
+        The physical allocations in virtual memory can be bigger.
+
+        :return: ram status
+        :rtype: dict
+        """
+        return self._stats['ram']
 
     @property
     def mts(self):
+        """
+        MTS foreground and background tasks.
+
+        If your board support the MTS variable, the output will be:
+
+        * **fg** - foregroundtasks
+        * **bg** - background tasks
+
+        :return: mts status
+        :rtype: dict
+        """
         # Extract MTS
         return self._stats.get('mts', {})
 
     @property
     def cpu(self):
+        """
+        CPU status. From this dictionary you can read the status of the CPU.
+
+        For each CPU all fields are:
+
+        * **min_freq** - Minimum frequency in kHz
+        * **max_freq** - Maximum frequency in kHz
+        * **frq** - Running frequency in kHz
+        * **governor** - Governor selected
+        * **val** - Status CPU, value between [0, 100]
+        * **model** - Model Architecture
+        * **IdleStates**
+
+        :return: CPU configuration, frequencies and speed
+        :rtype: dict
+        """
         # Return CPU status
         return self._cpu
 
     @property
     def cluster(self):
+        """
+        Cluster status of your board.
+
+        If this data is not available in your board will return an empty string
+
+        :return: Status cluster in your board
+        :rtype: string
+        """
         # Return status cluster
         return self._stats.get('cluster', '')
 
     @property
     def gpu(self):
+        """
+        GPU engine. The fields are:
+
+        * **min_freq** - Minimum frequency in kHz
+        * **max_freq** - Maximum frequency in kHz
+        * **frq** - Running frequency in kHz
+        * **val** - Status GPU, value between [0, 100]
+
+        :return: GPU engine, frequencies and speed
+        :rtype: dict
+        """
         # Extract GPU
         return self._stats['gpu']
 
     @property
     def power(self):
         """
-        A dictionary with all power consumption
+        Two power dictionaries:
 
-        :return: Detailed information about power consumption
-        :rtype: dict
+        * **total** - The total power estimated is not available of the NVIDIA Jetson power comsumption
+        * **power** - A dictionary with all power comsumption
+
+        For each power comsumption there are two fields:
+
+        * **avg** - Average power consumption in milliwatts
+        * **cur** - Current power consumption in milliwatts
+
+        :return: Two dictionaries, total and a list of all power consumption available from the board
+        :rtype: dict, dict
         """
         total = self._stats['power']['all']
         power = self._stats['power']['power']
@@ -379,26 +760,53 @@ class jtop(Thread):
     @property
     def temperature(self):
         """
-        A dictionary with board temperatures
+        A dictionary with all NVIDIA Jetson temperatures.
 
-        :return: Detailed information about temperature
+        All temperatures are in Celsius
+
+        :return: Temperature dictionary
         :rtype: dict
         """
         return self._stats['temperature']
 
     @property
     def local_interfaces(self):
-        """ Local interfaces information """
+        """
+        Local interfaces information and hostname
+
+        This dictionary the status of your local network
+
+        * **hostname** - Hostname board
+        * **interfaces** - A dictionary with name and IP address for all interfaces listed
+
+        :return: Local interfaces and hostaname
+        :rtype: dict
+        """
         return get_local_interfaces()
 
     @property
     def disk(self):
-        """ Disk status properties """
+        """
+        Disk status properties, in dictionary are included
+
+        * **total** - Total disk space in GB
+        * **available** - Space available in GB
+        * **use** - Disk space used in GB
+        * **available_no_root**
+
+        :return: Disk information
+        :rtype: dict
+        """
         return status_disk()
 
     @property
     def uptime(self):
-        """ Up time """
+        """
+        Up time, The time since you turned on the NVIDIA Jetson
+
+        :return: Board up time
+        :rtype: timedelta
+        """
         return timedelta(seconds=get_uptime())
 
     def _decode(self, data):
@@ -410,8 +818,6 @@ class jtop(Thread):
         self._engine._update(data['engines'])
         # -- CPU --
         self._cpu._update(data['cpu'])
-        # -- RAM --
-        self._memory._update(data['ram'])
         # -- SWAP --
         self._swap._update(data['swap'])
         # -- FAN --
@@ -431,6 +837,7 @@ class jtop(Thread):
             observer(self)
 
     def run(self):
+        """ """
         # https://gist.github.com/schlamar/2311116
         # https://stackoverflow.com/questions/13074847/catching-exception-in-context-manager-enter
         try:
@@ -472,6 +879,19 @@ class jtop(Thread):
                 return data['init']
 
     def start(self):
+        """
+        The start() function start your jtop and you can start to read the NVIDIA Jetson status.
+
+        This method is **not** needed to close jtop if you have open jtop using `with` like:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                pass
+
+        :raises JtopException: if the connection with the server is lost,
+            not active or your user does not have the permission to connect to *jetson_stats.service*
+        """
         # Connected to broadcaster
         try:
             self._broadcaster.connect()
@@ -507,19 +927,15 @@ class jtop(Thread):
         # Load server speed
         self._server_interval = init['interval']
         # Load board information
-        board = init['board']
-        self._board.info = board['info']
-        self._board.hardware = board['hardware']
+        self._board._update_init(init['board'])
         # Initialize jetson_clocks sender
         self._swap = Swap(self._controller, init['swap'])
         # Initialize jetson_clock
         if init['jc']:
             self._jc = JetsonClocks(self._controller)
-        # Initialize Memory
-        self._memory = Memory(self._controller)
         # Init FAN (If exist)
         if init['fan']:
-            self._fan = Fan(self._controller)
+            self._fan = Fan(self._controller, init['fan'])
         # Init NVP model (if exist)
         if init['nvpmodel']:
             self._nvp = NVPModel()
@@ -534,13 +950,42 @@ class jtop(Thread):
 
     @property
     def interval(self):
+        """
+        Speed jtop service. This speed can be different compare the speed specified in :func:`~jtop.jtop.jtop` constructor
+
+        :return: jtop interval (in seconds)
+        :rtype: float
+        """
         return self._server_interval
 
     @property
     def interval_user(self):
+        """
+        This is the same speed specified in :func:`~jtop.jtop.jtop` constructor
+
+        :return: jtop user interval (in seconds)
+        :rtype: float
+        """
         return self._interval
 
     def loop_for_ever(self):
+        """
+        This blocking method is needed when you design your python code to work only by callback.
+
+        Before to run this method remember to attach a callback using :func:`~jtop.jtop.jtop.attach`
+
+        A simple example to use this method is below
+
+        .. code-block:: python
+
+            def read_stats(jetson):
+                stats = jetson.stats
+
+            jetson = jtop()
+            jetson.attach(read_stats)
+            # Blocking method
+            jetson.loop_for_ever()
+        """
         self.start()
         # Blocking function to catch exceptions
         while self.ok():
@@ -551,6 +996,21 @@ class jtop(Thread):
                 self.close()
 
     def ok(self, spin=False):
+        """
+        This method is needed when you start jtop using `with` like below
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                while jetson.ok():
+                    stats = jetson.stats
+
+        This method is usually blocking, and is not needed to add in your script a sleep function,
+        when a new data will be available the function will release and you will read a new fresh data
+
+        :param spin: If True, this function will be not blocking
+        :type spin: bool
+        """
         # Wait if trigger is set
         if not spin:
             try:
@@ -572,6 +1032,18 @@ class jtop(Thread):
         return self._running
 
     def close(self):
+        """
+        This method will close the jtop server.
+
+        This method is **not** needed to close jtop if you have open jtop using `with` like:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                pass
+        """
+        # Wait thread end
+        self._thread_libraries.join()
         # Switch off broadcaster thread
         self._running = False
 

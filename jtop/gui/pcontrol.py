@@ -39,10 +39,11 @@ class CTRL(Page):
         self.service_start = Button(stdscr, key="s", action=self.action_service_start)
         self.service_enable = Button(stdscr, key="e", action=self.action_service_enable)
         # NVP Model controller
-        self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
-        self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
-        mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
-        self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
+        if self.jetson.nvpmodel is not None:
+            self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
+            self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
+            mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
+            self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
         # Fan controller
         if self.jetson.fan is not None:
             self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
@@ -188,11 +189,20 @@ class CTRL(Page):
                 # Draw keys to increase fan speed
                 self.fan_status_increase.draw(start_y, start_x + 16, key, mouse)
             # Write list of available modes
-            self.stdscr.addstr(start_y + 1, start_x + 22, "Modes", curses.A_BOLD)
+            self.stdscr.addstr(start_y + 1, start_x + 24, "Modes", curses.A_BOLD)
             # Get ID from fan mode
             fan_mode = self.jetson.fan.mode
             fan_id = self.jetson.fan.configs.index(fan_mode)
-            self.fan_list.draw(start_y, start_x + 28, width, key, mouse, select=fan_id)
+            self.fan_list.draw(start_y, start_x + 30, width, key, mouse, select=fan_id)
         # Draw the GPU chart
         self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
+
+    def keyboard(self, key):
+        if key == ord('f'):
+            l_configs = len(self.jetson.fan.configs)
+            idx = self.jetson.fan.configs.index(self.jetson.fan.mode)
+            # Get config name
+            name = self.jetson.fan.configs[(idx + 1) % l_configs]
+            # Set new fan mode
+            self.jetson.fan.mode = name
 # EOF

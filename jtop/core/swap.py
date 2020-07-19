@@ -63,8 +63,13 @@ class Swap(object):
 
     def __init__(self, controller, path):
         self._all = {}
+        self._list_swaps = {}
         self._controller = controller
         self._this_swap = path
+
+    def clear_cache(self):
+        # Set new swap size configuration
+        self._controller.put({'memory': ''})
 
     def set(self, value, on_boot=False):
         if not isinstance(value, (int, float)):
@@ -89,7 +94,10 @@ class Swap(object):
         # Update status swaps
         self._list_swaps = swap_status['list']
         # Update status swap
-        self._all.update(swap_status['all'])
+        self._all = swap_status['all']
+
+    def __len__(self):
+        return len(self._all)
 
     @property
     def all(self):
@@ -117,6 +125,14 @@ class SwapService(object):
         self._config = config
         # Load swap information
         # self.update()
+
+    def clear_cache(self):
+        """
+        Clear cache following https://coderwall.com/p/ef1gcw/managing-ram-and-swap
+        """
+        clear_cache = sp.Popen(['sysctl', 'vm.drop_caches=3'], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, _ = clear_cache.communicate()
+        return True if out else False
 
     def _update(self):
         config = self._config.get('swap', {})
@@ -163,6 +179,7 @@ class SwapService(object):
         # Add auto command if request
         if on_boot:
             swap_cmd += ['--auto']
+        logger.info("Activate {directory}/{name} auto={on_boot}".format(directory=directory, name=swap_name, on_boot=on_boot))
         # Run script
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
 
@@ -174,5 +191,6 @@ class SwapService(object):
         # List swap command
         swap_cmd = ['jetson_swap', '--off', '--dir', directory, '--name', swap_name]
         # Run script
+        logger.info("Deactivate {directory}/{name}".format(directory=directory, name=swap_name))
         sp.Popen(swap_cmd, stdout=sp.PIPE, stderr=sp.PIPE)
 # EOF

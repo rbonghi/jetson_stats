@@ -116,7 +116,7 @@ class Tegrastats:
         self._thread.start()
         return True
 
-    def close(self):
+    def close(self, timeout=None):
         # Catch exception if exist
         if self._error:
             # Extract exception and raise
@@ -126,7 +126,7 @@ class Tegrastats:
         # Check if thread and process are already empty
         self._running.clear()
         if self._thread is not None:
-            self._thread.join()
+            self._thread.join(timeout)
             self._thread = None
         return True
 # EOF

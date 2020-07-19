@@ -36,6 +36,48 @@ AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 logger = logging.getLogger(__name__)
 
 
+class Board:
+
+    def __init__(self):
+        self.info = {}
+        self.hardware = {}
+        self.libraries = {}
+        self._board = {'info': self.info, 'hardware': self.hardware, 'libraries': self.libraries}
+
+    def _update_libraries(self, libraries):
+        self.libraries = libraries
+        self._board = {'info': self.info, 'hardware': self.hardware, 'libraries': self.libraries}
+
+    def _update_init(self, init):
+        self.info = init['info']
+        self.hardware = init['hardware']
+        self._board = {'info': self.info, 'hardware': self.hardware, 'libraries': self.libraries}
+
+    def items(self):
+        return self._board.items()
+
+    def get(self, name, value=None):
+        if name in self._board:
+            return self._board[name]
+        else:
+            return value
+
+    def __getitem__(self, name):
+        return self._board[name]
+
+    def __iter__(self):
+        return iter(self._board)
+
+    def __next__(self):
+        return next(self._board)
+
+    def __len__(self):
+        return len(self._board)
+
+    def __repr__(self):
+        return str(self._board)
+
+
 def locate_commands(name, commands):
     for cmd in commands:
         if os.path.exists(cmd):

@@ -20,16 +20,9 @@ import time
 from jtop.service import JtopServer
 from jtop import jtop, JtopException
 import shutil
+# test functions
+from .common import remove_tests
 MAX_COUNT = 10
-
-
-def remove_tests():
-    if os.path.isfile('/tmp/jetson_model'):
-        os.remove('/tmp/jetson_model')
-    if os.path.isfile('/tmp/jetson_clocks_test'):
-        os.remove('/tmp/jetson_clocks_test')
-    if os.path.isfile('/tmp/nvp_model_test'):
-        os.remove('/tmp/nvp_model_test')
 
 
 def copyDirectory(src, dest):

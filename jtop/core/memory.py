@@ -19,8 +19,6 @@ import os
 import re
 # Logging
 import logging
-# Launch command
-import subprocess as sp
 # from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
@@ -42,56 +40,10 @@ def mem_info(path="/proc/meminfo"):
     return list_memory
 
 
-class Memory(object):
-
-    def __init__(self, controller):
-        self._controller = controller
-        self._ram = {}
-
-    def clear_cache(self):
-        # Set new swap size configuration
-        self._controller.put({'memory': ''})
-
-    def _update(self, ram):
-        self._ram = ram
-
-    def get(self, name, value):
-        if name in self._ram:
-            return self._ram[name]
-        else:
-            return value
-
-    def items(self):
-        return self._ram.items()
-
-    def __getitem__(self, name):
-        return self._ram[name]
-
-    def __iter__(self):
-        return iter(self._ram)
-
-    def __next__(self):
-        return next(self._ram)
-
-    def __len__(self):
-        return len(self._ram)
-
-    def __repr__(self):
-        return str(self._ram)
-
-
 class MemoryService(object):
 
     def __init__(self):
         pass
-
-    def clear_cache(self):
-        """
-        Clear cache following https://coderwall.com/p/ef1gcw/managing-ram-and-swap
-        """
-        clear_cache = sp.Popen(['sysctl', 'vm.drop_caches=3'], stdout=sp.PIPE, stderr=sp.PIPE)
-        out, _ = clear_cache.communicate()
-        return True if out else False
 
     def meminfo(self):
         """

@@ -43,6 +43,11 @@ from .core import (
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Load queue library for python 2 and python 3
+# Fix connection refused for python 2.7
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 try:
     import queue
 except ImportError:
@@ -59,6 +64,7 @@ JTOP_PIPE = '/run/jtop.sock'
 JTOP_USER = 'jetson_stats'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+TIMEOUT_SWITCHOFF = 3.0
 LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
 
 
@@ -157,18 +163,12 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.jetson_clocks = None
-        # Initialize jetson_fan
-        if self.fan is not None:
-            self.fan.initialization(self.jetson_clocks)
         # Initialize nvpmodel controller
         try:
             self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
-        # config nvpmodel on jetson_clocks
-        if self.jetson_clocks is not None:
-            self.jetson_clocks.set_nvpmodel(self.nvpmodel)
         # Setup memory servive
         self.memory = MemoryService()
         # Setup tegrastats
@@ -177,6 +177,16 @@ class JtopServer(Process):
         self.swap = SwapService(self.config)
 
     def run(self):
+        # Read nvp_mode
+        if self.nvpmodel is not None:
+            self.nvp_mode = self.nvpmodel.get()
+        # Run setup
+        if self.jetson_clocks is not None:
+            self.jetson_clocks.initialization(self.nvpmodel)
+        # Initialize jetson_fan
+        if self.fan is not None:
+            self.fan.initialization(self.jetson_clocks)
+        # Initialize variables
         timeout = None
         interval = 1
         try:
@@ -214,16 +224,7 @@ class JtopServer(Process):
                         jc = control['jc']
                         # Enable / disable jetson_clocks
                         if 'enable' in jc:
-                            if jc['enable']:
-                                if self.jetson_clocks.start():
-                                    logger.info("jetson_clocks started")
-                                else:
-                                    logger.warning("jetson_clocks already running")
-                            else:
-                                if self.jetson_clocks.stop(reset=True):
-                                    logger.info("jetson_clocks stopped")
-                                else:
-                                    logger.info("jetson_clocks already stopped")
+                            self.jetson_clocks.set(jc['enable'])
                         # Update jetson_clocks configuration
                         if 'boot' in jc:
                             self.jetson_clocks.boot = jc['boot']
@@ -245,7 +246,7 @@ class JtopServer(Process):
                     if 'memory' in control:
                         logger.info("Clear cache")
                         # Clear cache
-                        self.memory.clear_cache()
+                        self.swap.clear_cache()
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
@@ -253,7 +254,7 @@ class JtopServer(Process):
                         if self.tegra.open(interval=interval):
                             # Start jetson_clocks
                             if self.jetson_clocks is not None:
-                                self.jetson_clocks.show_start()
+                                self.jetson_clocks.start()
                             # Set interval value
                             self.interval.value = interval
                             # Status start tegrastats
@@ -264,7 +265,7 @@ class JtopServer(Process):
                             'interval': self.interval.value,
                             'swap': self.swap.path,
                             'jc': self.jetson_clocks is not None,
-                            'fan': self.fan is not None,
+                            'fan': self.fan.get_configs() if self.fan is not None else False,
                             'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
                     # Update timeout interval
@@ -276,32 +277,28 @@ class JtopServer(Process):
                         logger.info("tegrastats close")
                         # Start jetson_clocks
                         if self.jetson_clocks is not None:
-                            if self.jetson_clocks.show_stop():
-                                logger.info("jetson_clocks show closed")
+                            self.jetson_clocks.stop()
+                            logger.info("jetson_clocks show closed")
                     # Disable timeout
                     timeout = None
                     self.interval.value = -1.0
         except (KeyboardInterrupt, SystemExit):
             pass
-        except Exception:
-            # Write error message
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            logger.error("Error subprocess {error}".format(error=e), exc_info=1)
+            # Write error messag
             self._error.put(sys.exc_info())
         finally:
             # Close tegra
-            if self.tegra.close():
-                logger.info("tegrastats close")
+            if self.tegra.close(timeout=TIMEOUT_SWITCHOFF):
+                logger.info("Force tegrastats close")
                 # Start jetson_clocks
-            if self.jetson_clocks is not None:
-                if self.jetson_clocks.close():
-                    logger.info("jetson_clocks closed")
+                if self.jetson_clocks is not None:
+                    self.jetson_clocks.close()
 
     def start(self):
-        # Run setup
-        if self.jetson_clocks is not None:
-            self.jetson_clocks.initialization()
-        if self.nvpmodel is not None:
-            # Read nvp_mode
-            self.nvp_mode = self.nvpmodel.get()
         # Initialize socket
         try:
             gid = getgrnam(JTOP_USER).gr_gid
@@ -348,15 +345,18 @@ class JtopServer(Process):
             self.close()
 
     def close(self):
+        self.q.close()
         self.broadcaster.shutdown()
-        # If process is in timeout manually terminate
-        if self.interval.value == -1.0:
-            logger.info("Terminate subprocess")
-            self.terminate()
         # If process is alive wait to quit
-        if self.is_alive():
+        # logger.debug("Status subprocess {status}".format(status=self.is_alive()))
+        while self.is_alive():
+            # If process is in timeout manually terminate
+            if self.interval.value == -1.0:
+                logger.info("Terminate subprocess")
+                self.terminate()
             logger.info("Wait shutdown subprocess")
-            self.join()
+            self.join(timeout=TIMEOUT_SWITCHOFF)
+            self.interval.value = -1.0
         # Close tegrastats
         try:
             error = self._error.get(timeout=0.5)
@@ -439,11 +439,16 @@ class JtopServer(Process):
             for name, v in tegrastats['CPU'].items():
                 # Extract jc_cpu info
                 jc_cpu = jetson_clocks_show['CPU'].get(name, {})
-                if jc_cpu['Online']:
-                    # Remove online info
-                    del jc_cpu['Online']
-                    # Remove current frequency
-                    del jc_cpu['current_freq']
+                # Remove current frequency
+                del jc_cpu['current_freq']
+                # Fix online status
+                if 'Online' in jc_cpu:
+                    if jc_cpu['Online']:
+                        # Remove online info
+                        del jc_cpu['Online']
+                        # Update CPU information
+                        v.update(jc_cpu)
+                elif v:
                     # Update CPU information
                     v.update(jc_cpu)
                 data['cpu'][name] = v
@@ -476,7 +481,7 @@ class JtopServer(Process):
         # -- SWAP --
         data['swap'] = {
             'list': self.swap.all(),
-            'all': tegrastats['SWAP']}
+            'all': tegrastats['SWAP'] if 'SWAP' in tegrastats else {}}
         # -- OTHER --
         data['other'] = dict((k, tegrastats[k]) for k in tegrastats if k not in LIST_PRINT)
         # -- FAN --
@@ -487,7 +492,7 @@ class JtopServer(Process):
         if self.jetson_clocks is not None:
             data['jc'] = {
                 'status': self.jetson_clocks.alive(wait=False),
-                'thread': self.jetson_clocks.is_running,
+                'thread': self.jetson_clocks.is_running(),
                 'config': self.jetson_clocks.is_config(),
                 'boot': self.jetson_clocks.boot}
         # -- NVP MODEL --

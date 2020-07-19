@@ -185,7 +185,7 @@ class JTOPGUI:
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
         status = [self.jetson.board.hardware["TYPE"]]
         if self.jetson.jetson_clocks is not None:
-            status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks)]
+            status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks.status.capitalize())]
         if self.jetson.nvpmodel is not None:
             status += [self.jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')]
         str_xterm = ' - '.join(status)
@@ -275,6 +275,10 @@ class JTOPGUI:
             elif self.key == ord('q') or self.key == ord('Q') or self.ESC_BUTTON(self.key):
                 # keyboard check quit button
                 return True
+            else:
+                page = self.pages[self.n_page]
+                # Run key controller
+                page.keyboard(self.key)
             # Store old value key
             self.old_key = self.key
         return False

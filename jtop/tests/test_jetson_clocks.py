@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import time
 from jtop import jtop
+from ..service import JtopServer
+# test functions
+from .common import remove_tests
 MAX_COUNT = 10
 
 
@@ -73,4 +77,63 @@ def test_set_boot(jtop_server):
             counter += 1
         # Check if is not set
         assert not jetson.jetson_clocks.boot
+
+
+def test_boot_set_true():
+    # Clean test files
+    remove_tests()
+    # Make a new object
+    jtop_server = JtopServer(force=True, path_fan=['tests/fan/'])
+    # Re run jtop_server
+    jtop_server.start()
+    # Check if is alive
+    assert jtop_server.is_alive()
+    # Run jtop
+    with jtop() as jetson:
+        # Check status boot
+        jetson.jetson_clocks.boot = True
+        # Wait jetson_clocks boot
+        counter = 0
+        while jetson.ok():
+            if jetson.jetson_clocks.boot or counter == MAX_COUNT:
+                break
+            counter += 1
+    # Close service
+    jtop_server.close()
+    time.sleep(1.0)
+    # Check if is alive
+    assert not jtop_server.is_alive()
+    # Remove object
+    del jtop_server
+    # Make a new object
+    jtop_server = JtopServer(force=True, path_fan=['tests/fan/'])
+    # Re run jtop_server
+    jtop_server.start()
+    # Check if is alive
+    assert jtop_server.is_alive()
+    # Check if is booting
+    with jtop() as jetson:
+        # Check jetson_clocks status
+        assert jetson.jetson_clocks.status == 'booting' or jetson.jetson_clocks.status == 'inactive'
+        # check status is false
+        assert not bool(jetson.jetson_clocks)
+        # Set true jetson_clocks
+        jetson.jetson_clocks = True
+        # Wait jetson_clocks on
+        counter = 0
+        while jetson.ok():
+            if bool(jetson.jetson_clocks) or counter == MAX_COUNT:
+                break
+            counter += 1
+        # Check jetson_clocks status
+        assert jetson.jetson_clocks.status == 'running'
+        # Check if is true
+        assert bool(jetson.jetson_clocks)
+    # Close service
+    jtop_server.close()
+    time.sleep(1.0)
+    # Check if is alive
+    assert not jtop_server.is_alive()
+    # Clean test files
+    remove_tests()
 # EOF

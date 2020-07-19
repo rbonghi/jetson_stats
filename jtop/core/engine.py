@@ -23,15 +23,45 @@ class Engine(object):
     def __init__(self):
         self.nvjpg = None
         self.msenc = None
+        self._engines = {}
 
     def _update(self, tegrastats):
         self.ape = tegrastats['APE']
+        self._engines['ape'] = self.ape
         self.nvenc = tegrastats['NVENC']
+        self._engines['nvenc'] = self.nvenc
         self.nvdec = tegrastats['NVDEC']
+        self._engines['nvdec'] = self.nvdec
         if 'MSENC' in tegrastats:
             self.msenc = tegrastats['MSENC']
+            self._engines['msenc'] = self.msenc
         if 'NVJPG' in tegrastats:
             self.nvjpg = tegrastats['NVJPG']
+            self._engines['nvjpg'] = self.nvjpg
+
+    def items(self):
+        return self._engines.items()
+
+    def get(self, name, value=None):
+        if name in self._engines:
+            return self._engines[name]
+        else:
+            return value
+
+    def __getitem__(self, name):
+        return self._engines[name]
+
+    def __iter__(self):
+        return iter(self._engines)
+
+    def __next__(self):
+        return next(self._engines)
+
+    def __len__(self):
+        return len(self._engines)
+
+    def __repr__(self):
+        return str(self._engines)
 
 
 def nvjpg(path="/sys/kernel/debug/clk/nvjpg"):
