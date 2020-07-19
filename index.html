@@ -93,7 +93,7 @@
 <li><a class="reference internal" href="#id7">**jetson_config**</a></li>
 <li><a class="reference internal" href="#id9">**jetson_release**</a></li>
 <li><a class="reference internal" href="#id12">**jetson_swap**</a></li>
-<li><a class="reference internal" href="#id14">**jetson_variables**</a></li>
+<li><a class="reference internal" href="#id14">**jetson variables**</a></li>
 </ul>
 </li>
 </ul>
@@ -190,7 +190,7 @@
 <li><p><a class="reference external" href="#jetson_config">jetson_config</a></p></li>
 <li><p><a class="reference external" href="#jetson_release">jetson_release</a></p></li>
 <li><p><a class="reference external" href="#jetson_swap">jetson_swap</a></p></li>
-<li><p><a class="reference external" href="#jetson_variables">jetson_variables</a></p></li>
+<li><p><a class="reference external" href="#jetson_variables">jetson variables</a></p></li>
 </ul>
 <p>Read the <a class="reference external" href="https://github.com/rbonghi/jetson_stat/wiki">Wiki</a> for more detailed information or read the package <a class="reference external" href="https://rbonghi.github.io/jetson_stats">documentation</a>.</p>
 <div class="section" id="install">
@@ -207,26 +207,26 @@
 <p>It is a system monitoring utility that runs on the terminal and see and <strong>control</strong> realtime the status of your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a>. CPU, RAM, GPU status and frequency and other…</p>
 <p>The prompt interface will be show like this image, <strong>now clickable!</strong>:</p>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif" /></a>
-<p>You can run the jtop with (<em>Suggested</em> to run with <strong>sudo</strong>)</p>
-<div class="highlight-elm notranslate"><div class="highlight"><pre><span></span><span class="nv">sudo</span> <span class="nv">jtop</span>
+<p>You can run the jtop simple using a simple command <code class="docutils literal notranslate"><span class="pre">jtop</span></code></p>
+<p>YES! Sudo is <strong>not</strong> more required!</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@jetson-xavier-nx:~/$</span> jtop
 </pre></div>
 </div>
-<p>Other options are availables with <code class="docutils literal notranslate"><span class="pre">-h</span></code> option:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@jetson-nano:~/$</span> sudo jtop -h
-<span class="go">usage: jtop [-h] [--debug] [--no-warnings] [--restore] [--loop] [-r REFRESH]</span>
-<span class="go">            [-p PAGE] [-v]</span>
+<p>Other options are available with <code class="docutils literal notranslate"><span class="pre">-h</span></code> option:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@jetson-xavier-nx:~/$</span> jtop -h
+<span class="go">usage: jtop [-h] [--no-warnings] [--restore] [--loop] [-r REFRESH] [-p PAGE]</span>
+<span class="go">            [-v]</span>
 
 <span class="go">jtop is system monitoring utility and runs on terminal</span>
 
 <span class="go">optional arguments:</span>
 <span class="go">  -h, --help            show this help message and exit</span>
-<span class="go">  --debug               Run with debug logger</span>
-<span class="go">  --no-warnings         Do not show warnings</span>
-<span class="go">  --restore             Reset Jetson configuration</span>
-<span class="go">  --loop                Automatically switch page every 5s</span>
+<span class="go">  --no-warnings         Do not show warnings (default: False)</span>
+<span class="go">  --restore             Reset Jetson configuration (default: False)</span>
+<span class="go">  --loop                Automatically switch page every 5s (default: False)</span>
 <span class="go">  -r REFRESH, --refresh REFRESH</span>
-<span class="go">                        refresh interval</span>
-<span class="go">  -p PAGE, --page PAGE  Open fix page</span>
+<span class="go">                        refresh interval (default: 500)</span>
+<span class="go">  -p PAGE, --page PAGE  Open fix page (default: 1)</span>
 <span class="go">  -v, --version         show program&#39;s version number and exit</span>
 </pre></div>
 </div>
@@ -286,8 +286,8 @@ usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
 </div>
 </div>
 <div class="section" id="id14">
-<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_variables">**jetson_variables**</a><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
-<p>This script generate the easy environment variables to know which is your Hardware version of the Jetson and which Jetpack you have already installed</p>
+<h2><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_variables">**jetson variables**</a><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
+<p>When you install jetson-stats in your bash will be available a list of new environment variables to know which which hardware version is available are you working, which Jetpack is installed and other variable show below</p>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png" /></a>
 </div>
 </div>
