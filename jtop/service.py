@@ -254,7 +254,7 @@ class JtopServer(Process):
                         if self.tegra.open(interval=interval):
                             # Start jetson_clocks
                             if self.jetson_clocks is not None:
-                                self.jetson_clocks.start()
+                                self.jetson_clocks.start(interval)
                             # Set interval value
                             self.interval.value = interval
                             # Status start tegrastats

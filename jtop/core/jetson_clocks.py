@@ -35,6 +35,7 @@ COMMAND_TIMEOUT = 3.0
 CONFIG_DEFAULT_BOOT = False
 CONFIG_DEFAULT_DELAY = 60  # In seconds
 CONFIG_DEFAULT_L4T_FILE = "l4t_dfs.conf"
+JC_MIN_SLEEP = 0.05
 
 # CPU Cluster regex
 # CPU Cluster Switching: Disabled
@@ -217,9 +218,9 @@ class JetsonClocksService(object):
 
     def __init__(self, config, fan, jetson_clocks_path):
         # Thread event show
-        self._running = True
+        self._running = False
         self.event_show = Event()
-        self._thread = Thread(target=self._th_show)
+        self._thread = None
         # Thread event jetson_clocks set
         self._set_jc = None
         # nvpmodel
@@ -379,16 +380,21 @@ class JetsonClocksService(object):
     def show(self):
         return self._show
 
-    def _th_show(self):
+    def _th_show(self, interval):
         cmd = Command([self.jc_bin, '--show'])
         try:
             while self._running:
                 try:
+                    start = time.time()
                     lines = cmd(timeout=COMMAND_TIMEOUT)
                     self._show = decode_show_message(lines)
                     # Set event from jetson_clocks
                     if not self.event_show.is_set():
                         self.event_show.set()
+                    # Measure jetson_clocks sleep time
+                    delta = time.time() - start
+                    sleep_time = interval - delta if interval - delta > JC_MIN_SLEEP else JC_MIN_SLEEP
+                    time.sleep(sleep_time)
                 except Command.TimeoutException as e:
                     logger.warning("Timeout {}".format(e))
         except Exception as e:
@@ -402,13 +408,13 @@ class JetsonClocksService(object):
         self._running = False
         logger.debug("Close 'jetson_clocks --show' thread")
 
-    def start(self):
+    def start(self, interval):
         # If there are exception raise
         self._error_status()
         # Check if thread show is running or not
         if not self._running:
-            logger.debug("Reinitialize thread jetson_clocks show")
-            self._thread = Thread(target=self._th_show)
+            logger.debug("Initialize thread jetson_clocks show inverval= {interval}s".format(interval=interval))
+            self._thread = Thread(target=self._th_show, args=(interval + 0.2, ))
         # If thread is not alive start
         if not self._thread.is_alive():
             self._running = True
