@@ -248,8 +248,9 @@ class FanService(object):
         # Convert in PWM
         pwm = self._ValueToPWM(value)
         # Write PWM value
-        with open(self.path + 'target_pwm', 'w') as f:
-            f.write(str(pwm))
+        if self.isTPWM and os.access(self.path + 'target_pwm', os.W_OK):
+            with open(self.path + 'target_pwm', 'w') as f:
+                f.write(str(pwm))
 
     @property
     def auto(self):
@@ -264,8 +265,9 @@ class FanService(object):
         # Check limit speed
         value = 1 if value else 0
         # Write status control value
-        with open(self.path + 'temp_control', 'w') as f:
-            f.write(str(value))
+        if self.isCTRL and os.access(self.path + 'temp_control', os.W_OK):
+            with open(self.path + 'temp_control', 'w') as f:
+                f.write(str(value))
 
     def _PWMtoValue(self, pwm):
         pwm = int(pwm)

@@ -413,7 +413,7 @@ class JetsonClocksService(object):
         self._error_status()
         # Check if thread show is running or not
         if not self._running:
-            logger.debug("Initialize thread jetson_clocks show inverval= {interval}s".format(interval=interval))
+            logger.debug("Initialize thread jetson_clocks show interval= {interval}s".format(interval=interval))
             self._thread = Thread(target=self._th_show, args=(interval + 0.2, ))
         # If thread is not alive start
         if not self._thread.is_alive():
