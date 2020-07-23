@@ -241,7 +241,17 @@ class JetsonClocksService(object):
         self.nvpmodel = nvpmodel
         # Update status jetson_clocks
         cmd = Command([self.jc_bin, '--show'])
-        lines = cmd(timeout=COMMAND_TIMEOUT)
+        for idx in range(5):
+            try:
+                lines = cmd(timeout=COMMAND_TIMEOUT)
+                break
+            except Command.CommandException as error:
+                logger.error("[{idx}] {error}".format(idx=idx, error=error))
+                # Sleep for a while before run again this script
+                time.sleep(1.0)
+        if idx == 4:
+            raise JtopException("I cannot initialize jetson_clocks controller")
+        # Decode jetson_clocks --show
         self._show = decode_show_message(lines)
         if not self.event_show.is_set():
             self.event_show.set()
@@ -454,7 +464,7 @@ class JetsonClocksService(object):
         cmd = Command([self.jc_bin, '--store', self.config_l4t])
         try:
             message = cmd(timeout=COMMAND_TIMEOUT)
-        except Command.TimeoutException:
+        except Command.CommandException:
             return False
         logger.info("Store jetson_clocks configuration in {file}".format(file=self.config_l4t))
         # Extract result

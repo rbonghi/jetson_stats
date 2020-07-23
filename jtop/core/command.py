@@ -40,14 +40,19 @@ EXTRA_TIMEOUT = 1.0
 
 class Command(object):
 
-    class TimeoutException(Exception):
+    class CommandException(Exception):
 
-        def __init__(self, message, errno=-1):
+        def __init__(self, message, errno):
             self.message = message
             self.errno = errno
 
         def __str__(self):
             return "[errno:{errno}] {message}".format(message=self.message, errno=self.errno)
+
+    class TimeoutException(CommandException):
+
+        def __init__(self):
+            super(Command.TimeoutException, self).__init__("Process does not replied in time", -1)
 
     @staticmethod
     def run_command(command, repeat=5, timeout=2):
@@ -57,7 +62,7 @@ class Command(object):
                 return cmd(timeout=timeout)
             except Command.TimeoutException as error:
                 logger.error("[{idx}] {error}".format(idx=idx, error=error))
-        raise Command.TimeoutException("Error to start {command}".format(command=command))
+        raise Command.CommandException("Error to start {command}".format(command=command), -2)
 
     def __init__(self, command):
         self.process = None
@@ -102,9 +107,9 @@ class Command(object):
             ex_value.__traceback__ = tb_str
             raise ex_value
         if is_timeout:
-            raise Command.TimeoutException('Process does not replied in time', -1)
+            raise Command.TimeoutException()
         if self.process.returncode != 0:
-            raise Command.TimeoutException('Error process:', self.process.returncode)
+            raise Command.CommandException('Error process:', self.process.returncode)
         return list(out_queue.queue)
 
     def communicate(self, timeout=None):
