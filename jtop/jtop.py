@@ -196,7 +196,7 @@ class jtop(Thread):
         """
         self._observers.discard(observer)
 
-    def restore(self):
+    def restore(self, max_counter=10):
         """
         This block method will restore all jtop configuration, in order:
 
@@ -208,54 +208,72 @@ class jtop(Thread):
         * If active **disable** the jtop swap
         * **Clear** the internal jtop configuration file
 
-        :return: List of all operations to restore your NVIDIA Jetson
-        :rtype: dict
+        .. code-block:: python
+
+            for status, message in jetson.restore():
+                if status:
+                    print(message)
+                else:
+                    print("Fail")
+
+        :param max_counter: Counter time for each test before fail
+        :type max_counter: int
+        :return: Generator of all operations to restore your NVIDIA Jetson
+        :rtype: generator
         :raises JtopException: if the connection with the server is lost,
             not active or your user does not have the permission to connect to *jetson_stats.service*
         """
-        status = {}
         # Reset jetson_clocks
         if self.jetson_clocks is not None:
             # Disable jetson_clocks
             self.jetson_clocks = False
             # Wait jetson_clocks boot
-            while self.ok():
+            counter = 0
+            while self.ok() or counter == max_counter:
                 if not self.jetson_clocks:
                     break
-            status['jetson_clocks'] = bool(self.jetson_clocks)
+                counter += 1
+            yield counter != max_counter, "jetson_clocks off"
             # Disable jetson_clocks on boot
             self.jetson_clocks.boot = False
             # Wait jetson_clocks boot
-            while self.ok():
+            counter = 0
+            while self.ok() or counter == max_counter:
                 if not self.jetson_clocks.boot:
                     break
-            status['jetson_clocks boot'] = bool(self.jetson_clocks.boot)
+                counter += 1
+            yield counter != max_counter, "jetson_clocks boot off"
         # Reset fan control
         if self.fan is not None:
             # Reset mode fan
             self.fan.mode = 'default'
-            while self.ok():
+            counter = 0
+            while self.ok() or counter == max_counter:
                 if self.fan.mode == 'default':
                     break
-            status['fan mode'] = False
+                counter += 1
+            yield counter != max_counter, "fan mode set default"
             # Reset speed to zero
             self.fan.speed = 0
-            while self.ok():
+            counter = 0
+            while self.ok() or counter == max_counter:
                 if self.fan.measure == 0:
                     break
-            status['fan speed'] = False
+                counter += 1
+            yield counter != max_counter, "Fan speed={measure}".format(measure=self.fan.measure)
         # Switch off swap
         if self.swap.is_enable:
             # Deactivate swap
             self.swap.deactivate()
-            while self.ok():
+            counter = 0
+            while self.ok() or counter == max_counter:
                 if not self.swap.is_enable:
                     break
-            status['swap'] = bool(self.swap.is_enable)
+                counter += 1
+            yield counter != max_counter, "Swap disabled"
         # Clear config file
         self._controller.put({'config': 'reset'})
-        status['config'] = False
-        return status
+        yield True, "Config disabled"
 
     @property
     def engine(self):

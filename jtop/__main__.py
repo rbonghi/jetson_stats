@@ -128,12 +128,12 @@ def main():
     interval = float(args.refresh / 1000.0)
     # Restore option
     if args.restore:
+        print("Restore:")
         with jtop(interval=interval) as jetson:
             if jetson.ok():
-                restore = jetson.restore()
-                for name in sorted(restore):
-                    status = bcolors.ok() if not restore[name] else bcolors.fail()
-                    print("[{status}] Restore: {name}".format(name=name.capitalize(), status=status))
+                for status, name in jetson.restore():
+                    status = bcolors.ok() if status else bcolors.fail()
+                    print(" [{status}] {name}".format(name=name.capitalize(), status=status))
             # Write warnings
             warning_messages(jetson, args.no_warnings)
         # Close service
