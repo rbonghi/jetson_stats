@@ -66,7 +66,6 @@ from .core import (
     Board,
     Engine,
     Swap,
-    CPU,
     Fan,
     NVPModel,
     get_uptime,
@@ -134,8 +133,6 @@ class jtop(Thread):
         self._thread_libraries.start()
         # Initialize engines
         self._engine = Engine()
-        # Initialize CPU
-        self._cpu = CPU()
         # Initialize swap
         self._swap = None
         # Load jetson_clocks status
@@ -271,7 +268,7 @@ class jtop(Thread):
         * **NVJPG** in MHz (If supported in your board)
 
         :return: List of all active engines
-        :rtype: dict
+        :rtype: Engine
         """
         return self._engine
 
@@ -281,14 +278,31 @@ class jtop(Thread):
         Board status, in this property you can find:
 
         * info
-            * Board name
-            * Jetpack
+            * machine
+            * jetpack
             * L4T (Linux for Tegra)
-        * hardware (All hardware information)
-        * libraries (All libraries installed)
+        * hardware
+            * TYPE
+            * CODENAME
+            * SOC
+            * CHIP_ID
+            * BOARDIDS
+            * MODULE
+            * BOARD
+            * CUDA_ARCH_BIN
+            * SERIAL_NUMBER
+        * libraries
+            * CUDA
+            * cuDNN
+            * TensorRT
+            * VisionWorks
+            * OpenCV
+            * OpenCV-Cuda
+            * VPI
+            * Vulkan
 
         :return: Status board, hardware and libraries
-        :rtype: dict
+        :rtype: Board
         """
         # Wait thread end
         self._thread_libraries.join()
@@ -337,7 +351,7 @@ class jtop(Thread):
         * *manual* - The fan speed is the same that you have set in *jetson.fan.speed*
 
         :return: Status Fan
-        :rtype: dict
+        :rtype: Fan or None
         :raises ValueError: Wrong speed number or wrong mode name
         """
         return self._fan
@@ -383,7 +397,7 @@ class jtop(Thread):
             print(jetson.nvpmodel.status)
 
         :return: Return the name of NV Power Mode
-        :rtype: string or None
+        :rtype: NVPModel or None
         :raises JtopException: if the nvp model does not exist*
         """
         return self._nvp
@@ -436,7 +450,7 @@ class jtop(Thread):
             print(jetson.jetson_clocks.status)
 
         :return: status jetson_clocks script
-        :rtype: bool
+        :rtype: JetsonClocks
         :raises ValueError: Wrong jetson_clocks value
         """
         return self._jc
@@ -706,7 +720,7 @@ class jtop(Thread):
         :rtype: dict
         """
         # Return CPU status
-        return self._cpu
+        return self._stats['cpu']
 
     @property
     def cluster(self):
@@ -816,8 +830,6 @@ class jtop(Thread):
         self._stats = data
         # -- ENGINES --
         self._engine._update(data['engines'])
-        # -- CPU --
-        self._cpu._update(data['cpu'])
         # -- SWAP --
         self._swap._update(data['swap'])
         # -- FAN --
