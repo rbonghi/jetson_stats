@@ -215,6 +215,9 @@ class JtopServer(Process):
                         if command == 'reset':
                             logger.info('Reset configuration')
                             self.config.clear()
+                            if self.jetson_clocks is not None:
+                                logger.info('Remove jetson_clocks config')
+                                self.jetson_clocks.clear()
                     if 'jc' in control:
                         jc = control['jc']
                         # Enable / disable jetson_clocks
