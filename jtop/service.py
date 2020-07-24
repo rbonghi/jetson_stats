@@ -55,7 +55,7 @@ except ImportError:
 
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
-PATH_FAN = ['/sys/kernel/debug/tegra_fan/', '/sys/devices/pwm-fan/']
+PATH_FAN = ['/sys/kernel/debug/tegra_fan', '/sys/devices/pwm-fan']
 PATH_NVPMODEL = ['nvpmodel']
 # Pipe configuration
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
@@ -152,11 +152,7 @@ class JtopServer(Process):
         # Load board information
         self.board = load_jetson_variables()
         # Initialize Fan
-        try:
-            self.fan = FanService(self.config, path_fan)
-        except JtopException as error:
-            logger.warning("{error} in paths {path}".format(error=error, path=path_fan))
-            self.fan = None
+        self.fan = FanService(self.config, path_fan)
         # Initialize jetson_clocks controller
         try:
             self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)
@@ -184,8 +180,7 @@ class JtopServer(Process):
         if self.jetson_clocks is not None:
             self.jetson_clocks.initialization(self.nvpmodel)
         # Initialize jetson_fan
-        if self.fan is not None:
-            self.fan.initialization(self.jetson_clocks)
+        self.fan.initialization(self.jetson_clocks)
         # Initialize variables
         timeout = None
         interval = 1
@@ -264,8 +259,8 @@ class JtopServer(Process):
                             'board': self.board,
                             'interval': self.interval.value,
                             'swap': self.swap.path,
+                            'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks is not None,
-                            'fan': self.fan.get_configs() if self.fan is not None else False,
                             'nvpmodel': self.nvpmodel is not None}
                         self.q.put({'init': init})
                     # Update timeout interval
@@ -486,8 +481,7 @@ class JtopServer(Process):
         data['other'] = dict((k, tegrastats[k]) for k in tegrastats if k not in LIST_PRINT)
         # -- FAN --
         # Update status fan speed
-        if self.fan is not None:
-            data['fan'] = self.fan.update()
+        data['fan'] = self.fan.update()
         # -- JETSON_CLOCKS --
         if self.jetson_clocks is not None:
             data['jc'] = {

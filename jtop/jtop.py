@@ -369,7 +369,7 @@ class jtop(Thread):
         * *manual* - The fan speed is the same that you have set in *jetson.fan.speed*
 
         :return: Status Fan
-        :rtype: Fan or None
+        :rtype: Fan
         :raises ValueError: Wrong speed number or wrong mode name
         """
         return self._fan
@@ -851,8 +851,7 @@ class jtop(Thread):
         # -- SWAP --
         self._swap._update(data['swap'])
         # -- FAN --
-        if 'fan' in data:
-            self._fan._update(data['fan'])
+        self._fan._update(data['fan'])
         # -- JETSON_CLOCKS --
         if 'jc' in data:
             self._jc._update(data['jc'])
@@ -964,8 +963,7 @@ class jtop(Thread):
         if init['jc']:
             self._jc = JetsonClocks(self._controller)
         # Init FAN (If exist)
-        if init['fan']:
-            self._fan = Fan(self._controller, init['fan'])
+        self._fan = Fan(self._controller, init['fan'])
         # Init NVP model (if exist)
         if init['nvpmodel']:
             self._nvp = NVPModel()

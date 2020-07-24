@@ -33,7 +33,7 @@ class CTRL(Page):
         # Only if exist a fan will be load a chart
         # Initialize FAN chart
         self.chart_fan = Chart(jetson, "FAN", self.update_chart, line="o", color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
-        if self.jetson.fan is None:
+        if self.jetson.fan:
             self.chart_fan.statusChart(False, "NO FAN")
         # Initialize buttons
         self.service_start = Button(stdscr, key="s", action=self.action_service_start)
@@ -45,7 +45,7 @@ class CTRL(Page):
             mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
             self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
         # Fan controller
-        if self.jetson.fan is not None:
+        if self.jetson.fan:
             self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
             self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
             # Fan options
@@ -100,8 +100,8 @@ class CTRL(Page):
         if jetson.fan is None:
             return {}
         return {
-            'value': [jetson.fan.measure],
-            'active': jetson.fan is not None
+            'value': [jetson.fan.get('measure', 0)],
+            'active': True if jetson.fan else False
         }
 
     @check_curses
@@ -167,7 +167,7 @@ class CTRL(Page):
         size_y = [start_y, height - 3]
         # Add label
         label = ''
-        if self.jetson.fan is not None:
+        if self.jetson.fan:
             # Change size chart
             size_y = [start_y + 3, height - 3]
             # Read status control fan
