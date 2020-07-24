@@ -274,7 +274,7 @@ class JetsonClocksService(object):
             self._set_jc.start()
 
     def _fix_fan(self, speed, status):
-        logger.debug("fan mode: {mode} - speed {speed}".format(mode=self.fan.mode, speed=self.fan.speed))
+        logger.debug("fan mode: {mode}".format(mode=self.fan.mode))
         # Configure fan
         if self.fan.mode == 'system':
             # Read status
@@ -308,13 +308,11 @@ class JetsonClocksService(object):
             logger.info("Starting jetson_clocks in: {delta}s".format(delta=delta))
             time.sleep(delta)
         # Read fan speed
-        if self.fan is not None:
-            speed = self.fan.speed if self.fan.is_speed else 0
+        speed = self.fan.speed if self.fan.is_speed else 0
         # Start jetson_clocks
         Command.run_command([self.jc_bin], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
-        if self.fan is not None:
-            self._fix_fan(speed, True)
+        self._fix_fan(speed, True)
         # Reset nvpmodel
         if reset and self.nvpmodel is not None:
             self.nvpmodel.reset()
@@ -324,13 +322,11 @@ class JetsonClocksService(object):
         JetsonClocksService.set_status = status
         logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
         # Read fan speed
-        if self.fan is not None:
-            speed = self.fan.speed if self.fan.is_speed else 0
+        speed = self.fan.speed if self.fan.is_speed else 0
         # Run jetson_clocks
         Command.run_command([self.jc_bin, '--restore', self.config_l4t], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
-        if self.fan is not None:
-            self._fix_fan(speed, False)
+        self._fix_fan(speed, False)
         # Reset nvpmodel
         if reset and self.nvpmodel is not None:
             self.nvpmodel.reset()

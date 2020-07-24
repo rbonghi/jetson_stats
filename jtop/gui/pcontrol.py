@@ -157,7 +157,7 @@ class CTRL(Page):
             self.stdscr.addstr(start_y + 10, start_x + 16, str(nvp_id), curses.A_NORMAL)
             # Status NVP model service
             if nvpmodel.is_running:
-                self.stdscr.addch(start_y + 10, start_x+ 25, curses.ACS_DIAMOND, curses.color_pair(2) | curses.A_BOLD)
+                self.stdscr.addch(start_y + 10, start_x + 25, curses.ACS_DIAMOND, curses.color_pair(2) | curses.A_BOLD)
             # Draw keys to increase nvpmodel
             if nvp_id != len(self.jetson.nvpmodel.modes) - 1:
                 self.nvp_increase.draw(start_y + 9, start_x + 18, key, mouse)
