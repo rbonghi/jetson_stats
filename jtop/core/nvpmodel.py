@@ -57,6 +57,10 @@ class NVPModel(object):
         self._mode = ""
 
     @property
+    def is_running(self):
+        return self._running
+
+    @property
     def status(self):
         return [self._nvpm[k]['status'] for k in sorted(self._nvpm)]
 
@@ -113,6 +117,7 @@ class NVPModel(object):
         # Update nvpm modes
         self._nvpm = nvp_status['modes']
         self._mode = nvp_status['mode']
+        self._running = nvp_status['thread']
         self._id = NVP_get_id(self.modes, self._mode)
 
 

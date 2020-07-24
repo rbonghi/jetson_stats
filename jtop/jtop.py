@@ -400,6 +400,7 @@ class jtop(Thread):
         * **id** - ID name
         * **modes** - A list with all mode available in your board
         * **status** - A list of status for each NVP model (False if the nvpmodel is in failure)
+        * **is_running** - Status updating NVP model service
 
         The access of this properities is available like below
 

@@ -497,6 +497,7 @@ class JtopServer(Process):
                 self.nvp_mode = nvp_mode
             data['nvp'] = {
                 'modes': self.nvpmodel.modes(),
+                'thread': self.nvpmodel.is_running(),
                 'mode': self.nvp_mode}
         # -- Cluster --
         if 'cluster' in jetson_clocks_show:
