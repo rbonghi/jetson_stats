@@ -140,7 +140,7 @@ class FanService(object):
         self.is_debug = 'debug' in self.path if self.path is not None else False
         # Set list configurations
         if self.path is None:
-            self.CONFIGS = None
+            self.CONFIGS = ['default']
         elif self.is_debug:
             self.CONFIGS = ['default', 'manual']
         else:
