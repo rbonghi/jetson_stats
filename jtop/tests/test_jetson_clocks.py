@@ -113,8 +113,6 @@ def test_boot_set_true():
     assert jtop_server.is_alive()
     # Check if is booting
     with jtop() as jetson:
-        # Check jetson_clocks status
-        assert jetson.jetson_clocks.status == 'booting' or jetson.jetson_clocks.status == 'inactive'
         # check status is false
         assert not bool(jetson.jetson_clocks)
         # Set true jetson_clocks

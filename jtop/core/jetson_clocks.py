@@ -270,7 +270,7 @@ class JetsonClocksService(object):
         config = self._config.get('jetson_clocks', {})
         if config.get('boot', CONFIG_DEFAULT_BOOT):
             # Start thread Service client
-            self._set_jc = Thread(target=self._th_start, args=('booting', False, ))
+            self._set_jc = Thread(target=self._th_start, args=(False, ))
             self._set_jc.start()
 
     def _fix_fan(self, speed, status):
@@ -291,9 +291,8 @@ class JetsonClocksService(object):
         elif self.fan.mode == 'default':
             self.fan.set_mode('default', status)
 
-    def _th_start(self, status, reset):
-        JetsonClocksService.set_status = status
-        logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
+    def _th_start(self, reset):
+        JetsonClocksService.set_status = 'activating'
         # Check which version is L4T is loaded
         # if is before the 28.1 require to launch jetson_clock.sh only 60sec before the boot
         # https://devtalk.nvidia.com/default/topic/1027388/jetson-tx2/jetson_clock-sh-1-minute-delay/
@@ -304,8 +303,12 @@ class JetsonClocksService(object):
         up_time = timedelta(seconds=get_uptime())
         # If needtime make a sleep
         if up_time < boot_time:
+            JetsonClocksService.set_status = 'booting'
             delta = (boot_time - up_time).total_seconds()
             logger.info("Starting jetson_clocks in: {delta}s".format(delta=delta))
+        # Status jetson_clocks
+        logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
+        if up_time < boot_time:
             time.sleep(delta)
         # Read fan speed
         speed = self.fan.speed if self.fan.is_speed else 0
@@ -318,8 +321,8 @@ class JetsonClocksService(object):
             self.nvpmodel.reset()
         logger.info("jetson_clocks started")
 
-    def _th_stop(self, status, reset):
-        JetsonClocksService.set_status = status
+    def _th_stop(self, reset):
+        JetsonClocksService.set_status = 'deactivating'
         logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
         # Read fan speed
         speed = self.fan.speed if self.fan.is_speed else 0
@@ -349,12 +352,12 @@ class JetsonClocksService(object):
         # logger.debug("Set jetson_clocks {status}".format(status=status))
         if status:
             # Start thread Service client
-            self._set_jc = Thread(target=self._th_start, args=('activating', reset, ))
+            self._set_jc = Thread(target=self._th_start, args=(reset, ))
             self._set_jc.start()
         else:
             reset = False
             # Start thread Service client
-            self._set_jc = Thread(target=self._th_stop, args=('deactivating', reset, ))
+            self._set_jc = Thread(target=self._th_stop, args=(reset, ))
             self._set_jc.start()
         return True
 
