@@ -186,7 +186,7 @@ class CTRL(Page):
                 # Draw keys to decrease fan speed
                 self.fan_status_decrease.draw(start_y, start_x + 6, key, mouse)
                 # Draw selected number
-                speed_str = "{speed: 3.0f}%".format(speed=self.jetson.fan.speed)
+                speed_str = "{speed: >3.0f}%".format(speed=self.jetson.fan.speed)
                 self.stdscr.addstr(start_y + 1, start_x + 12, speed_str, curses.A_NORMAL)
                 # Draw keys to increase fan speed
                 self.fan_status_increase.draw(start_y, start_x + 17, key, mouse)
