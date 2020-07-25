@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>jtop package &mdash; jetson-stats 3.0.0 documentation</title>
+  <title>jtop package &mdash; jetson-stats 3.0.1 documentation</title>
   
 
   
@@ -233,22 +233,49 @@ if there is another jtop running this speed will be not used.</p>
 <ul class="simple">
 <li><dl class="simple">
 <dt>info</dt><dd><ul>
-<li><p>Board name</p></li>
-<li><p>Jetpack</p></li>
+<li><p>machine</p></li>
+<li><p>jetpack</p></li>
 <li><p>L4T (Linux for Tegra)</p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><p>hardware (All hardware information)</p></li>
-<li><p>libraries (All libraries installed)</p></li>
+<li><dl class="simple">
+<dt>hardware</dt><dd><ul>
+<li><p>TYPE</p></li>
+<li><p>CODENAME</p></li>
+<li><p>SOC</p></li>
+<li><p>CHIP_ID</p></li>
+<li><p>BOARDIDS</p></li>
+<li><p>MODULE</p></li>
+<li><p>BOARD</p></li>
+<li><p>CUDA_ARCH_BIN</p></li>
+<li><p>SERIAL_NUMBER</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>libraries</dt><dd><ul>
+<li><p>CUDA</p></li>
+<li><p>cuDNN</p></li>
+<li><p>TensorRT</p></li>
+<li><p>VisionWorks</p></li>
+<li><p>OpenCV</p></li>
+<li><p>OpenCV-Cuda</p></li>
+<li><p>VPI</p></li>
+<li><p>Vulkan</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Status board, hardware and libraries</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p>Board</p>
 </dd>
 </dl>
 </dd></dl>
@@ -372,7 +399,7 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-odd"><p>List of all active engines</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p>Engine</p>
 </dd>
 </dl>
 </dd></dl>
@@ -420,7 +447,7 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-odd"><p>Status Fan</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p>Fan</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – Wrong speed number or wrong mode name</p>
@@ -548,7 +575,7 @@ The physical allocations in virtual memory can be bigger.</p>
 <dd class="field-odd"><p>status jetson_clocks script</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dd class="field-even"><p>JetsonClocks</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – Wrong jetson_clocks value</p>
@@ -632,6 +659,7 @@ The physical allocations in virtual memory can be bigger.</p>
 <li><p><strong>id</strong> - ID name</p></li>
 <li><p><strong>modes</strong> - A list with all mode available in your board</p></li>
 <li><p><strong>status</strong> - A list of status for each NVP model (False if the nvpmodel is in failure)</p></li>
+<li><p><strong>is_running</strong> - Status updating NVP model service</p></li>
 </ul>
 <p>The access of this properities is available like below</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># NVP model name</span>
@@ -649,7 +677,7 @@ The physical allocations in virtual memory can be bigger.</p>
 <dd class="field-odd"><p>Return the name of NV Power Mode</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>string or None</p>
+<dd class="field-even"><p>NVPModel or None</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>JtopException</strong> – if the nvp model does not exist*</p>
@@ -734,7 +762,7 @@ The physical allocations in virtual memory can be bigger.</p>
 
 <dl class="method">
 <dt id="jtop.jtop.jtop.restore">
-<code class="sig-name descname">restore</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.restore" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">restore</code><span class="sig-paren">(</span><em class="sig-param">max_counter=10</em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.jtop.restore" title="Permalink to this definition">¶</a></dt>
 <dd><p>This block method will restore all jtop configuration, in order:</p>
 <ul class="simple">
 <li><p><strong>switch off</strong> jetson_clocks</p></li>
@@ -750,15 +778,25 @@ The physical allocations in virtual memory can be bigger.</p>
 <li><p>If active <strong>disable</strong> the jtop swap</p></li>
 <li><p><strong>Clear</strong> the internal jtop configuration file</p></li>
 </ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">status</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">jetson</span><span class="o">.</span><span class="n">restore</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">status</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fail&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>List of all operations to restore your NVIDIA Jetson</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_counter</strong> (<em>int</em>) – Counter time for each test before fail</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>dict</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Generator of all operations to restore your NVIDIA Jetson</p>
 </dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>JtopException</strong> – if the connection with the server is lost,
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>generator</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>JtopException</strong> – if the connection with the server is lost,
 not active or your user does not have the permission to connect to <em>jetson_stats.service</em></p>
 </dd>
 </dl>
