@@ -36,14 +36,14 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
     name = GaugeName(name) if isinstance(name, str) else name
     label = GaugeName(label) if isinstance(label, str) else label
     values = (GaugeBar(value, curses.color_pair(2)), ) if isinstance(value, (int, float)) else value
-    # Evaluate size withuout short name
+    # Evaluate size without short name
     name_size = len(name.text)
     size_bar = size - name_size - 4
     # Show short name linear gauge
     stdscr.addstr(offset, start, name.text, name.color)
     # Check if value is not a string
     if 'ON' in status:
-        # Show bracket linear gauge and label and evaluate size withuout size labels and short name
+        # Show bracket linear gauge and label and evaluate size without size labels and short name
         size_bar -= (len(label.text) + 1) if label.text else 0
         stdscr.addstr(offset, start + name_size + 1, "[" + " " * size_bar + "]", curses.A_BOLD)
         if label.text:

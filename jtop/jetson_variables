@@ -40,6 +40,7 @@ jetson_jetpack()
         "31.1.0" | "31.1") JETSON_JETPACK="4.1.1" ;;
         "31.0.2") JETSON_JETPACK="4.1" ;;
         "31.0.1") JETSON_JETPACK="4.0" ;;
+        "28.4.0") JETSON_JETPACK="3.3.3" ;;
         "28.2.1") JETSON_JETPACK="3.3 | 3.2.1" ;;
         "28.2.0" | "28.2") JETSON_JETPACK="3.2" ;;
         "28.1.0" | "28.1") JETSON_JETPACK="3.1" ;;

@@ -121,5 +121,5 @@ def test_read_fan_status(jtop_server):
 def test_read_fan_error(jtop_server_nothing):
     with jtop() as jetson:
         # Read status jetson fan
-        assert jetson.fan is None
+        assert len(jetson.fan) == 0
 # EOF

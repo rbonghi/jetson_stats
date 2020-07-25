@@ -32,7 +32,7 @@ CONFIG_DEFAULT_FAN_SPEED = 0.0
 
 def load_table(path):
     table = []
-    with open(path + 'pwm_rpm_table', 'r') as fp:
+    with open(path, 'r') as fp:
         title = []
         for line in fp.readlines():
             match = FAN_PWM_TABLE_RE.search(line)
@@ -51,41 +51,36 @@ class Fan(object):
         self._CONFIGS = CONFIGS
         # Initialize fan
         self._status = {}
-        self._mode = None
-        self._speed = None
-        self._auto = None
-        self._measure = None
-        self._rpm = None
 
     @property
     def rpm(self):
-        return self._rpm
+        return self._status.get('rpm', None)
 
     @property
     def measure(self):
-        return self._measure
+        return self._status.get('measure', None)
 
     @property
     def auto(self):
-        return self._auto
+        return self._status.get('auto', None)
 
     @property
     def mode(self):
-        return self._mode
+        return self._status.get('mode', None)
 
     @mode.setter
     def mode(self, value):
         if value not in self._CONFIGS:
             raise JtopException('Control does not available')
         # If value is the same do not do nothing
-        if self._mode == value:
+        if self.mode == value:
             return
         # Set new jetson_clocks configuration
         self._controller.put({'fan': {'mode': value}})
 
     @property
     def speed(self):
-        return self._speed
+        return self._status.get('speed', None)
 
     @speed.setter
     def speed(self, value):
@@ -97,7 +92,7 @@ class Fan(object):
         if value < 0.0 or value > 100.0:
             raise ValueError('Wrong speed. Number between [0, 100]')
         # If value is the same do not do nothing
-        if self._speed == value:
+        if self.speed == value:
             return
         # Set new jetson_clocks configuration
         self._controller.put({'fan': {'speed': value}})
@@ -108,16 +103,15 @@ class Fan(object):
 
     def _update(self, status):
         self._status = status
-        if 'mode' in status:
-            self._mode = status['mode']
-        if 'speed' in status:
-            self._speed = status['speed']
-        if 'auto' in status:
-            self._auto = status['auto']
-        if 'measure' in status:
-            self._measure = status['measure']
-        if 'rpm' in status:
-            self._rpm = status['rpm']
+
+    def get(self, key, value=None):
+        return self._status[key] if key in self._status else value
+
+    def __getitem__(self, key):
+        return self._status[key]
+
+    def __len__(self):
+        return len(self._status)
 
     def __repr__(self):
         return str(self._status)
@@ -134,24 +128,46 @@ class FanService(object):
     def __init__(self, config, fan_path):
         # Configuration
         self._config = config
-        # Initialize number max records to record
-        self.path = locate_commands("fan", fan_path)
-        # Configs
-        self.is_debug = 'debug' in self.path
-        self.CONFIGS = ['default', 'system', 'manual'] if not self.is_debug else ['default', 'manual']
-        # Init status fan
-        self.isRPM = os.path.isfile(os.path.join(self.path, 'rpm_measured'))
-        self.isCPWM = os.path.isfile(os.path.join(self.path, 'cur_pwm'))
-        self.isTPWM = os.path.isfile(os.path.join(self.path, 'target_pwm'))
-        self.isCTRL = os.path.isfile(os.path.join(self.path, 'temp_control'))
         # Initialize dictionary status
         self._status = {}
+        # Initialize number max records to record
+        try:
+            self.path = locate_commands("fan", fan_path)
+        except JtopException as error:
+            logger.warning("{error} in paths {path}".format(error=error, path=fan_path))
+            self.path = None
+        # Configs
+        self.is_debug = 'debug' in self.path if self.path is not None else False
+        # Set list configurations
+        if self.path is None:
+            self.CONFIGS = ['default']
+        elif self.is_debug:
+            self.CONFIGS = ['default', 'manual']
+        else:
+            self.CONFIGS = ['default', 'system', 'manual']
+        # Init status fan
+        self.isRPM = os.path.isfile(self.path + '/rpm_measured') if self.path is not None else False
+        self.isCPWM = os.path.isfile(self.path + '/cur_pwm') if self.path is not None else False
+        self.isTPWM = os.path.isfile(self.path + '/target_pwm') if self.path is not None else False
+        self.isCTRL = os.path.isfile(self.path + '/temp_control') if self.path is not None else False
+        self._allFiles = any([self.isRPM, self.isCPWM, self.isTPWM, self.isCTRL])
+        if not self._allFiles and self.path is not None:
+            logger.warning("No access to fan files: rpm_measured, cur_pwm, target_pwm, temp_control")
         # Max value PWM
-        self._pwm_cap = float(self._read_status('pwm_cap')) if os.path.isfile(self.path + 'pwm_cap') else 255
+        self._pwm_cap = 255
+        if self.path is not None:
+            if os.path.isfile(self.path + '/pwm_cap'):
+                self._pwm_cap = float(self._read_status('/pwm_cap'))
         # PWM RPM table
-        self.table = load_table(self.path) if os.path.isfile(self.path + 'pwm_rpm_table') else {}
+        self.table = {}
+        if self.path is not None:
+            if os.path.isfile(self.path + '/pwm_rpm_table'):
+                self.table = load_table(self.path + '/pwm_rpm_table')
         # Step time
-        self.step = int(self._read_status('step_time')) if os.path.isfile(self.path + 'step_time') else 0
+        self.step = 0
+        if self.path is not None:
+            if os.path.isfile(self.path + '/step_time'):
+                self.step = int(self._read_status('/step_time'))
         # Update variables
         self.update()
 
@@ -162,7 +178,7 @@ class FanService(object):
         # Set default speed
         self._speed = config_fan.get('speed', CONFIG_DEFAULT_FAN_SPEED)
         # Set default mode
-        mode = config_fan.get('mode', self.CONFIGS[0])
+        mode = config_fan.get('mode', self.CONFIGS[0] if self.CONFIGS else '')
         self.set_mode(mode, False)
 
     def get_configs(self):
@@ -171,7 +187,7 @@ class FanService(object):
     @property
     def mode(self):
         config_fan = self._config.get('fan', {})
-        return config_fan.get('mode', self.CONFIGS[0])
+        return config_fan.get('mode', self.CONFIGS[0] if self.CONFIGS else '')
 
     @mode.setter
     def mode(self, value):
@@ -248,8 +264,10 @@ class FanService(object):
         # Convert in PWM
         pwm = self._ValueToPWM(value)
         # Write PWM value
-        with open(self.path + 'target_pwm', 'w') as f:
-            f.write(str(pwm))
+        if self.isTPWM:
+            if os.access(self.path + '/target_pwm', os.W_OK):
+                with open(self.path + '/target_pwm', 'w') as f:
+                    f.write(str(pwm))
 
     @property
     def auto(self):
@@ -264,8 +282,10 @@ class FanService(object):
         # Check limit speed
         value = 1 if value else 0
         # Write status control value
-        with open(self.path + 'temp_control', 'w') as f:
-            f.write(str(value))
+        if self.isCTRL:
+            if os.access(self.path + '/temp_control', os.W_OK):
+                with open(self.path + '/temp_control', 'w') as f:
+                    f.write(str(value))
 
     def _PWMtoValue(self, pwm):
         pwm = int(pwm)
@@ -275,18 +295,16 @@ class FanService(object):
         return int(ceil((self._pwm_cap) * value / 100.0))
 
     def update(self):
+        if not self._allFiles:
+            return {}
         # Control temperature
-        if self.isCTRL:
-            self._status['auto'] = bool(int(self._read_status('temp_control')) == 1)
+        self._status['auto'] = bool(int(self._read_status('/temp_control')) == 1) if self.isCTRL else None
         # Read PWM
-        if self.isTPWM:
-            self._status['speed'] = self._PWMtoValue(self._read_status('target_pwm'))
+        self._status['speed'] = self._PWMtoValue(self._read_status('/target_pwm')) if self.isTPWM else None
         # Read current
-        if self.isCPWM:
-            self._status['measure'] = self._PWMtoValue(self._read_status('cur_pwm'))
+        self._status['measure'] = self._PWMtoValue(self._read_status('/cur_pwm')) if self.isCPWM else None
         # Read RPM fan
-        if self.isRPM:
-            self._status['rpm'] = int(self._read_status('rpm_measured'))
+        self._status['rpm'] = int(self._read_status('/rpm_measured')) if self.isRPM else None
         return self._status
 
     def _read_status(self, file_read):

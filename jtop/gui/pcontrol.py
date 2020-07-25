@@ -33,7 +33,7 @@ class CTRL(Page):
         # Only if exist a fan will be load a chart
         # Initialize FAN chart
         self.chart_fan = Chart(jetson, "FAN", self.update_chart, line="o", color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
-        if self.jetson.fan is None:
+        if self.jetson.fan:
             self.chart_fan.statusChart(False, "NO FAN")
         # Initialize buttons
         self.service_start = Button(stdscr, key="s", action=self.action_service_start)
@@ -45,7 +45,7 @@ class CTRL(Page):
             mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
             self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
         # Fan controller
-        if self.jetson.fan is not None:
+        if self.jetson.fan:
             self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
             self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
             # Fan options
@@ -100,8 +100,8 @@ class CTRL(Page):
         if jetson.fan is None:
             return {}
         return {
-            'value': [jetson.fan.measure],
-            'active': jetson.fan is not None
+            'value': [jetson.fan.get('measure', 0)],
+            'active': True if jetson.fan else False
         }
 
     @check_curses
@@ -141,9 +141,10 @@ class CTRL(Page):
         jetson_clocks_boot_string = "boot"
         self.stdscr.addstr(start_y + 7, start_x + 5, jetson_clocks_boot_string, curses.A_UNDERLINE)
         boot = self.jetson.jetson_clocks.boot
-        self.stdscr.addstr(start_y + 7, start_x + len(jetson_clocks_boot_string) + 6,
-                           "Enable" if boot else "Disable",
-                           curses.A_BOLD if boot else curses.A_NORMAL)
+        self.stdscr.addstr(
+            start_y + 7, start_x + len(jetson_clocks_boot_string) + 6,
+            "Enable" if boot else "Disable",
+            curses.A_BOLD if boot else curses.A_NORMAL)
         # Build NVP model list
         nvpmodel = self.jetson.nvpmodel
         if nvpmodel is not None:
@@ -154,6 +155,9 @@ class CTRL(Page):
                 self.nvp_decrease.draw(start_y + 9, start_x + 10, key, mouse)
             # Draw selected number
             self.stdscr.addstr(start_y + 10, start_x + 16, str(nvp_id), curses.A_NORMAL)
+            # Status NVP model service
+            if nvpmodel.is_running:
+                self.stdscr.addch(start_y + 10, start_x + 25, curses.ACS_DIAMOND, curses.color_pair(2) | curses.A_BOLD)
             # Draw keys to increase nvpmodel
             if nvp_id != len(self.jetson.nvpmodel.modes) - 1:
                 self.nvp_increase.draw(start_y + 9, start_x + 18, key, mouse)
@@ -164,12 +168,10 @@ class CTRL(Page):
                 select=nvp_id)
         # Evaluate size chart
         size_x = [start_x + width // 2 + 1, width - start_x - 1]
-        size_y = [start_y, height - 3]
+        size_y = [start_y + 3, height - 3]
         # Add label
         label = ''
-        if self.jetson.fan is not None:
-            # Change size chart
-            size_y = [start_y + 3, height - 3]
+        if self.jetson.fan:
             # Read status control fan
             ctrl_stat = "Auto=" + ("Enable" if self.jetson.fan.auto else "Disable")
             # Add label
@@ -177,23 +179,25 @@ class CTRL(Page):
                 label = "{current: >3.0f}% of {target: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, target=self.jetson.fan.speed, ctrl=ctrl_stat)
             else:
                 label = "{current: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, ctrl=ctrl_stat)
-            # Fan label
-            self.stdscr.addstr(start_y + 1, start_x, "Fan", curses.A_BOLD)
             if self.jetson.fan.speed is not None:
+                # Fan label
+                self.stdscr.addstr(start_y, start_x, "Fan", curses.A_NORMAL)
+                self.stdscr.addstr(start_y + 1, start_x, "Speed", curses.A_BOLD)
                 # Draw keys to decrease fan speed
-                self.fan_status_decrease.draw(start_y, start_x + 4, key, mouse)
+                self.fan_status_decrease.draw(start_y, start_x + 6, key, mouse)
                 # Draw selected number
-                self.stdscr.addstr(start_y, start_x + 10, "Speed", curses.A_BOLD)
-                speed_str = "{speed: 3.0f}%".format(speed=self.jetson.fan.speed)
-                self.stdscr.addstr(start_y + 1, start_x + 10, speed_str, curses.A_NORMAL)
+                speed_str = "{speed: >3.0f}%".format(speed=self.jetson.fan.speed)
+                self.stdscr.addstr(start_y + 1, start_x + 12, speed_str, curses.A_NORMAL)
                 # Draw keys to increase fan speed
-                self.fan_status_increase.draw(start_y, start_x + 16, key, mouse)
-            # Write list of available modes
-            self.stdscr.addstr(start_y + 1, start_x + 24, "Modes", curses.A_BOLD)
-            # Get ID from fan mode
-            fan_mode = self.jetson.fan.mode
-            fan_id = self.jetson.fan.configs.index(fan_mode)
-            self.fan_list.draw(start_y, start_x + 30, width, key, mouse, select=fan_id)
+                self.fan_status_increase.draw(start_y, start_x + 17, key, mouse)
+            if self.jetson.fan.auto is not None:
+                # Write list of available modes
+                self.stdscr.addstr(start_y, start_x + 24, "Fan", curses.A_NORMAL)
+                self.stdscr.addstr(start_y + 1, start_x + 24, "Mode", curses.A_BOLD)
+                # Get ID from fan mode
+                fan_mode = self.jetson.fan.mode
+                fan_id = self.jetson.fan.configs.index(fan_mode)
+                self.fan_list.draw(start_y, start_x + 30, width, key, mouse, select=fan_id)
         # Draw the GPU chart
         self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
 

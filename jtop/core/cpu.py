@@ -48,40 +48,4 @@ def cpu_models():
     for name, info in list_cpu.items():
         models[name] = info.get("model name", "")
     return models
-
-
-class CPU(object):
-    """
-    Find in cpuinfo information about the board
-    """
-    def __init__(self):
-        # Initialize CPU status
-        self.cpu = {}
-
-    def _update(self, cpu_status):
-        self.cpu.update(cpu_status)
-
-    def items(self):
-        return self.cpu.items()
-
-    def get(self, name, value=None):
-        if name in self.cpu:
-            return self.cpu[name]
-        else:
-            return value
-
-    def __getitem__(self, name):
-        return self.cpu[name]
-
-    def __iter__(self):
-        return iter(self.cpu)
-
-    def __next__(self):
-        return next(self.cpu)
-
-    def __len__(self):
-        return len(self.cpu)
-
-    def __repr__(self):
-        return str(self.cpu)
 # EOF

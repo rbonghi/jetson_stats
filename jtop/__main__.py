@@ -129,13 +129,13 @@ def main():
     # Restore option
     if args.restore:
         with jtop(interval=interval) as jetson:
-            if jetson.ok():
-                restore = jetson.restore()
-                for name in sorted(restore):
-                    status = bcolors.ok() if not restore[name] else bcolors.fail()
-                    print("[{status}] Restore: {name}".format(name=name.capitalize(), status=status))
             # Write warnings
             warning_messages(jetson, args.no_warnings)
+            # Restore configuration
+            if jetson.ok():
+                for status, name in jetson.restore():
+                    status = bcolors.ok() if status else bcolors.fail()
+                    print(" [{status}] {name}".format(name=name.capitalize(), status=status))
         # Close service
         exit(0)
     # jtop client start
