@@ -68,12 +68,12 @@ You can change page using _left_, _right_ arrow or _TAB_ to change page.
 ### Controls
 To control the your NVIDIA Jetson are available this keyboard commands:
 
-In page **3 MEM**:
+In page **4 MEM**:
 * **c** Clear cache
 * **s** Enable/Disable extra swap
 * **+** and **-** Increase and decrease swap size
 
-In page **4 CTRL**:
+In page **5 CTRL**:
 * **a** Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)
 * **e** Enable/Disable jetson_clocks on board boot
 * **+** and **-** Increase and decrease the NVPmodel
