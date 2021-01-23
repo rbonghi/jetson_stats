@@ -5,6 +5,8 @@
 
 **jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Xavier NX, Nano, AGX Xavier, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
 
+[:sparkling_heart: **Sponsor** jetson-stats](https://github.com/sponsors/rbonghi)
+
 When you install jetson-stats are included:
 - [Jetson stats](#jetson-stats)
 - [Install](#install)
