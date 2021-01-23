@@ -72,7 +72,7 @@ def hyperlink(url, text, hyperlink=True):
     # 5. https://stackoverflow.com/questions/44078888/clickable-html-links-in-python-3-6-shell
     # Check type of shell
     if hyperlink:
-        return u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (CTRL + Click to open this issue)".format(url=url, text=text)
+        return u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (press CTRL + Click)".format(url=url, text=text)
     else:
         return "{text} ({url})".format(url=url, text=text)
 
