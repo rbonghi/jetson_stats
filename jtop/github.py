@@ -23,7 +23,7 @@
 def jetpack_missing(repository, jetson, version):
     l4t = jetson.board.info["L4T"]
     # Title
-    title = "Jetpack not supported for [L4T {l4t}]".format(l4t=l4t)
+    title = "jetson-stats not supported for [L4T {l4t}]".format(l4t=l4t)
     # Template
     template = "jetpack-missing.md"
     # Body
@@ -35,7 +35,7 @@ def jetpack_missing(repository, jetson, version):
     # Make url
     url = make_issue(repository, title, body=body, labels="missing", template=template)
     # message shell
-    return hyperlink(url, title)
+    return hyperlink(url, "open issue")
 
 
 def board_missing(repository, jetson, version):
