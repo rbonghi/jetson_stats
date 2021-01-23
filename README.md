@@ -3,18 +3,22 @@
 
 [![CI & CD](https://github.com/rbonghi/jetson_stats/workflows/CI%20&%20CD/badge.svg)](https://github.com/rbonghi/jetson_stats/actions?query=workflow%3A%22CI+%26+CD%22)
 
-**jetson-stats** is a package to **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Xavier NX, Nano, AGX Xavier, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
+**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Xavier NX, Nano, AGX Xavier, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
 
 When you install jetson-stats are included:
-* [jtop](#jtop)
-* [jetson_config](#jetson_config)
-* [jetson_release](#jetson_release)
-* [jetson_swap](#jetson_swap)
-* [jetson variables](#jetson_variables)
+- [Jetson stats](#jetson-stats)
+- [Install](#install)
+- [**jtop**](#jtop)
+  - [Pages](#pages)
+  - [Controls](#controls)
+- [**jetson_config**](#jetson_config)
+- [**jetson_release**](#jetson_release)
+- [**jetson_swap**](#jetson_swap)
+- [**jetson variables**](#jetson-variables)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rbonghi.github.io/jetson_stats).
 
-## Install
+# Install
 
 ```elm
 sudo -H pip install -U jetson-stats
@@ -25,7 +29,7 @@ _PS: Don't forget to **reboot** your board_
 
 **You can run jtop in your python script [read here][library]**
 
-## [**jtop**][jtop] 
+# [**jtop**][jtop] 
 It is a system monitoring utility that runs on the terminal and see and **control** realtime the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
 
 The prompt interface will be show like this image, **now clickable!**:
@@ -57,7 +61,7 @@ optional arguments:
   -v, --version         show program's version number and exit
 ```
 You can change page using _left_, _right_ arrow or _TAB_ to change page.
-### Pages
+## Pages
 **jtop** have four different pages to control your NVIDIA Jetson:
 1. **ALL** Are collected all information about your board: CPUs status, Memory, *GPU*, disk, fan and all status about jetson_clocks, NVPmodel and other
 2. **GPU** A real time GPU history about your NVIDIA Jetson
@@ -65,7 +69,7 @@ You can change page using _left_, _right_ arrow or _TAB_ to change page.
 4. **MEM** A real time Memory chart and swap monitor
 5. **CTRL** Enable/Disable **jetson_clocks**, **nvpmodel** or **fan** directly from here
 6. **INFO** All information about libraries, CUDA, Serial Number, interfaces, ...
-### Controls
+## Controls
 To control the your NVIDIA Jetson are available this keyboard commands:
 
 In page **4 MEM**:
@@ -80,16 +84,16 @@ In page **5 CTRL**:
 * **f** Manual/jetson_clocks mode for your fan
 * **p** and **m** Increase and decrease the Fan speed
 
-## [**jetson_config**][jetson_config]
+# [**jetson_config**][jetson_config]
 
 Check _jetson-stats_ **health**, enable/disable **desktop**, enable/disable **jetson_clocks**, improve the performance of your **wifi** are available only in one click using **jetson_config**
 
 ![jetson_config](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_config.png)
-## [**jetson_release**][jetson_release]
+# [**jetson_release**][jetson_release]
 The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png)
-## [**jetson_swap**][jetson_swap]
+# [**jetson_swap**][jetson_swap]
 Simple manager to switch on and switch off a swapfile in your jetson.
 
 ```elm
@@ -104,7 +108,7 @@ usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
   -h | --help   This message
 ```
 
-## [**jetson variables**][jetson_variables]
+# [**jetson variables**][jetson_variables]
 When you install jetson-stats in your bash will be available a list of new environment variables to know which which hardware version is available are you working, which Jetpack is installed and other variable show below
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
