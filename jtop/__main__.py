@@ -83,7 +83,8 @@ def warning_messages(jetson, no_warnings=False):
         print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, jetson, version)))
     # Check if jetpack is missing
     if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
-        print("[{status}] Jetpack missing, try: {bold}sudo -H pip install -U jetson-stats{reset}".format(status=bcolors.warning(), bold=bcolors.BOLD, reset=bcolors.ENDC))
+        reinstall = "{bold}sudo -H pip install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC)
+        print("[{status}] Jetpack missing, try: {reinstall}".format(status=bcolors.warning(), reinstall=reinstall))
         print("   otherwhise open issue: {link}".format(link=jetpack_missing(REPOSITORY, jetson, version)))
 
 
