@@ -17,6 +17,7 @@ jobs:
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
         
     steps:
+    - run: "Reference: $GITHUB_REF"
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -39,6 +40,7 @@ jobs:
         sudo tox -e py${{ matrix.python-version }}
 
   docs:
+    name: Documentation
     if: startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
@@ -63,8 +65,24 @@ jobs:
         FOLDER: docs/build/html # The folder the action should deploy.
 
   deploy:
+    name: Deploy on PIP
     needs: [build, docs]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Deploying to production server on branch $GITHUB_REF"
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        sudo -H python -m pip install --upgrade pip
+        sudo -H pip install setuptools wheel twine
+    - name: Build and publish
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        sudo python setup.py sdist
+        twine upload dist/*
