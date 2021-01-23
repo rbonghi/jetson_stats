@@ -1,0 +1,72 @@
+name: CI & CD
+
+# Reference:
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
+on: [push, pull_request]
+
+# Reference
+# https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions
+
+jobs:
+  build:
+    name: Test on python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      # max-parallel: 1
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+        
+    steps:
+    - run: echo "Branch on $GITHUB_REF"
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        # Make group jetson_stats
+        sudo groupadd jetson_stats
+        # Install test dependencies
+        sudo ./tests/develop.sh -s
+        # Upgrade pip
+        sudo -H python -m pip install --upgrade pip
+        # Install tox
+        sudo -H pip install tox
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+    - name: Test with tox
+      run: |
+        sudo tox -e py${{ matrix.python-version }}
+
+  docs:
+    needs: build
+    if: startsWith(github.ref, 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2 # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
+      with:
+        persist-credentials: false
+    - name: Sphinx Build
+      # Follow: https://github.com/marketplace/actions/sphinx-build
+      uses: ammaraskar/sphinx-action@0.3
+      with:
+        docs-folder: docs/
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        build-command: make html
+        pre-build-command: pip install travis-sphinx sphinx sphinx-rtd-theme m2r
+    - name: Build and Deploy
+      # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        BRANCH: gh-pages # The branch the action should deploy to.
+        FOLDER: docs/build/html # The folder the action should deploy.
+
+  deploy:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to production server on branch $GITHUB_REF"
