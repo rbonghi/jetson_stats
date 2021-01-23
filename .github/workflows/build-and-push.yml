@@ -17,7 +17,6 @@ jobs:
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
         
     steps:
-    - run: echo "Branch on $GITHUB_REF"
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -40,8 +39,7 @@ jobs:
         sudo tox -e py${{ matrix.python-version }}
 
   docs:
-    needs: build
-    if: startsWith(github.ref, 'refs/heads/master')
+    if: startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -65,7 +63,7 @@ jobs:
         FOLDER: docs/build/html # The folder the action should deploy.
 
   deploy:
-    needs: build
+    needs: [build, docs]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
