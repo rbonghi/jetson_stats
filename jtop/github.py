@@ -35,7 +35,7 @@ def jetpack_missing(repository, jetson, version):
     # Make url
     url = make_issue(repository, title, body=body, labels="missing", template=template)
     # message shell
-    return hyperlink(url, "open issue")
+    return hyperlink(url, "open an issue on Github")
 
 
 def board_missing(repository, jetson, version):

@@ -83,9 +83,9 @@ def warning_messages(jetson, no_warnings=False):
         print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, jetson, version)))
     # Check if jetpack is missing
     if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
-        reinstall = "{bold}sudo -H pip install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC)
         print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=jetson.board.info['L4T']))
-        print("  Try {reinstall} or {link}".format(reinstall=reinstall, link=jetpack_missing(REPOSITORY, jetson, version)))
+        print("  Please, try: {bold}sudo -H pip install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+        print("  or {link}".format(link=jetpack_missing(REPOSITORY, jetson, version)))
 
 
 def exit_signal(signum, frame):
