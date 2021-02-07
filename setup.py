@@ -126,22 +126,24 @@ def install_services(copy=False):
 def pre_installer(installer, obj, copy):
     js_is_active = os.system('systemctl is-active --quiet jetson_stats') == 0
     # Run the uninstaller before to copy all scripts
-    if not is_virtualenv() and is_superuser():
-        sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-        # Install services (linking only for develop)
-        install_services(copy=copy)
-    if is_virtualenv() and not js_is_active:
-            print("----------------------------------------")
-            print("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
-            print("sudo -H pip install -U jetson-stats")
-            sys.exit(1)
-    if not is_virtualenv() and not is_superuser():
+    if not is_virtualenv():
+        if is_superuser():
+            sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+            # Install services (linking only for develop)
+            install_services(copy=copy)
+        else:
             print("----------------------------------------")
             print("Install on your host using superuser permission, like:")
             print("sudo -H pip install -U jetson-stats")
             sys.exit(1)
     else:
-        print("Skip uninstall on virtual environment")
+        if is_superuser():
+            print("Skip uninstall on virtual environment")
+        elif not js_is_active:
+            print("----------------------------------------")
+            print("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
+            print("sudo -H pip install -U jetson-stats")
+            sys.exit(1)
     # Run the default installation script
     installer.run(obj)
     # Run the restart all services before to close the installer
