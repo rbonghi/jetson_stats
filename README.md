@@ -8,19 +8,20 @@
 When you install jetson-stats are included:
 - [Jetson stats](#jetson-stats)
 - [Install](#install)
-- [**jtop**](#jtop)
+  - [Virtual environment](#virtual-environment)
+- [jtop](#jtop)
   - [Pages](#pages)
   - [Controls](#controls)
-- [**jetson_config**](#jetson_config)
-- [**jetson_release**](#jetson_release)
-- [**jetson_swap**](#jetson_swap)
-- [**jetson variables**](#jetson-variables)
+- [jetson_config](#jetson_config)
+- [jetson_release](#jetson_release)
+- [jetson_swap](#jetson_swap)
+- [jetson variables](#jetson-variables)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rbonghi.github.io/jetson_stats).
 
 # Install
 
-```elm
+```console
 sudo -H pip install -U jetson-stats
 ```
 **🚀 That's it! 🚀** 
@@ -29,7 +30,16 @@ _PS: Don't forget to **reboot** your board_
 
 **You can run jtop in your python script [read here][library]**
 
-# [**jtop**][jtop] 
+## Virtual environment
+
+If you need to install in a virtual environment like *virtualenv*, you **must** install in your host **and after** in your environment, like:
+```console
+virtualenv venv
+source venv/bin/activate
+pip install -U jetson-stats
+```
+
+# [jtop][jtop] 
 It is a system monitoring utility that runs on the terminal and see and **control** realtime the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
 
 The prompt interface will be show like this image, **now clickable!**:
@@ -84,19 +94,19 @@ In page **5 CTRL**:
 * **f** Manual/jetson_clocks mode for your fan
 * **p** and **m** Increase and decrease the Fan speed
 
-# [**jetson_config**][jetson_config]
+# [jetson_config][jetson_config]
 
 Check _jetson-stats_ **health**, enable/disable **desktop**, enable/disable **jetson_clocks**, improve the performance of your **wifi** are available only in one click using **jetson_config**
 
 ![jetson_config](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_config.png)
-# [**jetson_release**][jetson_release]
+# [jetson_release][jetson_release]
 The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png)
-# [**jetson_swap**][jetson_swap]
+# [jetson_swap][jetson_swap]
 Simple manager to switch on and switch off a swapfile in your jetson.
 
-```elm
+```console
 nvidia@jetson-nano:~/$ sudo jetson_swap -h
 usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
   -d | --dir    <directoryname> Directory to place swapfile
@@ -108,7 +118,7 @@ usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
   -h | --help   This message
 ```
 
-# [**jetson variables**][jetson_variables]
+# [jetson variables][jetson_variables]
 When you install jetson-stats in your bash will be available a list of new environment variables to know which which hardware version is available are you working, which Jetpack is installed and other variable show below
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
