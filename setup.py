@@ -42,6 +42,11 @@ import os
 from shutil import copyfile
 import sys
 import re
+import logging
+
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+log = logging.getLogger()
 
 
 # https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
@@ -51,6 +56,10 @@ def is_virtualenv():
     if hasattr(sys, 'base_prefix'):
         return sys.prefix != sys.base_prefix
     return False
+
+
+def is_superuser():
+    return os.getuid() == 0
 
 
 def list_scripts():
@@ -67,11 +76,6 @@ def list_scripts():
 
 def list_services():
     return ["services/{file}".format(file=f) for f in os.listdir("services") if os.path.isfile(os.path.join("services", f))]
-
-
-if os.getuid() != 0:
-    print("\nRequire super user")
-    sys.exit(1)
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -119,42 +123,47 @@ def install_services(copy=False):
         print("{type} {file} -> {path}".format(type=type_service, file=os.path.basename(f_service), path=path))
 
 
+def pre_installer(installer, obj, copy):
+    js_is_active = os.system('systemctl is-active --quiet jetson_stats') == 0
+    # Run the uninstaller before to copy all scripts
+    if not is_virtualenv() and is_superuser():
+        sp.call(shlex.split('./scripts/jetson_config --uninstall'))
+        # Install services (linking only for develop)
+        install_services(copy=copy)
+    if is_virtualenv() and not js_is_active:
+            print("----------------------------------------")
+            print("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
+            print("sudo -H pip install -U jetson-stats")
+            sys.exit(1)
+    if not is_virtualenv() and not is_superuser():
+            print("----------------------------------------")
+            print("Install on your host using superuser permission, like:")
+            print("sudo -H pip install -U jetson-stats")
+            sys.exit(1)
+    else:
+        print("Skip uninstall on virtual environment")
+    # Run the default installation script
+    installer.run(obj)
+    # Run the restart all services before to close the installer
+    if not is_virtualenv() and is_superuser():
+        sp.call(shlex.split('./scripts/jetson_config --install'))
+    else:
+        print("Skip install on virtual environment")
+
+
 class PostInstallCommand(install):
     """Installation mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        if not is_virtualenv():
-            sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-            # Install services (copying)
-            install_services(copy=True)
-        else:
-            print("Skip uninstall on virtual environment")
-        # Run the default installation script
-        install.run(self)
-        # Run the restart all services before to close the installer
-        if not is_virtualenv():
-            sp.call(shlex.split('./scripts/jetson_config --install'))
-        else:
-            print("Skip install on virtual environment")
+        pre_installer(install, self, True)
 
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
         # Run the uninstaller before to copy all scripts
-        if not is_virtualenv():
-            sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-            # Install services (linking)
-            install_services()
-        else:
-            print("Skip uninstall on virtual environment")
-        # Run the default installation script
-        develop.run(self)
-        # Run the restart all services before to close the installer
-        if not is_virtualenv():
-            sp.call(shlex.split('./scripts/jetson_config --install'))
-        else:
-            print("Skip install on virtual environment")
+        # Install services (linking)
+        pre_installer(develop, self, False)
 
 
 # Configuration setup module
