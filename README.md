@@ -32,7 +32,7 @@ _PS: Don't forget to **reboot** your board_
 
 ## Virtual environment
 
-If you need to install in a virtual environment like *virtualenv*, you **must** install in your host **and after** in your environment, like:
+If you need to install in a virtual environment like *virtualenv*, you **must** install before in your host **and after** in your environment, like:
 ```console
 virtualenv venv
 source venv/bin/activate
