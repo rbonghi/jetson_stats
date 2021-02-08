@@ -79,6 +79,9 @@ def check_size(height_max, width_max):
             if width >= width_max and height >= height_max:
                 return func(self, *args, **kwargs)
             else:
+                # First, clear the screen
+                self.stdscr.erase()
+                # Message
                 string_warning = "jtop"
                 string_warning_msg = "Change size window!"
                 size_window_width = "Width: " + str(width) + " >= " + str(width_max)
@@ -101,7 +104,8 @@ def check_size(height_max, width_max):
                     # Set background for all menu line
                     self.stdscr.addstr(height - 1, 0, ("{0:<" + str(width - 1) + "}").format(" "), curses.A_REVERSE)
                     # Add close option menu
-                    self.stdscr.addstr(height - 1, 1, "Q to close", curses.A_REVERSE)
+                    self.stdscr.addstr(height - 1, 1, "Q", curses.A_REVERSE | curses.A_BOLD)
+                    self.stdscr.addstr(height - 1, 2, "uit ", curses.A_REVERSE)
                 except curses.error:
                     pass
         return wrapped

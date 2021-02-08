@@ -132,7 +132,10 @@ class MEM(Page):
         # start_y = height - (r_height + 2)
         start_x = width - r_width - 1
         # Draw border legend
-        rectangle(self.stdscr, start_y, start_x, start_y + r_height, start_x + r_width)
+        try:
+            rectangle(self.stdscr, start_y, start_x, start_y + r_height, start_x + r_width)
+        except curses.error:
+            pass
         # Draw name
         self.stdscr.addstr(start_y + 1, start_x + 3, "RAM Legend", curses.A_BOLD)
         # Draw CPU
