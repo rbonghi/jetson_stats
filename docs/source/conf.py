@@ -24,7 +24,7 @@ copyright = '2020, Raffaello Bonghi'
 author = 'Raffaello Bonghi'
 
 # The full version, including alpha/beta/rc tags
-release = '3.0.3'
+release = '3.1.0'
 
 # -- General configuration ---------------------------------------------------
 
