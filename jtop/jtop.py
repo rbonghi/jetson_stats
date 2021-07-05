@@ -443,7 +443,7 @@ class jtop(Thread):
 
         where *value* is a boolean value
 
-        There are availabe other extra properties:
+        There are available other extra properties:
 
         * **boot** - You can enable and disable on boot **jetson_clocks**
         * **status** - A string with the current jetson_clocks status
