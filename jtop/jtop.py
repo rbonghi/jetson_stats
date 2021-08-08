@@ -929,7 +929,7 @@ class jtop(Thread):
             if e.errno == 2 or e.errno == 111:  # Message error: 'No such file or directory' or 'Connection refused'
                 raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
             elif e.errno == 13:  # Message error: 'Permission denied'
-                raise JtopException("I can't access to jetson_stats.service.\nPlease logout or reboot this board.")
+                raise JtopException("I can't access jetson_stats.service.\nPlease logout or reboot this board.")
             else:
                 raise FileNotFoundError(e)
         except ConnectionRefusedError as e:
@@ -940,14 +940,14 @@ class jtop(Thread):
                 raise ConnectionRefusedError(e)
         except PermissionError as e:
             if e.errno == 13:  # Permission denied
-                raise JtopException("I can't access to jetson_stats.service.\nPlease logout or reboot this board.")
+                raise JtopException("I can't access jetson_stats.service.\nPlease logout or reboot this board.")
             else:
                 raise PermissionError(e)
         except ValueError:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
-            raise JtopException("mismatch python version between library and service")
+            raise JtopException("Mismatch of Python versions between library and service")
         except AuthenticationError:
-            raise JtopException("Authentication mismatch with jetson-stats server")
+            raise JtopException("Authentication with jetson-stats server failed")
         # Initialize synchronized data and condition
         self._controller = self._broadcaster.get_queue()
         self._sync_data = self._broadcaster.sync_data()
