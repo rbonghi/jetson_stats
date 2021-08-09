@@ -60,7 +60,7 @@ jobs:
       # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
-        ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         BRANCH: gh-pages # The branch the action should deploy to.
         FOLDER: docs/build/html # The folder the action should deploy.
 
