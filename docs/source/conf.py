@@ -20,11 +20,11 @@ sys.path.insert(0, os.path.abspath('../../'))
 master_doc = 'index'
 
 project = 'jetson-stats'
-copyright = '2020, Raffaello Bonghi'
+copyright = '2020-2021, Raffaello Bonghi'
 author = 'Raffaello Bonghi'
 
 # The full version, including alpha/beta/rc tags
-release = '3.1.0'
+release = '3.1.1'
 
 # -- General configuration ---------------------------------------------------
 
