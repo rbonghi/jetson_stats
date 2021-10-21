@@ -89,15 +89,15 @@ def locate_commands(name, commands):
 def import_os_variables(SOURCE, PATTERN):
     if os.path.isfile(SOURCE):
         logger.debug("Open source file {source}".format(source=SOURCE))
-        proc = sp.Popen(['bash', '-c', 'source {source} && env'.format(source=SOURCE)], stdout=sp.PIPE, stderr=sp.PIPE)
-        # Load variables
-        source_env = {}
-        for tup in map(lambda s: s.decode("utf-8").strip().split('=', 1), proc.stdout):
-            name = tup[0].strip()
-            value = tup[1].strip()
-            if PATTERN in name:
-                source_env[name] = value
-        return source_env
+        with sp.Popen(['bash', '-c', 'source {source} && env'.format(source=SOURCE)], stdout=sp.PIPE, stderr=sp.PIPE) as proc:
+            # Load variables
+            source_env = {}
+            for tup in map(lambda s: s.decode("utf-8").strip().split('=', 1), proc.stdout):
+                name = tup[0].strip()
+                value = tup[1].strip()
+                if PATTERN in name:
+                    source_env[name] = value
+            return source_env
     else:
         logger.error("File does not exist")
         return {}
