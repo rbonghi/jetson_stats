@@ -51,6 +51,9 @@ log = logging.getLogger()
 
 # https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
 def is_virtualenv():
+    if os.path.exists(os.path.join(sys.prefix, 'conda-meta')):
+        # Conda virtual environments
+        return True
     if hasattr(sys, 'real_prefix'):
         return True
     if hasattr(sys, 'base_prefix'):
