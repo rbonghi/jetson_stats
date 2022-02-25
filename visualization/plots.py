@@ -104,6 +104,7 @@ def main():
     ax4.set_title('GPU (% used) vs time', fontdict=font1)
     ax4.set_ylabel('GPU (% used)')
     ax4.grid(color='green', linestyle='--', linewidth=0.5)
+    ax4.set_ylim([-1,109])
     ax4.axes.get_xaxis().set_ticklabels([])
 
     # GPU freq
