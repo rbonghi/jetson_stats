@@ -24,7 +24,7 @@ Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed i
 In the project root directory run the following:
 
 ```console
-sudo pip install -upgrade .
+sudo pip3 install -upgrade .
 ```
 **🚀 That's it! 🚀** 
 
