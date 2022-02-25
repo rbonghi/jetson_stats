@@ -532,8 +532,13 @@ class jtop(Thread):
         # -- CPU --
         for cpu in sorted(self.cpu):
             stats[cpu] = self.cpu[cpu].get('val', 'OFF')
+            stats[cpu+'freq'] = self.cpu[cpu].get('frq', 'OFF')
         # -- GPU --
         stats['GPU'] = self.gpu['val']
+        # -- GPU_FREQ --
+        stats['GPU_FREQ'] = self.gpu['frq']
+        # -- GPU_MAX_FREQ -i-
+        stats['GPU_MAX_FREQ'] = self.gpu['max_freq']
         # -- MTS --
         if self.mts:
             stats['MTS FG'] = self.mts['fg']
