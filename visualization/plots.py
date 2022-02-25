@@ -1,8 +1,6 @@
 import pandas as pd
-import time
 import matplotlib.pyplot as plt
 import argparse
-import numpy as np
 from matplotlib.font_manager import FontProperties
 
 
@@ -20,13 +18,13 @@ def main():
     df['sample'] = df['sample'] * 0.5
 
     # convert freq from kHz to MHz
-    df.loc[:, 'CPU1freq'] = df.loc[:, 'CPU1freq'] /1000
-    df.loc[:, 'CPU2freq'] = df.loc[:, 'CPU2freq'] /1000
-    df.loc[:, 'CPU3freq'] = df.loc[:, 'CPU3freq'] /1000
-    df.loc[:, 'CPU4freq'] = df.loc[:, 'CPU4freq'] /1000
-    df.loc[:, 'CPU5freq'] = df.loc[:, 'CPU5freq'] /1000
-    df.loc[:, 'CPU6freq'] = df.loc[:, 'CPU6freq'] /1000
-    df.loc[:, 'GPU_FREQ'] = df.loc[:, 'GPU_FREQ'] /1000
+    df.loc[:, 'CPU1freq'] = df.loc[:, 'CPU1freq'] / 1000
+    df.loc[:, 'CPU2freq'] = df.loc[:, 'CPU2freq'] / 1000
+    df.loc[:, 'CPU3freq'] = df.loc[:, 'CPU3freq'] / 1000
+    df.loc[:, 'CPU4freq'] = df.loc[:, 'CPU4freq'] / 1000
+    df.loc[:, 'CPU5freq'] = df.loc[:, 'CPU5freq'] / 1000
+    df.loc[:, 'CPU6freq'] = df.loc[:, 'CPU6freq'] / 1000
+    df.loc[:, 'GPU_FREQ'] = df.loc[:, 'GPU_FREQ'] / 1000
 
     cols_to_drop = ['MTS FG', 'MTS BG', 'RAM', 'EMC', 'SWAP', 'APE', 'NVENC', 'NVDEC', 'NVJPG', 'fan', 'power cur',
                     'jetson_clocks', 'power avg', 'uptime']
@@ -58,12 +56,12 @@ def main():
     fontP = FontProperties()
     fontP.set_size('xx-small')
     ax1.legend(loc=1, ncol=1, bbox_to_anchor=(0, 0, 1, 1),
-                   prop=fontP, fancybox=True, shadow=False, title=None)
+               prop=fontP, fancybox=True, shadow=False, title=None)
     ax1.set_title('Temperature vs time', fontdict=font1)
     ax1.set_ylabel('temp (˚C)')
 
     ax1.grid(color='green', linestyle='--', linewidth=0.5)
-    ax1.set_ylim([-1,109])
+    ax1.set_ylim([-1, 109])
     ax1.axes.get_xaxis().set_ticklabels([])
 
     # cpu usage vs time graph
@@ -74,12 +72,12 @@ def main():
     ax2.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'CPU5'].astype(float), label='core5')
     ax2.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'CPU6'].astype(float), label='core6')
     ax2.legend(loc=1, ncol=1, bbox_to_anchor=(0, 0, 1, 1),
-                   prop=fontP, fancybox=True, shadow=False, title=None)
+               prop=fontP, fancybox=True, shadow=False, title=None)
     ax2.set_title('CPU-core(% used) vs time', fontdict=font1)
     ax2.set_ylabel('CPU-core(% used)')
 
     ax2.grid(color='green', linestyle='--', linewidth=0.5)
-    ax2.set_ylim([-1,109])
+    ax2.set_ylim([-1, 109])
     ax2.axes.get_xaxis().set_ticklabels([])
 
     # CPU core freq vs sample
@@ -104,7 +102,7 @@ def main():
     ax4.set_title('GPU (% used) vs time', fontdict=font1)
     ax4.set_ylabel('GPU (% used)')
     ax4.grid(color='green', linestyle='--', linewidth=0.5)
-    ax4.set_ylim([-1,109])
+    ax4.set_ylim([-1, 109])
     ax4.axes.get_xaxis().set_ticklabels([])
 
     # GPU freq
