@@ -21,8 +21,10 @@ Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed i
 
 # Install
 
+In the project root directory run the following:
+
 ```console
-sudo -H pip install -U jetson-stats
+sudo pip install -upgrade .
 ```
 **🚀 That's it! 🚀** 
 
