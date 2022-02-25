@@ -24,7 +24,7 @@ Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed i
 In the project root directory run the following:
 
 ```console
-sudo pip3 install -upgrade .
+sudo pip3 install --upgrade .
 ```
 **🚀 That's it! 🚀** 
 
@@ -119,7 +119,6 @@ usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
   --off         Switch off the swap
   -h | --help   This message
 ```
-
 # [jetson variables][jetson_variables]
 When you install jetson-stats in your bash will be available a list of new environment variables to know which which hardware version is available are you working, which Jetpack is installed and other variable show below
 
