@@ -25,8 +25,10 @@ def main():
     df.loc[:, 'CPU5freq'] = df.loc[:, 'CPU5freq'] / 1000
     df.loc[:, 'CPU6freq'] = df.loc[:, 'CPU6freq'] / 1000
     df.loc[:, 'GPU_FREQ'] = df.loc[:, 'GPU_FREQ'] / 1000
+    df.loc[:, 'CPU6max_freq'] = df.loc[:, 'CPU6max_freq'] / 1000
+    df.loc[:, 'GPU_MAX_FREQ'] = df.loc[:, 'GPU_MAX_FREQ'] / 1000
 
-    cols_to_drop = ['MTS FG', 'MTS BG', 'RAM', 'EMC', 'SWAP', 'APE', 'NVENC', 'NVDEC', 'NVJPG', 'fan', 'power cur',
+    cols_to_drop = ['MTS FG', 'MTS BG', 'RAM', 'EMC', 'SWAP', 'APE', 'NVENC', 'NVDEC', 'NVJPG', 'fan',
                     'jetson_clocks', 'power avg', 'uptime']
 
     df.drop(columns=cols_to_drop, inplace=True)
@@ -41,11 +43,12 @@ def main():
     fig = plt.figure()
     fig.set_figheight(3)
     fig.set_figwidth(4.5)
-    ax1 = plt.subplot2grid(shape=(5, 3), loc=(0, 0), colspan=3)
-    ax2 = plt.subplot2grid(shape=(5, 3), loc=(1, 0), colspan=3)
-    ax3 = plt.subplot2grid(shape=(5, 3), loc=(2, 0), colspan=3)
-    ax4 = plt.subplot2grid(shape=(5, 3), loc=(3, 0), colspan=3)
-    ax5 = plt.subplot2grid(shape=(5, 3), loc=(4, 0), colspan=3)
+    ax1 = plt.subplot2grid(shape=(6, 3), loc=(0, 0), colspan=3)
+    ax2 = plt.subplot2grid(shape=(6, 3), loc=(1, 0), colspan=3)
+    ax3 = plt.subplot2grid(shape=(6, 3), loc=(2, 0), colspan=3)
+    ax4 = plt.subplot2grid(shape=(6, 3), loc=(3, 0), colspan=3)
+    ax5 = plt.subplot2grid(shape=(6, 3), loc=(4, 0), colspan=3)
+    ax6 = plt.subplot2grid(shape=(6, 3), loc=(5, 0), colspan=3)
 
     # core temp graphs
     ax1.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'Temp AO'].astype(float), label='AO')
@@ -57,7 +60,7 @@ def main():
     fontP.set_size('xx-small')
     ax1.legend(loc=1, ncol=1, bbox_to_anchor=(0, 0, 1, 1),
                prop=fontP, fancybox=True, shadow=False, title=None)
-    ax1.set_title('Temperature vs time', fontdict=font1)
+    ax1.set_title('Temperature(˚C) vs time', fontdict=font1)
     ax1.set_ylabel('temp (˚C)')
 
     ax1.grid(color='green', linestyle='--', linewidth=0.5)
@@ -87,9 +90,11 @@ def main():
     ax3.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'CPU4freq'].astype(float), label='core4')
     ax3.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'CPU5freq'].astype(float), label='core5')
     ax3.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'CPU6freq'].astype(float), label='core6')
+    ax3.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'CPU6max_freq'].astype(float), label='cpu_max_freq')
     ax3.legend(loc=1, ncol=1, bbox_to_anchor=(0, 0, 1, 1),
                prop=fontP, fancybox=True, shadow=False, title=None)
     ax3.set_title('CPU-core freq vs time', fontdict=font1)
+    ax3.set_ylim([0, df.loc[:, 'CPU6max_freq'][0].astype(float)+100])
     ax3.set_ylabel('CPU-freq(MHz)')
 
     ax3.grid(color='green', linestyle='--', linewidth=0.5)
@@ -107,12 +112,24 @@ def main():
 
     # GPU freq
     ax5.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'GPU_FREQ'].astype(float), label='GPU_FREQ')
+    ax5.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'GPU_MAX_FREQ'].astype(float), label='GPU_MAX_FREQ')
     ax5.legend(loc=1, ncol=1, bbox_to_anchor=(0, 0, 1, 1),
                prop=fontP, fancybox=True, shadow=False, title=None)
-    ax5.set_title('GPU freq', fontdict=font1)
+    ax5.set_title('GPU freq(MHz) vs time', fontdict=font1)
     ax5.set_ylabel('GPU freq (MHz)')
     ax5.grid(color='green', linestyle='--', linewidth=0.5)
-    ax5.set_xlabel('time(s)')
+    ax5.axes.get_xaxis().set_ticklabels([])
+
+    ax6.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'power cur'].astype(float), label='power_curr_all')
+    ax6.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'soc'].astype(float), label='power_curr_soc')
+    ax6.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'cpu_gpu_cv'].astype(float), label='power_curr_cpu_gpu_cv')
+    ax6.set_title('Power(mW) vs time', fontdict=font1)
+    ax6.legend(loc=1, ncol=1, bbox_to_anchor=(0, 0, 1, 1),
+               prop=fontP, fancybox=True, shadow=False, title=None)
+    ax6.set_ylabel('power (mW)')
+    ax6.set_xlabel('time(s)')
+    ax6.grid(color='green', linestyle='--', linewidth=0.5)
+
 
     # display plots
     plt.suptitle("Jtop Plots - Thermal Chamber at Room temperature", fontdict=font2)

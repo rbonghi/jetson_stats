@@ -533,6 +533,7 @@ class jtop(Thread):
         for cpu in sorted(self.cpu):
             stats[cpu] = self.cpu[cpu].get('val', 'OFF')
             stats[cpu+'freq'] = self.cpu[cpu].get('frq', 'OFF')
+            stats[cpu+'max_freq'] = self.cpu[cpu].get('max_freq', 'OFF')
         # -- GPU --
         stats['GPU'] = self.gpu['val']
         # -- GPU_FREQ --
@@ -564,6 +565,11 @@ class jtop(Thread):
         # -- FAN --
         if self.fan:
             stats['fan'] = self.fan.measure
+            stats['auto'] = self.fan.auto
+            stats['speed'] = self.fan.speed
+            stats['rpm'] = self.fan.rpm
+            stats['mode'] = self.fan.mode
+
         # -- Temperature --
         for temp in sorted(self.temperature):
             stats["Temp {name}".format(name=temp)] = self.temperature[temp]
@@ -571,6 +577,11 @@ class jtop(Thread):
         total, _ = self.power
         stats['power cur'] = total['cur']
         stats['power avg'] = total['avg']
+        stats['power_soc'] = _['SOC']
+        stats['power_cpu_gpu_cv'] = _['CPU GPU CV']
+        stats['soc'] = _['SOC'].get('cur')
+        stats['cpu_gpu_cv'] = _['CPU GPU CV'].get('cur')
+        print(_)
         return stats
 
     @property
