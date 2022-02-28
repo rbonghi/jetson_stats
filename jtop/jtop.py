@@ -577,11 +577,11 @@ class jtop(Thread):
         total, _ = self.power
         stats['power cur'] = total['cur']
         stats['power avg'] = total['avg']
-        stats['power soc'] = total['soc']
-        stats['power all'] = total['all']
-        stats['power cpu gpu cv'] = total['cpu gpu cv']
-
-
+        stats['power_soc'] = _['SOC']
+        stats['power_cpu_gpu_cv'] = _['CPU GPU CV']
+        stats['soc'] = _['SOC'].get('cur')
+        stats['cpu_gpu_cv'] = _['CPU GPU CV'].get('cur')
+        print(_)
         return stats
 
     @property
