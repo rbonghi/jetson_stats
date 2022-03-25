@@ -57,7 +57,7 @@ jobs:
         build-command: make html
         # Fix AttributeError: 'module' object has no attribute 'BlockGrammar'
         # https://github.com/Tribler/tribler/issues/6624
-        pre-build-command: pip install travis-sphinx sphinx sphinx-rtd-theme m2r mistune==0.8.4
+        pre-build-command: pip install Jinja2<3.1 travis-sphinx sphinx<4 sphinx-rtd-theme m2r mistune==0.8.4
     - name: Build and Deploy
       # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
       uses: JamesIves/github-pages-deploy-action@releases/v3
