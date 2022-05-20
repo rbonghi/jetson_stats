@@ -30,6 +30,7 @@ jetson_jetpack()
     local JETSON_L4T=$1
     local JETSON_JETPACK=""
     case $JETSON_L4T in
+        "32.7.2") JETSON_JETPACK="4.6.2" ;;
         "32.7.1") JETSON_JETPACK="4.6.1" ;;
         "32.6.1") JETSON_JETPACK="4.6" ;;
         "32.5.1" | "32.5.2") JETSON_JETPACK="4.5.1" ;;
