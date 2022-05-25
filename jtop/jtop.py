@@ -581,7 +581,6 @@ class jtop(Thread):
         stats['power_cpu_gpu_cv'] = _['CPU GPU CV']
         stats['soc'] = _['SOC'].get('cur')
         stats['cpu_gpu_cv'] = _['CPU GPU CV'].get('cur')
-        print(_)
         return stats
 
     @property
