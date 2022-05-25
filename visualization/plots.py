@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import argparse
 from matplotlib.font_manager import FontProperties
 import numpy as np
-import os
-from pathlib import Path
 
 
 def main():
