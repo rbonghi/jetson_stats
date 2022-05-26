@@ -2,3 +2,5 @@ pandas
 numpy
 argparse
 matplotlib
+pandas
+numpy

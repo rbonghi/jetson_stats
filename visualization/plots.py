@@ -177,14 +177,10 @@ def main():
     new = path.split('/')
     new_path = new[0:len(new)-1]
     file_name = new[-1].split('.')[0]
-    # print('filename', file_name)
-    # print(new_path)
+
     final = '/'.join(new_path)
-    # print(final)
-    # print(final+file_name, 'final+filename')
-    # plt.show()
     plt.savefig(final+'/'+file_name+'.png', format='png')
-    print('Plot saved in directory: ' + final + '/')
+    print(f'Plot saved in jetson_stats/examples directory as {file_name}.png')
 
 
 if __name__ == "__main__":
