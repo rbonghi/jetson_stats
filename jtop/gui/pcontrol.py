@@ -97,10 +97,9 @@ class CTRL(Page):
 
     def update_chart(self, jetson, name):
         # Append in list
-        if jetson.fan is None:
-            return {}
+        speed0 = jetson.fan.speed['pwm1']
         return {
-            'value': [jetson.fan.get('measure', 0)],
+            'value': [speed0],
             'active': True if jetson.fan else False
         }
 
@@ -163,41 +162,36 @@ class CTRL(Page):
                 self.nvp_increase.draw(start_y + 9, start_x + 18, key, mouse)
             # Write list of available modes
             self.nvp_list.draw(
-                start_y + 12, start_x, width // 2 - start_x, key, mouse,
+                start_y + 12, start_x, width * 3 // 5 - start_x, key, mouse,
                 lstatus=nvpmodel.status,
                 select=nvp_id)
         # Evaluate size chart
-        size_x = [start_x + width // 2 + 1, width - start_x - 1]
+        size_x = [start_x + width * 3 // 5 + 1, width - start_x - 1]
         size_y = [start_y + 3, height - 3]
         # Add label
         label = ''
         if self.jetson.fan:
-            # Read status control fan
-            ctrl_stat = "Auto=" + ("Enable" if self.jetson.fan.auto else "Disable")
-            # Add label
-            if self.jetson.fan.speed is not None:
-                label = "{current: >3.0f}% of {target: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, target=self.jetson.fan.speed, ctrl=ctrl_stat)
-            else:
-                label = "{current: >3.0f}% {ctrl}".format(current=self.jetson.fan.measure, ctrl=ctrl_stat)
-            if self.jetson.fan.speed is not None:
-                # Fan label
-                self.stdscr.addstr(start_y, start_x, "Fan", curses.A_NORMAL)
-                self.stdscr.addstr(start_y + 1, start_x, "Speed", curses.A_BOLD)
-                # Draw keys to decrease fan speed
-                self.fan_status_decrease.draw(start_y, start_x + 6, key, mouse)
-                # Draw selected number
-                speed_str = "{speed: >3.0f}%".format(speed=self.jetson.fan.speed)
-                self.stdscr.addstr(start_y + 1, start_x + 12, speed_str, curses.A_NORMAL)
-                # Draw keys to increase fan speed
-                self.fan_status_increase.draw(start_y, start_x + 17, key, mouse)
-            if self.jetson.fan.auto is not None:
-                # Write list of available modes
-                self.stdscr.addstr(start_y, start_x + 24, "Fan", curses.A_NORMAL)
-                self.stdscr.addstr(start_y + 1, start_x + 24, "Mode", curses.A_BOLD)
-                # Get ID from fan mode
-                fan_mode = self.jetson.fan.mode
-                fan_id = self.jetson.fan.configs.index(fan_mode)
-                self.fan_list.draw(start_y, start_x + 30, width, key, mouse, select=fan_id)
+            speed0 = self.jetson.fan.speed['pwm1']
+            # Read status control fan and make label
+            ctrl = "Ta" if self.jetson.fan.auto else "Tm"
+            label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=speed0)
+            # Fan label
+            self.stdscr.addstr(start_y, start_x, "Fan", curses.A_NORMAL)
+            self.stdscr.addstr(start_y + 1, start_x, "Speed", curses.A_BOLD)
+            # Draw keys to decrease fan speed
+            self.fan_status_decrease.draw(start_y, start_x + 6, key, mouse)
+            # Draw selected number
+            speed_str = "{speed: >3.0f}%".format(speed=speed0)
+            self.stdscr.addstr(start_y + 1, start_x + 12, speed_str, curses.A_NORMAL)
+            # Draw keys to increase fan speed
+            self.fan_status_increase.draw(start_y, start_x + 17, key, mouse)
+            # Write list of available modes
+            self.stdscr.addstr(start_y, start_x + 24, "Fan", curses.A_NORMAL)
+            self.stdscr.addstr(start_y + 1, start_x + 24, "Mode", curses.A_BOLD)
+            # Get ID from fan mode
+            fan_mode = self.jetson.fan.mode
+            fan_id = self.jetson.fan.configs.index(fan_mode)
+            self.fan_list.draw(start_y, start_x + 30, width, key, mouse, select=fan_id)
         # Draw the GPU chart
         self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
 

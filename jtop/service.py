@@ -55,7 +55,7 @@ except ImportError:
 
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
-PATH_FAN = ['/sys/kernel/debug/tegra_fan', '/sys/devices/pwm-fan']
+PATH_FAN = ['/sys/devices/platform']
 PATH_NVPMODEL = ['nvpmodel']
 # Pipe configuration
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html

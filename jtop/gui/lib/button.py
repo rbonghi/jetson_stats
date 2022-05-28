@@ -38,19 +38,28 @@ class Button:
     def draw(self, posy, posx, key, mouse, color=curses.A_REVERSE, exstatus=False):
         # Draw rectangle
         width = self.sizeX()
-        rectangle(self.stdscr, posy, posx, posy + SIZE_BUTTON_HEIGHT, posx + width)
+        try:
+            rectangle(self.stdscr, posy, posx, posy + SIZE_BUTTON_HEIGHT, posx + width)
+        except curses.error:
+                    pass
         # status
         status = self._keyPressed(key) or self._mousePressed(posy, posx, width, mouse)
         # Write key letter
         if self.key and not self.hide_key:
             underline = curses.A_UNDERLINE if self.underline else curses.A_NORMAL
             pressed = color if status or exstatus and not self.label else curses.A_NORMAL
-            self.stdscr.addstr(posy + 1, posx + 2, self.key, underline | pressed)
+            try:
+                self.stdscr.addstr(posy + 1, posx + 2, self.key, underline | pressed)
+            except curses.error:
+                    pass
         # Write label
         if self.label:
             posx_label = 4 if self.key and not self.hide_key else 2
             pressed = color if status or exstatus else curses.A_NORMAL
-            self.stdscr.addstr(posy + 1, posx + posx_label, self.label, pressed)
+            try:
+                self.stdscr.addstr(posy + 1, posx + posx_label, self.label, pressed)
+            except curses.error:
+                    pass
         # Run action
         if status and self.action is not None:
             # Run a thread
