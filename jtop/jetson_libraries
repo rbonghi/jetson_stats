@@ -101,7 +101,7 @@ export JETSON_VISIONWORKS
 # Extract VPI
 JETSON_VPI=$(dpkg -l 2>/dev/null | grep -m1 "vpi")
 if [ ! -z "$JETSON_VPI" ] ; then
-    JETSON_VPI=$(echo $JETSON_VPI | sed 's/.*vpi \([^ ]*\).*/\1/' )
+    JETSON_VPI=$(echo $JETSON_VPI | sed 's/.*vpi[0-9] \([^ ]*\).*/\1/' | cut -d '-' -f1  )
 else
     JETSON_VPI="NOT_INSTALLED"
 fi
