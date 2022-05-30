@@ -111,14 +111,13 @@ def compact_info(stdscr, start, offset, width, height, jetson):
     plot_name_info(stdscr, offset + counter, start + 1, "UpT", uptime_string)
     counter += 1
     # FAN status
-    for fan in jetson.fan.speed:
-        speed = jetson.fan.speed[fan]
+    for fan, speed in jetson.fan.all_speed().items():
         ctrl = "Ta" if jetson.fan.auto else "Tm"
         label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=speed)
         linear_gauge(
             stdscr,
             offset=offset + counter, start=start + 1, size=width,
-            name=GaugeName(fan, color=curses.color_pair(6)),
+            name=GaugeName('FAN', color=curses.color_pair(6)),
             value=speed,
             status='ON' if jetson.fan else 'DISABLED',
             label=label)

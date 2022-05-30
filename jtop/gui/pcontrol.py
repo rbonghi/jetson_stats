@@ -92,14 +92,13 @@ class CTRL(Page):
         # Increase the speed
         if spd - FAN_STEP >= 0:
             self.jetson.fan.speed = spd - FAN_STEP
-        if self.jetson.fan.speed < FAN_STEP:
+        if speed < FAN_STEP:
             self.jetson.fan.speed = 0
 
     def update_chart(self, jetson, name):
         # Append in list
-        speed0 = jetson.fan.speed['pwm1']
         return {
-            'value': [speed0],
+            'value': [jetson.fan.speed],
             'active': True if jetson.fan else False
         }
 
@@ -171,7 +170,7 @@ class CTRL(Page):
         # Add label
         label = ''
         if self.jetson.fan:
-            speed0 = self.jetson.fan.speed['pwm1']
+            speed0 = self.jetson.fan.all_speed()['pwm1']
             # Read status control fan and make label
             ctrl = "Ta" if self.jetson.fan.auto else "Tm"
             label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=speed0)
