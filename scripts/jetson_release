@@ -58,7 +58,7 @@ jetson_release()
 
 
     # Print Jetson version
-    echo "${bold} - $JETSON_MACHINE${reset}"
+    echo "${bold} - $JETSON_MODEL${reset}"
     # Print Jetpack and kernel
     echo "   * Jetpack $JETSON_JETPACK [L4T $JETSON_L4T]"
     # Print status NVPModel

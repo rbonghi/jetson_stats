@@ -79,17 +79,16 @@ def load_jetson_variables():
         env[k] = str(v)
     # Make dictionaries
     info = {
-        "machine": env["JETSON_MACHINE"],
+        "model": env["JETSON_MODEL"],
         "jetpack": env["JETSON_JETPACK"],
         "L4T": env["JETSON_L4T"]}
     hardware = {
-        "TYPE": env["JETSON_TYPE"],
         "CODENAME": env["JETSON_CODENAME"],
         "SOC": env["JETSON_SOC"],
         "CHIP_ID": env["JETSON_CHIP_ID"],
         "BOARDIDS": env["JETSON_BOARDIDS"],
         "MODULE": env["JETSON_MODULE"],
-        "BOARD": env["JETSON_BOARD"],
+        "CARRIER": env["JETSON_CARRIER"],
         "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
         "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
     # Board information

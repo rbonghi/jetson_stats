@@ -183,7 +183,7 @@ class JTOPGUI:
     def header(self):
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
-        status = [self.jetson.board.hardware["TYPE"]]
+        status = [self.jetson.board.info["model"]]
         if self.jetson.jetson_clocks is not None:
             status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks.status.capitalize())]
         if self.jetson.nvpmodel is not None:
@@ -203,7 +203,7 @@ class JTOPGUI:
             self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
         # Write first line
-        message = "{info[machine]} - Jetpack {info[jetpack]} [L4T {info[L4T]}]".format(info=self.jetson.board.info)
+        message = "{info[model]} - Jetpack {info[jetpack]} [L4T {info[L4T]}]".format(info=self.jetson.board.info)
         self.stdscr.addstr(idx, 0, message, curses.A_BOLD)
 
     @check_curses
