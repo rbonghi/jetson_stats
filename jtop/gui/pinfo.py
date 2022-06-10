@@ -59,6 +59,7 @@ class INFO(Page):
         idx = 0
         # Board info
         info = self.jetson.board.info
+        l4t_release = int(info["L4T"].split(".")[0])
         message_jp = "{info[jetpack]} [L4T {info[L4T]}]".format(info=info)
         self.stdscr.addstr(start_pos + idx, posx, "- Jetpack:", curses.A_BOLD)
         self.stdscr.addstr(start_pos + idx, posx + spacing, message_jp, curses.A_BOLD)
@@ -66,9 +67,10 @@ class INFO(Page):
         idx += 2
         # Load Board information
         hardware = self.jetson.board.hardware
-        self.info_variable(start_pos + idx, posx + 2, "* Type", info["model"].strip("NVIDIA "))
+        self.info_variable(start_pos + idx, posx + 2, "* Model", info["model"].strip("NVIDIA "))
         self.info_variable(start_pos + idx + 1, posx + 2, "* SOC Family", hardware["SOC"])
-        self.info_variable(start_pos + idx + 1, posx + 33, "ID", hardware["CHIP_ID"], spacing=4)
+        if hardware["CHIP_ID"]:
+            self.info_variable(start_pos + idx + 1, posx + 33, "ID", hardware["CHIP_ID"], spacing=4)
         self.info_variable(start_pos + idx + 2, posx + 2, "* Module", hardware["MODULE"])
         self.info_variable(start_pos + idx + 2, posx + 33, "Carrier", hardware["CARRIER"], spacing=9)
         self.info_variable(start_pos + idx + 3, posx + 2, "* Code Name", hardware["CODENAME"])
@@ -84,6 +86,9 @@ class INFO(Page):
         idx += 1
         for name, info in sorted(self.jetson.board.libraries.items()):
             if name == "OpenCV-Cuda":
+                continue
+            # VisionWorks is not anymore available from JP5.0
+            if name == "VisionWorks" and l4t_release >= 34:
                 continue
             self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
             self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)

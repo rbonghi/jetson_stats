@@ -142,12 +142,12 @@ export JETSON_BOARDIDS
 export JETSON_CODENAME
 export JETSON_MODULE
 export JETSON_CARRIER
-export JETSON_TYPE
 
 # Write CUDA architecture
 # https://developer.nvidia.com/cuda-gpus
 # https://devtalk.nvidia.com/default/topic/988317/jetson-tx1/what-should-be-the-value-of-cuda_arch_bin/
-case $JETSON_TYPE in
+case $JETSON_MODEL in
+    *Orin*) JETSON_CUDA_ARCH_BIN="UNKNOWN" ;;
     *Xavier*) JETSON_CUDA_ARCH_BIN="7.2" ;;
     TX2*) JETSON_CUDA_ARCH_BIN="6.2" ;;
     TX1* | Nano*) JETSON_CUDA_ARCH_BIN="5.3" ;;

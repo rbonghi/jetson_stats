@@ -19,6 +19,8 @@
 # Read CUDA version
 if [ -f /usr/local/cuda/version.txt ]; then
     JETSON_CUDA=$(cat /usr/local/cuda/version.txt | sed 's/\CUDA Version //g')
+elif [ -f /usr/local/cuda/bin/nvcc ]; then
+    JETSON_CUDA=$(/usr/local/cuda/bin/nvcc --version | egrep -o "V[0-9]+.[0-9]+.[0-9]+" | cut -c2-)
 else
     JETSON_CUDA="NOT_INSTALLED"
 fi
