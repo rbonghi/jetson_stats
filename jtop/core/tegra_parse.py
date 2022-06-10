@@ -25,7 +25,7 @@ MTS_RE = re.compile(r'MTS fg (\d+)% bg (\d+)%')
 VALS_RE = re.compile(r'\b([A-Z0-9_]+) ([0-9%@]+)(?=[^/])\b')
 VAL_FRE_RE = re.compile(r'\b(\d+)%@(\d+)')
 CPU_RE = re.compile(r'CPU \[(.*?)\]')
-WATT_RE = re.compile(r'\b(\w+) ([0-9.]+)(\w)W\/([0-9.]+)(\w)W\b')
+WATT_RE = re.compile(r'\b(\w+) ([0-9.]+)(\w?)W?\/([0-9.]+)(\w?)W?\b')
 TEMP_RE = re.compile(r'\b(\w+)@(-?[0-9.]+)C\b')
 
 
