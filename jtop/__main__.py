@@ -33,7 +33,7 @@ from .core import JtopException, get_var
 # GUI jtop interface
 from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 # Load colors
-from .github import jetpack_missing, board_missing
+from .github import jetpack_missing, model_missing
 # Create logger
 logger = logging.getLogger(__name__)
 # Version match
@@ -79,8 +79,8 @@ def warning_messages(jetson, no_warnings=False):
     if os.getuid() == 0:
         print("[{status}] SUDO is no more required".format(status=bcolors.warning()))
     # Check if jetpack is missing
-    if jetson.board.hardware['TYPE'] == "UNKNOWN" and jetson.board.hardware['BOARD'] and 'JETSON_DEBUG' not in os.environ:
-        print("[{status}] {link}".format(status=bcolors.warning(), link=board_missing(REPOSITORY, jetson, version)))
+    if jetson.board.info['model'] == "UNKNOWN" and 'JETSON_DEBUG' not in os.environ:
+        print("[{status}] {link}".format(status=bcolors.warning(), link=model_missing(REPOSITORY, jetson, version)))
     # Check if jetpack is missing
     if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
         print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=jetson.board.info['L4T']))

@@ -26,6 +26,8 @@ import stat
 from grp import getgrnam
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
+
+from jtop.core.fan import FanServiceLegacy
 # jetson_stats imports
 from .core import (
     cpu_models,
@@ -55,6 +57,7 @@ except ImportError:
 
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
+PATH_FAN_LEGACY = ['/sys/kernel/debug/tegra_fan', '/sys/devices/pwm-fan']
 PATH_FAN = ['/sys/devices/platform']
 PATH_NVPMODEL = ['nvpmodel']
 # Pipe configuration
@@ -151,7 +154,11 @@ class JtopServer(Process):
         # Load board information
         self.board = load_jetson_variables()
         # Initialize Fan
-        self.fan = FanService(self.config, path_fan)
+        try:
+            self.fan = FanService(self.config, path_fan)
+        except JtopException as error:
+            logger.warning("{error} in paths {path}".format(error=error, path=path_fan))
+            self.fan = FanServiceLegacy(self.config, PATH_FAN_LEGACY)
         # Initialize jetson_clocks controller
         try:
             self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)

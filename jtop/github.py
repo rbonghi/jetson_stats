@@ -38,20 +38,21 @@ def jetpack_missing(repository, jetson, version):
     return hyperlink(url, "open an issue on Github")
 
 
-def board_missing(repository, jetson, version):
-    board = jetson.board.hardware["BOARD"]
+def model_missing(repository, jetson, version):
+    model = jetson.board.hardinfo["model"]
     # Title
-    title = "Board missing {board}".format(board=board)
+    title = "Model missing {model}".format(model=model)
     # Template
-    template = "board-missing.md"
+    template = "model-missing.md"
     # Body
     body = "Please update jetson-stats with this board\n\n"
     body += "**Board**\n"
-    body += " - Board(s): " + board + "\n"
     body += " - Boardis: " + jetson.board.hardware["BOARDIDS"] + "\n"
     body += " - SOC: " + jetson.board.hardware["SOC"] + "\n"
     body += " - ID: " + jetson.board.hardware["CHIP_ID"] + "\n"
     body += " - Code Name: " + jetson.board.hardware["CODENAME"] + "\n\n"
+    body += " - Module: " + jetson.board.hardware["MODULE"] + "\n\n"
+    body += " - Carrier: " + jetson.board.hardware["CARRIER"] + "\n\n"
     body += "**Jetpack**\n"
     body += " - Jetpack: " + jetson.board.info["jetpack"] + "\n"
     body += " - L4T: " + jetson.board.info["L4T"] + "\n\n"

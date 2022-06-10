@@ -1,7 +1,7 @@
 ---
-name: Board missing
+name: Model missing
 about: jetson-stats does not recognize this board
-title: Board missing []
+title: Model missing []
 labels: missing
 assignees: ''
 

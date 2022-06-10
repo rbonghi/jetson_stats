@@ -111,16 +111,24 @@ def compact_info(stdscr, start, offset, width, height, jetson):
     plot_name_info(stdscr, offset + counter, start + 1, "UpT", uptime_string)
     counter += 1
     # FAN status
-    for fan, speed in jetson.fan.all_speed().items():
-        ctrl = "Ta" if jetson.fan.auto else "Tm"
-        label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=speed)
+    if jetson.fan.all_speed().items():
+        for fan, speed in jetson.fan.all_speed().items():
+            ctrl = "Ta" if jetson.fan.auto else "Tm"
+            label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=speed)
+            linear_gauge(
+                stdscr,
+                offset=offset + counter, start=start + 1, size=width,
+                name=GaugeName('FAN', color=curses.color_pair(6)),
+                value=speed,
+                status='ON' if jetson.fan else 'DISABLED',
+                label=label)
+            counter += 1
+    else:
         linear_gauge(
             stdscr,
             offset=offset + counter, start=start + 1, size=width,
             name=GaugeName('FAN', color=curses.color_pair(6)),
-            value=speed,
-            status='ON' if jetson.fan else 'DISABLED',
-            label=label)
+            status='DISABLED')
         counter += 1
     # Jetson clocks status: Running (Green) or Normal (Grey)
     jetson_clocks_gui(stdscr, offset + counter, start + 1, jetson)
