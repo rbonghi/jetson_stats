@@ -39,7 +39,7 @@ def jetpack_missing(repository, jetson, version):
 
 
 def model_missing(repository, jetson, version):
-    model = jetson.board.hardinfo["model"]
+    model = jetson.board.info["model"]
     # Title
     title = "Model missing {model}".format(model=model)
     # Template

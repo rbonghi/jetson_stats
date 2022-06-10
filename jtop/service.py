@@ -27,7 +27,6 @@ from grp import getgrnam
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 
-from jtop.core.fan import FanServiceLegacy
 # jetson_stats imports
 from .core import (
     cpu_models,
@@ -39,6 +38,7 @@ from .core import (
     Config,
     NVPModelService,
     FanService,
+    FanServiceLegacy,
     SwapService,
     get_key,
     import_os_variables)
@@ -457,7 +457,8 @@ class JtopServer(Process):
                     v.update(jc_cpu)
                 data['cpu'][name] = v
         for name, value in cpu_models().items():
-            data['cpu'][name]['model'] = value
+            if name in data['cpu']:
+                data['cpu'][name]['model'] = value
         # -- MTS --
         if 'MTS' in tegrastats:
             data['mts'] = tegrastats['MTS']

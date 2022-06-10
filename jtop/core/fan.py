@@ -193,12 +193,14 @@ class FanService(object):
         # Initialize dictionary status
         self._status = {}
         # Initialize number max records to record
-        # raise jtop error if not availble a fan
+        # raise jtop error if not available a fan
         root_path = locate_commands("fan", fan_path)
         # Set list configurations
         self.CONFIGS = ['system', 'manual']
         # Get list all pwm_fan
         self._fans = get_all_fans(root_path)
+        if not self._fans:
+            raise JtopException("Fan is not available on this board")
         # Check status nvfancontrol
         self.update()
 

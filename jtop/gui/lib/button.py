@@ -41,7 +41,7 @@ class Button:
         try:
             rectangle(self.stdscr, posy, posx, posy + SIZE_BUTTON_HEIGHT, posx + width)
         except curses.error:
-                    pass
+            pass
         # status
         status = self._keyPressed(key) or self._mousePressed(posy, posx, width, mouse)
         # Write key letter
@@ -51,7 +51,7 @@ class Button:
             try:
                 self.stdscr.addstr(posy + 1, posx + 2, self.key, underline | pressed)
             except curses.error:
-                    pass
+                pass
         # Write label
         if self.label:
             posx_label = 4 if self.key and not self.hide_key else 2
@@ -59,7 +59,7 @@ class Button:
             try:
                 self.stdscr.addstr(posy + 1, posx + posx_label, self.label, pressed)
             except curses.error:
-                    pass
+                pass
         # Run action
         if status and self.action is not None:
             # Run a thread
