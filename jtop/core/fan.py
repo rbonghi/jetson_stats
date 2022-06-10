@@ -476,7 +476,7 @@ class FanServiceLegacy(object):
         # Control temperature
         self._status['auto'] = bool(int(self._read_status('/temp_control')) == 1) if self.isCTRL else None
         # Read PWM
-        self._status['speed'] = self._PWMtoValue(self._read_status('/target_pwm')) if self.isTPWM else None
+        self._status['speed'] = {'FAN1': self._PWMtoValue(self._read_status('/target_pwm'))} if self.isTPWM else None
         # Read current
         self._status['measure'] = self._PWMtoValue(self._read_status('/cur_pwm')) if self.isCPWM else None
         # Read RPM fan

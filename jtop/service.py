@@ -158,7 +158,7 @@ class JtopServer(Process):
             self.fan = FanService(self.config, path_fan)
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_fan))
-            self.fan = FanServiceLegacy(self.config, path_fan + PATH_FAN_LEGACY)
+            self.fan = FanServiceLegacy(self.config, PATH_FAN_LEGACY + path_fan)
         # Initialize jetson_clocks controller
         try:
             self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)

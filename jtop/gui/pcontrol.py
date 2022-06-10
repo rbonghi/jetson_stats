@@ -170,7 +170,7 @@ class CTRL(Page):
         # Add label
         label = ''
         if self.jetson.fan:
-            speed0 = self.jetson.fan.all_speed()['pwm1']
+            speed0 = list(iter(self.jetson.fan.all_speed().values()))[0]
             # Read status control fan and make label
             ctrl = "Ta" if self.jetson.fan.auto else "Tm"
             label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=speed0)
