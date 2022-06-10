@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import abc
 import os
 import re
 from math import ceil
@@ -22,6 +23,9 @@ from .common import locate_commands
 from .exceptions import JtopException
 # Logging
 import logging
+# Initialization abstract class
+# In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
+ABC = abc.ABCMeta('ABC', (object,), {})
 # Compile decoder PWM table
 FAN_PWM_TABLE_RE = re.compile(r'\((.*?)\)')
 # Create logger
@@ -178,7 +182,7 @@ class Fan(object):
         return str(self._status)
 
 
-class FanService(object):
+class ABCFanService(ABC):
     """
     Fan controller
 
@@ -192,17 +196,10 @@ class FanService(object):
         self._config = config
         # Initialize dictionary status
         self._status = {}
-        # Initialize number max records to record
-        # raise jtop error if not available a fan
-        root_path = locate_commands("fan", fan_path)
-        # Set list configurations
-        self.CONFIGS = ['system', 'manual']
-        # Get list all pwm_fan
-        self._fans = get_all_fans(root_path)
-        if not self._fans:
-            raise JtopException("Fan is not available on this board")
-        # Check status nvfancontrol
-        self.update()
+        # PWM max capcity
+        self._pwm_cap = FAN_PWM_CAP
+        # Fan configurations
+        self.CONFIGS = []
 
     def initialization(self, jc):
         self._jc = jc
@@ -229,16 +226,41 @@ class FanService(object):
         jc_status = self._jc.alive(wait=False) if self._jc is not None else False
         self.set_mode(value, jc_status)
 
+    @abc.abstractmethod
     def set_mode(self, value, status):
-        logger.info("Mode set {mode} status={status}".format(mode=value, status=status))
-        nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
-        # Check first if the fan control is active and after enable the service
-        if value == 'system':
-            if not nvfancontrol_is_active:
-                os.system('systemctl start nvfancontrol')
-        elif value == 'manual':
-            if nvfancontrol_is_active:
-                os.system('systemctl stop nvfancontrol')
+        pass
+
+    @abc.abstractmethod
+    def set_speed(self, value):
+        pass
+
+    @abc.abstractmethod
+    def update(self):
+        pass
+
+    def _PWMtoValue(self, pwm):
+        pwm = int(pwm)
+        return float(pwm) * 100.0 / (self._pwm_cap)
+
+    def _ValueToPWM(self, value):
+        return int(ceil((self._pwm_cap) * value / 100.0))
+
+
+class FanService(ABCFanService):
+
+    def __init__(self, config, fan_path):
+        super(FanService, self).__init__(config, fan_path)
+        # Initialize number max records to record
+        # raise jtop error if not available a fan
+        root_path = locate_commands("fan", fan_path)
+        # Set list configurations
+        self.CONFIGS = ['system', 'manual']
+        # Get list all pwm_fan
+        self._fans = get_all_fans(root_path)
+        if not self._fans:
+            raise JtopException("Fan is not available on this board")
+        # Check status nvfancontrol
+        self.update()
 
     @property
     def speed(self):
@@ -258,6 +280,17 @@ class FanService(object):
         # Fan setting
         logger.debug("Config {config}".format(config=config))
 
+    def set_mode(self, value, status):
+        logger.info("Mode set {mode} status={status}".format(mode=value, status=status))
+        nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
+        # Check first if the fan control is active and after enable the service
+        if value == 'system':
+            if not nvfancontrol_is_active:
+                os.system('systemctl start nvfancontrol')
+        elif value == 'manual':
+            if nvfancontrol_is_active:
+                os.system('systemctl stop nvfancontrol')
+
     def set_speed(self, value):
         # Check type
         if not isinstance(value, (int, float)):
@@ -270,13 +303,6 @@ class FanService(object):
         # Write PWM value
         for fan in self._fans:
             file_write_status(self._fans[fan], str(pwm))
-
-    def _PWMtoValue(self, pwm):
-        pwm = int(pwm)
-        return float(pwm) * 100.0 / FAN_PWM_CAP
-
-    def _ValueToPWM(self, value):
-        return int(ceil(FAN_PWM_CAP * value / 100.0))
 
     def update(self):
         fan_speed = {}
@@ -291,21 +317,10 @@ class FanService(object):
         self._status['auto'] = nvfancontrol_is_active
         return self._status
 
-
-class FanServiceLegacy(object):
-    """
-    Fan controller
-
-    Unused variables:
-     - table
-     - step
-    """
+class FanServiceLegacy(ABCFanService):
 
     def __init__(self, config, fan_path):
-        # Configuration
-        self._config = config
-        # Initialize dictionary status
-        self._status = {}
+        super(FanServiceLegacy, self).__init__(config, fan_path)
         # Initialize number max records to record
         try:
             self.path = locate_commands("fan", fan_path)
@@ -330,10 +345,10 @@ class FanServiceLegacy(object):
         if not self._allFiles and self.path is not None:
             logger.warning("No access to fan files: rpm_measured, cur_pwm, target_pwm, temp_control")
         # Max value PWM
-        self._pwm_cap = 255
+        self._pwm_cap = FAN_PWM_CAP
         if self.path is not None:
             if os.path.isfile(self.path + '/pwm_cap'):
-                self._pwm_cap = float(self._read_status('/pwm_cap'))
+                self._pwm_cap = float(file_read_status(self.path + '/pwm_cap'))
         # PWM RPM table
         self.table = {}
         if self.path is not None:
@@ -343,72 +358,9 @@ class FanServiceLegacy(object):
         self.step = 0
         if self.path is not None:
             if os.path.isfile(self.path + '/step_time'):
-                self.step = int(self._read_status('/step_time'))
+                self.step = int(file_read_status(self.path + '/step_time'))
         # Update variables
         self.update()
-
-    def initialization(self, jc):
-        self._jc = jc
-        # Load configuration
-        config_fan = self._config.get('fan', {})
-        # Set default speed
-        self._speed = config_fan.get('speed', CONFIG_DEFAULT_FAN_SPEED)
-        # Set default mode
-        mode = config_fan.get('mode', self.CONFIGS[0] if self.CONFIGS else '')
-        self.set_mode(mode, False)
-
-    def get_configs(self):
-        return self.CONFIGS
-
-    @property
-    def mode(self):
-        config_fan = self._config.get('fan', {})
-        return config_fan.get('mode', self.CONFIGS[0] if self.CONFIGS else '')
-
-    @mode.setter
-    def mode(self, value):
-        if value not in self.CONFIGS:
-            raise JtopException('This control does not available')
-        jc_status = self._jc.alive(wait=False) if self._jc is not None else False
-        self.set_mode(value, jc_status)
-
-    def set_mode(self, value, status):
-        logger.info("Mode set {mode} status={status}".format(mode=value, status=status))
-        # Set mode fan
-        if value == 'system':
-            self.auto = True
-        if value == 'default':
-            # Set in auto only if jetson_clocks in not active
-            if self._jc is not None:
-                if self.is_speed:
-                    # Only if jetson_clocks is alive set max speed for fan
-                    self.set_speed(100 if status else 0)
-                # Set automatic mode:
-                # - True if jetson_clocks is off
-                # - False if jetson_clocks is running
-                self.auto = not status
-        if value == 'manual':
-            # Switch off speed
-            self.auto = False
-            # Initialize default speed
-            if self.is_speed:
-                self.speed = self._speed
-        # Store mode
-        self._status['mode'] = value
-        # Store only if value is different
-        if self.mode != value:
-            # Extract configuration
-            config = self._config.get('fan', {})
-            # Add new value
-            config['mode'] = value
-            # Set new jetson_clocks configuration
-            self._config.set('fan', config)
-            # Fan setting
-            logger.debug("Config {config}".format(config=config))
-
-    @property
-    def is_speed(self):
-        return self.isTPWM
 
     @property
     def speed(self):
@@ -429,6 +381,40 @@ class FanServiceLegacy(object):
         self._config.set('fan', config)
         # Fan setting
         logger.debug("Config {config}".format(config=config))
+
+    def set_mode(self, value, status):
+        logger.info("Mode set {mode} status={status}".format(mode=value, status=status))
+        # Set mode fan
+        if value == 'system':
+            self.auto = True
+        if value == 'default':
+            # Set in auto only if jetson_clocks in not active
+            if self._jc is not None:
+                if self.isTPWM:
+                    # Only if jetson_clocks is alive set max speed for fan
+                    self.set_speed(100 if status else 0)
+                # Set automatic mode:
+                # - True if jetson_clocks is off
+                # - False if jetson_clocks is running
+                self.auto = not status
+        if value == 'manual':
+            # Switch off speed
+            self.auto = False
+            # Initialize default speed
+            if self.isTPWM:
+                self.speed = self._speed
+        # Store mode
+        self._status['mode'] = value
+        # Store only if value is different
+        if self.mode != value:
+            # Extract configuration
+            config = self._config.get('fan', {})
+            # Add new value
+            config['mode'] = value
+            # Set new jetson_clocks configuration
+            self._config.set('fan', config)
+            # Fan setting
+            logger.debug("Config {config}".format(config=config))
 
     def set_speed(self, value):
         # Check type
@@ -463,28 +449,16 @@ class FanServiceLegacy(object):
                 with open(self.path + '/temp_control', 'w') as f:
                     f.write(str(value))
 
-    def _PWMtoValue(self, pwm):
-        pwm = int(pwm)
-        return float(pwm) * 100.0 / (self._pwm_cap)
-
-    def _ValueToPWM(self, value):
-        return int(ceil((self._pwm_cap) * value / 100.0))
-
     def update(self):
         if not self._allFiles:
             return {}
         # Control temperature
-        self._status['auto'] = bool(int(self._read_status('/temp_control')) == 1) if self.isCTRL else None
+        self._status['auto'] = bool(int(file_read_status(self.path + '/temp_control')) == 1) if self.isCTRL else None
         # Read PWM
-        self._status['speed'] = {'FAN1': self._PWMtoValue(self._read_status('/target_pwm'))} if self.isTPWM else None
+        self._status['speed'] = {'FAN1': self._PWMtoValue(file_read_status(self.path + '/target_pwm'))} if self.isTPWM else None
         # Read current
-        self._status['measure'] = self._PWMtoValue(self._read_status('/cur_pwm')) if self.isCPWM else None
+        self._status['measure'] = self._PWMtoValue(file_read_status(self.path + '/cur_pwm')) if self.isCPWM else None
         # Read RPM fan
-        self._status['rpm'] = int(self._read_status('/rpm_measured')) if self.isRPM else None
+        self._status['rpm'] = int(file_read_status(self.path + '/rpm_measured')) if self.isRPM else None
         return self._status
-
-    def _read_status(self, file_read):
-        with open(self.path + file_read, 'r') as f:
-            return f.read()
-        return None
 # EOF
