@@ -317,6 +317,7 @@ class FanService(ABCFanService):
         self._status['auto'] = nvfancontrol_is_active
         return self._status
 
+
 class FanServiceLegacy(ABCFanService):
 
     def __init__(self, config, fan_path):
