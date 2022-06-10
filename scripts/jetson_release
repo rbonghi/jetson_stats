@@ -79,7 +79,7 @@ jetson_release()
         if [ ! -z $JETSON_CHIP_ID ] ; then
             echo "   * Chip ID:$JETSON_CHIP_ID"
         fi
-        echo "   * Module: $JETSON_MODULE - Board: $JETSON_CARRIER"
+        echo "   * Module: $JETSON_MODULE - Carrier: $JETSON_CARRIER"
         echo "   * Code Name: $JETSON_CODENAME"
         # If available print the Board IDS
         if [ ! -z "$JETSON_BOARDIDS" ] ; then
