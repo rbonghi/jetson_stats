@@ -75,9 +75,11 @@ jetson_release()
     if $VERBOSE ; then
         # Board information
         echo "${bold} - Board info:${reset}"
-        echo "   * Type: $JETSON_TYPE"
-        echo "   * SOC Family: $JETSON_SOC - ID:$JETSON_CHIP_ID"
-        echo "   * Module: $JETSON_MODULE - Board: $JETSON_BOARD"
+        echo "   * SOC Family: $JETSON_SOC"
+        if [ ! -z $JETSON_CHIP_ID ] ; then
+            echo "   * Chip ID:$JETSON_CHIP_ID"
+        fi
+        echo "   * Module: $JETSON_MODULE - Board: $JETSON_CARRIER"
         echo "   * Code Name: $JETSON_CODENAME"
         # If available print the Board IDS
         if [ ! -z "$JETSON_BOARDIDS" ] ; then
@@ -100,7 +102,10 @@ jetson_release()
     # Print TensorRT version
     echo "   * TensorRT: $JETSON_TENSORRT"
     # Print VisionWorks version
-    echo "   * Visionworks: $JETSON_VISIONWORKS"
+    # VisionWorks is not part of Jetpack from 5.0
+    if [ $JETSON_L4T_RELEASE -lt 34 ] ; then
+        echo "   * Visionworks: $JETSON_VISIONWORKS"
+    fi
     # Print OpenCv version and cuda compiled
     if [ $JETSON_OPENCV_CUDA = "YES" ] ; then
         echo "   * OpenCV: $JETSON_OPENCV compiled CUDA: ${green}$JETSON_OPENCV_CUDA${reset}"
