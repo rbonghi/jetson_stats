@@ -152,13 +152,14 @@ class JtopServer(Process):
         # Generate key and open broadcaster
         self.broadcaster = JtopManager()
         # Load board information
+        # is_debug = True if "JETSON_DEBUG" in os.environ else False
         self.board = load_jetson_variables()
         # Initialize Fan
         try:
             self.fan = FanService(self.config, path_fan)
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_fan))
-            self.fan = FanServiceLegacy(self.config, PATH_FAN_LEGACY + path_fan)
+            self.fan = FanServiceLegacy(self.config, path_fan + PATH_FAN_LEGACY)
         # Initialize jetson_clocks controller
         try:
             self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)
@@ -171,7 +172,7 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
-        # Setup memory servive
+        # Setup memory service
         self.memory = MemoryService()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
