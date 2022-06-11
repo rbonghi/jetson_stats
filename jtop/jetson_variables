@@ -149,9 +149,9 @@ export JETSON_CARRIER
 case $JETSON_MODEL in
     *Orin*) JETSON_CUDA_ARCH_BIN="8.7" ;;
     *Xavier*) JETSON_CUDA_ARCH_BIN="7.2" ;;
-    TX2*) JETSON_CUDA_ARCH_BIN="6.2" ;;
-    TX1* | Nano*) JETSON_CUDA_ARCH_BIN="5.3" ;;
-    TK1) JETSON_CUDA_ARCH_BIN="3.2" ;;
+    *TX2*) JETSON_CUDA_ARCH_BIN="6.2" ;;
+    *TX1* | *Nano*) JETSON_CUDA_ARCH_BIN="5.3" ;;
+    *TK1*) JETSON_CUDA_ARCH_BIN="3.2" ;;
     * ) JETSON_CUDA_ARCH_BIN="NONE" ;;
 esac
 # Export Jetson CUDA ARCHITECTURE

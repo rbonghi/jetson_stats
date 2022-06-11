@@ -72,7 +72,7 @@ class INFO(Page):
         idx += 2
         # Load Board information
         hardware = self.jetson.board.hardware
-        self.info_variable(start_pos + idx, posx + 2, "* Model", info["model"].strip("NVIDIA "))
+        self.info_variable(start_pos + idx, posx + 2, "* Model", info["model"])
         self.info_variable(start_pos + idx + 1, posx + 2, "* SOC Family", hardware["SOC"])
         if hardware["CHIP_ID"]:
             self.info_variable(start_pos + idx + 1, posx + 33, "ID", hardware["CHIP_ID"], spacing=4)
