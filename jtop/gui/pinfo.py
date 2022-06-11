@@ -37,7 +37,10 @@ class INFO(Page):
         super(INFO, self).__init__("INFO", stdscr, jetson)
         info = self.jetson.board.info
         self.l4t_release = info["L4T"].split(".")[0]
-        self.l4t_release = int(self.l4t_release) if self.l4t_release.isnumeric() else 0
+        try:
+            self.l4t_release = int(self.l4t_release)
+        except ValueError:
+            self.l4t_release = 0
 
     def info_variable(self, start, offset, name, value, spacing=18):
         self.stdscr.addstr(start, offset, name + ":")
