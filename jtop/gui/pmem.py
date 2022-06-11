@@ -114,7 +114,7 @@ class MEM(Page):
             linear_gauge(self.stdscr, offset=line_counter, size=size, start=start,
                          name=GaugeName(path.basename(name), color=color),
                          value=value,
-                         percent="{use}/{tot}{unit}b".format(use=int(round(used)), tot=round(szw, 1), unit=unit),
+                         percent="{use}/{tot}{unit}B".format(use=int(round(used)), tot=round(szw, 1), unit=unit),
                          label="P={prio: d}".format(prio=int(swap['prio'])))
         # Draw total swap gauge
         line_counter += 1
@@ -245,7 +245,7 @@ class MEM(Page):
             else:
                 color = curses.A_NORMAL
             self.stdscr.addstr(first + height - 3, start_pos + 16, "{size: <2}".format(size=self._swap_size), color)
-            self.stdscr.addstr(first + height - 3, start_pos + 18, "Gb", curses.A_BOLD)
+            self.stdscr.addstr(first + height - 3, start_pos + 18, "GB", curses.A_BOLD)
             # Draw keys to increase size swap
             self.button_increase.draw(first + height - 4, start_pos + 21, key, mouse)
         # else:
