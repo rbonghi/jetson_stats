@@ -35,6 +35,9 @@ class INFO(Page):
 
     def __init__(self, stdscr, jetson):
         super(INFO, self).__init__("INFO", stdscr, jetson)
+        info = self.jetson.board.info
+        self.l4t_release = info["L4T"].split(".")[0]
+        self.l4t_release = int(self.l4t_release) if self.l4t_release.isnumeric() else 0
 
     def info_variable(self, start, offset, name, value, spacing=18):
         self.stdscr.addstr(start, offset, name + ":")
@@ -59,7 +62,6 @@ class INFO(Page):
         idx = 0
         # Board info
         info = self.jetson.board.info
-        l4t_release = int(info["L4T"].split(".")[0])
         message_jp = "{info[jetpack]} [L4T {info[L4T]}]".format(info=info)
         self.stdscr.addstr(start_pos + idx, posx, "- Jetpack:", curses.A_BOLD)
         self.stdscr.addstr(start_pos + idx, posx + spacing, message_jp, curses.A_BOLD)
@@ -88,7 +90,7 @@ class INFO(Page):
             if name == "OpenCV-Cuda":
                 continue
             # VisionWorks is not anymore available from JP5.0
-            if name == "VisionWorks" and l4t_release >= 34:
+            if name == "VisionWorks" and self.l4t_release >= 34:
                 continue
             self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
             self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)

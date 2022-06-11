@@ -231,6 +231,10 @@ class ABCFanService(ABC):
         pass
 
     @abc.abstractmethod
+    def is_speed(self):
+        pass
+
+    @abc.abstractmethod
     def set_speed(self, value):
         pass
 
@@ -290,6 +294,9 @@ class FanService(ABCFanService):
         elif value == 'manual':
             if nvfancontrol_is_active:
                 os.system('systemctl stop nvfancontrol')
+
+    def is_speed(self):
+        return True
 
     def set_speed(self, value):
         # Check type
@@ -416,6 +423,9 @@ class FanServiceLegacy(ABCFanService):
             self._config.set('fan', config)
             # Fan setting
             logger.debug("Config {config}".format(config=config))
+
+    def is_speed(self):
+        return self.isTPWM
 
     def set_speed(self, value):
         # Check type

@@ -152,14 +152,14 @@ class JtopServer(Process):
         # Generate key and open broadcaster
         self.broadcaster = JtopManager()
         # Load board information
-        # is_debug = True if "JETSON_DEBUG" in os.environ else False
+        is_debug = True if "JETSON_DEBUG" in os.environ else False
         self.board = load_jetson_variables()
         # Initialize Fan
         try:
             self.fan = FanService(self.config, path_fan)
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_fan))
-            self.fan = FanServiceLegacy(self.config, path_fan + PATH_FAN_LEGACY)
+            self.fan = FanServiceLegacy(self.config, path_fan if is_debug else PATH_FAN_LEGACY)
         # Initialize jetson_clocks controller
         try:
             self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)

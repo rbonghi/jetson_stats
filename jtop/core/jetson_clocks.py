@@ -278,13 +278,13 @@ class JetsonClocksService(object):
         # Configure fan
         if self.fan.mode == 'system':
             # Read status
-            if self.fan.is_speed:
+            if self.fan.is_speed():
                 self.fan.set_speed(speed)
             # Set mode
             self.fan.auto = True
         elif self.fan.mode == 'manual':
             # Read status
-            if self.fan.is_speed:
+            if self.fan.is_speed():
                 self.fan.set_speed(speed)
             # Set mode
             self.fan.auto = False
@@ -311,7 +311,7 @@ class JetsonClocksService(object):
         if up_time < boot_time:
             time.sleep(delta)
         # Read fan speed
-        speed = self.fan.speed if self.fan.is_speed else 0
+        speed = self.fan.speed if self.fan.is_speed() else 0
         # Start jetson_clocks
         Command.run_command([self.jc_bin], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
@@ -325,7 +325,7 @@ class JetsonClocksService(object):
         JetsonClocksService.set_status = 'deactivating'
         logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
         # Read fan speed
-        speed = self.fan.speed if self.fan.is_speed else 0
+        speed = self.fan.speed if self.fan.is_speed() else 0
         # Run jetson_clocks
         Command.run_command([self.jc_bin, '--restore', self.config_l4t], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
