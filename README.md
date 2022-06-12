@@ -1,6 +1,8 @@
 # Jetson stats
 [![PyPI - Downloads](https://img.shields.io/pypi/dw/jetson-stats.svg)](https://pypistats.org/packages/jetson-stats) [![PyPI version](https://badge.fury.io/py/jetson-stats.svg)](https://badge.fury.io/py/jetson-stats) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/jetson-stats.svg)](https://www.python.org/) [![PyPI - Format](https://img.shields.io/pypi/format/jetson-stats.svg)](https://pypi.org/project/jetson-stats/) [![CI & CD](https://github.com/rbonghi/jetson_stats/workflows/CI%20&%20CD/badge.svg)](https://github.com/rbonghi/jetson_stats/actions?query=workflow%3A%22CI+%26+CD%22)
 
+[![Twitter Follow](https://img.shields.io/twitter/follow/raffaello86?style=social)](https://twitter.com/raffaello86) [![robo.panther](https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&logo=instagram)](https://www.instagram.com/robo.panther/)
+
 **jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Xavier NX, Nano, AGX Xavier, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
 
 [:sparkling_heart: **Sponsor** jetson-stats](https://github.com/sponsors/rbonghi)
@@ -9,6 +11,7 @@ When you install jetson-stats are included:
 - [Jetson stats](#jetson-stats)
 - [Install](#install)
   - [Virtual environment](#virtual-environment)
+  - [Docker](#docker)
 - [jtop](#jtop)
   - [Pages](#pages)
   - [Controls](#controls)
@@ -16,6 +19,7 @@ When you install jetson-stats are included:
 - [jetson_release](#jetson_release)
 - [jetson_swap](#jetson_swap)
 - [jetson variables](#jetson-variables)
+- [Troubleshooting](#troubleshooting)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rbonghi.github.io/jetson_stats).
 
@@ -38,6 +42,25 @@ virtualenv venv
 source venv/bin/activate
 pip install -U jetson-stats
 ```
+
+## Docker
+
+You can run jetson_stats, but you **must** install before in your host
+
+You can test running on your terminal
+```console
+docker pull rbonghi/jetson-stats
+docker run -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats
+```
+
+or you can add in your Dockerfile writing:
+
+```docker
+FROM python:3-buster
+RUN pip install -U jetson-stats
+```
+
+**REMIND** to pass `/run/jtop.sock:/run/jtop.sock` when you run your docker container.
 
 # [jtop][jtop] 
 It is a system monitoring utility that runs on the terminal and see and **control** realtime the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
@@ -122,6 +145,19 @@ usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
 When you install jetson-stats in your bash will be available a list of new environment variables to know which which hardware version is available are you working, which Jetpack is installed and other variable show below
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
+
+# Troubleshooting
+
+If you reach the error below:
+
+**sudo: pip: command not found**
+
+You need to install **pip** before to install jetson-stats
+
+```console
+sudo apt-get install python3-pip
+sudo -H pip3 install -U jetson-stats
+```
 
 [library]: https://github.com/rbonghi/jetson_stats/wiki/library
 [jtop]: https://github.com/rbonghi/jetson_stats/wiki/jtop
