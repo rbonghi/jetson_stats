@@ -113,7 +113,7 @@ export JETSON_VPI
 # Vulkan
 JETSON_VULKAN_INFO=$(which vulkaninfo)
 if [ ! -z $JETSON_VULKAN_INFO ] ; then
-    JETSON_VULKAN_INFO=$($JETSON_VULKAN_INFO | grep -m1 "Vulkan Instance Version")
+    JETSON_VULKAN_INFO=$($JETSON_VULKAN_INFO 2> /dev/null | grep -m1 "Vulkan Instance Version")
     JETSON_VULKAN_INFO=$(echo $JETSON_VULKAN_INFO | sed 's/.*: \([^ ]*\).*/\1/' )
 else
     JETSON_VULKAN_INFO="NOT_INSTALLED"
