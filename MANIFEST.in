@@ -28,7 +28,9 @@ recursive-include services *.service
 recursive-include services *.sh
 
 # Remove test docs and examples and tox.ini
-exclude tox.it
+exclude tox.ini
+exclude Dockerfile
+exclude .dockerignore
 prune tests
 prune docs
 prune examples
