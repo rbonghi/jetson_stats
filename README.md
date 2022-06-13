@@ -3,7 +3,7 @@
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/raffaello86?style=social)](https://twitter.com/raffaello86) [![robo.panther](https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&logo=instagram)](https://www.instagram.com/robo.panther/)
 
-**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Xavier NX, Nano, AGX Xavier, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
+**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Orin series, Xavier series, Nano, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
 
 [:sparkling_heart: **Sponsor** jetson-stats](https://github.com/sponsors/rbonghi)
 
@@ -12,6 +12,7 @@ When you install jetson-stats are included:
 - [Install](#install)
   - [Virtual environment](#virtual-environment)
   - [Docker](#docker)
+  - [Troubleshooting](#troubleshooting)
 - [jtop](#jtop)
   - [Pages](#pages)
   - [Controls](#controls)
@@ -19,7 +20,6 @@ When you install jetson-stats are included:
 - [jetson_release](#jetson_release)
 - [jetson_swap](#jetson_swap)
 - [jetson variables](#jetson-variables)
-- [Troubleshooting](#troubleshooting)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rbonghi.github.io/jetson_stats).
 
@@ -58,6 +58,19 @@ or you can add in your Dockerfile writing:
 ```docker
 FROM python:3-buster
 RUN pip install -U jetson-stats
+```
+
+## Troubleshooting
+
+If you reach the error below:
+
+**sudo: pip: command not found**
+
+You need to install **pip** before to install jetson-stats
+
+```console
+sudo apt-get install python3-pip
+sudo -H pip3 install -U jetson-stats
 ```
 
 **REMIND** to pass `/run/jtop.sock:/run/jtop.sock` when you run your docker container.
@@ -145,19 +158,6 @@ usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
 When you install jetson-stats in your bash will be available a list of new environment variables to know which which hardware version is available are you working, which Jetpack is installed and other variable show below
 
 ![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
-
-# Troubleshooting
-
-If you reach the error below:
-
-**sudo: pip: command not found**
-
-You need to install **pip** before to install jetson-stats
-
-```console
-sudo apt-get install python3-pip
-sudo -H pip3 install -U jetson-stats
-```
 
 [library]: https://github.com/rbonghi/jetson_stats/wiki/library
 [jtop]: https://github.com/rbonghi/jetson_stats/wiki/jtop
