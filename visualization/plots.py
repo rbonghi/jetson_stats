@@ -80,14 +80,18 @@ def main():
     fontP.set_size('xx-small')
     ax1.legend(loc=1, ncol=1, bbox_to_anchor=(0, 0, 1, 1),
                prop=fontP, fancybox=True, shadow=False, title=None)
-    ax1.set_title('Temperature(˚C) vs time', fontdict=font1)
     ax1.set_ylabel('temp (˚C)')
 
     ax1.grid(color='green', linestyle='--', linewidth=0.5)
     ax1.set_ylim([-1, 101])
     ax1.set_yticks([0, 25, 50, 75, 100])
     ax1.axes.get_xaxis().set_ticklabels([])
-
+    y_min = df.loc[:, 'Temp AO'].min()
+    y_max = df.loc[:, 'Temp AO'].max()
+    ax1.set_ylim([int(y_min) - 2, int(y_max) + 2])
+    yticks_arr = np.arange(y_min, y_max, 5)
+    ax1.set_title('Temperature(˚C) vs time | min = {}˚C , max = {}˚C'.format(y_min, y_max), fontdict=font1)
+    ax1.set_yticks(yticks_arr)
     # cpu usage vs time graph
     ax2.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'CPU1'].astype(float), label='core1')
     ax2.plot(df.loc[:, 'sample'].astype(float), df.loc[:, 'CPU2'].astype(float), label='core2')
