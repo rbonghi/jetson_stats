@@ -34,11 +34,11 @@ class CPU(Page):
         # List all CPU
         self.chart_cpus = []
         for name in sorted(self.jetson.cpu):
-            chart = Chart(jetson, name, self.update_chart, color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
+            chart = Chart(jetson, "CPU{name}".format(name=name), self.update_chart, color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
             self.chart_cpus += [chart]
 
     def update_chart(self, jetson, name):
-        cpu = jetson.cpu[name]
+        cpu = jetson.cpu[int(name[3:])]
         status = True if cpu else False
         return {
             'value': [cpu.get("val", 0)],
@@ -80,6 +80,7 @@ class CPU(Page):
             model = model[:x_offset - (first + 3) - 4]
             # Draw info
             color = curses.color_pair(8) if active else curses.color_pair(7)
+            name = "CPU{name}".format(name=name)
             self.stdscr.addstr(first + offset_table + idx * 2, 2, name, color)
             try:
                 if active:

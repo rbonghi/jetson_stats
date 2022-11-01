@@ -42,6 +42,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         if 'val' in cpu and 'governor' in cpu:
             percent = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=cpu['val'])
         # Show linear gauge
+        name = "CPU{name}".format(name=name) + (" " if idx < 9 and len(list_cpus) > 9 else "")
         linear_gauge(
             stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
             name=GaugeName(name, color=curses.color_pair(6)),

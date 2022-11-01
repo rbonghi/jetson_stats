@@ -182,7 +182,7 @@ def CPUS(text):
         cpus_list = match.group(1).split(',')
         for idx, cpu_str in enumerate(cpus_list):
             # Set name CPU
-            name = 'CPU' + str(idx + 1)
+            name = idx + 1
             cpus[name] = {}
             # status
             if 'off' == cpu_str:

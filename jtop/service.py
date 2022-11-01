@@ -433,9 +433,13 @@ class JtopServer(Process):
         total, power = self._total_power(power)
         data['power'] = {'all': total, 'power': power}
         # -- Temperature --
-        # Remove PMIC temperature
+        # Remove PMIC temperature (TX family)
         if 'PMIC' in tegrastats['TEMP']:
             del tegrastats['TEMP']['PMIC']
+        # Remove all CV temperatures (Orin family)
+        for temp in list(tegrastats['TEMP'].keys()):
+            if temp.startswith('CV'):
+                del tegrastats['TEMP'][temp]
         data['temperature'] = tegrastats['TEMP']
         # -- CPU --
         data['cpu'] = tegrastats['CPU']

@@ -75,7 +75,7 @@ def decode_show_message(lines):
                 "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).split()}}
             # Store in CPU list
             idx_cpu = int(match.group(1)) + 1
-            status["CPU"]["CPU{num}".format(num=idx_cpu)] = cpu
+            status["CPU"][idx_cpu] = cpu
             continue
         # Search CPU for TX1
         match = CPUTX1_REGEXP.search(line)
@@ -89,7 +89,7 @@ def decode_show_message(lines):
                 "current_freq": int(match.group(5))}
             # Store in CPU list
             idx_cpu = int(match.group(1)) + 1
-            status["CPU"]["CPU{num}".format(num=idx_cpu)] = cpu
+            status["CPU"][idx_cpu] = cpu
             continue
         # Search configuration GPU config
         match = GPU_REGEXP.search(line)
