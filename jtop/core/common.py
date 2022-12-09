@@ -176,7 +176,7 @@ def get_local_interfaces():
     max_bytes_out, names_address_out = struct.unpack('iL', mutated_byte_buffer)
     # Convert names to a bytes array - keep in mind we've mutated the names array, so now our bytes out should represent
     # the bytes results of the get iface list ioctl command.
-    namestr = names.tostring() if hasattr(names, 'tostring') else names.tobytes()
+    namestr = bytearray(names)
     # Each entry is 40 bytes long.  The first 16 bytes are the name string.
     # the 20-24th bytes are IP address octet strings in byte form - one for each byte.
     # Don't know what 17-19 are, or bytes 25:40.
