@@ -28,7 +28,8 @@ from .jtopguimenu import (
     plot_watts,
     compact_info,
     plot_temperatures,
-    plot_CPUs)
+    plot_CPUs,
+    plot_GPUs)
 
 
 class ALL(Page):
@@ -114,10 +115,7 @@ class ALL(Page):
                      label=label_freq(self.jetson.emc['frq'], start='k'))
         # GPU linear gauge info
         line_counter += 2
-        linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('GPU', color=curses.color_pair(6)),
-                     value=self.jetson.gpu.get('val', 0),
-                     label=label_freq(self.jetson.gpu['frq'], start='k'))
+        line_counter = plot_GPUs(self.stdscr, line_counter, self.jetson.gpu, width)
         # Status disk
         line_counter += 1
         disk_status = self.jetson.disk

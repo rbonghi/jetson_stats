@@ -53,6 +53,24 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
     # Size block CPU
     return int(offest + idx / 2 + 1) if len(list_cpus) > 4 else int(offest + idx + 1)
 
+@check_curses
+def plot_GPUs(stdscr, offest, list_gpus, width):
+    # list_gpus = {1: list_gpus[1]}
+    max_bar = int(float(width) / 2.0)
+    for idx, name in enumerate(sorted(list_gpus)):
+        gpu = list_gpus[name]
+        # Split in double list
+        start = max_bar if idx >= len(list_gpus) / 2 else 0
+        off_idx = idx - len(list_gpus) / 2 if idx >= len(list_gpus) / 2 else idx
+        # Show linear gauge
+        name = "GPU{name}".format(name=name) if len(list_gpus) > 1 else "GPU"
+        linear_gauge(
+            stdscr, offset=int(offest + off_idx), start=start, size=max_bar if len(list_gpus) > 1 else width,
+            name=GaugeName(name, color=curses.color_pair(6)),
+            value=gpu.get('val', 0),
+            label=label_freq(gpu['frq'], start='k'))
+    # Size block CPU
+    return int(offest + idx / 2)
 
 @check_curses
 def plot_temperatures(stdscr, start, offset, width, height, jetson):

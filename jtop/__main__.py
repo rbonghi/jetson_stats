@@ -97,7 +97,6 @@ def main():
     parser = argparse.ArgumentParser(
         description='jtop is system monitoring utility and runs on terminal',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('service', nargs='?', help=argparse.SUPPRESS, default=False)
     parser.add_argument('--force', dest='force', help=argparse.SUPPRESS, action="store_true", default=False)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
@@ -111,7 +110,7 @@ def main():
     # signal.signal(signal.SIGINT, exit_signal)  # Do not needed equivalent to exception KeyboardInterrupt
     signal.signal(signal.SIGTERM, exit_signal)
     # Run jtop service
-    if args.service == 'service':
+    if os.getenv('JTOP_SERVICE', False):
         # Initialize logging level
         logging.basicConfig(level=logging.INFO, filemode='w', format='[%(levelname)s] %(name)s - %(message)s')
         # Run service

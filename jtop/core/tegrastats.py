@@ -18,12 +18,14 @@
 # Logging
 import logging
 import sys
+# Datetime remove
+from dateutil.parser import parse
 # Launch command
 import subprocess as sp
 # Threading
 from threading import Thread, Event
 # Tegrastats parser
-from .tegra_parse import VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, WATTS
+from .tegra_parse import DATE, VALS, MTS, RAM, SWAP, IRAM, CPUS, TEMPS, WATTS
 from .common import locate_commands
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
@@ -49,6 +51,8 @@ class Tegrastats:
         self.callback = callback
 
     def _decode(self, text):
+        # Remove date from tegrastats string
+        text = DATE(text)
         # Find and parse all single values
         stats = VALS(text)
         # Parse if exist MTS

@@ -18,6 +18,7 @@
 import re
 import os
 # All regular expressions
+DATE_RE = re.compile(r'\d+\-\d+\-\d+ \d+\:\d+\:\d+ ')
 SWAP_RE = re.compile(r'SWAP (\d+)\/(\d+)(\w)B( ?)\(cached (\d+)(\w)B\)')
 IRAM_RE = re.compile(r'IRAM (\d+)\/(\d+)(\w)B( ?)\(lfb (\d+)(\w)B\)')
 RAM_RE = re.compile(r'RAM (\d+)\/(\d+)(\w)B( ?)\(lfb (\d+)x(\d+)(\w)B\)')
@@ -35,6 +36,15 @@ def val_freq(val):
         return {'val': int(match.group(1)), 'frq': int(match.group(2)) * 1000}
     else:
         return {'val': int(val)}
+
+
+def DATE(text):
+    """
+        Remove date and time from string
+        12-27-2022 13:48:01 ....
+    """
+    match = DATE_RE.search(text)
+    return text[:match.start()] + text[match.end():]
 
 
 def SWAP(text):
