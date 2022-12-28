@@ -80,7 +80,7 @@ class Chart(object):
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if label:
-            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label, self.color | curses.A_BOLD)
+            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label[:displayX - len(self.name)], self.color | curses.A_BOLD)
         # Plot chart lines
         if self.active:
             # Plot values

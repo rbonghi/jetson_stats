@@ -31,16 +31,20 @@ class GPU(Page):
     def __init__(self, stdscr, jetson):
         super(GPU, self).__init__("GPU", stdscr, jetson)
         # Initialize GPU chart
-        self.chart_gpu = Chart(jetson, "GPU", self.update_chart, color=curses.color_pair(2), color_chart=[curses.color_pair(8)])
+        self.chart_gpus = []
+        for name in sorted(self.jetson.gpu):
+            chart = Chart(jetson, "GPU{name}".format(name=name), self.update_chart, color=curses.color_pair(2), color_chart=[curses.color_pair(8)])
+            self.chart_gpus += [chart]
 
     def update_chart(self, jetson, name):
+        gpu = jetson.gpu[int(name[3:])]
         # Get max value if is present
-        max_val = jetson.gpu.get("max_val", 100)
+        max_val = gpu.get("max_val", 100)
         # Get unit
-        unit = jetson.gpu.get("unit", "%")
+        unit = gpu.get("unit", "%")
         # Append in list
         return {
-            'value': [jetson.gpu.get("val", 0)],
+            'value': [gpu.get("val", 0)],
             'max': max_val,
             'unit': unit,
         }
@@ -49,28 +53,32 @@ class GPU(Page):
         """
             Draw a plot with GPU payload
         """
+        n_gpu = len(self.jetson.gpu)
         # Screen size
         height, width, first = self.size_page()
-        # Evaluate size chart
-        size_x = [1, width - 2]
-        size_y = [first + 1, height * 2 // 3]
-        # Draw the GPU chart
-        frq = label_freq(self.jetson.gpu['frq'], start='k')
-        label_chart_gpu = "{percent: >2}%".format(percent=self.jetson.gpu['val'])
-        if frq:
-            label_chart_gpu += " - {frq}".format(frq=frq)
-        self.chart_gpu.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
-        # Percent Gauge GPU
-        linear_gauge(self.stdscr, offset=first + height * 2 // 3 + 1, start=1, size=width // 2,
-                     name=GaugeName('GPU', color=curses.color_pair(6)),
-                     value=self.jetson.gpu.get('val', 0),
-                     label=label_freq(self.jetson.gpu['frq'], start='k'))
+        # Evaluate size single chart
+        x_size = (width - 2) // n_gpu
+        # Plot all GPUS
+        idx_n = 0
+        for chart, name in zip(self.chart_gpus, sorted(self.jetson.gpu)):
+            # Increase counter
+            size_x = [1 + idx_n * (x_size),  (1 + idx_n) * (1 + x_size) - 2]
+            size_y = [first + 1, height * 2 // 3]
+            # Value and frequency
+            y_label = idx_n % n_gpu
+            frq = label_freq(self.jetson.gpu[name]['frq'], start='k')
+            label_chart_gpu = "{percent: >2}%".format(percent=self.jetson.gpu[name]['val'])
+            if frq:
+                label_chart_gpu += " - {frq}".format(frq=frq)
+            chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu, y_label=y_label)
+            # Increase counter
+            idx_n += 1
         # Temperature GPU
         if 'GPU' in self.jetson.temperature:
             temp_gpu = self.jetson.temperature['GPU']
-            plot_name_info(self.stdscr, first + height * 2 // 3 + 1, width // 2 + 4, "GPU Temp", str(temp_gpu) + "C")
+            plot_name_info(self.stdscr, first + height * 2 // 3 + 2, 1, "GPU Temp", str(temp_gpu) + "C")
         # Jetson clocks status
-        jetson_clocks_gui(self.stdscr, first + height * 2 // 3 + 3, 1, self.jetson)
+        jetson_clocks_gui(self.stdscr, first + height * 2 // 3 + 4, 1, self.jetson)
         # NVP Model
         if self.jetson.nvpmodel is not None:
-            nvp_model_gui(self.stdscr, first + height * 2 // 3 + 4, 1, self.jetson)
+            nvp_model_gui(self.stdscr, first + height * 2 // 3 + 5, 1, self.jetson)

@@ -81,8 +81,8 @@ class CPU(Page):
             # Draw info
             color = curses.color_pair(8) if active else curses.color_pair(7)
             name = "CPU{name}".format(name=name)
-            self.stdscr.addstr(first + offset_table + idx * 2, 2, name, color)
             try:
+                self.stdscr.addstr(first + offset_table + idx * 2, 2, name, color)
                 if active:
                     self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, model, curses.A_NORMAL)
                     self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, "Frq:", curses.A_NORMAL)
@@ -91,6 +91,10 @@ class CPU(Page):
                     self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, status, curses.A_NORMAL)
             except curses.error:
                 pass
+            # Add alert ARROW Down
+            if first + offset_table + idx * 2 > height - 4:
+                for n_arrow in range(x_offset - 1):
+                    self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE)
         # Evaluate size single chart
         x_size = (width - x_offset - 6) // (n_cpu // 2)
         y_size = (height - 2 - first) // 2
@@ -107,7 +111,7 @@ class CPU(Page):
             y_label = idx_n % (n_cpu // 2) == (n_cpu // 2) - 1
             # Select line
             line = 1 if idx_n >= n_cpu // 2 else 0
-            # Incrase counter
+            # Increase counter
             counter = idx_n - line * (n_cpu // 2)
             # Evaluate size chart
             add_size = offest_label if y_label else 0
