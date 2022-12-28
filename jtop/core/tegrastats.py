@@ -18,8 +18,6 @@
 # Logging
 import logging
 import sys
-# Datetime remove
-from dateutil.parser import parse
 # Launch command
 import subprocess as sp
 # Threading

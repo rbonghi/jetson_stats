@@ -164,10 +164,26 @@ def engines(stdscr, start, offset, width, height, jetson):
     stdscr.hline(offset, start + 1, curses.ACS_HLINE, width - 1)
     stdscr.addstr(offset, start + (width - 13) // 2, " [HW engines] ", curses.A_BOLD)
     counter = 1
-    # APE frequency
-    if jetson.engine.ape:
-        plot_name_info(stdscr, offset + counter, start + 1, "APE", str(jetson.engine.ape['val']) + "MHz")
-        counter += 1
+    # DLA0 - DLA1
+    # NVJPG0 - NVJPG1
+    # NVDEC - NVENC
+    # PVA - APE
+    # SE
+
+    # DLA engines
+    dla0_val = "[OFF]"
+    dla1_val = "[OFF]"
+    double_info(stdscr, start + 1, offset + counter, width, ('DLA0', dla0_val), ('DAL1', dla1_val))
+    counter += 1
+    # NVJPG engines
+    nvjpg0_value = "[OFF]"
+    nvjpg1_value = "[OFF]"
+    if jetson.engine.nvjpg is not None:
+        if jetson.engine.nvjpg:
+            nvjpg0_value, _, unit = size_min(jetson.engine.nvjpg)
+            nvjpg0_value = "{value}{unit}Hz".format(value=nvjpg0_value, unit=unit)
+    double_info(stdscr, start + 1, offset + counter, width, ('NVJPG0', nvjpg0_value), ('NVJPG1', nvjpg1_value))
+    counter += 1
     # Find encoders
     if jetson.engine.nvenc:
         enc_name = 'NVENC'
@@ -187,16 +203,12 @@ def engines(stdscr, start, offset, width, height, jetson):
         dec_val = "[OFF]"
     double_info(stdscr, start + 1, offset + counter, width, (enc_name, enc_val), (dec_name, dec_val))
     counter += 1
-    # NVJPG
-    if jetson.engine.nvjpg is not None:
-        if jetson.engine.nvjpg:
-            value, _, unit = size_min(jetson.engine.nvjpg)
-            value = "{value}{unit}Hz".format(value=value, unit=unit)
-        else:
-            value = "[OFF]"
-        # Plot status
-        plot_name_info(stdscr, offset + counter, start + 1, "NVJPG", value)
-
+    # APE frequency
+    ape_value = "[OFF]"
+    if jetson.engine.ape:
+        ape_value = str(jetson.engine.ape['val']) + "MHz"
+    double_info(stdscr, start + 1, offset + counter, width, ("APE", ape_value), (dec_name, dec_val))
+    counter += 1
 
 def double_info(stdscr, start, offset, width, enc, dec):
     plot_name_info(stdscr, offset, start, enc[0], enc[1])
