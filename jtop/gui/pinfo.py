@@ -17,6 +17,8 @@
 
 import re
 import curses
+# Architecture and platform info
+import platform
 # Find variable
 from ..core.common import get_var
 # Page class definition
@@ -85,6 +87,15 @@ class INFO(Page):
         if hardware["BOARDIDS"]:
             self.info_variable(start_pos + idx + 1, posx + 2, "* Board ids", hardware["BOARDIDS"])
             idx += 1
+        # Platform info
+        platform_line = start_pos + idx + 1
+        self.stdscr.addstr(platform_line, posx, "- Platform:", curses.A_BOLD)
+        self.info_variable(start_pos + idx + 2, posx + 2, "* Architecture", platform.machine())
+        self.info_variable(start_pos + idx + 3, posx + 2, "* Release", platform.release())
+        idx += 3
+        if self.jetson.cluster:
+            self.info_variable(start_pos + idx + 4, posx + 2, "* Cluster", self.jetson.cluster)
+            idx += 1
         # Libraries info
         library_line = start_pos + idx + 1
         self.stdscr.addstr(library_line, posx, "- Libraries:", curses.A_BOLD)
@@ -106,14 +117,14 @@ class INFO(Page):
         # IP address and Hostname
         if self.jetson.local_interfaces:
             # Write hostname
-            self.stdscr.addstr(library_line, width - 35, "- Hostname:", curses.A_BOLD)
-            self.stdscr.addstr(library_line, width - 20, self.jetson.local_interfaces["hostname"], curses.A_BOLD)
+            self.stdscr.addstr(platform_line, width - 35, "- Hostname:", curses.A_BOLD)
+            self.stdscr.addstr(platform_line, width - 20, self.jetson.local_interfaces["hostname"], curses.A_BOLD)
             # Write all interfaces
-            self.stdscr.addstr(library_line + 1, width - 35, "- Interfaces:", curses.A_BOLD)
+            self.stdscr.addstr(platform_line + 1, width - 35, "- Interfaces:", curses.A_BOLD)
             idx = 2
             for name, ip in self.jetson.local_interfaces["interfaces"].items():
-                self.stdscr.addstr(library_line + idx, width - 33, "* " + name + ":")
-                self.stdscr.addstr(library_line + idx, width - 20, ip, curses.A_BOLD)
+                self.stdscr.addstr(platform_line + idx, width - 33, "* " + name + ":")
+                self.stdscr.addstr(platform_line + idx, width - 20, ip, curses.A_BOLD)
                 idx += 1
         # Author information
         plot_name_info(self.stdscr, start_pos - 1, width - 31, "Version", get_var(VERSION_RE))

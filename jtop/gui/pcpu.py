@@ -60,16 +60,9 @@ class CPU(Page):
         rectangle(self.stdscr, first + 1, 0, height - 2 + first, first + x_offset)
         # Draw title side area
         self.stdscr.addstr(first + 1, 1, " Platform ", curses.A_BOLD)
-        # Platform information
-        arch = platform.machine()
-        plot_name_info(self.stdscr, first + 2, 2, "Arch", arch)
-        release = platform.release()
-        release = release[:x_offset - (first + 3) - 4]
-        plot_name_info(self.stdscr, first + 3, 2, "Rel", release)
-        plot_name_info(self.stdscr, first + 4, 2, "Cluster", self.jetson.cluster)
         # Architecture CPU cores
         # architecture = self.jetson.architecture
-        offset_table = 6
+        offset_table = 2
         for idx, name in enumerate(sorted(self.jetson.cpu)):
             cpu = self.jetson.cpu[name]
             status = 'ON' if cpu else 'OFF'
@@ -78,15 +71,18 @@ class CPU(Page):
             # Load model architecture
             model = cpu['model'].split()[0] if 'model' in cpu else ''
             model = model[:x_offset - (first + 3) - 4]
+            governor = cpu.get('governor', '').capitalize()
+            #governor = governor[:x_size + add_size - 12]
             # Draw info
             color = curses.color_pair(8) if active else curses.color_pair(7)
             name = "CPU{name}".format(name=name)
             try:
                 self.stdscr.addstr(first + offset_table + idx * 2, 2, name, color)
                 if active:
-                    self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, model, curses.A_NORMAL)
-                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, "Frq:", curses.A_NORMAL)
-                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 7, "{}".format(frq), curses.A_BOLD)
+                    self.stdscr.addstr(first + offset_table + idx * 2, 3 + len(name), governor, curses.color_pair(3) | curses.A_BOLD)
+                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, model, curses.A_NORMAL)
+                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 3 + len(model), "Frq:", curses.A_NORMAL)
+                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 7 + len(model), "{}".format(frq), curses.A_BOLD)
                 else:
                     self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, status, curses.A_NORMAL)
             except curses.error:
@@ -119,9 +115,7 @@ class CPU(Page):
             size_y = [first + 1 + (line * (y_size)), first + y_size * (1 + line)]
             # Value and frequency
             if status:
-                governor = data.get('governor', '')[:x_size + add_size - 12]
-                percent = data.get('val', 0)
-                label_chart_cpu = "{percent: >3d}% {governor}".format(percent=percent, governor=governor.capitalize())
+                label_chart_cpu = "{percent: >3d}%".format(percent=data.get('val', 0))
                 chart.draw(self.stdscr, size_x, size_y, label=label_chart_cpu, y_label=y_label)
             idx_n += 1
 # EOF

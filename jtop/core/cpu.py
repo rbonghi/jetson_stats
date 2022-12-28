@@ -32,11 +32,11 @@ def cpu_info():
                 # Load value or if it is a new processor initialize a new field
                 if key == "processor":
                     idx = int(value) + 1
-                    name = "CPU{idx}".format(idx=idx)
-                    list_cpu[name] = {}
+                    #name = "CPU{idx}".format(idx=idx)
+                    list_cpu[idx] = {}
                 else:
                     # Load cpu info
-                    list_cpu[name][key] = value
+                    list_cpu[idx][key] = value
     return list_cpu
 
 

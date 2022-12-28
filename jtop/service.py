@@ -428,8 +428,11 @@ class JtopServer(Process):
         if nvjpg_data:
             data['engines']['NVJPG'] = nvjpg_data['rate'] if nvjpg_data['status'] else {}
         # -- Power --
+        # Remove NC power (Orin family)
+        if 'NC' in tegrastats['WATT']:
+            del tegrastats['WATT']['NC']
         # Refactor names
-        power = {k.replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in tegrastats['WATT'].items()}
+        power = {k.replace("VDDQ_", "").replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in tegrastats['WATT'].items()}
         total, power = self._total_power(power)
         data['power'] = {'all': total, 'power': power}
         # -- Temperature --
