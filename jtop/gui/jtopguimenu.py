@@ -195,13 +195,15 @@ def engines(stdscr, start, offset, width, height, jetson):
         if jetson.engine['NVJPG'].status:
             nvjpg0_val = jetson.engine['NVJPG'].frequency
             nvjpg0_val, _, unit = size_min(nvjpg0_val, start='M')
-            nvjpg0_val_string = "{value}{unit}Hz".format(value=int(nvjpg0_val), unit=unit)
+            nvjpg0_val_string = str(nvjpg0_val).rstrip('0').rstrip('.')
+            nvjpg0_val_string = "{value}{unit}Hz".format(value=nvjpg0_val_string, unit=unit)
     nvjpg1_val_string = '[OFF]'
     if 'NVJPG1' in jetson.engine:
         if jetson.engine['NVJPG1'].status:
             nvjpg1_val = jetson.engine['NVJPG1'].frequency
             nvjpg1_val, _, unit = size_min(nvjpg1_val, start='M')
-            nvjpg1_val_string = "{value}{unit}Hz".format(value=int(nvjpg1_val), unit=unit)
+            nvjpg1_val_string = str(nvjpg1_val).rstrip('0').rstrip('.')
+            nvjpg1_val_string = "{value}{unit}Hz".format(value=nvjpg1_val_string, unit=unit)
     double_info(stdscr, start + 1, offset + counter, width, ('NVJPG0', nvjpg0_val_string), ('NVJPG1', nvjpg1_val_string))
     counter += 1
     # Find encoders
@@ -222,17 +224,29 @@ def engines(stdscr, start, offset, width, height, jetson):
     double_info(stdscr, start + 1, offset + counter, width, (enc_name, enc_val), ('NVDEC', dec_val), spacing=1)
     counter += 1
     # APE frequency
-    ape_value = "[OFF]"
-    se_value = "[OFF]"
+    ape_val_string = "[OFF]"
+    se_val_string = "[OFF]"
     if 'APE' in jetson.engine:
-        ape_value = str(jetson.engine['APE'].frequency) + "MHz"
-    double_info(stdscr, start + 1, offset + counter, width, ("APE", ape_value), ("SE", se_value))
+        ape_val, _, unit = size_min(jetson.engine['APE'].frequency, start='M')
+        ape_val_string = str(ape_val).rstrip('0').rstrip('.')
+        ape_val_string = "{value}{unit}Hz".format(value=ape_val_string, unit=unit)
+    if 'SE' in jetson.engine:
+        se_val, _, unit = size_min(jetson.engine['SE'].frequency, start='M')
+        se_val_string = str(se_val).rstrip('0').rstrip('.')
+        se_val_string = "{value}{unit}Hz".format(value=se_val_string, unit=unit)
+    double_info(stdscr, start + 1, offset + counter, width, ("APE", ape_val_string), ("SE", se_val_string), spacing=1)
     counter += 1
     pva0_val_string = "[OFF]"
+    vic_val_string = "[OFF]"
     if 'PVA0' in jetson.engine:
         pva0_val, _, unit = size_min(jetson.engine['PVA0']['vps0'].frequency, start='M')
-        pva0_val_string = "{value}{unit}Hz".format(value=pva0_val, unit=unit)
-    plot_name_info(stdscr, offset + counter, start + 1, 'PVA', pva0_val_string)
+        pva0_val_string = str(pva0_val).rstrip('0').rstrip('.')
+        pva0_val_string = "{value}{unit}Hz".format(value=pva0_val_string, unit=unit)
+    if 'VIC' in jetson.engine:
+        vic_val, _, unit = size_min(jetson.engine['VIC'].frequency, start='M')
+        vic_val_string = str(vic_val).rstrip('0').rstrip('.')
+        vic_val_string = "{value}{unit}Hz".format(value=vic_val_string, unit=unit)
+    double_info(stdscr, start + 1, offset + counter, width, ("PVA0", pva0_val_string), ("VIC", vic_val_string))
     return counter + 1
 
 def double_info(stdscr, start, offset, width, enc, dec, spacing=0):

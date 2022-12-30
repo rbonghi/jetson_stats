@@ -41,6 +41,8 @@ class Engine(object):
         if not data:
             return
         # Decode frequency
+        if 'rate' in data:
+            self._freq = data['rate']
         if 'val' in data:
             self._freq = data['val']
         if 'frq' in data:
@@ -54,11 +56,15 @@ class Engine(object):
             self._max_freq = data['max_freq']
         # Set status engine ON
         self._status = True
+        if 'status' in data:
+            self._status = data['status']
+        
 
     def __repr__(self):
         if self._freq is not None:
-            return "{freq}".format(freq=self._freq)
-        return self._status
+            return "Engine[{freq}Mhz]".format(freq=self._freq)
+        status_string = 'ON' if self._status else 'OFF'
+        return "Engine[{status}]".format(status=status_string)
 
 
 class Engines(object):
@@ -108,18 +114,18 @@ class Engines(object):
         return str(self._engines)
 
 
-def nvjpg(path="/sys/kernel/debug/clk/nvjpg"):
+def read_engine(path):
     # Read status enable
-    nvjpg = {}
+    engine = {}
     # Check if access to this file
     if os.access(path + "/clk_enable_count", os.R_OK):
         with open(path + "/clk_enable_count", 'r') as f:
             # Write status engine
-            nvjpg['status'] = int(f.read()) == 1
+            engine['status'] = int(f.read()) == 1
     # Check if access to this file
     if os.access(path + "/clk_rate", os.R_OK):
         with open(path + "/clk_rate", 'r') as f:
             # Write status engine
-            nvjpg['rate'] = int(f.read())
-    return nvjpg
+            engine['rate'] = int(f.read()) // 1000000
+    return engine
 # EOF

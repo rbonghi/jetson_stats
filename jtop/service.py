@@ -30,7 +30,7 @@ from multiprocessing.managers import SyncManager
 # jetson_stats imports
 from .core import (
     cpu_models,
-    nvjpg,
+    read_engine,
     MemoryService,
     JtopException,
     Tegrastats,
@@ -419,13 +419,16 @@ class JtopServer(Process):
         data = {}
         jetson_clocks_show = copy.deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
         # -- Engines --
-        nvjpg_data = nvjpg()
+        nvjpg_data = read_engine("/sys/kernel/debug/clk/nvjpg")
+        se_data = read_engine("/sys/kernel/debug/clk/se")
         data['engines'] = {}
         for key in tegrastats:
             if key in ['APE', 'NVENC', 'NVDEC', 'MSENC', 'VIC', 'NVJPG1']:
                 data['engines'][key] = tegrastats[key]
         if nvjpg_data:
-            data['engines']['NVJPG'] = nvjpg_data['rate'] if nvjpg_data['status'] else {}
+            data['engines']['NVJPG'] = nvjpg_data
+        if se_data:
+            data['engines']['SE'] = se_data
         if 'DLA' in jetson_clocks_show:
             data['engines']['DLA'] = jetson_clocks_show['DLA']
         if 'PVA' in jetson_clocks_show:
