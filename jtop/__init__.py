@@ -24,5 +24,5 @@ __author__ = "Raffaello Bonghi"
 __email__ = "raffaello@rnext.it"
 # Version package
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "4.0.0rc2"
+__version__ = "4.0.0rc3"
 # EOF

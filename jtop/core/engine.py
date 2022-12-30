@@ -21,7 +21,7 @@ import os
 class Engine(object):
     def __init__(self, name):
         self.name = name
-        self._status = 'OFF'
+        self._status = False
         self._freq = None
         self._min_freq = None
         self._max_freq = None
@@ -53,7 +53,7 @@ class Engine(object):
         if 'max_freq' in data:
             self._max_freq = data['max_freq']
         # Set status engine ON
-        self._status = 'ON'
+        self._status = True
 
     def __repr__(self):
         if self._freq is not None:

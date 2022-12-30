@@ -557,7 +557,7 @@ class jtop(Thread):
                 for sub_engine in engobj:
                     stats[engobj[sub_engine].name] = engobj[sub_engine].frequency
                 continue
-            stats[engine] = engobj.frequency if not None else 'OFF'
+            stats[engine] = engobj.frequency if engobj.status else 'OFF'
         # -- FAN --
         if self.fan:
             stats['fan'] = self.fan.measure

@@ -175,37 +175,47 @@ def engines(stdscr, start, offset, width, height, jetson):
     # PVA
 
     # DLA engines
-    dla0_val = jetson.engine['DLA0']['core'].frequency if 'DLA0' in jetson.engine else "[OFF]"
-    dla0_val, _, unit = size_min(dla0_val, start='M')
-    dla0_val_string = "{value}{unit}Hz".format(value=dla0_val, unit=unit)
-    dla1_val = jetson.engine['DLA1']['core'].frequency if 'DLA1' in jetson.engine else "[OFF]"
-    dla1_val, _, unit = size_min(dla1_val, start='M')
-    dla1_val_string = "{value}{unit}Hz".format(value=dla1_val, unit=unit)
+    dla0_val_string = '[OFF]'
+    if 'DLA0' in jetson.engine:
+        if jetson.engine['DLA0']['core'].status:
+            dla0_val = jetson.engine['DLA0']['core'].frequency
+            dla0_val, _, unit = size_min(dla0_val, start='M')
+            dla0_val_string = "{value}{unit}Hz".format(value=dla0_val, unit=unit)
+    dla1_val_string = '[OFF]'
+    if 'DLA1' in jetson.engine:
+        if jetson.engine['DLA1']['core'].status:
+            dla1_val = jetson.engine['DLA1']['core'].frequency
+            dla1_val, _, unit = size_min(dla1_val, start='M')
+            dla1_val_string = "{value}{unit}Hz".format(value=dla1_val, unit=unit)
     double_info(stdscr, start + 1, offset + counter, width, ('DLA0', dla0_val_string), ('DLA1', dla1_val_string), spacing=2)
     counter += 1
     # NVJPG engines
-    nvjpg0_value = "[OFF]"
-    nvjpg1_val = jetson.engine['NVJPG1'].frequency if 'NVJPG1' in jetson.engine else "[OFF]"
-    nvjpg1_val, _, unit = size_min(nvjpg1_val, start='M')
-    nvjpg1_val_string = "{value}{unit}Hz".format(value=int(nvjpg1_val), unit=unit)
-    #if jetson.engine.nvjpg is not None:
-    #    if jetson.engine.nvjpg:
-    #        nvjpg0_value, _, unit = size_min(jetson.engine.nvjpg)
-    #        nvjpg0_value = "{value}{unit}Hz".format(value=nvjpg0_value, unit=unit)
-    double_info(stdscr, start + 1, offset + counter, width, ('NVJPG0', nvjpg0_value), ('NVJPG1', nvjpg1_val_string))
+    nvjpg0_val_string = '[OFF]'
+    if 'NVJPG' in jetson.engine:
+        if jetson.engine['NVJPG'].status:
+            nvjpg0_val = jetson.engine['NVJPG'].frequency
+            nvjpg0_val, _, unit = size_min(nvjpg0_val, start='M')
+            nvjpg0_val_string = "{value}{unit}Hz".format(value=int(nvjpg0_val), unit=unit)
+    nvjpg1_val_string = '[OFF]'
+    if 'NVJPG1' in jetson.engine:
+        if jetson.engine['NVJPG1'].status:
+            nvjpg1_val = jetson.engine['NVJPG1'].frequency
+            nvjpg1_val, _, unit = size_min(nvjpg1_val, start='M')
+            nvjpg1_val_string = "{value}{unit}Hz".format(value=int(nvjpg1_val), unit=unit)
+    double_info(stdscr, start + 1, offset + counter, width, ('NVJPG0', nvjpg0_val_string), ('NVJPG1', nvjpg1_val_string))
     counter += 1
     # Find encoders
     if 'MSENC' in jetson.engine:
         enc_name = 'MSENC'
         enc_val = "{value}{unit}Hz".format(value=jetson.engine['MSENC'].frequency, unit="M")
-    elif jetson.engine['NVENC'].status != 'OFF':
+    elif jetson.engine['NVENC'].status:
         enc_name = 'NVENC'
         enc_val = "{value}{unit}Hz".format(value=jetson.engine['NVENC'].frequency, unit="M")
     else:
         enc_name = 'NVENC'
         enc_val = "[OFF]"
     # Find decoders
-    if jetson.engine['NVDEC'].status != 'OFF':
+    if jetson.engine['NVDEC'].status:
         dec_val = "{value}{unit}Hz".format(value=jetson.engine['NVDEC'].frequency, unit="M")
     else:
         dec_val = "[OFF]"
