@@ -20,6 +20,7 @@ venv/
 .cache/
 swapfile
 test.*
+jtop_test.*
 *.csv
 
 .vscode/

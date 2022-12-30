@@ -131,9 +131,9 @@ def decode_show_message(lines):
                 status["DLA"][dla_number] = {}
             dla_type = str(match.group(2)).lower()
             status["DLA"][dla_number][dla_type] = {
-                "min_freq": int(match.group(3)),
-                "max_freq": int(match.group(4)),
-                "current_freq": int(match.group(5))}
+                "min_freq": int(match.group(3)) // 1000000,
+                "max_freq": int(match.group(4)) // 1000000,
+                "current_freq": int(match.group(5)) // 1000000}
         # Search configuration PVA config
         match = PVA_REGEXP.search(line)
         # Load PVA match
@@ -145,9 +145,9 @@ def decode_show_message(lines):
                 status["PVA"][pva_number] = {}
             pva_type = str(match.group(2)).lower()
             status["PVA"][pva_number][pva_type] = {
-                "min_freq": int(match.group(3)),
-                "max_freq": int(match.group(4)),
-                "current_freq": int(match.group(5))}
+                "min_freq": int(match.group(3)) // 1000000,
+                "max_freq": int(match.group(4)) // 1000000,
+                "current_freq": int(match.group(5)) // 1000000}
         # Search configuration NV Power Model
         match = NVP_REGEXP.search(line)
         # Load NV Power Model

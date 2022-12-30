@@ -19,9 +19,9 @@ import os
 
 
 class Engine(object):
-    def __init__(self, name, status='DISABLE'):
+    def __init__(self, name):
         self.name = name
-        self._status = status
+        self._status = 'OFF'
         self._freq = None
         self._min_freq = None
         self._max_freq = None
@@ -39,7 +39,6 @@ class Engine(object):
     
     def update(self, data):
         if not data:
-            self._status = 'OFF'
             return
         # Decode frequency
         if 'val' in data:
@@ -57,7 +56,7 @@ class Engine(object):
         self._status = 'ON'
 
     def __repr__(self):
-        if self._status != 'OFF':
+        if self._freq is not None:
             return "{freq}".format(freq=self._freq)
         return self._status
 
