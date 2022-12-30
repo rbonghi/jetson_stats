@@ -126,11 +126,9 @@ class MEM(Page):
                      percent=percent,
                      status='ON' if swap_status else 'OFF')
 
-    def memory_legend(self, start_y, height, width, first):
+    def memory_legend(self, start_y, start_x):
         r_height = 6
         r_width = 20
-        # start_y = height - (r_height + 2)
-        start_x = width - r_width - 1
         # Draw border legend
         try:
             rectangle(self.stdscr, start_y, start_x, start_y + r_height, start_x + r_width)
@@ -186,57 +184,55 @@ class MEM(Page):
         shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
         cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
         gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
-        linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
-                     start=1,
-                     name=GaugeName('Mem', color=curses.color_pair(6)),
-                     value=(cpu_bar, gpu_bar, ),
-                     label=label_lfb,
-                     percent=percent)
+        #linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
+        #             start=1,
+        #             name=GaugeName('Mem', color=curses.color_pair(6)),
+        #             value=(cpu_bar, gpu_bar, ),
+        #             label=label_lfb,
+        #             percent=percent)
         # IRAM linear gauge info
-        if self.jetson.iram:
-            iram_status = self.jetson.iram
-            line_counter += 1
-            szw, divider, unit = size_min(iram_status['tot'], start=iram_status['unit'])
+        #if self.jetson.iram:
+        #    iram_status = self.jetson.iram
+        #    line_counter += 1
+        #    szw, divider, unit = size_min(iram_status['tot'], start=iram_status['unit'])
             # lfb label
-            percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider, unit=unit, tot=szw)
-            label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
-                                                     unit=iram_status['lfb']['unit'])
-            linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
-                         start=1,
-                         name=GaugeName('Imm', color=curses.color_pair(6)),
-                         value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
-                         label=label_lfb,
-                         percent=percent)
+        #    percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider, unit=unit, tot=szw)
+        #    label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
+        #                                             unit=iram_status['lfb']['unit'])
+        #    linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
+        #                 start=1,
+        #                 name=GaugeName('Imm', color=curses.color_pair(6)),
+        #                 value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
+        #                 label=label_lfb,
+        #                 percent=percent)
         # EMC linear gauge info
-        line_counter += 1
-        linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
-                     start=1,
-                     name=GaugeName('EMC', color=curses.color_pair(6)),
-                     value=self.jetson.emc.get('val', 0),
-                     label=label_freq(self.jetson.emc['frq'], start='k'))
+        #line_counter += 1
+        #linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
+        #             start=1,
+        #             name=GaugeName('EMC', color=curses.color_pair(6)),
+        #             value=self.jetson.emc.get('val', 0),
+        #             label=label_freq(self.jetson.emc['frq'], start='k'))
         # Write memory legend
-        self.memory_legend(line_counter + 1, height, width, first)
-        # Clear cache button
-        self.button_cache.draw(first + height - 7, 1, key, mouse)
-        clear_cache = "Clear cache"
-        self.stdscr.addstr(first + height - 6, 7, clear_cache, curses.A_NORMAL)
+        self.memory_legend(line_counter + 1, 1)
         # Swap controller
-        self.button_swap.draw(first + height - 4, 1, key, mouse)
-        self.stdscr.addstr(first + height - 4, 7, "Extra", curses.A_UNDERLINE)
-        enable_swap = "Swap"
-        self.stdscr.addstr(first + height - 3, 7, enable_swap, curses.A_NORMAL)
+        self.button_swap.draw(first + height - 7, size_x[1] + 3, key, mouse)
+        self.stdscr.addstr(first + height - 7, size_x[1] + 9, "Swap extra", curses.A_UNDERLINE)
+        enable_swap = "Status:"
+        self.stdscr.addstr(first + height - 6, size_x[1] + 9, enable_swap, curses.A_NORMAL)
         # Status swap
         swap_enable = self.jetson.swap.is_enable
-        self.stdscr.addstr(first + height - 4, 11 + len(enable_swap), "Status", curses.A_UNDERLINE)
+        #self.stdscr.addstr(first + height - 4, 11 + len(enable_swap), "Status", curses.A_UNDERLINE)
         self.stdscr.addstr(
-            first + height - 3, 11 + len(enable_swap),
+            first + height - 5, size_x[1] + 10,
             "Enabled" if swap_enable else "Disable",
             curses.A_BOLD if swap_enable else curses.A_NORMAL)
         # Swap boxes
-        start_pos = 10 + len(enable_swap)
+        start_pos = size_x[1] + 3
         if not swap_enable:
             # Draw keys to decrease size swap
-            self.button_decrease.draw(first + height - 4, start_pos + 10, key, mouse)
+            self.button_decrease.draw(first + height - 4, start_pos, key, mouse)
+            # Draw keys to increase size swap
+            self.button_increase.draw(first + height - 4, start_pos + 6, key, mouse)
             # Draw selected number
             if self._swap_size > self._swap_old_size:
                 color = curses.color_pair(2)
@@ -244,11 +240,15 @@ class MEM(Page):
                 color = curses.color_pair(3)
             else:
                 color = curses.A_NORMAL
-            self.stdscr.addstr(first + height - 3, start_pos + 16, "{size: <2}".format(size=self._swap_size), color)
+            self.stdscr.addstr(first + height - 3, start_pos + 12, "size", curses.A_NORMAL)
+            self.stdscr.addstr(first + height - 3, start_pos + 17, "{size: <2}".format(size=self._swap_size), color)
             self.stdscr.addstr(first + height - 3, start_pos + 18, "GB", curses.A_BOLD)
-            # Draw keys to increase size swap
-            self.button_increase.draw(first + height - 4, start_pos + 21, key, mouse)
         # else:
         #    # Print folder swapfile
         #    self.stdscr.addstr(first + height - 3, start_pos + 11, "{folder}".format(folder=self.jetson.swap.file), curses.A_BOLD)
+        # Clear cache button
+        self.button_cache.draw(first + height - 7, size_x[1] + 21, key, mouse)
+        self.stdscr.addstr(first + height - 7, size_x[1] + 27, "Clear", curses.A_UNDERLINE)
+        clear_cache = "cache"
+        self.stdscr.addstr(first + height - 6, size_x[1] + 27, clear_cache, curses.A_NORMAL)
 # EOF
