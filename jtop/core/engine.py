@@ -19,25 +19,70 @@ import os
 
 
 class Engine(object):
+    def __init__(self, name, status='DISABLE'):
+        self.name = name
+        self._status = status
+        self._freq = None
+        self._min_freq = None
+        self._max_freq = None
+
+    @property
+    def frequency(self):
+        return self._freq
+
+    def get_constrains(self):
+        return (self._min_freq, self._max_freq)
+
+    @property
+    def status(self):
+        return self._status
+    
+    def update(self, data):
+        if not data:
+            self._status = 'OFF'
+            return
+        # Decode frequency
+        if 'val' in data:
+            self._freq = data['val']
+        if 'frq' in data:
+            self._freq = data['frq']
+        if 'current_freq' in data:
+            self._freq = data['current_freq']
+        # Decode constrains
+        if 'min_freq' in data:
+            self._min_freq = data['min_freq']
+        if 'max_freq' in data:
+            self._max_freq = data['max_freq']
+        # Set status engine ON
+        self._status = 'ON'
+
+    def __repr__(self):
+        if self._status != 'OFF':
+            return "{freq}".format(freq=self._freq)
+        return self._status
+
+
+class Engines(object):
 
     def __init__(self):
-        self.nvjpg = None
-        self.msenc = None
-        self._engines = {}
+        self._engines = {'NVDEC': Engine('NVDEC'), 'NVENC': Engine('NVENC')}
 
-    def _update(self, tegrastats):
-        self.ape = tegrastats['APE']
-        self._engines['ape'] = self.ape
-        self.nvenc = tegrastats['NVENC']
-        self._engines['nvenc'] = self.nvenc
-        self.nvdec = tegrastats['NVDEC']
-        self._engines['nvdec'] = self.nvdec
-        if 'MSENC' in tegrastats:
-            self.msenc = tegrastats['MSENC']
-            self._engines['msenc'] = self.msenc
-        if 'NVJPG' in tegrastats:
-            self.nvjpg = tegrastats['NVJPG']
-            self._engines['nvjpg'] = self.nvjpg
+    def _update(self, engines):
+        for name in engines:
+            # Multiple engines
+            if name in ['DLA', 'PVA']:
+                for idx in engines[name]:
+                    dla_name = "{name}{idx}".format(name=name, idx=idx)
+                    if dla_name not in self._engines: 
+                        self._engines[dla_name] = {value: Engine("{dla}_{value}".format(dla=dla_name, value=value.upper())) for value in engines[name][idx]}
+                    for value in engines[name][idx]:
+                        self._engines[dla_name][value].update(engines[name][idx][value])
+                continue
+            # single engine
+            if name not in self._engines:
+                eng = Engine(name)
+                self._engines[name] = eng
+            self._engines[name].update(engines[name])
 
     def items(self):
         return self._engines.items()

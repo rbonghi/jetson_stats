@@ -134,11 +134,17 @@ class ALL(Page):
         # Make rectangle
         rectangle(self.stdscr, line_counter + 1, 0, line_counter + 1 + column_height, width - 1)
         # Plot compact info
-        compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, column_height, self.jetson)
+        size_info = compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, column_height, self.jetson)
+        if size_info > column_height:
+            for n_arrow in range(column_width + 1):
+                    self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
         # Plot temperatures
         if self.jetson.temperature:
             self.add_line(line_counter + 1, column_width + 2, column_height)
-            plot_temperatures(self.stdscr, column_width + 2, line_counter + 1, column_width - 4, column_height, self.jetson)
+            size_temperatures = plot_temperatures(self.stdscr, column_width + 2, line_counter + 1, column_width - 4, column_height, self.jetson)
+            if size_temperatures > column_height:
+                for n_arrow in range(column_width - 5):
+                    self.stdscr.addch(first + height - 2, column_width + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
         # plot watts
         if power:
             self.add_line(line_counter + 1, 2 * column_width - 2, column_height)

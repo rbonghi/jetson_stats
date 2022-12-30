@@ -64,7 +64,7 @@ from threading import Thread
 from .service import JtopManager
 from .core import (
     Board,
-    Engine,
+    Engines,
     Swap,
     Fan,
     NVPModel,
@@ -132,7 +132,7 @@ class jtop(Thread):
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
         # Initialize engines
-        self._engine = Engine()
+        self._engine = Engines()
         # Initialize swap
         self._swap = None
         # Load jetson_clocks status
@@ -531,9 +531,10 @@ class jtop(Thread):
             stats['nvp model'] = self.nvpmodel.name
         # -- CPU --
         for cpu in sorted(self.cpu):
-            stats[cpu] = self.cpu[cpu].get('val', 'OFF')
+            stats["CPU{cpu}".format(cpu=cpu)] = self.cpu[cpu].get('val', 'OFF')
         # -- GPU --
-        stats['GPU'] = self.gpu['val']
+        for n_gpu in self.gpu:
+            stats['GPU{n_gpu}'.format(n_gpu=n_gpu)] = self.gpu[n_gpu]['val']
         # -- MTS --
         if self.mts:
             stats['MTS FG'] = self.mts['fg']
@@ -542,7 +543,7 @@ class jtop(Thread):
         stats['RAM'] = self.ram['use']
         # -- EMC --
         if self.emc:
-            stats['EMC'] = self.emc['use']
+            stats['EMC'] = self.emc['val']
         # -- IRAM --
         if self.iram:
             stats['IRAM'] = self.iram['use']
@@ -550,12 +551,13 @@ class jtop(Thread):
         if 'use' in self.swap:
             stats['SWAP'] = self.swap['use']
         # -- Engines --
-        stats['APE'] = self.engine.ape['val']
-        stats['NVENC'] = self.engine.nvenc['val'] if self.engine.nvenc else 'OFF'
-        stats['NVDEC'] = self.engine.nvdec['val'] if self.engine.nvdec else 'OFF'
-        stats['NVJPG'] = self.engine.nvjpg['rate'] if self.engine.nvjpg else 'OFF'
-        if self.engine.msenc:
-            stats['MSENC'] = self.engine.msenc
+        for engine in self.engine:
+            engobj = self.engine[engine]
+            if isinstance(engobj, dict):
+                for sub_engine in engobj:
+                    stats[engobj[sub_engine].name] = engobj[sub_engine].frequency
+                continue
+            stats[engine] = engobj.frequency if not None else 'OFF'
         # -- FAN --
         if self.fan:
             stats['fan'] = self.fan.measure

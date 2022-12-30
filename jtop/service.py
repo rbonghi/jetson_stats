@@ -420,13 +420,16 @@ class JtopServer(Process):
         jetson_clocks_show = copy.deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
         # -- Engines --
         nvjpg_data = nvjpg()
-        data['engines'] = {
-            'APE': tegrastats['APE'],
-            'NVENC': tegrastats['NVENC'] if 'NVENC' in tegrastats else {},
-            'NVDEC': tegrastats['NVDEC'] if 'NVDEC' in tegrastats else {},
-            'MSENC': tegrastats['MSENC'] if 'MSENC' in tegrastats else {}}
+        data['engines'] = {}
+        for key in tegrastats:
+            if key in ['APE', 'NVENC', 'NVDEC', 'MSENC', 'VIC', 'NVJPG1']:
+                data['engines'][key] = tegrastats[key]
         if nvjpg_data:
             data['engines']['NVJPG'] = nvjpg_data['rate'] if nvjpg_data['status'] else {}
+        if 'DLA' in jetson_clocks_show:
+            data['engines']['DLA'] = jetson_clocks_show['DLA']
+        if 'PVA' in jetson_clocks_show:
+            data['engines']['PVA'] = jetson_clocks_show['PVA']
         # -- Power --
         # Remove NC power (Orin family)
         if 'NC' in tegrastats['WATT']:

@@ -90,7 +90,7 @@ class CPU(Page):
             # Add alert ARROW Down
             if first + offset_table + idx * 2 > height - 4:
                 for n_arrow in range(x_offset - 1):
-                    self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE)
+                    self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
         # Evaluate size single chart
         x_size = (width - x_offset - 6) // (n_cpu // 2)
         y_size = (height - 2 - first) // 2

@@ -169,7 +169,7 @@ def plot_dictionary(stdscr, offset, data, name, start=0):
 
 
 @check_curses
-def plot_name_info(stdscr, offset, start, name, value, color=curses.A_NORMAL):
+def plot_name_info(stdscr, offset, start, name, value, color=curses.A_NORMAL, spacing=0):
     stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
-    stdscr.addstr(offset, start + len(name) + 2, value, color)
+    stdscr.addstr(offset, start + len(name) + 2 + spacing, value, color)
 # EOF

@@ -52,6 +52,16 @@ GPU_REGEXP = re.compile(r'GPU MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=((.*))')
 # EMC regex
 # EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
 EMC_REGEXP = re.compile(r'EMC MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=(.+?) FreqOverride=((.*))')
+# DLA regex
+# DLA0_CORE MinFreq=0 MaxFreq=1600000000 CurrentFreq=1600000000
+# DLA0_FALCON MinFreq=0 MaxFreq=844800000 CurrentFreq=844800000
+# DLA1_CORE MinFreq=0 MaxFreq=1600000000 CurrentFreq=1600000000
+# DLA1_FALCON MinFreq=0 MaxFreq=844800000 CurrentFreq=844800000
+DLA_REGEXP = re.compile(r'DLA(.+?)_(.+?) MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=((.*))')
+# PVA regex
+# PVA0_VPS0 MinFreq=0 MaxFreq=1152000000 CurrentFreq=1152000000
+# PVA0_AXI MinFreq=0 MaxFreq=832000000 CurrentFreq=832000000
+PVA_REGEXP = re.compile(r'PVA(.+?)_(.+?) MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq=((.*))')
 # NVP Model
 # NV Power Mode: MAXN
 NVP_REGEXP = re.compile(r'NV Power Mode: ((.*))')
@@ -110,6 +120,34 @@ def decode_show_message(lines):
                 "current_freq": int(match.group(3)),
                 "FreqOverride": int(match.group(4))}
             continue
+        # Search configuration DLA config
+        match = DLA_REGEXP.search(line)
+        # Load DLA match
+        if match:
+            if "DLA" not in status:
+                status["DLA"] = {}
+            dla_number = int(match.group(1))
+            if dla_number not in status["DLA"]:
+                status["DLA"][dla_number] = {}
+            dla_type = str(match.group(2)).lower()
+            status["DLA"][dla_number][dla_type] = {
+                "min_freq": int(match.group(3)),
+                "max_freq": int(match.group(4)),
+                "current_freq": int(match.group(5))}
+        # Search configuration PVA config
+        match = PVA_REGEXP.search(line)
+        # Load PVA match
+        if match:
+            if "PVA" not in status:
+                status["PVA"] = {}
+            pva_number = int(match.group(1))
+            if pva_number not in status["PVA"]:
+                status["PVA"][pva_number] = {}
+            pva_type = str(match.group(2)).lower()
+            status["PVA"][pva_number][pva_type] = {
+                "min_freq": int(match.group(3)),
+                "max_freq": int(match.group(4)),
+                "current_freq": int(match.group(5))}
         # Search configuration NV Power Model
         match = NVP_REGEXP.search(line)
         # Load NV Power Model

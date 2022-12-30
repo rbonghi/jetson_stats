@@ -74,6 +74,7 @@ def plot_GPUs(stdscr, offest, list_gpus, width):
 
 @check_curses
 def plot_temperatures(stdscr, start, offset, width, height, jetson):
+    counter = 0
     start = start + (width - 17) // 2
     # Define color temperatures
     color_options = {
@@ -98,6 +99,8 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
                 break
         # Print temperature value
         stdscr.addstr(offset + idx + 1, start + offset // 2 + 3, ("{val:8.2f}C").format(val=value), color)
+        counter = idx
+    return counter + 2
 
 
 @check_curses
@@ -157,7 +160,8 @@ def compact_info(stdscr, start, offset, width, height, jetson):
         nvp_model_gui(stdscr, offset + counter, start + 1, jetson)
         counter += 1
     # Write all engines
-    engines(stdscr, start, offset + counter, width, height, jetson)
+    counter += engines(stdscr, start, offset + counter, width, height, jetson)
+    return counter
 
 
 def engines(stdscr, start, offset, width, height, jetson):
@@ -167,13 +171,13 @@ def engines(stdscr, start, offset, width, height, jetson):
     # DLA0 - DLA1
     # NVJPG0 - NVJPG1
     # NVDEC - NVENC
-    # PVA - APE
-    # SE
+    # APE - SE
+    # PVA
 
     # DLA engines
     dla0_val = "[OFF]"
     dla1_val = "[OFF]"
-    double_info(stdscr, start + 1, offset + counter, width, ('DLA0', dla0_val), ('DAL1', dla1_val))
+    double_info(stdscr, start + 1, offset + counter, width, ('DLA0', dla0_val), ('DAL1', dla1_val), spacing=2)
     counter += 1
     # NVJPG engines
     nvjpg0_value = "[OFF]"
@@ -201,16 +205,20 @@ def engines(stdscr, start, offset, width, height, jetson):
     else:
         dec_name = 'NVDEC'
         dec_val = "[OFF]"
-    double_info(stdscr, start + 1, offset + counter, width, (enc_name, enc_val), (dec_name, dec_val))
+    double_info(stdscr, start + 1, offset + counter, width, (enc_name, enc_val), (dec_name, dec_val), spacing=1)
     counter += 1
     # APE frequency
     ape_value = "[OFF]"
+    se_value = "[OFF]"
     if jetson.engine.ape:
         ape_value = str(jetson.engine.ape['val']) + "MHz"
-    double_info(stdscr, start + 1, offset + counter, width, ("APE", ape_value), (dec_name, dec_val))
+    double_info(stdscr, start + 1, offset + counter, width, ("APE", ape_value), ("SE", se_value))
     counter += 1
+    pva_value = "[OFF]"
+    plot_name_info(stdscr, offset + counter, start + 1, 'PVA', pva_value)
+    return counter + 1
 
-def double_info(stdscr, start, offset, width, enc, dec):
-    plot_name_info(stdscr, offset, start, enc[0], enc[1])
-    plot_name_info(stdscr, offset, start + width // 2, dec[0], dec[1])
+def double_info(stdscr, start, offset, width, enc, dec, spacing=0):
+    plot_name_info(stdscr, offset, start, enc[0], enc[1], spacing=spacing)
+    plot_name_info(stdscr, offset, start + width // 2, dec[0], dec[1], spacing=spacing)
 # EOF
