@@ -80,6 +80,7 @@ class MemoryService(object):
         return string_cell
 
     def _update_table(self):
+        self._table = []
         first = True
         with open(self._path, 'r') as fp:
             for row in fp.readlines():

@@ -158,14 +158,55 @@ class MEM(Page):
         self.stdscr.addstr(start_y + 3, start_x + 16, "{unit}B".format(unit=gpu_unit), curses.A_NORMAL)
         self.stdscr.addstr(start_y + 5, start_x + 16, "{unit}B".format(unit=use_unit), curses.A_NORMAL)
 
+    def draw_nv_table(self, start_y, start_x, r_width):
+        columns_title = self.jetson.ram['table'][0]
+        table = self.jetson.ram['table'][1]
+        gpu_val = self.jetson.ram['shared']
+        gpu_val, divider, gpu_unit = size_min(gpu_val, start=self.jetson.ram['unit'])
+        gpu_val_string = str(gpu_val).rstrip('0').rstrip('.')
+        gpu_val_string = "{value}{unit}B".format(value=gpu_val_string, unit=gpu_unit)
+        # Size table
+        r_height = 5 + len(table)
+        # Draw table legend
+        try:
+            rectangle(self.stdscr, start_y, start_x, start_y + r_height, start_x + r_width)
+            self.stdscr.hline(start_y + 2, start_x + 1, curses.ACS_HLINE, r_width - 1)
+            self.stdscr.hline(start_y + 3 + len(table), start_x + 1, curses.ACS_HLINE, r_width - 1)
+        except curses.error:
+            pass
+        # Table
+        size = r_width // len(columns_title) + 1
+        for idx, name in enumerate(columns_title):
+            self.stdscr.addstr(start_y + 1, start_x + 2 + idx * size, name, curses.A_BOLD)
+            if idx < len(columns_title) - 1:
+                self.stdscr.addch(start_y, start_x + (idx + 1) * size, curses.ACS_TTEE)
+                self.stdscr.addch(start_y + 1, start_x + (idx + 1) * size, curses.ACS_VLINE)
+                self.stdscr.addch(start_y + 2, start_x + (idx + 1) * size, curses.ACS_BTEE)
+        for num_row, row in enumerate(table):
+            for num_cell, cell in enumerate(row):
+                if cell == "Size":
+                    value = row[cell]['val']
+                    value, _, unit = size_min(value, start='k')
+                    val_string = str(value).rstrip('0').rstrip('.')
+                    val_string = "{value}{unit}B".format(value=val_string, unit=unit)
+                else:
+                    val_string = row[cell]
+                try:
+                    self.stdscr.addstr(start_y + 3 + num_row, start_x + 2 + size * num_cell, val_string[:size - 2], curses.A_NORMAL)
+                except curses.error:
+                    pass
+                if num_cell < len(columns_title) - 1:
+                    self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
+        # Total
+        self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 3), "Total shared process:", (curses.color_pair(8) | curses.A_BOLD))
+        self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 1), gpu_val_string, (curses.color_pair(8) | curses.A_BOLD))
+
     def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
         # Set size chart memory
         size_x = [1, width * 1 // 2 + 5]
         size_y = [first + 1, height * 1 // 2 - 1]
-        # RAM linear gauge info
-        line_counter = size_y[1] + 2
         # Read RAM status and make gaugues
         ram_status = self.jetson.ram
         lfb_status = self.jetson.ram['lfb']
@@ -184,6 +225,8 @@ class MEM(Page):
         shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
         cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
         gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
+        # RAM linear gauge info
+        line_counter = size_y[1] + 1
         #linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
         #             start=1,
         #             name=GaugeName('Mem', color=curses.color_pair(6)),
@@ -212,8 +255,11 @@ class MEM(Page):
         #             name=GaugeName('EMC', color=curses.color_pair(6)),
         #             value=self.jetson.emc.get('val', 0),
         #             label=label_freq(self.jetson.emc['frq'], start='k'))
-        # Write memory legend
-        self.memory_legend(line_counter + 1, 1)
+        if 'table' in self.jetson.ram:
+            self.draw_nv_table(line_counter + 1, 1, size_x[1])
+        else:
+            # Write memory legend
+            self.memory_legend(line_counter + 1, 1)
         # Swap controller
         self.button_swap.draw(first + height - 7, size_x[1] + 3, key, mouse)
         self.stdscr.addstr(first + height - 7, size_x[1] + 9, "Swap extra", curses.A_UNDERLINE)
