@@ -488,10 +488,9 @@ class JtopServer(Process):
                 # Remove current_freq data
                 del data['gpu'][idx]['current_freq']
         # -- RAM --
-        meminfo = self.memory.meminfo()
+        meminfo = self.memory.nv_usage()
         data['ram'] = tegrastats['RAM']
-        if meminfo:
-            data['ram'].update(meminfo)
+        data['ram'].update(meminfo)
         # -- IRAM --
         if 'IRAM' in tegrastats:
             data['iram'] = tegrastats['IRAM']
