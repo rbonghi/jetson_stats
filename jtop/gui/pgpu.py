@@ -65,7 +65,7 @@ class GPU(Page):
             size_x = [1 + idx_n * (x_size),  (1 + idx_n) * (1 + x_size) - 2]
             size_y = [first + 1, height * 2 // 3]
             # Value and frequency
-            y_label = idx_n % n_gpu
+            y_label = (idx_n) % n_gpu == n_gpu - 1
             frq = label_freq(self.jetson.gpu[name]['frq'], start='k')
             label_chart_gpu = "{percent: >2}%".format(percent=self.jetson.gpu[name]['val'])
             if frq:
