@@ -132,7 +132,7 @@ class Chart(object):
                 try:
                     # Draw tick label
                     if ((point) / ceil(val)) % ten_sec == 0:
-                        #stdscr.addch(size_y[1] - 1, x_val, curses.ACS_TTEE)
+                        # stdscr.addch(size_y[1] - 1, x_val, curses.ACS_TTEE)
                         stdscr.addch(size_y[1], x_val, curses.ACS_LLCORNER)
                     # Draw label
                     if counter > 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
@@ -157,7 +157,7 @@ class Chart(object):
         points = []
         for n in list_values:
             points += [n] * int(val)
-        
+
         for idx, values in enumerate(reversed(points)):
             counter = 0
             counter_color = 0
@@ -168,7 +168,6 @@ class Chart(object):
                 cell_val = value * size_y / self.max_val
                 cell_val_int = int(cell_val)
                 cell_val_mant = cell_val - cell_val_int
-                
                 if cell_val > 0 and size_plot_x[1] - idx >= size_plot_x[0]:
                     # Fill chart if request
                     # Full block: \u2588 - 3/4 block \u2586 - Lower block: \u2584 - Small lower block: \u2581

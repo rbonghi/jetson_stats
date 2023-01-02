@@ -53,6 +53,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
     # Size block CPU
     return int(offest + idx / 2 + 1) if len(list_cpus) > 4 else int(offest + idx + 1)
 
+
 @check_curses
 def plot_GPUs(stdscr, offest, list_gpus, width):
     # list_gpus = {1: list_gpus[1]}
@@ -71,6 +72,7 @@ def plot_GPUs(stdscr, offest, list_gpus, width):
             label=label_freq(gpu['frq'], start='k'))
     # Size block CPU
     return int(offest + idx / 2)
+
 
 @check_curses
 def plot_temperatures(stdscr, start, offset, width, height, jetson):
@@ -248,6 +250,7 @@ def engines(stdscr, start, offset, width, height, jetson):
         vic_val_string = "{value}{unit}Hz".format(value=vic_val_string, unit=unit)
     double_info(stdscr, start + 1, offset + counter, width, ("PVA0", pva0_val_string), ("VIC", vic_val_string))
     return counter + 1
+
 
 def double_info(stdscr, start, offset, width, enc, dec, spacing=0):
     plot_name_info(stdscr, offset, start, enc[0], enc[1], spacing=spacing)

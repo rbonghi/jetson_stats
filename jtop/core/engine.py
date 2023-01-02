@@ -36,7 +36,7 @@ class Engine(object):
     @property
     def status(self):
         return self._status
-    
+
     def update(self, data):
         if not data:
             return
@@ -77,7 +77,7 @@ class Engines(object):
             if name in ['DLA', 'PVA']:
                 for idx in engines[name]:
                     dla_name = "{name}{idx}".format(name=name, idx=idx)
-                    if dla_name not in self._engines: 
+                    if dla_name not in self._engines:
                         self._engines[dla_name] = {value: Engine("{dla}_{value}".format(dla=dla_name, value=value.upper())) for value in engines[name][idx]}
                     for value in engines[name][idx]:
                         self._engines[dla_name][value].update(engines[name][idx][value])
