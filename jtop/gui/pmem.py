@@ -22,7 +22,7 @@ from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import (size_min)
-from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
+from .lib.linear_gauge import linear_gauge, GaugeName
 from .lib.chart import Chart
 from .lib.button import Button
 

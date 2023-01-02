@@ -137,7 +137,7 @@ class ALL(Page):
         size_info = compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, column_height, self.jetson)
         if size_info > column_height:
             for n_arrow in range(column_width + 1):
-                    self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+                self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
         # Plot temperatures
         if self.jetson.temperature:
             self.add_line(line_counter + 1, column_width + 2, column_height)

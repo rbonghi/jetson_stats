@@ -22,7 +22,6 @@ from .lib.common import (plot_name_info,
                          label_freq,
                          jetson_clocks_gui,
                          nvp_model_gui)
-from .lib.linear_gauge import linear_gauge, GaugeName
 from .lib.chart import Chart
 
 
@@ -62,7 +61,7 @@ class GPU(Page):
         idx_n = 0
         for chart, name in zip(self.chart_gpus, sorted(self.jetson.gpu)):
             # Increase counter
-            size_x = [1 + idx_n * (x_size),  (1 + idx_n) * (1 + x_size) - 2]
+            size_x = [1 + idx_n * (x_size), (1 + idx_n) * (1 + x_size) - 2]
             size_y = [first + 1, height * 2 // 3]
             # Value and frequency
             y_label = (idx_n) % n_gpu == n_gpu - 1

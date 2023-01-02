@@ -18,12 +18,10 @@
 import copy
 import curses
 from curses.textpad import rectangle
-import platform
 # Page class definition
 from .jtopgui import Page
 from .lib.chart import Chart
 from .lib.common import (check_curses,
-                         plot_name_info,
                          label_freq)
 
 
@@ -72,7 +70,7 @@ class CPU(Page):
             model = cpu['model'].split()[0] if 'model' in cpu else ''
             model = model[:x_offset - (first + 3) - 4]
             governor = cpu.get('governor', '').capitalize()
-            #governor = governor[:x_size + add_size - 12]
+            # governor = governor[:x_size + add_size - 12]
             # Draw info
             color = curses.color_pair(8) if active else curses.color_pair(7)
             name = "CPU{name}".format(name=name)
