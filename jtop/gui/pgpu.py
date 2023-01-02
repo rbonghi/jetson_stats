@@ -33,7 +33,7 @@ class GPU(Page):
         # Initialize GPU chart
         self.chart_gpus = []
         for name in sorted(self.jetson.gpu):
-            chart = Chart(jetson, "GPU{name}".format(name=name), self.update_chart, color=curses.color_pair(2), color_chart=[curses.color_pair(8)])
+            chart = Chart(jetson, "GPU{name}".format(name=name), self.update_chart, color_text=curses.COLOR_GREEN)
             self.chart_gpus += [chart]
 
     def update_chart(self, jetson, name):

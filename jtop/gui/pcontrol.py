@@ -32,7 +32,7 @@ class CTRL(Page):
         super(CTRL, self).__init__("CTRL", stdscr, jetson)
         # Only if exist a fan will be load a chart
         # Initialize FAN chart
-        self.chart_fan = Chart(jetson, "FAN", self.update_chart, line="o", color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
+        self.chart_fan = Chart(jetson, "FAN", self.update_chart, line="o", color_text=curses.COLOR_BLUE, color_chart=[curses.COLOR_BLUE])
         if self.jetson.fan:
             self.chart_fan.statusChart(False, "NO FAN")
         # Initialize buttons

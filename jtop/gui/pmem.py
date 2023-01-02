@@ -38,8 +38,8 @@ class MEM(Page):
         # Initialize MEM chart
         self.chart_ram = Chart(jetson, "RAM", self.update_chart,
                                type_value=float,
-                               color=curses.color_pair(6),
-                               color_chart=[curses.color_pair(12), curses.color_pair(8)])
+                               color_text=curses.COLOR_CYAN,
+                               color_chart=[curses.COLOR_GREEN, curses.COLOR_CYAN])
         # Initialize buttons
         self.button_cache = Button(stdscr, "c", action=self.action_cache)
         self.button_swap = Button(stdscr, "s", action=self.action_swap)
@@ -75,12 +75,14 @@ class MEM(Page):
         # Get unit
         unit = parameter.get("unit", "k")
         # Get value
+        use_val = parameter.get("use", 0)
         cpu_val = parameter.get("use", 0) - parameter.get("shared", 0)
-        gpu_val = parameter.get("shared", 0)
         szw, divider, unit = size_min(max_val, start=unit)
         # Append in list
+        use_out = use_val / divider
+        cpu_out = cpu_val / divider
         return {
-            'value': [cpu_val / divider, gpu_val / divider],
+            'value': [use_out, cpu_out],
             'max': szw,
             'unit': unit
         }
@@ -197,9 +199,8 @@ class MEM(Page):
                     pass
                 if num_cell < len(columns_title) - 1:
                     self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
-        # Total
-        self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 3), "Total shared process:", (curses.color_pair(8) | curses.A_BOLD))
-        self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 1), gpu_val_string, (curses.color_pair(8) | curses.A_BOLD))
+        # Total GPU
+        self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2), "Shared Tot: {GPU}".format(GPU=gpu_val_string), (curses.color_pair(8) | curses.A_BOLD))
 
     def draw(self, key, mouse):
         # Screen size
@@ -226,40 +227,11 @@ class MEM(Page):
         cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
         gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
         # RAM linear gauge info
-        line_counter = size_y[1] + 1
-        #linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
-        #             start=1,
-        #             name=GaugeName('Mem', color=curses.color_pair(6)),
-        #             value=(cpu_bar, gpu_bar, ),
-        #             label=label_lfb,
-        #             percent=percent)
-        # IRAM linear gauge info
-        #if self.jetson.iram:
-        #    iram_status = self.jetson.iram
-        #    line_counter += 1
-        #    szw, divider, unit = size_min(iram_status['tot'], start=iram_status['unit'])
-            # lfb label
-        #    percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider, unit=unit, tot=szw)
-        #    label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
-        #                                             unit=iram_status['lfb']['unit'])
-        #    linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
-        #                 start=1,
-        #                 name=GaugeName('Imm', color=curses.color_pair(6)),
-        #                 value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
-        #                 label=label_lfb,
-        #                 percent=percent)
-        # EMC linear gauge info
-        #line_counter += 1
-        #linear_gauge(self.stdscr, offset=line_counter, size=width - 1,
-        #             start=1,
-        #             name=GaugeName('EMC', color=curses.color_pair(6)),
-        #             value=self.jetson.emc.get('val', 0),
-        #             label=label_freq(self.jetson.emc['frq'], start='k'))
         if 'table' in self.jetson.ram:
-            self.draw_nv_table(line_counter + 1, 1, size_x[1])
+            self.draw_nv_table(size_y[1] + 2, 1, size_x[1])
         else:
             # Write memory legend
-            self.memory_legend(line_counter + 1, 1)
+            self.memory_legend(size_y[1] + 2, 1)
         # Swap controller
         self.button_swap.draw(first + height - 7, size_x[1] + 3, key, mouse)
         self.stdscr.addstr(first + height - 7, size_x[1] + 9, "Swap extra", curses.A_UNDERLINE)

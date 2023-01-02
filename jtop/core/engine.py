@@ -58,7 +58,6 @@ class Engine(object):
         self._status = True
         if 'status' in data:
             self._status = data['status']
-        
 
     def __repr__(self):
         if self._freq is not None:

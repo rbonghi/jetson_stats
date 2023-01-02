@@ -28,7 +28,7 @@ class Chart(object):
     Chart draw object
     http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
     """
-    def __init__(self, jetson, name, callback, type_value=int, line="*", color=curses.A_NORMAL, color_chart=[], fill=True, time=10.0, tik=2):
+    def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.A_NORMAL, color_chart=[], fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
         self.callback = callback
@@ -36,8 +36,8 @@ class Chart(object):
         self.refresh = jetson.interval * 1000
         # Design chart shape
         self.line = line
-        self.color = color
-        self.color_chart = color_chart if color_chart else [color]
+        self.color_text = color_text
+        self.color_chart = color_chart if color_chart else [color_text]
         self.fill = fill
         # Set timing
         self.time = time
@@ -51,6 +51,8 @@ class Chart(object):
         self.max_val = 100
         self.active = True
         self.message = "OFF"
+        # Colors set:
+        self.color_chart_new = [curses.COLOR_GREEN, curses.COLOR_CYAN]
         # Attach the chart for every update from jtop
         jetson.attach(self.update)
 
@@ -74,17 +76,22 @@ class Chart(object):
 
     @check_curses
     def draw(self, stdscr, size_x, size_y, label="", y_label=True):
+        curses.init_pair(30, self.color_text, curses.COLOR_BLACK)
         # Evaluate Diplay X, and Y size
         displayX = size_x[1] - size_x[0] + 1
         displayY = size_y[1] - size_y[0] - 1
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if label:
-            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label[:displayX - len(self.name)], self.color | curses.A_BOLD)
+            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label[:displayX - len(self.name)], curses.color_pair(30) | curses.A_BOLD)
+        # Draw ticks and labels
+        self._plot_x_axis(stdscr, size_x, size_y, displayX, label=y_label)
+        # Plot chart shape and labels
+        self._plot_y_axis(stdscr, size_x, size_y, displayY, label=y_label)
         # Plot chart lines
         if self.active:
             # Plot values
-            self._plot_values(stdscr, size_x, size_y, displayX, displayY, label=y_label)
+            self._plot_values(stdscr, size_x, size_y, label=y_label)
         else:
             l_label = size_x[1] - 6 if y_label else size_x[1] - 1
             rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1] - 2, l_label)
@@ -92,23 +99,20 @@ class Chart(object):
             middle_x = (l_label - size_x[0] - len(self.message)) // 2
             middle_y = (size_y[1] - size_y[0]) // 2
             stdscr.addstr(size_y[0] + middle_y, size_x[0] + middle_x, self.message, curses.A_BOLD)
-        # Draw ticks and labels
-        self._plot_x_axis(stdscr, size_x, size_y, displayX, label=y_label)
-        # Plot chart shape and labels
-        self._plot_y_axis(stdscr, size_x, size_y, displayY, label=y_label)
 
     def _plot_y_axis(self, stdscr, size_x, size_y, displayY, label=True):
         # Plot chart shape and labels
         label_x = size_x[1] - 5 if label else size_x[1]
         for point in range(displayY):
             if displayY != point:
-                value_n = self.max_val / float(displayY - 1) * float(displayY - point - 1)
+                value_n = self.max_val / float(displayY) * float(displayY - point)
                 try:
                     stdscr.addch(1 + size_y[0] + point, label_x, curses.ACS_LTEE)
                     if not label:
                         continue
                     if self.type_value == float:
-                        lab_c = "{value:2.1f}{unit}".format(value=value_n, unit=self.unit)
+                        lab_c = "{value:2.1f}".format(value=value_n).rstrip('0').rstrip('.')
+                        lab_c = "{lab_c}{unit}".format(lab_c=lab_c, unit=self.unit)
                     else:
                         lab_c = "{value:3d}{unit}".format(value=int(value_n), unit=self.unit)
                     stdscr.addstr(1 + size_y[0] + point, label_x + 2, lab_c, curses.A_BOLD)
@@ -122,17 +126,18 @@ class Chart(object):
         counter = 0
         label_y = size_x[1] - 5 if label else size_x[1]
         # Draw line
-        stdscr.hline(size_y[1] - 1, size_x[0], curses.ACS_HLINE, label_y - size_x[0])
+        stdscr.hline(size_y[1] - 1, size_x[0], curses.A_UNDERLINE, label_y - size_x[0])
         for point in range(displayX):
             x_val = label_y - point
             if x_val >= size_x[0]:
                 try:
                     # Draw tick label
                     if ((point) / ceil(val)) % ten_sec == 0:
-                        stdscr.addch(size_y[1] - 1, x_val, curses.ACS_TTEE)
+                        #stdscr.addch(size_y[1] - 1, x_val, curses.ACS_TTEE)
+                        stdscr.addch(size_y[1], x_val, curses.ACS_LLCORNER)
                     # Draw label
                     if counter > 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
-                        stdscr.addstr(size_y[1], x_val, "-{time}s".format(time=self.tik * counter))
+                        stdscr.addstr(size_y[1], x_val + 3, "-{time}s".format(time=self.tik * counter))
                     elif counter == 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
                         if label:
                             stdscr.addstr(size_y[1], x_val + 3, "time")
@@ -143,37 +148,47 @@ class Chart(object):
                 except curses.error:
                     pass
 
-    def _plot_values(self, stdscr, size_x, size_y, displayX, displayY, label=True):
-        """ Plot values """
-        # https://stackoverflow.com/questions/30107212/add-to-a-deque-being-iterated-in-python
+    def _plot_values(self, stdscr, size_x, size_y, label=True):
+        # Area Plot data
+        size_plot_x = [size_x[0], size_x[1] - 6 if label else size_x[1] - 1]
+        size_plot_y = [size_y[0], size_y[1] - 1]
+        size_y = size_plot_y[1] - size_plot_y[0]
         list_values = list(self.values)
-        val = float(displayX - 2) / float(len(list_values))
+        val = ceil(float(size_plot_x[1] - size_plot_x[0]) / float(len(list_values)))
         points = []
         for n in list_values:
-            # n = n if n <= self.max_val else self.max_val
-            points += [n] * int(ceil(val))
-
-        label_x = size_x[1] - 5 if label else size_x[1]
+            points += [n] * int(val)
+        
         for idx, values in enumerate(reversed(points)):
-            x_val = label_x - 1 - idx
-            # Draw chart
             counter = 0
-            ceil_part = 0
-            for value, color in zip(values, self.color_chart):
-                y_val = int((float(displayY - 1) / self.max_val) * (value + ceil_part))
-                ceil_part = value - int((float(displayY - 1) / self.max_val) * (value))
+            counter_color = 0
+            prev_color = curses.COLOR_BLACK
+            for value, color_chart in zip(values, self.color_chart):
+                curses.init_pair(20 + counter_color, color_chart, prev_color)
 
-                if x_val >= size_x[0]:
+                cell_val = value * size_y / self.max_val
+                cell_val_int = int(cell_val)
+                cell_val_mant = cell_val - cell_val_int
+                
+                if cell_val > 0 and size_plot_x[1] - idx >= size_plot_x[0]:
+                    # Fill chart if request
+                    # Full block: \u2588 - 3/4 block \u2586 - Lower block: \u2584 - Small lower block: \u2581
                     if self.fill:
-                        for n in range(counter + 1, counter + y_val + 1):
-                            try:
-                                stdscr.addstr(size_y[1] - 1 - n, x_val, " ", color)
-                            except curses.error:
-                                pass
+                        for n in range(cell_val_int - 1):
+                            stdscr.addch(size_plot_y[1] - n, size_plot_x[1] - idx, '\u2588', curses.color_pair(20 + counter_color))
+                        # Add head chart
+                        if cell_val < 1.0:
+                            stdscr.addch(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581', curses.color_pair(20 + counter_color))
+                        elif cell_val_mant == 0.0:
+                            stdscr.addch(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2584', curses.color_pair(20 + counter_color))
+                        elif cell_val_mant <= 0.5:
+                            stdscr.addch(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2586', curses.color_pair(20 + counter_color))
+                        elif cell_val_mant < 1.0:
+                            stdscr.addch(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581', curses.color_pair(20 + counter_color))
+                            stdscr.addch(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2588', curses.color_pair(20 + counter_color))
                     else:
-                        try:
-                            stdscr.addstr(size_y[1] - 1 - y_val, x_val, self.line, self.color)
-                        except curses.error:
-                            pass
-                counter += y_val
+                        stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(30))
+                counter += 1
+                counter_color += 1
+                prev_color = color_chart
 # EOF

@@ -34,7 +34,7 @@ class CPU(Page):
         # List all CPU
         self.chart_cpus = []
         for name in sorted(self.jetson.cpu):
-            chart = Chart(jetson, "CPU{name}".format(name=name), self.update_chart, color=curses.color_pair(4), color_chart=[curses.color_pair(10)])
+            chart = Chart(jetson, "CPU{name}".format(name=name), self.update_chart, color_text=curses.COLOR_BLUE)
             self.chart_cpus += [chart]
 
     def update_chart(self, jetson, name):
