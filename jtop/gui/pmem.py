@@ -21,8 +21,7 @@ from curses.textpad import rectangle
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
-from .lib.common import (label_freq,
-                         size_min)
+from .lib.common import (size_min)
 from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
 from .lib.chart import Chart
 from .lib.button import Button
@@ -200,7 +199,9 @@ class MEM(Page):
                 if num_cell < len(columns_title) - 1:
                     self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
         # Total GPU
-        self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2), "Shared Tot: {GPU}".format(GPU=gpu_val_string), (curses.color_pair(8) | curses.A_BOLD))
+        self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2),
+                           "Shared Tot: {GPU}".format(GPU=gpu_val_string),
+                           (curses.color_pair(8) | curses.A_BOLD))
         return r_height + 1
 
     def draw(self, key, mouse):
@@ -223,10 +224,10 @@ class MEM(Page):
         # Make swap list file
         self.swap_menu(lc=first, start=size_x[1] + 3, size=size_x[1] - 13, width=width)
         # Plot Linear Gauge
-        cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
-        shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
-        cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
-        gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
+        # cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
+        # shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
+        # cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
+        # gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
         # RAM linear gauge info
         if 'table' in self.jetson.ram:
             size_table = self.draw_nv_table(size_y[1] + 2, 1, size_x[1])
@@ -243,7 +244,6 @@ class MEM(Page):
         self.stdscr.addstr(first + height - 6, size_x[1] + 9, enable_swap, curses.A_NORMAL)
         # Status swap
         swap_enable = self.jetson.swap.is_enable
-        #self.stdscr.addstr(first + height - 4, 11 + len(enable_swap), "Status", curses.A_UNDERLINE)
         self.stdscr.addstr(
             first + height - 5, size_x[1] + 10,
             "Enabled" if swap_enable else "Disable",

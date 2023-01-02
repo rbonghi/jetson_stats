@@ -33,13 +33,16 @@ jobs:
         # Install test dependencies
         sudo ./tests/develop.sh -s
         # Upgrade pip
+        # https://github.com/actions/setup-python/issues/225
         sudo -H env "PATH=$PATH" python -m pip install --upgrade pip
         # Install tox
+        # https://github.com/actions/setup-python/issues/225
         sudo -H env "PATH=$PATH" pip install tox
     - name: Display Python version
       run: sudo env "PATH=$PATH" python -c "import sys; print(sys.version)"
     - name: Test with tox
       run: |
+        # https://github.com/actions/setup-python/issues/225
         sudo env "PATH=$PATH" tox -e py${{ matrix.python-version }}
 
   docker:
