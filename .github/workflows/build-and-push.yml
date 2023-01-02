@@ -28,21 +28,19 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        sudo apt-get install -y python${{ matrix.python-version }}
-        sudo update-alternatives --install /usr/bin/python python /usr/bin/python${{ matrix.python-version }} 1
         # Make group jetson_stats
         sudo groupadd jetson_stats
         # Install test dependencies
         sudo ./tests/develop.sh -s
         # Upgrade pip
-        sudo -H python -m pip install --upgrade pip
+        sudo -H env "PATH=$PATH" python -m pip install --upgrade pip
         # Install tox
-        sudo -H pip install tox
+        sudo -H env "PATH=$PATH" pip install tox
     - name: Display Python version
-      run: sudo python -c "import sys; print(sys.version)"
+      run: sudo env "PATH=$PATH" python -c "import sys; print(sys.version)"
     - name: Test with tox
       run: |
-        sudo tox -e py${{ matrix.python-version }}
+        sudo env "PATH=$PATH" tox -e py${{ matrix.python-version }}
 
   docker:
     name: "Build Docker image develop"
