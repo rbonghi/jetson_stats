@@ -37,7 +37,7 @@ jobs:
         # Install tox
         sudo -H pip install tox
     - name: Display Python version
-      run: python -c "import sys; print(sys.version)"
+      run: sudo python -c "import sys; print(sys.version)"
     - name: Test with tox
       run: |
         sudo tox -e py${{ matrix.python-version }}
