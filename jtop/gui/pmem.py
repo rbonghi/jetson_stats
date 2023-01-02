@@ -201,7 +201,7 @@ class MEM(Page):
                     self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
         # Total GPU
         self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2), "Shared Tot: {GPU}".format(GPU=gpu_val_string), (curses.color_pair(8) | curses.A_BOLD))
-        return r_height
+        return r_height + 1
 
     def draw(self, key, mouse):
         # Screen size
@@ -230,9 +230,9 @@ class MEM(Page):
         # RAM linear gauge info
         if 'table' in self.jetson.ram:
             size_table = self.draw_nv_table(size_y[1] + 2, 1, size_x[1])
-            if size_y[1] + size_table > height:
+            if size_y[1] + size_table + 2 >= height:
                 for n_arrow in range(1, size_x[1]):
-                    self.stdscr.addch(size_y[1] + size_table + 1, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+                    self.stdscr.addch(height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
         else:
             # Write memory legend
             self.memory_legend(size_y[1] + 2, 1)
