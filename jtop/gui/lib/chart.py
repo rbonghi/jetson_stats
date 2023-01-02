@@ -111,8 +111,7 @@ class Chart(object):
                     if not label:
                         continue
                     if self.type_value == float:
-                        lab_c = "{value:2.1f}".format(value=value_n).rstrip('0').rstrip('.')
-                        lab_c = "{lab_c}{unit}".format(lab_c=lab_c, unit=self.unit)
+                        lab_c = "{value:2.1f}{unit}".format(value=value_n, unit=self.unit)
                     else:
                         lab_c = "{value:3d}{unit}".format(value=int(value_n), unit=self.unit)
                     stdscr.addstr(1 + size_y[0] + point, label_x + 2, lab_c, curses.A_BOLD)
