@@ -28,6 +28,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        sudo apt-get install -y python3.9
         # Make group jetson_stats
         sudo groupadd jetson_stats
         # Install test dependencies
