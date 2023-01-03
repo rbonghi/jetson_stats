@@ -24,6 +24,10 @@ from .common import check_curses
 
 
 class Chart(object):
+    
+    OFFSET_COLOR_CHART = 18
+    OFFSET_COLOR_TEXT = 25
+    
     """
     Chart draw object
     http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
@@ -76,14 +80,14 @@ class Chart(object):
 
     @check_curses
     def draw(self, stdscr, size_x, size_y, label="", y_label=True):
-        curses.init_pair(30, self.color_text, curses.COLOR_BLACK)
+        curses.init_pair(Chart.OFFSET_COLOR_TEXT, self.color_text, curses.COLOR_BLACK)
         # Evaluate Diplay X, and Y size
         displayX = size_x[1] - size_x[0] + 1
         displayY = size_y[1] - size_y[0] - 1
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if label:
-            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label[:displayX - len(self.name)], curses.color_pair(30) | curses.A_BOLD)
+            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label[:displayX - len(self.name)], curses.color_pair(Chart.OFFSET_COLOR_TEXT) | curses.A_BOLD)
         # Draw ticks and labels
         self._plot_x_axis(stdscr, size_x, size_y, displayX, label=y_label)
         # Plot chart shape and labels
@@ -163,7 +167,7 @@ class Chart(object):
             counter_color = 0
             prev_color = curses.COLOR_BLACK
             for value, color_chart in zip(values, self.color_chart):
-                curses.init_pair(20 + counter_color, color_chart, prev_color)
+                curses.init_pair(Chart.OFFSET_COLOR_CHART + counter_color, color_chart, prev_color)
 
                 cell_val = value * size_y / self.max_val
                 cell_val_int = int(cell_val)
@@ -173,19 +177,19 @@ class Chart(object):
                     # Full block: \u2588 - 3/4 block \u2586 - Lower block: \u2584 - Small lower block: \u2581
                     if self.fill:
                         for n in range(cell_val_int - 1):
-                            stdscr.addch(size_plot_y[1] - n, size_plot_x[1] - idx, '\u2588', curses.color_pair(20 + counter_color))
+                            stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, "\u2588", curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         # Add head chart
                         if cell_val < 1.0:
-                            stdscr.addch(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581', curses.color_pair(20 + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant == 0.0:
-                            stdscr.addch(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2584', curses.color_pair(20 + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2584', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant <= 0.5:
-                            stdscr.addch(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2586', curses.color_pair(20 + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2586', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant < 1.0:
-                            stdscr.addch(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581', curses.color_pair(20 + counter_color))
-                            stdscr.addch(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2588', curses.color_pair(20 + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2588', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                     else:
-                        stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(30))
+                        stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(Chart.OFFSET_COLOR_TEXT))
                 counter += 1
                 counter_color += 1
                 prev_color = color_chart
