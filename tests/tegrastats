@@ -42,6 +42,7 @@ tegrastats_out()
     local JETSON_MODEL=$1
     # Generate random value for GPU
     local RAND_GPU=$(( $RANDOM % 100 + 0 ))
+    local RAND_GPU2=$(( $RANDOM % 100 + 0 ))
 
     if [ "$JETSON_MODEL" = "TX1" ] ; then
         # Jetson TX1
@@ -52,6 +53,9 @@ tegrastats_out()
     elif [ "$JETSON_MODEL" = "Xavier" ] ; then
         # Jetson Xavier
         echo "RAM 407/15823MB (lfb 3702x4MB) SWAP 0/7911MB (cached 0MB) CPU [$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265] EMC_FREQ 0% GR3D_FREQ $RAND_GPU% AO@26.5C GPU@28C iwlwifi@30C Tdiode@31.25C PMIC@100C AUX@26.5C CPU@27.5C thermal@27.45C Tboard@27C GPU 1155/1155 CPU 385/385 SOC 2504/2503 CV 0/0 VDDRQ 192/192 SYS5V 2692/2692"
+    elif [ "$JETSON_MODEL" = "Orin" ] ; then
+        # Jetson Orin
+        echo "01-03-2023 16:10:22 RAM 2257/30536MB (lfb 5392x4MB) SWAP 0/15268MB (cached 0MB) CPU [$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,0%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729] EMC_FREQ 0% GR3D_FREQ $RAND_GPU% CV0@-256C CPU@41.375C Tboard@29C SOC2@39C Tdiode@30.75C SOC0@38.906C CV1@-256C GPU@-256C tj@41.468C SOC1@38.843C CV2@-256C"
     elif [ "$JETSON_MODEL" = "Nano" ] ; then
         # Jetson Nano
         echo "RAM 330/3964MB (lfb 758x4MB) SWAP 0/1982MB (cached 0MB) CPU [$(($RANDOM%100+0))%@102,$(($RANDOM%100+0))%@102,$(($RANDOM%100+0))%@102,$(($RANDOM%100+0))%@102] EMC_FREQ 0% GR3D_FREQ $RAND_GPU% PLL@20.5C CPU@23C PMIC@100C GPU@22.5C AO@27C thermal@22.5C POM_5V_IN 933/933 POM_5V_GPU 0/0 POM_5V_CPU 84/84"
@@ -66,6 +70,7 @@ tegrastats_out_sudo()
     local JETSON_MODEL=$1
     # Generate random value for GPU
     local RAND_GPU=$(( $RANDOM % 100 + 0 ))
+    local RAND_GPU2=$(( $RANDOM % 100 + 0 ))
 
     if [ "$JETSON_MODEL" = "TX1" ] ; then
         # Jetson TX1 (SUDO)
@@ -76,6 +81,9 @@ tegrastats_out_sudo()
     elif [ "$JETSON_MODEL" = "Xavier" ] ; then
         # Jetson Xavier (SUDO)
         echo "RAM 408/15823MB (lfb 3702x4MB) SWAP 0/7911MB (cached 0MB) CPU [$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265,$(($RANDOM%100+0))%@2265] EMC_FREQ 0%@2133 GR3D_FREQ $RAND_GPU%@1377 APE 150 MTS fg 0% bg 0% AO@26.5C GPU@28C iwlwifi@30C Tdiode@31.25C PMIC@100C AUX@27C CPU@28C thermal@27.45C Tboard@27C GPU 1155/1155 CPU 385/385 SOC 2502/2502 CV 0/0 VDDRQ 192/192 SYS5V 2692/2692"
+    elif [ "$JETSON_MODEL" = "Orin" ] ; then
+        # Jetson Orin
+        echo "01-03-2023 16:07:54 RAM 2257/30536MB (lfb 5392x4MB) SWAP 0/15268MB (cached 0MB) CPU [$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729,$(($RANDOM%100+0))%@729] EMC_FREQ 0%@204 GR3D_FREQ $RAND_GPU%@0 GR3D2_FREQ $RAND_GPU2%@0 NVJPG1 729 VIC_FREQ 115 APE 233 CV0@-256C CPU@41.437C Tboard@29C SOC2@39.062C Tdiode@30.75C SOC0@39.031C CV1@-256C GPU@-256C tj@41.656C SOC1@38.937C CV2@-256C VDD_GPU_SOC 2390mW/2390mW VDD_CPU_CV 796mW/796mW VIN_SYS_5V0 3522mW/3522mW NC 0mW/0mW VDDQ_VDD2_1V8AO 301mW/301mW NC 0mW/0mW"
     elif [ "$JETSON_MODEL" = "Nano" ] ; then
         # Jetson Nano (SUDO)
         echo "RAM 331/3964MB (lfb 758x4MB) SWAP 0/1982MB (cached 0MB) IRAM 0/252kB(lfb 252kB) CPU [$(($RANDOM%100+0))%@102,$(($RANDOM%100+0))%@102,$(($RANDOM%100+0))%@102,$(($RANDOM%100+0))%@102] EMC_FREQ 3%@204 GR3D_FREQ $RAND_GPU%@76 APE 25 PLL@20.5C CPU@23.5C PMIC@100C GPU@22.5C AO@27.5C thermal@23C POM_5V_IN 933/933 POM_5V_GPU 0/0 POM_5V_CPU 84/105"
