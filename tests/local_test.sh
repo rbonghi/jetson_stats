@@ -43,6 +43,7 @@ main()
 {
     local DOCKER_BUILD=true
     local PYTHON_LIST="2.7 3.6 3.8 3.9 3.10"
+    local PYTHON_DEBUG=""
     
     # Decode all information from startup
     while [ -n "$1" ]; do
@@ -51,6 +52,10 @@ main()
                 # Load help
                 usage
                 exit 0
+            ;;
+            --debug)
+                PYTHON_DEBUG=$2
+                shift 1
             ;;
             -py|--python)
                 PYTHON_LIST=$2
@@ -73,6 +78,12 @@ main()
             echo "- ${green}Build Dockerfile image with python:${bold}$PYTHON_VERSION${reset}"
             docker build -t rbonghi/jetson-stats:tox-py$PYTHON_VERSION --build-arg "PYTHON_VERSION=$PYTHON_VERSION" -f tests/Dockerfile.tox . || { echo "${red}docker build failure!${reset}"; exit 1; }
         done
+    fi
+
+    if [ ! -z "$PYTHON_DEBUG" ] ; then
+        echo "- ${yellow}Debug Image with python:${bold}$PYTHON_DEBUG${reset}"
+        docker run -v $HOME/jetson_stats:/jetson_stats -it --rm --entrypoint bash rbonghi/jetson-stats:tox-py$PYTHON_DEBUG
+        exit 0
     fi
     
     # Run all images
