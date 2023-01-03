@@ -44,7 +44,10 @@ def DATE(text):
         12-27-2022 13:48:01 ....
     """
     match = DATE_RE.search(text)
-    return text[:match.start()] + text[match.end():]
+    if match is not None:
+        return text[:match.start()] + text[match.end():]
+    else:
+        return text
 
 
 def SWAP(text):
