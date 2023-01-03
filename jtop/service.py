@@ -313,8 +313,12 @@ class JtopServer(Process):
         # Remove old pipes if exists
         if os.path.exists(JTOP_PIPE):
             if self.force:
-                logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
-                os.remove(JTOP_PIPE)
+                if os.path.isdir(JTOP_PIPE):
+                    logger.info("Remove folder {pipe}".format(pipe=JTOP_PIPE))
+                    os.rmdir(JTOP_PIPE)
+                else:
+                    logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
+                    os.remove(JTOP_PIPE)
             else:
                 raise JtopException("Service already active! Please check before run it again")
         # Start broadcaster
