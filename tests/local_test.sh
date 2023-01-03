@@ -28,20 +28,22 @@ usage()
     if [ "$1" != "" ]; then
         echo "${red}$1${reset}"
     fi
-
+    
     echo "Jetson_stats tox local test. USE ONLY IN A TEST DESKTOP MACHINE!"
     echo "Usage:"
     echo "$0 [options]"
     echo "options,"
-    echo "   -h|--help    | This help"
+    echo "   -h|--help             | This help"
+    echo "  -py|--python [PYHTON]  | Set a specific python version example PYTHON=3.9"
+    echo "  --only-run             | Run tox without build the docker image"
+    
 }
 
 main()
 {
     local DOCKER_BUILD=true
-    local PYTHON_LIST="3.8 3.9"
-    local PYTHON_LIST="3.9"
-
+    local PYTHON_LIST="2.7 3.6 3.8 3.9 3.10"
+    
     # Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
@@ -49,18 +51,22 @@ main()
                 # Load help
                 usage
                 exit 0
-                ;;
+            ;;
+            -py|--python)
+                PYTHON_LIST=$2
+                shift 1
+            ;;
             --only-run)
                 DOCKER_BUILD=false
-                ;;
+            ;;
             *)
                 usage "[ERROR] Unknown option: $1"
                 exit 1
             ;;
         esac
-            shift 1
+        shift 1
     done
-
+    
     if $DOCKER_BUILD ; then
         # Build all images
         for PYTHON_VERSION in $PYTHON_LIST; do
@@ -68,11 +74,11 @@ main()
             docker build -t rbonghi/jetson-stats:tox-py$PYTHON_VERSION --build-arg "PYTHON_VERSION=$PYTHON_VERSION" -f tests/Dockerfile.tox . || { echo "${red}docker build failure!${reset}"; exit 1; }
         done
     fi
-
+    
     # Run all images
     for PYTHON_VERSION in $PYTHON_LIST; do
         echo "- ${green}Run Image and test with python:${bold}$PYTHON_VERSION${reset}"
-        docker run --rm rbonghi/jetson-stats:tox-py$PYTHON_VERSION -e py$PYTHON_VERSION || { echo "${red}Failure TOX $PYTHON_VERSION!${reset}"; exit 1; }
+        docker run --rm -t rbonghi/jetson-stats:tox-py$PYTHON_VERSION -v -e py$PYTHON_VERSION || { echo "${red}Failure TOX $PYTHON_VERSION!${reset}"; exit 1; }
     done
 }
 
