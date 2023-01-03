@@ -78,7 +78,7 @@ main()
     # Run all images
     for PYTHON_VERSION in $PYTHON_LIST; do
         echo "- ${green}Run Image and test with python:${bold}$PYTHON_VERSION${reset}"
-        docker run --rm -t rbonghi/jetson-stats:tox-py$PYTHON_VERSION -v -e py$PYTHON_VERSION || { echo "${red}Failure TOX $PYTHON_VERSION!${reset}"; exit 1; }
+        docker run --rm -t rbonghi/jetson-stats:tox-py$PYTHON_VERSION -e py$PYTHON_VERSION || { echo "${red}Failure TOX $PYTHON_VERSION!${reset}"; exit 1; }
     done
 }
 
