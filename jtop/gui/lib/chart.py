@@ -24,14 +24,15 @@ from .common import check_curses
 
 
 class Chart(object):
-    
+
     OFFSET_COLOR_CHART = 18
     OFFSET_COLOR_TEXT = 25
-    
+
     """
     Chart draw object
     http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
     """
+
     def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.A_NORMAL, color_chart=[], fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
@@ -87,7 +88,8 @@ class Chart(object):
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if label:
-            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label[:displayX - len(self.name)], curses.color_pair(Chart.OFFSET_COLOR_TEXT) | curses.A_BOLD)
+            stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label[:displayX - len(self.name)],
+                          curses.color_pair(Chart.OFFSET_COLOR_TEXT) | curses.A_BOLD)
         # Draw ticks and labels
         self._plot_x_axis(stdscr, size_x, size_y, displayX, label=y_label)
         # Plot chart shape and labels
@@ -136,7 +138,6 @@ class Chart(object):
                 try:
                     # Draw tick label
                     if ((point) / ceil(val)) % ten_sec == 0:
-                        # stdscr.addch(size_y[1] - 1, x_val, curses.ACS_TTEE)
                         stdscr.addch(size_y[1], x_val, curses.ACS_LLCORNER)
                     # Draw label
                     if counter > 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
@@ -180,14 +181,19 @@ class Chart(object):
                             stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, "\u2588", curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         # Add head chart
                         if cell_val < 1.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581',
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant == 0.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2584', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2584',
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant <= 0.5:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2586', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2586',
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant < 1.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2588', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581',
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2588',
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                     else:
                         stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(Chart.OFFSET_COLOR_TEXT))
                 counter += 1
