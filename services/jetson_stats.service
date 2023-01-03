@@ -19,7 +19,7 @@ Description=jetson_stats service
 [Service]
 # Type=exec
 Environment="JTOP_SERVICE=True"
-ExecStart=/usr/local/bin/jtop service --force
+ExecStart=/usr/local/bin/jtop --force
 Restart=on-failure
 RestartSec=10s
 TimeoutStartSec=30s
