@@ -542,7 +542,7 @@ class jtop(Thread):
         stats['RAM'] = self.ram['use']
         # -- EMC --
         if self.emc:
-            stats['EMC'] = self.emc['use']
+            stats['EMC'] = self.emc['val']
         # -- IRAM --
         if self.iram:
             stats['IRAM'] = self.iram['use']
