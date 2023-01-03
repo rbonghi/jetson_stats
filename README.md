@@ -26,7 +26,7 @@ Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed i
 # Install
 
 ```console
-sudo -H pip install -U jetson-stats
+sudo -H pip3 install -U jetson-stats
 ```
 **🚀 That's it! 🚀** 
 
