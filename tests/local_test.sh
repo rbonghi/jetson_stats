@@ -34,7 +34,8 @@ usage()
     echo "$0 [options]"
     echo "options,"
     echo "   -h|--help             | This help"
-    echo "  -py|--python [PYHTON]  | Set a specific python version example PYTHON=3.9"
+    echo "   --debug [PYHTON]      | Debug a specific python version, example PYTHON=3.9"
+    echo "  -py|--python [PYHTON]  | Set a specific python version, example PYTHON=3.9"
     echo "  --only-run             | Run tox without build the docker image"
     
 }
