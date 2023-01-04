@@ -218,7 +218,9 @@ class NVPModelService(object):
     def is_running(self):
         if self._thread is None:
             return False
-        return self._thread.isAlive()
+        # https://github.com/fkie/multimaster_fkie/issues/149
+        # https://docs.python.org/2.7/library/threading.html#threading.Thread.is_alive
+        return self._thread.is_alive()
 
     def set(self, value):
         if self.is_running():
