@@ -71,9 +71,9 @@ class JTOPGUI:
     """
     COLORS = {"RED": 1, "GREEN": 2, "YELLOW": 3, "BLUE": 4, "MAGENTA": 5, "CYAN": 6}
 
-    def __init__(self, stdscr, jetson, pages, init_page=0, start=True, loop=False, seconds=5):
+    def __init__(self, stdscr, jetson, pages, init_page=0, start=True, loop=False, seconds=5, color_filter=False):
         # Define pairing colors
-        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(1, curses.COLOR_RED if not color_filter else curses.COLOR_BLUE, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)

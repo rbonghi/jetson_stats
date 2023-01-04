@@ -101,6 +101,8 @@ def main():
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
+    parser.add_argument('--color-filter', dest="color_filter",
+                        help='Change jtop base colors, you can use also JTOP_COLOR_FILTER=True', action="store_true", default=False)
     parser.add_argument('-r', '--refresh', dest="refresh", help='refresh interval', type=int, default='500')
     parser.add_argument('-p', '--page', dest="page", help='Open fix page', type=int, default=1)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_var(VERSION_RE)))
@@ -144,7 +146,9 @@ def main():
         # Open jtop client
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper
-            curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], init_page=args.page, loop=args.loop, seconds=LOOP_SECONDS)
+            color_filter = bool(os.getenv('JTOP_COLOR_FILTER', args.color_filter))
+            curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], init_page=args.page,
+                           loop=args.loop, seconds=LOOP_SECONDS, color_filter=color_filter)
             # Write warnings
             warning_messages(jetson, args.no_warnings)
     except (KeyboardInterrupt, SystemExit):
