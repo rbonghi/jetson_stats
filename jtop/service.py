@@ -524,7 +524,9 @@ class JtopServer(Process):
         # -- NVP MODEL --
         if self.nvpmodel is not None:
             # Read nvp_mode
-            nvp_mode = jetson_clocks_show['NVP'] if 'NVP' in jetson_clocks_show else self.nvpmodel.get()
+            # REMOVE jetson_clock for future release
+            # > nvp_mode = jetson_clocks_show['NVP'] if 'NVP' in jetson_clocks_show else self.nvpmodel.get()
+            nvp_mode = self.nvpmodel.get()
             if not self.nvpmodel.is_running():
                 self.nvp_mode = nvp_mode
             data['nvp'] = {
