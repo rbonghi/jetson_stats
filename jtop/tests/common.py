@@ -28,6 +28,7 @@ MAX_COUNT = 50
 
 def set_nvp_mode(jetson, mode):
     # Check if status is different
+    print("NVP-MODE: BEFORE assert str(jetson.nvpmodel)={nvp} - mode={mode}".format(nvp=str(jetson.nvpmodel), mode=mode))
     if str(jetson.nvpmodel) != mode:
         # Check status nvpmodel
         if jetson.ok():
@@ -41,6 +42,7 @@ def set_nvp_mode(jetson, mode):
         if counter == MAX_COUNT:
             warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
     # Check if is same model
+    print("NVP-MODE: assert jetson.nvpmodel={nvp} - mode={mode}".format(nvp=str(jetson.nvpmodel), mode=mode))
     assert str(jetson.nvpmodel) == mode
     # Check name variable
     assert jetson.nvpmodel.name == mode
