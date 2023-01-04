@@ -199,9 +199,12 @@ class MEM(Page):
                 if num_cell < len(columns_title) - 1:
                     self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
         # Total GPU
-        self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2),
-                           "Shared Tot: {GPU}".format(GPU=gpu_val_string),
-                           (curses.color_pair(8) | curses.A_BOLD))
+        try:
+            self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2),
+                            "Shared Tot: {GPU}".format(GPU=gpu_val_string),
+                            (curses.color_pair(8) | curses.A_BOLD))
+        except curses.error:
+            pass
         return r_height + 1
 
     def draw(self, key, mouse):
