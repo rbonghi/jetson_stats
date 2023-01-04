@@ -201,8 +201,8 @@ class MEM(Page):
         # Total GPU
         try:
             self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2),
-                            "Shared Tot: {GPU}".format(GPU=gpu_val_string),
-                            (curses.color_pair(8) | curses.A_BOLD))
+                               "Shared Tot: {GPU}".format(GPU=gpu_val_string),
+                               (curses.color_pair(8) | curses.A_BOLD))
         except curses.error:
             pass
         return r_height + 1
