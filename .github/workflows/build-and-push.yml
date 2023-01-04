@@ -88,12 +88,13 @@ jobs:
       uses: actions/checkout@v2
       with:
         persist-credentials: false
-    - name: directly build sphinx
+    - name: Build sphinx
+      # Manual build documentation
+      # Follow https://github.com/ammaraskar/sphinx-action/issues/43#issuecomment-1218439431
       run: |
-        # pip install -r requirements.txt
-        pip install travis-sphinx sphinx sphinx-rtd-theme m2r mistune==0.8.4
-        sphinx-build -D todo_include_todos=0 docs ./docs/_build/html/
-    - name: Build and Deploy
+        pip install travis-sphinx sphinx sphinx-rtd-theme m2r mistune
+        sphinx-build -D todo_include_todos=0 docs/source ./docs/build/html/
+    - name: Deploy on branch
       if: startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/')
       # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
       uses: JamesIves/github-pages-deploy-action@releases/v3
