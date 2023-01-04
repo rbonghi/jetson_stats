@@ -74,6 +74,10 @@ main()
     done
     
     if $DOCKER_BUILD ; then
+        # Build specific version only if debug
+        if [ ! -z "$PYTHON_DEBUG" ] ; then
+            PYTHON_LIST=$PYTHON_DEBUG
+        fi
         # Build all images
         for PYTHON_VERSION in $PYTHON_LIST; do
             echo "- ${green}Build Dockerfile image with python:${bold}$PYTHON_VERSION${reset}"
