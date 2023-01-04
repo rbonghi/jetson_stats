@@ -262,15 +262,20 @@ class MEM(Page):
                 color = curses.color_pair(3)
             else:
                 color = curses.A_NORMAL
-            self.stdscr.addstr(first + height - 3, start_pos + 12, "size", curses.A_NORMAL)
-            self.stdscr.addstr(first + height - 3, start_pos + 17, "{size: <2}".format(size=self._swap_size), color)
-            self.stdscr.addstr(first + height - 3, start_pos + 18, "GB", curses.A_BOLD)
+            try:
+                self.stdscr.addstr(first + height - 3, start_pos + 12, "size", curses.A_NORMAL)
+                self.stdscr.addstr(first + height - 3, start_pos + 17, "{size: <2}".format(size=self._swap_size), color)
+                self.stdscr.addstr(first + height - 3, start_pos + 18, "GB", curses.A_BOLD)
+            except curses.error:
+                pass
         # else:
         #    # Print folder swapfile
         #    self.stdscr.addstr(first + height - 3, start_pos + 11, "{folder}".format(folder=self.jetson.swap.file), curses.A_BOLD)
         # Clear cache button
         self.button_cache.draw(first + height - 7, size_x[1] + 21, key, mouse)
-        self.stdscr.addstr(first + height - 7, size_x[1] + 27, "Clear", curses.A_UNDERLINE)
-        clear_cache = "cache"
-        self.stdscr.addstr(first + height - 6, size_x[1] + 27, clear_cache, curses.A_NORMAL)
+        try:
+            self.stdscr.addstr(first + height - 7, size_x[1] + 27, "Clear", curses.A_UNDERLINE)
+            self.stdscr.addstr(first + height - 6, size_x[1] + 27, "cache", curses.A_NORMAL)
+        except curses.error:
+            pass
 # EOF

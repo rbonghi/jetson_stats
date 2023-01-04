@@ -92,7 +92,6 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
     for idx, name in enumerate(sorted(jetson.temperature)):
         # Print temperature name
         value = jetson.temperature[name]
-        stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=name))
         # Set color temperature
         color = curses.A_NORMAL
         for k in list_options:
@@ -100,7 +99,11 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
                 color = color_options[k]
                 break
         # Print temperature value
-        stdscr.addstr(offset + idx + 1, start + offset // 2 + 3, ("{val:8.2f}C").format(val=value), color)
+        try:
+            stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=name))
+            stdscr.addstr(offset + idx + 1, start + offset // 2 + 3, ("{val:8.2f}C").format(val=value), color)
+        except curses.error:
+            pass
         counter = idx
     return counter + 2
 

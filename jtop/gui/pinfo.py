@@ -106,8 +106,11 @@ class INFO(Page):
             # VisionWorks is not anymore available from JP5.0
             if name == "VisionWorks" and self.l4t_release >= 34:
                 continue
-            self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
-            self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
+            try:
+                self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
+                self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
+            except curses.error:
+                pass
             if name == "OpenCV":
                 self.stdscr.addstr(start_pos + idx + 1, posx + 25, "compiled CUDA:")
                 cuda = self.jetson.board.libraries["OpenCV-Cuda"]
