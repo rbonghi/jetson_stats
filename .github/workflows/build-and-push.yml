@@ -80,10 +80,36 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/arm64
 
+  docs:
+    name: Documentation
+    if: startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2 # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
+      with:
+        persist-credentials: false
+    - name: Sphinx Build
+      # Follow: https://github.com/marketplace/actions/sphinx-build
+      uses: ammaraskar/sphinx-action@0.4
+      with:
+        docs-folder: docs/
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        build-command: make html
+        # Fix AttributeError: 'module' object has no attribute 'BlockGrammar'
+        # https://github.com/Tribler/tribler/issues/6624
+        pre-build-command: pip install travis-sphinx sphinx sphinx-rtd-theme m2r mistune==0.8.4
+    - name: Build and Deploy
+      # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        BRANCH: gh-pages # The branch the action should deploy to.
+        FOLDER: docs/build/html # The folder the action should deploy.
+
   deploy:
     name: Deploy on PIP
-    # needs: [build, docs]
-    needs: [build, docker]
+    needs: [build, docker, docs]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
