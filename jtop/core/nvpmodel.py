@@ -255,6 +255,8 @@ class NVPModelService(object):
                     return False
         except Command.TimeoutException:
             raise JtopException("nvpmodel does not reply in time")
+        except Command.CommandException:
+            raise JtopException("nvpmodel command exception")
         # If everithing go well save the new mode
         self.selected = level
         return True
