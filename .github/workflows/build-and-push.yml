@@ -85,19 +85,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2 # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
+      uses: actions/checkout@v2
       with:
         persist-credentials: false
-    - name: Sphinx Build
-      # Follow: https://github.com/marketplace/actions/sphinx-build
-      uses: ammaraskar/sphinx-action@0.4
-      with:
-        docs-folder: docs/
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
-        build-command: make html
-        # Fix AttributeError: 'module' object has no attribute 'BlockGrammar'
-        # https://github.com/Tribler/tribler/issues/6624
-        pre-build-command: pip install travis-sphinx sphinx sphinx-rtd-theme m2r mistune==0.8.4
+    - name: directly build sphinx
+      run: |
+        # pip install -r requirements.txt
+        # pip install travis-sphinx sphinx sphinx-rtd-theme m2r mistune==0.8.4
+        sphinx-build -D todo_include_todos=0 docs ./docs/_build/html/
     - name: Build and Deploy
       if: startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/')
       # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
