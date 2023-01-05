@@ -135,7 +135,7 @@ Check _jetson-stats_ **health**, enable/disable **desktop**, enable/disable **je
 # [jetson_release][jetson_release]
 The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
 
-![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png)
+![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_release.png)
 # [jetson_swap][jetson_swap]
 Simple manager to switch on and switch off a swapfile in your jetson.
 
