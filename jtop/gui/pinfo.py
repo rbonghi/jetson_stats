@@ -17,6 +17,7 @@
 
 import re
 import curses
+import platform
 # Architecture and platform info
 import platform
 # Find variable
@@ -130,6 +131,8 @@ class INFO(Page):
                 self.stdscr.addstr(platform_line + idx, width - 20, ip, curses.A_BOLD)
                 idx += 1
         # Author information
-        plot_name_info(self.stdscr, start_pos - 1, width - 31, "Version", get_var(VERSION_RE))
+        python_version = platform.python_version()
+        plot_name_info(self.stdscr, start_pos - 1, width - 35, "Version", get_var(VERSION_RE))
+        plot_name_info(self.stdscr, start_pos - 1, width - 16, "Python", python_version)
         plot_name_info(self.stdscr, start_pos, width - 30, "Author", get_var(AUTHOR_RE))
         plot_name_info(self.stdscr, start_pos + 1, width - 30, "e-mail", get_var(EMAIL_RE))
