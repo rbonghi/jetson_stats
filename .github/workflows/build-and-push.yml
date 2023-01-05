@@ -144,7 +144,7 @@ jobs:
 
   notify:
     name: "Notify socials"
-    needs: [deploy, update_docker_description, docs]
+    # needs: [deploy, update_docker_description, docs]
     runs-on: ubuntu-latest
     steps:
     - name: Repository status
@@ -164,3 +164,12 @@ jobs:
       uses: Ilshidur/action-discord@master
       with:
         args: 'jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!'
+    - name: Send telegram message
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!
+          
+          See changes: https://github.com/${{ github.repository }}/releases/latest
