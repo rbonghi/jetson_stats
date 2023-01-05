@@ -3,9 +3,9 @@
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/raffaello86?style=social)](https://twitter.com/raffaello86) [![robo.panther](https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&logo=instagram)](https://www.instagram.com/robo.panther/)
 
-**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Orin, Xavier, Nano, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
+**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Orin, Xavier, Nano, TX1, TX2] series. Works with all NVIDIA Jetson ecosystem.
 
-[:sparkling_heart: **Sponsor** jetson-stats](https://github.com/sponsors/rbonghi)
+**Consider to** [:sparkling_heart: **Sponsor** jetson-stats](https://github.com/sponsors/rbonghi)
 
 When you install jetson-stats are included:
 - [Jetson stats](#jetson-stats)
@@ -21,7 +21,7 @@ When you install jetson-stats are included:
 - [jetson\_swap](#jetson_swap)
 - [jetson variables](#jetson-variables)
 
-Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rbonghi.github.io/jetson_stats).
+Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rnext.it/jetson_stats).
 
 # Install
 
@@ -45,9 +45,9 @@ pip install -U jetson-stats
 
 ## Docker
 
-You can test running on your terminal, but you **must** install before in your host!
+You can run jtop from a docker container, but you **must** install jetsons-stats as well on your host! Try with the command below:
 ```console
-docker run -t -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats
+docker run --rm -t -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats
 ```
 
 or you can add in your Dockerfile writing:
@@ -165,4 +165,4 @@ When you install jetson-stats in your bash will be available a list of new envir
 [jetson_performance]: https://github.com/rbonghi/jetson_stats/wiki/jetson_performance
 [jetson_docker]: https://github.com/rbonghi/jetson_stats/wiki/jetson_docker
 [NVIDIA]: https://www.nvidia.com/
-[NVIDIA Jetson]: http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html
+[NVIDIA Jetson]: https://developer.nvidia.com/buy-jetson

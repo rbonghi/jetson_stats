@@ -177,7 +177,7 @@ setup(
     version=version,
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
-    description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Xavier NX, Nano, AGX Xavier, TX1, TX2]",
+    description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX1, TX2] series",
     license='AGPL-3.0',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -194,7 +194,7 @@ setup(
     package_data={"jtop": ["jetson_variables", "jetson_libraries"]},
     # Define research keywords
     keywords=("jetson_stats jtop python system-monitor docker \
-               nvidia Jetson XavierNX Nano Xavier TX2 TX1 process viewer"
+               nvidia Jetson Orin AGXOrin Xavier AGXXavier XavierNX Nano TX1 TX2 process viewer"
               ),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
