@@ -17,7 +17,6 @@
 
 import re
 import curses
-import platform
 # Architecture and platform info
 import platform
 # Find variable
