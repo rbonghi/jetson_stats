@@ -856,7 +856,7 @@ main()
     # Evaluate the size
     local MENU_LIST_LEN
     let MENU_LIST_LEN=${#MENU_LIST[@]}/2
-    local MENU_TEXT="$JETSON_MACHINE\n"
+    local MENU_TEXT="$JETSON_MODEL\n"
     MENU_TEXT+="$(jtop -v 2>&1)"
     # Make jetson_stats menu
     local OUTPUT
