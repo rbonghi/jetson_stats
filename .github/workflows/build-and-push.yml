@@ -144,7 +144,7 @@ jobs:
 
   notify:
     name: "Notify socials"
-    # needs: [deploy, update_docker_description, docs]
+    needs: [deploy, update_docker_description, docs]
     runs-on: ubuntu-latest
     steps:
     - name: Repository status
