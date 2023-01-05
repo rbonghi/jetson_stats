@@ -122,7 +122,7 @@ def main():
             server = JtopServer(force=args.force)
             python_version = platform.python_version()
             logger.info("jetson_stats server loaded")
-            logger.info(f"Running on python: {python_version}".format(python_version=python_version))
+            logger.info("Running on python: {python_version}".format(python_version=python_version))
             server.loop_for_ever()
         except JtopException as e:
             print(e)
