@@ -47,7 +47,7 @@ pip install -U jetson-stats
 
 You can run jtop from a docker container, but you **must** install jetsons-stats as well on your host! Try with the command below:
 ```console
-docker run --rm -t -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats
+docker run --rm -t -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson_stats:latest
 ```
 
 or you can add in your Dockerfile writing:
