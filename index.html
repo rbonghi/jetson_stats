@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Welcome to jetson-stats’s documentation! &mdash; jetson-stats 4.0.0rc3 documentation</title>
+  <title>Welcome to jetson-stats’s documentation! &mdash; jetson-stats 4.0.0 documentation</title>
   
 
   
@@ -190,11 +190,14 @@
 <a class="reference external image-reference" href="https://badge.fury.io/py/jetson-stats"><img alt="PyPI version" src="https://badge.fury.io/py/jetson-stats.svg" /></a>
 <a class="reference external image-reference" href="https://www.python.org/"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/jetson-stats.svg" /></a>
 <a class="reference external image-reference" href="https://pypi.org/project/jetson-stats/"><img alt="PyPI - Format" src="https://img.shields.io/pypi/format/jetson-stats.svg" /></a>
+<a class="reference external image-reference" href="/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/rbonghi/jetson_stats" /></a>
+<a class="reference external image-reference" href="https://hub.docker.com/r/rbonghi/jetson_stats"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/rbonghi/jetson_stats" /></a>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/actions?query=workflow%3A%22CI+%26+CD%22"><img alt="CI &amp; CD" src="https://github.com/rbonghi/jetson_stats/workflows/CI%20&amp;%20CD/badge.svg" /></a>
 <a class="reference external image-reference" href="https://twitter.com/raffaello86"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/raffaello86?style=social" /></a>
 <a class="reference external image-reference" href="https://www.instagram.com/robo.panther/"><img alt="robo.panther" src="https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&amp;logo=instagram" /></a>
-<p><strong>jetson-stats</strong> is a package for <strong>monitoring</strong> and <strong>control</strong> your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a> [Orin series, Xavier series, Nano, TX1, TX2] Works with all NVIDIA Jetson ecosystem.</p>
-<p><a class="reference external" href="https://github.com/sponsors/rbonghi">:sparkling_heart: **Sponsor** jetson-stats</a></p>
+<a class="reference external image-reference" href="https://discord.gg/BFbuJNhYzS"><img alt="Discord" src="https://img.shields.io/discord/1060563771048861817" /></a>
+<p><strong>jetson-stats</strong> is a package for <strong>monitoring</strong> and <strong>control</strong> your <a class="reference external" href="https://developer.nvidia.com/buy-jetson">NVIDIA Jetson</a> [Orin, Xavier, Nano, TX1, TX2] series. Works with all NVIDIA Jetson ecosystem.</p>
+<p><strong>Consider to</strong> <a class="reference external" href="https://github.com/sponsors/rbonghi">:sparkling_heart: **Sponsor** jetson-stats</a></p>
 <p>When you install jetson-stats are included:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="#jetson-stats">Jetson stats</a></p></li>
@@ -216,7 +219,7 @@
 <li><p><a class="reference external" href="#jetson_swap">jetson_swap</a></p></li>
 <li><p><a class="reference external" href="#jetson-variables">jetson variables</a></p></li>
 </ul>
-<p>Read the <a class="reference external" href="https://github.com/rbonghi/jetson_stat/wiki">Wiki</a> for more detailed information or read the package <a class="reference external" href="https://rbonghi.github.io/jetson_stats">documentation</a>.</p>
+<p>Read the <a class="reference external" href="https://github.com/rbonghi/jetson_stat/wiki">Wiki</a> for more detailed information or read the package <a class="reference external" href="https://rnext.it/jetson_stats">documentation</a>.</p>
 </section>
 <section id="id2">
 <h1>Install<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h1>
@@ -237,10 +240,8 @@
 </section>
 <section id="id6">
 <h2>Docker<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
-<p>You can run jetson_stats, but you <strong>must</strong> install before in your host</p>
-<p>You can test running on your terminal</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker pull rbonghi/jetson-stats</span>
-<span class="go">docker run -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats</span>
+<p>You can run jtop from a docker container, but you <strong>must</strong> install jetsons-stats as well on your host! Try with the command below:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run --rm -t -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats</span>
 </pre></div>
 </div>
 <p>or you can add in your Dockerfile writing:</p>
@@ -263,18 +264,17 @@
 </section>
 <section id="id9">
 <h1><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jtop">jtop</a><a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h1>
-<p>It is a system monitoring utility that runs on the terminal and see and <strong>control</strong> realtime the status of your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a>. CPU, RAM, GPU status and frequency and other…</p>
+<p>It is a system monitoring utility that runs on the terminal and see and <strong>control</strong> realtime the status of your <a class="reference external" href="https://developer.nvidia.com/buy-jetson">NVIDIA Jetson</a>. CPU, RAM, GPU status and frequency and other…</p>
 <p>The prompt interface will be show like this image, <strong>now clickable!</strong>:</p>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif" /></a>
 <p>You can run the jtop simple using a simple command <code class="docutils literal notranslate"><span class="pre">jtop</span></code></p>
 <p>YES! Sudo is <strong>not</strong> more required!</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@jetson-xavier-nx:~/$ </span>jtop
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@agx-orin:~/$ </span>jtop
 </pre></div>
 </div>
 <p>Other options are available with <code class="docutils literal notranslate"><span class="pre">-h</span></code> option:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@jetson-xavier-nx:~/$ </span>jtop<span class="w"> </span>-h
-<span class="go">usage: jtop [-h] [--no-warnings] [--restore] [--loop] [-r REFRESH] [-p PAGE]</span>
-<span class="go">            [-v]</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@agx-orin:~/$ </span>jtop<span class="w"> </span>-h
+<span class="go">usage: jtop [-h] [--no-warnings] [--restore] [--loop] [--color-filter] [-r REFRESH] [-p PAGE] [-v]</span>
 
 <span class="go">jtop is system monitoring utility and runs on terminal</span>
 
@@ -283,6 +283,7 @@
 <span class="go">  --no-warnings         Do not show warnings (default: False)</span>
 <span class="go">  --restore             Reset Jetson configuration (default: False)</span>
 <span class="go">  --loop                Automatically switch page every 5s (default: False)</span>
+<span class="go">  --color-filter        Change jtop base colors, you can use also JTOP_COLOR_FILTER=True (default: False)</span>
 <span class="go">  -r REFRESH, --refresh REFRESH</span>
 <span class="go">                        refresh interval (default: 500)</span>
 <span class="go">  -p PAGE, --page PAGE  Open fix page (default: 1)</span>
@@ -326,7 +327,7 @@ To control the your NVIDIA Jetson are available this keyboard commands:</p></li>
 </section>
 <section id="id15">
 <h1><a class="reference external" href="https://github.com/rbonghi/jetson_stats/wiki/jetson_release">jetson_release</a><a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h1>
-<p>The command show the status and all information about your <a class="reference external" href="http://www.nvidia.com/object/embedded-systems-dev-kits-modules.html">NVIDIA Jetson</a></p>
+<p>The command show the status and all information about your <a class="reference external" href="https://developer.nvidia.com/buy-jetson">NVIDIA Jetson</a></p>
 <a class="reference external image-reference" href="https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png"><img alt="jtop" src="https://github.com/rbonghi/jetson_stats/wiki/images/jetso_release.png" /></a>
 </section>
 <section id="id18">
@@ -360,7 +361,7 @@ To control the your NVIDIA Jetson are available this keyboard commands:</p></li>
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2020-2021, Raffaello Bonghi.
+        &#169; Copyright 2020-2023, Raffaello Bonghi.
 
     </p>
   </div>
