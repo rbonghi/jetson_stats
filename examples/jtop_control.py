@@ -61,7 +61,7 @@ if __name__ == "__main__":
                     # Print jetson fan status
                     print(jetson.fan)
                     # Leave when fan measure is at 100%
-                    if jetson.fan.measure == 100:
+                    if jetson.fan.speed == 100:
                         break
     except JtopException as e:
         print(e)

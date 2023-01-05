@@ -226,10 +226,13 @@ class jtop(Thread):
         # Reset jetson_clocks
         if self.jetson_clocks is not None:
             # Disable jetson_clocks
-            self.jetson_clocks = False
+            try:
+                self.jetson_clocks = False
+            except JtopException as ex:
+                yield False, ex
             # Wait jetson_clocks boot
             counter = 0
-            while self.ok() or counter == max_counter:
+            while self.ok() and (counter < max_counter):
                 if not self.jetson_clocks:
                     break
                 counter += 1
@@ -238,7 +241,7 @@ class jtop(Thread):
             self.jetson_clocks.boot = False
             # Wait jetson_clocks boot
             counter = 0
-            while self.ok() or counter == max_counter:
+            while self.ok() and (counter < max_counter):
                 if not self.jetson_clocks.boot:
                     break
                 counter += 1
@@ -246,27 +249,27 @@ class jtop(Thread):
         # Reset fan control
         if self.fan is not None:
             # Reset mode fan
-            self.fan.mode = 'default'
+            self.fan.mode = 'system'
             counter = 0
-            while self.ok() or counter == max_counter:
-                if self.fan.mode == 'default':
+            while self.ok() and (counter < max_counter):
+                if self.fan.mode == 'system':
                     break
                 counter += 1
             yield counter != max_counter, "fan mode set default"
             # Reset speed to zero
             self.fan.speed = 0
             counter = 0
-            while self.ok() or counter == max_counter:
-                if self.fan.measure == 0:
+            while self.ok() and (counter < max_counter):
+                if self.fan.speed == 0:
                     break
                 counter += 1
-            yield counter != max_counter, "Fan speed={measure}".format(measure=self.fan.measure)
+            yield counter != max_counter, "Fan speed={speed}".format(speed=self.fan.speed)
         # Switch off swap
         if self.swap.is_enable:
             # Deactivate swap
             self.swap.deactivate()
             counter = 0
-            while self.ok() or counter == max_counter:
+            while self.ok() and (counter < max_counter):
                 if not self.swap.is_enable:
                     break
                 counter += 1
@@ -560,7 +563,7 @@ class jtop(Thread):
             stats[engine] = engobj.frequency if engobj.status else 'OFF'
         # -- FAN --
         if self.fan:
-            stats['fan'] = self.fan.measure
+            stats['fan'] = self.fan.speed
         # -- Temperature --
         for temp in sorted(self.temperature):
             stats["Temp {name}".format(name=temp)] = self.temperature[temp]

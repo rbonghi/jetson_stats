@@ -134,14 +134,17 @@ def main():
     interval = float(args.refresh / 1000.0)
     # Restore option
     if args.restore:
-        with jtop(interval=interval) as jetson:
-            # Write warnings
-            warning_messages(jetson, args.no_warnings)
-            # Restore configuration
-            if jetson.ok():
-                for status, name in jetson.restore():
-                    status = bcolors.ok() if status else bcolors.fail()
-                    print(" [{status}] {name}".format(name=name.capitalize(), status=status))
+        try:
+            with jtop(interval=interval) as jetson:
+                # Write warnings
+                warning_messages(jetson, args.no_warnings)
+                # Restore configuration
+                if jetson.ok():
+                    for status, name in jetson.restore():
+                        status = bcolors.ok() if status else bcolors.fail()
+                        print(" [{status}] {name}".format(name=name.capitalize(), status=status))
+        except JtopException as e:
+            print(e)
         # Close service
         exit(0)
     # jtop client start
