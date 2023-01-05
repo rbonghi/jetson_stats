@@ -3,7 +3,7 @@
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/raffaello86?style=social)](https://twitter.com/raffaello86) [![robo.panther](https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&logo=instagram)](https://www.instagram.com/robo.panther/)
 
-**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Orin series, Xavier series, Nano, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
+**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Orin, Xavier, Nano, TX1, TX2] Works with all NVIDIA Jetson ecosystem.
 
 [:sparkling_heart: **Sponsor** jetson-stats](https://github.com/sponsors/rbonghi)
 
@@ -16,9 +16,9 @@ When you install jetson-stats are included:
 - [jtop](#jtop)
   - [Pages](#pages)
   - [Controls](#controls)
-- [jetson_config](#jetson_config)
-- [jetson_release](#jetson_release)
-- [jetson_swap](#jetson_swap)
+- [jetson\_config](#jetson_config)
+- [jetson\_release](#jetson_release)
+- [jetson\_swap](#jetson_swap)
 - [jetson variables](#jetson-variables)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rbonghi.github.io/jetson_stats).
@@ -45,12 +45,9 @@ pip install -U jetson-stats
 
 ## Docker
 
-You can run jetson_stats, but you **must** install before in your host
-
-You can test running on your terminal
+You can test running on your terminal, but you **must** install before in your host!
 ```console
-docker pull rbonghi/jetson-stats
-docker run -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats
+docker run -t -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats
 ```
 
 or you can add in your Dockerfile writing:
@@ -85,14 +82,13 @@ You can run the jtop simple using a simple command `jtop`
 
 YES! Sudo is **not** more required!
 ```console
-nvidia@jetson-xavier-nx:~/$ jtop
+nvidia@agx-orin:~/$ jtop
 ```
 
 Other options are available with `-h` option:
 ```console
-nvidia@jetson-xavier-nx:~/$ jtop -h
-usage: jtop [-h] [--no-warnings] [--restore] [--loop] [-r REFRESH] [-p PAGE]
-            [-v]
+nvidia@agx-orin:~/$ jtop -h
+usage: jtop [-h] [--no-warnings] [--restore] [--loop] [--color-filter] [-r REFRESH] [-p PAGE] [-v]
 
 jtop is system monitoring utility and runs on terminal
 
@@ -101,6 +97,7 @@ optional arguments:
   --no-warnings         Do not show warnings (default: False)
   --restore             Reset Jetson configuration (default: False)
   --loop                Automatically switch page every 5s (default: False)
+  --color-filter        Change jtop base colors, you can use also JTOP_COLOR_FILTER=True (default: False)
   -r REFRESH, --refresh REFRESH
                         refresh interval (default: 500)
   -p PAGE, --page PAGE  Open fix page (default: 1)
