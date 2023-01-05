@@ -241,7 +241,7 @@
 <section id="id6">
 <h2>Docker<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
 <p>You can run jtop from a docker container, but you <strong>must</strong> install jetsons-stats as well on your host! Try with the command below:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run --rm -t -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson-stats</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run --rm -t -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson_stats:latest</span>
 </pre></div>
 </div>
 <p>or you can add in your Dockerfile writing:</p>
