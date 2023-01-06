@@ -3,7 +3,7 @@
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/raffaello86?style=social)](https://twitter.com/raffaello86) [![robo.panther](https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&logo=instagram)](https://www.instagram.com/robo.panther/) [![Discord](https://img.shields.io/discord/1060563771048861817)](https://discord.gg/BFbuJNhYzS)
 
-**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Orin, Xavier, Nano, TX1, TX2] series. Works with all NVIDIA Jetson ecosystem.
+**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Orin, Xavier, Nano, TX] series. Works with all NVIDIA Jetson [ecosystem](#compability).
 
 **Consider to** [:sparkling_heart: **Sponsor** jetson-stats](https://github.com/sponsors/rbonghi)
 
@@ -166,3 +166,20 @@ When you install jetson-stats in your bash will be available a list of new envir
 [jetson_docker]: https://github.com/rbonghi/jetson_stats/wiki/jetson_docker
 [NVIDIA]: https://www.nvidia.com/
 [NVIDIA Jetson]: https://developer.nvidia.com/buy-jetson
+
+# Compability
+
+jetson-stats is compatibile with:
+* NVIDIA Jetson AGX Orin
+* NVIDIA Jetson Orin Series
+* NVIDIA Jetson AGX Xavier Industrial
+* NVIDIA Jetson AGX Xavier
+* NVIDIA Jetson Xavier NX
+* NVIDIA Jetson Xavier Series
+* NVIDIA Jetson Nano
+* NVIDIA Jetson TX2 NX
+* NVIDIA Jetson TX2i
+* NVIDIA Jetson TX2
+* NVIDIA Jetson TX1
+
+If you need a specific compability open an [issue](https://github.com/rbonghi/jetson_stats/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=)
