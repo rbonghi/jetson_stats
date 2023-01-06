@@ -55,7 +55,7 @@ def read_engine(path):
 
 class EngineService(object):
 
-    ENGINES = ['ape', 'dla0', 'dla1', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc']
+    ENGINES = ['ape', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc']
 
     def __init__(self, path):
         # Sort list before start
@@ -76,7 +76,19 @@ class EngineService(object):
                 matching = [s for s in list_all_engines if local_path in s]
                 # Add in list all engines
                 if matching:
-                    self.engines_path[name.upper()] = matching
+                    # Check if name end with a number, if true collect by number
+                    # dla0 dla1 ...
+                    if os.path.basename(matching[0]).split('_')[0] == "{name}0".format(name=name):
+                        logger.info("Special Engine group found: [{name}X]".format(name=name))
+                        for num in range(10):
+                            name_engine = "{name}{counter}".format(name=name, counter=num)
+                            new_match = [match for match in matching if name_engine in match]
+                            if new_match:
+                                self.engines_path[name_engine.upper()] = new_match
+                            else:
+                                break
+                    else:
+                        self.engines_path[name.upper()] = sorted(matching)
         # Print all engines found
         engines_string = ' '.join(name for name in self.engines_path)
         logger.info("Engines found: [{engines}]".format(engines=engines_string))
