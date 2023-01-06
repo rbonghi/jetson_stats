@@ -17,6 +17,7 @@
 
 # Page class definition
 from .jtopgui import Page
+from ..gui.lib.linear_gauge import linear_gauge
 
 
 class ENGINE(Page):
@@ -25,5 +26,16 @@ class ENGINE(Page):
         super(ENGINE, self).__init__("ENGINE", stdscr, jetson)
 
     def draw(self, key, mouse):
-        pass
+        # Screen size
+        height, width, first = self.size_page()
+
+        for idx, name in enumerate(self.jetson.engine):
+            engine = self.jetson.engine[name]
+            min_max = engine.get_constrains()
+            self.stdscr.addstr(first + 1 + idx, width // 2 + 5, f"{name} {min_max}")
+            linear_gauge(self.stdscr,
+                         offset=first + 1 + idx,
+                         start=0,
+                         size=width // 2,
+                         value=engine.frequency)
 # EOF
