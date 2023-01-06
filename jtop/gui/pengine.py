@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,14 +15,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
+# Page class definition
+from .jtopgui import Page
 
-from .jtopgui import JTOPGUI, Page
-from .pall import ALL
-from .pcpu import CPU
-from .pgpu import GPU
-from .pengine import ENGINE
-from .pmem import MEM
-from .pcontrol import CTRL
-from .pinfo import INFO
+
+class ENGINE(Page):
+
+    def __init__(self, stdscr, jetson):
+        super(ENGINE, self).__init__("ENGINE", stdscr, jetson)
+
+    def draw(self, key, mouse):
+        pass
 # EOF

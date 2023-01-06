@@ -32,7 +32,7 @@ from .jtop import jtop
 # jtop exception
 from .core import JtopException, get_var
 # GUI jtop interface
-from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
+from .gui import JTOPGUI, ALL, GPU, CPU, ENGINE, MEM, CTRL, INFO
 # Load colors
 from .github import jetpack_missing, model_missing
 # Create logger
@@ -153,7 +153,7 @@ def main():
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper
             color_filter = bool(os.getenv('JTOP_COLOR_FILTER', args.color_filter))
-            curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], init_page=args.page,
+            curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CPU, MEM, ENGINE, CTRL, INFO], init_page=args.page,
                            loop=args.loop, seconds=LOOP_SECONDS, color_filter=color_filter)
             # Write warnings
             warning_messages(jetson, args.no_warnings)
