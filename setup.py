@@ -189,7 +189,7 @@ setup(
         "Bug Reports": (project_homepage + "/issues"),
         "Source": (project_homepage + "/tree/master")
     },
-    packages=find_packages(exclude=['examples', 'scripts', 'tests', 'jtop.tests']),  # Required
+    packages=find_packages(exclude=['examples', 'scripts', 'tests', 'jtop.tests', 'jtop.tests_gui']),  # Required
     # Load jetson_variables
     package_data={"jtop": ["jetson_variables", "jetson_libraries"]},
     # Define research keywords

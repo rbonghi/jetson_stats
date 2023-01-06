@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -14,14 +14,3 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-# flake8: noqa
-
-from .jtopgui import JTOPGUI, Page
-from .pall import ALL
-from .pcpu import CPU
-from .pgpu import GPU
-from .pmem import MEM
-from .pcontrol import CTRL
-from .pinfo import INFO
-# EOF

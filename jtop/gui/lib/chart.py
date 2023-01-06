@@ -33,7 +33,7 @@ class Chart(object):
     http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
     """
 
-    def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.A_NORMAL, color_chart=[], fill=True, time=10.0, tik=2):
+    def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.COLOR_WHITE, color_chart=[], fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
         self.callback = callback

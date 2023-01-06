@@ -95,7 +95,7 @@ main()
     
     if [ ! -z "$PYTHON_DEBUG" ] ; then
         echo "- ${yellow}Debug Image with python:${bold}$PYTHON_DEBUG${reset}"
-        docker run -v $HOME/jetson_stats:/jetson_stats -it --rm --entrypoint bash rbonghi/jetson-stats:tox-py$PYTHON_DEBUG
+        docker run -v $(pwd):/jetson_stats -it --rm --entrypoint bash rbonghi/jetson-stats:tox-py$PYTHON_DEBUG
         exit 0
     fi
     

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,13 +15,36 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
+import curses
+# GUI jtop interface
+from ..gui import JTOPGUI, Page
+from ..gui.lib.linear_gauge import linear_gauge
+# jtop client
+from ..jtop import jtop
 
-from .jtopgui import JTOPGUI, Page
-from .pall import ALL
-from .pcpu import CPU
-from .pgpu import GPU
-from .pmem import MEM
-from .pcontrol import CTRL
-from .pinfo import INFO
+# How to run
+# python3 -m jtop.tests_gui.test_linear_gauge
+
+
+class TestPage(Page):
+
+    def __init__(self, stdscr, jetson):
+        super(TestPage, self).__init__("Test", stdscr, jetson)
+
+    def draw(self, key, mouse):
+        # Screen size
+        height, width, first = self.size_page()
+        # Print a linear gauge
+        for idx in range(21):
+            linear_gauge(self.stdscr, offset=first + 1 + idx, start=0, size=width, value=idx * 5)
+
+
+def main():
+
+    with jtop() as jetson:
+        curses.wrapper(JTOPGUI, jetson, [TestPage])
+
+
+if __name__ == "__main__":
+    main()
 # EOF
