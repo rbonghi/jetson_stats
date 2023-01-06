@@ -22,7 +22,7 @@ from ..gui import JTOPGUI, Page
 from ..jtop import jtop
 
 # How to run
-# python3 -m jtop.tests_gui.test_chart
+# python3 -m jtop.tests_gui.test_gui_page
 
 
 class TestPage(Page):
