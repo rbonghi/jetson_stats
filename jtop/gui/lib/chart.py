@@ -175,6 +175,7 @@ class Chart(object):
                 cell_val_mant = cell_val - cell_val_int
                 if cell_val > 0 and size_plot_x[1] - idx >= size_plot_x[0]:
                     # Fill chart if request
+                    # https://www.htmlsymbols.xyz/box-drawing
                     # Full block: \u2588 - 3/4 block \u2586 - Lower block: \u2584 - Small lower block: \u2581
                     if self.fill:
                         for n in range(cell_val_int - 1):

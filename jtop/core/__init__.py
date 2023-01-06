@@ -23,7 +23,7 @@ from .fan import Fan, FanService, FanServiceLegacy
 from .jetson_clocks import JetsonClocks, JetsonClocksService
 from .swap import Swap, SwapService
 from .cpu import cpu_models
-from .engine import Engines, read_engine
+from .engine import EngineService, read_engine
 from .config import Config
 from .memory import MemoryService
 from .command import Command

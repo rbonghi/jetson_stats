@@ -16,101 +16,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-
-
-class Engine(object):
-    def __init__(self, name):
-        self.name = name
-        self._status = False
-        self._freq = None
-        self._min_freq = None
-        self._max_freq = None
-
-    @property
-    def frequency(self):
-        return self._freq
-
-    def get_constrains(self):
-        return (self._min_freq, self._max_freq)
-
-    @property
-    def status(self):
-        return self._status
-
-    def update(self, data):
-        if not data:
-            return
-        # Decode frequency
-        if 'rate' in data:
-            self._freq = data['rate']
-        if 'val' in data:
-            self._freq = data['val']
-        if 'frq' in data:
-            self._freq = data['frq']
-        if 'current_freq' in data:
-            self._freq = data['current_freq']
-        # Decode constrains
-        if 'min_freq' in data:
-            self._min_freq = data['min_freq']
-        if 'max_freq' in data:
-            self._max_freq = data['max_freq']
-        # Set status engine ON
-        self._status = True
-        if 'status' in data:
-            self._status = data['status']
-
-    def __repr__(self):
-        if self._freq is not None:
-            return "Engine[{freq}Mhz]".format(freq=self._freq)
-        status_string = 'ON' if self._status else 'OFF'
-        return "Engine[{status}]".format(status=status_string)
-
-
-class Engines(object):
-
-    def __init__(self):
-        self._engines = {'NVDEC': Engine('NVDEC'), 'NVENC': Engine('NVENC')}
-
-    def _update(self, engines):
-        for name in engines:
-            # Multiple engines
-            if name in ['DLA', 'PVA']:
-                for idx in engines[name]:
-                    dla_name = "{name}{idx}".format(name=name, idx=idx)
-                    if dla_name not in self._engines:
-                        self._engines[dla_name] = {value: Engine("{dla}_{value}".format(dla=dla_name, value=value.upper())) for value in engines[name][idx]}
-                    for value in engines[name][idx]:
-                        self._engines[dla_name][value].update(engines[name][idx][value])
-                continue
-            # single engine
-            if name not in self._engines:
-                eng = Engine(name)
-                self._engines[name] = eng
-            self._engines[name].update(engines[name])
-
-    def items(self):
-        return self._engines.items()
-
-    def get(self, name, value=None):
-        if name in self._engines:
-            return self._engines[name]
-        else:
-            return value
-
-    def __getitem__(self, name):
-        return self._engines[name]
-
-    def __iter__(self):
-        return iter(self._engines)
-
-    def __next__(self):
-        return next(self._engines)
-
-    def __len__(self):
-        return len(self._engines)
-
-    def __repr__(self):
-        return str(self._engines)
+# Logging
+import logging
+# from .exceptions import JtopException
+# Create logger
+logger = logging.getLogger(__name__)
 
 
 def read_engine(path):
@@ -125,6 +35,63 @@ def read_engine(path):
     if os.access(path + "/clk_rate", os.R_OK):
         with open(path + "/clk_rate", 'r') as f:
             # Write status engine
-            engine['rate'] = int(f.read()) // 1000000
+            engine['curr'] = int(f.read()) // 1000000
+    # Decode clock rate
+    max_value = False
+    if os.access(path + "/clk_max_rate", os.R_OK):
+        with open(path + "/clk_max_rate", 'r') as f:
+            # Write status engine
+            value = int(f.read())
+            # 18446744073709551615 = FFFF FFFF FFFF FFFF = 2 ^ 16
+            if value != 18446744073709551615:
+                engine['max'] = value // 1000000
+                max_value = True
+    if os.access(path + "/clk_min_rate", os.R_OK) and max_value:
+        with open(path + "/clk_min_rate", 'r') as f:
+            # Write status engine
+            engine['min'] = int(f.read()) // 1000000
     return engine
+
+
+class EngineService(object):
+
+    ENGINES = ['ape', 'dla0', 'dla1', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc']
+
+    def __init__(self, path):
+        # Sort list before start
+        EngineService.ENGINES.sort()
+        self.engines_path = {}
+        # List all engines available
+        list_all_engines = [x[0] for x in os.walk(path)]
+        # Search all available engines
+        for name in EngineService.ENGINES:
+            if name.endswith('.'):
+                name = name[:-1]
+                local_path = "{path}/{name}".format(path=path, name=name)
+                if os.path.isdir(local_path):
+                    self.engines_path[name.upper()] = [local_path]
+            else:
+                # https://stackoverflow.com/questions/4843158/how-to-check-if-a-string-is-a-substring-of-items-in-a-list-of-strings
+                local_path = "{path}/{name}".format(path=path, name=name)
+                matching = [s for s in list_all_engines if local_path in s]
+                # Add in list all engines
+                if matching:
+                    self.engines_path[name.upper()] = matching
+        # Print all engines found
+        engines_string = ' '.join(name for name in self.engines_path)
+        logger.info("Engines found: [{engines}]".format(engines=engines_string))
+
+    def get_status(self):
+        status = {}
+        # Read status from all engines
+        for engine in self.engines_path:
+            status[engine] = []
+            for local_path in self.engines_path[engine]:
+                name_engine = os.path.basename(local_path).upper()
+                logger.debug("Status [{engine}] in {path}".format(engine=name_engine, path=local_path))
+                data = read_engine(local_path)
+                data['name'] = name_engine
+                data['unit'] = 'M'
+                status[engine] += [data]
+        return status
 # EOF

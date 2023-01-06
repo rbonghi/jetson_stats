@@ -64,7 +64,6 @@ from threading import Thread
 from .service import JtopManager
 from .core import (
     Board,
-    Engines,
     Swap,
     Fan,
     NVPModel,
@@ -131,8 +130,6 @@ class jtop(Thread):
         self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
-        # Initialize engines
-        self._engine = Engines()
         # Initialize swap
         self._swap = None
         # Load jetson_clocks status
@@ -291,7 +288,7 @@ class jtop(Thread):
         :return: List of all active engines
         :rtype: Engine
         """
-        return self._engine
+        return self._stats.get('engines', {})
 
     @property
     def board(self):
@@ -554,13 +551,10 @@ class jtop(Thread):
         if 'use' in self.swap:
             stats['SWAP'] = self.swap['use']
         # -- Engines --
-        for engine in self.engine:
-            engobj = self.engine[engine]
-            if isinstance(engobj, dict):
-                for sub_engine in engobj:
-                    stats[engobj[sub_engine].name] = engobj[sub_engine].frequency
-                continue
-            stats[engine] = engobj.frequency if engobj.status else 'OFF'
+        for group in self.engine:
+            for engine in self.engine[group]:
+                name = engine['name']
+                stats[name] = engine['curr'] if engine['status'] else 'OFF'
         # -- FAN --
         if self.fan:
             stats['fan'] = self.fan.speed
@@ -852,8 +846,6 @@ class jtop(Thread):
         Internal decode function to decode and refactoring data
         """
         self._stats = data
-        # -- ENGINES --
-        self._engine._update(data['engines'])
         # -- SWAP --
         self._swap._update(data['swap'])
         # -- FAN --

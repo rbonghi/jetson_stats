@@ -30,13 +30,13 @@ from multiprocessing.managers import SyncManager
 # jetson_stats imports
 from .core import (
     cpu_models,
-    read_engine,
     MemoryService,
     JtopException,
     Tegrastats,
     JetsonClocksService,
     Config,
     NVPModelService,
+    EngineService,
     FanService,
     FanServiceLegacy,
     SwapService,
@@ -172,6 +172,8 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
+        # Setup engine service
+        self.engine = EngineService("/sys/kernel/debug/clk")
         # Setup memory service
         self.memory = MemoryService()
         # Setup tegrastats
@@ -423,20 +425,7 @@ class JtopServer(Process):
         data = {}
         jetson_clocks_show = copy.deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
         # -- Engines --
-        nvjpg_data = read_engine("/sys/kernel/debug/clk/nvjpg")
-        se_data = read_engine("/sys/kernel/debug/clk/se")
-        data['engines'] = {}
-        for key in tegrastats:
-            if key in ['APE', 'NVENC', 'NVDEC', 'MSENC', 'VIC', 'NVJPG1']:
-                data['engines'][key] = tegrastats[key]
-        if nvjpg_data:
-            data['engines']['NVJPG'] = nvjpg_data
-        if se_data:
-            data['engines']['SE'] = se_data
-        if 'DLA' in jetson_clocks_show:
-            data['engines']['DLA'] = jetson_clocks_show['DLA']
-        if 'PVA' in jetson_clocks_show:
-            data['engines']['PVA'] = jetson_clocks_show['PVA']
+        data['engines'] = self.engine.get_status()
         # -- Power --
         # Remove NC power (Orin family)
         if 'NC' in tegrastats['WATT']:
