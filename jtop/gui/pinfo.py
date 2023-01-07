@@ -17,8 +17,6 @@
 
 import re
 import curses
-# Architecture and platform info
-import platform
 # Find variable
 from ..core.common import get_var
 # Page class definition
@@ -88,10 +86,12 @@ class INFO(Page):
             self.info_variable(start_pos + idx + 1, posx + 2, "* Board ids", hardware["BOARDIDS"])
             idx += 1
         # Platform info
+        plat = self.jetson.board.platform
         platform_line = start_pos + idx + 1
         self.stdscr.addstr(platform_line, posx, "- Platform:", curses.A_BOLD)
-        self.info_variable(start_pos + idx + 2, posx + 2, "* Architecture", platform.machine())
-        self.info_variable(start_pos + idx + 3, posx + 2, "* Release", platform.release())
+        self.info_variable(start_pos + idx + 2, posx + 2, "* Architecture", plat['machine'])
+        self.info_variable(start_pos + idx + 3, posx + 2, "* Distribution", plat['distribution'])
+        self.info_variable(start_pos + idx + 4, posx + 2, "* Release", plat['release'].split("-")[0])
         idx += 3
         if self.jetson.cluster:
             self.info_variable(start_pos + idx + 4, posx + 2, "* Cluster", self.jetson.cluster)
@@ -130,8 +130,7 @@ class INFO(Page):
                 self.stdscr.addstr(platform_line + idx, width - 20, ip, curses.A_BOLD)
                 idx += 1
         # Author information
-        python_version = platform.python_version()
         plot_name_info(self.stdscr, start_pos - 1, width - 35, "Version", get_var(VERSION_RE))
-        plot_name_info(self.stdscr, start_pos - 1, width - 16, "Python", python_version)
+        plot_name_info(self.stdscr, start_pos - 1, width - 16, "Python", plat['python'])
         plot_name_info(self.stdscr, start_pos, width - 30, "Author", get_var(AUTHOR_RE))
         plot_name_info(self.stdscr, start_pos + 1, width - 30, "e-mail", get_var(EMAIL_RE))

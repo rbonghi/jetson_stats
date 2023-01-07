@@ -17,8 +17,6 @@
 
 import abc
 import curses
-import distro
-import platform
 # Logging
 import logging
 # Timer
@@ -191,11 +189,11 @@ class JTOPGUI:
             self.header_x86()
 
     def header_x86(self):
-        release = platform.release().split("-")[0]
-        distribution = " ".join(distro.linux_distribution())
-        message = "{system} {machine} machine - {distribution} [{release}]".format(system=platform.system().upper(),
-                                                                                   machine=platform.machine(),
-                                                                                   distribution=distribution,
+        plat = self.jetson.board.platform
+        release = plat['release'].split("-")[0]
+        message = "{system} {machine} machine - {distribution} [{release}]".format(system=plat['system'].upper(),
+                                                                                   machine=plat['machine'],
+                                                                                   distribution=plat['distribution'],
                                                                                    release=release)
         self.stdscr.addstr(0, 0, message, curses.A_BOLD)
 

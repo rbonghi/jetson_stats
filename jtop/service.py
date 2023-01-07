@@ -19,6 +19,7 @@
 import logging
 # Operative system
 # import signal
+import platform
 import copy
 import os
 import sys
@@ -54,6 +55,10 @@ try:
     import queue
 except ImportError:
     import Queue as queue
+try:
+    import distro
+except NameError:
+    distro = platform
 
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
@@ -84,7 +89,8 @@ def load_jetson_variables():
     info = {
         "model": env["JETSON_MODEL"],
         "jetpack": env["JETSON_JETPACK"],
-        "L4T": env["JETSON_L4T"]}
+        "L4T": env["JETSON_L4T"],
+    }
     hardware = {
         "CODENAME": env["JETSON_CODENAME"],
         "SOC": env["JETSON_SOC"],
@@ -93,9 +99,16 @@ def load_jetson_variables():
         "MODULE": env["JETSON_MODULE"],
         "CARRIER": env["JETSON_CARRIER"],
         "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
-        "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper()}
+        "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper(),
+    }
+    plat = {'system': platform.system(),
+            'machine': platform.machine(),
+            'distribution': " ".join(distro.linux_distribution()),
+            'release': platform.release(),
+            'python': platform.python_version(),
+            }
     # Board information
-    return {'info': info, 'hardware': hardware}
+    return {'info': info, 'hardware': hardware, 'platform': plat}
 
 
 class JtopManager(SyncManager):
@@ -154,6 +167,7 @@ class JtopServer(Process):
         # Load board information
         is_debug = True if "JETSON_DEBUG" in os.environ else False
         self.board = load_jetson_variables()
+        logger.info("Running on python: {python_version}".format(python_version=self.board['platform']['python']))
         # Initialize Fan
         try:
             self.fan = FanService(self.config, path_fan)
