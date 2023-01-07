@@ -45,6 +45,12 @@ def map_engines(jetson):
             [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('PVA0a', get_value_engine(jetson.engine['PVA0']['PVA0_AXI']))],
             [('SE', get_value_engine(jetson.engine['SE']['SE'])), ('VIC', get_value_engine(jetson.engine['VIC']['VIC']))],
         ]
+    elif 'jetson nano' in model:
+        return [
+            [('APE', get_value_engine(jetson.engine['APE']['APE']))],
+            [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
+            [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('SE', get_value_engine(jetson.engine['SE']['SE']))],
+        ]
     # Otherwise if not mapped show all engines
     list_engines = []
     for group in jetson.engine:
@@ -86,11 +92,12 @@ class ENGINE(Page):
             size_eng = size_gauge // len(engines) - 1
             # Plot all engines
             for idx, (name, engine) in enumerate(engines.items()):
+                name_array = name.split("_")[1:]
                 # Plot block name
-                if len(engines) > 1:
+                if len(engines) > 1 and len(name_array) > 1:
                     self.stdscr.addstr(offset_y + gidx * 2, offset_x + (size_eng + 1) * idx,
                                        "{group}".format(group=group), curses.color_pair(6) | curses.A_BOLD)
                 # Plot Gauge
-                new_name = ' '.join(name.split("_")[1:]) if len(engines) > 1 else name
+                new_name = ' '.join(name_array) if len(name_array) > 1 else name
                 linear_frequency_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, new_name, engine)
 # EOF

@@ -56,7 +56,7 @@ def read_engine(path):
 
 class EngineService(object):
 
-    ENGINES = ['ape', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc.', 'nvdec.', 'se.', 'cvnas', 'msenc.']
+    ENGINES = ['ape.', 'dla', 'pva', 'vic.', 'nvjpg', 'nvenc.', 'nvdec.', 'se.', 'cvnas', 'msenc']
 
     def __init__(self, path):
         # Sort list before start
