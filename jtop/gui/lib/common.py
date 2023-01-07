@@ -155,6 +155,14 @@ def size_min(num, divider=1.0, n=0, start=''):
         return round(num / divider, 1), divider, vect[n + idx]
 
 
+def value_to_string(value, unit, type='Hz'):
+    value, _, unit = size_min(value, start=unit)
+    value_string = str(value)
+    if len(value_string) > 3:
+        value_string = value_string.rstrip('0').rstrip('.')
+    return "{value}{unit}{type}".format(value=value_string, unit=unit, type=type)
+
+
 @check_curses
 def plot_dictionary(stdscr, offset, data, name, start=0):
     # Plot title
@@ -169,7 +177,7 @@ def plot_dictionary(stdscr, offset, data, name, start=0):
 
 
 @check_curses
-def plot_name_info(stdscr, offset, start, name, value, color=curses.A_NORMAL, spacing=0):
-    stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
-    stdscr.addstr(offset, start + len(name) + 2 + spacing, value, color)
+def plot_name_info(stdscr, pos_y, pos_x, name, value, color=curses.A_NORMAL, spacing=0):
+    stdscr.addstr(pos_y, pos_x, "{name}:".format(name=name), curses.A_BOLD)
+    stdscr.addstr(pos_y, pos_x + len(name) + 2 + spacing, value, color)
 # EOF

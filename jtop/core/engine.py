@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 def read_engine(path):
     # Read status enable
     engine = {}
+    engine['unit'] = 'M'
     # Check if access to this file
     if os.access(path + "/clk_enable_count", os.R_OK):
         with open(path + "/clk_enable_count", 'r') as f:
@@ -55,7 +56,7 @@ def read_engine(path):
 
 class EngineService(object):
 
-    ENGINES = ['ape', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc']
+    ENGINES = ['ape', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc.', 'nvdec.', 'se.', 'cvnas', 'msenc.']
 
     def __init__(self, path):
         # Sort list before start
@@ -84,7 +85,7 @@ class EngineService(object):
                             name_engine = "{name}{counter}".format(name=name, counter=num)
                             new_match = [match for match in matching if name_engine in match]
                             if new_match:
-                                self.engines_path[name_engine.upper()] = new_match
+                                self.engines_path[name_engine.upper()] = sorted(new_match)
                             else:
                                 break
                     else:
@@ -97,13 +98,10 @@ class EngineService(object):
         status = {}
         # Read status from all engines
         for engine in self.engines_path:
-            status[engine] = []
+            status[engine] = {}
             for local_path in self.engines_path[engine]:
                 name_engine = os.path.basename(local_path).upper()
                 logger.debug("Status [{engine}] in {path}".format(engine=name_engine, path=local_path))
-                data = read_engine(local_path)
-                data['name'] = name_engine
-                data['unit'] = 'M'
-                status[engine] += [data]
+                status[engine][name_engine] = read_engine(local_path)
         return status
 # EOF

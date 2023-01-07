@@ -18,20 +18,11 @@
 import curses
 # Page class definition
 from .jtopgui import Page
-from .lib.common import size_min
+from .lib.common import value_to_string
 
 
-def value_to_string(value, unit):
-    value, _, unit = size_min(value, start=unit)
-    value_string = str(value)
-    if len(value_string) > 3:
-        value_string = value_string.rstrip('0').rstrip('.')
-    return "{value}{unit}Hz".format(value=value_string, unit=unit)
-
-
-def linear_frequency_gauge(stdscr, pos_y, pos_x, size, data):
+def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
     curr = data['curr']
-    name = data['name']
     unit = data['unit']
     # Draw name engine
     stdscr.addstr(pos_y, pos_x, name, curses.color_pair(6))
@@ -83,6 +74,6 @@ class ENGINE(Page):
         for gidx, group in enumerate(self.jetson.engine):
             engines = self.jetson.engine[group]
             size_eng = size_gauge // len(engines) - 1
-            for idx, engine in enumerate(engines):
-                linear_frequency_gauge(self.stdscr, offset_y + gidx * 2, offset_x + (size_eng + 1) * idx, size_eng, engine)
+            for idx, (name, engine) in enumerate(engines.items()):
+                linear_frequency_gauge(self.stdscr, offset_y + gidx * 2, offset_x + (size_eng + 1) * idx, size_eng, name, engine)
 # EOF
