@@ -552,8 +552,7 @@ class jtop(Thread):
             stats['SWAP'] = self.swap['use']
         # -- Engines --
         for group in self.engine:
-            for engine in self.engine[group]:
-                name = engine['name']
+            for name, engine in self.engine[group].items():
                 stats[name] = engine['curr'] if engine['status'] else 'OFF'
         # -- FAN --
         if self.fan:

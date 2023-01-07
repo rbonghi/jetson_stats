@@ -31,11 +31,11 @@ def map_engines(jetson):
     # Check if there is a map for each engine
     if 'agx orin' in model:
         return [
-            [('DLA0', get_value_engine(jetson.engine['DLA0']['DLA0_CORE'])), ('DLA1', get_value_engine(jetson.engine['DLA1']['DLA1_CORE']))],
+            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('SE', get_value_engine(jetson.engine['SE']['SE']))],
+            [('DLA0c', get_value_engine(jetson.engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(jetson.engine['DLA1']['DLA1_CORE']))],
             [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
             [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('NVJPG1', get_value_engine(jetson.engine['NVJPG']['NVJPG1']))],
-            [('PVA0', get_value_engine(jetson.engine['PVA0']['PVA0_CPU_AXI']))],
-            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('SE', get_value_engine(jetson.engine['SE']['SE']))],
+            [('PVA0a', get_value_engine(jetson.engine['PVA0']['PVA0_CPU_AXI'])), ('VIC', get_value_engine(jetson.engine['VIC']['VIC']))],
         ]
     # Otherwise if not mapped show all engines
     list_engines = []
