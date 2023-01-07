@@ -61,6 +61,7 @@ jobs:
           type=ref,event=branch
           type=semver,pattern={{version}}
           type=ref,event=tag
+          type=ref,event=pull_request
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -72,11 +73,10 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     - name: Build and push
-      if: github.event_name != 'pull_request'
       id: docker_build
       uses: docker/build-push-action@v3.2.0
       with:
-        push: ${{ github.actor != 'dependabot[bot]' }}
+        push: ${{ github.actor != 'dependabot[bot]' || github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/arm64
