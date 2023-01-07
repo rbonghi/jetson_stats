@@ -92,12 +92,12 @@ class ENGINE(Page):
             size_eng = size_gauge // len(engines) - 1
             # Plot all engines
             for idx, (name, engine) in enumerate(engines.items()):
-                name_array = name.split("_")[1:]
+                name_array = name.split("_")
                 # Plot block name
                 if len(engines) > 1 and len(name_array) > 1:
                     self.stdscr.addstr(offset_y + gidx * 2, offset_x + (size_eng + 1) * idx,
                                        "{group}".format(group=group), curses.color_pair(6) | curses.A_BOLD)
                 # Plot Gauge
-                new_name = ' '.join(name_array) if len(name_array) > 1 else name
+                new_name = ' '.join(name_array[1:]) if len(name_array) > 1 and len(engines) > 1 else name
                 linear_frequency_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, new_name, engine)
 # EOF
