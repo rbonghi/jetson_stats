@@ -31,11 +31,19 @@ def map_engines(jetson):
     # Check if there is a map for each engine
     if 'agx orin' in model:
         return [
-            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('SE', get_value_engine(jetson.engine['SE']['SE']))],
+            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('PVA0a', get_value_engine(jetson.engine['PVA0']['PVA0_CPU_AXI']))],
             [('DLA0c', get_value_engine(jetson.engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(jetson.engine['DLA1']['DLA1_CORE']))],
             [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
             [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('NVJPG1', get_value_engine(jetson.engine['NVJPG']['NVJPG1']))],
-            [('PVA0a', get_value_engine(jetson.engine['PVA0']['PVA0_CPU_AXI'])), ('VIC', get_value_engine(jetson.engine['VIC']['VIC']))],
+            [('SE', get_value_engine(jetson.engine['SE']['SE'])), ('VIC', get_value_engine(jetson.engine['VIC']['VIC']))],
+        ]
+    elif 'xavier nx' in model:
+        return [
+            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('CVNAS', get_value_engine(jetson.engine['CVNAS']['CVNAS']))],
+            [('DLA0c', get_value_engine(jetson.engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(jetson.engine['DLA1']['DLA1_CORE']))],
+            [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
+            [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('PVA0a', get_value_engine(jetson.engine['PVA0']['PVA0_AXI']))],
+            [('SE', get_value_engine(jetson.engine['SE']['SE'])), ('VIC', get_value_engine(jetson.engine['VIC']['VIC']))],
         ]
     # Otherwise if not mapped show all engines
     list_engines = []
