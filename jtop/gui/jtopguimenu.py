@@ -28,6 +28,7 @@ from .lib.common import (check_curses,
                          jetson_clocks_gui,
                          nvp_model_gui)
 from .lib.linear_gauge import linear_gauge, GaugeName
+from .pengine import compact_engines
 
 
 @check_curses
@@ -166,44 +167,6 @@ def compact_info(stdscr, start, offset, width, height, jetson):
         nvp_model_gui(stdscr, offset + counter, start + 1, jetson)
         counter += 1
     # Write all engines
-    counter += engines(stdscr, start, offset + counter, width, height, jetson)
+    counter += compact_engines(stdscr, start, offset + counter, width, jetson)
     return counter
-
-
-def get_value_engine(engine):
-    return value_to_string(engine['curr'], engine['unit']) if engine['status'] else '[OFF]'
-
-
-def map_engines(jetson):
-    model = jetson.board.info["model"].lower()
-    # Check if there is a map for each engine
-    if 'agx orin' in model:
-        return [
-            [('DLA0', get_value_engine(jetson.engine['DLA0']['DLA0_CORE'])), ('DLA1', get_value_engine(jetson.engine['DLA1']['DLA1_CORE']))],
-            [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
-            [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('NVJPG1', get_value_engine(jetson.engine['NVJPG']['NVJPG1']))],
-            [('PVA0', get_value_engine(jetson.engine['PVA0']['PVA0_CPU_AXI']))],
-            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('SE', get_value_engine(jetson.engine['SE']['SE']))],
-        ]
-    # Otherwise if not mapped show all engines
-    list_engines = []
-    for group in jetson.engine:
-        list_engines += [[(name, get_value_engine(engine)) for name, engine in jetson.engine[group].items()]]
-    return list_engines
-
-
-def engines(stdscr, pos_x, pos_y, width, height, jetson):
-    map_eng = map_engines(jetson)
-    size_map = len(map_eng)
-    # Write first line
-    if size_map > 0:
-        stdscr.hline(pos_y, pos_x + 1, curses.ACS_HLINE, width - 1)
-        stdscr.addstr(pos_y, pos_x + (width - 13) // 2, " [HW engines] ", curses.A_BOLD)
-        size_map += 1
-    # Plot all engines
-    for gidx, row in enumerate(map_eng):
-        size_eng = width // len(row) - 1
-        for idx, (name, value) in enumerate(row):
-            plot_name_info(stdscr, pos_y + gidx + 1, pos_x + (size_eng + 1) * idx + 1, name, value)
-    return size_map
 # EOF

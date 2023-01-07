@@ -18,44 +18,46 @@
 import curses
 # Page class definition
 from .jtopgui import Page
-from .lib.common import value_to_string
+from .lib.common import value_to_string, plot_name_info
+from .lib.linear_gauge import linear_frequency_gauge
 
 
-def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
-    curr = data['curr']
-    unit = data['unit']
-    # Draw name engine
-    stdscr.addstr(pos_y, pos_x, name, curses.color_pair(6))
-    # Draw frequency
-    curr_string = value_to_string(curr, unit)
-    # Write status bar
-    size_bar = size - len(name) - len(curr_string) - 4
-    start_bar = pos_x + len(name) + 1
-    end_bar = start_bar + size_bar
-    # Check if there is a limit
-    if data['status']:
-        if 'max' in data:
-            min_string = "< {min}".format(min=value_to_string(data['min'], unit)) if min != 0 else ""
-            max_string = "{max}>".format(max=value_to_string(data['max'], unit))
-            # Draw bar
-            # https://www.htmlsymbols.xyz/box-drawing
-            stdscr.addstr(pos_y, start_bar, "[" + " " * (size_bar) + "]", curses.A_BOLD)
-            # Draw min and max value
-            stdscr.addstr(pos_y, start_bar + 1, min_string, curses.A_DIM)
-            stdscr.addstr(pos_y, end_bar - len(max_string) + 1, max_string, curses.A_DIM)
-            # Draw indicator
-            value = ((curr * size_bar) / float(data['max']))
-            stdscr.addstr(pos_y, start_bar + int(value), '\u2588', curses.A_NORMAL)
-        else:
-            stdscr.addstr(pos_y, start_bar, "\u2501" * (size_bar - 2) + "\u25B6", curses.A_BOLD)
-            stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", curses.A_NORMAL)
-            stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
-    else:
-        stdscr.addstr(pos_y, start_bar, "[" + "\u2500" * (size_bar - 3) + "]", curses.A_BOLD)
-        stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
-        stdscr.addstr(pos_y, end_bar - (size) // 2, ' OFF ', curses.A_BOLD)
-    # Show current frequency
-    stdscr.addstr(pos_y, pos_x + size - len(curr_string), curr_string, curses.A_NORMAL)
+def get_value_engine(engine):
+    return value_to_string(engine['curr'], engine['unit']) if engine['status'] else '[OFF]'
+
+
+def map_engines(jetson):
+    model = jetson.board.info["model"].lower()
+    # Check if there is a map for each engine
+    if 'agx orin' in model:
+        return [
+            [('DLA0', get_value_engine(jetson.engine['DLA0']['DLA0_CORE'])), ('DLA1', get_value_engine(jetson.engine['DLA1']['DLA1_CORE']))],
+            [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
+            [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('NVJPG1', get_value_engine(jetson.engine['NVJPG']['NVJPG1']))],
+            [('PVA0', get_value_engine(jetson.engine['PVA0']['PVA0_CPU_AXI']))],
+            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('SE', get_value_engine(jetson.engine['SE']['SE']))],
+        ]
+    # Otherwise if not mapped show all engines
+    list_engines = []
+    for group in jetson.engine:
+        list_engines += [[(name, get_value_engine(engine)) for name, engine in jetson.engine[group].items()]]
+    return list_engines
+
+
+def compact_engines(stdscr, pos_x, pos_y, width, jetson):
+    map_eng = map_engines(jetson)
+    size_map = len(map_eng)
+    # Write first line
+    if size_map > 0:
+        stdscr.hline(pos_y, pos_x + 1, curses.ACS_HLINE, width - 1)
+        stdscr.addstr(pos_y, pos_x + (width - 13) // 2, " [HW engines] ", curses.A_BOLD)
+        size_map += 1
+    # Plot all engines
+    for gidx, row in enumerate(map_eng):
+        size_eng = width // len(row) - 1
+        for idx, (name, value) in enumerate(row):
+            plot_name_info(stdscr, pos_y + gidx + 1, pos_x + (size_eng + 1) * idx + 1, name, value)
+    return size_map
 
 
 class ENGINE(Page):
