@@ -32,6 +32,7 @@ from multiprocessing.managers import SyncManager
 from .core import (
     cpu_models,
     read_engine,
+    CPUService,
     MemoryService,
     JtopException,
     Tegrastats,
@@ -187,6 +188,8 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
+        # Setup cpu service
+        self.cpu = CPUService("/sys/devices/system/cpu")
         # Setup memory service
         self.memory = MemoryService()
         # Setup tegrastats
