@@ -22,8 +22,6 @@ import curses
 from .lib.common import (check_curses,
                          strfdelta,
                          plot_name_info,
-                         size_min,
-                         value_to_string,
                          label_freq,
                          jetson_clocks_gui,
                          nvp_model_gui)
