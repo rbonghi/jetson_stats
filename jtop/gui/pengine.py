@@ -84,6 +84,12 @@ class ENGINE(Page):
         for gidx, group in enumerate(self.jetson.engine):
             engines = self.jetson.engine[group]
             size_eng = size_gauge // len(engines) - 1
+            # Plot all engines
             for idx, (name, engine) in enumerate(engines.items()):
-                linear_frequency_gauge(self.stdscr, offset_y + gidx * 2, offset_x + (size_eng + 1) * idx, size_eng, name, engine)
+                # Plot block name
+                if len(engines) > 1:
+                    self.stdscr.addstr(offset_y + gidx * 2, offset_x + (size_eng + 1) * idx, "{group}".format(group=group), curses.color_pair(6) | curses.A_BOLD)
+                # Plot Gauge
+                new_name = ' '.join(name.split("_")[1:]) if len(engines) > 1 else name
+                linear_frequency_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, new_name, engine)
 # EOF

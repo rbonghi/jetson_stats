@@ -109,7 +109,10 @@ def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
     else:
         stdscr.addstr(pos_y, start_bar, "[" + "\u2500" * (size_bar - 3) + "]", curses.A_BOLD)
         stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
-        stdscr.addstr(pos_y, end_bar - (size) // 2, ' OFF ', curses.A_BOLD)
+        if size_bar > 7:
+            stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', curses.A_BOLD)
+        else:
+            stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', curses.A_BOLD)
     # Show current frequency
     stdscr.addstr(pos_y, pos_x + size - len(curr_string), curr_string, curses.A_NORMAL)
 # EOF
