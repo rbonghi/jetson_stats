@@ -78,8 +78,8 @@ def warning_messages(jetson, no_warnings=False):
     # Check if is running on sudo
     if os.getuid() == 0:
         print("[{status}] SUDO is no more required".format(status=bcolors.warning()))
-    # Check if jetpack is missing
-    if jetson.board.info['model'] == "UNKNOWN" and 'JETSON_DEBUG' not in os.environ:
+    # Check if board is missing
+    if jetson.board.info['model'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
         print("[{status}] {link}".format(status=bcolors.warning(), link=model_missing(REPOSITORY, jetson, version)))
     # Check if jetpack is missing
     if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
