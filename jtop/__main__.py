@@ -153,7 +153,12 @@ def main():
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper
             color_filter = bool(os.getenv('JTOP_COLOR_FILTER', args.color_filter))
-            curses.wrapper(JTOPGUI, jetson, [ALL, GPU, CPU, MEM, ENGINE, CTRL, INFO], init_page=args.page,
+            # Build list pages available
+            pages = [ALL, GPU, CPU, MEM]
+            if jetson.engine:
+                pages += [ENGINE]
+            pages += [CTRL, INFO]
+            curses.wrapper(JTOPGUI, jetson, pages, init_page=args.page,
                            loop=args.loop, seconds=LOOP_SECONDS, color_filter=color_filter)
             # Write warnings
             warning_messages(jetson, args.no_warnings)
