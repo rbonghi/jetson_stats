@@ -45,19 +45,20 @@ from .core import (
     import_os_variables)
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
-# Load queue library for python 2 and python 3
 # Fix connection refused for python 2.7
 try:
     FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
+# Load queue library for python 2 and python 3
 try:
     import queue
 except ImportError:
     import Queue as queue
+# Load distro library from python3 or use platform
 try:
     import distro
-except NameError:
+except ImportError:
     distro = platform
 
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
