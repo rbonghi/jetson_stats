@@ -72,6 +72,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     - name: Build and push
+      if: github.event_name != 'pull_request'
       id: docker_build
       uses: docker/build-push-action@v3.2.0
       with:
