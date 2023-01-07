@@ -17,6 +17,8 @@
 
 import abc
 import curses
+import distro
+import platform
 # Logging
 import logging
 # Timer
@@ -181,6 +183,23 @@ class JTOPGUI:
 
     @check_curses
     def header(self):
+        board = self.jetson.board
+        # Detect if jtop is running on jetson or on other platforms
+        if board.info['jetpack'] == "UNKNOWN" and board.info['L4T'] != "N.N.N":
+            self.header_jetson()
+        else:
+            self.header_x86()
+
+    def header_x86(self):
+        release = platform.release().split("-")[0]
+        distribution = " ".join(distro.linux_distribution())
+        message = "{system} {machine} machine - {distribution} [{release}]".format(system=platform.system().upper(),
+                                                                                   machine=platform.machine(),
+                                                                                   distribution=distribution,
+                                                                                   release=release)
+        self.stdscr.addstr(0, 0, message, curses.A_BOLD)
+
+    def header_jetson(self):
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
         status = [self.jetson.board.info["model"]]
