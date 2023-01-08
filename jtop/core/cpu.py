@@ -34,6 +34,7 @@ CPU_PROG_REG = re.compile(r'cpu(.+?) ((.*))')
 
 def cpu_info():
     list_cpu = {}
+    num_cpu = 0
     with open("/proc/cpuinfo", "r") as fp:
         for line in fp:
             # Search line
@@ -43,12 +44,11 @@ def cpu_info():
                 value = match.group(2).rstrip()
                 # Load value or if it is a new processor initialize a new field
                 if key == "processor":
-                    idx = int(value)
-                    # name = "CPU{idx}".format(idx=idx)
-                    list_cpu[idx] = {}
-                else:
-                    # Load cpu info
-                    list_cpu[idx][key] = value
+                    num_cpu = int(value)
+                    list_cpu[num_cpu] = {}
+                    continue
+                # Load cpu info
+                list_cpu[num_cpu][key] = value
     return list_cpu
 
 
