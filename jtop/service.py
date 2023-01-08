@@ -517,9 +517,10 @@ class JtopServer(Process):
         if 'EMC' in tegrastats:
             data['emc'] = tegrastats['EMC']
             if self.jetson_clocks is not None:
-                data['emc'].update(jetson_clocks_show['EMC'])
-                # Remove current_freq data
-                del data['emc']['current_freq']
+                if 'EMC' in jetson_clocks_show:
+                    data['emc'].update(jetson_clocks_show['EMC'])
+                    # Remove current_freq data
+                    del data['emc']['current_freq']
         # -- SWAP --
         data['swap'] = {
             'list': self.swap.all(),
