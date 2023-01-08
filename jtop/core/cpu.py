@@ -71,8 +71,9 @@ def read_sys_cpu(path, cpu_status={}):
         with open(path + "/online", 'r') as f:
             cpu_status['online'] = f.read().strip()
     # Read governor
-    with open(path + "/cpufreq/scaling_governor", 'r') as f:
-        cpu_status['governor'] = f.read().strip()
+    if os.path.isfile(path + "/cpufreq/scaling_governor"):
+        with open(path + "/cpufreq/scaling_governor", 'r') as f:
+            cpu_status['governor'] = f.read().strip()
     # Min frequency
     with open(path + "/cpufreq/scaling_min_freq", 'r') as f:
         cpu_status['min'] = int(f.read())
