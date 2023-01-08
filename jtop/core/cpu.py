@@ -18,6 +18,11 @@
 import os
 import re
 from copy import deepcopy
+# Logging
+import logging
+# Create logger
+logger = logging.getLogger(__name__)
+# All regular exceptions
 REGEXP = re.compile(r'(.+?): ((.*))')
 CPU_SYS_REG = re.compile(r'cpu[0-9]')
 CPU_SYS_STATE_REG = re.compile(r'state[0-9]')
@@ -121,6 +126,11 @@ class CPUService(object):
                                      }
                      for item in os.listdir(path_system_cpu) if os.path.isdir(os.path.join(path_system_cpu, item)) and CPU_SYS_REG.search(item)}
         self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
+        # Check available cpufreq and cpuidle
+        if not os.path.isdir(path_system_cpu + "/cpu0/cpufreq"):
+            logger.warning("cpufreq folder not available on this device!")
+        if not os.path.isdir(path_system_cpu + "/cpu0/cpuidle"):
+            logger.warning("cpuidle folder not available on this device!")
 
     def get_utilization(self):
         # CPU lines
