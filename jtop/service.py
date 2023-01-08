@@ -473,30 +473,9 @@ class JtopServer(Process):
         data['temperature'] = tegrastats['TEMP']
         # -- CPU --
         # Read CPU data
-        total_cpu, cpus = self.cpu.get_status()
-        print(cpus[0])
-        data['cpu'] = tegrastats['CPU']
-        # Update data from jetson_clocks show
-        if 'CPU' in jetson_clocks_show:
-            for name, v in tegrastats['CPU'].items():
-                # Extract jc_cpu info
-                jc_cpu = jetson_clocks_show['CPU'].get(name, {})
-                # Remove current frequency
-                del jc_cpu['current_freq']
-                # Fix online status
-                if 'Online' in jc_cpu:
-                    if jc_cpu['Online']:
-                        # Remove online info
-                        del jc_cpu['Online']
-                        # Update CPU information
-                        v.update(jc_cpu)
-                elif v:
-                    # Update CPU information
-                    v.update(jc_cpu)
-                data['cpu'][name] = v
-        # for name, value in cpu_models().items():
-        #    if name in data['cpu']:
-        #        data['cpu'][name]['model'] = value
+        cpu_total, cpus = self.cpu.get_status()
+        data['cpu'] = cpus
+        data['cpu_total'] = cpu_total
         # -- MTS --
         if 'MTS' in tegrastats:
             data['mts'] = tegrastats['MTS']
