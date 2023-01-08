@@ -22,7 +22,7 @@ from .tegrastats import Tegrastats
 from .fan import Fan, FanService, FanServiceLegacy
 from .jetson_clocks import JetsonClocks, JetsonClocksService
 from .swap import Swap, SwapService
-from .cpu import CPUService, cpu_models
+from .cpu import CPUService
 from .engine import Engines, read_engine
 from .config import Config
 from .memory import MemoryService

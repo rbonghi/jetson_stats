@@ -30,7 +30,6 @@ from multiprocessing.managers import SyncManager
 
 # jetson_stats imports
 from .core import (
-    cpu_models,
     read_engine,
     CPUService,
     MemoryService,
@@ -189,7 +188,7 @@ class JtopServer(Process):
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
         # Setup cpu service
-        self.cpu = CPUService("/sys/devices/system/cpu")
+        self.cpu = CPUService()
         # Setup memory service
         self.memory = MemoryService()
         # Setup tegrastats
@@ -473,6 +472,9 @@ class JtopServer(Process):
                 del tegrastats['TEMP'][temp]
         data['temperature'] = tegrastats['TEMP']
         # -- CPU --
+        # Read CPU data
+        total_cpu, cpus = self.cpu.get_status()
+        print(cpus[0])
         data['cpu'] = tegrastats['CPU']
         # Update data from jetson_clocks show
         if 'CPU' in jetson_clocks_show:
@@ -492,9 +494,9 @@ class JtopServer(Process):
                     # Update CPU information
                     v.update(jc_cpu)
                 data['cpu'][name] = v
-        for name, value in cpu_models().items():
-            if name in data['cpu']:
-                data['cpu'][name]['model'] = value
+        # for name, value in cpu_models().items():
+        #    if name in data['cpu']:
+        #        data['cpu'][name]['model'] = value
         # -- MTS --
         if 'MTS' in tegrastats:
             data['mts'] = tegrastats['MTS']

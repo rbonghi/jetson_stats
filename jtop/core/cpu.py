@@ -17,9 +17,14 @@
 
 import os
 import re
+from copy import deepcopy
 REGEXP = re.compile(r'(.+?): ((.*))')
-CPU_REG = re.compile(r'cpu[0-9]')
-CPU_STATE_REG = re.compile(r'state[0-9]')
+CPU_SYS_REG = re.compile(r'cpu[0-9]')
+CPU_SYS_STATE_REG = re.compile(r'state[0-9]')
+# Proc stat CPU usage
+# https://www.linuxhowtos.org/System/procstat.htm
+# cpu0 793125 280 352516 16192366 50291 0 2012 0 0 0
+CPU_PROG_REG = re.compile(r'cpu(.+?) ((.*))')
 
 
 def cpu_info():
@@ -33,7 +38,7 @@ def cpu_info():
                 value = match.group(2).rstrip()
                 # Load value or if it is a new processor initialize a new field
                 if key == "processor":
-                    idx = int(value) + 1
+                    idx = int(value)
                     # name = "CPU{idx}".format(idx=idx)
                     list_cpu[idx] = {}
                 else:
@@ -42,19 +47,29 @@ def cpu_info():
     return list_cpu
 
 
-def cpu_models():
-    # Load cpuinfo
-    list_cpu = cpu_info()
-    models = {}
-    # Find all models
-    for name, info in list_cpu.items():
-        models[name] = info.get("model name", "")
-    return models
+# CPU lines
+# - user: normal processes executing in user mode
+# - nice: niced processes executing in user mode
+# - system: processes executing in kernel mode
+# - idle: twiddling thumbs
+# - iowait: waiting for I/O to complete
+# - irq: servicing interrupts
+# - softirq: servicing softirqs
+CPU_STAT_LABEL = ['user', 'nice', 'system', 'idle', 'iowait', 'irq', 'softirq', 'total']
+
+
+def get_utilization(delta):
+    # Return major outputs
+    return {'user': 100.0 * (delta[0] / delta[-1]),
+            'nice': 100.0 * (delta[1] / delta[-1]),
+            'system': 100.0 * (delta[2] / delta[-1]),
+            'idle': 100.0 * (delta[3] / delta[-1])
+            }
 
 
 def read_idle(path):
     # https://docs.kernel.org/admin-guide/pm/cpuidle.html
-    states = [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item)) and CPU_STATE_REG.search(item)]
+    states = [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item)) and CPU_SYS_STATE_REG.search(item)]
     idle = {}
     for state in sorted(states):
         with open("{path}/{state}/name".format(path=path, state=state), 'r') as f:
@@ -65,51 +80,101 @@ def read_idle(path):
     return idle
 
 
-def read_sys_cpu(path, cpu_status={}):
+def read_system_cpu(path, cpu_status={}):
     # Online status
     if os.path.isfile(path + "/online"):
         with open(path + "/online", 'r') as f:
             cpu_status['online'] = f.read().strip()
     # Read governor
-    if os.path.isfile(path + "/cpufreq/scaling_governor"):
+    if os.path.isdir(path + "/cpufreq"):
         with open(path + "/cpufreq/scaling_governor", 'r') as f:
             cpu_status['governor'] = f.read().strip()
-    # Min frequency
-    with open(path + "/cpufreq/scaling_min_freq", 'r') as f:
-        cpu_status['min'] = int(f.read())
-    # Max frequency
-    with open(path + "/cpufreq/scaling_max_freq", 'r') as f:
-        cpu_status['max'] = int(f.read())
-    # Current frequency
-    with open(path + "/cpufreq/scaling_cur_freq", 'r') as f:
-        cpu_status['cur'] = int(f.read())
+        # build dict freq
+        freq = {}
+        # Min frequency
+        with open(path + "/cpufreq/scaling_min_freq", 'r') as f:
+            freq['min'] = int(f.read())
+        # Max frequency
+        with open(path + "/cpufreq/scaling_max_freq", 'r') as f:
+            freq['max'] = int(f.read())
+        # Current frequency
+        with open(path + "/cpufreq/scaling_cur_freq", 'r') as f:
+            freq['cur'] = int(f.read())
+        # Store values
+        cpu_status['freq'] = freq
     # Read idle CPU
-    cpu_status['idle_state'] = read_idle(path + "/cpuidle")
+    if os.path.isdir(path + "/cpuidle"):
+        cpu_status['idle_state'] = read_idle(path + "/cpuidle")
     return cpu_status
 
 
 class CPUService(object):
 
-    def __init__(self, path):
+    def __init__(self):
+        # Load cpuinfo
+        list_cpu = cpu_info()
         # List all CPU available
-        self._cpu = {int(item[3:]): "{path}/{item}".format(path=path, item=item)
-                     for item in os.listdir(path) if os.path.isdir(os.path.join(path, item)) and CPU_REG.search(item)}
-        # TEST
-        self.get_status()
+        path_system_cpu = "/sys/devices/system/cpu"
+        self._cpu = {int(item[3:]): {'path': "{path}/{item}".format(path=path_system_cpu, item=item),
+                                     'last_cpu': [0.0] * len(CPU_STAT_LABEL),
+                                     'model': list_cpu.get(int(item[3:]), {}).get("model name", "")
+                                     }
+                     for item in os.listdir(path_system_cpu) if os.path.isdir(os.path.join(path_system_cpu, item)) and CPU_SYS_REG.search(item)}
+        self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
+
+    def get_utilization(self):
+        # CPU lines
+        # - user: normal processes executing in user mode
+        # - nice: niced processes executing in user mode
+        # - system: processes executing in kernel mode
+        # - idle: twiddling thumbs
+        # - iowait: waiting for I/O to complete
+        # - irq: servicing interrupts
+        # - softirq: servicing softirqs
+        cpu_out = {}
+        total = {}
+        with open("/proc/stat", 'r') as f:
+            for line in f:
+                match = CPU_PROG_REG.search(line)
+                if match:
+                    # Get all fields
+                    fields = [float(column) for column in match.group(2).strip().split()[:7]]
+                    # Add total in last field
+                    fields += [sum(fields)]
+                    if match.group(1).isdigit():
+                        num_cpu = int(match.group(1))
+                        # Evaluate delta all values
+                        # https://rosettacode.org/wiki/Linux_CPU_utilization
+                        delta = [now - last for now, last in zip(fields, self._cpu[num_cpu]['last_cpu'])]
+                        # Update last value
+                        self._cpu[num_cpu]['last_cpu'] = deepcopy(delta)
+                        # Store utilization
+                        cpu_out[num_cpu] = get_utilization(delta)
+                    else:
+                        # Evaluate delta all values
+                        # https://rosettacode.org/wiki/Linux_CPU_utilization
+                        delta = [now - last for now, last in zip(fields, self._cpu_total['last_cpu'])]
+                        # Update last value
+                        self._cpu_total['last_cpu'] = deepcopy(delta)
+                        # Store utilization
+                        total = get_utilization(delta)
+        return total, cpu_out
+
+    def read_sys_cpu(self, cpu_data={}):
+        for cpu, data in sorted(self._cpu.items()):
+            # store all data
+            cpu_data[cpu] = read_system_cpu(data['path'], cpu_data[cpu])
+            # add model
+            cpu_data[cpu]['model'] = data['model']
+        return cpu_data
 
     def get_status(self):
-        status = {}
-        # Read status CPU
-        for cpu, path in sorted(self._cpu.items()):
-            # Usage CPU
-            # https://stackoverflow.com/questions/8952462/cpu-usage-from-a-file-on-linux
-            # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
-            # https://www.linuxhowtos.org/System/procstat.htm
-            # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
-            # TODO
-            # frequency and status
-            cpu_status = read_sys_cpu(path)
-            print(cpu_status)
-            status[cpu] = cpu_status
-        return status
+        # Usage CPU
+        # https://stackoverflow.com/questions/8952462/cpu-usage-from-a-file-on-linux
+        # https://www.linuxhowtos.org/System/procstat.htm
+        # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
+        total, cpu_list = self.get_utilization()
+        # Frequency and idle
+        cpu_list = self.read_sys_cpu(cpu_list)
+        return total, cpu_list
 # EOF
