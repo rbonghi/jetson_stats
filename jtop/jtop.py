@@ -533,8 +533,9 @@ class jtop(Thread):
         if self.nvpmodel is not None:
             stats['nvp model'] = self.nvpmodel.name
         # -- CPU --
-        for cpu in sorted(self.cpu):
-            stats["CPU{cpu}".format(cpu=cpu)] = self.cpu[cpu].get('val', 'OFF')
+        cpus = self.cpu['cpu']
+        for cpu in sorted(cpus):
+            stats["CPU{cpu}".format(cpu=cpu + 1)] = 100 - int(cpus[cpu]['idle'])
         # -- GPU --
         for n_gpu in self.gpu:
             stats['GPU{n_gpu}'.format(n_gpu=n_gpu)] = self.gpu[n_gpu]['val']

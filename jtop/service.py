@@ -473,9 +473,7 @@ class JtopServer(Process):
         data['temperature'] = tegrastats['TEMP']
         # -- CPU --
         # Read CPU data
-        cpu_total, cpus = self.cpu.get_status()
-        data['cpu'] = cpus
-        data['cpu_total'] = cpu_total
+        data['cpu'] = self.cpu.get_status()
         # -- MTS --
         if 'MTS' in tegrastats:
             data['mts'] = tegrastats['MTS']

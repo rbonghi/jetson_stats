@@ -186,5 +186,5 @@ class CPUService(object):
         total, cpu_list = self.get_utilization()
         # Frequency and idle
         cpu_list = self.read_sys_cpu(cpu_list)
-        return total, cpu_list
+        return {'total': total, 'cpu': cpu_list}
 # EOF
