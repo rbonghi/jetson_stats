@@ -218,11 +218,11 @@ def TEMPS(text):
 
 
 def WATTS(text):
-    """ Parse all milliwats in tegrastats output
+    """ Parse all milliwatt in tegrastats output
 
         [VDD_name] X/Y
-        X = Current power consumption in milliwatts.
-        Y = Average power consumption in milliwatts.
+        X = Current power consumption in milliwatt.
+        Y = Average power consumption in milliwatt.
     """
     return {str(name): {'cur': int(cur), 'avg': int(avg)} for name, cur, unit_cur, avg, unit_avg in re.findall(WATT_RE, text)}
 # EOF

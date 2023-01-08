@@ -52,7 +52,7 @@ Or using a callback function
     jetson.attach(read_stats)
     jetson.loop_for_ever()
 
-Other example are availables on https://github.com/rbonghi/jetson_stats/tree/master/examples
+Other example are available on https://github.com/rbonghi/jetson_stats/tree/master/examples
 Follow the next attributes to know in detail how you can you in your python project.
 """
 import logging
@@ -337,7 +337,7 @@ class jtop(Thread):
 
         If your board does not support a fan, the output will be `None`
 
-        The variable avalables are:
+        The variable available are:
 
         * **auto** - boolean with fan control.
             * True = Automatic speed control enabled
@@ -347,7 +347,7 @@ class jtop(Thread):
         * **rpm** - Revolution Per Minute. This number can be 0 if the hardware does not implement this feature
         * **mode** - Mode selected for your fan
 
-        If you want set a new speed, change the mode or know how many configurations are availables you can use:
+        If you want set a new speed, change the mode or know how many configurations are available you can use:
 
         .. code-block:: python
 
@@ -405,7 +405,7 @@ class jtop(Thread):
         * **status** - A list of status for each NVP model (False if the nvpmodel is in failure)
         * **is_running** - Status updating NVP model service
 
-        The access of this properities is available like below
+        The access of this properties is available like below
 
         .. code-block:: python
 
@@ -717,7 +717,7 @@ class jtop(Thread):
 
         If your board support the MTS variable, the output will be:
 
-        * **fg** - foregroundtasks
+        * **fg** - foreground tasks
         * **bg** - background tasks
 
         :return: mts status
@@ -781,13 +781,13 @@ class jtop(Thread):
         """
         Two power dictionaries:
 
-        * **total** - The total power estimated is not available of the NVIDIA Jetson power comsumption
-        * **power** - A dictionary with all power comsumption
+        * **total** - The total power estimated is not available of the NVIDIA Jetson power consumption
+        * **power** - A dictionary with all power consumption
 
-        For each power comsumption there are two fields:
+        For each power consumption there are two fields:
 
-        * **avg** - Average power consumption in milliwatts
-        * **cur** - Current power consumption in milliwatts
+        * **avg** - Average power consumption in milliwatt
+        * **cur** - Current power consumption in milliwatt
 
         :return: Two dictionaries, total and a list of all power consumption available from the board
         :rtype: dict, dict
@@ -818,7 +818,7 @@ class jtop(Thread):
         * **hostname** - Hostname board
         * **interfaces** - A dictionary with name and IP address for all interfaces listed
 
-        :return: Local interfaces and hostaname
+        :return: Local interfaces and hostname
         :rtype: dict
         """
         return get_local_interfaces()

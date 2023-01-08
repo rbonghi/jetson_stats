@@ -339,7 +339,7 @@ class JetsonClocksService(object):
         # Measure remaining time from boot
         boot_time = timedelta(seconds=self._config.get('wait', CONFIG_DEFAULT_DELAY))
         up_time = timedelta(seconds=get_uptime())
-        # If needtime make a sleep
+        # If need time make a sleep
         if up_time < boot_time:
             JetsonClocksService.set_status = 'booting'
             delta = (boot_time - up_time).total_seconds()

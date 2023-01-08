@@ -54,7 +54,7 @@ except NameError:
 try:
     import queue
 except ImportError:
-    import Queue as queue
+    import Queue as queue  # pyright: ignore[reportMissingImports]
 # Load distro library from python3 or use platform
 try:
     import distro
@@ -310,7 +310,7 @@ class JtopServer(Process):
             pass
         except Exception as e:
             logger.error("Error subprocess {error}".format(error=e), exc_info=1)
-            # Write error messag
+            # Write error message
             self._error.put(sys.exc_info())
         finally:
             # Close tegra
@@ -348,7 +348,7 @@ class JtopServer(Process):
         self.sync_event = self.broadcaster.sync_event()
         # Change owner
         os.chown(JTOP_PIPE, os.getuid(), gid)
-        # Change mode cotroller and stats
+        # Change mode controller and stats
         # https://www.tutorialspoint.com/python/os_chmod.htm
         # Equivalent permission 660 srw-rw----
         os.chmod(JTOP_PIPE, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
