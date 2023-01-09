@@ -53,14 +53,15 @@ def read_engine(path):
 
 class EngineService(object):
 
-    ENGINES = ['ape.', 'dla', 'pva', 'vic.', 'nvjpg', 'nvenc.', 'nvdec.', 'se.', 'cvnas', 'msenc']
+    ENGINES = ['ape', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc']
 
     def __init__(self, path):
         # Sort list before start
         EngineService.ENGINES.sort()
         self.engines_path = {}
         # List all engines available
-        list_all_engines = [x[0] for x in os.walk(path)]
+        engine_path = "/sys/kernel/debug/clk"
+        list_all_engines = [x[0] for x in os.walk(engine_path)]
         # Search all available engines
         for name in EngineService.ENGINES:
             if name.endswith('.'):
@@ -71,7 +72,9 @@ class EngineService(object):
             else:
                 # https://stackoverflow.com/questions/4843158/how-to-check-if-a-string-is-a-substring-of-items-in-a-list-of-strings
                 local_path = "{path}/{name}".format(path=path, name=name)
-                matching = [s for s in list_all_engines if local_path in s]
+                # In this search are removed all engines that have a '.' on their name
+                # like ape.buffer or nvdec.buf
+                matching = [s for s in list_all_engines if local_path in s and '.' not in s]
                 # Add in list all engines
                 if matching:
                     # Check if name end with a number, if true collect by number
