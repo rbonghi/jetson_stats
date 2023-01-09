@@ -28,26 +28,23 @@ def read_engine(path):
     engine = {}
     engine['unit'] = 'M'
     # Check if access to this file
-    if os.access(path + "/clk_enable_count", os.R_OK):
-        with open(path + "/clk_enable_count", 'r') as f:
-            # Write status engine
-            engine['status'] = int(f.read()) == 1
+    with open(path + "/clk_enable_count", 'r') as f:
+        # Write status engine
+        engine['status'] = int(f.read()) == 1
     # Check if access to this file
-    if os.access(path + "/clk_rate", os.R_OK):
-        with open(path + "/clk_rate", 'r') as f:
-            # Write status engine
-            engine['curr'] = int(f.read()) // 1000000
+    with open(path + "/clk_rate", 'r') as f:
+        # Write status engine
+        engine['curr'] = int(f.read()) // 1000000
     # Decode clock rate
     max_value = False
-    if os.access(path + "/clk_max_rate", os.R_OK):
-        with open(path + "/clk_max_rate", 'r') as f:
-            # Write status engine
-            value = int(f.read())
-            # 18446744073709551615 = FFFF FFFF FFFF FFFF = 2 ^ 16
-            if value != 18446744073709551615:
-                engine['max'] = value // 1000000
-                max_value = True
-    if os.access(path + "/clk_min_rate", os.R_OK) and max_value:
+    with open(path + "/clk_max_rate", 'r') as f:
+        # Write status engine
+        value = int(f.read())
+        # 18446744073709551615 = FFFF FFFF FFFF FFFF = 2 ^ 16
+        if value != 18446744073709551615:
+            engine['max'] = value // 1000000
+            max_value = True
+    if max_value:
         with open(path + "/clk_min_rate", 'r') as f:
             # Write status engine
             engine['min'] = int(f.read()) // 1000000
