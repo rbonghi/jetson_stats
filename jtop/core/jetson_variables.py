@@ -15,15 +15,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-##### PLEASE NOTE #####
-# This package WILL sobstitute the jetson_variables variable in the future
-
 import os
 import re
 
-###########################
-#### JETPACK DETECTION ####
-###########################
+# ---------------------
+# JETPACK DETECTION
+# ---------------------
 # Write version of jetpack installed
 # https://developer.nvidia.com/embedded/jetpack-archive
 NVIDIA_JETPACK = {
@@ -82,7 +79,7 @@ NVIDIA_JETPACK = {
 
 CUDA_TABLE = {
     'tegra234': '8.7',  # JETSON ORIN
-    'tegra210': '7.2',  # JETSON XAVIER
+    'tegra194': '7.2',  # JETSON XAVIER
     'tegra186': '6.2',  # JETSON TX2
     'tegra210': '5.3',  # JETSON TX1
     'tegra124': '3.2',  # JETSON TK1
@@ -104,9 +101,9 @@ MODULE_NAME_TABLE = {
     'jetson-tx1': 'NVIDIA Jetson TX1',
     'jetson_tk1': 'NVIDIA Jetson TK1',
 }
-#######################
+# ---------------------
 # DO NOT EDIT FROM HERE
-#######################
+# ---------------------
 DTSFILENAME_RE = re.compile(r'(.*)-p')
 
 
