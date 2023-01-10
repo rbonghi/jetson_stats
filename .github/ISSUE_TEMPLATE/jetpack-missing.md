@@ -9,9 +9,10 @@ assignees: ''
 
 Please update jetson-stats with new jetpack
 <!-- Complete all fields -->
-**Linux for Tegra**
- - L4T: [e.g. 4.3]
+### Linux for Tegra
 
-**Jetson-Stats**
+- L4T: [e.g. 4.3]
+
+### Jetson-Stats
 <!-- Use jtop -v -->
- - Version: [e.g. 1.8]
+- Version: [e.g. 1.8]

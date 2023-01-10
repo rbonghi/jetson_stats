@@ -26,31 +26,53 @@ def get_value_engine(engine):
     return value_to_string(engine['curr'], engine['unit']) if engine['status'] else '[OFF]'
 
 
+def pass_agx_orin(engine):
+    return [
+        [('APE', get_value_engine(engine['APE']['APE'])), ('PVA0a', get_value_engine(engine['PVA0']['PVA0_CPU_AXI']))],
+        [('DLA0c', get_value_engine(engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(engine['DLA1']['DLA1_CORE']))],
+        [('NVENC', get_value_engine(engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(engine['NVDEC']['NVDEC']))],
+        [('NVJPG', get_value_engine(engine['NVJPG']['NVJPG'])), ('NVJPG1', get_value_engine(engine['NVJPG']['NVJPG1']))],
+        [('SE', get_value_engine(engine['SE']['SE'])), ('VIC', get_value_engine(engine['VIC']['VIC']))],
+    ]
+
+
+def map_xavier_nx(engine):
+    return [
+        [('APE', get_value_engine(engine['APE']['APE'])), ('CVNAS', get_value_engine(engine['CVNAS']['CVNAS']))],
+        [('DLA0c', get_value_engine(engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(engine['DLA1']['DLA1_CORE']))],
+        [('NVENC', get_value_engine(engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(engine['NVDEC']['NVDEC']))],
+        [('NVJPG', get_value_engine(engine['NVJPG']['NVJPG'])), ('PVA0a', get_value_engine(engine['PVA0']['PVA0_AXI']))],
+        [('SE', get_value_engine(engine['SE']['SE'])), ('VIC', get_value_engine(engine['VIC']['VIC']))],
+    ]
+
+
+def map_jetson_nano(engine):
+    return [
+        [('APE', get_value_engine(engine['APE']['APE']))],
+        [('NVENC', get_value_engine(engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(engine['NVDEC']['NVDEC']))],
+        [('NVJPG', get_value_engine(engine['NVJPG']['NVJPG'])), ('SE', get_value_engine(engine['SE']['SE']))],
+    ]
+
+
+MAP_JETSON_MODELS = {
+    'agx orin': pass_agx_orin,
+    'agx xavier': map_xavier_nx,
+    'jetson nano': map_jetson_nano
+}
+
+
+def engine_model(model):
+    for name, func in MAP_JETSON_MODELS.items():
+        if name.lower() in model.lower():
+            return func
+    return None
+
+
 def map_engines(jetson):
-    model = jetson.board.info["model"].lower()
     # Check if there is a map for each engine
-    if 'agx orin' in model:
-        return [
-            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('PVA0a', get_value_engine(jetson.engine['PVA0']['PVA0_CPU_AXI']))],
-            [('DLA0c', get_value_engine(jetson.engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(jetson.engine['DLA1']['DLA1_CORE']))],
-            [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
-            [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('NVJPG1', get_value_engine(jetson.engine['NVJPG']['NVJPG1']))],
-            [('SE', get_value_engine(jetson.engine['SE']['SE'])), ('VIC', get_value_engine(jetson.engine['VIC']['VIC']))],
-        ]
-    elif 'xavier nx' in model:
-        return [
-            [('APE', get_value_engine(jetson.engine['APE']['APE'])), ('CVNAS', get_value_engine(jetson.engine['CVNAS']['CVNAS']))],
-            [('DLA0c', get_value_engine(jetson.engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(jetson.engine['DLA1']['DLA1_CORE']))],
-            [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
-            [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('PVA0a', get_value_engine(jetson.engine['PVA0']['PVA0_AXI']))],
-            [('SE', get_value_engine(jetson.engine['SE']['SE'])), ('VIC', get_value_engine(jetson.engine['VIC']['VIC']))],
-        ]
-    elif 'jetson nano' in model:
-        return [
-            [('APE', get_value_engine(jetson.engine['APE']['APE']))],
-            [('NVENC', get_value_engine(jetson.engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(jetson.engine['NVDEC']['NVDEC']))],
-            [('NVJPG', get_value_engine(jetson.engine['NVJPG']['NVJPG'])), ('SE', get_value_engine(jetson.engine['SE']['SE']))],
-        ]
+    func_list_engines = engine_model(jetson.board.info["model"])
+    if func_list_engines:
+        return func_list_engines(jetson.engine)
     # Otherwise if not mapped show all engines
     list_engines = []
     for group in jetson.engine:

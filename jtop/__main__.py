@@ -32,7 +32,7 @@ from .jtop import jtop
 # jtop exception
 from .core import JtopException, get_var
 # GUI jtop interface
-from .gui import JTOPGUI, ALL, GPU, CPU, ENGINE, MEM, CTRL, INFO
+from .gui import JTOPGUI, ALL, GPU, CPU, ENGINE, MEM, CTRL, INFO, engine_model
 # Load colors
 from .github import jetpack_missing, model_missing
 # Create logger
@@ -85,8 +85,12 @@ def warning_messages(jetson, no_warnings=False):
     # Check if jetpack is missing
     if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
         print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=jetson.board.info['L4T']))
-        print("  Please, try: {bold}sudo -H pip install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+        print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
         print("  or {link}".format(link=jetpack_missing(REPOSITORY, jetson, version)))
+    # Check if model is in map list
+    model = jetson.board.info["model"]
+    if not engine_model(model):
+        print("[{status}] Board \"{model}\" missing in jtop".format(status=bcolors.warning(), model=model))
 
 
 def exit_signal(signum, frame):
