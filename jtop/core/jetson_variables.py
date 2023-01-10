@@ -147,6 +147,7 @@ def get_variables():
             os_variables['TYPE_MODULE'] = MODULE_NAME_TABLE.get(module, '')
         else:
             print("jetson model and board not available")
+            print(parts)
     # Decode CUDA architecure
     os_variables['CUDA_ARCH_BIN'] = CUDA_TABLE.get(os_variables['SOC'], '')
     # Read serial number
@@ -154,6 +155,15 @@ def get_variables():
         with open("/sys/firmware/devicetree/base/serial-number", 'r') as f:
             serial_number = f.readline().rstrip('\x00')
         os_variables['SERIAL_NUMBER'] = serial_number
+    # NVIDIA Jetson version
+    # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
+    # https://stackoverflow.com/questions/16817646/extract-version-number-from-a-string
+    # https://askubuntu.com/questions/319307/reliably-check-if-a-package-is-installed-or-not
+    # https://github.com/dusty-nv/jetson-inference/blob/7e81381a96c1ac5f57f1728afbfdec7f1bfeffc2/tools/install-pytorch.sh#L296
+    if os.path.isfile('/etc/nv_tegra_release'):
+        with open("/etc/nv_tegra_release", 'r') as f:
+            nv_tegra_release = f.readline().rstrip('\x00')
+            print(nv_tegra_release)
     return os_variables
 
 
