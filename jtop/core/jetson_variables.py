@@ -19,6 +19,7 @@ import os
 import re
 from smbus import SMBus
 
+from .command import Command
 from .exceptions import JtopException
 
 # ---------------------
@@ -116,15 +117,17 @@ MODULE_NAME_TABLE = {
 # DO NOT EDIT FROM HERE
 # ---------------------
 DTSFILENAME_RE = re.compile(r'(.*)-p')
+SOC_RE = re.compile(r'[0-9]+')
+DPKG_L4T_CORE_RE = re.compile(r'^nvidia-l4t-core.*install$')
 
 
-def get_variables_old():
+def cat(path):
+    with open(path, 'r') as f:
+        return f.readline().rstrip('\x00')
+
+
+def get_variables_from_dtsfilename():
     os_variables = {}
-    # Read Jetson model
-    if os.path.isfile('/sys/firmware/devicetree/base/model'):
-        with open("/sys/firmware/devicetree/base/model", 'r') as f:
-            jetson_model = f.readline().rstrip('\x00')
-        os_variables['MODEL'] = jetson_model
     # Decode dtsfilename
     if os.path.isfile("/proc/device-tree/nvidia,dtsfilename"):
         # Read dtsfilename
@@ -133,8 +136,7 @@ def get_variables_old():
         # TX2 - tegra186-quill-p3310-1000-c03-00-base
         # TX1 - tegra210-jetson-tx1-p2597-2180-a01-devkit
         # TK1 - tegra124-jetson_tk1-pm375-000-c00-00
-        with open("/proc/device-tree/nvidia,dtsfilename", 'r') as f:
-            dtsfilename = f.readline().rstrip('\x00').split('/')
+        dtsfilename = cat("/proc/device-tree/nvidia,dtsfilename").split('/')
         # Decode codename
         os_variables['CODENAME'] = dtsfilename[-3]
         # Decode NVIDIA Jetson type, model and board
@@ -145,14 +147,14 @@ def get_variables_old():
         match = re.match(DTSFILENAME_RE, parts)
         if match:
             module = match.group(1)
-            os_variables['MODULE'] = module
+            os_variables['PART_NUMBER'] = module
             # print(f"module: {module}".format(module=module))
             carrier = parts.replace("{module}-".format(module=module), '')
             os_variables['CARRIER'] = carrier
             # print(f"carrier: {carrier}".format(carrier=carrier))
             # Decode Jetson type of module
             # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/index.html
-            os_variables['TYPE_MODULE'] = MODULE_NAME_TABLE.get(module, '')
+            os_variables['MODULE'] = MODULE_NAME_TABLE.get(module, '')
         else:
             print("jetson model and board not available")
             print(parts)
@@ -161,6 +163,13 @@ def get_variables_old():
 
     return os_variables
 
+def check_if_nvidia_core():
+    dpkg = Command(['dpkg', '--get-selections'])
+    lines = dpkg()
+    for line in lines:
+        if re.match(DPKG_L4T_CORE_RE, line):
+            return True
+    return False
 
 def get_part_number():
     for bus_number in range(3):
@@ -179,43 +188,50 @@ def get_part_number():
     raise JtopException("Error find part number!")
 
 
-def get_l4t():
-    # NVIDIA Jetson version
-    # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
-    # https://stackoverflow.com/questions/16817646/extract-version-number-from-a-string
-    # https://askubuntu.com/questions/319307/reliably-check-if-a-package-is-installed-or-not
-    # https://github.com/dusty-nv/jetson-inference/blob/7e81381a96c1ac5f57f1728afbfdec7f1bfeffc2/tools/install-pytorch.sh#L296
-    if os.path.isfile('/etc/nv_tegra_release'):
-        with open("/etc/nv_tegra_release", 'r') as f:
-            nv_tegra_release = f.readline().rstrip('\x00')
-            print(nv_tegra_release)
-
-
 def get_variables():
     os_variables = {}
     # Read Jetson model
     if os.path.isfile('/sys/firmware/devicetree/base/model'):
-        with open("/sys/firmware/devicetree/base/model", 'r') as f:
-            jetson_model = f.readline().rstrip('\x00')
-        os_variables['MODEL'] = jetson_model
+        os_variables['MODEL'] = cat("/sys/firmware/devicetree/base/model")
     # Find part number from I2C
     # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
     # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/HR/JetsonEepromLayout.html
-    try:
-        part_number = get_part_number()
-        os_variables['PART_NUMBER'] = part_number
-    except JtopException as e:
-        print(e)
+    part_number = get_part_number()
+    os_variables['PART_NUMBER'] = part_number
     # Find module from part_number
     module = MODULE_NAME_TABLE.get(part_number, '')
     if not module:
-        print("Error find module name from {part_number}".format(part_number=part_number))
+        JtopException("Error find module name from {part_number}".format(part_number=part_number))
     os_variables['MODULE'] = module
     # Read serial number
     if os.path.isfile('/sys/firmware/devicetree/base/serial-number'):
-        with open("/sys/firmware/devicetree/base/serial-number", 'r') as f:
-            serial_number = f.readline().rstrip('\x00')
-        os_variables['SERIAL_NUMBER'] = serial_number
+        os_variables['SERIAL_NUMBER'] = cat("/sys/firmware/devicetree/base/serial-number")
+    # Read NV TEGRA RELEASE
+    if os.path.isfile('/etc/nv_tegra_release'):
+        # NVIDIA Jetson version
+        # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
+        # https://stackoverflow.com/questions/16817646/extract-version-number-from-a-string
+        # https://askubuntu.com/questions/319307/reliably-check-if-a-package-is-installed-or-not
+        # https://github.com/dusty-nv/jetson-inference/blob/7e81381a96c1ac5f57f1728afbfdec7f1bfeffc2/tools/install-pytorch.sh#L296
+        nv_tegra_release = cat("/etc/nv_tegra_release").split(", ")
+        l4t_release = nv_tegra_release[0].lstrip("# R").rstrip(" (release)")
+        l4t_revision = nv_tegra_release[1].lstrip("REVISION: ")
+        os_variables['L4T'] = '.'.join([l4t_release, l4t_revision])
+        # Ectract GCID
+        os_variables['GCID'] = nv_tegra_release[2].lstrip("GCID: ")
+        # Ectract SOC
+        number = re.search(SOC_RE, nv_tegra_release[3].lstrip("BOARD: ")).group()
+        os_variables['SOC'] = "tegra{number}".format(number=number)  
+    elif check_if_nvidia_core():
+        dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
+        l4t = dpkg()[0]
+        os_variables['L4T'] = l4t.split('-')[0].lstrip('\'')
+    else:
+        JtopException("L4T Not available on this board")
+    # Read Jetpack
+    os_variables['JETPACK'] = NVIDIA_JETPACK.get(os_variables['L4T'], '')
+    # Decode CUDA architecure
+    os_variables['CUDA_ARCH_BIN'] = CUDA_TABLE.get(os_variables['SOC'], '')
     return os_variables
 
 
