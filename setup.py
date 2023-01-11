@@ -29,7 +29,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from jtop.core import get_variables
+from jtop.core import get_nvidia_l4t
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
 # and accepts an argument to specify the text encoding
@@ -66,11 +66,10 @@ def is_superuser():
 
 
 def list_scripts():
-    JETSONS = get_variables()
     # Load scripts to install
     scripts = ['scripts/jetson_swap', 'scripts/jetson_release', 'scripts/jetson_config']
     # If jetpack lower than 32 install also
-    l4t = JETSONS['L4T']
+    l4t = get_nvidia_l4t()
     if l4t:
         release = int(l4t.split('.')[0])
         if release < 32:
