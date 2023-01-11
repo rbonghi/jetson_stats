@@ -20,7 +20,6 @@ import re
 from smbus import SMBus
 
 from .command import Command
-from .exceptions import JtopException
 
 # ---------------------
 # JETPACK DETECTION
@@ -187,7 +186,7 @@ def get_part_number():
         except OSError:
             # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
             pass
-    raise JtopException("Error find part number!")
+    return ''
 
 
 def get_nvidia_l4t():
@@ -211,8 +210,8 @@ def get_nvidia_l4t():
         dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
         l4t = dpkg()[0]
         return l4t.split('-')[0].lstrip('\'')
-    # If not find any L4T raise exception
-    raise JtopException("L4T Not available on this board")
+    # If not find any L4T return empty string
+    return ''
 
 
 def get_variables():
@@ -223,15 +222,10 @@ def get_variables():
     # Find part number from I2C
     # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
     # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/HR/JetsonEepromLayout.html
-    try:
-        part_number = get_part_number()
-        os_variables['PART_NUMBER'] = part_number
-        # Find module from part_number
-        if part_number not in MODULE_NAME_TABLE:
-            raise JtopException("Error find module name from {part_number}".format(part_number=part_number))
-        os_variables['MODULE'] = MODULE_NAME_TABLE.get(part_number, '')
-    except JtopException as e:
-        print(e)
+    part_number = get_part_number()
+    os_variables['PART_NUMBER'] = part_number
+    # Find module from part_number
+    os_variables['MODULE'] = MODULE_NAME_TABLE.get(part_number, '')
     # Decode SOC
     if os.path.isfile("/proc/device-tree/compatible"):
         compatible = cat("/proc/device-tree/compatible").split(',')
@@ -242,12 +236,9 @@ def get_variables():
     if os.path.isfile('/sys/firmware/devicetree/base/serial-number'):
         os_variables['SERIAL_NUMBER'] = cat("/sys/firmware/devicetree/base/serial-number")
     # Extract L4T
-    try:
-        os_variables['L4T'] = get_nvidia_l4t()
-        # Read Jetpack
-        os_variables['JETPACK'] = NVIDIA_JETPACK.get(os_variables['L4T'], '')
-    except JtopException as e:
-        print(e)
+    os_variables['L4T'] = get_nvidia_l4t()
+    # Read Jetpack
+    os_variables['JETPACK'] = NVIDIA_JETPACK.get(os_variables['L4T'], '')
     return os_variables
 
 
