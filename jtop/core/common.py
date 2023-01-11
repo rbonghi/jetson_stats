@@ -80,6 +80,11 @@ class Board:
         return str(self._board)
 
 
+def cat(path):
+    with open(path, 'r') as f:
+        return f.readline().rstrip('\x00')
+
+
 def locate_commands(name, commands):
     for cmd in commands:
         if os.path.exists(cmd):

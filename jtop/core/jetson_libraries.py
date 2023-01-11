@@ -15,10 +15,32 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
+from .common import cat
 from .command import Command
 
-MODULES = ['libcudnn', 'libvisionworks', 'tensorrt', 'vpi']
+MODULES = ['cudnn', 'visionworks', 'tensorrt', 'vpi']
+CUDA_FILE_RE = re.compile(r'CUDA Version (.*)')
+CUDA_NVCC_RE = re.compile(r'V([0-9]+.[0-9]+.[0-9]+)')
+
+
+def get_cuda():
+    cuda_version = ''
+    if os.path.isfile("/usr/local/cuda/version.txt"):
+        version = cat("/usr/local/cuda/version.txt")
+        match = re.search(CUDA_FILE_RE, version)
+        if match:
+            cuda_version = match.group(1)
+    elif os.path.isfile("/usr/local/cuda/bin/nvcc"):
+        cmd = Command(['/usr/local/cuda/bin/nvcc', '--version'])
+        lines = cmd()
+        for line in lines:
+            match = re.search(CUDA_NVCC_RE, line)
+            if match:
+                cuda_version = match.group(1)
+                break
+    return cuda_version
 
 
 def get_opencv():
@@ -82,11 +104,16 @@ def get_libraries():
                 break
     except FileNotFoundError:
         pass
-
     return os_variables
 
 
 if __name__ == "__main__":
+    # Get CUDA
+    cuda_version = get_cuda()
+    if cuda_version:
+        print("CUDA: {version}".format(version=cuda_version))
+    else:
+        print("CUDA not installed!")
     # Find OpenCV
     opencv_version, opencv_cuda = get_opencv()
     if opencv_version:

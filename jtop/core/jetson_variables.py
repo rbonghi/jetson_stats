@@ -18,7 +18,7 @@
 import os
 import re
 from smbus import SMBus
-
+from .common import cat
 from .command import Command
 
 # ---------------------
@@ -118,11 +118,6 @@ MODULE_NAME_TABLE = {
 DTSFILENAME_RE = re.compile(r'(.*)-p')
 SOC_RE = re.compile(r'[0-9]+')
 DPKG_L4T_CORE_RE = re.compile(r'^nvidia-l4t-core.*install$')
-
-
-def cat(path):
-    with open(path, 'r') as f:
-        return f.readline().rstrip('\x00')
 
 
 def get_variables_from_dtsfilename():
