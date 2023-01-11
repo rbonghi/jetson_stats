@@ -17,6 +17,7 @@
 
 # flake8: noqa
 
+from .jetson_variables import get_variables
 from .nvpmodel import NVPModel, NVPModelService
 from .tegrastats import Tegrastats
 from .fan import Fan, FanService, FanServiceLegacy

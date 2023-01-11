@@ -29,7 +29,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from jtop.service import import_jetson_variables
+from jtop.core import get_variables
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
 # and accepts an argument to specify the text encoding
@@ -66,13 +66,14 @@ def is_superuser():
 
 
 def list_scripts():
-    JETSONS = import_jetson_variables()
+    JETSONS = get_variables()
     # Load scripts to install
     scripts = ['scripts/jetson_swap', 'scripts/jetson_release', 'scripts/jetson_config']
-    # If jetpack lower than 32 install also jetson_docker
-    l4t_release = JETSONS['JETSON_L4T_RELEASE']
-    if l4t_release.isdigit():
-        if int(l4t_release) < 32:
+    # If jetpack lower than 32 install also
+    l4t = JETSONS['L4T']
+    if l4t:
+        release = int(l4t.split('.')[0])
+        if release < 32:
             scripts += ['scripts/jetson_docker']
     return scripts
 
@@ -158,6 +159,7 @@ def pre_installer(installer, obj, copy):
 
 class PostInstallCommand(install):
     """Installation mode."""
+
     def run(self):
         # Run the uninstaller before to copy all scripts
         pre_installer(install, self, True)
@@ -165,6 +167,7 @@ class PostInstallCommand(install):
 
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
+
     def run(self):
         # Run the uninstaller before to copy all scripts
         # Install services (linking)
