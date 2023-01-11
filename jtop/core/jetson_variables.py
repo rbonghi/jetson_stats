@@ -19,7 +19,7 @@ import os
 import re
 from smbus import SMBus
 from .common import cat
-from .command import Command
+from .jetson_l4t import get_nvidia_l4t
 
 # ---------------------
 # JETPACK DETECTION
@@ -117,7 +117,6 @@ MODULE_NAME_TABLE = {
 # ---------------------
 DTSFILENAME_RE = re.compile(r'(.*)-p')
 SOC_RE = re.compile(r'[0-9]+')
-DPKG_L4T_CORE_RE = re.compile(r'^nvidia-l4t-core.*install$')
 
 
 def get_variables_from_dtsfilename():
@@ -158,15 +157,6 @@ def get_variables_from_dtsfilename():
     return os_variables
 
 
-def check_dpkg_nvidia_l4t_core():
-    dpkg = Command(['dpkg', '--get-selections'])
-    lines = dpkg()
-    for line in lines:
-        if re.match(DPKG_L4T_CORE_RE, line):
-            return True
-    return False
-
-
 def get_part_number():
     for bus_number in range(3):
         try:
@@ -181,31 +171,6 @@ def get_part_number():
         except OSError:
             # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
             pass
-    return ''
-
-
-def get_nvidia_l4t():
-    # Read NV TEGRA RELEASE
-    if os.path.isfile('/etc/nv_tegra_release'):
-        # NVIDIA Jetson version
-        # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
-        # https://stackoverflow.com/questions/16817646/extract-version-number-from-a-string
-        # https://askubuntu.com/questions/319307/reliably-check-if-a-package-is-installed-or-not
-        # https://github.com/dusty-nv/jetson-inference/blob/7e81381a96c1ac5f57f1728afbfdec7f1bfeffc2/tools/install-pytorch.sh#L296
-        nv_tegra_release = cat("/etc/nv_tegra_release").split(", ")
-        l4t_release = nv_tegra_release[0].lstrip("# R").rstrip(" (release)")
-        l4t_revision = nv_tegra_release[1].lstrip("REVISION: ")
-        return '.'.join([l4t_release, l4t_revision])
-        # Ectract GCID - DO NOT NEEDED
-        # os_variables['GCID'] = nv_tegra_release[2].lstrip("GCID: ")
-        # Ectract SOC - DO NOT USE THIS LINE! CONTAINS ALWAYS WRONG OUTPUT
-        # number = re.search(SOC_RE, nv_tegra_release[3].lstrip("BOARD: ")).group()
-        # os_variables['SOC'] = "tegra{number}".format(number=number)
-    elif check_dpkg_nvidia_l4t_core():
-        dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
-        l4t = dpkg()[0]
-        return l4t.split('-')[0].lstrip('\'')
-    # If not find any L4T return empty string
     return ''
 
 
