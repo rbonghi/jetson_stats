@@ -19,6 +19,12 @@ import os
 import re
 from .common import cat
 from .command import Command
+# Fix connection refused for python 2.7
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
 
 MODULES = ['cudnn', 'visionworks', 'tensorrt', 'vpi']
 CUDA_FILE_RE = re.compile(r'CUDA Version (.*)')
