@@ -163,13 +163,15 @@ def get_variables_from_dtsfilename():
 
     return os_variables
 
-def check_if_nvidia_core():
+
+def check_dpkg_nvidia_l4t_core():
     dpkg = Command(['dpkg', '--get-selections'])
     lines = dpkg()
     for line in lines:
         if re.match(DPKG_L4T_CORE_RE, line):
             return True
     return False
+
 
 def get_part_number():
     for bus_number in range(3):
@@ -221,8 +223,8 @@ def get_variables():
         os_variables['GCID'] = nv_tegra_release[2].lstrip("GCID: ")
         # Ectract SOC
         number = re.search(SOC_RE, nv_tegra_release[3].lstrip("BOARD: ")).group()
-        os_variables['SOC'] = "tegra{number}".format(number=number)  
-    elif check_if_nvidia_core():
+        os_variables['SOC'] = "tegra{number}".format(number=number)
+    elif check_dpkg_nvidia_l4t_core():
         dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
         l4t = dpkg()[0]
         os_variables['L4T'] = l4t.split('-')[0].lstrip('\'')
