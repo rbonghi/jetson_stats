@@ -190,6 +190,7 @@ def get_l4t():
             nv_tegra_release = f.readline().rstrip('\x00')
             print(nv_tegra_release)
 
+
 def get_variables():
     os_variables = {}
     # Read Jetson model
