@@ -85,7 +85,7 @@ NVIDIA_JETPACK = {
 }
 
 CUDA_TABLE = {
-    'tegra234': '8.7',  # JETSON ORIN
+    'tegra23x': '8.7',  # JETSON ORIN - tegra234
     'tegra194': '7.2',  # JETSON XAVIER
     'tegra186': '6.2',  # JETSON TX2
     'tegra210': '5.3',  # JETSON TX1
@@ -190,24 +190,7 @@ def get_part_number():
     raise JtopException("Error find part number!")
 
 
-def get_variables():
-    os_variables = {}
-    # Read Jetson model
-    if os.path.isfile('/sys/firmware/devicetree/base/model'):
-        os_variables['MODEL'] = cat("/sys/firmware/devicetree/base/model")
-    # Find part number from I2C
-    # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
-    # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/HR/JetsonEepromLayout.html
-    part_number = get_part_number()
-    os_variables['PART_NUMBER'] = part_number
-    # Find module from part_number
-    module = MODULE_NAME_TABLE.get(part_number, '')
-    if not module:
-        JtopException("Error find module name from {part_number}".format(part_number=part_number))
-    os_variables['MODULE'] = module
-    # Read serial number
-    if os.path.isfile('/sys/firmware/devicetree/base/serial-number'):
-        os_variables['SERIAL_NUMBER'] = cat("/sys/firmware/devicetree/base/serial-number")
+def get_nvidia_l4t():
     # Read NV TEGRA RELEASE
     if os.path.isfile('/etc/nv_tegra_release'):
         # NVIDIA Jetson version
@@ -218,22 +201,53 @@ def get_variables():
         nv_tegra_release = cat("/etc/nv_tegra_release").split(", ")
         l4t_release = nv_tegra_release[0].lstrip("# R").rstrip(" (release)")
         l4t_revision = nv_tegra_release[1].lstrip("REVISION: ")
-        os_variables['L4T'] = '.'.join([l4t_release, l4t_revision])
-        # Ectract GCID
-        os_variables['GCID'] = nv_tegra_release[2].lstrip("GCID: ")
-        # Ectract SOC
-        number = re.search(SOC_RE, nv_tegra_release[3].lstrip("BOARD: ")).group()
-        os_variables['SOC'] = "tegra{number}".format(number=number)
+        return '.'.join([l4t_release, l4t_revision])
+        # Ectract GCID - DO NOT NEEDED
+        # os_variables['GCID'] = nv_tegra_release[2].lstrip("GCID: ")
+        # Ectract SOC - DO NOT USE THIS LINE! CONTAINS ALWAYS WRONG OUTPUT
+        # number = re.search(SOC_RE, nv_tegra_release[3].lstrip("BOARD: ")).group()
+        # os_variables['SOC'] = "tegra{number}".format(number=number)
     elif check_dpkg_nvidia_l4t_core():
         dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
         l4t = dpkg()[0]
-        os_variables['L4T'] = l4t.split('-')[0].lstrip('\'')
-    else:
-        JtopException("L4T Not available on this board")
-    # Read Jetpack
-    os_variables['JETPACK'] = NVIDIA_JETPACK.get(os_variables['L4T'], '')
+        return l4t.split('-')[0].lstrip('\'')
+    # If not find any L4T raise exception
+    raise JtopException("L4T Not available on this board")
+
+
+def get_variables():
+    os_variables = {}
+    # Read Jetson model
+    if os.path.isfile('/sys/firmware/devicetree/base/model'):
+        os_variables['MODEL'] = cat("/sys/firmware/devicetree/base/model")
+    # Find part number from I2C
+    # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
+    # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/HR/JetsonEepromLayout.html
+    try:
+        part_number = get_part_number()
+        os_variables['PART_NUMBER'] = part_number
+        # Find module from part_number
+        if part_number not in MODULE_NAME_TABLE:
+            raise JtopException("Error find module name from {part_number}".format(part_number=part_number))
+        os_variables['MODULE'] = MODULE_NAME_TABLE.get(part_number, '')
+    except JtopException as e:
+        print(e)
+    # Decode SOC
+    if os.path.isfile("/proc/device-tree/compatible"):
+        compatible = cat("/proc/device-tree/compatible").split(',')
+    os_variables['SOC'] = compatible[-1]
     # Decode CUDA architecure
     os_variables['CUDA_ARCH_BIN'] = CUDA_TABLE.get(os_variables['SOC'], '')
+    # Read serial number
+    if os.path.isfile('/sys/firmware/devicetree/base/serial-number'):
+        os_variables['SERIAL_NUMBER'] = cat("/sys/firmware/devicetree/base/serial-number")
+    # Extract L4T
+    try:
+        os_variables['L4T'] = get_nvidia_l4t()
+        # Read Jetpack
+        os_variables['JETPACK'] = NVIDIA_JETPACK.get(os_variables['L4T'], '')
+    except JtopException as e:
+        print(e)
     return os_variables
 
 
