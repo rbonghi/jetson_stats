@@ -17,6 +17,9 @@
 
 import os
 import re
+from smbus import SMBus
+
+from .exceptions import JtopException
 
 # ---------------------
 # JETPACK DETECTION
@@ -91,18 +94,23 @@ CUDA_TABLE = {
 
 MODULE_NAME_TABLE = {
     'p3701-0000': 'NVIDIA Jetson AGX Orin',
-    'p3668-0000': 'NVIDIA Jetson Xavier NX (developer kit)',
+    'p3668-0000': 'NVIDIA Jetson Xavier NX (Developer kit)',
     'p3668-0001': 'NVIDIA Jetson Xavier NX',
     'p3668-0003': 'NVIDIA Jetson Xavier NX 16GB',
     'p2888-0001': 'NVIDIA Jetson AGX Xavier (16 GB ram)',
     'p2888-0004': 'NVIDIA Jetson AGX Xavier (32 GB ram)',
     'p2888-0005': 'NVIDIA Jetson AGX Xavier (64 GB ram)',
+    'p2888-0006': 'NVIDIA Jetson AGX Xavier (8 GB ram)',
     'p2888-0008': 'NVIDIA Jetson AGX Xavier Industrial (32 GB ram)',
-    'p3448-0000': 'NVIDIA Jetson Nano 4Gb',
+    'p3448-0000': 'NVIDIA Jetson Nano (4 GB ram)',
+    'p3448-0002': 'NVIDIA Jetson Nano',
+    'p3448-0003': 'NVIDIA Jetson Nano (2 GB ram)',
     'p3509-0000': 'NVIDIA Jetson TX2 NX',
-    'quill': 'NVIDIA Jetson TX2',
-    'jetson-tx1': 'NVIDIA Jetson TX1',
-    'jetson_tk1': 'NVIDIA Jetson TK1',
+    'p3489-0000': 'NVIDIA Jetson TX2i',
+    'p3489-0888': 'NVIDIA Jetson TX2 (4 GB ram)',
+    'p3310-1000': 'NVIDIA Jetson TX2',
+    'p2180-1000': 'NVIDIA Jetson TX1',
+    'r375-0001': 'NVIDIA Jetson TK1',
 }
 # ---------------------
 # DO NOT EDIT FROM HERE
@@ -110,7 +118,7 @@ MODULE_NAME_TABLE = {
 DTSFILENAME_RE = re.compile(r'(.*)-p')
 
 
-def get_variables():
+def get_variables_old():
     os_variables = {}
     # Read Jetson model
     if os.path.isfile('/sys/firmware/devicetree/base/model'):
@@ -150,11 +158,28 @@ def get_variables():
             print(parts)
     # Decode CUDA architecure
     os_variables['CUDA_ARCH_BIN'] = CUDA_TABLE.get(os_variables['SOC'], '')
-    # Read serial number
-    if os.path.isfile('/sys/firmware/devicetree/base/serial-number'):
-        with open("/sys/firmware/devicetree/base/serial-number", 'r') as f:
-            serial_number = f.readline().rstrip('\x00')
-        os_variables['SERIAL_NUMBER'] = serial_number
+
+    return os_variables
+
+
+def get_part_number():
+    for bus_number in range(3):
+        try:
+            bus = SMBus(bus_number)
+            part_number_raw = bus.read_i2c_block_data(0x50, 20, 29)
+            part_number_raw = ''.join(chr(i) for i in part_number_raw)
+            # print(part_number)
+            board_id = part_number_raw[5:9]
+            sku = part_number_raw[10:14]
+            part_number = "p{board_id}-{sku}".format(board_id=board_id, sku=sku)
+            return part_number
+        except OSError:
+            # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
+            pass
+    raise JtopException("Error find part number!")
+
+
+def get_l4t():
     # NVIDIA Jetson version
     # reference https://devtalk.nvidia.com/default/topic/860092/jetson-tk1/how-do-i-know-what-version-of-l4t-my-jetson-tk1-is-running-/
     # https://stackoverflow.com/questions/16817646/extract-version-number-from-a-string
@@ -164,6 +189,32 @@ def get_variables():
         with open("/etc/nv_tegra_release", 'r') as f:
             nv_tegra_release = f.readline().rstrip('\x00')
             print(nv_tegra_release)
+
+def get_variables():
+    os_variables = {}
+    # Read Jetson model
+    if os.path.isfile('/sys/firmware/devicetree/base/model'):
+        with open("/sys/firmware/devicetree/base/model", 'r') as f:
+            jetson_model = f.readline().rstrip('\x00')
+        os_variables['MODEL'] = jetson_model
+    # Find part number from I2C
+    # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
+    # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/HR/JetsonEepromLayout.html
+    try:
+        part_number = get_part_number()
+        os_variables['PART_NUMBER'] = part_number
+    except JtopException as e:
+        print(e)
+    # Find module from part_number
+    module = MODULE_NAME_TABLE.get(part_number, '')
+    if not module:
+        print("Error find module name from {part_number}".format(part_number=part_number))
+    os_variables['MODULE'] = module
+    # Read serial number
+    if os.path.isfile('/sys/firmware/devicetree/base/serial-number'):
+        with open("/sys/firmware/devicetree/base/serial-number", 'r') as f:
+            serial_number = f.readline().rstrip('\x00')
+        os_variables['SERIAL_NUMBER'] = serial_number
     return os_variables
 
 
