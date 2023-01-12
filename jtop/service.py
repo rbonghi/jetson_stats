@@ -19,7 +19,6 @@
 import logging
 # Operative system
 # import signal
-import platform
 import copy
 import os
 import sys
@@ -42,7 +41,8 @@ from .core import (
     FanServiceLegacy,
     SwapService,
     get_key,
-    get_jetson_variables)
+    get_jetson_variables,
+    get_platform_variables)
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Fix connection refused for python 2.7
@@ -55,11 +55,6 @@ try:
     import queue
 except ImportError:
     import Queue as queue
-# Load distro library from python3 or use platform
-try:
-    import distro
-except ImportError:
-    distro = platform
 
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
@@ -79,20 +74,6 @@ LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT'
 
 def status_service():
     return os.system('systemctl is-active --quiet jetson_stats') == 0
-
-
-def load_board_variables():
-    info = get_jetson_variables()
-    # Build platform information
-    platform_dict = {
-        'system': platform.system(),
-        'machine': platform.machine(),
-        'distribution': " ".join(distro.linux_distribution()),
-        'release': platform.release(),
-        'python': platform.python_version(),
-    }
-    # Board information
-    return {'info': info, 'platform': platform_dict}
 
 
 class JtopManager(SyncManager):
@@ -150,8 +131,9 @@ class JtopServer(Process):
         self.broadcaster = JtopManager()
         # Load board information
         is_debug = True if "JETSON_DEBUG" in os.environ else False
-        self.board = load_board_variables()
-        logger.info("Running on python: {python_version}".format(python_version=self.board['platform']['python']))
+        # Load board and platform variables
+        self.board = {'info': get_jetson_variables(), 'platform': get_platform_variables()}
+        logger.info("Running on Python: {python_version}".format(python_version=self.board['platform']['Python']))
         # Initialize Fan
         try:
             self.fan = FanService(self.config, path_fan)

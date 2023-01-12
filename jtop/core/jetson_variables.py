@@ -17,7 +17,14 @@
 
 import os
 import re
+import platform
 from smbus import SMBus
+# Load distro library from python3 or use platform
+try:
+    import distro
+except ImportError:
+    distro = platform
+
 from .common import cat
 from .jetson_l4t import get_nvidia_l4t, get_nvidia_jetpack
 
@@ -159,6 +166,16 @@ def get_jetson_variables():
     # Read Jetpack
     hardware['Jetpack'] = get_nvidia_jetpack(hardware['L4T'])
     return hardware
+
+
+def get_platform_variables():
+    return {
+        'Machine': platform.machine(),
+        'System': platform.system(),
+        'Distribution': " ".join(distro.linux_distribution()),
+        'Release': platform.release(),
+        'Python': platform.python_version(),
+    }
 
 
 def export_variables(hardware):

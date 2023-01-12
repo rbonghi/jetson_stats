@@ -15,10 +15,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import argparse
-from .core import get_jetson_variables, get_cuda, get_opencv, get_libraries, NVPModelService
+from .core import (get_jetson_variables,
+                   get_platform_variables,
+                   get_cuda, get_opencv,
+                   get_libraries,
+                   get_var,
+                   NVPModelService)
 from .service import status_service
 from .terminal_colors import bcolors
+# Version match
+VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
 
 def main():
@@ -46,9 +54,6 @@ def main():
     nvp_number, nvp_name = NVPModelService.query('nvpmodel')
     nvp_string = "{number} - {name}".format(number=nvp_number, name=bcolors.ok(nvp_name))
     print("{service}: {status}".format(service=bcolors.bold("NV Power Mode"), status=nvp_string))
-    # Print status jetson-stats service
-    jtop_status = bcolors.ok("Active") if status_service() else bcolors.fail("Inactive")
-    print("{service}: {status}".format(service=bcolors.bold("jtop service"), status=jtop_status))
     # Print jetson hardware variables
     if args.verbose:
         print(bcolors.ok(bcolors.bold("Hardware:")))
@@ -56,6 +61,19 @@ def main():
             if not variable:
                 variable = bcolors.fail("Not available")
             print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
+    # Print platform variables
+    plat = get_platform_variables()
+    print(bcolors.ok(bcolors.bold("Platform:")))
+    for name, variable in plat.items():
+        if not variable:
+            variable = bcolors.fail("Not available")
+        print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
+    # jtop status
+    print(bcolors.ok(bcolors.bold("jtop:")))
+    # Print status jetson-stats service
+    print(" - {name}: {value}".format(name=bcolors.bold("Version"), value=get_var(VERSION_RE)))
+    jtop_status = bcolors.ok("Active") if status_service() else bcolors.fail("Inactive")
+    print(" - {name}: {value}".format(name=bcolors.bold("Service"), value=jtop_status))
     # Read CUDA status
     print(bcolors.ok(bcolors.bold("Libraries:")))
     cuda_version = get_cuda()
