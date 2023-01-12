@@ -18,7 +18,10 @@
 import os
 import re
 import platform
-from smbus import SMBus
+try:
+    from smbus import SMBus
+except ImportError:
+    print("Skip for setup.py")
 # Load distro library from python3 or use platform
 try:
     import distro
@@ -118,6 +121,8 @@ def get_part_number():
             sku = part_number[10:14]
             jetson_part_number = "p{board_id}-{sku}".format(board_id=board_id, sku=sku)
             return part_number, jetson_part_number
+        except IOError:
+            break
         except OSError:
             # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
             pass
@@ -130,7 +135,7 @@ def get_jetson_variables():
     model = ''
     if os.path.isfile('/sys/firmware/devicetree/base/model'):
         model = cat("/sys/firmware/devicetree/base/model")
-        model = "p{model}".format(model=model.replace(':','-'))
+        model = "p{model}".format(model=model.replace(':', '-'))
     hardware['Model'] = model
     # Find part number from I2C
     # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
@@ -140,8 +145,8 @@ def get_jetson_variables():
     hardware['P-Number'] = jetson_part_number
     # Read boardids
     if os.path.isfile('/proc/device-tree/nvidia,boardids'):
-         boardids = cat("/proc/device-tree/nvidia,boardids")
-         hardware['BoardIDs'] = boardids
+        boardids = cat("/proc/device-tree/nvidia,boardids")
+        hardware['BoardIDs'] = boardids
     # Find module from part_number
     module = ''
     if jetson_part_number:
@@ -153,8 +158,9 @@ def get_jetson_variables():
     compatible = ''
     if os.path.isfile("/proc/device-tree/compatible"):
         compatible = cat("/proc/device-tree/compatible").split(',')
-    hardware['SoC'] = compatible[-1]
-    # Decode CUDA architecure
+        compatible = compatible.split(',')[-1]
+    hardware['SoC'] = compatible
+    # Decode CUDA architecture
     cuda_arch = ''
     for cuda, arch in CUDA_TABLE.items():
         if cuda in hardware['SoC']:

@@ -56,7 +56,6 @@ Other example are availables on https://github.com/rbonghi/jetson_stats/tree/mas
 Follow the next attributes to know in detail how you can you in your python project.
 """
 import logging
-import os
 import re
 import sys
 from datetime import datetime, timedelta
@@ -961,7 +960,8 @@ class jtop(Thread):
         # Get jtop service version
         service_version = init.get('version', '')
         if service_version != get_var(VERSION_RE):
-            raise JtopException("Mismatch version jtop service: [{service_version}] and client: [{client_version}]. Please run:\nsudo systemctl restart jetson_stats.service".format(
+            raise JtopException("""Mismatch version jtop service: [{service_version}] and client: [{client_version}].
+                                Please run:\nsudo systemctl restart jetson_stats.service""".format(
                 service_version=service_version,
                 client_version=get_var(VERSION_RE)))
         # Load server speed
