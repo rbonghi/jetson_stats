@@ -19,6 +19,7 @@
 import logging
 # Operative system
 # import signal
+import re
 import copy
 import os
 import sys
@@ -41,6 +42,7 @@ from .core import (
     FanServiceLegacy,
     SwapService,
     get_key,
+    get_var,
     get_jetson_variables,
     get_platform_variables)
 # Create logger for tegrastats
@@ -55,6 +57,8 @@ try:
     import queue
 except ImportError:
     import Queue as queue
+# Version match
+VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
 PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
 PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
@@ -132,7 +136,7 @@ class JtopServer(Process):
         # Load board information
         is_debug = True if "JETSON_DEBUG" in os.environ else False
         # Load board and platform variables
-        self.board = {'info': get_jetson_variables(), 'platform': get_platform_variables()}
+        self.board = {'hardware': get_jetson_variables(), 'platform': get_platform_variables()}
         logger.info("Running on Python: {python_version}".format(python_version=self.board['platform']['Python']))
         # Initialize Fan
         try:
@@ -246,6 +250,7 @@ class JtopServer(Process):
                             logger.info("tegrastats started {interval}ms".format(interval=int(interval * 1000)))
                         # send configuration board
                         init = {
+                            'version': get_var(VERSION_RE),
                             'board': self.board,
                             'interval': self.interval.value,
                             'swap': self.swap.path,

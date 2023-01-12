@@ -57,12 +57,17 @@ Follow the next attributes to know in detail how you can you in your python proj
 """
 import logging
 import os
+import re
 import sys
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
 from .core import (
+    get_var,
+    get_cuda,
+    get_opencv,
+    get_libraries,
     Board,
     Engines,
     Swap,
@@ -70,7 +75,6 @@ from .core import (
     NVPModel,
     get_uptime,
     status_disk,
-    import_os_variables,
     get_local_interfaces,
     JetsonClocks,
     JtopException)
@@ -89,6 +93,8 @@ if sys.version_info[0] == 2:
 logger = logging.getLogger(__name__)
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+# Version match
+VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
 
 class jtop(Thread):
@@ -143,27 +149,20 @@ class jtop(Thread):
         self._nvp = None
 
     def _load_jetson_libraries(self):
-        try:
-            env = {}
-            JTOP_FOLDER, _ = os.path.split(__file__)
-            libraries = import_os_variables(JTOP_FOLDER + "/jetson_libraries", "JETSON_")
-            for k, v in libraries.items():
-                env[k] = str(v)
-            # Make dictionaries
-            self._board._update_libraries({
-                "CUDA": env["JETSON_CUDA"],
-                "cuDNN": env["JETSON_CUDNN"],
-                "TensorRT": env["JETSON_TENSORRT"],
-                "VisionWorks": env["JETSON_VISIONWORKS"],
-                "OpenCV": env["JETSON_OPENCV"],
-                "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
-                "VPI": env["JETSON_VPI"],
-                "Vulkan": env["JETSON_VULKAN_INFO"]})
-            # Loaded from script
-            logger.debug("Loaded jetson_variables variables")
-        except Exception:
-            # Write error message
-            self._error = sys.exc_info()
+        # Load all variables
+        cuda_version = get_cuda()
+        opencv_version, opencv_cuda = get_opencv()
+        os_variables = get_libraries()
+        libraries = {
+            'CUDA': cuda_version,
+            "OpenCV": opencv_version,
+            "OpenCV-Cuda": opencv_cuda,
+        }
+        libraries.update(os_variables)
+        # Make dictionaries
+        self._board._update_libraries(libraries)
+        # Loaded from script
+        logger.debug("Loaded jetson_variables variables")
 
     def attach(self, observer):
         """
@@ -959,6 +958,12 @@ class jtop(Thread):
         self._sync_event = self._broadcaster.sync_event()
         # Initialize connection
         init = self._get_configuration()
+        # Get jtop service version
+        service_version = init.get('version', '')
+        if service_version != get_var(VERSION_RE):
+            raise JtopException("Mismatch version jtop service: [{service_version}] and client: [{client_version}]. Please run:\nsudo systemctl restart jetson_stats.service".format(
+                service_version=service_version,
+                client_version=get_var(VERSION_RE)))
         # Load server speed
         self._server_interval = init['interval']
         # Load board information

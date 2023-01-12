@@ -39,21 +39,19 @@ logger = logging.getLogger(__name__)
 class Board:
 
     def __init__(self):
-        self.info = {}
         self.hardware = {}
         self.libraries = {}
         self.platform = {}
-        self._board = {'info': self.info, 'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
+        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
     def _update_libraries(self, libraries):
         self.libraries = libraries
-        self._board = {'info': self.info, 'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
+        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
     def _update_init(self, init):
-        self.info = init['info']
         self.hardware = init['hardware']
         self.platform = init['platform']
-        self._board = {'info': self.info, 'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
+        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
     def items(self):
         return self._board.items()

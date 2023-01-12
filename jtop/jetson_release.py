@@ -19,7 +19,8 @@ import re
 import argparse
 from .core import (get_jetson_variables,
                    get_platform_variables,
-                   get_cuda, get_opencv,
+                   get_cuda,
+                   get_opencv,
                    get_libraries,
                    get_var,
                    NVPModelService)
