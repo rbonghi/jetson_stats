@@ -155,8 +155,8 @@ class jtop(Thread):
         os_variables = get_libraries()
         libraries = {
             'CUDA': cuda_version,
-            "OpenCV": opencv_version,
-            "OpenCV-Cuda": opencv_cuda,
+            'OpenCV': opencv_version,
+            'OpenCV-Cuda': opencv_cuda,
         }
         libraries.update(os_variables)
         # Make dictionaries
