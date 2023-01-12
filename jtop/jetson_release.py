@@ -61,13 +61,13 @@ def main():
             if not variable:
                 variable = bcolors.fail("Not available")
             print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
-    # Print platform variables
-    plat = get_platform_variables()
-    print(bcolors.ok(bcolors.bold("Platform:")))
-    for name, variable in plat.items():
-        if not variable:
-            variable = bcolors.fail("Not available")
-        print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
+        # Print platform variables
+        plat = get_platform_variables()
+        print(bcolors.ok(bcolors.bold("Platform:")))
+        for name, variable in plat.items():
+            if not variable:
+                variable = bcolors.fail("Not available")
+            print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
     # jtop status
     print(bcolors.ok(bcolors.bold("jtop:")))
     # Print status jetson-stats service
