@@ -42,7 +42,7 @@ from .core import (
     FanServiceLegacy,
     SwapService,
     get_key,
-    import_os_variables)
+    get_jetson_variables)
 # Create logger for tegrastats
 logger = logging.getLogger(__name__)
 # Fix connection refused for python 2.7
@@ -77,39 +77,18 @@ TIMEOUT_SWITCHOFF = 3.0
 LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
 
 
-def import_jetson_variables():
-    JTOP_FOLDER, _ = os.path.split(__file__)
-    return import_os_variables(JTOP_FOLDER + "/jetson_variables", "JETSON_")
-
-
 def load_jetson_variables():
-    env = {}
-    for k, v in import_jetson_variables().items():
-        env[k] = str(v)
-    # Make dictionaries
-    info = {
-        "model": env["JETSON_MODEL"],
-        "jetpack": env["JETSON_JETPACK"],
-        "L4T": env["JETSON_L4T"],
+    info = get_jetson_variables()
+    # Build platform information
+    platform_dict = {
+        'system': platform.system(),
+        'machine': platform.machine(),
+        'distribution': " ".join(distro.linux_distribution()),
+        'release': platform.release(),
+        'python': platform.python_version(),
     }
-    hardware = {
-        "CODENAME": env["JETSON_CODENAME"],
-        "SOC": env["JETSON_SOC"],
-        "CHIP_ID": env["JETSON_CHIP_ID"],
-        "BOARDIDS": env["JETSON_BOARDIDS"],
-        "MODULE": env["JETSON_MODULE"],
-        "CARRIER": env["JETSON_CARRIER"],
-        "CUDA_ARCH_BIN": env["JETSON_CUDA_ARCH_BIN"],
-        "SERIAL_NUMBER": env["JETSON_SERIAL_NUMBER"].upper(),
-    }
-    plat = {'system': platform.system(),
-            'machine': platform.machine(),
-            'distribution': " ".join(distro.linux_distribution()),
-            'release': platform.release(),
-            'python': platform.python_version(),
-            }
     # Board information
-    return {'info': info, 'hardware': hardware, 'platform': plat}
+    return {'info': info, 'platform': platform_dict}
 
 
 class JtopManager(SyncManager):

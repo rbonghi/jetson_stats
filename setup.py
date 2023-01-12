@@ -192,8 +192,6 @@ setup(
         "Source": (project_homepage + "/tree/master")
     },
     packages=find_packages(exclude=['examples', 'scripts', 'tests', 'jtop.tests', 'jtop.tests_gui']),  # Required
-    # Load jetson_variables
-    package_data={"jtop": ["jetson_variables", "jetson_libraries"]},
     # Define research keywords
     keywords=("jetson_stats jtop python system-monitor docker \
                nvidia Jetson Orin AGXOrin Xavier AGXXavier XavierNX Nano TX1 TX2 process viewer"

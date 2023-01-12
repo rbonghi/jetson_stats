@@ -33,6 +33,7 @@ from .core import JtopException, get_var
 # GUI jtop interface
 from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 # Load colors
+from .terminal_colors import bcolors
 from .github import jetpack_missing, model_missing
 # Create logger
 logger = logging.getLogger(__name__)
@@ -41,29 +42,6 @@ VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 # Reference repository
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
 LOOP_SECONDS = 5
-
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-    @staticmethod
-    def ok(message="OK"):
-        return bcolors.OKGREEN + message + bcolors.ENDC
-
-    @staticmethod
-    def warning(message="WARN"):
-        return bcolors.WARNING + message + bcolors.ENDC
-
-    @staticmethod
-    def fail(message="ERR"):
-        return bcolors.FAIL + message + bcolors.ENDC
 
 
 def warning_messages(jetson, no_warnings=False):

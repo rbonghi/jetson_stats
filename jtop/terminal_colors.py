@@ -1,6 +1,6 @@
-#!/bin/bash
+# -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2020-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,17 +15,30 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Load JETSON environment variables
-JTOP_VARIABLE=""
-if type -P python3 >/dev/null 2>&1 ; then
-    JTOP_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-fi
-if type -P python >/dev/null 2>&1 && [ -z $JTOP_VARIABLE ] ; then
-    JTOP_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-fi
-# Load variables only if not empty the variable
-# if [ ! -z $JTOP_VARIABLE ] ; then
-#     . $JTOP_VARIABLE/jetson_variables
-#     . $JTOP_VARIABLE/jetson_libraries
-# fi
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+    @staticmethod
+    def ok(message="OK"):
+        return bcolors.OKGREEN + message + bcolors.ENDC
+
+    @staticmethod
+    def warning(message="WARN"):
+        return bcolors.WARNING + message + bcolors.ENDC
+
+    @staticmethod
+    def fail(message="ERR"):
+        return bcolors.FAIL + message + bcolors.ENDC
+
+    @staticmethod
+    def bold(message):
+        return bcolors.BOLD + message + bcolors.ENDC
 # EOF

@@ -16,28 +16,59 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-from .core.jetson_variables import get_variables
-from .core.jetson_libraries import get_cuda
+from .core import get_jetson_variables, get_cuda, get_opencv, get_libraries
+from .terminal_colors import bcolors
 
 
 def main():
     parser = argparse.ArgumentParser(
         description='Show detailed information about this board. Machine, Jetpack, libraries and other',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-v', dest="verbose", help='Show all variables', action="store_true", default=False)
     # Parse arguments
     args = parser.parse_args()
-    print(args)
     # Read all Jetson Variables
-    jetson = get_variables()
-    for name, variable in jetson.items():
-        print(" - {name}: {variable}".format(name=name.capitalize(), variable=variable))
-    # Read all libraries
-    print("Libraries")
+    jetson = get_jetson_variables()
+    # Print headline
+    # jetson['Jetpack'] = ''
+    if jetson['Jetpack']:
+        print("Model: {model} - Jetpack {jetpack} [L4T {L4T}]".format(model=bcolors.bold(jetson['Model']),
+              jetpack=bcolors.bold(jetson['Jetpack']), L4T=bcolors.bold(jetson['L4T'])))
+    else:
+        print(bcolors.fail(bcolors.bold("Jetpack missing!")))
+        print(" - Model: {model}".format(model=bcolors.bold(jetson['Model'])))
+        print(" - L4T: {L4T}".format(L4T=bcolors.bold(jetson['L4T'])))
+    del jetson['Model']
+
+    del jetson['L4T']
+    # Print jetson hardware variables
+    if args.verbose:
+        print(bcolors.ok(bcolors.bold("Hardware:")))
+        for name, variable in jetson.items():
+            if not variable:
+                variable = bcolors.fail("Not available")
+            print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
+    # Read CUDA status
+    print(bcolors.ok(bcolors.bold("Libraries:")))
     cuda_version = get_cuda()
     if cuda_version:
-        print(" - CUDA: {version}".format(version=cuda_version))
+        print(" - {cuda}: {version}".format(cuda=bcolors.bold('CUDA'), version=cuda_version))
     else:
-        print(" - CUDA not installed!")
+        print(bcolors.fail(" - CUDA not installed!"))
+    # Read OpenCV status
+    opencv_version, opencv_cuda = get_opencv()
+    if opencv_version:
+        opencv_cuda_string = bcolors.ok("YES") if opencv_cuda else bcolors.fail("NO")
+        opencv_string = "{name}: {value}".format(name=bcolors.bold('OpenCV'), value=opencv_version)
+        print(" - {opencv_string} - with CUDA: {opencv_cuda}".format(opencv_string=opencv_string, opencv_cuda=opencv_cuda_string))
+    else:
+        print(bcolors.fail(" - OpenCV not installed!"))
+    # Read all libraries
+    os_variables = get_libraries()
+    for name, value in os_variables.items():
+        if not value:
+            value = bcolors.fail("Not installed")
+        print(" - {name}: {value}".format(name=bcolors.bold(name), value=value))
 
 
 if __name__ == "__main__":
