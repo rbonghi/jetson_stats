@@ -48,7 +48,7 @@ def main():
         print(" - Model: {model}".format(model=bcolors.bold(jetson['Model'])))
         print(" - L4T: {L4T}".format(L4T=bcolors.bold(jetson['L4T'])))
     del jetson['Model']
-
+    del jetson['Jetpack']
     del jetson['L4T']
     # Print NVP model status
     nvp_number, nvp_name = NVPModelService.query('nvpmodel')
