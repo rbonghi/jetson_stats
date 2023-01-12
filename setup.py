@@ -30,6 +30,7 @@ from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from jtop.core import get_nvidia_l4t
+from jtop.service import status_service
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
 # and accepts an argument to specify the text encoding
@@ -67,7 +68,7 @@ def is_superuser():
 
 def list_scripts():
     # Load scripts to install
-    scripts = ['scripts/jetson_swap', 'scripts/jetson_release', 'scripts/jetson_config']
+    scripts = ['scripts/jetson_swap', 'scripts/jetson_config']
     # If jetpack lower than 32 install also
     l4t = get_nvidia_l4t()
     if l4t:
@@ -127,7 +128,6 @@ def install_services(copy=False):
 
 
 def pre_installer(installer, obj, copy):
-    js_is_active = os.system('systemctl is-active --quiet jetson_stats') == 0
     # Run the uninstaller before to copy all scripts
     if not is_virtualenv():
         if is_superuser():
@@ -142,7 +142,7 @@ def pre_installer(installer, obj, copy):
     else:
         if is_superuser():
             print("Skip uninstall on virtual environment")
-        elif not js_is_active:
+        elif not status_service():
             print("----------------------------------------")
             print("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
             print("sudo -H pip install -U jetson-stats")
@@ -241,6 +241,9 @@ setup(
     cmdclass={'develop': PostDevelopCommand,
               'install': PostInstallCommand},
     # The following provide a command called `jtop`
-    entry_points={'console_scripts': ['jtop=jtop.__main__:main']},
+    entry_points={'console_scripts': [
+        'jtop=jtop.__main__:main',
+        'jetson_release = jtop.jetson_release:main'
+    ]},
 )
 # EOF

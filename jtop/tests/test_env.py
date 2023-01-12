@@ -27,10 +27,8 @@ def test_load(jtop_server):
 
 def test_env(jtop_server):
     with jtop() as jetson:
-        # Check contain JETSON_BOARD
+        # Check contain board variables
         assert len(jetson.board.info) > 0
-        # Check contain JETSON_L4T
-        assert len(jetson.board.hardware) > 0
-        # Check contain JETSON_CUDA
+        # Check contain Libraries informations
         assert len(jetson.board.libraries) > 0
 # EOF

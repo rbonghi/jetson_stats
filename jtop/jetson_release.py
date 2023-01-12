@@ -16,7 +16,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-from .core import get_jetson_variables, get_cuda, get_opencv, get_libraries
+from .core import get_jetson_variables, get_cuda, get_opencv, get_libraries, NVPModelService
+from .service import status_service
 from .terminal_colors import bcolors
 
 
@@ -41,6 +42,13 @@ def main():
     del jetson['Model']
 
     del jetson['L4T']
+    # Print NVP model status
+    nvp_number, nvp_name = NVPModelService.query('nvpmodel')
+    nvp_string = "{number} - {name}".format(number=nvp_number, name=bcolors.ok(nvp_name))
+    print("{service}: {status}".format(service=bcolors.bold("NV Power Mode"), status=nvp_string))
+    # Print status jetson-stats service
+    jtop_status = bcolors.ok("Active") if status_service() else bcolors.fail("Inactive")
+    print("{service}: {status}".format(service=bcolors.bold("jtop service"), status=jtop_status))
     # Print jetson hardware variables
     if args.verbose:
         print(bcolors.ok(bcolors.bold("Hardware:")))

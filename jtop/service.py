@@ -77,7 +77,11 @@ TIMEOUT_SWITCHOFF = 3.0
 LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
 
 
-def load_jetson_variables():
+def status_service():
+    return os.system('systemctl is-active --quiet jetson_stats') == 0
+
+
+def load_board_variables():
     info = get_jetson_variables()
     # Build platform information
     platform_dict = {
@@ -146,7 +150,7 @@ class JtopServer(Process):
         self.broadcaster = JtopManager()
         # Load board information
         is_debug = True if "JETSON_DEBUG" in os.environ else False
-        self.board = load_jetson_variables()
+        self.board = load_board_variables()
         logger.info("Running on python: {python_version}".format(python_version=self.board['platform']['python']))
         # Initialize Fan
         try:
