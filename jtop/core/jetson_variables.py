@@ -57,6 +57,8 @@ MODULE_NAME_TABLE = {
     'p3310-1000': 'NVIDIA Jetson TX2',
     'p2180-1000': 'NVIDIA Jetson TX1',
     'r375-0001': 'NVIDIA Jetson TK1',
+    # Other modules
+    'p2595-0000-A0': 'Nintendo Switch'
 }
 # ---------------------
 # DO NOT EDIT FROM HERE
@@ -128,6 +130,7 @@ def get_jetson_variables():
     model = ''
     if os.path.isfile('/sys/firmware/devicetree/base/model'):
         model = cat("/sys/firmware/devicetree/base/model")
+        model = "p{model}".format(model=model.replace(':','-'))
     hardware['Model'] = model
     # Find part number from I2C
     # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
@@ -135,15 +138,29 @@ def get_jetson_variables():
     part_number, jetson_part_number = get_part_number()
     hardware['699-level Part Number'] = part_number
     hardware['P-Number'] = jetson_part_number
+    # Read boardids
+    if os.path.isfile('/proc/device-tree/nvidia,boardids'):
+         boardids = cat("/proc/device-tree/nvidia,boardids")
+         hardware['BoardIDs'] = boardids
     # Find module from part_number
-    hardware['Module'] = MODULE_NAME_TABLE.get(jetson_part_number, '')
+    module = ''
+    if jetson_part_number:
+        module = MODULE_NAME_TABLE.get(jetson_part_number, '')
+    elif 'BoardIDs' in hardware:
+        module = MODULE_NAME_TABLE.get(hardware['BoardIDs'], '')
+    hardware['Module'] = module
     # Decode SOC
     compatible = ''
     if os.path.isfile("/proc/device-tree/compatible"):
         compatible = cat("/proc/device-tree/compatible").split(',')
     hardware['SoC'] = compatible[-1]
     # Decode CUDA architecure
-    hardware['CUDA Arch BIN'] = CUDA_TABLE.get(hardware['SoC'], '')
+    cuda_arch = ''
+    for cuda, arch in CUDA_TABLE.items():
+        if cuda in hardware['SoC']:
+            cuda_arch = arch
+            break
+    hardware['CUDA Arch BIN'] = cuda_arch
     # Find codename
     if os.path.isfile("/proc/device-tree/nvidia,dtsfilename"):
         # Read dtsfilename
@@ -153,7 +170,7 @@ def get_jetson_variables():
         # TX1 - tegra210-jetson-tx1-p2597-2180-a01-devkit
         # TK1 - tegra124-jetson_tk1-pm375-000-c00-00
         dtsfilename = cat("/proc/device-tree/nvidia,dtsfilename")
-        if "/dvs/git/dirty/git-master_linux/kernel" in dtsfilename:
+        if "/dvs/git/dirty/git-master_linux/kernel" in dtsfilename or 'kernel-dts' in dtsfilename:
             # Decode codename
             hardware['Codename'] = dtsfilename.split('/')[-3].capitalize()
     # Read serial number

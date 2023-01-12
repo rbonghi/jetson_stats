@@ -106,7 +106,7 @@ def get_libraries():
         lines = cmd_vulkan()
         for line in lines:
             if "Vulkan Instance Version" in line:
-                os_variables['VULKAN'] = line.lstrip("Vulkan Instance Version: ")
+                os_variables['Vulkan'] = line.lstrip("Vulkan Instance Version: ")
                 break
     except FileNotFoundError:
         pass
