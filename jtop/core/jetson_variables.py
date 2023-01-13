@@ -158,7 +158,7 @@ def get_jetson_variables():
     compatible = ''
     if os.path.isfile("/proc/device-tree/compatible"):
         compatible = cat("/proc/device-tree/compatible").split(',')
-        compatible = compatible.split(',')[-1]
+        compatible = compatible[-1]
     hardware['SoC'] = compatible
     # Decode CUDA architecture
     cuda_arch = ''
