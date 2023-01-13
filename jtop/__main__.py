@@ -34,7 +34,7 @@ from .core import JtopException, get_var
 from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 # Load colors
 from .terminal_colors import bcolors
-from .github import jetpack_missing, model_missing
+from .github import jetpack_missing, hardware_missing
 # Create logger
 logger = logging.getLogger(__name__)
 # Version match
@@ -48,6 +48,7 @@ def warning_messages(jetson, no_warnings=False):
     if no_warnings:
         return
     # Read status version
+    hardware = jetson.board.hardware
     version = get_var(VERSION_RE)
     # Check is well stored the default jetson_clocks configuration
     if jetson.jetson_clocks:
@@ -57,13 +58,14 @@ def warning_messages(jetson, no_warnings=False):
     if os.getuid() == 0:
         print("[{status}] SUDO is no more required".format(status=bcolors.warning()))
     # Check if board is missing
-    if jetson.board.info['model'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
-        print("[{status}] {link}".format(status=bcolors.warning(), link=model_missing(REPOSITORY, jetson, version)))
+    hardware['Module'] = ''
+    if not hardware['Module']:
+        print("[{status}] {link}".format(status=bcolors.warning(), link=hardware_missing(REPOSITORY, hardware, version)))
     # Check if jetpack is missing
-    if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
-        print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=jetson.board.info['L4T']))
+    if not hardware['Jetpack'] and hardware['L4T']:
+        print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=hardware['L4T']))
         print("  Please, try: {bold}sudo -H pip install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
-        print("  or {link}".format(link=jetpack_missing(REPOSITORY, jetson, version)))
+        print("  or {link}".format(link=jetpack_missing(REPOSITORY, hardware, version)))
 
 
 def exit_signal(signum, frame):

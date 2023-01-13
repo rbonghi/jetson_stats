@@ -19,9 +19,11 @@
 # Shell information
 # os.environ['SHELL']
 
+from copy import deepcopy
 
-def jetpack_missing(repository, jetson, version):
-    l4t = jetson.board.info["L4T"]
+
+def jetpack_missing(repository, hardware, version):
+    l4t=hardware['L4T']
     # Title
     title = "jetson-stats not supported for [L4T {l4t}]".format(l4t=l4t)
     # Template
@@ -38,26 +40,24 @@ def jetpack_missing(repository, jetson, version):
     return hyperlink(url, "open an issue on Github")
 
 
-def model_missing(repository, jetson, version):
-    model = jetson.board.info["model"]
+def hardware_missing(repository, hardware, version):
+    hardware = deepcopy(hardware)
+    del hardware['Jetpack']
+    del hardware['L4T']
+    del hardware['Serial Number']
     # Title
-    title = "Model missing {model}".format(model=model)
+    title = "hardware missing"
     # Template
     template = "model-missing.md"
     # Body
     body = "Please update jetson-stats with this board\n\n"
     body += "**Board**\n"
-    body += " - Boardis: " + jetson.board.hardware["BOARDIDS"] + "\n"
-    body += " - SOC: " + jetson.board.hardware["SOC"] + "\n"
-    body += " - ID: " + jetson.board.hardware["CHIP_ID"] + "\n"
-    body += " - Code Name: " + jetson.board.hardware["CODENAME"] + "\n\n"
-    body += " - Module: " + jetson.board.hardware["MODULE"] + "\n\n"
-    body += " - Carrier: " + jetson.board.hardware["CARRIER"] + "\n\n"
-    body += "**Jetpack**\n"
-    body += " - Jetpack: " + jetson.board.info["jetpack"] + "\n"
-    body += " - L4T: " + jetson.board.info["L4T"] + "\n\n"
+    for name, value in hardware.items():
+        if not value:
+            value = "**MISSING**"
+        body += " - {name}: {value}\n".format(name=name, value=value)
     body += "**Jetson-Stats**\n"
-    body += " - version: " + version + "\n"
+    body += " - Version: " + version + "\n"
     # Make url
     url = make_issue(repository, title, body=body, labels="missing", template=template)
     # message shell

@@ -35,12 +35,6 @@ class INFO(Page):
 
     def __init__(self, stdscr, jetson):
         super(INFO, self).__init__("INFO", stdscr, jetson)
-        info = self.jetson.board.info
-        self.l4t_release = info["L4T"].split(".")[0]
-        try:
-            self.l4t_release = int(self.l4t_release)
-        except ValueError:
-            self.l4t_release = 0
 
     def info_variable(self, start, offset, name, value, spacing=18):
         self.stdscr.addstr(start, offset, name + ":")
@@ -104,8 +98,6 @@ class INFO(Page):
             if name == "OpenCV-Cuda":
                 continue
             # VisionWorks is not anymore available from JP5.0
-            if name == "VisionWorks" and self.l4t_release >= 34:
-                continue
             try:
                 self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
                 self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
