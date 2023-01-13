@@ -40,12 +40,15 @@ def get_cuda():
             cuda_version = match.group(1)
     elif os.path.isfile("/usr/local/cuda/bin/nvcc"):
         cmd = Command(['/usr/local/cuda/bin/nvcc', '--version'])
-        lines = cmd()
-        for line in lines:
-            match = re.search(CUDA_NVCC_RE, line)
-            if match:
-                cuda_version = match.group(1)
-                break
+        try:
+            lines = cmd()
+            for line in lines:
+                match = re.search(CUDA_NVCC_RE, line)
+                if match:
+                    cuda_version = match.group(1)
+                    break
+        except (OSError, Command.CommandException):
+            pass
     return cuda_version
 
 
@@ -65,7 +68,7 @@ def get_opencv():
                 return True
             if "Use Cuda" in line:
                 return False if "NO" in line else True
-    except FileNotFoundError:
+    except (OSError, Command.CommandException):
         pass
     return opencv_version, opencv_cuda
 
@@ -74,15 +77,18 @@ def get_all_modules():
     modules = {}
     # Extract all modules in dpkg -l
     dpkg = Command(['dpkg', '-l'])
-    lines = dpkg()
-    for row in lines:
-        row = re.sub(r'\n+ +', '\n', row)  # remove spaces at the start of lines and empty lines
-        row = re.sub(r'\s +', '\t', row)  # replace two or more spaces with tab
-        cells = row.split('\t')
-        if len(cells) > 2:
-            name = cells[1]
-            version = cells[2]
-            modules[name] = version
+    try:
+        lines = dpkg()
+        for row in lines:
+            row = re.sub(r'\n+ +', '\n', row)  # remove spaces at the start of lines and empty lines
+            row = re.sub(r'\s +', '\t', row)  # replace two or more spaces with tab
+            cells = row.split('\t')
+            if len(cells) > 2:
+                name = cells[1]
+                version = cells[2]
+                modules[name] = version
+    except (OSError, Command.CommandException):
+        pass
     return modules
 
 
@@ -108,7 +114,7 @@ def get_libraries():
             if "Vulkan Instance Version" in line:
                 os_variables['Vulkan'] = line.lstrip("Vulkan Instance Version: ")
                 break
-    except FileNotFoundError:
+    except (OSError, Command.CommandException):
         pass
     return os_variables
 

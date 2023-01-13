@@ -23,7 +23,7 @@ from copy import deepcopy
 
 
 def jetpack_missing(repository, hardware, version):
-    l4t=hardware['L4T']
+    l4t = hardware['L4T']
     # Title
     title = "jetson-stats not supported for [L4T {l4t}]".format(l4t=l4t)
     # Template
@@ -42,8 +42,6 @@ def jetpack_missing(repository, hardware, version):
 
 def hardware_missing(repository, hardware, version):
     hardware = deepcopy(hardware)
-    del hardware['Jetpack']
-    del hardware['L4T']
     del hardware['Serial Number']
     # Title
     title = "hardware missing"
