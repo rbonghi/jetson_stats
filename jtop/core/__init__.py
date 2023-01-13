@@ -17,8 +17,7 @@
 
 # flake8: noqa
 
-from .jetson_l4t import get_nvidia_l4t
-from .jetson_variables import get_jetson_variables, get_platform_variables
+from .jetson_variables import get_jetson_variables, get_platform_variables, get_nvidia_l4t
 from .jetson_libraries import get_cuda, get_opencv, get_libraries
 from .nvpmodel import NVPModel, NVPModelService
 from .tegrastats import Tegrastats
