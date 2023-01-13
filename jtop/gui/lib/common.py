@@ -155,21 +155,21 @@ def size_min(num, divider=1.0, n=0, start=''):
         return round(num / divider, 1), divider, vect[n + idx]
 
 
-@check_curses
-def plot_dictionary(stdscr, offset, data, name, start=0):
-    # Plot title
-    stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
-    counter = 1
-    for key, value in data.items():
-        if 'text' in value:
-            stdscr.addstr(offset + counter, start, " {0:<10} {1}".format(key, value['text']))
-        else:
-            stdscr.addstr(offset + counter, start, " {0:<10} {1}".format(key, value))
-        counter += 1
+def plot_dictionary(stdscr, pos_y, pos_x, name, data):
+    size_y = 1
+    size_x = 0
+    stdscr.addstr(pos_y, pos_x, name, curses.A_BOLD)
+    # Build table from dictionary
+    for idx, (name, value) in enumerate(data.items()):
+        plot_name_info(stdscr, pos_y + idx + 1, pos_x + 1, name, value)
+        size_x = max(size_x, len(name) + len(value) + 3)
+        size_y += 1
+    return size_y, size_x
 
 
 @check_curses
 def plot_name_info(stdscr, offset, start, name, value, color=curses.A_NORMAL, spacing=0):
     stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
     stdscr.addstr(offset, start + len(name) + 2 + spacing, value, color)
+    return len(name) + len(value) + 2
 # EOF
