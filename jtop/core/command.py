@@ -76,8 +76,11 @@ class Command(object):
                 self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE, stdin=open(os.devnull), preexec_fn=os.setsid)
                 # Read lines output
                 for line in iter(self.process.stdout.readline, b''):
-                    line = line.decode('utf-8')
-                    line = str(line.strip())
+                    try:
+                        line = line.decode('utf-8')
+                        line = str(line.strip())
+                    except UnicodeEncodeError:
+                        line = line.encode('ascii', 'ignore').decode('ascii')
                     out_queue.put(line)
                 # Close and terminate
                 self.process.stdout.close()
