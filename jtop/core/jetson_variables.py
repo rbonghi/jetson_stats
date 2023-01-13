@@ -238,8 +238,10 @@ def get_jetson_variables():
     # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
     # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/HR/JetsonEepromLayout.html
     part_number, jetson_part_number = get_part_number()
-    hardware['699-level Part Number'] = part_number
-    hardware['P-Number'] = jetson_part_number
+    # Add only if there is a part number
+    if part_number:
+        hardware['699-level Part Number'] = part_number
+        hardware['P-Number'] = jetson_part_number
     # Read boardids
     if os.path.isfile('/proc/device-tree/nvidia,boardids'):
         boardids = cat("/proc/device-tree/nvidia,boardids")
