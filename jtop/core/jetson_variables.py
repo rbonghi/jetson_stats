@@ -135,7 +135,6 @@ def get_jetson_variables():
     model = ''
     if os.path.isfile('/sys/firmware/devicetree/base/model'):
         model = cat("/sys/firmware/devicetree/base/model")
-        model = "p{model}".format(model=model.replace(':', '-'))
     hardware['Model'] = model
     # Find part number from I2C
     # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html
@@ -146,6 +145,7 @@ def get_jetson_variables():
     # Read boardids
     if os.path.isfile('/proc/device-tree/nvidia,boardids'):
         boardids = cat("/proc/device-tree/nvidia,boardids")
+        boardids = "p{boardids}".format(boardids=boardids.replace(':', '-'))
         hardware['BoardIDs'] = boardids
     # Find module from part_number
     module = ''
