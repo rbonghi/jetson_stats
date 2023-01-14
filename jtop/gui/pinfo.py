@@ -59,22 +59,23 @@ class INFO(Page):
         """
         # Screen size
         _, width, first = self.size_page()
-        # Author information
-        plot_name_info(self.stdscr, first + 1, 1, "jtop", get_var(VERSION_RE))
-        # plot_name_info(self.stdscr, start_pos, width - 30, "Author", get_var(AUTHOR_RE))
-        # plot_name_info(self.stdscr, start_pos + 1, width - 30, "e-mail", get_var(EMAIL_RE))
         start_pos = first + 3
+        # Author info
+        string_author = "jtop {version} - (C) 2020-2023 {author} [{email}]".format(version=get_var(VERSION_RE),
+                                                                                   author=get_var(AUTHOR_RE),
+                                                                                   email=get_var(EMAIL_RE))
+        self.stdscr.addstr(first + 1, 0, string_author, curses.A_BOLD)
         # Plot platform
         platform_size_y, platform_size_x = plot_dictionary(self.stdscr, start_pos, 1, 'Platform', self.jetson.board.platform)
+        # Plot libraries
+        libraries_size_y, libraries_size_x = plot_libraries(self.stdscr, start_pos + platform_size_y + 1, 1, self.jetson.board.libraries)
         # Plot hardware
-        hardware_size_y, hardware_size_x = plot_dictionary(self.stdscr, start_pos + platform_size_y + 1, 1, 'Hardware', self.jetson.board.hardware)
+        hardware_size_y, hardware_size_x = plot_dictionary(self.stdscr, start_pos, 1 + platform_size_x + 1, 'Hardware', self.jetson.board.hardware)
         # Plot interfaces
         interfaces = self.jetson.local_interfaces["interfaces"]
         hostname = self.jetson.local_interfaces["hostname"]
-        plot_name_info(self.stdscr, start_pos, 2 + hardware_size_x, "Hostname", hostname)
-        interfaces_size_y, interfaces_size_x = plot_dictionary(self.stdscr, start_pos + 1, 2 + hardware_size_x, 'Interfaces', interfaces)
-        # Plot libraries
-        max_size_y = max(platform_size_y, interfaces_size_y + 1)
-        max_size_x = max(hardware_size_x, interfaces_size_x)
-        libraries_size_y, libraries_size_x = plot_libraries(self.stdscr, start_pos + max_size_y + 1, 2 + max_size_x, self.jetson.board.libraries)
+        #max_size_y = max(platform_size_y, interfaces_size_y + 1)
+        max_size_x = max(platform_size_x, libraries_size_x)
+        plot_name_info(self.stdscr, start_pos + hardware_size_y + 1, 2 + max_size_x, "Hostname", hostname)
+        interfaces_size_y, interfaces_size_x = plot_dictionary(self.stdscr, start_pos + hardware_size_y + 2, 2 + max_size_x, 'Interfaces', interfaces)
 # EOF

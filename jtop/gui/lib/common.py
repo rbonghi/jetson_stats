@@ -161,6 +161,8 @@ def plot_dictionary(stdscr, pos_y, pos_x, name, data):
     stdscr.addstr(pos_y, pos_x, name, curses.A_BOLD)
     # Build table from dictionary
     for idx, (name, value) in enumerate(data.items()):
+        if not value:
+            value = "Missing"
         plot_name_info(stdscr, pos_y + idx + 1, pos_x + 1, name, value)
         size_x = max(size_x, len(name) + len(value) + 3)
         size_y += 1

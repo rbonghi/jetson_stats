@@ -181,21 +181,23 @@ class JTOPGUI:
 
     @check_curses
     def header(self):
-        board = self.jetson.board
         # Detect if jtop is running on jetson or on other platforms
-        if board.hardware['L4T']:
+        if self.jetson.board.hardware['L4T']:
             self.header_jetson()
         else:
             self.header_x86()
 
     def header_x86(self):
-        plat = self.jetson.board.platform
-        release = plat['release'].split("-")[0]
-        message = "{system} {machine} machine - {distribution} [{release}]".format(system=plat['system'].upper(),
-                                                                                   machine=plat['machine'],
-                                                                                   distribution=plat['distribution'],
+        platform = self.jetson.board.platform
+        release = platform['Release'].split("-")[0]
+        message = "{system} {machine} machine - {distribution} [{release}]".format(system=platform['System'].upper(),
+                                                                                   machine=platform['Machine'],
+                                                                                   distribution=platform['Distribution'],
                                                                                    release=release)
         self.stdscr.addstr(0, 0, message, curses.A_BOLD)
+        # Print jtop basic info
+        str_xterm = platform['Distribution']
+        set_xterm_title("jtop {name}".format(name=str_xterm))
 
     def header_jetson(self):
         model = self.jetson.board.hardware["Model"]
