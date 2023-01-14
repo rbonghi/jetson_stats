@@ -59,12 +59,12 @@ class INFO(Page):
         """
         # Screen size
         _, width, first = self.size_page()
-        start_pos = first + 3
+        start_pos = first + 2
         # Author info
         string_author = "jtop {version} - (C) 2020-2023 {author} [{email}]".format(version=get_var(VERSION_RE),
                                                                                    author=get_var(AUTHOR_RE),
                                                                                    email=get_var(EMAIL_RE))
-        self.stdscr.addstr(first + 1, 0, string_author, curses.A_BOLD)
+        self.stdscr.addstr(first, 0, string_author, curses.A_BOLD)
         # Plot platform
         platform_size_y, platform_size_x = plot_dictionary(self.stdscr, start_pos, 1, 'Platform', self.jetson.board.platform)
         # Plot libraries
@@ -74,7 +74,6 @@ class INFO(Page):
         # Plot interfaces
         interfaces = self.jetson.local_interfaces["interfaces"]
         hostname = self.jetson.local_interfaces["hostname"]
-        #max_size_y = max(platform_size_y, interfaces_size_y + 1)
         max_size_x = max(platform_size_x, libraries_size_x)
         plot_name_info(self.stdscr, start_pos + hardware_size_y + 1, 2 + max_size_x, "Hostname", hostname)
         interfaces_size_y, interfaces_size_x = plot_dictionary(self.stdscr, start_pos + hardware_size_y + 2, 2 + max_size_x, 'Interfaces', interfaces)
