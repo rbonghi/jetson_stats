@@ -81,7 +81,6 @@ def is_docker():
     with open('/proc/self/cgroup', 'r') as procfile:
         for line in procfile:
             fields = line.strip().split('/')
-            print(fields)
             if 'docker' in fields or 'buildkit' in fields:
                 return True
     return False
