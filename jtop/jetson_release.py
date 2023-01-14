@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2020-2023 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,9 +17,9 @@
 
 import re
 import argparse
-from .core import (get_jetson_variables,
-                   get_platform_variables,
-                   get_cuda,
+
+from .core.jetson_variables import get_jetson_variables, get_platform_variables
+from .core import (get_cuda,
                    get_opencv,
                    get_libraries,
                    get_var,

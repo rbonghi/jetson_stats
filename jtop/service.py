@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -24,12 +24,17 @@ import copy
 import os
 import sys
 import stat
+import shlex
+import subprocess as sp
 from grp import getgrnam
+from shutil import copyfile
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 
 # jetson_stats imports
+from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core import (
+    Command,
     cpu_models,
     read_engine,
     MemoryService,
@@ -42,10 +47,8 @@ from .core import (
     FanServiceLegacy,
     SwapService,
     get_key,
-    get_var,
-    get_jetson_variables,
-    get_platform_variables)
-# Create logger for tegrastats
+    get_var)
+# Create logger
 logger = logging.getLogger(__name__)
 # Fix connection refused for python 2.7
 try:
@@ -70,6 +73,8 @@ PATH_NVPMODEL = ['nvpmodel']
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 JTOP_PIPE = '/run/jtop.sock'
 JTOP_USER = 'jetson_stats'
+JTOP_DATA_FOLDER = 'local/jetson_stats'
+JTOP_SERVICE_NAME = 'jetson_stats.service'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
 TIMEOUT_SWITCHOFF = 3.0
@@ -77,7 +82,84 @@ LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT'
 
 
 def status_service():
-    return os.system('systemctl is-active --quiet jetson_stats') == 0
+    return os.system('systemctl is-active --quiet {service}'.format(service=JTOP_SERVICE_NAME)) == 0
+
+
+def remove_service_pipe():
+    # Remove old pipes if exists
+    if os.path.isdir(JTOP_PIPE):
+        logger.info("Remove folder {pipe}".format(pipe=JTOP_PIPE))
+        os.rmdir(JTOP_PIPE)
+    elif os.path.isfile(JTOP_PIPE):
+        logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
+        os.remove(JTOP_PIPE)
+
+
+def uninstall_service(name=JTOP_SERVICE_NAME):
+    if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)):
+        logger.info("Found {name}".format(name=name))
+        # Check if service is active
+        if os.system('systemctl is-active --quiet {name}'.format(name=name)) == 0:
+            # Stop service
+            logger.info(" - STOP {name}".format(name=name))
+            sp.call(shlex.split('sudo systemctl stop {name}'.format(name=name)))
+        # Disable service
+        logger.info(" - DISABLE {name}".format(name=name))
+        sp.call(shlex.split('sudo systemctl disable {name}'.format(name=name)))
+        # Remove jetson_performance service from /etc/init.d
+        if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)):
+            logger.info(" - REMOVE {name} from /etc/systemd/system".format(name=name))
+            os.remove('/etc/systemd/system/{name}'.format(name=name))
+        # Update service list
+        logger.info(" - Reload all daemons")
+        sp.call(shlex.split('sudo systemctl daemon-reload'))
+        return True
+    return False
+
+
+def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
+    logger.info("Install {name}".format(name=name))
+    # Copy or link file
+    service_install_path = '/etc/systemd/system/{name}'.format(name=name)
+    service_package_path = '{package_root}/services/{name}'.format(package_root=package_root, name=name)
+    # remove if exist file
+    if os.path.exists(service_install_path):
+        logger.info(" - Remove old {path}".format(path=service_install_path))
+        os.remove(service_install_path)
+    if copy:
+        type_service = "Copying"
+        copyfile(service_package_path, service_install_path)
+    else:
+        type_service = "Linking"
+        os.symlink(service_package_path, service_install_path)
+    # Prompt message
+    logger.info(" - {type} {file} -> {path}".format(type=type_service.upper(), file=name, path=service_install_path))
+    # Update service list
+    logger.info(" - Reload all daemons")
+    sp.call(shlex.split('sudo systemctl daemon-reload'))
+    # Enable jetson_stats at startup
+    logger.info(" - ENABLE {name}".format(name=name))
+    sp.call(shlex.split('sudo systemctl enable {name}'.format(name=name)))
+    # Start service
+    logger.info(" - START {name}".format(name=name))
+    sp.call(shlex.split('sudo systemctl start {name}'.format(name=name)))
+
+
+def set_service_permission(group=JTOP_USER):
+    user = os.environ.get('USER', '')
+    # Get user from sudo
+    if 'SUDO_USER' in os.environ:
+        user = os.environ['SUDO_USER']
+    # Make jetson_stats group
+    cmd_group = Command(shlex.split('getent group {group}'.format(group=group)))
+    try:
+        cmd_group()
+    except (OSError, Command.CommandException):
+        logger.info("Create new group {group}".format(group=group))
+        sp.call(shlex.split('sudo groupadd {group}'.format(group=group)))
+    # Add jetson_stats user group to local user
+    logger.info("Add {user} to group {group}".format(group=group, user=user))
+    sp.call(shlex.split('sudo usermod -a -G {group} {user}'.format(group=group, user=user)))
 
 
 class JtopManager(SyncManager):
@@ -113,7 +195,7 @@ class JtopServer(Process):
         if os.getuid() != 0:
             raise JtopException("jtop service need sudo to work")
         # Load configuration
-        self.config = Config()
+        self.config = Config(JTOP_DATA_FOLDER)
         # Error queue
         self._error = Queue()
         # Command queue
@@ -296,16 +378,10 @@ class JtopServer(Process):
             # User does not exist
             raise JtopException("Group {jtop_user} does not exist!".format(jtop_user=JTOP_USER))
         # Remove old pipes if exists
-        if os.path.exists(JTOP_PIPE):
-            if self.force:
-                if os.path.isdir(JTOP_PIPE):
-                    logger.info("Remove folder {pipe}".format(pipe=JTOP_PIPE))
-                    os.rmdir(JTOP_PIPE)
-                else:
-                    logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
-                    os.remove(JTOP_PIPE)
-            else:
-                raise JtopException("Service already active! Please check before run it again")
+        if self.force:
+            remove_service_pipe()
+        else:
+            raise JtopException("Service already active! Please check before run it again")
         # Start broadcaster
         try:
             self.broadcaster.start()

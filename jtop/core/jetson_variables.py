@@ -1,6 +1,7 @@
+#!/usr/bin/python
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2020-2023 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,7 +18,11 @@
 
 import os
 import re
+import sys
+import warnings
 import platform
+import logging
+from shutil import copyfile
 try:
     from smbus import SMBus
 except ImportError:
@@ -30,7 +35,11 @@ except ImportError:
 
 from .common import cat
 from .command import Command
-
+# Create logger
+logger = logging.getLogger(__name__)
+# https://github.com/robotframework/robotframework/issues/2552
+if not sys.warnoptions:
+    warnings.filterwarnings('ignore', category=RuntimeWarning, module='runpy')
 
 # ---------------------
 # JETPACK DETECTION
@@ -129,6 +138,7 @@ MODULE_NAME_TABLE = {
 # ---------------------
 # DO NOT EDIT FROM HERE
 # ---------------------
+JTOP_VARIABLE_FILE = 'jtop_env'
 DTSFILENAME_RE = re.compile(r'(.*)-p')
 SOC_RE = re.compile(r'[0-9]+')
 DPKG_L4T_CORE_RE = re.compile(r'^nvidia-l4t-core.*install$')
@@ -301,6 +311,32 @@ def get_platform_variables():
     }
 
 
+def uninstall_variables(name=JTOP_VARIABLE_FILE):
+    if os.path.isfile('/etc/profile.d/{name}'.format(name=name)):
+        logger.info("Found {name}".format(name=name))
+        # Remove old jetson_stats variable
+        os.remove('/etc/profile.d/{name}'.format(name=name))
+        logger.info(" - Remove {name} from /etc/profile.d/".format(name=name))
+
+
+def install_variables(package_root, copy, name=JTOP_VARIABLE_FILE):
+    logger.info("Install {name} variables".format(name=name))
+    variables_install_path = '/etc/profile.d/{name}'.format(name=name)
+    variables_package_path = '{package_root}/scripts/{name}'.format(package_root=package_root, name=name)
+    # remove if exist file
+    if os.path.exists(variables_install_path):
+        logger.info(" - Remove old {path}".format(path=variables_install_path))
+        os.remove(variables_install_path)
+    if copy:
+        type_service = "Copying"
+        copyfile(variables_package_path, variables_install_path)
+    else:
+        type_service = "Linking"
+        os.symlink(variables_package_path, variables_install_path)
+    # Prompt message
+    logger.info(" - {type} {file} -> {path}".format(type=type_service.upper(), file=name, path=variables_install_path))
+
+
 def export_variables(hardware):
     # Export variables to be loaded on bash script
     # https://blog.tintoy.io/2017/06/exporting-environment-variables-from-python-to-bash/
@@ -312,7 +348,11 @@ def export_variables(hardware):
 
 
 if __name__ == "__main__":
+    # Get all variables
     hardware = get_jetson_variables()
+    # Remove variables not needed
+    if '699-level Part Number' in hardware:
+        del hardware['699-level Part Number']
     # Test output variables
     export_variables(hardware)
 # EOF

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -29,57 +29,21 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from jtop.core import get_nvidia_l4t
-from jtop.service import status_service
+from jtop.service import status_service, remove_service_pipe, uninstall_service, set_service_permission, install_service
+from jtop.core.jetson_variables import uninstall_variables, install_variables
+from jtop.terminal_colors import bcolors
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
 # and accepts an argument to specify the text encoding
 # Python 3 only projects can skip this import
 from io import open
 # Launch command
-import subprocess as sp
-import shlex
 import os
-from shutil import copyfile
 import sys
 import re
 import logging
-
-
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 log = logging.getLogger()
-
-
-# https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
-def is_virtualenv():
-    if os.path.exists(os.path.join(sys.prefix, 'conda-meta')):
-        # Conda virtual environments
-        return True
-    if hasattr(sys, 'real_prefix'):
-        return True
-    if hasattr(sys, 'base_prefix'):
-        return sys.prefix != sys.base_prefix
-    return False
-
-
-def is_superuser():
-    return os.getuid() == 0
-
-
-def list_scripts():
-    # Load scripts to install
-    scripts = ['scripts/jetson_swap', 'scripts/jetson_config']
-    # If jetpack lower than 32 install also
-    l4t = get_nvidia_l4t()
-    if l4t:
-        release = int(l4t.split('.')[0])
-        if release < 32:
-            scripts += ['scripts/jetson_docker']
-    return scripts
-
-
-def list_services():
-    return ["services/{file}".format(file=f) for f in os.listdir("services") if os.path.isfile(os.path.join("services", f))]
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -99,45 +63,68 @@ with open(os.path.join(here, "jtop", "__init__.py")) as fp:
 # Store version package
 version = VERSION
 
+# https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
 
-def install_services(copy=False):
+
+def is_virtualenv():
+    if os.path.exists(os.path.join(sys.prefix, 'conda-meta')):
+        # Conda virtual environments
+        return True
+    if hasattr(sys, 'real_prefix'):
+        return True
+    if hasattr(sys, 'base_prefix'):
+        return sys.prefix != sys.base_prefix
+    return False
+
+
+def is_superuser():
+    return os.getuid() == 0
+
+
+def remove_data(file_name):
+    # Remove old pipes if exists
+    if os.path.isfile(file_name):
+        print("Remove {file} file".format(file=file_name))
+        os.remove(file_name)
+    elif os.path.isdir(file_name):
+        print("Remove {file} folder".format(file=file_name))
+        os.rmdir(file_name)
+
+
+def remove_depecated_data():
     """
-    This function install all services in a proper folder and setup the deamons
+    This function uninstall the service
     """
-    print("System prefix {prefix}".format(prefix=sys.prefix))
-    # Make jetson stats folder
-    root = sys.prefix + "/local/jetson_stats/"
-    if not os.path.exists(root):
-        os.makedirs(root)
-    # Copy all files
-    for f_service in list_services():
-        folder, _ = os.path.split(__file__)
-        path = root + os.path.basename(f_service)
-        # remove if exist file
-        if os.path.exists(path):
-            os.remove(path)
-        # Copy or link file
-        if copy:
-            type_service = "Copying"
-            copyfile(folder + "/" + f_service, path)
-        else:
-            type_service = "Linking"
-            os.symlink(folder + "/" + f_service, path)
-        # Prompt message
-        print("{type} {file} -> {path}".format(type=type_service, file=os.path.basename(f_service), path=path))
+    # If exist, remove old service name called jetson_performance
+    uninstall_service('jetson_performance.service')
+    # If exist, remove old service name called jetson_stats_boot
+    uninstall_service('jetson_stats_boot.service')
+    # If exist, Remove old folders
+    remove_data("/usr/local/bin/jetson-docker")
+    remove_data("/usr/local/bin/jetson-release")
+    remove_data("/usr/local/jetson_stats/jetson_env.sh")
+    remove_data("/opt/jetson_stats")
+    remove_data("/etc/jetson-swap")
+    remove_data("/etc/jetson_easy")
 
 
-def pre_installer(installer, obj, copy):
+def pypi_installer(installer, obj, copy):
     # Run the uninstaller before to copy all scripts
     if not is_virtualenv():
         if is_superuser():
-            sp.call(shlex.split('./scripts/jetson_config --uninstall'))
-            # Install services (linking only for develop)
-            install_services(copy=copy)
+            # Remove all deprecated data
+            # - This function should do nothing
+            remove_depecated_data()
+            # remove service jetson_stats.service
+            uninstall_service()
+            # Remove service path
+            remove_service_pipe()
+            # Uninstall variables
+            uninstall_variables()
         else:
             print("----------------------------------------")
             print("Install on your host using superuser permission, like:")
-            print("sudo -H pip install -U jetson-stats")
+            print(bcolors.bold("sudo -H pip3 install -U jetson-stats"))
             sys.exit(1)
     else:
         if is_superuser():
@@ -145,32 +132,38 @@ def pre_installer(installer, obj, copy):
         elif not status_service():
             print("----------------------------------------")
             print("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
-            print("sudo -H pip install -U jetson-stats")
+            print(bcolors.bold("sudo -H pip3 install -U jetson-stats"))
             sys.exit(1)
     # Run the default installation script
     installer.run(obj)
     # Run the restart all services before to close the installer
     if not is_virtualenv() and is_superuser():
-        sp.call(shlex.split('./scripts/jetson_config --install'))
+        folder, _ = os.path.split(__file__)  # This folder
+        # Install variables
+        install_variables(folder, copy=copy)
+        # Set service permissions
+        set_service_permission()
+        # Install service (linking only for develop)
+        install_service(folder, copy=copy)
     else:
         print("Skip install on virtual environment")
 
 
-class PostInstallCommand(install):
+class JTOPInstallCommand(install):
     """Installation mode."""
 
     def run(self):
         # Run the uninstaller before to copy all scripts
-        pre_installer(install, self, True)
+        pypi_installer(install, self, True)
 
 
-class PostDevelopCommand(develop):
+class JTOPDevelopCommand(develop):
     """Post-installation for development mode."""
 
     def run(self):
         # Run the uninstaller before to copy all scripts
         # Install services (linking)
-        pre_installer(develop, self, False)
+        pypi_installer(develop, self, False)
 
 
 # Configuration setup module
@@ -179,7 +172,7 @@ setup(
     version=version,
     author="Raffaello Bonghi",
     author_email="raffaello@rnext.it",
-    description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX1, TX2] series",
+    description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series",
     license='AGPL-3.0',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -235,15 +228,16 @@ setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('jetson_stats', list_services())],
+    data_files=[('jetson_stats', ['services/jetson_stats.service', 'scripts/jtop_env'])],
     # Install extra scripts
-    scripts=list_scripts(),
-    cmdclass={'develop': PostDevelopCommand,
-              'install': PostInstallCommand},
+    scripts=['scripts/jetson_swap'],
+    cmdclass={'develop': JTOPDevelopCommand,
+              'install': JTOPInstallCommand},
     # The following provide a command called `jtop`
     entry_points={'console_scripts': [
         'jtop=jtop.__main__:main',
-        'jetson_release = jtop.jetson_release:main'
+        'jetson_release = jtop.jetson_release:main',
+        'jetson_config = jtop.jetson_config:main',
     ]},
 )
 # EOF

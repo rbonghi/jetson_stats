@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -22,14 +22,15 @@ import sys
 import copy
 # Create logger
 logger = logging.getLogger(__name__)
-# Configurations
-JTOP_USER = 'jetson_stats'
 
 
 class Config:
 
-    def __init__(self):
+    def __init__(self, jtop_path):
+        self._jtop_path = jtop_path
+        # Build folder if does not exist
         if not os.path.isdir(self.path):
+            logger.info("Build service folder in {path}".format(path=self.path))
             # Make folder directory
             os.makedirs(self.path)
         # Load configuration path
@@ -58,7 +59,7 @@ class Config:
         if hasattr(sys, 'base_prefix'):
             path = sys.base_prefix
         # Return directory folder
-        return path + '/local/jetson_stats'
+        return "{path}/{jtop}".format(path=path, jtop=self._jtop_path)
 
     def _load(self):
         config = {}
