@@ -63,10 +63,9 @@ with open(os.path.join(here, "jtop", "__init__.py")) as fp:
 # Store version package
 version = VERSION
 
-# https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
-
 
 def is_virtualenv():
+    # https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
     if os.path.exists(os.path.join(sys.prefix, 'conda-meta')):
         # Conda virtual environments
         return True
@@ -74,6 +73,16 @@ def is_virtualenv():
         return True
     if hasattr(sys, 'base_prefix'):
         return sys.prefix != sys.base_prefix
+    return False
+
+
+def is_docker():
+    # https://gist.github.com/anantkamath/623ce7f5432680749e087cf8cfba9b69
+    with open('/proc/self/cgroup', 'r') as procfile:
+        for line in procfile:
+            fields = line.strip().split('/')
+            if 'docker' in fields:
+                return True
     return False
 
 
@@ -111,7 +120,7 @@ def remove_depecated_data():
 def pypi_installer(installer, obj, copy):
     # Run the uninstaller before to copy all scripts
     if not is_virtualenv():
-        if is_superuser():
+        if is_superuser() and not is_docker():
             # Remove all deprecated data
             # - This function should do nothing
             remove_depecated_data()
@@ -137,7 +146,7 @@ def pypi_installer(installer, obj, copy):
     # Run the default installation script
     installer.run(obj)
     # Run the restart all services before to close the installer
-    if not is_virtualenv() and is_superuser():
+    if not is_virtualenv() and not is_docker() and is_superuser():
         folder, _ = os.path.split(__file__)  # This folder
         # Install variables
         install_variables(folder, copy=copy)
