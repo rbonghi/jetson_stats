@@ -102,17 +102,17 @@ def uninstall_service(name=JTOP_SERVICE_NAME):
         if os.system('systemctl is-active --quiet {name}'.format(name=name)) == 0:
             # Stop service
             logger.info(" - STOP {name}".format(name=name))
-            sp.call(shlex.split('sudo systemctl stop {name}'.format(name=name)))
+            sp.call(shlex.split('systemctl stop {name}'.format(name=name)))
         # Disable service
         logger.info(" - DISABLE {name}".format(name=name))
-        sp.call(shlex.split('sudo systemctl disable {name}'.format(name=name)))
+        sp.call(shlex.split('systemctl disable {name}'.format(name=name)))
         # Remove jetson_performance service from /etc/init.d
         if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)):
             logger.info(" - REMOVE {name} from /etc/systemd/system".format(name=name))
             os.remove('/etc/systemd/system/{name}'.format(name=name))
         # Update service list
         logger.info(" - Reload all daemons")
-        sp.call(shlex.split('sudo systemctl daemon-reload'))
+        sp.call(shlex.split('systemctl daemon-reload'))
         return True
     return False
 
@@ -136,13 +136,13 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
     logger.info(" - {type} {file} -> {path}".format(type=type_service.upper(), file=name, path=service_install_path))
     # Update service list
     logger.info(" - Reload all daemons")
-    sp.call(shlex.split('sudo systemctl daemon-reload'))
+    sp.call(shlex.split('systemctl daemon-reload'))
     # Enable jetson_stats at startup
     logger.info(" - ENABLE {name}".format(name=name))
-    sp.call(shlex.split('sudo systemctl enable {name}'.format(name=name)))
+    sp.call(shlex.split('systemctl enable {name}'.format(name=name)))
     # Start service
     logger.info(" - START {name}".format(name=name))
-    sp.call(shlex.split('sudo systemctl start {name}'.format(name=name)))
+    sp.call(shlex.split('systemctl start {name}'.format(name=name)))
 
 
 def set_service_permission(group=JTOP_USER):
@@ -156,10 +156,10 @@ def set_service_permission(group=JTOP_USER):
         cmd_group()
     except (OSError, Command.CommandException):
         logger.info("Create new group {group}".format(group=group))
-        sp.call(shlex.split('sudo groupadd {group}'.format(group=group)))
+        sp.call(shlex.split('groupadd {group}'.format(group=group)))
     # Add jetson_stats user group to local user
     logger.info("Add {user} to group {group}".format(group=group, user=user))
-    sp.call(shlex.split('sudo usermod -a -G {group} {user}'.format(group=group, user=user)))
+    sp.call(shlex.split('usermod -a -G {group} {user}'.format(group=group, user=user)))
 
 
 class JtopManager(SyncManager):
