@@ -155,15 +155,25 @@ def size_min(num, divider=1.0, n=0, start=''):
         return round(num / divider, 1), divider, vect[n + idx]
 
 
-def plot_dictionary(stdscr, pos_y, pos_x, name, data):
+def plot_dictionary(stdscr, pos_y, pos_x, name, data, size=None):
     size_y = 1
     size_x = 0
     stdscr.addstr(pos_y, pos_x, name, curses.A_BOLD)
     # Build table from dictionary
     for idx, (name, value) in enumerate(data.items()):
+        # Plot nanme
+        stdscr.addstr(pos_y + idx + 1, pos_x + 1, str(name) + ":", curses.A_BOLD)
+        # Plot value
         if not value:
             value = "Missing"
-        plot_name_info(stdscr, pos_y + idx + 1, pos_x + 1, name, value)
+        len_value = len(value)
+        if size:
+            if len(name) + len(value) + 3 > size:
+                len_value = size - len(name) - 3
+        try:
+            stdscr.addstr(pos_y + idx + 1, pos_x + 3 + len(name), value[:len_value], curses.A_NORMAL)
+        except curses.error:
+            pass
         size_x = max(size_x, len(name) + len(value) + 3)
         size_y += 1
     return size_y, size_x

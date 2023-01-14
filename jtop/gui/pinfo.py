@@ -70,7 +70,9 @@ class INFO(Page):
         # Plot libraries
         libraries_size_y, libraries_size_x = plot_libraries(self.stdscr, start_pos + platform_size_y + 1, 1, self.jetson.board.libraries)
         # Plot hardware
-        hardware_size_y, hardware_size_x = plot_dictionary(self.stdscr, start_pos, 1 + platform_size_x + 1, 'Hardware', self.jetson.board.hardware)
+        size_hardware_x = width - platform_size_x - 2
+        hardware_size_y, hardware_size_x = plot_dictionary(self.stdscr, start_pos, 1 + platform_size_x + 1,
+                                                           'Hardware', self.jetson.board.hardware, size=size_hardware_x)
         # Plot interfaces
         interfaces = self.jetson.local_interfaces["interfaces"]
         hostname = self.jetson.local_interfaces["hostname"]
