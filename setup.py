@@ -118,9 +118,13 @@ def remove_depecated_data():
 
 
 def pypi_installer(installer, obj, copy):
+    print("Install status:")
+    print(" - [{status}] super_user".format(status="X" if is_superuser() else " "))
+    print(" - [{status}] virtualenv".format(status="X" if is_virtualenv() else " "))
+    print(" - [{status}] docker".format(status="X" if is_docker() else " "))
     # Run the uninstaller before to copy all scripts
-    if not is_virtualenv():
-        if is_superuser() and not is_docker():
+    if not is_virtualenv() and not is_docker():
+        if is_superuser():
             # Remove all deprecated data
             # - This function should do nothing
             remove_depecated_data()
@@ -135,6 +139,8 @@ def pypi_installer(installer, obj, copy):
             print("Install on your host using superuser permission, like:")
             print(bcolors.bold("sudo -H pip3 install -U jetson-stats"))
             sys.exit(1)
+    elif is_docker():
+        print("Skip uninstall in docker")
     else:
         if is_superuser():
             print("Skip uninstall on virtual environment")
@@ -155,7 +161,7 @@ def pypi_installer(installer, obj, copy):
         # Install service (linking only for develop)
         install_service(folder, copy=copy)
     else:
-        print("Skip install on virtual environment")
+        print("Skip install service")
 
 
 class JTOPInstallCommand(install):

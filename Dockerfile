@@ -23,6 +23,6 @@ ADD . /jetson_stats
 WORKDIR /jetson_stats
 
 RUN python3 -m pip install --upgrade pip && \
-    pip3 install .
+    pip3 install -v .
 
 CMD ["jtop"]
