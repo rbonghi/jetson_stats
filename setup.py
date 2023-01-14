@@ -82,7 +82,7 @@ def is_docker():
         for line in procfile:
             fields = line.strip().split('/')
             print(fields)
-            if 'docker' in fields or 'buildx' in fields:
+            if 'docker' in fields or 'buildkit' in fields:
                 return True
     return False
 
