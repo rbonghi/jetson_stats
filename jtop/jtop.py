@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019-2020 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -296,27 +296,29 @@ class jtop(Thread):
         """
         Board status, in this property you can find:
 
-        * info
-            * machine
-            * jetpack
-            * L4T (Linux for Tegra)
+        * platform
+            * Machine
+            * System
+            * Distribution
+            * Release
+            * Python
         * hardware
-            * TYPE
-            * CODENAME
-            * SOC
-            * CHIP_ID
-            * BOARDIDS
-            * MODULE
-            * BOARD
-            * CUDA_ARCH_BIN
-            * SERIAL_NUMBER
+            * Model
+            * 699-level Part Number
+            * P-Number
+            * Module
+            * SoC
+            * CUDA Arch BIN
+            * Codename (Optional)
+            * Serial Number
+            * L4T (Linux for Tegra)
+            * Jetpack
         * libraries
             * CUDA
-            * cuDNN
-            * TensorRT
-            * VisionWorks
             * OpenCV
             * OpenCV-Cuda
+            * cuDNN
+            * TensorRT
             * VPI
             * Vulkan
 
@@ -958,10 +960,10 @@ class jtop(Thread):
         # Initialize connection
         init = self._get_configuration()
         # Get jtop service version
-        service_version = init.get('version', '')
+        service_version = init.get('version', 'unknown')
         if service_version != get_var(VERSION_RE):
-            raise JtopException("""Mismatch version jtop service: [{service_version}] and client: [{client_version}].
-                                Please run:\nsudo systemctl restart jetson_stats.service""".format(
+            raise JtopException("""Mismatch version jtop service: [{service_version}] and client: [{client_version}]. Please run:\n
+sudo systemctl restart jetson_stats.service""".format(
                 service_version=service_version,
                 client_version=get_var(VERSION_RE)))
         # Load server speed
