@@ -22,17 +22,31 @@ import sys
 import copy
 # Create logger
 logger = logging.getLogger(__name__)
+JTOP_DATA_FOLDER = 'local/jetson_stats'
+
+
+def make_config_service(data_folder=JTOP_DATA_FOLDER):
+    path = get_config_service(data_folder)
+    if not os.path.isdir(path):
+        logger.info("Build service folder in {path}".format(path=path))
+        # Make folder directory
+        os.makedirs(path)
+
+
+def get_config_service(data_folder=JTOP_DATA_FOLDER):
+    path = sys.prefix
+    if hasattr(sys, 'real_prefix'):
+        path = sys.real_prefix
+    if hasattr(sys, 'base_prefix'):
+        path = sys.base_prefix
+    # Return directory folder
+    return "{path}/{data_folder}".format(path=path, data_folder=data_folder)
 
 
 class Config:
 
     def __init__(self, jtop_path):
         self._jtop_path = jtop_path
-        # Build folder if does not exist
-        if not os.path.isdir(self.path):
-            logger.info("Build service folder in {path}".format(path=self.path))
-            # Make folder directory
-            os.makedirs(self.path)
         # Load configuration path
         self.config_file = self.path + '/config.json'
         # Load configuration
@@ -53,13 +67,7 @@ class Config:
 
     @property
     def path(self):
-        path = sys.prefix
-        if hasattr(sys, 'real_prefix'):
-            path = sys.real_prefix
-        if hasattr(sys, 'base_prefix'):
-            path = sys.base_prefix
-        # Return directory folder
-        return "{path}/{jtop}".format(path=path, jtop=self._jtop_path)
+        return get_config_service()
 
     def _load(self):
         config = {}

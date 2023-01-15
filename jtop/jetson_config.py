@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import os
 import curses
 import sys
@@ -22,7 +23,9 @@ import sys
 import logging
 
 from .gui import JTOPCONFIG
+from .core import get_var
 from .core.jetson_variables import status_variables, install_variables
+from .core.config import get_config_service
 from .service import status_service, status_permission, install_service, set_service_permission
 # Create logger
 logger = logging.getLogger(__name__)
@@ -35,7 +38,9 @@ if 'SUDO_USER' in os.environ:
 folder, _ = os.path.split(__file__)
 folder = os.path.dirname(folder)
 developer = os.path.isdir("{folder}/tests".format(folder=folder))
-config = 'AAAAA'
+config = get_config_service()
+# Version match
+VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
 
 def fix_service():
@@ -77,11 +82,11 @@ DISPLAY_MENU = {
     ]
 }
 MAIN_PAGE = {
-    'title': 'jtop {version} - main page'.format(version='AAA'),
+    'title': 'jtop {version} - main page'.format(version=get_var(VERSION_RE)),
     'menu': [
         (None, JTOP_MENU, "Check the status of jetson-stats"),
+        (None, None, "Update jetson-stats to the latest version"),
         (None, DISPLAY_MENU, "Enable/Disable boot from desktop"),
-        (None, None, "Update this tool to the latest version"),
         (None, None, "Information about this configuration tool"),
     ]}
 

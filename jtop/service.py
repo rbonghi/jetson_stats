@@ -73,7 +73,6 @@ PATH_NVPMODEL = ['nvpmodel']
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 JTOP_PIPE = '/run/jtop.sock'
 JTOP_USER = 'jetson_stats'
-JTOP_DATA_FOLDER = 'local/jetson_stats'
 JTOP_SERVICE_NAME = 'jetson_stats.service'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
@@ -225,7 +224,7 @@ class JtopServer(Process):
         if os.getuid() != 0:
             raise JtopException("jtop service need sudo to work")
         # Load configuration
-        self.config = Config(JTOP_DATA_FOLDER)
+        self.config = Config()
         # Error queue
         self._error = Queue()
         # Command queue
