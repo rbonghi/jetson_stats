@@ -17,6 +17,7 @@
 
 # flake8: noqa
 
+from .jtopguiconfig import JTOPCONFIG
 from .jtopgui import JTOPGUI, Page
 from .pall import ALL
 from .pcpu import CPU
