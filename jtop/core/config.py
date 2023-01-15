@@ -45,8 +45,7 @@ def get_config_service(data_folder=JTOP_DATA_FOLDER):
 
 class Config:
 
-    def __init__(self, jtop_path):
-        self._jtop_path = jtop_path
+    def __init__(self):
         # Load configuration path
         self.config_file = self.path + '/config.json'
         # Load configuration
