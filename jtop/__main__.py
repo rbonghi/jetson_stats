@@ -31,6 +31,7 @@ from .jtop import jtop
 # jtop exception
 from .core import JtopException, get_var
 # GUI jtop interface
+from .jetson_config import jtop_config
 from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 # Load colors
 from .terminal_colors import bcolors
@@ -78,6 +79,7 @@ def main():
         description='jtop is system monitoring utility and runs on terminal',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--force', dest='force', help=argparse.SUPPRESS, action="store_true", default=False)
+    parser.add_argument('--health', dest="health", help='Status jtop and fix', action="store_true", default=False)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
@@ -123,6 +125,10 @@ def main():
         except JtopException as e:
             print(e)
         # Close service
+        exit(0)
+    # Run health jtop
+    if args.health:
+        jtop_config()
         exit(0)
     # jtop client start
     try:

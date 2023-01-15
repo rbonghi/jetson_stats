@@ -21,6 +21,7 @@ import curses
 import logging
 
 from .gui import JTOPCONFIG
+from .service import status_service
 # Create logger
 logger = logging.getLogger(__name__)
 # Detect user
@@ -33,31 +34,34 @@ if 'SUDO_USER' in os.environ:
 JTOP_MENU = {
     'title': 'status jtop',
     'menu': [
-        (None, "Check all commands if are installed"),
-        (None, "Check folders"),
-        (None, "Check variables status"),
-        (None, "Check status permissions for {user}".format(user=user)),
-        (None, "Status jetson-stats service"),
+        (None, None, "Fix all"),
+        (status_service, None, "Fix jetson-stats service"),
+        (None, None, "Fix permissions for '{user}'".format(user=user)),
+        (None, None, "Fix jtop variables"),
     ],
-    'back': True
 }
 DISPLAY_MENU = {
     'title': 'GUI menu option',
     'menu': [
-        (None, "Text console, requiring user to login"),
-        (None, "Text console, automatically logged in as '{user}' user".format(user=user)),
-        (None, "Desktop GUI, requiring user to login"),
-        (None, "Desktop GUI, automatically logged in as '{user}' user".format(user=user)),
+        (None, None, "Text console, requiring user to login"),
+        (None, None, "Text console, automatically logged in as '{user}' user".format(user=user)),
+        (None, None, "Desktop GUI, requiring user to login"),
+        (None, None, "Desktop GUI, automatically logged in as '{user}' user".format(user=user)),
     ]
 }
 MAIN_PAGE = {
     'title': 'jtop {version} - main page'.format(version='AAA'),
     'menu': [
-        (JTOP_MENU, "Check the status of jetson-stats"),
-        (DISPLAY_MENU, "Enable/Disable boot from desktop"),
-        (None, "Update this tool to the latest version"),
-        (None, "Information about this configuration tool"),
+        (None, JTOP_MENU, "Check the status of jetson-stats"),
+        (None, DISPLAY_MENU, "Enable/Disable boot from desktop"),
+        (None, None, "Update this tool to the latest version"),
+        (None, None, "Information about this configuration tool"),
     ]}
+
+
+def jtop_config():
+    # Run wrapper from JTOP menu
+    curses.wrapper(JTOPCONFIG, JTOP_MENU)
 
 
 def main():

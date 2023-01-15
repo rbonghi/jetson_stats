@@ -23,10 +23,17 @@ logger = logging.getLogger(__name__)
 # Gui refresh rate
 GUI_REFRESH = 1000 // 20
 
+JTOP_MENU_STATUS = 0
+JTOP_MENU_EXEC = 1
+JTOP_MENU_DESCRIPTION = 2
+
 
 class JTOPCONFIG:
 
     def __init__(self, stdscr, main_page):
+        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        # Initialize variables
         self._current_menu = main_page
         self._previous_menu = main_page
         self._counter_option = 0
@@ -69,15 +76,21 @@ class JTOPCONFIG:
         # Find center on y axis
         center_y = (height - len(menu)) // 2
         # Find center on X axis
-        max_description = max([len(x) for _, x in menu])
+        max_description = max([len(x) for _, _, x in menu])
         center_x = (width - max_description) // 2
         # Draw menu
-        for idx, (cmd, description) in enumerate(menu):
+        for idx, (status, cmd, description) in enumerate(menu):
             # Reverse line if counter is the same
             color = curses.A_REVERSE if self._counter_option == idx else curses.A_NORMAL
             # Draw command if not None
-            if cmd:
-                self.stdscr.addstr(center_y + idx, center_x - 5, "DO", color)
+            if isinstance(cmd, dict):
+                self.stdscr.addstr(center_y + idx, center_x - 6, "DO", color)
+            elif callable(status):
+                status = status()
+                message = " OK " if status else "FAIL"
+                color_status = curses.color_pair(2) if status else curses.color_pair(1)
+                self.stdscr.addstr(center_y + idx, center_x - 6, message, color_status | curses.A_BOLD)
+            # Write description
             self.stdscr.addstr(center_y + idx, center_x, description, color)
         # Draw title
         title_center = (max_description - len(title)) // 2
@@ -130,7 +143,7 @@ class JTOPCONFIG:
                 if self._counter_option + 1 < len(self._current_menu['menu']):
                     self._counter_option += 1
             elif self.key in {curses.KEY_ENTER, 10, 13}:
-                cmd = self._current_menu['menu'][self._counter_option][0]
+                cmd = self._current_menu['menu'][self._counter_option][JTOP_MENU_EXEC]
                 if isinstance(cmd, dict):
                     self._counter_option = 0
                     self._previous_menu = self._current_menu
