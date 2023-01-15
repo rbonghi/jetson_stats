@@ -17,13 +17,14 @@
 
 import re
 import os
+import shlex
 import curses
 import sys
 # Logging
 import logging
 
 from .gui import JTOPCONFIG
-from .core import get_var
+from .core import get_var, Command
 from .core.jetson_variables import status_variables, install_variables
 from .core.config import get_config_service
 from .service import status_service, status_permission, install_service, set_service_permission
@@ -41,24 +42,68 @@ developer = os.path.isdir("{folder}/tests".format(folder=folder))
 config = get_config_service()
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
+GUI_GRAPHIC_RE = re.compile(r'^AutomaticLoginEnable[ ]*=[ ]*[tT]rue')
+
+# -------------------- JTOP ------------------------------------------------
 
 
-def fix_service():
+def fix_service(data):
     copy = not developer
     # Install service (linking only for develop)
     install_service(folder, copy=copy)
 
 
-def fix_variables():
+def fix_variables(data):
     copy = not developer
     # Install variables
     install_variables(folder, copy=copy)
 
 
-def fix_jtop_all():
-    fix_service()
+def fix_jtop_all(data):
+    fix_service(data)
     set_service_permission()
-    fix_variables()
+    fix_variables(data)
+
+# -------------------- Graphic ---------------------------------------------
+
+
+def get_type_desktop():
+    cmd_status_gui = Command(shlex.split('systemctl get-default'))
+    status = 0
+    try:
+        status_gui = cmd_status_gui()[0]
+        if status_gui == 'multi-user.target':
+            status = 1
+            if os.path.isfile('/etc/systemd/system/getty@tty1.service.d/autologin.conf'):
+                status = 2
+        elif status_gui == 'graphical.target':
+            status = 3
+            # Check GUI autologin
+            if os.path.isfile('/etc/gdm3/custom.conf'):
+                with open('/etc/gdm3/custom.conf', 'r') as f:
+                    for line in f.readlines():
+                        if GUI_GRAPHIC_RE.match(line):
+                            status = 4
+                            break
+    except (OSError, Command.CommandException):
+        pass
+    return status
+
+
+def desktop_is_type_one(data):
+    return "[B1]" if data == 1 else " B1 "
+
+
+def desktop_is_type_two(data):
+    return "[B2]" if data == 2 else " B2 "
+
+
+def desktop_is_type_tree(data):
+    return "[B3]" if data == 3 else " B3 "
+
+
+def desktop_is_type_four(data):
+    return "[B4]" if data == 4 else " B4 "
 
 
 # ---------------------- Pages ---------------------------------------------
@@ -74,11 +119,12 @@ JTOP_MENU = {
 }
 DISPLAY_MENU = {
     'title': 'GUI menu option',
+    'run_before': get_type_desktop,
     'menu': [
-        (None, None, "Text console, requiring user to login"),
-        (None, None, "Text console, automatically logged in as '{user}' user".format(user=user)),
-        (None, None, "Desktop GUI, requiring user to login"),
-        (None, None, "Desktop GUI, automatically logged in as '{user}' user".format(user=user)),
+        (desktop_is_type_one, None, "Text console, requiring user to login"),
+        (desktop_is_type_two, None, "Text console, automatically logged in as '{user}' user".format(user=user)),
+        (desktop_is_type_tree, None, "Desktop GUI, requiring user to login"),
+        (desktop_is_type_four, None, "Desktop GUI, automatically logged in as '{user}' user".format(user=user)),
     ]
 }
 MAIN_PAGE = {

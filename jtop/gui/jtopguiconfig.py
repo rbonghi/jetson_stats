@@ -84,10 +84,19 @@ class JTOPCONFIG:
             color = curses.A_REVERSE if self._counter_option == idx else curses.A_NORMAL
             # Draw command if not None
             if callable(status):
-                status = status()
-                message = " OK " if status else "FAIL"
-                color_status = curses.color_pair(2) if status else curses.color_pair(1)
-                self.stdscr.addstr(center_y + idx, center_x - 6, message, color_status | curses.A_BOLD)
+                # Run function and get output
+                if 'run_before' in page:
+                    cmd_before_out = page['run_before']()
+                    status = status(cmd_before_out)
+                else:
+                    status = status()
+                # Print output
+                if isinstance(status, bool):
+                    message = " OK " if status else "FAIL"
+                    color_status = curses.color_pair(2) if status else curses.color_pair(1)
+                    self.stdscr.addstr(center_y + idx, center_x - 6, message, color_status | curses.A_BOLD)
+                elif isinstance(status, str):
+                    self.stdscr.addstr(center_y + idx, center_x - 6, status)
             # Write description
             self.stdscr.addstr(center_y + idx, center_x, description, color)
         # Draw description
