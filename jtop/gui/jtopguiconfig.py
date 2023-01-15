@@ -71,19 +71,22 @@ class JTOPCONFIG:
     def draw_menu_page(self, page):
         height, width = self.stdscr.getmaxyx()
         # Draw menu
-        title = page['title']
-        menu = page['menu']
+        menu = []
+        if 'menu' in page:
+            menu = page['menu']
         # Find center on y axis
         center_y = (height - len(menu)) // 2
         # Find center on X axis
-        max_description = max([len(x) for _, _, x in menu])
+        max_description = max([len(x) for _, _, x in menu]) if len(menu) else 0
         center_x = (width - max_description) // 2
         # Draw menu
         for idx, (status, _, description) in enumerate(menu):
             # Reverse line if counter is the same
             color = curses.A_REVERSE if self._counter_option == idx else curses.A_NORMAL
             # Draw command if not None
-            if callable(status):
+            if isinstance(status, str):
+                self.stdscr.addstr(center_y + idx, center_x - 9, status, color)
+            elif callable(status):
                 # Run function and get output
                 if 'run_before' in page:
                     cmd_before_out = page['run_before']()
@@ -111,23 +114,32 @@ class JTOPCONFIG:
                 self.stdscr.addstr(center_y - len(description) + idx - 1, center_x + description_center, line)
             description_y = len(description) + 1
         # Draw title
+        title = page['title']
         title_center = (max_description - len(title)) // 2
         self.stdscr.addstr(center_y - 2 - description_y, center_x + title_center, title, curses.A_BOLD)
-
         # Draw buttons
+        center_x = (width - 45) // 2
         self.stdscr.addstr(center_y + len(menu) + 1, center_x + 5, "Commands:", curses.A_BOLD)  # Size 9
-        # Up key
-        self.stdscr.addch(center_y + len(menu) + 1, center_x + 16, curses.ACS_UARROW)
-        self.stdscr.addstr(center_y + len(menu) + 1, center_x + 18, "Up", curses.A_BOLD)
-        # Down key
-        self.stdscr.addch(center_y + len(menu) + 2, center_x + 16, curses.ACS_DARROW)
-        self.stdscr.addstr(center_y + len(menu) + 2, center_x + 18, "Down", curses.A_BOLD)
-        # Enter
-        self.stdscr.addstr(center_y + len(menu) + 1, center_x + 24, "ENTER", curses.A_BOLD)
+        if 'menu' in page:
+            # Up key
+            self.stdscr.addch(center_y + len(menu) + 1, center_x + 30, curses.ACS_UARROW)
+            self.stdscr.addstr(center_y + len(menu) + 1, center_x + 32, "Up", curses.A_BOLD)
+            # Down key
+            self.stdscr.addch(center_y + len(menu) + 2, center_x + 30, curses.ACS_DARROW)
+            self.stdscr.addstr(center_y + len(menu) + 2, center_x + 32, "Down", curses.A_BOLD)
+            # Enter
+            self.stdscr.addstr(center_y + len(menu) + 3, center_x + 30, "ENTER", curses.A_BOLD)
+        # Esc button
         message_button = "ESC = Back" if self._current_menu != self._previous_menu else "ESC = exit"
-        self.stdscr.addstr(center_y + len(menu) + 2, center_x + 24, "{message}".format(message=message_button), curses.A_BOLD)
+        self.stdscr.addstr(center_y + len(menu) + 1, center_x + 16, "{message}".format(message=message_button), curses.A_BOLD)
         # Quit
-        self.stdscr.addstr(center_y + len(menu) + 3, center_x + 24, "q/Q Quit", curses.A_BOLD)
+        self.stdscr.addstr(center_y + len(menu) + 2, center_x + 16, "q/Q Quit", curses.A_BOLD)
+
+    def _print_message(self, title, message):
+        return {
+            'title': title,
+            'description': message
+        }
 
     def loop(self):
         # Here is the loop of our program, we keep clearing and redrawing in this loop
@@ -178,7 +190,13 @@ class JTOPCONFIG:
                     self._current_menu = cmd
                 elif callable(cmd):
                     # Execute command
-                    cmd()
+                    output = cmd()
+                    if output:
+                        title = self._current_menu['menu'][self._counter_option][JTOP_MENU_DESCRIPTION]
+                        data = self._print_message(title, output)
+                        self._counter_option = 0
+                        self._previous_menu = self._current_menu
+                        self._current_menu = data
             elif self.ESC_BUTTON(self.key):
                 if self._current_menu != self._previous_menu:
                     self._current_menu = self._previous_menu
