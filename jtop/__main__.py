@@ -35,7 +35,7 @@ from .jetson_config import jtop_config
 from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 # Load colors
 from .terminal_colors import bcolors
-from .github import jetpack_missing, hardware_missing
+from .github import jetpack_missing, hardware_missing, get_hardware_log
 # Create logger
 logger = logging.getLogger(__name__)
 # Version match
@@ -43,6 +43,7 @@ VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 # Reference repository
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
 LOOP_SECONDS = 5
+JTOP_LOG_NAME = 'jtop-error.log'
 
 
 def warning_messages(jetson, no_warnings=False):
@@ -55,14 +56,15 @@ def warning_messages(jetson, no_warnings=False):
     if jetson.jetson_clocks:
         if not jetson.jetson_clocks.is_config:
             print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
-    # Check if board is missing
-    hardware['Module'] = ''
-    if not hardware['Module']:
-        print("[{status}] {link}".format(status=bcolors.warning(), link=hardware_missing(REPOSITORY, hardware, version)))
+    # Check if an hardware value is missing
+    if not all([data for data in hardware.values()]):
+        print("[{status}] jtop not support this hardware for [L4T {l4t}]".format(status=bcolors.warning(), l4t=hardware['L4T']))
+        print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+        print("  or {link}".format(link=hardware_missing(REPOSITORY, hardware, version)))
     # Check if jetpack is missing
     if not hardware['Jetpack'] and hardware['L4T']:
         print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=hardware['L4T']))
-        print("  Please, try: {bold}sudo -H pip install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+        print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
         print("  or {link}".format(link=jetpack_missing(REPOSITORY, hardware, version)))
 
 
@@ -77,6 +79,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--force', dest='force', help=argparse.SUPPRESS, action="store_true", default=False)
     parser.add_argument('--health', dest="health", help='Status jtop and fix', action="store_true", default=False)
+    parser.add_argument('--log', dest="log", help='Generate a log for GitHub', action="store_true", default=False)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
@@ -126,6 +129,13 @@ def main():
     # Run health jtop
     if args.health:
         jtop_config()
+    # Generate a log for GitHub
+    if args.log:
+        body = get_hardware_log()
+        with open('{cwd}/{name}'.format(cwd=os.getcwd(), name=JTOP_LOG_NAME), 'w') as writer:
+            writer.write(body)
+        print("LOG '{name}' generated in {path}".format(name=JTOP_LOG_NAME, path=os.getcwd()))
+        exit(0)
     # jtop client start
     try:
         # Open jtop client

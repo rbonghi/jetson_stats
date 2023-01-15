@@ -20,6 +20,8 @@
 # os.environ['SHELL']
 
 from copy import deepcopy
+# jtop variables
+from .core.jetson_variables import get_raw_output
 
 
 def jetpack_missing(repository, hardware, version):
@@ -40,11 +42,24 @@ def jetpack_missing(repository, hardware, version):
     return hyperlink(url, "open an issue on Github")
 
 
+def get_hardware_log():
+    raw_output = get_raw_output()
+    # Print all raw output
+    body = "Output:"
+    for name, value in raw_output.items():
+        body += "\n------------------\n"
+        body += "{name}:\n{value}".format(name=name, value=value)
+    return body
+
+
 def hardware_missing(repository, hardware, version):
     hardware = deepcopy(hardware)
     del hardware['Serial Number']
     # Title
-    title = "hardware missing"
+    if 'P-Number' in hardware:
+        title = "Hardware Missing: {pnumber}".format(pnumber=hardware.get('P-Number', ''))
+    else:
+        title = "Hardware Missing".format()
     # Template
     template = "model-missing.md"
     # Body
@@ -54,12 +69,16 @@ def hardware_missing(repository, hardware, version):
         if not value:
             value = "**MISSING**"
         body += " - {name}: {value}\n".format(name=name, value=value)
-    body += "**Jetson-Stats**\n"
+    body += "\n**Jetson-Stats**\n"
     body += " - Version: " + version + "\n"
+    # Print all raw output
+    body += "\n<!-- Please attach the output from: jtop --log -->\n"
+    body += "**RAW Data**\n"
+    body += "File from `jtop --log` attached"
     # Make url
     url = make_issue(repository, title, body=body, labels="missing", template=template)
     # message shell
-    return hyperlink(url, title)
+    return hyperlink(url, "open an issue on Github and attach the output from: jtop --log")
 
 
 def hyperlink(url, text, hyperlink=True):

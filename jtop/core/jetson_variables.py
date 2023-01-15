@@ -153,18 +153,22 @@ def get_raw_output():
     raw_output = {}
     # Catch all output from all files
     for file in RAW_FILES:
-        raw_output[file] = cat(file) if os.path.isfile(file) else "No such file or directory"
+        raw_output[file] = cat(file).strip('\n') if os.path.isfile(file) else "No such file or directory"
     # Read all output from all I2C ports
     for bus_number in range(3):
         try:
+            string_data = ""
             bus = SMBus(bus_number)
-            data = bus.read_i2c_block_data(0x50)
-            print(data)
-        except IOError:
-            break
-        except OSError:
+            size_block = 16
+            for idx in range(256 // size_block):
+                data = bus.read_i2c_block_data(0x50, idx * size_block, size_block)
+                string_data += ' '.join(["{:02X}".format(x) for x in data]) + " " * 4
+                string_data += ''.join([chr(x) if chr(x).isprintable() else "." for x in data]) + "\n"
+            string_data = string_data.rstrip('\n')
+            raw_output['I2C-{num}'.format(num=bus_number)] = string_data
+        except (IOError, OSError):
             # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
-            pass
+            raw_output['I2C-{num}'.format(num=bus_number)] = 'FAIL'
     return raw_output
 
 
@@ -253,9 +257,7 @@ def get_part_number():
             sku = part_number[10:14]
             jetson_part_number = "p{board_id}-{sku}".format(board_id=board_id, sku=sku)
             return part_number, jetson_part_number
-        except IOError:
-            break
-        except OSError:
+        except (IOError, OSError):
             # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
             pass
     return part_number, jetson_part_number
