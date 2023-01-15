@@ -134,14 +134,28 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
     # Prompt message
     logger.info(" - {type} {file} -> {path}".format(type=type_service.upper(), file=name, path=service_install_path))
     # Update service list
-    logger.info(" - Reload all daemons")
-    sp.call(shlex.split('systemctl daemon-reload'))
+    cmd_daemon_reload = Command(shlex.split('systemctl daemon-reload'))
+    try:
+        cmd_daemon_reload()
+        logger.info(" - Reload all daemons")
+    except (OSError, Command.CommandException):
+        logger.error("Fail reload all daemons")
     # Enable jetson_stats at startup
-    logger.info(" - ENABLE {name}".format(name=name))
-    sp.call(shlex.split('systemctl enable {name}'.format(name=name)))
+    cmd_service_enable = Command(shlex.split('systemctl enable {name}'.format(name=name)))
+    try:
+        lines = cmd_service_enable()
+        logger.info(" - ENABLE {name}".format(name=name))
+        logger.info(lines)
+    except (OSError, Command.CommandException):
+        logger.error("Fail enable service {name}".format(name=name))
     # Start service
-    logger.info(" - START {name}".format(name=name))
-    sp.call(shlex.split('systemctl start {name}'.format(name=name)))
+    cmd_service_start = Command(shlex.split('systemctl start {name}'.format(name=name)))
+    try:
+        lines = cmd_service_start()
+        logger.info(" - START {name}".format(name=name))
+        logger.info(lines)
+    except (OSError, Command.CommandException):
+        logger.error("Fail start service {name}".format(name=name))
 
 
 def status_permission_user(group=JTOP_USER):
