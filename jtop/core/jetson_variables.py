@@ -142,6 +142,30 @@ JTOP_VARIABLE_FILE = 'jtop_env'
 DTSFILENAME_RE = re.compile(r'(.*)-p')
 SOC_RE = re.compile(r'[0-9]+')
 DPKG_L4T_CORE_RE = re.compile(r'^nvidia-l4t-core.*install$')
+RAW_FILES = ['/etc/nv_tegra_release',
+             '/sys/firmware/devicetree/base/model',
+             '/proc/device-tree/nvidia,boardids',
+             '/proc/device-tree/compatible',
+             '/proc/device-tree/nvidia,dtsfilename']
+
+
+def get_raw_output():
+    raw_output = {}
+    # Catch all output from all files
+    for file in RAW_FILES:
+        raw_output[file] = cat(file) if os.path.isfile(file) else "No such file or directory"
+    # Read all output from all I2C ports
+    for bus_number in range(3):
+        try:
+            bus = SMBus(bus_number)
+            data = bus.read_i2c_block_data(0x50)
+            print(data)
+        except IOError:
+            break
+        except OSError:
+            # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
+            pass
+    return raw_output
 
 
 def check_dpkg_nvidia_l4t_core():

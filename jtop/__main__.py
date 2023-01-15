@@ -55,9 +55,6 @@ def warning_messages(jetson, no_warnings=False):
     if jetson.jetson_clocks:
         if not jetson.jetson_clocks.is_config:
             print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
-    # Check if is running on sudo
-    if os.getuid() == 0:
-        print("[{status}] SUDO is no more required".format(status=bcolors.warning()))
     # Check if board is missing
     hardware['Module'] = ''
     if not hardware['Module']:
@@ -129,7 +126,6 @@ def main():
     # Run health jtop
     if args.health:
         jtop_config()
-        exit(0)
     # jtop client start
     try:
         # Open jtop client
