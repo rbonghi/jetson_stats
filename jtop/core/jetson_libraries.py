@@ -26,7 +26,7 @@ except NameError:
     FileNotFoundError = IOError
 
 
-MODULES = ['cuDNN', 'TensorRT', 'VPI', 'Visionworks']
+MODULES = ['cuDNN', 'TensorRT', 'VPI']  # 'Visionworks'
 CUDA_FILE_RE = re.compile(r'CUDA Version (.*)')
 CUDA_NVCC_RE = re.compile(r'V([0-9]+.[0-9]+.[0-9]+)')
 
