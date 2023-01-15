@@ -31,21 +31,25 @@ user = os.environ.get('USER', '')
 if 'SUDO_USER' in os.environ:
     user = os.environ['SUDO_USER']
 
-JTOP_MENU = [
-    (None, "Check all commands if are installed"),
-    (None, "Check folders"),
-    (None, "Check variables status"),
-    (None, "Check status permissions for {user}".format(user=user)),
-    (None, "Status jetson-stats service"),
-]
-
-
-MAIN_PAGE = [
-    (JTOP_MENU, "Check the status of jetson-stats"),
-    (None, "Enable/Disable boot from desktop"),
-    (None, "Update this tool to the latest version"),
-    (None, "Information about this configuration tool"),
-]
+# ---------------------- Pages ---------------------------------------------
+JTOP_MENU = {
+    'title': 'status jtop',
+    'menu': [
+        (None, "Check all commands if are installed"),
+        (None, "Check folders"),
+        (None, "Check variables status"),
+        (None, "Check status permissions for {user}".format(user=user)),
+        (None, "Status jetson-stats service"),
+    ]
+}
+MAIN_PAGE = {
+    'title': 'jtop {version} - main page'.format(version='AAA'),
+    'menu': [
+        (JTOP_MENU, "Check the status of jetson-stats"),
+        (None, "Enable/Disable boot from desktop"),
+        (None, "Update this tool to the latest version"),
+        (None, "Information about this configuration tool"),
+    ]}
 
 
 class JTOPCONFIG:
@@ -82,26 +86,37 @@ class JTOPCONFIG:
         # Run loop
         self.loop()
 
-    def draw_menu_page(self, menu):
+    def draw_menu_page(self, page):
         height, width = self.stdscr.getmaxyx()
+        # Draw menu
+        title = page['title']
+        menu = page['menu']
         center_y = (height - len(menu)) // 2
         # Find center on X axis
         max_description = max([len(x) for _, x in menu])
         center_x = (width - max_description) // 2
         # Draw menu
-        for idx, (_, description) in enumerate(menu):
+        for idx, (cmd, description) in enumerate(menu):
+            if cmd:
+                self.stdscr.addstr(center_y + idx, center_x - 5, "DO")
             self.stdscr.addstr(center_y + idx, center_x, description)
+        # Draw title
+        title_center = (max_description - len(title)) // 2
+        self.stdscr.addstr(center_y - 2, center_x + title_center, title)
         # Draw buttons
-        self.stdscr.addstr(center_y + len(menu) + 1, center_x, "<OK>")
-        self.stdscr.addstr(center_y + len(menu) + 1, center_x + 10, "<Exit>")
+        message_button = "ENTER"
+        self.stdscr.addstr(center_y + len(menu) + 1, center_x + 5, "<{message}>".format(message=message_button))
+        message_button = "ESC"
+        self.stdscr.addstr(center_y + len(menu) + 1, center_x + max_description - len(message_button) - 7, "<{message}>".format(message=message_button))
 
     def loop(self):
+        self._current_menu = MAIN_PAGE
         # Here is the loop of our program, we keep clearing and redrawing in this loop
         while not self.events():
             # First, clear the screen
             self.stdscr.erase()
             # Draw menu page
-            self.draw_menu_page(MAIN_PAGE)
+            self.draw_menu_page(self._current_menu)
             # Draw the screen
             self.stdscr.refresh()
             # Set a timeout and read keystroke
