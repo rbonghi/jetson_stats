@@ -57,7 +57,7 @@ def update_jtop():
     try:
         cmd_update_msg = cmd_update()
         cmd_update_msg = "JTOP updated!"
-    except (OSError, Command.CommandException) as e:
+    except (OSError, Command.CommandException):
         cmd_update_msg = "Error to update jtop, please run:\n\nsudo -H pip3 install --no-cache-dir -U jetson_stats"
     return cmd_update_msg
 
@@ -122,6 +122,7 @@ def desktop_is_type_four(data):
 
 
 def desktop_set_B1():
+    global REQUIRE_REBOOT
     sp.call(shlex.split('systemctl set-default multi-user.target'))
     # sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
     if os.path.isfile('/etc/systemd/system/getty.target.wants/getty@tty1.service'):
@@ -134,6 +135,7 @@ def desktop_set_B1():
 
 
 def desktop_set_B2():
+    global REQUIRE_REBOOT
     sp.call(shlex.split('systemctl set-default multi-user.target'))
     # sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
     if os.path.isfile('/etc/systemd/system/getty.target.wants/getty@tty1.service'):
@@ -152,6 +154,7 @@ def desktop_set_B2():
 
 
 def desktop_set_B3():
+    global REQUIRE_REBOOT
     sp.call(shlex.split('systemctl set-default graphical.target'))
     # sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
     if os.path.isfile('/etc/systemd/system/getty.target.wants/getty@tty1.service'):
@@ -166,6 +169,7 @@ def desktop_set_B3():
 
 
 def desktop_set_B4():
+    global REQUIRE_REBOOT
     sp.call(shlex.split('systemctl set-default graphical.target'))
     # sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
     if os.path.isfile('/etc/systemd/system/getty.target.wants/getty@tty1.service'):
