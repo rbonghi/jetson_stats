@@ -311,6 +311,10 @@ def get_platform_variables():
     }
 
 
+def status_variables(name=JTOP_VARIABLE_FILE):
+    return os.path.isfile('/etc/profile.d/{name}'.format(name=name))
+
+
 def uninstall_variables(name=JTOP_VARIABLE_FILE):
     if os.path.isfile('/etc/profile.d/{name}'.format(name=name)):
         logger.info("Found {name}".format(name=name))
@@ -324,7 +328,7 @@ def install_variables(package_root, copy, name=JTOP_VARIABLE_FILE):
     variables_install_path = '/etc/profile.d/{name}'.format(name=name)
     variables_package_path = '{package_root}/scripts/{name}'.format(package_root=package_root, name=name)
     # remove if exist file
-    if os.path.exists(variables_install_path):
+    if os.path.isfile(variables_install_path) or os.path.islink(variables_install_path):
         logger.info(" - Remove old {path}".format(path=variables_install_path))
         os.remove(variables_install_path)
     if copy:

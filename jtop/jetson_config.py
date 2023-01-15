@@ -17,11 +17,13 @@
 
 import os
 import curses
+import sys
 # Logging
 import logging
 
 from .gui import JTOPCONFIG
-from .service import status_service
+from .core.jetson_variables import status_variables, install_variables
+from .service import status_service, status_permission, install_service, set_service_permission
 # Create logger
 logger = logging.getLogger(__name__)
 # Detect user
@@ -29,15 +31,40 @@ user = os.environ.get('USER', '')
 # Get user from sudo
 if 'SUDO_USER' in os.environ:
     user = os.environ['SUDO_USER']
+# Locate folder and type of installation
+folder, _ = os.path.split(__file__)
+folder = os.path.dirname(folder)
+developer = os.path.isdir("{folder}/tests".format(folder=folder))
+config = 'AAAAA'
+
+
+def fix_service():
+    copy = not developer
+    # Install service (linking only for develop)
+    install_service(folder, copy=copy)
+
+
+def fix_variables():
+    copy = not developer
+    # Install variables
+    install_variables(folder, copy=copy)
+
+
+def fix_jtop_all():
+    fix_service()
+    set_service_permission()
+    fix_variables()
+
 
 # ---------------------- Pages ---------------------------------------------
 JTOP_MENU = {
     'title': 'status jtop',
+    'description': 'config folder: {config}\njtop path:{jtop_path}'.format(config=config, jtop_path=folder),
     'menu': [
-        (None, None, "Fix all"),
-        (status_service, None, "Fix jetson-stats service"),
-        (None, None, "Fix permissions for '{user}'".format(user=user)),
-        (None, None, "Fix jtop variables"),
+        (None, fix_jtop_all, "Fix all"),
+        (status_service, fix_service, "Fix jetson-stats service"),
+        (status_permission, set_service_permission, "Fix permissions for '{user}'".format(user=user)),
+        (status_variables, fix_variables, "Fix jtop variables"),
     ],
 }
 DISPLAY_MENU = {
@@ -60,13 +87,25 @@ MAIN_PAGE = {
 
 
 def jtop_config():
-    # Run wrapper from JTOP menu
-    curses.wrapper(JTOPCONFIG, JTOP_MENU)
+    # Check if running a root
+    if os.getuid() == 0:
+        # Run wrapper
+        curses.wrapper(JTOPCONFIG, JTOP_MENU)
+        sys.exit(0)
+    # Quit with error
+    print("Please run with sudo")
+    sys.exit(1)
 
 
 def main():
-    # Run wrapper
-    curses.wrapper(JTOPCONFIG, MAIN_PAGE)
+    # Check if running a root
+    if os.getuid() == 0:
+        # Run wrapper
+        curses.wrapper(JTOPCONFIG, MAIN_PAGE)
+        sys.exit(0)
+    # Quit with error
+    print("Please run with sudo")
+    sys.exit(1)
 
 
 if __name__ == "__main__":

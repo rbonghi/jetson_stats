@@ -123,7 +123,7 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
     service_install_path = '/etc/systemd/system/{name}'.format(name=name)
     service_package_path = '{package_root}/services/{name}'.format(package_root=package_root, name=name)
     # remove if exist file
-    if os.path.exists(service_install_path):
+    if os.path.isfile(service_install_path) or os.path.islink(service_install_path):
         logger.info(" - Remove old {path}".format(path=service_install_path))
         os.remove(service_install_path)
     if copy:
@@ -145,21 +145,51 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
     sp.call(shlex.split('systemctl start {name}'.format(name=name)))
 
 
+def status_permission_user(group=JTOP_USER):
+    user = os.environ.get('USER', '')
+    # Get user from sudo
+    if 'SUDO_USER' in os.environ:
+        user = os.environ['SUDO_USER']
+    # Check if user is in group
+    cmd_group_user = Command(shlex.split('groups {user}'.format(user=user)))
+    try:
+        lines = cmd_group_user()
+        for line in lines:
+            name, info = line.split(":")
+            info = info.strip().split()
+            if name.strip() == user and group in info:
+                return True
+    except (OSError, Command.CommandException):
+        logger.error("{user} does not exist".format(user=user))
+    return False
+
+
+def status_permission_group(group=JTOP_USER):
+    # Check if exist group
+    cmd_group = Command(shlex.split('getent group {group}'.format(group=group)))
+    try:
+        cmd_group()
+    except (OSError, Command.CommandException):
+        logger.error("Does not exist {group}".format(group=group))
+        return False
+    return True
+
+
+def status_permission(group=JTOP_USER):
+    return status_permission_group(group) and status_permission_group(group)
+
+
 def set_service_permission(group=JTOP_USER):
     user = os.environ.get('USER', '')
     # Get user from sudo
     if 'SUDO_USER' in os.environ:
         user = os.environ['SUDO_USER']
     # Make jetson_stats group
-    cmd_group = Command(shlex.split('getent group {group}'.format(group=group)))
-    try:
-        cmd_group()
-    except (OSError, Command.CommandException):
-        logger.info("Create new group {group}".format(group=group))
+    if not status_permission_group(group):
         sp.call(shlex.split('groupadd {group}'.format(group=group)))
-    # Add jetson_stats user group to local user
-    logger.info("Add {user} to group {group}".format(group=group, user=user))
-    sp.call(shlex.split('usermod -a -G {group} {user}'.format(group=group, user=user)))
+    if not status_permission_group(group):
+        logger.info("Add {user} to group {group}".format(group=group, user=user))
+        sp.call(shlex.split('usermod -a -G {group} {user}'.format(group=group, user=user)))
 
 
 class JtopManager(SyncManager):
