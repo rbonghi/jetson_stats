@@ -164,7 +164,6 @@ def get_raw_output():
                 data = bus.read_i2c_block_data(0x50, idx * size_block, size_block)
                 string_data += ' '.join(["{:02X}".format(x) for x in data]) + " " * 4
                 string_data += ''.join([chr(x) if chr(x).isprintable() else "." for x in data]) + "\n"
-            string_data = string_data.rstrip('\n')
             raw_output['I2C-{num}'.format(num=bus_number)] = string_data
         except (IOError, OSError):
             # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
