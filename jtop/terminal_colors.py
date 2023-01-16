@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019-2023 Raffaello Bonghi.
 #
@@ -14,22 +15,30 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Include the README
-include *.md
 
-# Include the license file
-include LICENSE
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
-# Include the data files
-recursive-include scripts *
+    @staticmethod
+    def ok(message="OK"):
+        return bcolors.OKGREEN + message + bcolors.ENDC
 
-# Include services files
-recursive-include services *.service
+    @staticmethod
+    def warning(message="WARN"):
+        return bcolors.WARNING + message + bcolors.ENDC
 
-# Remove test docs and examples and tox.ini
-exclude tox.ini
-exclude Dockerfile
-exclude .dockerignore
-prune tests
-prune docs
-prune examples
+    @staticmethod
+    def fail(message="ERR"):
+        return bcolors.FAIL + message + bcolors.ENDC
+
+    @staticmethod
+    def bold(message):
+        return bcolors.BOLD + message + bcolors.ENDC
+# EOF

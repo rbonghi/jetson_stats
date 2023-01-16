@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -181,26 +181,31 @@ class JTOPGUI:
 
     @check_curses
     def header(self):
-        board = self.jetson.board
         # Detect if jtop is running on jetson or on other platforms
-        if board.info['jetpack'] == "UNKNOWN" and board.info['L4T'] != "N.N.N":
+        if self.jetson.board.hardware['L4T']:
             self.header_jetson()
         else:
             self.header_x86()
 
     def header_x86(self):
-        plat = self.jetson.board.platform
-        release = plat['release'].split("-")[0]
-        message = "{system} {machine} machine - {distribution} [{release}]".format(system=plat['system'].upper(),
-                                                                                   machine=plat['machine'],
-                                                                                   distribution=plat['distribution'],
+        platform = self.jetson.board.platform
+        release = platform['Release'].split("-")[0]
+        message = "{system} {machine} machine - {distribution} [{release}]".format(system=platform['System'].upper(),
+                                                                                   machine=platform['Machine'],
+                                                                                   distribution=platform['Distribution'],
                                                                                    release=release)
         self.stdscr.addstr(0, 0, message, curses.A_BOLD)
+        # Print jtop basic info
+        str_xterm = platform['Distribution']
+        set_xterm_title("jtop {name}".format(name=str_xterm))
 
     def header_jetson(self):
+        model = self.jetson.board.hardware["Model"]
+        jetpack = self.jetson.board.hardware["Jetpack"]
+        L4T = self.jetson.board.hardware["L4T"]
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
-        status = [self.jetson.board.info["model"]]
+        status = [model]
         if self.jetson.jetson_clocks is not None:
             status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks.status.capitalize())]
         if self.jetson.nvpmodel is not None:
@@ -220,7 +225,7 @@ class JTOPGUI:
             self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
         # Write first line
-        message = "{info[model]} - Jetpack {info[jetpack]} [L4T {info[L4T]}]".format(info=self.jetson.board.info)
+        message = "Model: {model} - Jetpack {jetpack} [L4T {L4T}]".format(model=model, jetpack=jetpack, L4T=L4T)
         self.stdscr.addstr(idx, 0, message, curses.A_BOLD)
 
     @check_curses

@@ -20,6 +20,7 @@ When you install jetson-stats are included:
 - [jetson\_release](#jetson_release)
 - [jetson\_swap](#jetson_swap)
 - [jetson variables](#jetson-variables)
+- [Compability](#compability)
 
 Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rnext.it/jetson_stats).
 

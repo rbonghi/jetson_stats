@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 master_doc = 'index'
 
 project = 'jetson-stats'
-copyright = '2020-2023, Raffaello Bonghi'
+copyright = '2019-2023, Raffaello Bonghi'
 author = 'Raffaello Bonghi'
 
 # The full version, including alpha/beta/rc tags

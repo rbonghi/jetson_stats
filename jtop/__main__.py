@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2020 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -31,9 +31,11 @@ from .jtop import jtop
 # jtop exception
 from .core import JtopException, get_var
 # GUI jtop interface
+from .jetson_config import jtop_config
 from .gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 # Load colors
-from .github import jetpack_missing, model_missing
+from .terminal_colors import bcolors
+from .github import jetpack_missing, hardware_missing, get_hardware_log
 # Create logger
 logger = logging.getLogger(__name__)
 # Version match
@@ -41,51 +43,29 @@ VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 # Reference repository
 REPOSITORY = "https://github.com/rbonghi/jetson_stats/issues"
 LOOP_SECONDS = 5
-
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-    @staticmethod
-    def ok(message="OK"):
-        return bcolors.OKGREEN + message + bcolors.ENDC
-
-    @staticmethod
-    def warning(message="WARN"):
-        return bcolors.WARNING + message + bcolors.ENDC
-
-    @staticmethod
-    def fail(message="ERR"):
-        return bcolors.FAIL + message + bcolors.ENDC
+JTOP_LOG_NAME = 'jtop-error.log'
 
 
 def warning_messages(jetson, no_warnings=False):
     if no_warnings:
         return
     # Read status version
+    hardware = jetson.board.hardware
     version = get_var(VERSION_RE)
     # Check is well stored the default jetson_clocks configuration
     if jetson.jetson_clocks:
         if not jetson.jetson_clocks.is_config:
             print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
-    # Check if is running on sudo
-    if os.getuid() == 0:
-        print("[{status}] SUDO is no more required".format(status=bcolors.warning()))
-    # Check if board is missing
-    if jetson.board.info['model'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
-        print("[{status}] {link}".format(status=bcolors.warning(), link=model_missing(REPOSITORY, jetson, version)))
+    # Check if an hardware value is missing
+    if not all([data for data in hardware.values()]):
+        print("[{status}] jtop not support this hardware for [L4T {l4t}]".format(status=bcolors.warning(), l4t=hardware['L4T']))
+        print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+        print("  or {link}".format(link=hardware_missing(REPOSITORY, hardware, version)))
     # Check if jetpack is missing
-    if jetson.board.info['jetpack'] == "UNKNOWN" and jetson.board.info['L4T'] != "N.N.N":
-        print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=jetson.board.info['L4T']))
-        print("  Please, try: {bold}sudo -H pip install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
-        print("  or {link}".format(link=jetpack_missing(REPOSITORY, jetson, version)))
+    if not hardware['Jetpack'] and hardware['L4T']:
+        print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=hardware['L4T']))
+        print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+        print("  or {link}".format(link=jetpack_missing(REPOSITORY, hardware, version)))
 
 
 def exit_signal(signum, frame):
@@ -98,6 +78,8 @@ def main():
         description='jtop is system monitoring utility and runs on terminal',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--force', dest='force', help=argparse.SUPPRESS, action="store_true", default=False)
+    parser.add_argument('--health', dest="health", help='Status jtop and fix', action="store_true", default=False)
+    parser.add_argument('--log', dest="log", help='Generate a log for GitHub', action="store_true", default=False)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)
@@ -143,6 +125,16 @@ def main():
         except JtopException as e:
             print(e)
         # Close service
+        exit(0)
+    # Run health jtop
+    if args.health:
+        jtop_config()
+    # Generate a log for GitHub
+    if args.log:
+        body = get_hardware_log()
+        with open('{cwd}/{name}'.format(cwd=os.getcwd(), name=JTOP_LOG_NAME), 'w') as writer:
+            writer.write(body)
+        print("LOG '{name}' generated in {path}".format(name=JTOP_LOG_NAME, path=os.getcwd()))
         exit(0)
     # jtop client start
     try:

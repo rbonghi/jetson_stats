@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -39,21 +39,19 @@ logger = logging.getLogger(__name__)
 class Board:
 
     def __init__(self):
-        self.info = {}
         self.hardware = {}
         self.libraries = {}
         self.platform = {}
-        self._board = {'info': self.info, 'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
+        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
     def _update_libraries(self, libraries):
         self.libraries = libraries
-        self._board = {'info': self.info, 'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
+        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
     def _update_init(self, init):
-        self.info = init['info']
         self.hardware = init['hardware']
         self.platform = init['platform']
-        self._board = {'info': self.info, 'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
+        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
     def items(self):
         return self._board.items()
@@ -78,6 +76,11 @@ class Board:
 
     def __repr__(self):
         return str(self._board)
+
+
+def cat(path):
+    with open(path, 'r') as f:
+        return f.readline().rstrip('\x00')
 
 
 def locate_commands(name, commands):
