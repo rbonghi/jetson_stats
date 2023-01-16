@@ -143,7 +143,7 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
     # Enable jetson_stats at startup
     cmd_service_enable = Command(shlex.split('systemctl enable {name}'.format(name=name)))
     try:
-        lines = cmd_service_enable()
+        cmd_service_enable()
         logger.info(" - ENABLE {name}".format(name=name))
         # logger.info(lines)
     except (OSError, Command.CommandException):
@@ -151,7 +151,7 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
     # Start service
     cmd_service_start = Command(shlex.split('systemctl start {name}'.format(name=name)))
     try:
-        lines = cmd_service_start()
+        cmd_service_start()
         logger.info(" - START {name}".format(name=name))
         # logger.info(lines)
     except (OSError, Command.CommandException):
