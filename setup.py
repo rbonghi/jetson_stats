@@ -111,6 +111,7 @@ def remove_depecated_data():
     # If exist, Remove old folders
     remove_data("/usr/local/bin/jetson-docker")
     remove_data("/usr/local/bin/jetson-release")
+    remove_data("/etc/profile.d/jetson_env.sh")
     remove_data("/usr/local/jetson_stats/jetson_env.sh")
     remove_data("/opt/jetson_stats")
     remove_data("/etc/jetson-swap")

@@ -145,7 +145,7 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
     try:
         lines = cmd_service_enable()
         logger.info(" - ENABLE {name}".format(name=name))
-        logger.info(lines)
+        # logger.info(lines)
     except (OSError, Command.CommandException):
         logger.error("Fail enable service {name}".format(name=name))
     # Start service
@@ -153,7 +153,7 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
     try:
         lines = cmd_service_start()
         logger.info(" - START {name}".format(name=name))
-        logger.info(lines)
+        # logger.info(lines)
     except (OSError, Command.CommandException):
         logger.error("Fail start service {name}".format(name=name))
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019-2023 Raffaello Bonghi.
 #
@@ -14,6 +13,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# THIS SCRIPT MUST HAVE .SH !
 
 # Load JETSON environment variables
 # Export variables to be loaded on bash script
@@ -31,6 +32,6 @@ fi
 
 # Load variables only if not empty the variable
  if [ ! -z $JETSON_VARIABLE ] ; then
-     eval `$JETSON_PYTHON_NAME -m jtop.core.jetson_variables`
+     eval $($JETSON_PYTHON_NAME -m jtop.core.jetson_variables)
  fi
 # EOF

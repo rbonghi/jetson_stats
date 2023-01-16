@@ -138,7 +138,8 @@ MODULE_NAME_TABLE = {
 # ---------------------
 # DO NOT EDIT FROM HERE
 # ---------------------
-JTOP_VARIABLE_FILE = 'jtop_env'
+# THIS SCRIPT MUST HAVE .SH !
+JTOP_VARIABLE_FILE = 'jtop_env.sh'
 DTSFILENAME_RE = re.compile(r'(.*)-p')
 SOC_RE = re.compile(r'[0-9]+')
 DPKG_L4T_CORE_RE = re.compile(r'^nvidia-l4t-core.*install$')
