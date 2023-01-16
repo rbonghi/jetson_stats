@@ -244,7 +244,7 @@ setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('jetson_stats', ['services/jetson_stats.service', 'scripts/jtop_env'])],
+    data_files=[('jetson_stats', ['services/jetson_stats.service', 'scripts/jtop_env.sh'])],
     # Install extra scripts
     scripts=['scripts/jetson_swap'],
     cmdclass={'develop': JTOPDevelopCommand,
