@@ -268,7 +268,7 @@ class MEM(Page):
             try:
                 self.stdscr.addstr(first + height - 3, start_pos + 12, "size", curses.A_NORMAL)
                 self.stdscr.addstr(first + height - 3, start_pos + 17, "{size: <2}".format(size=self._swap_size), color)
-                self.stdscr.addstr(first + height - 3, start_pos + 18, "GB", curses.A_BOLD)
+                self.stdscr.addstr(first + height - 3, start_pos + 20, "GB", curses.A_BOLD)
             except curses.error:
                 pass
         # else:
