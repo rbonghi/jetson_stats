@@ -1,5 +1,7 @@
 <h1 align="center">
 
+<b>jetson-stats</b>
+
 ![jetson-stats](docs/images/jtop.png)
 
 </h1>
