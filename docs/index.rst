@@ -10,6 +10,7 @@ jetson-stats
    sponsors
    jtop
    advanced-usage
+   docker
    reference
    other-tools/index
    contributing

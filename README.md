@@ -1,6 +1,6 @@
 <h1 align="center">
 
-![jtop](docs/images/jtop.png)
+![jetson-stats](docs/images/jtop.png)
 
 </h1>
 
@@ -66,7 +66,25 @@ with jtop() as jetson:
         print(jetson.stats)
 ```
 
+You can also use jtop with your _virualenv_!
+
 More information available at [advanced usage](https://rnext.it/jetson_stats/advanced-usage.html) page.
+
+## Docker
+
+You can run directly in Docker jtop, you need only to:
+
+1. Install jetson-stats on your **host**
+2. Install on your container jetson-stats as well
+3. Pass to your container `/run/jtop.sock:/run/jtop.sock`
+
+You can try running this command
+
+```console
+docker run --rm -it -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson_stats:latest
+```
+
+More information available at [Docker](https://rnext.it/jetson_stats/docker.html) documentation page.
 
 ## Sponsorship
 
