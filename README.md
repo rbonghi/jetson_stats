@@ -1,186 +1,81 @@
-# Jetson stats
-[![PyPI - Downloads](https://img.shields.io/pypi/dw/jetson-stats.svg)](https://pypistats.org/packages/jetson-stats) [![PyPI version](https://badge.fury.io/py/jetson-stats.svg)](https://badge.fury.io/py/jetson-stats) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/jetson-stats.svg)](https://www.python.org/) [![PyPI - Format](https://img.shields.io/pypi/format/jetson-stats.svg)](https://pypi.org/project/jetson-stats/) [![GitHub](https://img.shields.io/github/license/rbonghi/jetson_stats)](/LICENSE) [![Docker Pulls](https://img.shields.io/docker/pulls/rbonghi/jetson_stats)](https://hub.docker.com/r/rbonghi/jetson_stats) [![CI & CD](https://github.com/rbonghi/jetson_stats/workflows/CI%20&%20CD/badge.svg)](https://github.com/rbonghi/jetson_stats/actions?query=workflow%3A%22CI+%26+CD%22)
+<h1 align="center">
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/raffaello86?style=social)](https://twitter.com/raffaello86) [![robo.panther](https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&logo=instagram)](https://www.instagram.com/robo.panther/) [![Discord](https://img.shields.io/discord/1060563771048861817)](https://discord.gg/BFbuJNhYzS)
+![jtop](docs/images/jtop.png)
 
-**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson][NVIDIA Jetson] [Orin, Xavier, Nano, TX] series. Works with all NVIDIA Jetson [ecosystem](#compability).
+</h1>
 
-**Consider to** [:sparkling_heart: **Sponsor** jetson-stats](https://github.com/sponsors/rbonghi)
+<p align="center">
+  <a href="https://pypistats.org/packages/jetson-stats"><img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dw/jetson-stats.svg" /></a>
+  <a href="https://badge.fury.io/py/jetson-stats"><img alt="PyPI version" src="https://badge.fury.io/py/jetson-stats.svg" /></a>
+  <a href="https://www.python.org/"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/jetson-stats.svg" /></a>
+  <a href="https://pypi.org/project/jetson-stats/"><img alt="PyPI - Format" src="https://img.shields.io/pypi/format/jetson-stats.svg" /></a>
+  <a href="/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/rbonghi/jetson_stats" /></a>
+  <a href="https://snyk.io/advisor/python/jetson-stats"><img alt="jetson-stats" src="https://snyk.io/advisor/python/jetson-stats/badge.svg" /></a>
+  <a href="https://hub.docker.com/r/rbonghi/jetson_stats"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/rbonghi/jetson_stats" /></a>
+  <a href="https://github.com/rbonghi/jetson_stats/actions?query=workflow%3A%22CI+%26+CD%22"><img alt="CI & CD" src="https://github.com/rbonghi/jetson_stats/workflows/CI%20&%20CD/badge.svg" /></a>
+  <a href="https://github.com/rbonghi/jetson_stats/actions/workflows/github-code-scanning/codeql"><img alt="CodeQL" src="https://github.com/rbonghi/jetson_stats/actions/workflows/github-code-scanning/codeql/badge.svg?branch=master" /></a>
+</p>
 
-When you install jetson-stats are included:
-- [Jetson stats](#jetson-stats)
-- [Install](#install)
-  - [Virtual environment](#virtual-environment)
-  - [Docker](#docker)
-  - [Troubleshooting](#troubleshooting)
-- [jtop](#jtop)
-  - [Pages](#pages)
-  - [Controls](#controls)
-- [jetson\_config](#jetson_config)
-- [jetson\_release](#jetson_release)
-- [jetson\_swap](#jetson_swap)
-- [jetson variables](#jetson-variables)
-- [Compability](#compability)
+<p align="center">
+  <a href="https://twitter.com/raffaello86"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/raffaello86?style=social" /></a>
+  <a href="https://www.instagram.com/robo.panther/"><img alt="robo.panther" src="https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&logo=instagram" /></a>
+  <a href="https://discord.gg/BFbuJNhYzS"><img alt="Join our Discord" src="https://img.shields.io/discord/1060563771048861817?color=%237289da&label=discord" /></a>
+</p>
 
-Read the [Wiki](https://github.com/rbonghi/jetson_stat/wiki) for more detailed information or read the package [documentation](https://rnext.it/jetson_stats).
+**jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson](https://developer.nvidia.com/buy-jetson) [Orin, Xavier, Nano, TX] series.
 
-# Install
+## Install
+
+jetson-stats can be installed with [pip](https://pip.pypa.io), but need **superuser**:
 
 ```console
 sudo -H pip3 install -U jetson-stats
 ```
-**🚀 That's it! 🚀** 
 
-_PS: Don't forget to **reboot** your board_
+**🚀 That's it! 🚀**
 
-**You can run jtop in your python script [read here][library]**
+_PS: Don't forget to **logout** or **reboot** your board_
 
-## Virtual environment
+## Run
 
-If you need to install in a virtual environment like *virtualenv*, you **must** install before in your host **and after** in your environment, like:
-```
-virtualenv venv
-source venv/bin/activate
-pip install -U jetson-stats
-```
-
-## Docker
-
-You can run jtop from a docker container, but you **must** install jetsons-stats as well on your host! Try with the command below:
-```console
-docker run --rm -it -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson_stats:latest
-```
-
-or you can add in your Dockerfile writing:
-
-```docker
-FROM python:3-buster
-RUN pip install -U jetson-stats
-```
-
-## Troubleshooting
-
-If you reach the error below:
-
-**sudo: pip: command not found**
-
-You need to install **pip** before to install jetson-stats
+Start jtop it's pretty simple just write `jtop`!
 
 ```console
-sudo apt-get install python3-pip
-sudo -H pip3 install -U jetson-stats
+jtop
 ```
 
-**REMIND** to pass `/run/jtop.sock:/run/jtop.sock` when you run your docker container.
+A simple interface will appear on your terminal
 
-# [jtop][jtop] 
-It is a system monitoring utility that runs on the terminal and see and **control** realtime the status of your [NVIDIA Jetson][NVIDIA Jetson]. CPU, RAM, GPU status and frequency and other...
+<div align="center">
 
-The prompt interface will be show like this image, **now clickable!**:
-![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jtop.gif)
+![jtop](docs/images/jtop.gif)
 
-You can run the jtop simple using a simple command `jtop`
+</div>
 
-YES! Sudo is **not** more required!
-```console
-nvidia@agx-orin:~/$ jtop
+## Library
+
+You can use jtop such a python library to integrate in your software
+
+```python
+from jtop import jtop
+
+with jtop() as jetson:
+    # jetson.ok() will provide the proper update frequency
+    while jetson.ok():
+        # Read tegra stats
+        print(jetson.stats)
 ```
 
-Other options are available with `-h` option:
-```console
-nvidia@agx-orin:~/$ jtop -h
-usage: jtop [-h] [--no-warnings] [--restore] [--loop] [--color-filter] [-r REFRESH] [-p PAGE] [-v]
+More information available at [advanced usage](https://rnext.it/jetson_stats/advanced-usage.html) page.
 
-jtop is system monitoring utility and runs on terminal
+## Sponsorship
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --no-warnings         Do not show warnings (default: False)
-  --restore             Reset Jetson configuration (default: False)
-  --loop                Automatically switch page every 5s (default: False)
-  --color-filter        Change jtop base colors, you can use also JTOP_COLOR_FILTER=True (default: False)
-  -r REFRESH, --refresh REFRESH
-                        refresh interval (default: 500)
-  -p PAGE, --page PAGE  Open fix page (default: 1)
-  -v, --version         show program's version number and exit
-```
-You can change page using _left_, _right_ arrow or _TAB_ to change page.
-## Pages
-**jtop** have four different pages to control your NVIDIA Jetson:
-1. **ALL** Are collected all information about your board: CPUs status, Memory, *GPU*, disk, fan and all status about jetson_clocks, NVPmodel and other
-2. **GPU** A real time GPU history about your NVIDIA Jetson
-3. **CPU** A real time CPU plot of NVIDIA Jetson
-4. **MEM** A real time Memory chart and swap monitor
-5. **CTRL** Enable/Disable **jetson_clocks**, **nvpmodel** or **fan** directly from here
-6. **INFO** All information about libraries, CUDA, Serial Number, interfaces, ...
-## Controls
-To control the your NVIDIA Jetson are available this keyboard commands:
+If your company benefits from this library, please consider [:sparkling_heart: sponsoring its development](https://github.com/sponsors/rbonghi).
 
-In page **4 MEM**:
-* **c** Clear cache
-* **s** Enable/Disable extra swap
-* **+** and **-** Increase and decrease swap size
+## Documentation
 
-In page **5 CTRL**:
-* **a** Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)
-* **e** Enable/Disable jetson_clocks on board boot
-* **+** and **-** Increase and decrease the NVPmodel
-* **f** Manual/jetson_clocks mode for your fan
-* **p** and **m** Increase and decrease the Fan speed
+jetson-stats documentation has usage and reference documentation at <https://rnext.it/jetson_stats>.
 
-# [jetson_config][jetson_config]
+## Community
 
-Check _jetson-stats_ **health**, enable/disable **desktop**, enable/disable **jetson_clocks**, improve the performance of your **wifi** are available only in one click using **jetson_config**
-
-![jetson_config](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_config.png)
-# [jetson_release][jetson_release]
-The command show the status and all information about your [NVIDIA Jetson][NVIDIA Jetson]
-
-![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_release.png)
-# [jetson_swap][jetson_swap]
-Simple manager to switch on and switch off a swapfile in your jetson.
-
-```console
-nvidia@jetson-nano:~/$ sudo jetson_swap -h
-usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
-  -d | --dir    <directoryname> Directory to place swapfile
-  -n | --name   <swapname> Name swap file
-  -s | --size   <gigabytes>
-  -a | --auto   Enable swap on boot in /etc/fstab 
-  -t | --status Check if the swap is currently active
-  --off         Switch off the swap
-  -h | --help   This message
-```
-
-# [jetson variables][jetson_variables]
-When you install jetson-stats in your bash will be available a list of new environment variables to know which which hardware version is available are you working, which Jetpack is installed and other variable show below
-
-![jtop](https://github.com/rbonghi/jetson_stats/wiki/images/jetson_env.png)
-
-[library]: https://github.com/rbonghi/jetson_stats/wiki/library
-[jtop]: https://github.com/rbonghi/jetson_stats/wiki/jtop
-[jetson_config]: https://github.com/rbonghi/jetson_stats/wiki/jetson_config
-[jetson_swap]: https://github.com/rbonghi/jetson_stats/wiki/jetson_swap
-[jetson_variables]: https://github.com/rbonghi/jetson_stats/wiki/jetson_variables
-[jetson_release]: https://github.com/rbonghi/jetson_stats/wiki/jetson_release
-[jetson_performance]: https://github.com/rbonghi/jetson_stats/wiki/jetson_performance
-[jetson_docker]: https://github.com/rbonghi/jetson_stats/wiki/jetson_docker
-[NVIDIA]: https://www.nvidia.com/
-[NVIDIA Jetson]: https://developer.nvidia.com/buy-jetson
-
-# Compability
-
-jetson-stats is compatibile with:
-* NVIDIA Jetson AGX Orin
-* NVIDIA Jetson Orin Series
-* NVIDIA Jetson AGX Xavier Industrial
-* NVIDIA Jetson AGX Xavier
-* NVIDIA Jetson Xavier NX
-* NVIDIA Jetson Xavier Series
-* NVIDIA Jetson Nano
-* NVIDIA Jetson TX2 NX
-* NVIDIA Jetson TX2i
-* NVIDIA Jetson TX2
-* NVIDIA Jetson TX1
-
-If you need a specific compability open an [issue](https://github.com/rbonghi/jetson_stats/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=)
+jetson-stats has a [community Discord channel](https://discord.gg/BFbuJNhYzS) for asking questions and collaborating with other contributors. Drop by and say hello 👋

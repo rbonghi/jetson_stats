@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-jtop is a simple package to monitoring and control your NVIDIA Jetson [Xavier NX, Nano, AGX Xavier, TX1, TX2].
+jtop is a simple package to monitoring and control your NVIDIA Jetson [Orin, Xavier, Nano, TX] series.
 
 It read the status of your board using different native processes:
  * tegrastats
@@ -52,7 +52,7 @@ Or using a callback function
     jetson.attach(read_stats)
     jetson.loop_for_ever()
 
-Other example are availables on https://github.com/rbonghi/jetson_stats/tree/master/examples
+Other example are available on https://github.com/rbonghi/jetson_stats/tree/master/examples
 Follow the next attributes to know in detail how you can you in your python project.
 """
 import logging

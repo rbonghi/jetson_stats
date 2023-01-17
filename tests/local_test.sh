@@ -34,19 +34,19 @@ usage()
     echo "$0 [options]"
     echo "options,"
     echo "   -h|--help             | This help"
-    echo "   --debug [PYHTON]      | Debug a specific python version, example PYTHON=3.9"
+    echo "   --debug               | Run image"
     echo "  -py|--python [PYHTON]  | Set a specific python version, example PYTHON=3.9"
-    echo "  --doc-only             | Run and build ONLY the documentation"
-    echo "  --only-run             | Run tox without build the docker image"
+    echo "  --doc                  | Run and build ONLY the documentation"
     
 }
 
 main()
 {
-    local DOCKER_DOCUMENTATION_BUILD=true
     local DOCKER_BUILD=true
+    local DOCUMENTATION_BUILD=true
     local PYTHON_LIST="2.7 3.6 3.8 3.9 3.10 3.11"
-    local PYTHON_DEBUG=""
+    local PYTHON_DEBUG=false
+    local DOCUMENTATION=false
     
     # Decode all information from startup
     while [ -n "$1" ]; do
@@ -56,22 +56,19 @@ main()
                 usage
                 exit 0
             ;;
-            --doc-only)
-                PYTHON_LIST=""
+            --doc)
                 DOCKER_BUILD=false
+                DOCUMENTATION=true
             ;;
             --debug)
-                PYTHON_DEBUG=$2
-                DOCKER_DOCUMENTATION_BUILD=false
-                shift 1
+                PYTHON_DEBUG=true
+                DOCUMENTATION_BUILD=false
+                DOCKER_BUILD=false
             ;;
             -py|--python)
                 PYTHON_LIST=$2
-                DOCKER_DOCUMENTATION_BUILD=false
+                DOCUMENTATION_BUILD=false
                 shift 1
-            ;;
-            --only-run)
-                DOCKER_BUILD=false
             ;;
             *)
                 usage "[ERROR] Unknown option: $1"
@@ -81,34 +78,31 @@ main()
         shift 1
     done
     
+    
+    if $DOCUMENTATION_BUILD ; then
+        echo "- ${green}Build and compile jetson-stats documentation with sphinx${reset}"
+        docker build -t rbonghi/jetson-stats:doc -f tests/Dockerfile.sphinx . || { echo "${red}docker build failure!${reset}"; exit 1; }
+    fi
+    
     if $DOCKER_BUILD ; then
-        # Build specific version only if debug
-        if [ ! -z "$PYTHON_DEBUG" ] ; then
-            PYTHON_LIST=$PYTHON_DEBUG
-        fi
         # Build all images
         for PYTHON_VERSION in $PYTHON_LIST; do
-            echo "- ${green}Build Dockerfile image with python:${bold}$PYTHON_VERSION${reset}"
+            echo "- ${green}Build and test image with python:${bold}$PYTHON_VERSION${reset}"
             docker build -t rbonghi/jetson-stats:tox-py$PYTHON_VERSION --build-arg "PYTHON_VERSION=$PYTHON_VERSION" -f tests/Dockerfile.tox . || { echo "${red}docker build failure!${reset}"; exit 1; }
         done
     fi
     
-    if [ ! -z "$PYTHON_DEBUG" ] ; then
-        echo "- ${yellow}Debug Image with python:${bold}$PYTHON_DEBUG${reset}"
-        docker run -v $(pwd):/jetson_stats -it --rm --entrypoint bash rbonghi/jetson-stats:tox-py$PYTHON_DEBUG
-        exit 0
+    if $PYTHON_DEBUG ; then
+        if $DOCUMENTATION ; then
+            echo "- ${yellow}Debug documentation image${reset}"
+            docker run -v $(pwd):/jetson_stats -it --rm rbonghi/jetson-stats:doc
+        else
+            PYTHON_VERSION=$PYTHON_LIST
+            echo "- ${yellow}Debug Image with python:${bold}$PYTHON_VERSION${reset}"
+            docker run -v $(pwd):/jetson_stats -it --rm rbonghi/jetson-stats:tox-py$PYTHON_VERSION
+        fi
     fi
     
-    # Run all images
-    for PYTHON_VERSION in $PYTHON_LIST; do
-        echo "- ${green}Run Image and test with python:${bold}$PYTHON_VERSION${reset}"
-        docker run --rm -t rbonghi/jetson-stats:tox-py$PYTHON_VERSION -e py$PYTHON_VERSION || { echo "${red}Failure TOX $PYTHON_VERSION!${reset}"; exit 1; }
-    done
-    
-    if $DOCKER_DOCUMENTATION_BUILD ; then
-        echo "- ${green}Build and compile jetson-stats documentation with sphinx${reset}"
-        docker build -t rbonghi/jetson-stats:doc -f tests/Dockerfile.sphinx . || { echo "${red}docker build failure!${reset}"; exit 1; }
-    fi
 }
 
 main $@

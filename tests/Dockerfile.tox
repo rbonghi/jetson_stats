@@ -18,8 +18,8 @@
 ARG PYTHON_VERSION=3.8
 FROM python:${PYTHON_VERSION}
 
-RUN apt update && \
-    apt install -y sudo bc && \
+RUN apt-get update && \
+    apt-get install -y sudo bc && \
     rm -rf /var/lib/apt/lists/*
 
 COPY . /jetson_stats
@@ -31,4 +31,7 @@ RUN sudo groupadd jtop && \
     sudo -H python -m pip install --upgrade pip && \
     sudo -H pip install tox
 
-ENTRYPOINT ["sudo", "tox"]
+# Run tox
+RUN sudo tox -e py$PYTHON_VERSION
+
+CMD ["bash"]
