@@ -32,9 +32,13 @@ jetson-stats can be installed with [pip](https://pip.pypa.io), but need **superu
 sudo -H pip3 install -U jetson-stats
 ```
 
+_Don't forget to **logout** or **reboot** your board_
+
+<div align="center">
+
 **🚀 That's it! 🚀**
 
-_PS: Don't forget to **logout** or **reboot** your board_
+</div>
 
 ## Run
 
