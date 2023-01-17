@@ -1,4 +1,7 @@
+# flake8: noqa
+
 from __future__ import annotations
+import jtop
 
 import os
 import sys
@@ -14,7 +17,6 @@ sys.path.insert(0, root_path)
 
 # -- Project information -----------------------------------------------------
 
-import jtop
 
 project = 'jetson-stats'
 author = 'Raffaello Bonghi'
