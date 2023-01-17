@@ -28,7 +28,7 @@ Simple and fast! You can write on your shell **jtop** and that's it!
 
 Other options are available with `-h` option:
 
-.. code-block:: bash
+.. code-block:: console
   :class: no-copybutton
 
   nvidia@agx-orin:~/$ jtop -h
