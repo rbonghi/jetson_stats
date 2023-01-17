@@ -102,4 +102,17 @@ html_theme_options = {
     "source_branch": "master",
     "source_directory": "docs/",
 }
+
+html_sidebars = {
+    "**": [
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/scroll-start.html",
+        "sidebar/navigation.html",
+        "sidebar/ethical-ads.html",
+        "sidebar/scroll-end.html",
+        "sidebar/variant-selector.html",
+        "sidebar/adsense.html",
+    ]
+}
 # EOF
