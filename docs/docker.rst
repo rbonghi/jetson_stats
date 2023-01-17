@@ -6,7 +6,7 @@ Docker
 You can run directly in Docker jtop, you need only to:
 
 1. Install jetson-stats on your **host**
-2. Install on your container jetson-stats as well
+2. Install jetson-stats on your container as well
 3. Pass to your container `/run/jtop.sock:/run/jtop.sock`
 
 You can try running this command
