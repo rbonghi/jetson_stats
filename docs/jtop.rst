@@ -79,3 +79,19 @@ In page **5 CTRL**:
 * **+** and **-** Increase and decrease the NVPmodel
 * **f** Manual/jetson_clocks mode for your fan
 * **p** and **m** Increase and decrease the Fan speed
+
+How it's works
+--------------
+
+jtop use a service to sharing the data between client (jtop gui or your python script) and a server.
+
+This service, called *jtop.service* use a socket file. It is located in:
+
+.. code-block:: bash
+  :class: no-copybutton
+
+  /run/jtop.sock
+
+This socket is protected by access mode: **660** equivalent to `srw-rw----` and by the group.
+
+Only other users in `jtop` have access to this socket

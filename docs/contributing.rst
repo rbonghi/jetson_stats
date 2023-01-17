@@ -26,6 +26,19 @@ Clone and build in developer mode jetson-stats
    cd jetson_stats
    sudo -H pip3 install -v -e .
 
+.. note::
+   
+   You can also testing on x86 machines, installing the emulation for *tegrastats*, *nvpmodel* and *jetson_clocks*
+
+   .. code-block:: bash
+
+      sudo ./tests/develop.sh
+
+   .. danger::
+
+      Do not install on Jetson! Otherwise will overwrite your files.
+
+
 Manually stop and disable jtop service
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
