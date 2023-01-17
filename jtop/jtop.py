@@ -219,7 +219,7 @@ class jtop(Thread):
         :return: Generator of all operations to restore your NVIDIA Jetson
         :rtype: generator
         :raises JtopException: if the connection with the server is lost,
-            not active or your user does not have the permission to connect to *jetson_stats.service*
+            not active or your user does not have the permission to connect to *jtop.service*
         """
         # Reset jetson_clocks
         if self.jetson_clocks is not None:
@@ -925,27 +925,27 @@ class jtop(Thread):
                 pass
 
         :raises JtopException: if the connection with the server is lost,
-            not active or your user does not have the permission to connect to *jetson_stats.service*
+            not active or your user does not have the permission to connect to *jtop.service*
         """
         # Connected to broadcaster
         try:
             self._broadcaster.connect()
         except FileNotFoundError as e:
             if e.errno == 2 or e.errno == 111:  # Message error: 'No such file or directory' or 'Connection refused'
-                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
+                raise JtopException("The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service")
             elif e.errno == 13:  # Message error: 'Permission denied'
-                raise JtopException("I can't access jetson_stats.service.\nPlease logout or reboot this board.")
+                raise JtopException("I can't access jtop.service.\nPlease logout or reboot this board.")
             else:
                 raise FileNotFoundError(e)
         except ConnectionRefusedError as e:
             if e.errno == 111:  # Connection refused
                 # When server is off but socket files exists in /run
-                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
+                raise JtopException("The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service")
             else:
                 raise ConnectionRefusedError(e)
         except PermissionError as e:
             if e.errno == 13:  # Permission denied
-                raise JtopException("I can't access jetson_stats.service.\nPlease logout or reboot this board.")
+                raise JtopException("I can't access jtop.service.\nPlease logout or reboot this board.")
             else:
                 raise PermissionError(e)
         except ValueError:
@@ -963,7 +963,7 @@ class jtop(Thread):
         service_version = init.get('version', 'unknown')
         if service_version != get_var(VERSION_RE):
             raise JtopException("""Mismatch version jtop service: [{service_version}] and client: [{client_version}]. Please run:\n
-sudo systemctl restart jetson_stats.service""".format(
+sudo systemctl restart jtop.service""".format(
                 service_version=service_version,
                 client_version=get_var(VERSION_RE)))
         # Load server speed

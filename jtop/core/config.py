@@ -22,7 +22,7 @@ import sys
 import copy
 # Create logger
 logger = logging.getLogger(__name__)
-JTOP_DATA_FOLDER = 'local/jetson_stats'
+JTOP_DATA_FOLDER = 'local/jtop'
 
 
 def make_config_service(data_folder=JTOP_DATA_FOLDER):

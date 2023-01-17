@@ -29,7 +29,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from jtop.service import status_service, remove_service_pipe, uninstall_service, set_service_permission, install_service
+from jtop.service import status_service, remove_service_pipe, uninstall_service, set_service_permission, unset_service_permission, install_service
 from jtop.core.jetson_variables import uninstall_variables, install_variables
 from jtop.terminal_colors import bcolors
 # io.open is needed for projects that support Python 2.7
@@ -42,6 +42,7 @@ import os
 import sys
 import re
 import logging
+import shutil
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 log = logging.getLogger()
 
@@ -97,22 +98,26 @@ def remove_data(file_name):
         os.remove(file_name)
     elif os.path.isdir(file_name):
         print("Remove {file} folder".format(file=file_name))
-        os.rmdir(file_name)
+        shutil.rmtree(file_name)
 
 
 def remove_depecated_data():
     """
     This function uninstall the service
     """
-    # If exist, remove old service name called jetson_performance
+    # If exist, remove old services names if they exists
     uninstall_service('jetson_performance.service')
-    # If exist, remove old service name called jetson_stats_boot
     uninstall_service('jetson_stats_boot.service')
-    # If exist, Remove old folders
+    uninstall_service('jetson_stats.service')
+    # Remove old variable definitions
+    uninstall_variables('jetson_env.sh')
+    # Remove old permission and group
+    unset_service_permission('jetson_stats')
+    # Remove old script if they exists
     remove_data("/usr/local/bin/jetson-docker")
     remove_data("/usr/local/bin/jetson-release")
-    remove_data("/etc/profile.d/jetson_env.sh")
-    remove_data("/usr/local/jetson_stats/jetson_env.sh")
+    # Remove old folders
+    remove_data("/usr/local/jetson_stats")
     remove_data("/opt/jetson_stats")
     remove_data("/etc/jetson-swap")
     remove_data("/etc/jetson_easy")
@@ -129,7 +134,7 @@ def pypi_installer(installer, obj, copy):
             # Remove all deprecated data
             # - This function should do nothing
             remove_depecated_data()
-            # remove service jetson_stats.service
+            # remove service jtop.service
             uninstall_service()
             # Remove service path
             remove_service_pipe()
@@ -244,7 +249,7 @@ setup(
     zip_safe=False,
     # Add jetson_variables in /opt/jetson_stats
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('jetson_stats', ['services/jetson_stats.service', 'scripts/jtop_env.sh'])],
+    data_files=[('jetson_stats', ['services/jtop.service', 'scripts/jtop_env.sh'])],
     # Install extra scripts
     scripts=['scripts/jetson_swap'],
     cmdclass={'develop': JTOPDevelopCommand,

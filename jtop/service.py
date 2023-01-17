@@ -72,8 +72,8 @@ PATH_NVPMODEL = ['nvpmodel']
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 JTOP_PIPE = '/run/jtop.sock'
-JTOP_USER = 'jetson_stats'
-JTOP_SERVICE_NAME = 'jetson_stats.service'
+JTOP_USER = 'jtop'
+JTOP_SERVICE_NAME = 'jtop.service'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
 TIMEOUT_SWITCHOFF = 3.0
@@ -95,7 +95,7 @@ def remove_service_pipe():
 
 
 def uninstall_service(name=JTOP_SERVICE_NAME):
-    if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)):
+    if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)) or os.path.islink('/etc/systemd/system/{name}'.format(name=name)):
         logger.info("Found {name}".format(name=name))
         # Check if service is active
         if os.system('systemctl is-active --quiet {name}'.format(name=name)) == 0:
@@ -106,7 +106,7 @@ def uninstall_service(name=JTOP_SERVICE_NAME):
         logger.info(" - DISABLE {name}".format(name=name))
         sp.call(shlex.split('systemctl disable {name}'.format(name=name)))
         # Remove jetson_performance service from /etc/init.d
-        if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)):
+        if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)) or os.path.islink('/etc/systemd/system/{name}'.format(name=name)):
             logger.info(" - REMOVE {name} from /etc/systemd/system".format(name=name))
             os.remove('/etc/systemd/system/{name}'.format(name=name))
         # Update service list
@@ -192,6 +192,20 @@ def status_permission(group=JTOP_USER):
     return status_permission_group(group) and status_permission_group(group)
 
 
+def unset_service_permission(group=JTOP_USER):
+    user = os.environ.get('USER', '')
+    # Get user from sudo
+    if 'SUDO_USER' in os.environ:
+        user = os.environ['SUDO_USER']
+    # Check if user is in group
+    if status_permission_user(group):
+        logger.info("Remove {user} from group {group}".format(group=group, user=user))
+        sp.call(shlex.split('gpasswd -d {user} {group}'.format(group=group, user=user)))
+    if status_permission_group(group):
+        logger.info("Delete group {group}".format(group=group))
+        sp.call(shlex.split('groupdel {group}'.format(group=group)))
+
+
 def set_service_permission(group=JTOP_USER):
     user = os.environ.get('USER', '')
     # Get user from sudo
@@ -199,8 +213,9 @@ def set_service_permission(group=JTOP_USER):
         user = os.environ['SUDO_USER']
     # Make jetson_stats group
     if not status_permission_group(group):
+        logger.info("Add new group {group}".format(group=group))
         sp.call(shlex.split('groupadd {group}'.format(group=group)))
-    if not status_permission_group(group):
+    if not status_permission_user(group):
         logger.info("Add {user} to group {group}".format(group=group, user=user))
         sp.call(shlex.split('usermod -a -G {group} {user}'.format(group=group, user=user)))
 

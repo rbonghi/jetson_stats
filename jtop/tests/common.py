@@ -76,6 +76,6 @@ def remove_tests():
         os.remove('/tmp/jetson_clocks_test')
     if os.path.isfile('/tmp/nvp_model_test'):
         os.remove('/tmp/nvp_model_test')
-    if os.path.isfile('/usr/local/jetson_stats/config.json'):
-        os.remove('/usr/local/jetson_stats/config.json')
+    if os.path.isfile('/usr/local/jtop/config.json'):
+        os.remove('/usr/local/jtop/config.json')
 # EOF
