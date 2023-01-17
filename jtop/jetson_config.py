@@ -210,7 +210,7 @@ INFORMATION_MENU = {
 \n\nScripts: jtop, jetson_config, jetson_release, jetson_swap\nServices: jetson_stats",
 }
 MAIN_PAGE = {
-    'title': 'jtop {version} - main page'.format(version=get_var(VERSION_RE)),
+    'title': 'jetson-stats {version} - main page'.format(version=get_var(VERSION_RE)),
     'menu': [
         ("Health", JTOP_MENU, "Check the status of jetson-stats"),
         ("Update", update_jtop, "Update jetson-stats to the latest version"),

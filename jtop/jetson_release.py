@@ -17,6 +17,7 @@
 
 import re
 import argparse
+from datetime import date
 
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core import (get_cuda,
@@ -35,6 +36,8 @@ def main():
         description='Show detailed information about this board. Machine, Jetpack, libraries and other',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-v', dest="verbose", help='Show all variables', action="store_true", default=False)
+    # Copyrights
+    print("Software part of jetson-stats {version} (c) 2019-{year} Raffaello Bonghi".format(version=get_var(VERSION_RE), year=date.today().year))
     # Parse arguments
     args = parser.parse_args()
     # Read all Jetson Variables

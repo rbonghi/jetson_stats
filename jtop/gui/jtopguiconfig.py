@@ -16,6 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import curses
+from datetime import date
 # Logging
 import logging
 # Create logger
@@ -134,6 +135,9 @@ class JTOPCONFIG:
         self.stdscr.addstr(center_y + len(menu) + 1, center_x + 16, "{message}".format(message=message_button), curses.A_BOLD)
         # Quit
         self.stdscr.addstr(center_y + len(menu) + 2, center_x + 16, "q/Q Quit", curses.A_BOLD)
+        # Draw copyrights
+        self.stdscr.addstr(height - 2, width - 31, "Software parts of jetson-stats", curses.A_NORMAL)
+        self.stdscr.addstr(height - 1, width - 31, "(c) 2019-{year} Raffaello Bonghi".format(year=date.today().year), curses.A_NORMAL)
 
     def _print_message(self, title, message):
         return {
