@@ -178,11 +178,17 @@ class MEM(Page):
         # Table
         size = r_width // len(columns_title) + 1
         for idx, name in enumerate(columns_title):
-            self.stdscr.addstr(start_y + 1, start_x + 2 + idx * size, name, curses.A_BOLD)
+            try:
+                self.stdscr.addstr(start_y + 1, start_x + 2 + idx * size, name, curses.A_BOLD)
+            except curses.error:
+                pass
             if idx < len(columns_title) - 1:
-                self.stdscr.addch(start_y, start_x + (idx + 1) * size, curses.ACS_TTEE)
-                self.stdscr.addch(start_y + 1, start_x + (idx + 1) * size, curses.ACS_VLINE)
-                self.stdscr.addch(start_y + 2, start_x + (idx + 1) * size, curses.ACS_BTEE)
+                try:
+                    self.stdscr.addch(start_y, start_x + (idx + 1) * size, curses.ACS_TTEE)
+                    self.stdscr.addch(start_y + 1, start_x + (idx + 1) * size, curses.ACS_VLINE)
+                    self.stdscr.addch(start_y + 2, start_x + (idx + 1) * size, curses.ACS_BTEE)
+                except curses.error:
+                    pass
         for num_row, row in enumerate(table):
             for num_cell, cell in enumerate(row):
                 if cell == "Size":
@@ -197,7 +203,10 @@ class MEM(Page):
                 except curses.error:
                     pass
                 if num_cell < len(columns_title) - 1:
-                    self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
+                    try:
+                        self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
+                    except curses.error:
+                        pass
         # Total GPU
         try:
             self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2),
