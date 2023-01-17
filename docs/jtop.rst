@@ -3,9 +3,6 @@ jtop
 
 .. currentmodule:: jtop
 
-Installing
-----------
-
 jtop can be installed with `pip <https://pip.pypa.io>`_
 
 .. code-block:: bash
@@ -14,8 +11,8 @@ jtop can be installed with `pip <https://pip.pypa.io>`_
 
 Don't forget to **logout** or **reboot** your board
 
-Running
--------
+Run jtop
+--------
 
 Simple and fast! You can write on your shell **jtop** and that's it!
 

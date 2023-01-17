@@ -20,7 +20,7 @@ Setting up your developing environment
 
 Clone and build in developer mode jetson-stats
 
-.. code-block:: bash
+.. code-block:: console
 
    git clone https://github.com/rbonghi/jetson_stats.git
    cd jetson_stats
@@ -30,7 +30,7 @@ Clone and build in developer mode jetson-stats
    
    You can also testing on x86 machines, installing the emulation for *tegrastats*, *nvpmodel* and *jetson_clocks*
 
-   .. code-block:: bash
+   .. code-block:: console
 
       sudo ./tests/develop.sh
 
@@ -45,21 +45,21 @@ Manually stop and disable jtop service
 If you want to manually control the jtop service you need to disable the service and manually start one in a terminal,
 following the commands below
 
-.. code-block:: bash
+.. code-block:: console
 
    sudo systemctl stop jtop.service
    sudo systemctl disable jtop.service
 
 Now you can work running in your terminal the jtop service
 
-.. code-block:: bash
+.. code-block:: console
 
    sudo JTOP_SERVICE=True jtop --force
 
 Restore jtop service
 ^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: bash
+.. code-block:: console
 
    sudo systemctl enable jtop.service
    sudo systemctl start jtop.service
@@ -71,7 +71,7 @@ Before commit you can test jetson-stats on multiple python version and check if 
 
 This script works with docker, and you can quickly run it.
 
-.. code-block:: bash
+.. code-block:: console
 
    bash tests/local_test.sh
 
@@ -100,7 +100,7 @@ Live docker with tox
 
 Run tox or work live from the terminal
 
-.. code-block:: bash
+.. code-block:: console
 
    bash tests/local_test.sh --debug -py 3.9 
 
@@ -109,7 +109,7 @@ Test documentation
 
 If you want to run **only** the documentation:
 
-.. code-block:: bash
+.. code-block:: console
 
    bash tests/local_test.sh --doc
 
@@ -120,6 +120,20 @@ If you want to test or develop the GUI library
 
 You can run this command from your terminal `python3 -m jtop.tests_gui.x` where **x** is the name of the file, example
 
-.. code-block:: bash
+.. code-block:: console
 
    python3 -m jtop.tests_gui.gui_page 
+
+Releases
+--------
+
+- Announce intent to release on Discord, see if anyone wants to include last minute changes.
+- Update `jtop/__init__.py` with the proper version number
+- Commit the changes to a `release-X.Y.Z` branch.
+- Create a pull request
+- Release a new `tag <https://git-scm.com/book/en/v2/Git-Basics-Tagging>`_ will automatically generate a new version
+
+.. code-block:: console
+   :class: no-copybutton
+
+   git tag -a <VERSION> -m <MESSAGE>
