@@ -229,8 +229,16 @@ class JTOPGUI:
             self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
         # Write first line
-        message = "Model: {model} - Jetpack {jetpack} [L4T {L4T}]".format(model=model, jetpack=jetpack, L4T=L4T)
-        self.stdscr.addstr(idx, 0, message, curses.A_BOLD)
+        head_string = "Model: {model} - ".format(model=model) if model else ""
+        if jetpack:
+            head_string += "Jetpack {jetpack} [L4T {L4T}]".format(jetpack=jetpack, L4T=L4T)
+            self.stdscr.addstr(idx, 0, head_string, curses.A_BOLD)
+        else:
+            head_string += "[L4T {L4T}]".format(L4T=L4T)
+            # Print only the model
+            self.stdscr.addstr(idx, 0, head_string, curses.A_BOLD)
+            
+            self.stdscr.addstr(idx, len(head_string) + 1, "Jetpack NOT DETECTED", curses.color_pair(1) | curses.A_BOLD)
 
     @check_curses
     def menu(self):
