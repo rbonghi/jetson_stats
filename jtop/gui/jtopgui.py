@@ -237,7 +237,7 @@ class JTOPGUI:
             head_string += "[L4T {L4T}]".format(L4T=L4T)
             # Print only the model
             self.stdscr.addstr(idx, 0, head_string, curses.A_BOLD)
-            
+            # Print error message
             self.stdscr.addstr(idx, len(head_string) + 1, "Jetpack NOT DETECTED", curses.color_pair(1) | curses.A_BOLD)
 
     @check_curses
