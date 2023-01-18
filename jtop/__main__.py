@@ -71,6 +71,7 @@ def warning_messages(jetson, no_warnings=False):
     if not engine_model(module):
         print("[{status}] Module \"{module}\" missing in jtop".format(status=bcolors.warning(), module=module))
 
+
 def exit_signal(signum, frame):
     logger.info("Close service by signal {signum}".format(signum=signum))
     sys.exit(0)
