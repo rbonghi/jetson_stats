@@ -32,9 +32,9 @@ def jetpack_missing(repository, hardware, version):
     template = "jetpack-missing.md"
     # Body
     body = "Please update jetson-stats with new jetpack\n\n"
-    body += "**Linux for Tegra**\n"
+    body += "### Linux for Tegra\n\n"
     body += " - L4T: " + l4t + "\n\n"
-    body += "**Jetson-Stats**\n"
+    body += "### Jetson-Stats\n\n"
     body += " - Version: " + version + "\n"
     # Make url
     url = make_issue(repository, title, body=body, labels="missing", template=template)
@@ -61,19 +61,19 @@ def hardware_missing(repository, hardware, version):
     else:
         title = "Hardware Missing".format()
     # Template
-    template = "model-missing.md"
+    template = "hardware-missing.md"
     # Body
     body = "Please update jetson-stats with this board\n\n"
-    body += "**Board**\n"
+    body += "### Board\n\n"
     for name, value in hardware.items():
         if not value:
             value = "**MISSING**"
         body += " - {name}: {value}\n".format(name=name, value=value)
-    body += "\n**Jetson-Stats**\n"
+    body += "\n### Jetson-Stats\n\n"
     body += " - Version: " + version + "\n"
     # Print all raw output
     body += "\n<!-- Please attach the output from: jtop --log -->\n"
-    body += "**RAW Data**\n"
+    body += "### RAW Data\n\n"
     body += "File from `jtop --log` attached"
     # Make url
     url = make_issue(repository, title, body=body, labels="missing", template=template)

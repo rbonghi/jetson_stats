@@ -13,21 +13,24 @@ Please update jetson-stats with this board
    * jetson_release -v
    * jtop (page INFO)
 -->
-**Board**
- - Model:
- - 699-level Part Number:
- - P-Number:
- - Module:
- - SoC:
- - CUDA Arch BIN:
- - Codename:
- - L4T:
- - Jetpack:
+### Board
+
+- Model:
+- 699-level Part Number:
+- P-Number:
+- Module:
+- SoC:
+- CUDA Arch BIN:
+- Codename:
+- L4T:
+- Jetpack:
 
 <!-- Use jtop -v -->
-**Jetson-Stats**
- - Version:
+### Jetson-Stats
+
+- Version:
 
 <!-- Please attach the output from: jtop --log -->
-**RAW Data**
+### RAW Data
+
 File from `jtop --log` attached
