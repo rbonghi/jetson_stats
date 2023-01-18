@@ -56,8 +56,10 @@ def main():
     del jetson['L4T']
     # Print NVP model status
     nvp_number, nvp_name = NVPModelService.query('nvpmodel')
-    nvp_string = "{number} - {name}".format(number=nvp_number, name=bcolors.ok(nvp_name))
-    print("{service}: {status}".format(service=bcolors.bold("NV Power Mode"), status=nvp_string))
+    print("{service}: {name} - Type: {number}".format(
+        service=bcolors.bold("NV Power Mode"),
+        name=bcolors.ok(nvp_name),
+        number=bcolors.ok(nvp_number)))
     # Print jetson hardware variables
     if args.verbose:
         print(bcolors.ok(bcolors.bold("Hardware:")))

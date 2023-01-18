@@ -28,17 +28,17 @@ class bcolors:
 
     @staticmethod
     def ok(message="OK"):
-        return bcolors.OKGREEN + message + bcolors.ENDC
+        return bcolors.OKGREEN + str(message) + bcolors.ENDC
 
     @staticmethod
     def warning(message="WARN"):
-        return bcolors.WARNING + message + bcolors.ENDC
+        return bcolors.WARNING + str(message) + bcolors.ENDC
 
     @staticmethod
     def fail(message="ERR"):
-        return bcolors.FAIL + message + bcolors.ENDC
+        return bcolors.FAIL + str(message) + bcolors.ENDC
 
     @staticmethod
     def bold(message):
-        return bcolors.BOLD + message + bcolors.ENDC
+        return bcolors.BOLD + str(message) + bcolors.ENDC
 # EOF
