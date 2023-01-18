@@ -1,5 +1,5 @@
-Contributing
-============
+✨ Contributing
+================
 
 jetson-stats is a community-maintained project and we happily accept contributions.
 

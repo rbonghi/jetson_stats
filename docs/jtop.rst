@@ -1,5 +1,5 @@
-jtop
-==========
+📊 jtop
+=======
 
 .. currentmodule:: jtop
 

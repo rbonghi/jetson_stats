@@ -1,5 +1,5 @@
-Sponsor
-=============
+💖 Sponsor 
+==========
 
 Please consider sponsoring jetson-stats development, especially if your company benefits from this library.
 

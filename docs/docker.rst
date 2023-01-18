@@ -1,5 +1,5 @@
-Docker
-======
+🐋 Docker
+=========
 
 .. currentmodule:: jtop
 

@@ -1,5 +1,5 @@
-Other tools
-===========
+🧰 Other tools
+================
 
 When you install jetson-stats there are also other tools included
 
