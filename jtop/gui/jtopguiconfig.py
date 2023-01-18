@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import curses
 from datetime import date
 # Logging
 import logging
+# local modules
+from ..core import get_var
 # Create logger
 logger = logging.getLogger(__name__)
 # Gui refresh rate
+COPYRIGHT_RE = re.compile(r""".*__copyright__ = ["'](.*?)['"]""", re.S)
 GUI_REFRESH = 1000 // 20
 
 JTOP_MENU_STATUS = 0
@@ -137,7 +141,7 @@ class JTOPCONFIG:
         self.stdscr.addstr(center_y + len(menu) + 2, center_x + 16, "q/Q Quit", curses.A_BOLD)
         # Draw copyrights
         self.stdscr.addstr(height - 2, width - 31, "Software parts of jetson-stats", curses.A_NORMAL)
-        self.stdscr.addstr(height - 1, width - 31, "(c) 2019-{year} Raffaello Bonghi".format(year=date.today().year), curses.A_NORMAL)
+        self.stdscr.addstr(height - 1, width - 28, get_var(COPYRIGHT_RE), curses.A_NORMAL)
 
     def _print_message(self, title, message):
         return {

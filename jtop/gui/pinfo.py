@@ -26,7 +26,7 @@ from .jtopgui import Page
 from .lib.common import plot_name_info, plot_dictionary
 # Regex
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
-AUTHOR_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
+COPYRIGHT_RE = re.compile(r""".*__copyright__ = ["'](.*?)['"]""", re.S)
 EMAIL_RE = re.compile(r""".*__email__ = ["'](.*?)['"]""", re.S)
 
 
@@ -65,9 +65,9 @@ class INFO(Page):
         _, width, first = self.size_page()
         start_pos = first + 3
         # Author info
-        string_author = "jtop {version} - (C) 2019-2023 {author} [{email}]".format(version=get_var(VERSION_RE),
-                                                                                   author=get_var(AUTHOR_RE),
-                                                                                   email=get_var(EMAIL_RE))
+        string_author = "jtop {version} - {copyright} [{email}]".format(version=get_var(VERSION_RE),
+                                                                        copyright=get_var(COPYRIGHT_RE),
+                                                                        email=get_var(EMAIL_RE))
         self.stdscr.addstr(first, 0, string_author, curses.A_BOLD)
         self.stdscr.addstr(first + 1, 0, "Website: https://rnext.it/jetson_stats/", curses.A_BOLD)
         # Plot platform

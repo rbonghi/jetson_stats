@@ -29,6 +29,7 @@ from .service import status_service
 from .terminal_colors import bcolors
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
+COPYRIGHT_RE = re.compile(r""".*__copyright__ = ["'](.*?)['"]""", re.S)
 
 
 def main():
@@ -37,7 +38,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-v', dest="verbose", help='Show all variables', action="store_true", default=False)
     # Copyrights
-    print("Software part of jetson-stats {version} (c) 2019-{year} Raffaello Bonghi".format(version=get_var(VERSION_RE), year=date.today().year))
+    print("Software part of jetson-stats {version} - {copyright}".format(version=get_var(VERSION_RE), copyright=get_var(COPYRIGHT_RE)))
     # Parse arguments
     args = parser.parse_args()
     # Read all Jetson Variables
