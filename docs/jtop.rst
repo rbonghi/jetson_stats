@@ -28,7 +28,7 @@ Other options are available with `-h` option:
 .. code-block:: console
   :class: no-copybutton
 
-  nvidia@agx-orin:~/$ jtop -h
+  nvidia@agx-orin:~$ jtop -h
   usage: jtop [-h] [--no-warnings] [--restore] [--loop] [--color-filter] [-r REFRESH] [-p PAGE] [-v]
 
   jtop is system monitoring utility and runs on terminal

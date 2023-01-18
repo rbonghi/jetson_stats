@@ -20,7 +20,7 @@ sys.path.insert(0, root_path)
 
 project = 'jetson-stats'
 author = 'Raffaello Bonghi'
-copyright = f"2019-{date.today().year}, {author}"
+copyright = f"{date.today().year}, {author}"
 
 
 # The short X.Y version.

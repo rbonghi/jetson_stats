@@ -12,7 +12,7 @@ All options available
 .. code-block:: console
   :class: no-copybutton
 
-  nvidia@jetson-nano:~/$ sudo jetson_swap -h
+  nvidia@jetson-nano:~$ sudo jetson_swap -h
   usage: createSwapFile [[[-d directory ] [-s size] -a] | [-h] | [--off]]
   -d | --dir    <directoryname> Directory to place swapfile
   -n | --name   <swapname> Name swap file
