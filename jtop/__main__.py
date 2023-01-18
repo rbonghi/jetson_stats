@@ -57,7 +57,7 @@ def warning_messages(jetson, no_warnings=False):
         if not jetson.jetson_clocks.is_config:
             print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
     # Check if an hardware value is missing
-    if not all([data for data in hardware.values()]):
+    if not all([data for name, data in hardware.items() if name not in ['Jetpack', 'L4T']]):
         print("[{status}] jtop not support this hardware for [L4T {l4t}]".format(status=bcolors.warning(), l4t=hardware['L4T']))
         print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
         print("  or {link}".format(link=hardware_missing(REPOSITORY, hardware, version)))
