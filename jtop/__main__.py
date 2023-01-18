@@ -79,7 +79,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--force', dest='force', help=argparse.SUPPRESS, action="store_true", default=False)
     parser.add_argument('--health', dest="health", help='Status jtop and fix', action="store_true", default=False)
-    parser.add_argument('--log', dest="log", help='Generate a log for GitHub', action="store_true", default=False)
+    parser.add_argument('--error-log', dest="log", help='Generate a log for GitHub', action="store_true", default=False)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
     parser.add_argument('--loop', dest="loop", help='Automatically switch page every {sec}s'.format(sec=LOOP_SECONDS), action="store_true", default=False)

@@ -128,8 +128,8 @@ Releases
 --------
 
 - Announce intent to release on Discord, see if anyone wants to include last minute changes.
-- Update `jtop/__init__.py` with the proper version number
-- Commit the changes to a `release-X.Y.Z` branch.
+- Update ``jtop/__init__.py`` with the proper version number
+- Commit the changes to a ``release-X.Y.Z`` branch.
 - Create a pull request
 - Release a new `tag <https://git-scm.com/book/en/v2/Git-Basics-Tagging>`_ will automatically generate a new version
 

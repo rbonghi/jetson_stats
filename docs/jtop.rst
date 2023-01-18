@@ -23,7 +23,7 @@ Simple and fast! You can write on your shell **jtop** and that's it!
 .. image:: images/jtop.png
    :align: center
 
-Other options are available with `-h` option:
+Other options are available with ``-h`` option:
 
 .. code-block:: console
   :class: no-copybutton
@@ -35,6 +35,8 @@ Other options are available with `-h` option:
 
   optional arguments:
     -h, --help            show this help message and exit
+    --health              Status jtop and fix (default: False)
+    --error-log           Generate a log for GitHub (default: False)
     --no-warnings         Do not show warnings (default: False)
     --restore             Reset Jetson configuration (default: False)
     --loop                Automatically switch page every 5s (default: False)
@@ -77,18 +79,92 @@ In page **5 CTRL**:
 * **f** Manual/jetson_clocks mode for your fan
 * **p** and **m** Increase and decrease the Fan speed
 
+Options
+-------
+
+There are different options available for jtop
+
+Health
+^^^^^^
+
+If something goes wrong, you can check the ``jtop`` status with
+
+.. code-block:: console
+
+  jtop --health
+
+.. image:: /images/jetson_config-02-jtop.png
+   :align: center
+
+This tool, will check and fix:
+
+- **jetson-stats** - Fix jetson-stats service
+- **Permissions** - Fix permissions for your user
+- **variables** - Check if are installed all variables :doc:`other-tools/environment_variables`
+
+Restore
+^^^^^^^
+
+If you want to restore the original board configuration you can simply write
+
+.. code-block:: console
+
+  jtop --restore
+
+.. image:: images/jtop-restore.png
+   :align: center
+
+This command will restore the original configuration of:
+
+- ``jetson_clocks``
+- fan
+- jtop configuration
+
+Color filter
+^^^^^^^^^^^^
+
+This option change the red color for text and background to blue.
+
+To enable this feature you can add this option
+
+.. code-block:: console
+
+  jtop --color-filter
+
+or you can add in your ``.bashrc``
+
+.. code-block:: bash
+
+  JTOP_COLOR_FILTER=True
+
+The output will be like the image below
+
+.. image:: images/jtop-color-filter.png
+   :align: center
+
+Error-log
+^^^^^^^^^
+
+If your board is not included, jetpack missing, hardware missing, you can launch this script
+
+.. code-block:: console
+
+  jtop --error-log
+
+This script generate a file ``jtop-error.log`` ready to be attached on your issue
+
 How it's works
 --------------
 
 jtop use a service to sharing the data between client (jtop gui or your python script) and a server.
 
-This service, called *jtop.service* use a socket file. It is located in:
+This service, called ``jtop.service`` use a socket file. It is located in:
 
-.. code-block:: bash
+.. code-block:: console
   :class: no-copybutton
 
   /run/jtop.sock
 
-This socket is protected by access mode: **660** equivalent to `srw-rw----` and by the group.
+This socket is protected by access mode: **660** equivalent to ``srw-rw----`` and by the group.
 
-Only other users in `jtop` have access to this socket
+Only other users in ``jtop`` have access to this socket
