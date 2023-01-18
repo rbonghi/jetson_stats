@@ -49,7 +49,7 @@ log = logging.getLogger()
 
 here = os.path.abspath(os.path.dirname(__file__))
 project_homepage = "https://github.com/rbonghi/jetson_stats"
-documentation_homepage = "https://rbonghi.github.io/jetson_stats"
+documentation_homepage = "https://rnext.it/jetson_stats"
 
 
 # Get the long description from the README file
@@ -197,13 +197,14 @@ setup(
     license='AGPL-3.0',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url=project_homepage,
-    download_url=(project_homepage + "/archive/master.zip"),
+    url=documentation_homepage,
     project_urls={
-        "How To": documentation_homepage,
-        "Examples": (project_homepage + "/tree/master/examples"),
-        "Bug Reports": (project_homepage + "/issues"),
-        "Source": (project_homepage + "/tree/master")
+        'Documentation': documentation_homepage,
+        'Funding': 'https://github.com/sponsors/rbonghi',
+        'Say Thanks!': 'https://discord.gg/BFbuJNhYzS',
+        'Source': project_homepage,
+        'Tracker': (project_homepage + "/issues"),
+        'Examples': (project_homepage + "/tree/master/examples"),
     },
     packages=find_packages(exclude=['examples', 'scripts', 'tests', 'jtop.tests', 'jtop.tests_gui']),  # Required
     # Define research keywords
