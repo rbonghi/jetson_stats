@@ -150,6 +150,16 @@ RAW_FILES = ['/etc/nv_tegra_release',
              '/proc/device-tree/nvidia,dtsfilename']
 
 
+def read_i2c_raw_data(bus, registry, size_block):
+    string_data = ""
+    for idx in range(256 // size_block):
+        # Extract part number expected module
+        data = bus.read_i2c_block_data(registry, idx * size_block, size_block)
+        string_data += ' '.join(["{:02X}".format(x) for x in data]) + " " * 4
+        string_data += ''.join([chr(x) if chr(x).isprintable() else "." for x in data]) + "\n"
+    return string_data
+
+
 def get_raw_output():
     raw_output = {}
     # Catch all output from all files
@@ -158,14 +168,10 @@ def get_raw_output():
     # Read all output from all I2C ports
     for bus_number in range(3):
         try:
-            string_data = ""
             bus = SMBus(bus_number)
             size_block = 16
-            for idx in range(256 // size_block):
-                data = bus.read_i2c_block_data(0x50, idx * size_block, size_block)
-                string_data += ' '.join(["{:02X}".format(x) for x in data]) + " " * 4
-                string_data += ''.join([chr(x) if chr(x).isprintable() else "." for x in data]) + "\n"
-            raw_output['I2C-{num}'.format(num=bus_number)] = string_data
+            raw_output['I2C-{num}-0x50'.format(num=bus_number)] = read_i2c_raw_data(bus, 0x50, size_block)
+            raw_output['I2C-{num}-0x56'.format(num=bus_number)] = read_i2c_raw_data(bus, 0x56, size_block)
         except (IOError, OSError):
             # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
             raw_output['I2C-{num}'.format(num=bus_number)] = 'FAIL'
@@ -312,8 +318,12 @@ def get_jetson_variables():
         # TX1 - tegra210-jetson-tx1-p2597-2180-a01-devkit
         # TK1 - tegra124-jetson_tk1-pm375-000-c00-00
         dtsfilename = cat("/proc/device-tree/nvidia,dtsfilename")
-        if "/dvs/git/dirty/git-master_linux/kernel" in dtsfilename or 'kernel-dts' in dtsfilename:
+        if 'kernel-dts' in dtsfilename:
             # Decode codename
+            idx_codename = dtsfilename.split('/').index('kernel-dts') - 1
+            hardware['Codename'] = dtsfilename.split('/')[idx_codename].capitalize()
+        elif "/dvs/git/dirty/git-master_linux/kernel" in dtsfilename:
+            # Decode codename for TK1
             hardware['Codename'] = dtsfilename.split('/')[-3].capitalize()
     # Read serial number
     serial = ''

@@ -87,6 +87,12 @@ def main():
         print(" - {cuda}: {version}".format(cuda=bcolors.bold('CUDA'), version=cuda_version))
     else:
         print(bcolors.fail(" - CUDA not installed!"))
+    # Read all libraries
+    os_variables = get_libraries()
+    for name, value in os_variables.items():
+        if not value:
+            value = bcolors.fail("Not installed")
+        print(" - {name}: {value}".format(name=bcolors.bold(name), value=value))
     # Read OpenCV status
     opencv_version, opencv_cuda = get_opencv()
     if opencv_version:
@@ -95,12 +101,6 @@ def main():
         print(" - {opencv_string} - with CUDA: {opencv_cuda}".format(opencv_string=opencv_string, opencv_cuda=opencv_cuda_string))
     else:
         print(bcolors.fail(" - OpenCV not installed!"))
-    # Read all libraries
-    os_variables = get_libraries()
-    for name, value in os_variables.items():
-        if not value:
-            value = bcolors.fail("Not installed")
-        print(" - {name}: {value}".format(name=bcolors.bold(name), value=value))
 
 
 if __name__ == "__main__":

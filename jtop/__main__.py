@@ -132,6 +132,7 @@ def main():
     # Generate a log for GitHub
     if args.log:
         body = get_hardware_log()
+        body += "\n\nLog from jtop {version}\n".format(version=get_var(VERSION_RE))
         with open('{cwd}/{name}'.format(cwd=os.getcwd(), name=JTOP_LOG_NAME), 'w') as writer:
             writer.write(body)
         print("LOG '{name}' generated in {path}".format(name=JTOP_LOG_NAME, path=os.getcwd()))
