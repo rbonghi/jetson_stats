@@ -26,6 +26,16 @@
 
 **jetson-stats** is a package for **monitoring** and **control** your [NVIDIA Jetson](https://developer.nvidia.com/buy-jetson) [Orin, Xavier, Nano, TX] series.
 
+jetson-stats is a powerful tool to analyze your board, you can use with a stand alone application with `jtop` or import in your python script, the main features are:
+
+- decode hardware, architecture, L4T and NVIDIA Jetpack
+- monitoring, CPU, GPU, Memory, Engines, fan
+- control NVP model, fan speed, jetson_clocks
+- importable in a python script
+- dockerizale in a container
+- Do not need super user
+- Tested on many different hardware configurations
+
 ## Install
 
 jetson-stats can be installed with [pip](https://pip.pypa.io), but need **superuser**:
