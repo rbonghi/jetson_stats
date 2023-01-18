@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -178,11 +178,17 @@ class MEM(Page):
         # Table
         size = r_width // len(columns_title) + 1
         for idx, name in enumerate(columns_title):
-            self.stdscr.addstr(start_y + 1, start_x + 2 + idx * size, name, curses.A_BOLD)
+            try:
+                self.stdscr.addstr(start_y + 1, start_x + 2 + idx * size, name, curses.A_BOLD)
+            except curses.error:
+                pass
             if idx < len(columns_title) - 1:
-                self.stdscr.addch(start_y, start_x + (idx + 1) * size, curses.ACS_TTEE)
-                self.stdscr.addch(start_y + 1, start_x + (idx + 1) * size, curses.ACS_VLINE)
-                self.stdscr.addch(start_y + 2, start_x + (idx + 1) * size, curses.ACS_BTEE)
+                try:
+                    self.stdscr.addch(start_y, start_x + (idx + 1) * size, curses.ACS_TTEE)
+                    self.stdscr.addch(start_y + 1, start_x + (idx + 1) * size, curses.ACS_VLINE)
+                    self.stdscr.addch(start_y + 2, start_x + (idx + 1) * size, curses.ACS_BTEE)
+                except curses.error:
+                    pass
         for num_row, row in enumerate(table):
             for num_cell, cell in enumerate(row):
                 if cell == "Size":
@@ -197,7 +203,10 @@ class MEM(Page):
                 except curses.error:
                     pass
                 if num_cell < len(columns_title) - 1:
-                    self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
+                    try:
+                        self.stdscr.addch(start_y + 3 + num_row, start_x + (1 + num_cell) * size, curses.ACS_VLINE)
+                    except curses.error:
+                        pass
         # Total GPU
         try:
             self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2),
@@ -268,7 +277,7 @@ class MEM(Page):
             try:
                 self.stdscr.addstr(first + height - 3, start_pos + 12, "size", curses.A_NORMAL)
                 self.stdscr.addstr(first + height - 3, start_pos + 17, "{size: <2}".format(size=self._swap_size), color)
-                self.stdscr.addstr(first + height - 3, start_pos + 18, "GB", curses.A_BOLD)
+                self.stdscr.addstr(first + height - 3, start_pos + 20, "GB", curses.A_BOLD)
             except curses.error:
                 pass
         # else:

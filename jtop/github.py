@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2020 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,18 +19,22 @@
 # Shell information
 # os.environ['SHELL']
 
+from copy import deepcopy
+# jtop variables
+from .core.jetson_variables import get_raw_output
 
-def jetpack_missing(repository, jetson, version):
-    l4t = jetson.board.info["L4T"]
+
+def jetpack_missing(repository, hardware, version):
+    l4t = hardware['L4T']
     # Title
     title = "jetson-stats not supported for [L4T {l4t}]".format(l4t=l4t)
     # Template
     template = "jetpack-missing.md"
     # Body
     body = "Please update jetson-stats with new jetpack\n\n"
-    body += "**Linux for Tegra**\n"
+    body += "### Linux for Tegra\n\n"
     body += " - L4T: " + l4t + "\n\n"
-    body += "**Jetson-Stats**\n"
+    body += "### Jetson-Stats\n\n"
     body += " - Version: " + version + "\n"
     # Make url
     url = make_issue(repository, title, body=body, labels="missing", template=template)
@@ -38,30 +42,43 @@ def jetpack_missing(repository, jetson, version):
     return hyperlink(url, "open an issue on Github")
 
 
-def model_missing(repository, jetson, version):
-    model = jetson.board.info["model"]
+def get_hardware_log():
+    raw_output = get_raw_output()
+    # Print all raw output
+    body = "Output:"
+    for name, value in raw_output.items():
+        body += "\n------------------\n"
+        body += "{name}:\n{value}".format(name=name, value=value)
+    return body
+
+
+def hardware_missing(repository, hardware, version):
+    hardware = deepcopy(hardware)
+    del hardware['Serial Number']
     # Title
-    title = "Model missing {model}".format(model=model)
+    if 'P-Number' in hardware:
+        title = "Hardware Missing: {pnumber}".format(pnumber=hardware.get('P-Number', ''))
+    else:
+        title = "Hardware Missing".format()
     # Template
-    template = "model-missing.md"
+    template = "hardware-missing.md"
     # Body
     body = "Please update jetson-stats with this board\n\n"
-    body += "**Board**\n"
-    body += " - Boardis: " + jetson.board.hardware["BOARDIDS"] + "\n"
-    body += " - SOC: " + jetson.board.hardware["SOC"] + "\n"
-    body += " - ID: " + jetson.board.hardware["CHIP_ID"] + "\n"
-    body += " - Code Name: " + jetson.board.hardware["CODENAME"] + "\n\n"
-    body += " - Module: " + jetson.board.hardware["MODULE"] + "\n\n"
-    body += " - Carrier: " + jetson.board.hardware["CARRIER"] + "\n\n"
-    body += "**Jetpack**\n"
-    body += " - Jetpack: " + jetson.board.info["jetpack"] + "\n"
-    body += " - L4T: " + jetson.board.info["L4T"] + "\n\n"
-    body += "**Jetson-Stats**\n"
-    body += " - version: " + version + "\n"
+    body += "### Board\n\n"
+    for name, value in hardware.items():
+        if not value:
+            value = "**MISSING**"
+        body += " - {name}: {value}\n".format(name=name, value=value)
+    body += "\n### Jetson-Stats\n\n"
+    body += " - Version: " + version + "\n"
+    # Print all raw output
+    body += "\n<!-- Please attach the output from: jtop --log -->\n"
+    body += "### RAW Data\n\n"
+    body += "File from `jtop --log` attached"
     # Make url
     url = make_issue(repository, title, body=body, labels="missing", template=template)
     # message shell
-    return hyperlink(url, title)
+    return hyperlink(url, "open an issue on Github and attach the output from: jtop --log")
 
 
 def hyperlink(url, text, hyperlink=True):

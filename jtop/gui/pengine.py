@@ -56,8 +56,9 @@ def map_jetson_nano(engine):
 
 MAP_JETSON_MODELS = {
     'agx orin': pass_agx_orin,
-    'agx xavier': map_xavier_nx,
-    'jetson nano': map_jetson_nano
+    'xavier nx': map_xavier_nx,
+    'jetson nano': map_jetson_nano,
+    'nintendo': map_jetson_nano
 }
 
 
@@ -70,7 +71,7 @@ def engine_model(model):
 
 def map_engines(jetson):
     # Check if there is a map for each engine
-    func_list_engines = engine_model(jetson.board.info["model"])
+    func_list_engines = engine_model(jetson.board.hardware["Module"])
     if func_list_engines:
         return func_list_engines(jetson.engine)
     # Otherwise if not mapped show all engines

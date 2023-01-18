@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019-2020 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-jtop is a simple package to monitoring and control your NVIDIA Jetson [Xavier NX, Nano, AGX Xavier, TX1, TX2].
+jtop is a simple package to monitoring and control your NVIDIA Jetson [Orin, Xavier, Nano, TX] series.
 
 It read the status of your board using different native processes:
  * tegrastats
@@ -52,24 +52,27 @@ Or using a callback function
     jetson.attach(read_stats)
     jetson.loop_for_ever()
 
-Other example are availables on https://github.com/rbonghi/jetson_stats/tree/master/examples
+Other example are available on https://github.com/rbonghi/jetson_stats/tree/master/examples
 Follow the next attributes to know in detail how you can you in your python project.
 """
 import logging
-import os
+import re
 import sys
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
 from .core import (
+    get_var,
+    get_cuda,
+    get_opencv,
+    get_libraries,
     Board,
     Swap,
     Fan,
     NVPModel,
     get_uptime,
     status_disk,
-    import_os_variables,
     get_local_interfaces,
     JetsonClocks,
     JtopException)
@@ -88,6 +91,8 @@ if sys.version_info[0] == 2:
 logger = logging.getLogger(__name__)
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+# Version match
+VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
 
 class jtop(Thread):
@@ -140,27 +145,20 @@ class jtop(Thread):
         self._nvp = None
 
     def _load_jetson_libraries(self):
-        try:
-            env = {}
-            JTOP_FOLDER, _ = os.path.split(__file__)
-            libraries = import_os_variables(JTOP_FOLDER + "/jetson_libraries", "JETSON_")
-            for k, v in libraries.items():
-                env[k] = str(v)
-            # Make dictionaries
-            self._board._update_libraries({
-                "CUDA": env["JETSON_CUDA"],
-                "cuDNN": env["JETSON_CUDNN"],
-                "TensorRT": env["JETSON_TENSORRT"],
-                "VisionWorks": env["JETSON_VISIONWORKS"],
-                "OpenCV": env["JETSON_OPENCV"],
-                "OpenCV-Cuda": env["JETSON_OPENCV_CUDA"],
-                "VPI": env["JETSON_VPI"],
-                "Vulkan": env["JETSON_VULKAN_INFO"]})
-            # Loaded from script
-            logger.debug("Loaded jetson_variables variables")
-        except Exception:
-            # Write error message
-            self._error = sys.exc_info()
+        # Load all variables
+        cuda_version = get_cuda()
+        opencv_version, opencv_cuda = get_opencv()
+        os_variables = get_libraries()
+        libraries = {
+            'CUDA': cuda_version,
+            'OpenCV': opencv_version,
+            'OpenCV-Cuda': opencv_cuda,
+        }
+        libraries.update(os_variables)
+        # Make dictionaries
+        self._board._update_libraries(libraries)
+        # Loaded from script
+        logger.debug("Loaded jetson_variables variables")
 
     def attach(self, observer):
         """
@@ -218,7 +216,7 @@ class jtop(Thread):
         :return: Generator of all operations to restore your NVIDIA Jetson
         :rtype: generator
         :raises JtopException: if the connection with the server is lost,
-            not active or your user does not have the permission to connect to *jetson_stats.service*
+            not active or your user does not have the permission to connect to *jtop.service*
         """
         # Reset jetson_clocks
         if self.jetson_clocks is not None:
@@ -295,27 +293,29 @@ class jtop(Thread):
         """
         Board status, in this property you can find:
 
-        * info
-            * machine
-            * jetpack
-            * L4T (Linux for Tegra)
+        * platform
+            * Machine
+            * System
+            * Distribution
+            * Release
+            * Python
         * hardware
-            * TYPE
-            * CODENAME
-            * SOC
-            * CHIP_ID
-            * BOARDIDS
-            * MODULE
-            * BOARD
-            * CUDA_ARCH_BIN
-            * SERIAL_NUMBER
+            * Model
+            * 699-level Part Number
+            * P-Number
+            * Module
+            * SoC
+            * CUDA Arch BIN
+            * Codename (Optional)
+            * Serial Number
+            * L4T (Linux for Tegra)
+            * Jetpack
         * libraries
             * CUDA
-            * cuDNN
-            * TensorRT
-            * VisionWorks
             * OpenCV
             * OpenCV-Cuda
+            * cuDNN
+            * TensorRT
             * VPI
             * Vulkan
 
@@ -916,27 +916,27 @@ class jtop(Thread):
                 pass
 
         :raises JtopException: if the connection with the server is lost,
-            not active or your user does not have the permission to connect to *jetson_stats.service*
+            not active or your user does not have the permission to connect to *jtop.service*
         """
         # Connected to broadcaster
         try:
             self._broadcaster.connect()
         except FileNotFoundError as e:
             if e.errno == 2 or e.errno == 111:  # Message error: 'No such file or directory' or 'Connection refused'
-                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
+                raise JtopException("The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service")
             elif e.errno == 13:  # Message error: 'Permission denied'
-                raise JtopException("I can't access jetson_stats.service.\nPlease logout or reboot this board.")
+                raise JtopException("I can't access jtop.service.\nPlease logout or reboot this board.")
             else:
                 raise FileNotFoundError(e)
         except ConnectionRefusedError as e:
             if e.errno == 111:  # Connection refused
                 # When server is off but socket files exists in /run
-                raise JtopException("The jetson_stats.service is not active. Please run:\nsudo systemctl restart jetson_stats.service")
+                raise JtopException("The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service")
             else:
                 raise ConnectionRefusedError(e)
         except PermissionError as e:
             if e.errno == 13:  # Permission denied
-                raise JtopException("I can't access jetson_stats.service.\nPlease logout or reboot this board.")
+                raise JtopException("I can't access jtop.service.\nPlease logout or reboot this board.")
             else:
                 raise PermissionError(e)
         except ValueError:
@@ -950,6 +950,13 @@ class jtop(Thread):
         self._sync_event = self._broadcaster.sync_event()
         # Initialize connection
         init = self._get_configuration()
+        # Get jtop service version
+        service_version = init.get('version', 'unknown')
+        if service_version != get_var(VERSION_RE):
+            raise JtopException("""Mismatch version jtop service: [{service_version}] and client: [{client_version}]. Please run:\n
+sudo systemctl restart jtop.service""".format(
+                service_version=service_version,
+                client_version=get_var(VERSION_RE)))
         # Load server speed
         self._server_interval = init['interval']
         # Load board information

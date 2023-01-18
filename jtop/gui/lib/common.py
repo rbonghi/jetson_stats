@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -163,21 +163,33 @@ def value_to_string(value, unit, type='Hz'):
     return "{value}{unit}{type}".format(value=value_string, unit=unit, type=type)
 
 
+def plot_dictionary(stdscr, pos_y, pos_x, name, data, size=None):
+    size_y = 1
+    size_x = 0
+    stdscr.addstr(pos_y, pos_x, name, curses.A_BOLD)
+    # Build table from dictionary
+    for idx, (name, value) in enumerate(data.items()):
+        # Plot nanme
+        stdscr.addstr(pos_y + idx + 1, pos_x + 1, str(name) + ":", curses.A_BOLD)
+        # Plot value
+        if not value:
+            value = "Missing"
+        len_value = len(value)
+        if size:
+            if len(name) + len(value) + 3 > size:
+                len_value = size - len(name) - 3
+        try:
+            stdscr.addstr(pos_y + idx + 1, pos_x + 3 + len(name), value[:len_value], curses.A_NORMAL)
+        except curses.error:
+            pass
+        size_x = max(size_x, len(name) + len(value) + 3)
+        size_y += 1
+    return size_y, size_x
+
+
 @check_curses
-def plot_dictionary(stdscr, offset, data, name, start=0):
-    # Plot title
+def plot_name_info(stdscr, offset, start, name, value, color=curses.A_NORMAL, spacing=0):
     stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
-    counter = 1
-    for key, value in data.items():
-        if 'text' in value:
-            stdscr.addstr(offset + counter, start, " {0:<10} {1}".format(key, value['text']))
-        else:
-            stdscr.addstr(offset + counter, start, " {0:<10} {1}".format(key, value))
-        counter += 1
-
-
-@check_curses
-def plot_name_info(stdscr, pos_y, pos_x, name, value, color=curses.A_NORMAL, spacing=0):
-    stdscr.addstr(pos_y, pos_x, "{name}:".format(name=name), curses.A_BOLD)
-    stdscr.addstr(pos_y, pos_x + len(name) + 2 + spacing, value, color)
+    stdscr.addstr(offset, start + len(name) + 2 + spacing, value, color)
+    return len(name) + len(value) + 2
 # EOF

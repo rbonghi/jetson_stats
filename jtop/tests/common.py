@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -76,6 +76,6 @@ def remove_tests():
         os.remove('/tmp/jetson_clocks_test')
     if os.path.isfile('/tmp/nvp_model_test'):
         os.remove('/tmp/nvp_model_test')
-    if os.path.isfile('/usr/local/jetson_stats/config.json'):
-        os.remove('/usr/local/jetson_stats/config.json')
+    if os.path.isfile('/usr/local/jtop/config.json'):
+        os.remove('/usr/local/jtop/config.json')
 # EOF
