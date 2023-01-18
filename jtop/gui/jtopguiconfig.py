@@ -17,7 +17,6 @@
 
 import re
 import curses
-from datetime import date
 # Logging
 import logging
 # local modules

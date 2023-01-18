@@ -17,7 +17,6 @@
 
 import re
 import argparse
-from datetime import date
 
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core import (get_cuda,
