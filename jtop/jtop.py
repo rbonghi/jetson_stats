@@ -281,13 +281,10 @@ class jtop(Thread):
         """
         Engine status, in this property you can find:
 
-        * **APE** in MHz
-        * **NVENC** in MHz
-        * **NVDEC** in MHz
-        * **NVJPG** in MHz (If supported in your board)
+        APE, DLA, NVDEC, NVENC, and other
 
-        :return: List of all active engines
-        :rtype: Engine
+        :return: Dictionary of all active engines
+        :rtype: dict
         """
         return self._stats.get('engines', {})
 
