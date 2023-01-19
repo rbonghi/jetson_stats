@@ -65,6 +65,7 @@ def warning_messages(jetson, no_warnings=False):
     # Check if model is in map list
     if not engine_model(hardware["Module"]) and hardware["Module"]:
         engine_gui(REPOSITORY, hardware, version)
+    engine_gui(REPOSITORY, hardware, version)
 
 
 def exit_signal(signum, frame):

@@ -117,7 +117,7 @@ def hardware_missing(repository, hardware, version):
     hyperlink(message, url, "open a Github issue & {attach} file from: jtop --error-log".format(attach=bcolors.bold('attach')))
 
 
-def hyperlink(message, url, text, hyperlink=True):
+def hyperlink(message, url, text):
     # Reference:
     # 1. http://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
     # 2. https://stackoverflow.com/questions/40419276/python-how-to-print-text-to-console-as-hyperlink
@@ -129,10 +129,10 @@ def hyperlink(message, url, text, hyperlink=True):
     print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset} or".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
     # Generate hyperlink for sheel
     # Check type of shell
-    if hyperlink:
+    try:
         link = u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (press CTRL + Click)".format(url=url, text=text)
-    else:
-        link = "{text} ({url})".format(url=url, text=text)
+    except UnicodeEncodeError:
+        link = "{text}".format(url=url)
     print("  {link}".format(link=link))
 
 
