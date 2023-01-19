@@ -132,7 +132,7 @@ def hyperlink(message, url, text):
     try:
         link = u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (press CTRL + Click)".format(url=url, text=text)
     except UnicodeEncodeError:
-        link = "{text}".format(url=url)
+        link = "{text}".format(text=text)
     print("  {link}".format(link=link))
 
 
