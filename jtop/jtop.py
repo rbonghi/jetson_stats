@@ -296,13 +296,13 @@ class jtop(Thread):
         """
         Board status, in this property you can find:
 
-        * platform
+        * platform (from jtop library is running)
             * Machine
             * System
             * Distribution
             * Release
             * Python
-        * hardware
+        * hardware (from service is running)
             * Model
             * 699-level Part Number
             * P-Number
@@ -313,7 +313,7 @@ class jtop(Thread):
             * Serial Number
             * L4T (Linux for Tegra)
             * Jetpack
-        * libraries
+        * libraries (from jtop library is running)
             * CUDA
             * OpenCV
             * OpenCV-Cuda
