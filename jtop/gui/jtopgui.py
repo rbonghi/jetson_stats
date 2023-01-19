@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import abc
 import curses
 import locale
@@ -22,6 +23,8 @@ import locale
 import logging
 # Timer
 from datetime import datetime, timedelta
+# Get variables
+from ..core import get_var
 # Graphics elements
 from .lib.common import (check_size,
                          check_curses,
@@ -33,6 +36,8 @@ logger = logging.getLogger(__name__)
 ABC = abc.ABCMeta('ABC', (object,), {})
 # Gui refresh rate
 GUI_REFRESH = 1000 // 20
+# Copyright small
+COPYRIGHT_SMALL_RE = re.compile(r""".*__cr__ = ["'](.*?)['"]""", re.S)
 
 
 class Page(ABC):
@@ -251,10 +256,11 @@ class JTOPGUI:
             self.stdscr.addstr(height - 1, position, str(idx + 1), color | curses.A_BOLD)
             self.stdscr.addstr(height - 1, position + 1, page.name + " ", color)
             position += len(page.name) + 3
+        # Quit button
         self.stdscr.addstr(height - 1, position, "Q", curses.A_REVERSE | curses.A_BOLD)
         self.stdscr.addstr(height - 1, position + 1, "uit ", curses.A_REVERSE)
         # Author name
-        name_author = "Raffaello Bonghi"
+        name_author = get_var(COPYRIGHT_SMALL_RE) + " "
         self.stdscr.addstr(height - 1, width - len(name_author), name_author, curses.A_REVERSE)
 
     def event_menu(self, mx, my):
