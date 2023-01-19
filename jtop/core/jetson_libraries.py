@@ -65,9 +65,11 @@ def get_opencv():
         lines = cmd()
         for line in lines:
             if "NVIDIA CUDA" in line:
-                return True
+                opencv_cuda = True
+                break
             if "Use Cuda" in line:
-                return False if "NO" in line else True
+                opencv_cuda = False if "NO" in line else True
+                break
     except (OSError, Command.CommandException):
         pass
     return opencv_version, opencv_cuda

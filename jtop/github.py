@@ -21,7 +21,7 @@
 
 from copy import deepcopy
 # jtop variables
-from .core.jetson_variables import get_raw_output
+from .core.jetson_variables import get_raw_output, get_platform_variables
 
 
 def jetpack_missing(repository, hardware, version):
@@ -43,9 +43,14 @@ def jetpack_missing(repository, hardware, version):
 
 
 def get_hardware_log():
-    raw_output = get_raw_output()
+    # Print platform
+    platform = get_platform_variables()
+    body = "--------------------- PLATFORM -------------------------\n"
+    for name, value in platform.items():
+        body += "{name}: {value}\n".format(name=name, value=value)
     # Print all raw output
-    body = "Output:"
+    raw_output = get_raw_output()
+    body += "-------------------- RAW OUTPUT ------------------------"
     for name, value in raw_output.items():
         body += "\n------------------\n"
         body += "{name}:\n{value}".format(name=name, value=value)

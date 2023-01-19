@@ -31,5 +31,6 @@ Please update jetson-stats with this board
 - Version:
 
 <!-- Please attach the output from: jtop --log -->
-**RAW Data**
+### RAW Data
+
 File from `jtop --log` attached
