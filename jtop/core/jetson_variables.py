@@ -124,7 +124,7 @@ MODULE_NAME_TABLE = {
     'p2888-0006': 'NVIDIA Jetson AGX Xavier (8 GB ram)',
     'p2888-0008': 'NVIDIA Jetson AGX Xavier Industrial (32 GB ram)',
     'p3448-0000': 'NVIDIA Jetson Nano (4 GB ram)',
-    'p3448-0002': 'NVIDIA Jetson Nano',
+    'p3448-0002': 'NVIDIA Jetson Nano module (16Gb eMMC)',
     'p3448-0003': 'NVIDIA Jetson Nano (2 GB ram)',
     'p3509-0000': 'NVIDIA Jetson TX2 NX',
     'p3489-0000': 'NVIDIA Jetson TX2i',
