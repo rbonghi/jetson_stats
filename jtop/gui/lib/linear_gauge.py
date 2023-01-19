@@ -97,7 +97,12 @@ def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
         # https://www.htmlsymbols.xyz/box-drawing
         stdscr.addstr(pos_y, start_bar, "[" + " " * (size_bar) + "]", curses.A_BOLD)
         # Draw min and max value
-        string_min_max = min_string + "-" * (size_bar - len(max_string) - 7) + max_string
+        if size_bar <= 7:
+            string_min_max = "-" * size_bar
+        elif size_bar <= 14:
+            string_min_max = "-" * (size_bar - 7) + max_string
+        else:
+            string_min_max = min_string + "-" * (size_bar - 14) + max_string
         # Draw indicator
         if data['max'] != data['min']:
             value = int((curr * size_bar) / (float(data['max'] - float(data['min']))))

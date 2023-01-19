@@ -106,7 +106,7 @@ class ENGINE(Page):
         # Screen size
         height, width, first = self.size_page()
         # Draw all engines
-        offset_y = first + 2
+        offset_y = first + 1
         offset_x = 1
         size_gauge = width - 2
         # Draw all engines
