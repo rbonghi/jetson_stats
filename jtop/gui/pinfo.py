@@ -64,12 +64,15 @@ class INFO(Page):
         # Screen size
         _, width, first = self.size_page()
         start_pos = first + 3
+        # Clear first line
+        self.stdscr.move(0, 0)
+        self.stdscr.clrtoeol()
         # Author info
         string_author = "jtop {version} - {copyright} [{email}]".format(version=get_var(VERSION_RE),
                                                                         copyright=get_var(COPYRIGHT_RE),
                                                                         email=get_var(EMAIL_RE))
         self.stdscr.addstr(first, 0, string_author, curses.A_BOLD)
-        self.stdscr.addstr(first + 1, 0, "Website: https://rnext.it/jetson_stats/", curses.A_BOLD)
+        self.stdscr.addstr(first + 1, 0, "Website: https://rnext.it/jetson_stats", curses.A_BOLD)
         # Plot platform
         platform_size_y, platform_size_x = plot_dictionary(self.stdscr, start_pos, 1, 'Platform', self.jetson.board.platform)
         # Plot libraries
