@@ -36,7 +36,7 @@ def pass_agx_orin(engine):
     ]
 
 
-def map_xavier_nx(engine):
+def map_xavier(engine):
     return [
         [('APE', get_value_engine(engine['APE']['APE'])), ('CVNAS', get_value_engine(engine['CVNAS']['CVNAS']))],
         [('DLA0c', get_value_engine(engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(engine['DLA1']['DLA1_CORE']))],
@@ -56,9 +56,9 @@ def map_jetson_nano(engine):
 
 MAP_JETSON_MODELS = {
     'agx orin': pass_agx_orin,
-    'xavier nx': map_xavier_nx,
+    'xavier': map_xavier,
     'jetson nano': map_jetson_nano,
-    'nintendo': map_jetson_nano
+    'nintendo': map_jetson_nano,
 }
 
 

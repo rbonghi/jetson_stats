@@ -35,7 +35,7 @@ from .jetson_config import jtop_config
 from .gui import JTOPGUI, ALL, GPU, CPU, ENGINE, MEM, CTRL, INFO, engine_model
 # Load colors
 from .terminal_colors import bcolors
-from .github import jetpack_missing, hardware_missing, get_hardware_log
+from .github import jetpack_missing, hardware_missing, engine_gui, get_hardware_log
 # Create logger
 logger = logging.getLogger(__name__)
 # Version match
@@ -57,19 +57,14 @@ def warning_messages(jetson, no_warnings=False):
         if not jetson.jetson_clocks.is_config:
             print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
     # Check if an hardware value is missing
-    if not all([data for name, data in hardware.items() if name not in ['Jetpack', 'L4T']]):
-        print("[{status}] jtop not support this hardware for [L4T {l4t}]".format(status=bcolors.warning(), l4t=hardware['L4T']))
-        print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
-        print("  or {link}".format(link=hardware_missing(REPOSITORY, hardware, version)))
+    if not all([data for name, data in hardware.items() if name not in ['Jetpack']]):
+        hardware_missing(REPOSITORY, hardware, version)
     # Check if jetpack is missing
     if not hardware['Jetpack'] and hardware['L4T']:
-        print("[{status}] jetson-stats not supported for [L4T {l4t}]".format(status=bcolors.warning(), l4t=hardware['L4T']))
-        print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset}".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
-        print("  or {link}".format(link=jetpack_missing(REPOSITORY, hardware, version)))
+        jetpack_missing(REPOSITORY, hardware, version)
     # Check if model is in map list
-    module = jetson.board.hardware["Module"]
-    if not engine_model(module):
-        print("[{status}] Module \"{module}\" missing in jtop".format(status=bcolors.warning(), module=module))
+    if not engine_model(hardware["Module"]) and hardware["Module"]:
+        engine_gui(REPOSITORY, hardware, version)
 
 
 def exit_signal(signum, frame):
