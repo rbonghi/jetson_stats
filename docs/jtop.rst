@@ -57,8 +57,9 @@ Pages
 2. **GPU** A real time GPU history about your NVIDIA Jetson
 3. **CPU** A real time CPU plot of NVIDIA Jetson
 4. **MEM** A real time Memory chart and swap monitor
-5. **CTRL** Enable/Disable **jetson_clocks**, **nvpmodel** or **fan** directly from here
-6. **INFO** All information about libraries, CUDA, Serial Number, interfaces, ...
+5. **ENG** A real time list with the status of all engines
+6. **CTRL** Enable/Disable **jetson_clocks**, **nvpmodel** or **fan** directly from here
+7. **INFO** All information about libraries, CUDA, Serial Number, interfaces, ...
 
 Controls
 ^^^^^^^^
