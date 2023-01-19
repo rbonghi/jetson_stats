@@ -101,13 +101,13 @@ def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
             stdscr.addstr(pos_y, end_bar - len(max_string) + 1, max_string, curses.A_DIM)
             # Draw indicator
             value = ((curr * size_bar) / float(data['max']))
-            stdscr.addstr(pos_y, start_bar + int(value), '\u2588', curses.A_NORMAL)
+            stdscr.addstr(pos_y, start_bar + int(value), u'\u2588', curses.A_NORMAL)
         else:
-            stdscr.addstr(pos_y, start_bar, "\u2501" * (size_bar - 2) + "\u25B6", curses.A_BOLD)
+            stdscr.addstr(pos_y, start_bar, u'\u2501' * (size_bar - 2) + u'\u25B6', curses.A_BOLD)
             stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", curses.A_NORMAL)
             stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
     else:
-        stdscr.addstr(pos_y, start_bar, "[" + "\u2500" * (size_bar - 3) + "]", curses.A_BOLD)
+        stdscr.addstr(pos_y, start_bar, "[" + u'\u2500' * (size_bar - 3) + "]", curses.A_BOLD)
         stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
         if size_bar > 7:
             stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', curses.A_BOLD)

@@ -115,9 +115,6 @@ class JTOPGUI:
             self.run(loop, seconds)
 
     def run(self, loop, seconds):
-        # https://stackoverflow.com/questions/54795303/ncurses-freaks-out-when-writing-wide-character-to-certain-screen-locations
-        curses.initscr()
-        locale.setlocale(locale.LC_ALL, "")
         # In this program, we don't want keystrokes echoed to the console,
         # so we run this to disable that
         curses.noecho()
