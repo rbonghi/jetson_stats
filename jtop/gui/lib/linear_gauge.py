@@ -89,30 +89,38 @@ def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
     start_bar = pos_x + len(name) + 1
     end_bar = start_bar + size_bar
     # Check if there is a limit
-    if data['status']:
-        if 'max' in data:
-            min_string = "< {min}".format(min=value_to_string(data['min'], unit)) if min != 0 else ""
-            max_string = "{max}>".format(max=value_to_string(data['max'], unit))
-            # Draw bar
-            # https://www.htmlsymbols.xyz/box-drawing
-            stdscr.addstr(pos_y, start_bar, "[" + " " * (size_bar) + "]", curses.A_BOLD)
-            # Draw min and max value
-            stdscr.addstr(pos_y, start_bar + 1, min_string, curses.A_DIM)
-            stdscr.addstr(pos_y, end_bar - len(max_string) + 1, max_string, curses.A_DIM)
-            # Draw indicator
-            value = ((curr * size_bar) / float(data['max']))
-            stdscr.addstr(pos_y, start_bar + int(value), u'\u2588', curses.A_NORMAL)
+    color_bar = curses.color_pair(2) if data['status'] else curses.color_pair(1)
+    if 'max' in data:
+        min_string = "<{min}".format(min=value_to_string(data['min'], unit)) if min != 0 else ""
+        max_string = "{max}>".format(max=value_to_string(data['max'], unit))
+        # Draw bar
+        # https://www.htmlsymbols.xyz/box-drawing
+        stdscr.addstr(pos_y, start_bar, "[" + " " * (size_bar) + "]", curses.A_BOLD)
+        # Draw min and max value
+        string_min_max = min_string + "-" * (size_bar - len(max_string) - 7) + max_string
+        # Draw indicator
+        if data['max'] != data['min']:
+            value = int((curr * size_bar) / (float(data['max'] - float(data['min']))))
+            stdscr.addstr(pos_y, start_bar + 1, string_min_max[:value], color_bar)
+            stdscr.addstr(pos_y, start_bar + int(value) + 1, string_min_max[value:], curses.A_DIM)
         else:
-            stdscr.addstr(pos_y, start_bar, u'\u2501' * (size_bar - 2) + u'\u25B6', curses.A_BOLD)
-            stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", curses.A_NORMAL)
-            stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
+            stdscr.addstr(pos_y, start_bar + 1, string_min_max, color_bar)
+        if data['status']:
+            # Show current frequency
+            stdscr.addstr(pos_y, pos_x + size - len(curr_string), curr_string, color_bar | curses.A_BOLD)
+        else:
+            stdscr.addstr(pos_y, pos_x + size - len(curr_string) + 1, 'OFF', color_bar | curses.A_NORMAL)
     else:
-        stdscr.addstr(pos_y, start_bar, "[" + u'\u2500' * (size_bar - 3) + "]", curses.A_BOLD)
-        stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
-        if size_bar > 7:
-            stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', curses.A_BOLD)
+        if data['status']:
+            stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
+            stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
+            stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)
         else:
-            stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', curses.A_BOLD)
-    # Show current frequency
-    stdscr.addstr(pos_y, pos_x + size - len(curr_string), curr_string, curses.A_NORMAL)
+            stdscr.hline(pos_y, start_bar + 1, curses.ACS_BULLET, size_bar)
+            if size_bar > 7:
+                stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', color_bar | curses.A_NORMAL)
+            else:
+                stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', color_bar | curses.A_NORMAL)
+        # Show current frequency
+        stdscr.addstr(pos_y, pos_x + size - len(curr_string), curr_string, color_bar | curses.A_NORMAL)
 # EOF
