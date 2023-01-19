@@ -62,6 +62,7 @@ from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
+from .core.jetson_variables import get_platform_variables
 from .core import (
     get_var,
     get_cuda,
@@ -145,6 +146,8 @@ class jtop(Thread):
         self._nvp = None
 
     def _load_jetson_libraries(self):
+        # Load platform
+        data_platform = get_platform_variables()
         # Load all variables
         cuda_version = get_cuda()
         opencv_version, opencv_cuda = get_opencv()
@@ -156,7 +159,7 @@ class jtop(Thread):
         }
         libraries.update(os_variables)
         # Make dictionaries
-        self._board._update_libraries(libraries)
+        self._board._update_data(data_platform, libraries)
         # Loaded from script
         logger.debug("Loaded jetson_variables variables")
 

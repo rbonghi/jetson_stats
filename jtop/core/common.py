@@ -44,13 +44,13 @@ class Board:
         self.platform = {}
         self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
-    def _update_libraries(self, libraries):
+    def _update_data(self, platform, libraries):
+        self.platform = platform
         self.libraries = libraries
         self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
     def _update_init(self, init):
         self.hardware = init['hardware']
-        self.platform = init['platform']
         self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
 
     def items(self):

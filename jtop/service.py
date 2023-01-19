@@ -276,8 +276,9 @@ class JtopServer(Process):
         # Load board information
         is_debug = True if "JETSON_DEBUG" in os.environ else False
         # Load board and platform variables
-        self.board = {'hardware': get_jetson_variables(), 'platform': get_platform_variables()}
-        logger.info("Running on Python: {python_version}".format(python_version=self.board['platform']['Python']))
+        self.board = {'hardware': get_jetson_variables()}
+        data_platform = get_platform_variables()
+        logger.info("Running on Python: {python_version}".format(python_version=data_platform['Python']))
         # Initialize Fan
         try:
             self.fan = FanService(self.config, path_fan)
