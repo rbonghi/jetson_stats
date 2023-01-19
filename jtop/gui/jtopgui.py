@@ -18,7 +18,6 @@
 import re
 import abc
 import curses
-import locale
 # Logging
 import logging
 # Timer
