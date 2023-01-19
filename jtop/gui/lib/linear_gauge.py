@@ -17,6 +17,7 @@
 
 import curses
 from .common import check_curses
+from .common import value_to_string
 
 
 class GaugeName:
@@ -73,4 +74,45 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
         # Show bracket linear gauge and label
         status = status if status else "OFF"
         stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(7))
+
+
+@check_curses
+def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
+    curr = data['curr']
+    unit = data['unit']
+    # Draw name engine
+    stdscr.addstr(pos_y, pos_x, name, curses.color_pair(6))
+    # Draw frequency
+    curr_string = value_to_string(curr, unit)
+    # Write status bar
+    size_bar = size - len(name) - len(curr_string) - 4
+    start_bar = pos_x + len(name) + 1
+    end_bar = start_bar + size_bar
+    # Check if there is a limit
+    if data['status']:
+        if 'max' in data:
+            min_string = "< {min}".format(min=value_to_string(data['min'], unit)) if min != 0 else ""
+            max_string = "{max}>".format(max=value_to_string(data['max'], unit))
+            # Draw bar
+            # https://www.htmlsymbols.xyz/box-drawing
+            stdscr.addstr(pos_y, start_bar, "[" + " " * (size_bar) + "]", curses.A_BOLD)
+            # Draw min and max value
+            stdscr.addstr(pos_y, start_bar + 1, min_string, curses.A_DIM)
+            stdscr.addstr(pos_y, end_bar - len(max_string) + 1, max_string, curses.A_DIM)
+            # Draw indicator
+            value = ((curr * size_bar) / float(data['max']))
+            stdscr.addstr(pos_y, start_bar + int(value), u'\u2588', curses.A_NORMAL)
+        else:
+            stdscr.addstr(pos_y, start_bar, u'\u2501' * (size_bar - 2) + u'\u25B6', curses.A_BOLD)
+            stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", curses.A_NORMAL)
+            stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
+    else:
+        stdscr.addstr(pos_y, start_bar, "[" + u'\u2500' * (size_bar - 3) + "]", curses.A_BOLD)
+        stdscr.addstr(pos_y, pos_x + size - len(curr_string) - 3, "F=", curses.A_NORMAL)
+        if size_bar > 7:
+            stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', curses.A_BOLD)
+        else:
+            stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', curses.A_BOLD)
+    # Show current frequency
+    stdscr.addstr(pos_y, pos_x + size - len(curr_string), curr_string, curses.A_NORMAL)
 # EOF

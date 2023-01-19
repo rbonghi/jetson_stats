@@ -43,7 +43,6 @@ def main():
     # Read all Jetson Variables
     jetson = get_jetson_variables()
     # Print headline
-    # jetson['Jetpack'] = ''
     if jetson['Jetpack']:
         print("Model: {model} - Jetpack {jetpack} [L4T {L4T}]".format(model=bcolors.bold(jetson['Model']),
               jetpack=bcolors.bold(jetson['Jetpack']), L4T=bcolors.bold(jetson['L4T'])))

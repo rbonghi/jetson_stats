@@ -22,6 +22,7 @@ from .jtopgui import JTOPGUI, Page
 from .pall import ALL
 from .pcpu import CPU
 from .pgpu import GPU
+from .pengine import ENGINE, engine_model
 from .pmem import MEM
 from .pcontrol import CTRL
 from .pinfo import INFO

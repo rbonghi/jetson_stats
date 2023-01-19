@@ -155,6 +155,14 @@ def size_min(num, divider=1.0, n=0, start=''):
         return round(num / divider, 1), divider, vect[n + idx]
 
 
+def value_to_string(value, unit, type='Hz'):
+    value, _, unit = size_min(value, start=unit)
+    value_string = str(value)
+    if len(value_string) > 3:
+        value_string = value_string.rstrip('0').rstrip('.')
+    return "{value}{unit}{type}".format(value=value_string, unit=unit, type=type)
+
+
 def plot_dictionary(stdscr, pos_y, pos_x, name, data, size=None):
     size_y = 1
     size_x = 0
