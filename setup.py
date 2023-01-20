@@ -143,7 +143,7 @@ def pypi_installer(installer, obj, copy):
         else:
             print("----------------------------------------")
             print("Install on your host using superuser permission, like:")
-            print(bcolors.bold("sudo -H pip3 install -U jetson-stats"))
+            print(bcolors.bold("sudo pip3 install -U jetson-stats"))
             sys.exit(1)
     elif is_docker():
         print("Skip uninstall in docker")
@@ -153,7 +153,7 @@ def pypi_installer(installer, obj, copy):
         elif not status_service():
             print("----------------------------------------")
             print("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
-            print(bcolors.bold("sudo -H pip3 install -U jetson-stats"))
+            print(bcolors.bold("sudo pip3 install -U jetson-stats"))
             sys.exit(1)
     # Run the default installation script
     installer.run(obj)

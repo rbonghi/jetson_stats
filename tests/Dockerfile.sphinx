@@ -28,7 +28,7 @@ COPY . /jetson_stats
 WORKDIR /jetson_stats
 
 # Install jtop
-RUN sudo -H pip3 install -v -e .
+RUN sudo pip3 install -v -e .
 # Install sphinx requirements
 RUN pip install -r docs/requirements.txt
 

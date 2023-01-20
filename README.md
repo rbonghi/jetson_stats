@@ -41,7 +41,7 @@ jetson-stats is a powerful tool to analyze your board, you can use with a stand 
 jetson-stats can be installed with [pip](https://pip.pypa.io), but need **superuser**:
 
 ```console
-sudo -H pip3 install -U jetson-stats
+sudo pip3 install -U jetson-stats
 ```
 
 _Don't forget to **logout** or **reboot** your board_

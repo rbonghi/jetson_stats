@@ -7,7 +7,7 @@ jtop can be installed with `pip <https://pip.pypa.io>`_
 
 .. code-block:: bash
 
-  sudo -H pip3 install -U jetson-stats
+  sudo pip3 install -U jetson-stats
 
 Don't forget to **logout** or **reboot** your board
 

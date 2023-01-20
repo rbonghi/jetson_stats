@@ -126,7 +126,7 @@ def hyperlink(message, url, text):
     # 5. https://stackoverflow.com/questions/44078888/clickable-html-links-in-python-3-6-shell
     # Print starting message
     print("[{status}] {message}".format(status=bcolors.warning(), message=message))
-    print("  Please, try: {bold}sudo -H pip3 install -U jetson-stats{reset} or".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+    print("  Please, try: {bold}sudo pip3 install -U jetson-stats{reset} or".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
     # Generate hyperlink for sheel
     # Check type of shell
     try:
