@@ -58,6 +58,7 @@ Follow the next attributes to know in detail how you can you in your python proj
 import logging
 import re
 import sys
+from warnings import warn
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
@@ -648,7 +649,7 @@ class jtop(Thread):
         :return: emc status
         :rtype: dict
         """
-        # Extract EMC
+        warn('This property will be deprecated in the next release. Will be used jtop.ram()', DeprecationWarning, stacklevel=2)
         return self._stats.get('emc', {})
 
     @property
@@ -673,7 +674,7 @@ class jtop(Thread):
         :return: iram status
         :rtype: dict
         """
-        # Extract IRAM
+        warn('This property will be deprecated in the next release. Will be used jtop.ram()', DeprecationWarning, stacklevel=2)
         return self._stats.get('iram', {})
 
     @property
@@ -714,7 +715,7 @@ class jtop(Thread):
         :return: mts status
         :rtype: dict
         """
-        # Extract MTS
+        warn('This property will be deprecated in the next release. Will be used jtop.cpu()', DeprecationWarning, stacklevel=2)
         return self._stats.get('mts', {})
 
     @property
@@ -748,7 +749,7 @@ class jtop(Thread):
         :return: Status cluster in your board
         :rtype: string
         """
-        # Return status cluster
+        warn('This property will be deprecated in the next release. Will be used jtop.cpu()', DeprecationWarning, stacklevel=2)
         return self._stats.get('cluster', '')
 
     @property
