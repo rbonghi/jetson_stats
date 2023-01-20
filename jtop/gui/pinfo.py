@@ -74,13 +74,13 @@ class INFO(Page):
         self.stdscr.addstr(first, 0, string_author, curses.A_BOLD)
         self.stdscr.addstr(first + 1, 0, "Website: https://rnext.it/jetson_stats", curses.A_BOLD)
         # Plot platform
-        platform_size_y, platform_size_x = plot_dictionary(self.stdscr, start_pos, 1, 'Platform', self.jetson.board.platform)
+        platform_size_y, platform_size_x = plot_dictionary(self.stdscr, start_pos, 1, 'Platform', self.jetson.board['platform'])
         # Plot libraries
-        libraries_size_y, libraries_size_x = plot_libraries(self.stdscr, start_pos + platform_size_y + 1, 1, self.jetson.board.libraries)
+        libraries_size_y, libraries_size_x = plot_libraries(self.stdscr, start_pos + platform_size_y + 1, 1, self.jetson.board['libraries'])
         # Plot hardware
         size_hardware_x = width - platform_size_x - 2
         hardware_size_y, hardware_size_x = plot_dictionary(self.stdscr, start_pos, 1 + platform_size_x + 1,
-                                                           'Hardware', self.jetson.board.hardware, size=size_hardware_x)
+                                                           'Hardware', self.jetson.board['hardware'], size=size_hardware_x)
         # Plot interfaces
         interfaces = self.jetson.local_interfaces["interfaces"]
         hostname = self.jetson.local_interfaces["hostname"]

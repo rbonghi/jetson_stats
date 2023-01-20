@@ -36,48 +36,6 @@ AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 logger = logging.getLogger(__name__)
 
 
-class Board:
-
-    def __init__(self):
-        self.hardware = {}
-        self.libraries = {}
-        self.platform = {}
-        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
-
-    def _update_data(self, platform, libraries):
-        self.platform = platform
-        self.libraries = libraries
-        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
-
-    def _update_init(self, init):
-        self.hardware = init['hardware']
-        self._board = {'hardware': self.hardware, 'platform': self.platform, 'libraries': self.libraries}
-
-    def items(self):
-        return self._board.items()
-
-    def get(self, name, value=None):
-        if name in self._board:
-            return self._board[name]
-        else:
-            return value
-
-    def __getitem__(self, name):
-        return self._board[name]
-
-    def __iter__(self):
-        return iter(self._board)
-
-    def __next__(self):
-        return next(self._board)
-
-    def __len__(self):
-        return len(self._board)
-
-    def __repr__(self):
-        return str(self._board)
-
-
 def cat(path):
     with open(path, 'r') as f:
         return f.readline().rstrip('\x00')

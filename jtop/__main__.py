@@ -50,7 +50,7 @@ def warning_messages(jetson, no_warnings=False):
     if no_warnings:
         return
     # Read status version
-    hardware = jetson.board.hardware
+    hardware = jetson.board['hardware']
     version = get_var(VERSION_RE)
     # Check is well stored the default jetson_clocks configuration
     if jetson.jetson_clocks:

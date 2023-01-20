@@ -68,7 +68,6 @@ from .core import (
     get_cuda,
     get_opencv,
     get_libraries,
-    Board,
     Swap,
     Fan,
     NVPModel,
@@ -132,7 +131,7 @@ class jtop(Thread):
         # Initialize broadcaster manager
         self._broadcaster = JtopManager()
         # Initialize board variable
-        self._board = Board()
+        self._board = {}
         self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
@@ -147,7 +146,7 @@ class jtop(Thread):
 
     def _load_jetson_libraries(self):
         # Load platform
-        data_platform = get_platform_variables()
+        self._board['platform'] = get_platform_variables()
         # Load all variables
         cuda_version = get_cuda()
         opencv_version, opencv_cuda = get_opencv()
@@ -159,7 +158,7 @@ class jtop(Thread):
         }
         libraries.update(os_variables)
         # Make dictionaries
-        self._board._update_data(data_platform, libraries)
+        self._board['libraries'] = libraries
         # Loaded from script
         logger.debug("Loaded jetson_variables variables")
 
@@ -313,14 +312,14 @@ class jtop(Thread):
         * libraries (from jtop library is running)
             * CUDA
             * OpenCV
-            * OpenCV-Cuda
+            * OpenCV-Cuda (boolean)
             * cuDNN
             * TensorRT
             * VPI
             * Vulkan
 
         :return: Status board, hardware and libraries
-        :rtype: Board
+        :rtype: dict
         """
         # Wait thread end
         self._thread_libraries.join()
@@ -960,7 +959,7 @@ sudo systemctl restart jtop.service""".format(
         # Load server speed
         self._server_interval = init['interval']
         # Load board information
-        self._board._update_init(init['board'])
+        self._board['hardware'] = init['board']['hardware']
         # Initialize jetson_clocks sender
         self._swap = Swap(self._controller, init['swap'])
         # Initialize jetson_clock

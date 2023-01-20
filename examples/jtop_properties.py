@@ -21,7 +21,7 @@ from jtop import jtop
 
 if __name__ == "__main__":
 
-    print("All accessible jtop properities")
+    print("All accessible jtop properties")
 
     with jtop() as jetson:
         # boards
