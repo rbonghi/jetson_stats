@@ -35,6 +35,7 @@ jetson-stats is a powerful tool to analyze your board, you can use with a stand 
 - dockerizale in a container
 - Do not need super user
 - Tested on many different hardware configurations
+- works with all NVIDIA Jetpack
 
 ## Install
 
