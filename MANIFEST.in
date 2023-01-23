@@ -17,6 +17,9 @@
 # Include the README
 include *.md
 
+# Include requirements
+include requirements.txt
+
 # Include the license file
 include LICENSE
 

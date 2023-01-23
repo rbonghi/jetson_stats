@@ -43,9 +43,9 @@ def engine_gui(repository, hardware, version):
     body += "\n### jetson-stats\n\n"
     body += " - Version: " + version + "\n"
     # Print all raw output
-    body += "\n<!-- Please attach a screnshoot page from jtop Engine page -->\n"
+    body += "\n<!-- Please attach a screenshot page from jtop Engine page -->\n"
     body += "### Screenshot engine page\n\n"
-    body += "Screnshoot page from jtop engine page attacched"
+    body += "Screenshot page from jtop engine page attached"
     # Make url
     url = make_issue(repository, title, body=body, labels="GUI,missing", template=template)
     # message shell
@@ -127,7 +127,7 @@ def hyperlink(message, url, text):
     # Print starting message
     print("[{status}] {message}".format(status=bcolors.warning(), message=message))
     print("  Please, try: {bold}sudo pip3 install -U jetson-stats{reset} or".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
-    # Generate hyperlink for sheel
+    # Generate hyperlink for shell
     # Check type of shell
     try:
         link = u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (press CTRL + Click)".format(url=url, text=text)
