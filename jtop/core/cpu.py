@@ -89,7 +89,7 @@ def read_system_cpu(path, cpu_status={}):
     # Online status
     if os.path.isfile(path + "/online"):
         with open(path + "/online", 'r') as f:
-            cpu_status['online'] = f.read().strip()
+            cpu_status['online'] = f.read().strip() == '1'
     # Read governor
     if os.path.isdir(path + "/cpufreq"):
         with open(path + "/cpufreq/scaling_governor", 'r') as f:
@@ -120,17 +120,24 @@ class CPUService(object):
         list_cpu = cpu_info()
         # List all CPU available
         path_system_cpu = "/sys/devices/system/cpu"
-        self._cpu = {int(item[3:]): {'path': "{path}/{item}".format(path=path_system_cpu, item=item),
-                                     'last_cpu': [0.0] * len(CPU_STAT_LABEL),
-                                     'model': list_cpu.get(int(item[3:]), {}).get("model name", "")
-                                     }
-                     for item in os.listdir(path_system_cpu) if os.path.isdir(os.path.join(path_system_cpu, item)) and CPU_SYS_REG.search(item)}
+        cpu_list = {int(item[3:]): {'path': "{path}/{item}".format(path=path_system_cpu, item=item),
+                                    'last_cpu': [0.0] * len(CPU_STAT_LABEL),
+                                    'model': list_cpu.get(int(item[3:]), {}).get("model name", "")
+                                    }
+                    for item in os.listdir(path_system_cpu) if os.path.isdir(os.path.join(path_system_cpu, item)) and CPU_SYS_REG.search(item)}
+        # Sort CPU list in a list by CPU name
+        self._cpu = [cpu_list[i] for i in sorted(cpu_list)]
+        self._cpu_info = [{'model': list_cpu.get(cpu, {}).get("model name", "")} for cpu in range(len(self._cpu))]
+        # Build CPU total info
         self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
         # Check available cpufreq and cpuidle
         if not os.path.isdir(path_system_cpu + "/cpu0/cpufreq"):
             logger.warning("cpufreq folder not available on this device!")
         if not os.path.isdir(path_system_cpu + "/cpu0/cpuidle"):
             logger.warning("cpuidle folder not available on this device!")
+
+    def get_cpu_info(self):
+        return self._cpu_info
 
     def get_utilization(self):
         # CPU lines
@@ -141,7 +148,7 @@ class CPUService(object):
         # - iowait: waiting for I/O to complete
         # - irq: servicing interrupts
         # - softirq: servicing softirqs
-        cpu_out = {}
+        cpu_out = [{} for i in range(len(self._cpu))]
         total = {}
         with open("/proc/stat", 'r') as f:
             for line in f:
@@ -164,19 +171,12 @@ class CPUService(object):
                         # Evaluate delta all values
                         # https://rosettacode.org/wiki/Linux_CPU_utilization
                         delta = [now - last for now, last in zip(fields, self._cpu_total['last_cpu'])]
+                        print(delta)
                         # Update last value
                         self._cpu_total['last_cpu'] = deepcopy(delta)
                         # Store utilization
                         total = get_utilization(delta)
         return total, cpu_out
-
-    def read_sys_cpu(self, cpu_data={}):
-        for cpu, data in sorted(self._cpu.items()):
-            # store all data
-            cpu_data[cpu] = read_system_cpu(data['path'], cpu_data[cpu])
-            # add model
-            cpu_data[cpu]['model'] = data['model']
-        return cpu_data
 
     def get_status(self):
         # Usage CPU
@@ -184,7 +184,9 @@ class CPUService(object):
         # https://www.linuxhowtos.org/System/procstat.htm
         # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
         total, cpu_list = self.get_utilization()
-        # Frequency and idle
-        cpu_list = self.read_sys_cpu(cpu_list)
+        # Add cpu status with frequency and idle config
+        for cpu, data in enumerate(self._cpu):
+            # store all data
+            cpu_list[cpu] = read_system_cpu(data['path'], cpu_list[cpu])
         return {'total': total, 'cpu': cpu_list}
 # EOF

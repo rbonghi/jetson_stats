@@ -136,6 +136,8 @@ class jtop(Thread):
         self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
+        # Initialize cpu info
+        self._cpu_info = []
         # Initialize swap
         self._swap = None
         # Load jetson_clocks status
@@ -704,22 +706,6 @@ class jtop(Thread):
         return self._stats['ram']
 
     @property
-    def mts(self):
-        """
-        MTS foreground and background tasks.
-
-        If your board support the MTS variable, the output will be:
-
-        * **fg** - foreground tasks
-        * **bg** - background tasks
-
-        :return: mts status
-        :rtype: dict
-        """
-        warn('This property will be deprecated in the next release. Will be used jtop.cpu()', DeprecationWarning, stacklevel=2)
-        return self._stats.get('mts', {})
-
-    @property
     def cpu(self):
         """
         CPU status. From this dictionary you can read the status of the CPU.
@@ -737,21 +723,11 @@ class jtop(Thread):
         :return: CPU configuration, frequencies and speed
         :rtype: dict
         """
+        # Add cpu info in list
+        for idx, cpu in enumerate(self._stats['cpu']['cpu']):
+            cpu.update(self._cpu_info[idx])
         # Return CPU status
         return self._stats['cpu']
-
-    @property
-    def cluster(self):
-        """
-        Cluster status of your board.
-
-        If this data is not available in your board will return an empty string
-
-        :return: Status cluster in your board
-        :rtype: string
-        """
-        warn('This property will be deprecated in the next release. Will be used jtop.cpu()', DeprecationWarning, stacklevel=2)
-        return self._stats.get('cluster', '')
 
     @property
     def gpu(self):
@@ -962,6 +938,8 @@ sudo systemctl restart jtop.service""".format(
         self._server_interval = init['interval']
         # Load board information
         self._board['hardware'] = init['board']['hardware']
+        # Initialize cpu basic info
+        self._cpu_info = init['cpu']
         # Initialize jetson_clocks sender
         self._swap = Swap(self._controller, init['swap'])
         # Initialize jetson_clock

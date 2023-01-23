@@ -100,7 +100,6 @@ def main():
         try:
             # Initialize stats server
             server = JtopServer(force=args.force)
-            logger.info("jetson_stats {version} - server loaded".format(version=get_var(VERSION_RE)))
             server.loop_for_ever()
         except JtopException as e:
             print(e)

@@ -20,12 +20,12 @@ import logging
 # Operative system
 # import signal
 import re
-import copy
 import os
 import sys
 import stat
 import shlex
 import subprocess as sp
+from copy import deepcopy
 from grp import getgrnam
 from shutil import copyfile
 from multiprocessing import Process, Queue, Event, Value
@@ -252,6 +252,9 @@ class JtopServer(Process):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jtop service need sudo to work")
+        # Save version jtop
+        self._version = deepcopy(get_var(VERSION_RE))
+        logger.info("jetson_stats {version} - server loaded".format(version=self._version))
         # Load configuration
         self.config = Config()
         # Error queue
@@ -395,9 +398,10 @@ class JtopServer(Process):
                             logger.info("tegrastats started {interval}ms".format(interval=int(interval * 1000)))
                         # send configuration board
                         init = {
-                            'version': get_var(VERSION_RE),
+                            'version': self._version,
                             'board': self.board,
                             'interval': self.interval.value,
+                            'cpu': self.cpu.get_cpu_info(),
                             'swap': self.swap.path,
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks is not None,
@@ -545,7 +549,7 @@ class JtopServer(Process):
         # Make configuration dict
         # logger.debug("tegrastats read")
         data = {}
-        jetson_clocks_show = copy.deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
+        jetson_clocks_show = deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
         # -- Engines --
         data['engines'] = self.engine.get_status()
         # -- Power --
