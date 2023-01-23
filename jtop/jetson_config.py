@@ -93,7 +93,7 @@ def get_type_desktop():
                 status = 2
         elif status_gui == 'graphical.target':
             status = 3
-            # Check GUI autologin
+            # Check GUI auto login
             if os.path.isfile('/etc/gdm3/custom.conf'):
                 with open('/etc/gdm3/custom.conf', 'r') as f:
                     for line in f.readlines():
