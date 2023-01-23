@@ -51,6 +51,9 @@ here = os.path.abspath(os.path.dirname(__file__))
 project_homepage = "https://github.com/rbonghi/jetson_stats"
 documentation_homepage = "https://rnext.it/jetson_stats"
 
+# Load requirements
+with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:
+    requirements = f.read().splitlines()
 
 # Get the long description from the README file
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -244,7 +247,7 @@ setup(
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
     platforms=["linux", "linux2", "darwin"],
-    install_requires=['smbus', 'distro'],
+    install_requires=requirements,
     # Zip safe configuration
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
     zip_safe=False,
