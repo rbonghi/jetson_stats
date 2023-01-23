@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -22,11 +22,11 @@ import curses
 from .lib.common import (check_curses,
                          strfdelta,
                          plot_name_info,
-                         size_min,
                          label_freq,
                          jetson_clocks_gui,
                          nvp_model_gui)
 from .lib.linear_gauge import linear_gauge, GaugeName
+from .pengine import compact_engines
 
 
 @check_curses
@@ -35,18 +35,18 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
     for idx, name in enumerate(sorted(list_cpus)):
         cpu = list_cpus[name]
         # Split in double list
-        start = max_bar if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 0
+        start = max_bar if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 1
         off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
         # Check if exist governor and add in percent name
         percent = ""
-        if 'val' in cpu and 'governor' in cpu:
-            percent = "{gov} -{val: 4}%".format(gov=cpu['governor'].capitalize(), val=cpu['val'])
+        if 'governor' in cpu:
+            percent = "{gov} -{val: 4.0f}%".format(gov=cpu['governor'].capitalize(), val=100 - cpu['idle'])
         # Show linear gauge
-        name = "CPU{name}".format(name=name) + (" " if idx < 9 and len(list_cpus) > 9 else "")
+        name = "{name}".format(name=name) + (" " if idx < 9 and len(list_cpus) > 9 else "")
         linear_gauge(
             stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
             name=GaugeName(name, color=curses.color_pair(6)),
-            value=cpu.get('val', 0),
+            value=cpu['user'] + cpu['nice'] + cpu['system'],
             status='ON' if cpu else 'OFF',
             percent=percent,
             label=label_freq(cpu['frq'], start='k') if 'frq' in cpu else '')
@@ -165,97 +165,6 @@ def compact_info(stdscr, start, offset, width, height, jetson):
         nvp_model_gui(stdscr, offset + counter, start + 1, jetson)
         counter += 1
     # Write all engines
-    counter += engines(stdscr, start, offset + counter, width, height, jetson)
+    counter += compact_engines(stdscr, start, offset + counter, width, jetson)
     return counter
-
-
-def engines(stdscr, start, offset, width, height, jetson):
-    stdscr.hline(offset, start + 1, curses.ACS_HLINE, width - 1)
-    stdscr.addstr(offset, start + (width - 13) // 2, " [HW engines] ", curses.A_BOLD)
-    counter = 1
-    # DLA0 - DLA1
-    # NVJPG0 - NVJPG1
-    # NVDEC - NVENC
-    # APE - SE
-    # PVA
-
-    # DLA engines
-    dla0_val_string = '[OFF]'
-    if 'DLA0' in jetson.engine:
-        if jetson.engine['DLA0']['core'].status:
-            dla0_val = jetson.engine['DLA0']['core'].frequency
-            dla0_val, _, unit = size_min(dla0_val, start='M')
-            dla0_val_string = "{value}{unit}Hz".format(value=dla0_val, unit=unit)
-    dla1_val_string = '[OFF]'
-    if 'DLA1' in jetson.engine:
-        if jetson.engine['DLA1']['core'].status:
-            dla1_val = jetson.engine['DLA1']['core'].frequency
-            dla1_val, _, unit = size_min(dla1_val, start='M')
-            dla1_val_string = "{value}{unit}Hz".format(value=dla1_val, unit=unit)
-    double_info(stdscr, start + 1, offset + counter, width, ('DLA0', dla0_val_string), ('DLA1', dla1_val_string), spacing=2)
-    counter += 1
-    # NVJPG engines
-    nvjpg0_val_string = '[OFF]'
-    if 'NVJPG' in jetson.engine:
-        if jetson.engine['NVJPG'].status:
-            nvjpg0_val = jetson.engine['NVJPG'].frequency
-            nvjpg0_val, _, unit = size_min(nvjpg0_val, start='M')
-            nvjpg0_val_string = str(nvjpg0_val).rstrip('0').rstrip('.')
-            nvjpg0_val_string = "{value}{unit}Hz".format(value=nvjpg0_val_string, unit=unit)
-    nvjpg1_val_string = '[OFF]'
-    if 'NVJPG1' in jetson.engine:
-        if jetson.engine['NVJPG1'].status:
-            nvjpg1_val = jetson.engine['NVJPG1'].frequency
-            nvjpg1_val, _, unit = size_min(nvjpg1_val, start='M')
-            nvjpg1_val_string = str(nvjpg1_val).rstrip('0').rstrip('.')
-            nvjpg1_val_string = "{value}{unit}Hz".format(value=nvjpg1_val_string, unit=unit)
-    double_info(stdscr, start + 1, offset + counter, width, ('NVJPG0', nvjpg0_val_string), ('NVJPG1', nvjpg1_val_string))
-    counter += 1
-    # Find encoders
-    if 'MSENC' in jetson.engine:
-        enc_name = 'MSENC'
-        enc_val = "{value}{unit}Hz".format(value=jetson.engine['MSENC'].frequency, unit="M")
-    elif jetson.engine['NVENC'].status:
-        enc_name = 'NVENC'
-        enc_val = "{value}{unit}Hz".format(value=jetson.engine['NVENC'].frequency, unit="M")
-    else:
-        enc_name = 'NVENC'
-        enc_val = "[OFF]"
-    # Find decoders
-    if jetson.engine['NVDEC'].status:
-        dec_val = "{value}{unit}Hz".format(value=jetson.engine['NVDEC'].frequency, unit="M")
-    else:
-        dec_val = "[OFF]"
-    double_info(stdscr, start + 1, offset + counter, width, (enc_name, enc_val), ('NVDEC', dec_val), spacing=1)
-    counter += 1
-    # APE frequency
-    ape_val_string = "[OFF]"
-    se_val_string = "[OFF]"
-    if 'APE' in jetson.engine:
-        ape_val, _, unit = size_min(jetson.engine['APE'].frequency, start='M')
-        ape_val_string = str(ape_val).rstrip('0').rstrip('.')
-        ape_val_string = "{value}{unit}Hz".format(value=ape_val_string, unit=unit)
-    if 'SE' in jetson.engine:
-        se_val, _, unit = size_min(jetson.engine['SE'].frequency, start='M')
-        se_val_string = str(se_val).rstrip('0').rstrip('.')
-        se_val_string = "{value}{unit}Hz".format(value=se_val_string, unit=unit)
-    double_info(stdscr, start + 1, offset + counter, width, ("APE", ape_val_string), ("SE", se_val_string), spacing=1)
-    counter += 1
-    pva0_val_string = "[OFF]"
-    vic_val_string = "[OFF]"
-    if 'PVA0' in jetson.engine:
-        pva0_val, _, unit = size_min(jetson.engine['PVA0']['vps0'].frequency, start='M')
-        pva0_val_string = str(pva0_val).rstrip('0').rstrip('.')
-        pva0_val_string = "{value}{unit}Hz".format(value=pva0_val_string, unit=unit)
-    if 'VIC' in jetson.engine:
-        vic_val, _, unit = size_min(jetson.engine['VIC'].frequency, start='M')
-        vic_val_string = str(vic_val).rstrip('0').rstrip('.')
-        vic_val_string = "{value}{unit}Hz".format(value=vic_val_string, unit=unit)
-    double_info(stdscr, start + 1, offset + counter, width, ("PVA0", pva0_val_string), ("VIC", vic_val_string))
-    return counter + 1
-
-
-def double_info(stdscr, start, offset, width, enc, dec, spacing=0):
-    plot_name_info(stdscr, offset, start, enc[0], enc[1], spacing=spacing)
-    plot_name_info(stdscr, offset, start + width // 2, dec[0], dec[1], spacing=spacing)
 # EOF

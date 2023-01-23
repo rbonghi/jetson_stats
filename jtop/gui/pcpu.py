@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -31,12 +31,12 @@ class CPU(Page):
         super(CPU, self).__init__("CPU", stdscr, jetson)
         # List all CPU
         self.chart_cpus = []
-        for name in sorted(self.jetson.cpu):
+        for name in sorted(self.jetson.cpu['cpu']):
             chart = Chart(jetson, "CPU{name}".format(name=name), self.update_chart, color_text=curses.COLOR_BLUE)
             self.chart_cpus += [chart]
 
     def update_chart(self, jetson, name):
-        cpu = jetson.cpu[int(name[3:])]
+        cpu = jetson.cpu['cpu'][int(name[3:])]
         status = True if cpu else False
         return {
             'value': [cpu.get("val", 0)],

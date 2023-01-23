@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2020 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,63 +19,121 @@
 # Shell information
 # os.environ['SHELL']
 
+from copy import deepcopy
+# jtop variables
+from .core.jetson_variables import get_raw_output, get_platform_variables
+from .terminal_colors import bcolors
 
-def jetpack_missing(repository, jetson, version):
-    l4t = jetson.board.info["L4T"]
+
+def engine_gui(repository, hardware, version):
+    hardware = deepcopy(hardware)
+    del hardware['Serial Number']
+    module = hardware['Module']
+    # Title
+    title = "GUI compact engine page missing for [{module}]".format(module=module)
+    # Template
+    template = "engine-gui.md"
+    # body
+    body = "Please add a new jtop engine compact page for\n\n"
+    body += "### Board\n\n"
+    for name, value in hardware.items():
+        if not value:
+            value = "**MISSING**"
+        body += " - {name}: {value}\n".format(name=name, value=value)
+    body += "\n### jetson-stats\n\n"
+    body += " - Version: " + version + "\n"
+    # Print all raw output
+    body += "\n<!-- Please attach a screnshoot page from jtop Engine page -->\n"
+    body += "### Screenshot engine page\n\n"
+    body += "Screnshoot page from jtop engine page attacched"
+    # Make url
+    url = make_issue(repository, title, body=body, labels="GUI,missing", template=template)
+    # message shell
+    message = "Module \"{module}\" missing in jtop GUI".format(module=module)
+    hyperlink(message, url, "open a Github issue & {attach} a engine page screenshot".format(attach=bcolors.bold('attach')))
+
+
+def jetpack_missing(repository, hardware, version):
+    l4t = hardware['L4T']
     # Title
     title = "jetson-stats not supported for [L4T {l4t}]".format(l4t=l4t)
     # Template
     template = "jetpack-missing.md"
     # Body
     body = "Please update jetson-stats with new jetpack\n\n"
-    body += "**Linux for Tegra**\n"
+    body += "### Linux for Tegra\n\n"
     body += " - L4T: " + l4t + "\n\n"
-    body += "**Jetson-Stats**\n"
+    body += "### Jetson-Stats\n\n"
     body += " - Version: " + version + "\n"
     # Make url
-    url = make_issue(repository, title, body=body, labels="missing", template=template)
+    url = make_issue(repository, title, body=body, labels="Jetpack,missing", template=template)
     # message shell
-    return hyperlink(url, "open an issue on Github")
+    message = "jetson-stats not supported for [L4T {l4t}]".format(l4t=hardware['L4T'])
+    hyperlink(message, url, "open a Github issue")
 
 
-def model_missing(repository, jetson, version):
-    model = jetson.board.info["model"]
+def get_hardware_log():
+    # Print platform
+    platform = get_platform_variables()
+    body = "--------------------- PLATFORM -------------------------\n"
+    for name, value in platform.items():
+        body += "{name}: {value}\n".format(name=name, value=value)
+    # Print all raw output
+    raw_output = get_raw_output()
+    body += "-------------------- RAW OUTPUT ------------------------"
+    for name, value in raw_output.items():
+        body += "\n------------------\n"
+        body += "{name}:\n{value}".format(name=name, value=value)
+    return body
+
+
+def hardware_missing(repository, hardware, version):
+    hardware = deepcopy(hardware)
+    del hardware['Serial Number']
     # Title
-    title = "Model missing {model}".format(model=model)
+    if 'P-Number' in hardware:
+        title = "Hardware Missing: {pnumber}".format(pnumber=hardware.get('P-Number', ''))
+    else:
+        title = "Hardware Missing".format()
     # Template
-    template = "model-missing.md"
+    template = "hardware-missing.md"
     # Body
     body = "Please update jetson-stats with this board\n\n"
-    body += "**Board**\n"
-    body += " - Boardis: " + jetson.board.hardware["BOARDIDS"] + "\n"
-    body += " - SOC: " + jetson.board.hardware["SOC"] + "\n"
-    body += " - ID: " + jetson.board.hardware["CHIP_ID"] + "\n"
-    body += " - Code Name: " + jetson.board.hardware["CODENAME"] + "\n\n"
-    body += " - Module: " + jetson.board.hardware["MODULE"] + "\n\n"
-    body += " - Carrier: " + jetson.board.hardware["CARRIER"] + "\n\n"
-    body += "**Jetpack**\n"
-    body += " - Jetpack: " + jetson.board.info["jetpack"] + "\n"
-    body += " - L4T: " + jetson.board.info["L4T"] + "\n\n"
-    body += "**Jetson-Stats**\n"
-    body += " - version: " + version + "\n"
+    body += "### Board\n\n"
+    for name, value in hardware.items():
+        if not value:
+            value = "**MISSING**"
+        body += " - {name}: {value}\n".format(name=name, value=value)
+    body += "\n### Jetson-Stats\n\n"
+    body += " - Version: " + version + "\n"
+    # Print all raw output
+    body += "\n<!-- Please attach the output from: jtop --error-log -->\n"
+    body += "### RAW Data\n\n"
+    body += "File from `--error-log` attached"
     # Make url
-    url = make_issue(repository, title, body=body, labels="missing", template=template)
+    url = make_issue(repository, title, body=body, labels="Hardware,missing", template=template)
     # message shell
-    return hyperlink(url, title)
+    message = "jtop not support this hardware"
+    hyperlink(message, url, "open a Github issue & {attach} file from: jtop --error-log".format(attach=bcolors.bold('attach')))
 
 
-def hyperlink(url, text, hyperlink=True):
+def hyperlink(message, url, text):
     # Reference:
     # 1. http://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
     # 2. https://stackoverflow.com/questions/40419276/python-how-to-print-text-to-console-as-hyperlink
     # 3. https://purpleidea.com/blog/2018/06/29/hyperlinks-in-gnome-terminal/
     # 4. https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
     # 5. https://stackoverflow.com/questions/44078888/clickable-html-links-in-python-3-6-shell
+    # Print starting message
+    print("[{status}] {message}".format(status=bcolors.warning(), message=message))
+    print("  Please, try: {bold}sudo pip3 install -U jetson-stats{reset} or".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+    # Generate hyperlink for sheel
     # Check type of shell
-    if hyperlink:
-        return u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (press CTRL + Click)".format(url=url, text=text)
-    else:
-        return "{text} ({url})".format(url=url, text=text)
+    try:
+        link = u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (press CTRL + Click)".format(url=url, text=text)
+    except UnicodeEncodeError:
+        link = "{text}".format(text=text)
+    print("  {link}".format(link=link))
 
 
 def make_issue(repository, title, body="", labels="", template=""):

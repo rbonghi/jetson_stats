@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -76,8 +76,11 @@ class Command(object):
                 self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE, stdin=open(os.devnull), preexec_fn=os.setsid)
                 # Read lines output
                 for line in iter(self.process.stdout.readline, b''):
-                    line = line.decode('utf-8')
-                    line = str(line.strip())
+                    try:
+                        line = line.decode('utf-8')
+                        line = str(line.strip())
+                    except UnicodeEncodeError:
+                        line = line.encode('ascii', 'ignore').decode('ascii')
                     out_queue.put(line)
                 # Close and terminate
                 self.process.stdout.close()

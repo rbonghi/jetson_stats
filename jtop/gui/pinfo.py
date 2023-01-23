@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,34 +17,45 @@
 
 import re
 import curses
+from copy import deepcopy
 # Find variable
 from ..core.common import get_var
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
-from .lib.common import plot_name_info
-# Menu GUI pages
-from .jtopguimenu import strfdelta
+from .lib.common import plot_name_info, plot_dictionary
 # Regex
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
-AUTHOR_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
+COPYRIGHT_RE = re.compile(r""".*__copyright__ = ["'](.*?)['"]""", re.S)
 EMAIL_RE = re.compile(r""".*__email__ = ["'](.*?)['"]""", re.S)
+
+
+def plot_libraries(stdscr, pos_y, pos_x, libraries):
+    libraries = deepcopy(libraries)
+    opencv = libraries['OpenCV']
+    opencv_cuda = libraries['OpenCV-Cuda']
+    opencv_cuda_string = "YES" if opencv_cuda else "NO"
+    color = curses.color_pair(2) if opencv_cuda else curses.color_pair(1)
+    del libraries['OpenCV']
+    del libraries['OpenCV-Cuda']
+    # Plot Library
+    libraries_size_y, libraries_size_x = plot_dictionary(stdscr, pos_y, pos_x, 'Libraries', libraries)
+    # Plot OpenCV and CUDA
+    opencv_string = opencv if opencv else "Missing"
+    opencv_size_x = plot_name_info(stdscr, pos_y + libraries_size_y, pos_x + 1, 'OpenCV', opencv_string)
+    len_opencv = opencv_size_x
+    stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 2, str(len_opencv))
+    if opencv:
+        stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 1, " - with CUDA:")
+        stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 15, opencv_cuda_string, color | curses.A_BOLD)
+        len_opencv += len(opencv_cuda_string) + 14
+    return libraries_size_y + 1, max(libraries_size_x, len_opencv)
 
 
 class INFO(Page):
 
     def __init__(self, stdscr, jetson):
         super(INFO, self).__init__("INFO", stdscr, jetson)
-        info = self.jetson.board.info
-        self.l4t_release = info["L4T"].split(".")[0]
-        try:
-            self.l4t_release = int(self.l4t_release)
-        except ValueError:
-            self.l4t_release = 0
-
-    def info_variable(self, start, offset, name, value, spacing=18):
-        self.stdscr.addstr(start, offset, name + ":")
-        self.stdscr.addstr(start, offset + spacing, value, curses.A_BOLD)
 
     def draw(self, key, mouse):
         """
@@ -52,85 +63,28 @@ class INFO(Page):
         """
         # Screen size
         _, width, first = self.size_page()
-        # Position information
-        posx = 1
-        start_pos = first + 2
-        spacing = 18
-        # Up time
-        uptime_string = strfdelta(self.jetson.uptime, "{days} days {hours}:{minutes}:{seconds}")
-        self.stdscr.addstr(start_pos, posx, "- Up Time:", curses.A_BOLD)
-        self.stdscr.addstr(start_pos, posx + spacing, uptime_string)
-        start_pos += 1
-        # Loop build information
-        idx = 0
-        # Board info
-        info = self.jetson.board.info
-        message_jp = "{info[jetpack]} [L4T {info[L4T]}]".format(info=info)
-        self.stdscr.addstr(start_pos + idx, posx, "- Jetpack:", curses.A_BOLD)
-        self.stdscr.addstr(start_pos + idx, posx + spacing, message_jp, curses.A_BOLD)
-        self.stdscr.addstr(start_pos + idx + 1, posx, "- Board:", curses.A_BOLD)
-        idx += 2
-        # Load Board information
-        hardware = self.jetson.board.hardware
-        self.info_variable(start_pos + idx, posx + 2, "* Model", info["model"])
-        self.info_variable(start_pos + idx + 1, posx + 2, "* SOC Family", hardware["SOC"])
-        if hardware["CHIP_ID"]:
-            self.info_variable(start_pos + idx + 1, posx + 33, "ID", hardware["CHIP_ID"], spacing=4)
-        self.info_variable(start_pos + idx + 2, posx + 2, "* Module", hardware["MODULE"])
-        self.info_variable(start_pos + idx + 2, posx + 33, "Carrier", hardware["CARRIER"], spacing=9)
-        self.info_variable(start_pos + idx + 3, posx + 2, "* Code Name", hardware["CODENAME"])
-        self.info_variable(start_pos + idx + 4, posx + 2, "* Cuda ARCH", hardware["CUDA_ARCH_BIN"])
-        self.info_variable(start_pos + idx + 5, posx + 2, "* Serial Number", hardware["SERIAL_NUMBER"])
-        idx += 5
-        if hardware["BOARDIDS"]:
-            self.info_variable(start_pos + idx + 1, posx + 2, "* Board ids", hardware["BOARDIDS"])
-            idx += 1
-        # Platform info
-        plat = self.jetson.board.platform
-        platform_line = start_pos + idx + 1
-        self.stdscr.addstr(platform_line, posx, "- Platform:", curses.A_BOLD)
-        self.info_variable(start_pos + idx + 2, posx + 2, "* Architecture", plat['machine'])
-        self.info_variable(start_pos + idx + 3, posx + 2, "* Distribution", plat['distribution'])
-        self.info_variable(start_pos + idx + 4, posx + 2, "* Release", plat['release'].split("-")[0])
-        idx += 3
-        if self.jetson.cluster:
-            self.info_variable(start_pos + idx + 4, posx + 2, "* Cluster", self.jetson.cluster)
-            idx += 1
-        # Libraries info
-        library_line = start_pos + idx + 1
-        self.stdscr.addstr(library_line, posx, "- Libraries:", curses.A_BOLD)
-        idx += 1
-        for name, info in sorted(self.jetson.board.libraries.items()):
-            if name == "OpenCV-Cuda":
-                continue
-            # VisionWorks is not anymore available from JP5.0
-            if name == "VisionWorks" and self.l4t_release >= 34:
-                continue
-            try:
-                self.stdscr.addstr(start_pos + idx + 1, posx + 2, "* " + name + ":")
-                self.stdscr.addstr(start_pos + idx + 1, posx + spacing, info, curses.A_BOLD)
-            except curses.error:
-                pass
-            if name == "OpenCV":
-                self.stdscr.addstr(start_pos + idx + 1, posx + 25, "compiled CUDA:")
-                cuda = self.jetson.board.libraries["OpenCV-Cuda"]
-                color = curses.color_pair(2) if cuda == "YES" else curses.color_pair(1)
-                self.stdscr.addstr(start_pos + idx + 1, posx + 40, cuda, color | curses.A_BOLD)
-            idx += 1
-        # IP address and Hostname
-        if self.jetson.local_interfaces:
-            # Write hostname
-            self.stdscr.addstr(platform_line, width - 35, "- Hostname:", curses.A_BOLD)
-            self.stdscr.addstr(platform_line, width - 20, self.jetson.local_interfaces["hostname"], curses.A_BOLD)
-            # Write all interfaces
-            self.stdscr.addstr(platform_line + 1, width - 35, "- Interfaces:", curses.A_BOLD)
-            idx = 2
-            for name, ip in self.jetson.local_interfaces["interfaces"].items():
-                self.stdscr.addstr(platform_line + idx, width - 33, "* " + name + ":")
-                self.stdscr.addstr(platform_line + idx, width - 20, ip, curses.A_BOLD)
-                idx += 1
-        # Author information
-        plot_name_info(self.stdscr, start_pos - 1, width - 35, "Version", get_var(VERSION_RE))
-        plot_name_info(self.stdscr, start_pos - 1, width - 16, "Python", plat['python'])
-        plot_name_info(self.stdscr, start_pos, width - 30, "Author", get_var(AUTHOR_RE))
-        plot_name_info(self.stdscr, start_pos + 1, width - 30, "e-mail", get_var(EMAIL_RE))
+        start_pos = first + 3
+        # Clear first line
+        self.stdscr.move(0, 0)
+        self.stdscr.clrtoeol()
+        # Author info
+        string_author = "jtop {version} - {copyright} [{email}]".format(version=get_var(VERSION_RE),
+                                                                        copyright=get_var(COPYRIGHT_RE),
+                                                                        email=get_var(EMAIL_RE))
+        self.stdscr.addstr(first, 0, string_author, curses.A_BOLD)
+        self.stdscr.addstr(first + 1, 0, "Website: https://rnext.it/jetson_stats", curses.A_BOLD)
+        # Plot platform
+        platform_size_y, platform_size_x = plot_dictionary(self.stdscr, start_pos, 1, 'Platform', self.jetson.board['platform'])
+        # Plot libraries
+        libraries_size_y, libraries_size_x = plot_libraries(self.stdscr, start_pos + platform_size_y + 1, 1, self.jetson.board['libraries'])
+        # Plot hardware
+        size_hardware_x = width - platform_size_x - 2
+        hardware_size_y, hardware_size_x = plot_dictionary(self.stdscr, start_pos, 1 + platform_size_x + 1,
+                                                           'Hardware', self.jetson.board['hardware'], size=size_hardware_x)
+        # Plot interfaces
+        interfaces = self.jetson.local_interfaces["interfaces"]
+        hostname = self.jetson.local_interfaces["hostname"]
+        max_size_x = max(platform_size_x, libraries_size_x)
+        plot_name_info(self.stdscr, start_pos + hardware_size_y + 1, 2 + max_size_x, "Hostname", hostname)
+        interfaces_size_y, interfaces_size_x = plot_dictionary(self.stdscr, start_pos + hardware_size_y + 2, 2 + max_size_x, 'Interfaces', interfaces)
+# EOF

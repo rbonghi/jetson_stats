@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -22,7 +22,9 @@ from .jtop import jtop
 
 __author__ = "Raffaello Bonghi"
 __email__ = "raffaello@rnext.it"
+__cr__ = "(c) 2023, RB"
+__copyright__ = "(c) 2023, Raffaello Bonghi"
 # Version package
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "4.0.0"
+__version__ = "4.1.0"
 # EOF

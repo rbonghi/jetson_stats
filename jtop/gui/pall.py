@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -45,7 +45,7 @@ class ALL(Page):
         height, width, first = self.size_page()
         line_counter = first + 1
         # Plot Status CPU
-        line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.cpu, width)
+        line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.cpu['cpu'], width)
         # Plot MTS
         if self.jetson.mts:
             line_counter += 1
