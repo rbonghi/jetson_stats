@@ -87,6 +87,7 @@ def read_idle(path):
 
 def read_system_cpu(path, cpu_status={}):
     # Online status
+    cpu_status['online'] = True
     if os.path.isfile(path + "/online"):
         with open(path + "/online", 'r') as f:
             cpu_status['online'] = f.read().strip() == '1'
