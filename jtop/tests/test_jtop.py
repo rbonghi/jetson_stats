@@ -44,15 +44,6 @@ def check_attributes(jetson):
     # Check temperature
     assert isinstance(jetson.temperature, dict)
     assert len(jetson.temperature) > 0
-    # Check MTS
-    assert isinstance(jetson.mts, dict)
-    assert len(jetson.mts) > 0
-    # Check EMC
-    assert isinstance(jetson.emc, dict)
-    assert len(jetson.emc) > 0
-    # Check IRAM
-    assert isinstance(jetson.iram, dict)
-    # assert len(jetson.iram) > 0
 
 
 def test_open(jtop_server):

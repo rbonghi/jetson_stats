@@ -138,7 +138,7 @@ class CPUService(object):
 
     def reset_estimation(self):
         # reset estimation status cpu
-        for cpu in self._cpu_info:
+        for cpu in self._cpu:
             cpu['last_cpu'] = [0.0] * len(CPU_STAT_LABEL)
         # Build CPU total info
         self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
