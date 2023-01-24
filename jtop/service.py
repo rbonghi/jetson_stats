@@ -521,7 +521,7 @@ class JtopServer(Process):
         # https://github.com/rbonghi/jetson_stats/issues/51
         total_name = ""
         for val in power:
-            if "IN" in val:
+            if "_IN" in val:
                 total_name = val
                 break
         # Extract the total from list
@@ -551,8 +551,8 @@ class JtopServer(Process):
         if 'NC' in tegrastats['WATT']:
             del tegrastats['WATT']['NC']
         # Refactor names
-        power = {k.replace("VDDQ_", "").replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in tegrastats['WATT'].items()}
-        total, power = self._total_power(power)
+        total, power = self._total_power(tegrastats['WATT'])
+        power = {k.replace("VDDQ_", "").replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in power.items()}
         data['power'] = {'all': total, 'power': power}
         # -- Temperature --
         # Remove PMIC temperature (TX family)
