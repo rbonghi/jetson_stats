@@ -23,6 +23,7 @@ from .jtopgui import Page
 from .lib.chart import Chart
 from .lib.common import (check_curses,
                          label_freq)
+from .lib.linear_gauge import linear_frequency_gauge
 
 
 def cpu_grid(list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0):
@@ -55,22 +56,26 @@ class CPU(Page):
         super(CPU, self).__init__("CPU", stdscr, jetson)
         # List all chart CPU
         size_cpu = len(jetson.cpu['cpu'])
-        self._chart_cpus = [Chart(jetson, str(idx), self.update_chart, color_text=curses.COLOR_BLUE) for idx in range(size_cpu)]
+        self._chart_cpus = [Chart(jetson, str(idx + 1), self.update_chart, color_text=curses.COLOR_BLUE) for idx in range(size_cpu)]
 
     def update_chart(self, jetson, name):
-        return {}
+        cpu = jetson.cpu['cpu'][int(name) - 1]
+        return {
+            'value': [100 - cpu.get("idle", 0)],
+        }
 
     def print_cpu(self, idx, cpu, pos_y, pos_x, size_h, size_w):
-        # string = f"({idx}) y{pos_y} x{pos_x}|H{size_h} W{size_w}"
-        # self.stdscr.addstr(pos_y, pos_x, string, curses.A_NORMAL)
-        self.stdscr.addstr(pos_y, pos_x, str(idx), curses.A_BOLD)
-
-        label_chart_cpu = "{percent: >3d}%".format(percent=cpu.get('val', 0))
+        # Print status CPU
+        governor = cpu.get('governor', '').capitalize()
+        label_chart_cpu = "{percent: >3.0f}% {governor}".format(percent=100 - cpu.get('idle', 0), governor=governor)
         # Print chart
         chart = self._chart_cpus[idx]
         chart.draw(self.stdscr, [pos_x, pos_x + size_w], [pos_y, pos_y + size_h - 2], label=label_chart_cpu, y_label=False)
         # Print info
-        self.stdscr.addstr(pos_y + size_h - 1, pos_x, "First", curses.A_NORMAL)
+        freq = cpu['freq']
+        freq['online'] = cpu['online']
+        linear_frequency_gauge(self.stdscr, pos_y + size_h - 1, pos_x, size_w, "Frq", cpu['freq'])
+        # self.stdscr.addstr(pos_y + size_h - 1, pos_x, "First", curses.A_NORMAL)
         self.stdscr.addstr(pos_y + size_h, pos_x, "Second", curses.A_NORMAL)
 
     def draw(self, key, mouse):

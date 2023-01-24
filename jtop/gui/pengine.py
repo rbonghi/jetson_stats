@@ -23,7 +23,7 @@ from .lib.linear_gauge import linear_frequency_gauge
 
 
 def get_value_engine(engine):
-    return value_to_string(engine['curr'], engine['unit']) if engine['status'] else '[OFF]'
+    return value_to_string(engine['cur'], engine['unit']) if engine['online'] else '[OFF]'
 
 
 def pass_agx_orin(engine):

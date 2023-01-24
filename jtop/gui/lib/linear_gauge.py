@@ -78,18 +78,18 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
 
 @check_curses
 def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
-    curr = data['curr']
+    curr = data['cur']
     unit = data['unit']
     # Draw name engine
     stdscr.addstr(pos_y, pos_x, name, curses.color_pair(6))
     # Draw frequency
     curr_string = value_to_string(curr, unit)
-    # Write status bar
+    # Write online bar
     size_bar = size - len(name) - len(curr_string) - 4
-    start_bar = pos_x + len(name) + 1
+    start_bar = pos_x + len(name) + 1 if len(name) > 0 else pos_x
     end_bar = start_bar + size_bar
     # Check if there is a limit
-    color_bar = curses.color_pair(2) if data['status'] else curses.color_pair(1)
+    color_bar = curses.color_pair(2) if data['online'] else curses.color_pair(1)
     if 'max' in data:
         min_string = "<{min}".format(min=value_to_string(data['min'], unit)) if min != 0 else ""
         max_string = "{max}>".format(max=value_to_string(data['max'], unit))
@@ -110,13 +110,13 @@ def linear_frequency_gauge(stdscr, pos_y, pos_x, size, name, data):
             stdscr.addstr(pos_y, start_bar + int(value) + 1, string_min_max[value:], curses.A_DIM)
         else:
             stdscr.addstr(pos_y, start_bar + 1, string_min_max, color_bar)
-        if data['status']:
+        if data['online']:
             # Show current frequency
             stdscr.addstr(pos_y, pos_x + size - len(curr_string), curr_string, color_bar | curses.A_BOLD)
         else:
             stdscr.addstr(pos_y, pos_x + size - len(curr_string) + 1, 'OFF', color_bar | curses.A_NORMAL)
     else:
-        if data['status']:
+        if data['online']:
             stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
             stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
             stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)

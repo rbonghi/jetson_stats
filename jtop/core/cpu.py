@@ -96,6 +96,8 @@ def read_system_cpu(path, cpu_status={}):
             cpu_status['governor'] = f.read().strip()
         # build dict freq
         freq = {}
+        # Unit Frequency
+        freq['unit'] = 'k'
         # Min frequency
         with open(path + "/cpufreq/scaling_min_freq", 'r') as f:
             freq['min'] = int(f.read())
