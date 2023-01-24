@@ -519,6 +519,7 @@ class JtopServer(Process):
         # In according with:
         # https://forums.developer.nvidia.com/t/power-consumption-monitoring/73608/8
         # https://github.com/rbonghi/jetson_stats/issues/51
+        # https://forums.developer.nvidia.com/t/tegrastats-monitoring/217088/4?u=user62045
         total_name = ""
         for val in power:
             if "_IN" in val:
@@ -548,6 +549,7 @@ class JtopServer(Process):
         data['engines'] = self.engine.get_status()
         # -- Power --
         # Remove NC power (Orin family)
+        # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#jetson-agx-orin-series
         if 'NC' in tegrastats['WATT']:
             del tegrastats['WATT']['NC']
         # Refactor names
