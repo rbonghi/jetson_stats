@@ -44,7 +44,7 @@ jetson-stats can be installed with [pip](https://pip.pypa.io), but need **superu
 sudo pip3 install -U jetson-stats
 ```
 
-_Don't forget to **logout** or **reboot** your board_
+_Don't forget to **logout/login** or **reboot** your board_
 
 <div align="center">
 
@@ -60,7 +60,7 @@ Start jtop it's pretty simple just write `jtop`!
 jtop
 ```
 
-A simple interface will appear on your terminal
+A simple interface will appear on your terminal, more capabilites are documented at [_jtop_](https://rnext.it/jetson_stats/jtop.html) page.
 
 <div align="center">
 
@@ -84,7 +84,7 @@ with jtop() as jetson:
 
 You can also use jtop with your _virualenv_!
 
-More information available at [advanced usage](https://rnext.it/jetson_stats/advanced-usage.html) page.
+More information available at [_advanced usage_](https://rnext.it/jetson_stats/advanced-usage.html) page.
 
 ## Docker
 
@@ -100,7 +100,7 @@ You can try running this command
 docker run --rm -it -v /run/jtop.sock:/run/jtop.sock rbonghi/jetson_stats:latest
 ```
 
-More information available at [Docker](https://rnext.it/jetson_stats/docker.html) documentation page.
+More information available at [_docker_](https://rnext.it/jetson_stats/docker.html) documentation page.
 
 ## Sponsorship
 
