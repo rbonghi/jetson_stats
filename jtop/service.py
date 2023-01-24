@@ -411,6 +411,8 @@ class JtopServer(Process):
                     timeout = TIMEOUT_GAIN if interval <= TIMEOUT_GAIN else interval * TIMEOUT_GAIN
                 except queue.Empty:
                     self.sync_event.clear()
+                    # Reset CPU estimation
+                    self.cpu.reset_estimation()
                     # Close and log status
                     if self.tegra.close():
                         logger.info("tegrastats close")

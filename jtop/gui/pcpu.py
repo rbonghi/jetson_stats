@@ -25,13 +25,75 @@ from .lib.common import (check_curses,
                          label_freq)
 
 
+def cpu_grid(list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0):
+    num_cpu = len(list_cpu)
+    size_columns = 4
+    # Measure size rows and columns
+    size_rows = int(num_cpu / size_columns) + bool((num_cpu / size_columns) % 1)
+    size_columns = int(num_cpu / size_rows) + bool((num_cpu / size_rows) % 1)
+    # Measure step height and width
+    step_height = round(size_height / size_rows) if size_height > 0 else 1
+    step_width = round(size_width / size_columns) if size_width > 0 else 1
+    # Build Grid
+    idx_row = 0
+    idx_column = 0
+    for idx, cpu in enumerate(list_cpu):
+        # Check row index
+        if idx_row >= size_rows:
+            idx_row = 0
+            idx_column += 1
+        # Get CPU in grid
+        print_cpu(idx, cpu, start_y + idx_row * step_height, start_x + idx_column * step_width, step_height - 1, step_width - 1)
+        idx_row += 1
+    # return matrix
+    return step_height, step_width, size_columns, size_rows
+
+
 class CPU(Page):
 
     def __init__(self, stdscr, jetson):
         super(CPU, self).__init__("CPU", stdscr, jetson)
+        # List all chart CPU
+        size_cpu = len(jetson.cpu['cpu'])
+        self._chart_cpus = [Chart(jetson, str(idx), self.update_chart, color_text=curses.COLOR_BLUE) for idx in range(size_cpu)]
+
+    def update_chart(self, jetson, name):
+        return {}
+
+    def print_cpu(self, idx, cpu, pos_y, pos_x, size_h, size_w):
+        # string = f"({idx}) y{pos_y} x{pos_x}|H{size_h} W{size_w}"
+        # self.stdscr.addstr(pos_y, pos_x, string, curses.A_NORMAL)
+        self.stdscr.addstr(pos_y, pos_x, str(idx), curses.A_BOLD)
+
+        label_chart_cpu = "{percent: >3d}%".format(percent=cpu.get('val', 0))
+        # Print chart
+        chart = self._chart_cpus[idx]
+        chart.draw(self.stdscr, [pos_x, pos_x + size_w], [pos_y, pos_y + size_h - 2], label=label_chart_cpu, y_label=False)
+        # Print info
+        self.stdscr.addstr(pos_y + size_h - 1, pos_x, "First", curses.A_NORMAL)
+        self.stdscr.addstr(pos_y + size_h, pos_x, "Second", curses.A_NORMAL)
+
+    def draw(self, key, mouse):
+        # Screen size
+        height, width, first = self.size_page()
+        # Print gauge all CPU
+        self.stdscr.addstr(first + 1, 1, "CPU ALL STATUS", curses.A_BOLD)
+        # Print all GRID CPU
+        step_height, step_width, size_columns, size_rows = cpu_grid(
+            self.jetson.cpu['cpu'], self.print_cpu, first + 2, 1, size_height=height - 4, size_width=width - 8)
+        # Print CPU Y axis
+        chart = self._chart_cpus[0]
+        for i in range(size_rows):
+            chart.draw_y_axis(self.stdscr, first + 2 + i * step_height, 1 + step_width * size_columns, step_height - 3)
+
+
+class CPU_OLD(Page):
+
+    def __init__(self, stdscr, jetson):
+        super(CPU_OLD, self).__init__("CPU", stdscr, jetson)
         # List all CPU
         self.chart_cpus = []
-        for name in sorted(self.jetson.cpu['cpu']):
+        for name, value in enumerate(self.jetson.cpu['cpu']):
             chart = Chart(jetson, "CPU{name}".format(name=name), self.update_chart, color_text=curses.COLOR_BLUE)
             self.chart_cpus += [chart]
 
@@ -61,7 +123,7 @@ class CPU(Page):
         # Architecture CPU cores
         # architecture = self.jetson.architecture
         offset_table = 2
-        for idx, name in enumerate(sorted(self.jetson.cpu)):
+        for idx, name in enumerate(self.jetson.cpu):
             cpu = self.jetson.cpu[name]
             status = 'ON' if cpu else 'OFF'
             active = True if cpu else False

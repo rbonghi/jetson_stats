@@ -46,18 +46,6 @@ class ALL(Page):
         line_counter = first + 1
         # Plot Status CPU
         line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.cpu['cpu'], width)
-        # Plot MTS
-        if self.jetson.mts:
-            line_counter += 1
-            self.stdscr.addstr(line_counter, 0, "MTS ", curses.color_pair(5))
-            # Show FG linear gauge
-            linear_gauge(self.stdscr, offset=line_counter, start=4, size=width // 2 - 2,
-                         name=GaugeName('FG', color=curses.color_pair(5)),
-                         value=self.jetson.mts['fg'])
-            # Show BG linear gauge
-            linear_gauge(self.stdscr, offset=line_counter, start=2 + width // 2, size=width // 2 - 2,
-                         name=GaugeName('BG', color=curses.color_pair(5)),
-                         value=self.jetson.mts['bg'])
         # RAM linear gauge info
         line_counter += 1
         ram_status = self.jetson.ram

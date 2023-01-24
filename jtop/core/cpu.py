@@ -136,6 +136,13 @@ class CPUService(object):
         if not os.path.isdir(path_system_cpu + "/cpu0/cpuidle"):
             logger.warning("cpuidle folder not available on this device!")
 
+    def reset_estimation(self):
+        # reset estimation status cpu
+        for cpu in self._cpu_info:
+            cpu['last_cpu'] = [0.0] * len(CPU_STAT_LABEL)
+        # Build CPU total info
+        self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
+
     def get_cpu_info(self):
         return self._cpu_info
 
@@ -155,6 +162,7 @@ class CPUService(object):
                 match = CPU_PROG_REG.search(line)
                 if match:
                     # Get all fields
+                    # 7 is equal to len(CPU_STAT_LABEL) - 1 (no total)
                     fields = [float(column) for column in match.group(2).strip().split()[:7]]
                     # Add total in last field
                     fields += [sum(fields)]
@@ -171,7 +179,6 @@ class CPUService(object):
                         # Evaluate delta all values
                         # https://rosettacode.org/wiki/Linux_CPU_utilization
                         delta = [now - last for now, last in zip(fields, self._cpu_total['last_cpu'])]
-                        print(delta)
                         # Update last value
                         self._cpu_total['last_cpu'] = deepcopy(delta)
                         # Store utilization

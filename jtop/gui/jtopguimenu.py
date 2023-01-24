@@ -32,8 +32,7 @@ from .pengine import compact_engines
 @check_curses
 def plot_CPUs(stdscr, offest, list_cpus, width):
     max_bar = int(float(width) / 2.0)
-    for idx, name in enumerate(sorted(list_cpus)):
-        cpu = list_cpus[name]
+    for idx, cpu in enumerate(list_cpus):
         # Split in double list
         start = max_bar if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 1
         off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
@@ -42,7 +41,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         if 'governor' in cpu:
             percent = "{gov} -{val: 4.0f}%".format(gov=cpu['governor'].capitalize(), val=100 - cpu['idle'])
         # Show linear gauge
-        name = "{name}".format(name=name) + (" " if idx < 9 and len(list_cpus) > 9 else "")
+        name = "{name}".format(name=idx) + (" " if idx <= 9 and len(list_cpus) > 9 else "")
         linear_gauge(
             stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
             name=GaugeName(name, color=curses.color_pair(6)),
