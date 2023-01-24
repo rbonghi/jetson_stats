@@ -17,9 +17,8 @@
   <a href="https://github.com/rbonghi/jetson_stats/actions?query=workflow%3A%22CI+%26+CD%22"><img alt="CI & CD" src="https://github.com/rbonghi/jetson_stats/workflows/CI%20&%20CD/badge.svg" /></a>
   <a href="https://github.com/rbonghi/jetson_stats/actions/workflows/github-code-scanning/codeql"><img alt="CodeQL" src="https://github.com/rbonghi/jetson_stats/actions/workflows/github-code-scanning/codeql/badge.svg?branch=master" /></a>
 </p>
-
 <p align="center">
-  <a href="https://twitter.com/raffaello86"><img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/raffaello86?style=social" /></a>
+  <a href="https://twitter.com/raffaello86"><img alt="Twitter Follow" src="https://img.shields.io/badge/follow-%40raffaello86-1DA1F2?logo=twitter&style=social" /></a>
   <a href="https://www.instagram.com/robo.panther/"><img alt="robo.panther" src="https://img.shields.io/badge/Follow:-robo.panther-E4405F?style=social&logo=instagram" /></a>
   <a href="https://discord.gg/BFbuJNhYzS"><img alt="Join our Discord" src="https://img.shields.io/discord/1060563771048861817?color=%237289da&label=discord" /></a>
 </p>
