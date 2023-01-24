@@ -175,7 +175,7 @@ class CPUService(object):
                         # https://rosettacode.org/wiki/Linux_CPU_utilization
                         delta = [now - last for now, last in zip(fields, self._cpu[num_cpu]['last_cpu'])]
                         # Update last value
-                        self._cpu[num_cpu]['last_cpu'] = deepcopy(delta)
+                        self._cpu[num_cpu]['last_cpu'] = deepcopy(fields)
                         # Store utilization
                         cpu_out[num_cpu] = get_utilization(delta)
                     else:
