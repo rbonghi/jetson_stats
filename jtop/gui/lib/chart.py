@@ -87,7 +87,7 @@ class Chart(object):
         curses.init_pair(Chart.OFFSET_COLOR_TEXT, self.color_text, curses.COLOR_BLACK)
         # Evaluate Diplay X, and Y size
         displayX = size_x[1] - size_x[0] + 1
-        displayY = size_y[1] - size_y[0] - 1
+        # displayY = size_y[1] - size_y[0] - 1
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if label:
