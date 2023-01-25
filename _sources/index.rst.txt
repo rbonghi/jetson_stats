@@ -14,6 +14,7 @@ jetson-stats
    reference
    other-tools/index
    contributing
+   GitHub <https://github.com/rbonghi/jetson_stats>
 
 .. toctree::
    :hidden:
@@ -21,6 +22,7 @@ jetson-stats
 
    ros_jetson_stats<https://github.com/rbonghi/ros_jetson_stats>
    ros2_jetson_stats<https://github.com/NVIDIA-AI-IOT/ros2_jetson_stats>
+   Grafana plugin<https://grafana.com/grafana/dashboards/14493-nvidia-jetson>
 
 
 jetson-stats is a package for monitoring and control your NVIDIA Jetson [Orin, Xavier, Nano, TX] series. Works with all NVIDIA Jetson ecosystem.
@@ -37,10 +39,9 @@ jetson-stats can be installed with `pip <https://pip.pypa.io>`_
 
    sudo pip3 install -U jetson-stats
 
+Don't forget to **logout/login** or **reboot** your board
+
 **🚀 That's it! 🚀** 
-
-Don't forget to **logout** or **reboot** your board
-
 
 Usage
 -----
