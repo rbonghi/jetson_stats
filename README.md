@@ -2,7 +2,7 @@
 
 <b>jetson-stats</b>
 
-![jetson-stats](https://github.com/rbonghi/jetson_stats/raw/master/docs/images/jtop.png)
+[![jetson-stats](https://github.com/rbonghi/jetson_stats/raw/master/docs/images/jtop.png)](https://rnext.it/jetson_stats/)
 
 </h1>
 
@@ -64,7 +64,7 @@ A simple interface will appear on your terminal, more capabilities are documente
 
 <div align="center">
 
-![jtop](https://github.com/rbonghi/jetson_stats/raw/master/docs/images/jtop.gif)
+[![jtop](https://github.com/rbonghi/jetson_stats/raw/master/docs/images/jtop.gif)](https://github.com/rbonghi/jetson_stats)
 
 </div>
 
