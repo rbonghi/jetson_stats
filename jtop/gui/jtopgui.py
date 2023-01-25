@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import abc
 import curses
 # Logging
 import logging
 # Timer
 from datetime import datetime, timedelta
+# Get variables
+from ..core import get_var
 # Graphics elements
 from .lib.common import (check_size,
                          check_curses,
@@ -32,6 +35,8 @@ logger = logging.getLogger(__name__)
 ABC = abc.ABCMeta('ABC', (object,), {})
 # Gui refresh rate
 GUI_REFRESH = 1000 // 20
+# Copyright small
+COPYRIGHT_SMALL_RE = re.compile(r""".*__cr__ = ["'](.*?)['"]""", re.S)
 
 
 class Page(ABC):
@@ -80,7 +85,7 @@ class JTOPGUI:
         curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
         # background
-        curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_RED)
+        curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_RED if not color_filter else curses.COLOR_BLUE)
         curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_GREEN)
         curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_YELLOW)
         curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLUE)
@@ -181,9 +186,31 @@ class JTOPGUI:
 
     @check_curses
     def header(self):
+        # Detect if jtop is running on jetson or on other platforms
+        if self.jetson.board['hardware']['L4T']:
+            self.header_jetson()
+        else:
+            self.header_x86()
+
+    def header_x86(self):
+        platform = self.jetson.board['platform']
+        release = platform['Release'].split("-")[0]
+        message = "{system} {machine} machine - {distribution} [{release}]".format(system=platform['System'].upper(),
+                                                                                   machine=platform['Machine'],
+                                                                                   distribution=platform['Distribution'],
+                                                                                   release=release)
+        self.stdscr.addstr(0, 0, message, curses.A_BOLD)
+        # Print jtop basic info
+        str_xterm = platform['Distribution']
+        set_xterm_title("jtop {name}".format(name=str_xterm))
+
+    def header_jetson(self):
+        model = self.jetson.board['hardware']["Model"]
+        jetpack = self.jetson.board['hardware']["Jetpack"]
+        L4T = self.jetson.board['hardware']["L4T"]
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
-        status = [self.jetson.board.info["model"]]
+        status = [model]
         if self.jetson.jetson_clocks is not None:
             status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks.status.capitalize())]
         if self.jetson.nvpmodel is not None:
@@ -203,8 +230,16 @@ class JTOPGUI:
             self.stdscr.addstr(0, (width - len(string_sudo)) // 2, string_sudo, curses.color_pair(9))
             idx = 1
         # Write first line
-        message = "{info[model]} - Jetpack {info[jetpack]} [L4T {info[L4T]}]".format(info=self.jetson.board.info)
-        self.stdscr.addstr(idx, 0, message, curses.A_BOLD)
+        head_string = "Model: {model} - ".format(model=model) if model else ""
+        if jetpack:
+            head_string += "Jetpack {jetpack} [L4T {L4T}]".format(jetpack=jetpack, L4T=L4T)
+            self.stdscr.addstr(idx, 0, head_string, curses.A_BOLD)
+        else:
+            head_string += "[L4T {L4T}]".format(L4T=L4T)
+            # Print only the model
+            self.stdscr.addstr(idx, 0, head_string, curses.A_BOLD)
+            # Print error message
+            self.stdscr.addstr(idx, len(head_string) + 1, "Jetpack NOT DETECTED", curses.color_pair(1) | curses.A_BOLD)
 
     @check_curses
     def menu(self):
@@ -217,10 +252,11 @@ class JTOPGUI:
             self.stdscr.addstr(height - 1, position, str(idx + 1), color | curses.A_BOLD)
             self.stdscr.addstr(height - 1, position + 1, page.name + " ", color)
             position += len(page.name) + 3
+        # Quit button
         self.stdscr.addstr(height - 1, position, "Q", curses.A_REVERSE | curses.A_BOLD)
         self.stdscr.addstr(height - 1, position + 1, "uit ", curses.A_REVERSE)
         # Author name
-        name_author = "Raffaello Bonghi"
+        name_author = get_var(COPYRIGHT_SMALL_RE) + " "
         self.stdscr.addstr(height - 1, width - len(name_author), name_author, curses.A_REVERSE)
 
     def event_menu(self, mx, my):

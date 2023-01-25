@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2022 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -18,13 +18,22 @@
 ARG PYTHON_VERSION=3.8
 FROM python:${PYTHON_VERSION}
 
-RUN apt update && \
-    apt install -y bc && \
+RUN apt-get update && \
+    apt-get install -y sudo bc && \
+    sudo -H python -m pip install --upgrade pip && \
     rm -rf /var/lib/apt/lists/*
 
 COPY . /jetson_stats
 
 WORKDIR /jetson_stats
 
-RUN pip install travis-sphinx sphinx sphinx-rtd-theme m2r mistune && \
-    sphinx-build -D todo_include_todos=0 docs/source ./docs/build/html/
+# Install jtop
+RUN sudo pip3 install -v -e .
+# Install sphinx requirements
+RUN pip install -r docs/requirements.txt
+
+WORKDIR /jetson_stats/docs
+
+RUN sphinx-build -b html -W . _build/html
+
+CMD ["bash"]

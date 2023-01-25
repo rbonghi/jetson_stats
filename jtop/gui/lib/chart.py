@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2019 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -33,7 +33,7 @@ class Chart(object):
     http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
     """
 
-    def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.A_NORMAL, color_chart=[], fill=True, time=10.0, tik=2):
+    def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.COLOR_WHITE, color_chart=[], fill=True, time=10.0, tik=2):
         self.jetson = jetson
         self.name = name
         self.callback = callback
@@ -175,24 +175,25 @@ class Chart(object):
                 cell_val_mant = cell_val - cell_val_int
                 if cell_val > 0 and size_plot_x[1] - idx >= size_plot_x[0]:
                     # Fill chart if request
+                    # https://www.htmlsymbols.xyz/box-drawing
                     # Full block: \u2588 - 3/4 block \u2586 - Lower block: \u2584 - Small lower block: \u2581
                     if self.fill:
                         for n in range(cell_val_int - 1):
-                            stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, "\u2588", curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, u'\u2588', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         # Add head chart
                         if cell_val < 1.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581',
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant == 0.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2584',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2584',
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant <= 0.5:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2586',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2586',
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant < 1.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, '\u2581',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581',
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, '\u2588',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2588',
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                     else:
                         stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(Chart.OFFSET_COLOR_TEXT))

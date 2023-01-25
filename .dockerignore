@@ -2,8 +2,8 @@
 *.pyc
 
 # Setuptools distribution folder.
-dist/
-build/
+_dist/
+_build/
 doc/
 
 # Python egg metadata, regenerated from source files by setuptools.

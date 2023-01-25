@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
-# Copyright (c) 2022 Raffaello Bonghi.
+# Copyright (c) 2019-2023 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +23,6 @@ ADD . /jetson_stats
 WORKDIR /jetson_stats
 
 RUN python3 -m pip install --upgrade pip && \
-    pip3 install .
+    pip3 install -v .
 
 CMD ["jtop"]
