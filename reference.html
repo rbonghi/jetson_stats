@@ -1,0 +1,1149 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="🧰 Other tools" href="other-tools/index.html" /><link rel="prev" title="🐋 Docker" href="docker.html" />
+
+    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 -->
+        <title>📖 API Reference - jetson-stats 4.1.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f0f0;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+
+<script>
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-92957365-1']);
+  _gaq.push(['_gat._anonymizeIp']);
+  _gaq.push(['_trackPageview']);
+</script>
+</head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     
+        <a style="text-decoration: none; color: white;" 
+           href="https://github.com/sponsors/rbonghi">
+           💖 Support jetson-stats on GitHub Sponsors
+        </a>
+     
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">jetson-stats 4.1.0</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  
+  <span class="sidebar-brand-text">jetson-stats 4.1.0</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference external" href="https://rnext.it">rnext.it</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://discord.gg/BFbuJNhYzS">Community Discord</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sponsors.html">💖 Sponsor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jtop.html">📊 jtop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">👨‍💻 Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">🐋 Docker</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">📖 API Reference</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="other-tools/index.html">🧰 Other tools</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_config.html">jetson_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_release.html">jetson_release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_swap.html">jetson_swap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="other-tools/environment_variables.html">Environment variables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">✨ Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/rbonghi/ros_jetson_stats">ros_jetson_stats</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/NVIDIA-AI-IOT/ros2_jetson_stats">ros2_jetson_stats</a></li>
+</ul>
+
+</div>
+</div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9664117913485219"
+     crossorigin="anonymous"></script>
+<!-- documentation -->
+<div align="center" style="margin: 1em 0;">
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9664117913485219"
+     data-ad-slot="7056781215"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+</div>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/rbonghi/jetson_stats/edit/master/docs/reference.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="api-reference">
+<h1>📖 API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="jtop.jtop">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.</span></span><span class="sig-name descname"><span class="pre">jtop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Thread" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code></a></p>
+<p>This class control the access to your board, from here you can control your
+NVIDIA Jetson board or read the jetson_clocks status or change the nvp model.</p>
+<p>When you initialize your jtop you can setup a communication speed <strong>interval</strong>,
+if there is another jtop running this speed will be not used.</p>
+<p>When jtop is started you can read the server speed in <strong>interval</strong> property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Interval to setup the jtop speed (in seconds)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.jtop.attach">
+<span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.attach" title="Permalink to this definition">#</a></dt>
+<dd><p>Attach an observer to read the status of jtop. You can add more observer that you want.</p>
+<p>The function <strong>must</strong> be with this format:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">observer</span><span class="p">(</span><span class="n">jetson</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>The input of your callback will be the jetson object.</p>
+<p>To detach a function, please look <code class="xref py py-func docutils literal notranslate"><span class="pre">detach()</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>observer</strong> (<em>function</em>) – The function to call</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.board">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">board</span></span><a class="headerlink" href="#jtop.jtop.board" title="Permalink to this definition">#</a></dt>
+<dd><p>Board status, in this property you can find:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>platform (from jtop library is running)</dt><dd><ul>
+<li><p>Machine</p></li>
+<li><p>System</p></li>
+<li><p>Distribution</p></li>
+<li><p>Release</p></li>
+<li><p>Python</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>hardware (from service is running)</dt><dd><ul>
+<li><p>Model</p></li>
+<li><p>699-level Part Number</p></li>
+<li><p>P-Number</p></li>
+<li><p>Module</p></li>
+<li><p>SoC</p></li>
+<li><p>CUDA Arch BIN</p></li>
+<li><p>Codename (Optional)</p></li>
+<li><p>Serial Number</p></li>
+<li><p>L4T (Linux for Tegra)</p></li>
+<li><p>Jetpack</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>libraries (from jtop library is running)</dt><dd><ul>
+<li><p>CUDA</p></li>
+<li><p>OpenCV</p></li>
+<li><p>OpenCV-Cuda (boolean)</p></li>
+<li><p>cuDNN</p></li>
+<li><p>TensorRT</p></li>
+<li><p>VPI</p></li>
+<li><p>Vulkan</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Status board, hardware and libraries</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.jtop.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.close" title="Permalink to this definition">#</a></dt>
+<dd><p>This method will close the jtop server.</p>
+<p>This method is <strong>not</strong> needed to close jtop if you have open jtop using <cite>with</cite> like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.cluster">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster</span></span><a class="headerlink" href="#jtop.jtop.cluster" title="Permalink to this definition">#</a></dt>
+<dd><p>Cluster status of your board.</p>
+<p>If this data is not available in your board will return an empty string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Status cluster in your board</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.cpu">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cpu</span></span><a class="headerlink" href="#jtop.jtop.cpu" title="Permalink to this definition">#</a></dt>
+<dd><p>CPU status. From this dictionary you can read the status of the CPU.</p>
+<p>For each CPU all fields are:</p>
+<ul class="simple">
+<li><p><strong>min_freq</strong> - Minimum frequency in kHz</p></li>
+<li><p><strong>max_freq</strong> - Maximum frequency in kHz</p></li>
+<li><p><strong>frq</strong> - Running frequency in kHz</p></li>
+<li><p><strong>governor</strong> - Governor selected</p></li>
+<li><p><strong>val</strong> - Status CPU, value between [0, 100]</p></li>
+<li><p><strong>model</strong> - Model Architecture</p></li>
+<li><p><strong>IdleStates</strong></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>CPU configuration, frequencies and speed</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.jtop.detach">
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.detach" title="Permalink to this definition">#</a></dt>
+<dd><p>Detach an observer from jtop</p>
+<p>To attach a function, please look <code class="xref py py-func docutils literal notranslate"><span class="pre">attach()</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>observer</strong> (<em>function</em>) – The function to detach</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.disk">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disk</span></span><a class="headerlink" href="#jtop.jtop.disk" title="Permalink to this definition">#</a></dt>
+<dd><p>Disk status properties, in dictionary are included</p>
+<ul class="simple">
+<li><p><strong>total</strong> - Total disk space in GB</p></li>
+<li><p><strong>available</strong> - Space available in GB</p></li>
+<li><p><strong>use</strong> - Disk space used in GB</p></li>
+<li><p><strong>available_no_root</strong></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Disk information</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.emc">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">emc</span></span><a class="headerlink" href="#jtop.jtop.emc" title="Permalink to this definition">#</a></dt>
+<dd><p>EMC is the external memory controller, through which all sysmem/carve-out/GART memory accesses go.</p>
+<p>If your board have the EMC, the fields are:</p>
+<ul class="simple">
+<li><p><strong>min_freq</strong> - Minimum frequency in kHz</p></li>
+<li><p><strong>max_freq</strong> - Maximum frequency in kHz</p></li>
+<li><p><strong>frq</strong> - Running frequency in kHz</p></li>
+<li><p><strong>val</strong> - Status EMC, value between [0, 100]</p></li>
+<li><p><strong>FreqOverride</strong> - Status override</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>emc status</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.engine">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">engine</span></span><a class="headerlink" href="#jtop.jtop.engine" title="Permalink to this definition">#</a></dt>
+<dd><p>Engine status, in this property you can find:</p>
+<p>APE, DLA, NVDEC, NVENC, and other</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of all active engines</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.fan">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fan</span></span><a class="headerlink" href="#jtop.jtop.fan" title="Permalink to this definition">#</a></dt>
+<dd><p>Fan status and control. From this property you can setup your board</p>
+<p>If your board does not support a fan, the output will be <cite>None</cite></p>
+<p>The variable available are:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>auto</strong> - boolean with fan control.</dt><dd><ul>
+<li><p>True = Automatic speed control enabled</p></li>
+<li><p>False = Automatic speed control disabled</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><strong>speed</strong> - Speed set. Value between [0, 100] (float)</p></li>
+<li><p><strong>measure</strong> - Speed measured. Value between [0, 100] (float)</p></li>
+<li><p><strong>rpm</strong> - Revolution Per Minute. This number can be 0 if the hardware does not implement this feature</p></li>
+<li><p><strong>mode</strong> - Mode selected for your fan</p></li>
+</ul>
+<p>If you want set a new speed, change the mode or know how many configurations are available you can use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span><span class="o">.</span><span class="n">fan</span><span class="o">.</span><span class="n">speed</span> <span class="o">=</span> <span class="n">value</span>
+</pre></div>
+</div>
+<p>where <em>value</em> is a number between [0, 100] <em>(float)</em></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span><span class="o">.</span><span class="n">fan</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">name</span>
+</pre></div>
+</div>
+<p>where <em>name</em> is a <strong>string</strong> of the mode that you want use</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">configs</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">fan</span><span class="o">.</span><span class="n">configs</span>
+</pre></div>
+</div>
+<p>Return a <strong>list</strong> of all available configurations:</p>
+<ul class="simple">
+<li><p><em>default</em> - The fan is not manage, when jetson_clocks start will follow the jetson_clocks configurations</p></li>
+<li><p><em>system</em> - The fan speed will be manage from the OS</p></li>
+<li><p><em>manual</em> - The fan speed is the same that you have set in <em>jetson.fan.speed</em></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Status Fan</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Fan</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.11)"><strong>ValueError</strong></a> – Wrong speed number or wrong mode name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.gpu">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gpu</span></span><a class="headerlink" href="#jtop.jtop.gpu" title="Permalink to this definition">#</a></dt>
+<dd><p>GPU engine. The fields are:</p>
+<ul class="simple">
+<li><p><strong>min_freq</strong> - Minimum frequency in kHz</p></li>
+<li><p><strong>max_freq</strong> - Maximum frequency in kHz</p></li>
+<li><p><strong>frq</strong> - Running frequency in kHz</p></li>
+<li><p><strong>val</strong> - Status GPU, value between [0, 100]</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>GPU engine, frequencies and speed</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.interval">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interval</span></span><a class="headerlink" href="#jtop.jtop.interval" title="Permalink to this definition">#</a></dt>
+<dd><p>Speed jtop service. This speed can be different compare the speed specified in <a class="reference internal" href="#jtop.jtop" title="jtop.jtop.jtop"><code class="xref py py-func docutils literal notranslate"><span class="pre">jtop()</span></code></a> constructor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>jtop interval (in seconds)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.interval_user">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interval_user</span></span><a class="headerlink" href="#jtop.jtop.interval_user" title="Permalink to this definition">#</a></dt>
+<dd><p>This is the same speed specified in <a class="reference internal" href="#jtop.jtop" title="jtop.jtop.jtop"><code class="xref py py-func docutils literal notranslate"><span class="pre">jtop()</span></code></a> constructor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>jtop user interval (in seconds)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.iram">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">iram</span></span><a class="headerlink" href="#jtop.jtop.iram" title="Permalink to this definition">#</a></dt>
+<dd><p>IRAM is memory local to the video hardware engine.
+If your board have the IRAM, the fields are:</p>
+<ul class="simple">
+<li><p><strong>use</strong> - status iram used</p></li>
+<li><p><strong>tot</strong> - Total size IRAM</p></li>
+<li><p><strong>unit</strong> - Unit size IRAM, usually in kB</p></li>
+<li><dl class="simple">
+<dt><strong>lfb</strong> - Largest Free Block (lfb) is a statistic about the memory allocator</dt><dd><ul>
+<li><p><strong>size</strong> - Size of the largest free block</p></li>
+<li><p><strong>unit</strong> - Unit size lfb</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Largest Free Block (lfb) is a statistic about the memory allocator.
+It refers to the largest contiguous block of physical memory
+that can currently be allocated: at most 4 MB.
+It can become smaller with memory fragmentation.
+The physical allocations in virtual memory can be bigger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>iram status</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.jetson_clocks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jetson_clocks</span></span><a class="headerlink" href="#jtop.jtop.jetson_clocks" title="Permalink to this definition">#</a></dt>
+<dd><p>Status jetson_clocks, if you want change the jetson_clocks status you can simply write:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span><span class="o">.</span><span class="n">jetson_clocks</span> <span class="o">=</span> <span class="n">value</span>
+</pre></div>
+</div>
+<p>where <em>value</em> is a boolean value</p>
+<p>There are available other extra properties:</p>
+<ul class="simple">
+<li><p><strong>boot</strong> - You can enable and disable on boot <strong>jetson_clocks</strong></p></li>
+<li><dl class="simple">
+<dt><strong>status</strong> - A string with the current jetson_clocks status</dt><dd><ul>
+<li><p><em>running</em> - The service is running</p></li>
+<li><p><em>booting</em> - jetson_clocks is in booting (When your board boot, jetson_clocks wait 60s before to start)</p></li>
+<li><p><em>activating</em> - jetson_clocks is activating</p></li>
+<li><p><em>deactivating</em> - jetson_clocks is deactivating</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>You can change and edit using this property:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Read jetson_clocks boot property</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jetson</span><span class="o">.</span><span class="n">jetson_clocks</span><span class="o">.</span><span class="n">boot</span><span class="p">)</span>
+<span class="c1"># Set a new value</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">jetson_clocks</span><span class="o">.</span><span class="n">boot</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># True or False</span>
+</pre></div>
+</div>
+<p>Written jetson_clocks status</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Status jetson_clocks</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jetson</span><span class="o">.</span><span class="n">jetson_clocks</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>status jetson_clocks script</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>JetsonClocks</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.11)"><strong>ValueError</strong></a> – Wrong jetson_clocks value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.local_interfaces">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">local_interfaces</span></span><a class="headerlink" href="#jtop.jtop.local_interfaces" title="Permalink to this definition">#</a></dt>
+<dd><p>Local interfaces information and hostname</p>
+<p>This dictionary the status of your local network</p>
+<ul class="simple">
+<li><p><strong>hostname</strong> - Hostname board</p></li>
+<li><p><strong>interfaces</strong> - A dictionary with name and IP address for all interfaces listed</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Local interfaces and hostname</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.jtop.loop_for_ever">
+<span class="sig-name descname"><span class="pre">loop_for_ever</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.loop_for_ever" title="Permalink to this definition">#</a></dt>
+<dd><p>This blocking method is needed when you design your python code to work only by callback.</p>
+<p>Before to run this method remember to attach a callback using <code class="xref py py-func docutils literal notranslate"><span class="pre">attach()</span></code></p>
+<p>A simple example to use this method is below</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">read_stats</span><span class="p">(</span><span class="n">jetson</span><span class="p">):</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">stats</span>
+
+<span class="n">jetson</span> <span class="o">=</span> <span class="n">jtop</span><span class="p">()</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">read_stats</span><span class="p">)</span>
+<span class="c1"># Blocking method</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">loop_for_ever</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.mts">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mts</span></span><a class="headerlink" href="#jtop.jtop.mts" title="Permalink to this definition">#</a></dt>
+<dd><p>MTS foreground and background tasks.</p>
+<p>If your board support the MTS variable, the output will be:</p>
+<ul class="simple">
+<li><p><strong>fg</strong> - foreground tasks</p></li>
+<li><p><strong>bg</strong> - background tasks</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>mts status</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.nvpmodel">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nvpmodel</span></span><a class="headerlink" href="#jtop.jtop.nvpmodel" title="Permalink to this definition">#</a></dt>
+<dd><p>From this function you set and read NV Power Mode. If your NVIDIA Jetson does not use nvpmodel will return None</p>
+<p>If you want set a new nvpmodel you can follow the NVIDIA Jetson documentation and write a string like below</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># You can write a string for a name or an integer for the ID</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span> <span class="o">=</span> <span class="n">name_or_id</span>
+</pre></div>
+</div>
+<p>If you need to increase or decrease the ID you can use</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># or</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>There are other properties:</p>
+<ul class="simple">
+<li><p><strong>name</strong> - mode name</p></li>
+<li><p><strong>id</strong> - ID name</p></li>
+<li><p><strong>modes</strong> - A list with all mode available in your board</p></li>
+<li><p><strong>status</strong> - A list of status for each NVP model (False if the nvpmodel is in failure)</p></li>
+<li><p><strong>is_running</strong> - Status updating NVP model service</p></li>
+</ul>
+<p>The access of this properties is available like below</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># NVP model name</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="c1"># NVP model id</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="c1"># NVP model list</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span><span class="o">.</span><span class="n">modes</span><span class="p">)</span>
+<span class="c1"># NVP model status</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Return the name of NV Power Mode</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>NVPModel or None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>JtopException</strong> – if the nvp model does not exist*</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.jtop.ok">
+<span class="sig-name descname"><span class="pre">ok</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.ok" title="Permalink to this definition">#</a></dt>
+<dd><p>This method is needed when you start jtop using <cite>with</cite> like below</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">stats</span>
+</pre></div>
+</div>
+<p>This method is usually blocking, and is not needed to add in your script a sleep function,
+when a new data will be available the function will release and you will read a new fresh data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – If True, this function will be not blocking</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><a class="headerlink" href="#jtop.jtop.power" title="Permalink to this definition">#</a></dt>
+<dd><p>Two power dictionaries:</p>
+<ul class="simple">
+<li><p><strong>total</strong> - The total power estimated is not available of the NVIDIA Jetson power consumption</p></li>
+<li><p><strong>power</strong> - A dictionary with all power consumption</p></li>
+</ul>
+<p>For each power consumption there are two fields:</p>
+<ul class="simple">
+<li><p><strong>avg</strong> - Average power consumption in milliwatt</p></li>
+<li><p><strong>cur</strong> - Current power consumption in milliwatt</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Two dictionaries, total and a list of all power consumption available from the board</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.ram">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ram</span></span><a class="headerlink" href="#jtop.jtop.ram" title="Permalink to this definition">#</a></dt>
+<dd><p>RAM available on your board.</p>
+<ul class="simple">
+<li><p><strong>use</strong> - status iram used</p></li>
+<li><p><strong>shared</strong> - status of shared memory used from GPU</p></li>
+<li><p><strong>tot</strong> - Total size RAM</p></li>
+<li><p><strong>unit</strong> - Unit size RAM, usually in kB</p></li>
+<li><dl class="simple">
+<dt><strong>lfb</strong> - Largest Free Block (lfb) is a statistic about the memory allocator</dt><dd><ul>
+<li><p><strong>nblock</strong> - Number of block used</p></li>
+<li><p><strong>size</strong> - Size of the largest free block</p></li>
+<li><p><strong>unit</strong> - Unit size lfb</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Largest Free Block (lfb) is a statistic about the memory allocator.
+It refers to the largest contiguous block of physical memory
+that can currently be allocated: at most 4 MB.
+It can become smaller with memory fragmentation.
+The physical allocations in virtual memory can be bigger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ram status</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.jtop.restore">
+<span class="sig-name descname"><span class="pre">restore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_counter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.restore" title="Permalink to this definition">#</a></dt>
+<dd><p>This block method will restore all jtop configuration, in order:</p>
+<ul class="simple">
+<li><p><strong>switch off</strong> jetson_clocks</p></li>
+<li><p><strong>Disable</strong> jetson_clocks on boot</p></li>
+<li><dl class="simple">
+<dt><strong>fan</strong></dt><dd><ul>
+<li><p>set to <strong>default</strong>, please follow the fan reference <code class="xref py py-func docutils literal notranslate"><span class="pre">fan()</span></code></p></li>
+<li><p>set fan speed to 0 (This operation can require time)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>If active <strong>disable</strong> the jtop swap</p></li>
+<li><p><strong>Clear</strong> the internal jtop configuration file</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">status</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">jetson</span><span class="o">.</span><span class="n">restore</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">status</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fail&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>max_counter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Counter time for each test before fail</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Generator of all operations to restore your NVIDIA Jetson</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>generator</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>JtopException</strong> – if the connection with the server is lost,
+not active or your user does not have the permission to connect to <em>jtop.service</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.jtop.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.start" title="Permalink to this definition">#</a></dt>
+<dd><p>The start() function start your jtop and you can start to read the NVIDIA Jetson status.</p>
+<p>This method is <strong>not</strong> needed to close jtop if you have open jtop using <cite>with</cite> like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>JtopException</strong> – if the connection with the server is lost,
+not active or your user does not have the permission to connect to <em>jtop.service</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.stats">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#jtop.jtop.stats" title="Permalink to this definition">#</a></dt>
+<dd><p>This property return a simplified version of tegrastats,
+it is simple to use if you want log the NVIDIA Jetson status with pandas or in a csv file.</p>
+<p>This property is a simplified version of all data collected from your NVIDIA Jetson,
+if you need more detailed information, please use the other jtop properties</p>
+<p>The field listed are:</p>
+<ul class="simple">
+<li><p><strong>time</strong> - A <cite>datetime</cite> variable with the local time in your board</p></li>
+<li><p><strong>uptime</strong> - A <cite>timedelta</cite> with the up time of your board, same from <code class="xref py py-func docutils literal notranslate"><span class="pre">uptime()</span></code></p></li>
+<li><p><strong>jetson_clocks</strong> - Status of jetson_clocks, human readable <code class="xref py py-func docutils literal notranslate"><span class="pre">jetson_clocks()</span></code></p></li>
+<li><p><strong>nvp model</strong> - If exist, the NV Power Model name active <code class="xref py py-func docutils literal notranslate"><span class="pre">nvpmodel()</span></code></p></li>
+<li><p><strong>cpu X</strong> - The status for each cpu in your board, if disabled you will read <em>OFF</em></p></li>
+<li><p><strong>GPU</strong> - Status of your GPU <code class="xref py py-func docutils literal notranslate"><span class="pre">gpu()</span></code></p></li>
+<li><p><strong>MTS FG</strong> - Foreground tasks <code class="xref py py-func docutils literal notranslate"><span class="pre">mts()</span></code></p></li>
+<li><p><strong>MTS BG</strong> - Background tasks <code class="xref py py-func docutils literal notranslate"><span class="pre">mts()</span></code></p></li>
+<li><p><strong>RAM</strong> - Used ram <code class="xref py py-func docutils literal notranslate"><span class="pre">ram()</span></code></p></li>
+<li><p><strong>EMC</strong> - If exist, the used emc <code class="xref py py-func docutils literal notranslate"><span class="pre">emc()</span></code></p></li>
+<li><p><strong>IRAM</strong> - If exist, the used iram <code class="xref py py-func docutils literal notranslate"><span class="pre">iram()</span></code></p></li>
+<li><p><strong>SWAP</strong> - If exist, the used swap <code class="xref py py-func docutils literal notranslate"><span class="pre">swap()</span></code></p></li>
+<li><p><strong>APE</strong> - Frequency APE engine <code class="xref py py-func docutils literal notranslate"><span class="pre">engine()</span></code></p></li>
+<li><p><strong>NVENC</strong> - Frequency NVENC engine <code class="xref py py-func docutils literal notranslate"><span class="pre">engine()</span></code></p></li>
+<li><p><strong>NVDEC</strong> - Frequency NVDEC engine <code class="xref py py-func docutils literal notranslate"><span class="pre">engine()</span></code></p></li>
+<li><p><strong>NVJPG</strong> - Frequency NVJPG engine <code class="xref py py-func docutils literal notranslate"><span class="pre">engine()</span></code></p></li>
+<li><p><strong>fan</strong> - Status fan speed <code class="xref py py-func docutils literal notranslate"><span class="pre">fan()</span></code></p></li>
+<li><p><strong>Temp X</strong> - X temperature <code class="xref py py-func docutils literal notranslate"><span class="pre">temperature()</span></code></p></li>
+<li><p><strong>power cur</strong> - Total current power <code class="xref py py-func docutils literal notranslate"><span class="pre">power()</span></code></p></li>
+<li><p><strong>power avg</strong> - Total average power <code class="xref py py-func docutils literal notranslate"><span class="pre">power()</span></code></p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Compacts jetson statistics</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.swap">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">swap</span></span><a class="headerlink" href="#jtop.jtop.swap" title="Permalink to this definition">#</a></dt>
+<dd><p>SWAP manager and reader</p>
+<p>If you want read the status of your board will return a dictionary with</p>
+<ul class="simple">
+<li><p><strong>use</strong> - Amount of SWAP in use</p></li>
+<li><p><strong>tot</strong> - Total amount of SWAP available for applications</p></li>
+<li><p><strong>unit</strong> - Unit SWAP, usually in MB</p></li>
+<li><dl class="simple">
+<dt><strong>cached</strong></dt><dd><ul>
+<li><p><strong>size</strong> - Cache size</p></li>
+<li><p><strong>unit</strong> - Unit cache size</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>This property has other extra methods show below</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If you want know how many swap are active you can run this extra method</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">all_swap</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">swap</span><span class="o">.</span><span class="n">all</span>
+</pre></div>
+</div>
+<p>The output will be a dictionary, where for each swap:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>used</strong> - Used Swap in kB</p></li>
+<li><p><strong>size</strong> - Size in kB</p></li>
+<li><p><strong>type</strong> - Type</p></li>
+<li><p><strong>prio</strong> - Priority</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p>The method inside this property enable a new swap in your board.
+To work need to write a <em>size</em> in GB and if you want this swap enable in boot you can set
+<em>on_boot</em> on True (default False).
+This method will create a new swap located usually in <strong>“/”</strong> and called <strong>“swfile”</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span><span class="o">.</span><span class="n">swap</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">on_boot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>If you want disable the swap created you can run this method</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span><span class="o">.</span><span class="n">swap</span><span class="o">.</span><span class="n">deactivate</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>This method will show the status of your SWAP created</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">status</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">swap</span><span class="o">.</span><span class="n">is_enable</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>This method will show the current swap size created</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">size</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">swap</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>If you need to clear the cache in your NVIDIA Jetson you can run this extra call</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span><span class="o">.</span><span class="n">swap</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>swap status</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.temperature">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">temperature</span></span><a class="headerlink" href="#jtop.jtop.temperature" title="Permalink to this definition">#</a></dt>
+<dd><p>A dictionary with all NVIDIA Jetson temperatures.</p>
+<p>All temperatures are in Celsius</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Temperature dictionary</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.jtop.uptime">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uptime</span></span><a class="headerlink" href="#jtop.jtop.uptime" title="Permalink to this definition">#</a></dt>
+<dd><p>Up time, The time since you turned on the NVIDIA Jetson</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Board up time</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>timedelta</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="other-tools/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">🧰 Other tools</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="docker.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">🐋 Docker</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Raffaello Bonghi
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/rbonghi/jetson_stats" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">📖 API Reference</a><ul>
+<li><a class="reference internal" href="#jtop.jtop"><code class="docutils literal notranslate"><span class="pre">jtop</span></code></a><ul>
+<li><a class="reference internal" href="#jtop.jtop.attach"><code class="docutils literal notranslate"><span class="pre">jtop.attach()</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.board"><code class="docutils literal notranslate"><span class="pre">jtop.board</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.close"><code class="docutils literal notranslate"><span class="pre">jtop.close()</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.cluster"><code class="docutils literal notranslate"><span class="pre">jtop.cluster</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.cpu"><code class="docutils literal notranslate"><span class="pre">jtop.cpu</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.detach"><code class="docutils literal notranslate"><span class="pre">jtop.detach()</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.disk"><code class="docutils literal notranslate"><span class="pre">jtop.disk</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.emc"><code class="docutils literal notranslate"><span class="pre">jtop.emc</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.engine"><code class="docutils literal notranslate"><span class="pre">jtop.engine</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.fan"><code class="docutils literal notranslate"><span class="pre">jtop.fan</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.gpu"><code class="docutils literal notranslate"><span class="pre">jtop.gpu</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.interval"><code class="docutils literal notranslate"><span class="pre">jtop.interval</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.interval_user"><code class="docutils literal notranslate"><span class="pre">jtop.interval_user</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.iram"><code class="docutils literal notranslate"><span class="pre">jtop.iram</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.jetson_clocks"><code class="docutils literal notranslate"><span class="pre">jtop.jetson_clocks</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.local_interfaces"><code class="docutils literal notranslate"><span class="pre">jtop.local_interfaces</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.loop_for_ever"><code class="docutils literal notranslate"><span class="pre">jtop.loop_for_ever()</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.mts"><code class="docutils literal notranslate"><span class="pre">jtop.mts</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.nvpmodel"><code class="docutils literal notranslate"><span class="pre">jtop.nvpmodel</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.ok"><code class="docutils literal notranslate"><span class="pre">jtop.ok()</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.power"><code class="docutils literal notranslate"><span class="pre">jtop.power</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.ram"><code class="docutils literal notranslate"><span class="pre">jtop.ram</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.restore"><code class="docutils literal notranslate"><span class="pre">jtop.restore()</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.start"><code class="docutils literal notranslate"><span class="pre">jtop.start()</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.stats"><code class="docutils literal notranslate"><span class="pre">jtop.stats</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.swap"><code class="docutils literal notranslate"><span class="pre">jtop.swap</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.temperature"><code class="docutils literal notranslate"><span class="pre">jtop.temperature</span></code></a></li>
+<li><a class="reference internal" href="#jtop.jtop.uptime"><code class="docutils literal notranslate"><span class="pre">jtop.uptime</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/scripts/furo.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
+    
+
+
+<script>
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+</body>
+</html>

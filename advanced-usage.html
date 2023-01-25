@@ -2,10 +2,12 @@
 <html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#" /><link rel="search" title="Search" href="search.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="🐋 Docker" href="docker.html" /><link rel="prev" title="📊 jtop" href="jtop.html" />
 
-    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 --><title>Index - jetson-stats 4.1.0</title>
-<link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 -->
+        <title>👨‍💻 Advanced Usage - jetson-stats 4.1.0</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -170,12 +172,12 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <ul>
+  <ul class="current">
 <li class="toctree-l1"><a class="reference external" href="https://rnext.it">rnext.it</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://discord.gg/BFbuJNhYzS">Community Discord</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sponsors.html">💖 Sponsor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="jtop.html">📊 jtop</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">👨‍💻 Advanced Usage</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">👨‍💻 Advanced Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker.html">🐋 Docker</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">📖 API Reference</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="other-tools/index.html">🧰 Other tools</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -223,7 +225,16 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="theme-toggle-container theme-toggle-content">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/rbonghi/jetson_stats/edit/master/docs/advanced-usage.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
@@ -237,237 +248,82 @@
           </label>
         </div>
         <article role="main">
-          
-<section class="genindex-section">
-  <h1 id="index">Index</h1>
-  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#J"><strong>J</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a></div>
-</section>
-<section id="A" class="genindex-section">
-  <h2>A</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.attach">attach() (jtop.jtop method)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
+          <section id="advanced-usage">
+<h1>👨‍💻 Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permalink to this heading">#</a></h1>
+<p>You can install jtop in a virtual environment or in a docker following the guidelines below</p>
+<div class="admonition-virtual-environment admonition">
+<p class="admonition-title">Virtual environment</p>
+<p>If you need to install in a virtual environment like <em>virtualenv</em>, you <strong>must</strong> install before in your host <strong>and after</strong> in your environment, like:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virtualenv<span class="w"> </span>venv
+<span class="nb">source</span><span class="w"> </span>venv/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>jetson-stats
+</pre></div>
+</div>
+</div>
+<p><strong>jtop</strong> is a complete controller of all systems in your NVIDIA Jetson</p>
+<ul class="simple">
+<li><p>Tegrastats</p></li>
+<li><p>NVP Model</p></li>
+<li><p>Fan</p></li>
+<li><p>Status board (i.g. Model version, Jetpack, … )</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">jtop</span> <span class="kn">import</span> <span class="n">jtop</span>
+</pre></div>
+</div>
+<p>You can initialize the jtop node like a file i.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
+    <span class="c1"># jetson.ok() will provide the proper update frequency</span>
+    <span class="k">while</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
+        <span class="c1"># Read tegra stats</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">jetson</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or manually start up with the basic function open/close</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">jetson</span> <span class="o">=</span> <span class="n">jtop</span><span class="p">()</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="n">stat</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">stats</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can read the status of your NVIDIA Jetson via callback</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">read_stats</span><span class="p">(</span><span class="n">jetson</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">jetson</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span>
 
-<section id="B" class="genindex-section">
-  <h2>B</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.board">board (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
+<span class="c1"># Open the jtop</span>
+<span class="n">jetson</span> <span class="o">=</span> <span class="n">jtop</span><span class="p">()</span>
+<span class="c1"># Attach a function where you can read the status of your jetson</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">read_stats</span><span class="p">)</span>
+<span class="n">jetson</span><span class="o">.</span><span class="n">loop_for_ever</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Other examples are available in <a class="reference external" href="https://github.com/rbonghi/jetson_stats/tree/master/examples">example folder</a>.</p>
 </section>
-
-<section id="C" class="genindex-section">
-  <h2>C</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.close">close() (jtop.jtop method)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.cluster">cluster (jtop.jtop property)</a>
-</li>
-        <li><a href="reference.html#jtop.jtop.cpu">cpu (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="D" class="genindex-section">
-  <h2>D</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.detach">detach() (jtop.jtop method)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.disk">disk (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="E" class="genindex-section">
-  <h2>E</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.emc">emc (jtop.jtop property)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.engine">engine (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="F" class="genindex-section">
-  <h2>F</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.fan">fan (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="G" class="genindex-section">
-  <h2>G</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.gpu">gpu (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="I" class="genindex-section">
-  <h2>I</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.interval">interval (jtop.jtop property)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.interval_user">interval_user (jtop.jtop property)</a>
-</li>
-        <li><a href="reference.html#jtop.jtop.iram">iram (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="J" class="genindex-section">
-  <h2>J</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.jetson_clocks">jetson_clocks (jtop.jtop property)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop">jtop (class in jtop)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="L" class="genindex-section">
-  <h2>L</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.local_interfaces">local_interfaces (jtop.jtop property)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.loop_for_ever">loop_for_ever() (jtop.jtop method)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="M" class="genindex-section">
-  <h2>M</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.mts">mts (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="N" class="genindex-section">
-  <h2>N</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.nvpmodel">nvpmodel (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="O" class="genindex-section">
-  <h2>O</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.ok">ok() (jtop.jtop method)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="P" class="genindex-section">
-  <h2>P</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.power">power (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="R" class="genindex-section">
-  <h2>R</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.ram">ram (jtop.jtop property)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.restore">restore() (jtop.jtop method)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="S" class="genindex-section">
-  <h2>S</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.start">start() (jtop.jtop method)</a>
-</li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.stats">stats (jtop.jtop property)</a>
-</li>
-        <li><a href="reference.html#jtop.jtop.swap">swap (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="T" class="genindex-section">
-  <h2>T</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.temperature">temperature (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
-<section id="U" class="genindex-section">
-  <h2>U</h2>
-  <table style="width: 100%" class="indextable genindextable"><tr>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="reference.html#jtop.jtop.uptime">uptime (jtop.jtop property)</a>
-</li>
-    </ul></td>
-  </tr></table>
-</section>
-
 
         </article>
       </div>
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="docker.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">🐋 Docker</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="jtop.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">📊 jtop</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
