@@ -122,9 +122,10 @@ def plot_watts(stdscr, start, offset, width, height, jetson):
         stdscr.addstr(offset + idx + 1, start + 3, str(value['cur']), curses.A_NORMAL)
         stdscr.addstr(offset + idx + 1, start + 10, str(value['avg']), curses.A_NORMAL)
     # Plot totals before finishing
-    stdscr.addstr(offset + idx + 2, start - 10, 'ALL', curses.A_BOLD)
-    stdscr.addstr(offset + idx + 2, start + 3, str(total['cur']), curses.A_BOLD)
-    stdscr.addstr(offset + idx + 2, start + 10, str(total['avg']), curses.A_BOLD)
+    len_power = len(power)
+    stdscr.addstr(offset + len_power + 1, start - 10, 'ALL', curses.A_BOLD)
+    stdscr.addstr(offset + len_power + 1, start + 3, str(total['cur']), curses.A_BOLD)
+    stdscr.addstr(offset + len_power + 1, start + 10, str(total['avg']), curses.A_BOLD)
 
 
 @check_curses

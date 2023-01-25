@@ -74,7 +74,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     - name: Build and push
       id: docker_build
-      uses: docker/build-push-action@v3.2.0
+      uses: docker/build-push-action@v3.3.0
       with:
         push: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}

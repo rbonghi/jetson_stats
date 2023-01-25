@@ -48,6 +48,7 @@ if not sys.warnoptions:
 # https://developer.nvidia.com/embedded/jetpack-archive
 NVIDIA_JETPACK = {
     # -------- JP5 --------
+    "35.2.1": "5.1",
     "35.1.0": "5.0.2 GA",
     "34.1.1": "5.0.1 DP",
     "34.1.0": "5.0 DP",
@@ -115,20 +116,20 @@ CUDA_TABLE = {
 
 MODULE_NAME_TABLE = {
     'p3701-0000': 'NVIDIA Jetson AGX Orin',
-    'p3668-0000': 'NVIDIA Jetson Xavier NX (Developer kit)',
-    'p3668-0001': 'NVIDIA Jetson Xavier NX',
     'p3668-0003': 'NVIDIA Jetson Xavier NX 16GB',
-    'p2888-0001': 'NVIDIA Jetson AGX Xavier (16 GB ram)',
-    'p2888-0004': 'NVIDIA Jetson AGX Xavier (32 GB ram)',
-    'p2888-0005': 'NVIDIA Jetson AGX Xavier (64 GB ram)',
-    'p2888-0006': 'NVIDIA Jetson AGX Xavier (8 GB ram)',
+    'p3668-0001': 'NVIDIA Jetson Xavier NX',
+    'p3668-0000': 'NVIDIA Jetson Xavier NX (Developer kit)',
     'p2888-0008': 'NVIDIA Jetson AGX Xavier Industrial (32 GB ram)',
-    'p3448-0000': 'NVIDIA Jetson Nano (4 GB ram)',
-    'p3448-0002': 'NVIDIA Jetson Nano module (16Gb eMMC)',
+    'p2888-0006': 'NVIDIA Jetson AGX Xavier (8 GB ram)',
+    'p2888-0005': 'NVIDIA Jetson AGX Xavier (64 GB ram)',
+    'p2888-0004': 'NVIDIA Jetson AGX Xavier (32 GB ram)',
+    'p2888-0001': 'NVIDIA Jetson AGX Xavier (16 GB ram)',
     'p3448-0003': 'NVIDIA Jetson Nano (2 GB ram)',
+    'p3448-0002': 'NVIDIA Jetson Nano module (16Gb eMMC)',
+    'p3448-0000': 'NVIDIA Jetson Nano (4 GB ram)',
     'p3509-0000': 'NVIDIA Jetson TX2 NX',
-    'p3489-0000': 'NVIDIA Jetson TX2i',
     'p3489-0888': 'NVIDIA Jetson TX2 (4 GB ram)',
+    'p3489-0000': 'NVIDIA Jetson TX2i',
     'p3310-1000': 'NVIDIA Jetson TX2',
     'p2180-1000': 'NVIDIA Jetson TX1',
     'r375-0001': 'NVIDIA Jetson TK1',

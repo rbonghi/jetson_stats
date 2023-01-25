@@ -14,6 +14,7 @@ jetson-stats
    reference
    other-tools/index
    contributing
+   GitHub <https://github.com/rbonghi/jetson_stats>
 
 .. toctree::
    :hidden:
@@ -21,6 +22,7 @@ jetson-stats
 
    ros_jetson_stats<https://github.com/rbonghi/ros_jetson_stats>
    ros2_jetson_stats<https://github.com/NVIDIA-AI-IOT/ros2_jetson_stats>
+   Grafana plugin<https://grafana.com/grafana/dashboards/14493-nvidia-jetson>
 
 
 jetson-stats is a package for monitoring and control your NVIDIA Jetson [Orin, Xavier, Nano, TX] series. Works with all NVIDIA Jetson ecosystem.
@@ -37,15 +39,24 @@ jetson-stats can be installed with `pip <https://pip.pypa.io>`_
 
    sudo pip3 install -U jetson-stats
 
+Don't forget to **logout/login** or **reboot** your board
+
 **🚀 That's it! 🚀** 
 
-Don't forget to **logout** or **reboot** your board
+Run
+---
 
+Start jtop it's pretty simple just write `jtop`!
 
-Usage
------
+.. code-block:: bash
 
-The :doc:`jtop` is the place to go to learn how to use the the core tool and monitoring your board.
+   jtop
+
+A simple interface will appear on your terminal, more capabilities are documented at :doc:`jtop` page.
+
+Advanced usage
+--------------
+
 The more in-depth :doc:`advanced-usage` guide is the place to jtop such a python library and use for your project.
 
 .. code-block:: python
@@ -78,9 +89,10 @@ jetson-stats is compatible with:
    * NVIDIA Jetson TX2i
    * NVIDIA Jetson TX2
    * NVIDIA Jetson TX1
+* NVIDIA Jetson TK1
 * Nintendo Switch
 
-If you need a specific Compatibility open an `issue <https://github.com/rbonghi/jetson_stats/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=>`_.
+If you need a specific Compatibility open an `issue <https://github.com/rbonghi/jetson_stats/issues/new?assignees=&labels=Hardware%2Cmissing&template=hardware-missing.md&title=Hardware+Missing+%5B%5D>`_.
 
 
 License

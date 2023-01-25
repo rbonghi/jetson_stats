@@ -16,7 +16,16 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-FROM python:3-buster
+FROM python:3.12.0a4-slim-bullseye
+
+COPY requirements.txt requirements.txt
+# Install make and gcc to build smbus
+RUN apt-get update && \
+    apt-get install -y make gcc && \
+    pip3 install -r requirements.txt && \
+    rm requirements.txt && \
+    apt-get remove -y make gcc && \
+    rm -rf /var/lib/apt/lists/*
 
 ADD . /jetson_stats
 
