@@ -48,9 +48,9 @@ Run
 
 Start jtop it's pretty simple just write `jtop`!
 
-```console
-jtop
-```
+.. code-block:: bash
+
+   jtop
 
 A simple interface will appear on your terminal, more capabilities are documented at :doc:`jtop` page.
 
