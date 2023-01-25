@@ -43,10 +43,20 @@ Don't forget to **logout/login** or **reboot** your board
 
 **🚀 That's it! 🚀** 
 
-Usage
------
+Run
+---
 
-The :doc:`jtop` is the place to go to learn how to use the the core tool and monitoring your board.
+Start jtop it's pretty simple just write `jtop`!
+
+```console
+jtop
+```
+
+A simple interface will appear on your terminal, more capabilities are documented at :doc:`jtop` page.
+
+Advanced usage
+--------------
+
 The more in-depth :doc:`advanced-usage` guide is the place to jtop such a python library and use for your project.
 
 .. code-block:: python
