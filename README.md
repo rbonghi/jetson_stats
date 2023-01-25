@@ -27,14 +27,14 @@
 
 jetson-stats is a powerful tool to analyze your board, you can use with a stand alone application with `jtop` or import in your python script, the main features are:
 
-- decode hardware, architecture, L4T and NVIDIA Jetpack
-- monitoring, CPU, GPU, Memory, Engines, fan
-- control NVP model, fan speed, jetson_clocks
-- importable in a python script
+- Decode hardware, architecture, L4T and NVIDIA Jetpack
+- Monitoring, CPU, GPU, Memory, Engines, fan
+- Control NVP model, fan speed, jetson_clocks
+- Importable in a python script
 - Dockerizable in a container
 - Do not need super user
 - Tested on many different hardware configurations
-- works with all NVIDIA Jetpack
+- Works with all NVIDIA Jetpack
 
 ## Install
 
