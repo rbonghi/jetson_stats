@@ -13,6 +13,7 @@
   <a href="https://pypi.org/project/jetson-stats/"><img alt="PyPI - Format" src="https://img.shields.io/pypi/format/jetson-stats.svg" /></a>
   <a href="/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/rbonghi/jetson_stats" /></a>
   <a href="https://snyk.io/advisor/python/jetson-stats"><img alt="jetson-stats" src="https://snyk.io/advisor/python/jetson-stats/badge.svg" /></a>
+  <a href="https://hub.docker.com/r/rbonghi/jetson_stats"><img alt="Docker Image Size (tag)" src="https://img.shields.io/docker/image-size/rbonghi/jetson_stats/latest"></a>
   <a href="https://hub.docker.com/r/rbonghi/jetson_stats"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/rbonghi/jetson_stats" /></a>
   <a href="https://github.com/rbonghi/jetson_stats/actions?query=workflow%3A%22CI+%26+CD%22"><img alt="CI & CD" src="https://github.com/rbonghi/jetson_stats/workflows/CI%20&%20CD/badge.svg" /></a>
   <a href="https://github.com/rbonghi/jetson_stats/actions/workflows/github-code-scanning/codeql"><img alt="CodeQL" src="https://github.com/rbonghi/jetson_stats/actions/workflows/github-code-scanning/codeql/badge.svg?branch=master" /></a>
