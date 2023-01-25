@@ -108,7 +108,7 @@ If your company benefits from this library, please consider [:sparkling_heart: s
 
 ## Documentation
 
-jetson-stats documentation has usage and reference documentation at <https://rnext.it/jetson_stats>.
+jetson-stats has usage and reference documentation at <https://rnext.it/jetson_stats>.
 
 ## Community
 
