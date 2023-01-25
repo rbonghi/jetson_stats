@@ -2,7 +2,7 @@
 
 <b>jetson-stats</b>
 
-![jetson-stats](docs/images/jtop.png)
+![jetson-stats](https://github.com/rbonghi/jetson_stats/raw/master/docs/images/jtop.png)
 
 </h1>
 
@@ -31,7 +31,7 @@ jetson-stats is a powerful tool to analyze your board, you can use with a stand 
 - monitoring, CPU, GPU, Memory, Engines, fan
 - control NVP model, fan speed, jetson_clocks
 - importable in a python script
-- dockerizale in a container
+- Dockerizable in a container
 - Do not need super user
 - Tested on many different hardware configurations
 - works with all NVIDIA Jetpack
@@ -60,11 +60,11 @@ Start jtop it's pretty simple just write `jtop`!
 jtop
 ```
 
-A simple interface will appear on your terminal, more capabilites are documented at [_jtop_](https://rnext.it/jetson_stats/jtop.html) page.
+A simple interface will appear on your terminal, more capabilities are documented at [_jtop_](https://rnext.it/jetson_stats/jtop.html) page.
 
 <div align="center">
 
-![jtop](docs/images/jtop.gif)
+![jtop](https://github.com/rbonghi/jetson_stats/raw/master/docs/images/jtop.gif)
 
 </div>
 
