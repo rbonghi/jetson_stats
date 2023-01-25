@@ -81,7 +81,7 @@ jetson-stats is compatible with:
    * NVIDIA Jetson TX1
 * Nintendo Switch
 
-If you need a specific Compatibility open an `issue <https://github.com/rbonghi/jetson_stats/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=>`_.
+If you need a specific Compatibility open an `issue <https://github.com/rbonghi/jetson_stats/issues/new?assignees=&labels=Hardware%2Cmissing&template=hardware-missing.md&title=Hardware+Missing+%5B%5D>`_.
 
 
 License
