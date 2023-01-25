@@ -522,7 +522,7 @@ class JtopServer(Process):
         # https://forums.developer.nvidia.com/t/tegrastats-monitoring/217088/4?u=user62045
         total_name = ""
         for val in power:
-            if "_IN" in val:
+            if "POM_5V_IN" in val:
                 total_name = val
                 break
         # Extract the total from list
