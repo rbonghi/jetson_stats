@@ -51,7 +51,7 @@ class WebService:
         # Start jtop
         self._jetson.start()
         # Start server
-        self._app.run(debug=True)
+        self._app.run(debug=False)
 
     def stop(self):
         print("switch off server")
