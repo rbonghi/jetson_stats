@@ -20,6 +20,7 @@ from flask import Flask, Response
 from jtop import jtop
 import json
 
+
 class WebService:
 
     def __init__(self):
@@ -44,22 +45,23 @@ class WebService:
             status=201,
             mimetype="application/json"
         )
-        
+
     def start(self):
         print("Init server ...")
         # Start jtop
         self._jetson.start()
         # Start server
         self._app.run(debug=True)
-        
+
     def stop(self):
         print("switch off server")
         # Stop jtop
         self._jetson.close()
         # Stop server
-        
+
 
 if __name__ == "__main__":
     # Initialize service
     service = WebService()
     service.stop()
+# EOF
