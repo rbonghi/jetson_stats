@@ -553,6 +553,9 @@ class JtopServer(Process):
         # logger.debug("tegrastats read")
         data = {}
         jetson_clocks_show = deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
+        # -- CPU --
+        # Read CPU data
+        data['cpu'] = self.cpu.get_status()
         # -- Engines --
         data['engines'] = self.engine.get_status()
         # -- Power --
@@ -573,9 +576,6 @@ class JtopServer(Process):
             if temp.startswith('CV'):
                 del tegrastats['TEMP'][temp]
         data['temperature'] = tegrastats['TEMP']
-        # -- CPU --
-        # Read CPU data
-        data['cpu'] = self.cpu.get_status()
         # -- MTS --
         if 'MTS' in tegrastats:
             data['mts'] = tegrastats['MTS']
@@ -609,8 +609,6 @@ class JtopServer(Process):
         data['swap'] = {
             'list': self.swap.all(),
             'all': tegrastats['SWAP'] if 'SWAP' in tegrastats else {}}
-        # -- OTHER --
-        data['other'] = dict((k, tegrastats[k]) for k in tegrastats if k not in LIST_PRINT)
         # -- FAN --
         # Update status fan speed
         data['fan'] = self.fan.update()
@@ -624,8 +622,6 @@ class JtopServer(Process):
         # -- NVP MODEL --
         if self.nvpmodel is not None:
             # Read nvp_mode
-            # REMOVE jetson_clock for future release
-            # > nvp_mode = jetson_clocks_show['NVP'] if 'NVP' in jetson_clocks_show else self.nvpmodel.get()
             nvp_mode = self.nvpmodel.get()
             if not self.nvpmodel.is_running():
                 self.nvp_mode = nvp_mode
@@ -633,9 +629,6 @@ class JtopServer(Process):
                 'modes': self.nvpmodel.modes(),
                 'thread': self.nvpmodel.is_running(),
                 'mode': self.nvp_mode}
-        # -- Cluster --
-        if 'cluster' in jetson_clocks_show:
-            data['cluster'] = jetson_clocks_show['cluster']
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)

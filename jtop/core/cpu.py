@@ -97,8 +97,10 @@ def read_freq_cpu(path, type_freq):
     with open("{path}/cpufreq/{type_freq}_max_freq".format(path=path, type_freq=type_freq), 'r') as f:
         freq['max'] = int(f.read())
     # Current frequency
-    with open("{path}/cpufreq/{type_freq}_cur_freq".format(path=path, type_freq=type_freq), 'r') as f:
-        freq['cur'] = int(f.read())
+    current_path = "{path}/cpufreq/{type_freq}_cur_freq".format(path=path, type_freq=type_freq)
+    if os.path.isfile(current_path):
+        with open(current_path, 'r') as f:
+            freq['cur'] = int(f.read())
     return freq
 
 
@@ -113,8 +115,8 @@ def read_system_cpu(path, cpu_status={}):
         with open(path + "/cpufreq/scaling_governor", 'r') as f:
             cpu_status['governor'] = f.read().strip()
         # Store values
-        cpu_status['scaling_freq'] = read_freq_cpu(path, 'scaling')
-        cpu_status['freq'] = read_freq_cpu(path, 'cpuinfo')
+        cpu_status['freq'] = read_freq_cpu(path, 'scaling')
+        cpu_status['info_freq'] = read_freq_cpu(path, 'cpuinfo')
     # Read idle CPU
     if os.path.isdir(path + "/cpuidle"):
         cpu_status['idle_state'] = read_idle(path + "/cpuidle")
