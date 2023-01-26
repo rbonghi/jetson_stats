@@ -71,12 +71,14 @@ class CPU(Page):
         # Print chart
         chart = self._chart_cpus[idx]
         chart.draw(self.stdscr, [pos_x, pos_x + size_w], [pos_y, pos_y + size_h - 2], label=label_chart_cpu, y_label=False)
+        # Print model
+        model = cpu['model'] if 'model' in cpu else ''
+        model = model[:size_w]
+        self.stdscr.addstr(pos_y + size_h - 1, pos_x, model, curses.A_NORMAL)
         # Print info
         freq = cpu['freq']
         freq['online'] = cpu['online']
-        linear_frequency_gauge(self.stdscr, pos_y + size_h - 1, pos_x, size_w, "Frq", cpu['freq'])
-        # self.stdscr.addstr(pos_y + size_h - 1, pos_x, "First", curses.A_NORMAL)
-        self.stdscr.addstr(pos_y + size_h, pos_x, "Second", curses.A_NORMAL)
+        linear_frequency_gauge(self.stdscr, pos_y + size_h, pos_x, size_w, "Frq", cpu['freq'])
 
     def draw(self, key, mouse):
         # Screen size
