@@ -117,7 +117,7 @@ CUDA_TABLE = {
 # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3231/index.html
 # https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/IN/QuickStart.html
 MODULE_NAME_TABLE = {
-    'p3767-0000': 'NVIDIA Jetson AGX Orin NX',
+    'p3767-0000': 'NVIDIA Jetson Orin NX',
     'p3701-0004': 'NVIDIA Jetson AGX Orin (32GB ram)',
     'p3701-0000': 'NVIDIA Jetson AGX Orin',
     'p3668-0003': 'NVIDIA Jetson Xavier NX (16GB ram)',
