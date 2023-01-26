@@ -83,7 +83,7 @@ def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
     if 'name' in cpu:
         name = cpu['name']
     else:
-        name = str(idx + 1) + (" " if idx <= 9 else "")
+        name = str(idx + 1) + (" " if idx < 9 else "")
     # Draw gauge
     data = {
         'name': name,
