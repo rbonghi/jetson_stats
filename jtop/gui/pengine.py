@@ -19,7 +19,7 @@ import curses
 # Page class definition
 from .jtopgui import Page
 from .lib.common import value_to_string, plot_name_info
-from .lib.linear_gauge import linear_frequency_gauge
+from .lib.linear_gauge import freq_gauge
 
 
 def get_value_engine(engine):
@@ -122,5 +122,7 @@ class ENGINE(Page):
                                        "{group}".format(group=group), curses.color_pair(6) | curses.A_BOLD)
                 # Plot Gauge
                 new_name = ' '.join(name_array[1:]) if len(name_array) > 1 and len(engines) > 1 else name
-                linear_frequency_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, new_name, engine)
+                # Add name in plot string
+                engine['name'] = new_name
+                freq_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, engine)
 # EOF

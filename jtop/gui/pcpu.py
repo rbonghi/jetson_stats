@@ -15,67 +15,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import copy
 import curses
-from curses.textpad import rectangle
 # Page class definition
 from .jtopgui import Page
 from .lib.chart import Chart
-from .lib.common import value_to_string
-from .lib.linear_gauge import linear_frequency_gauge
-
-
-def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
-    """_summary_
-
-        data = {
-            'name': name value
-            'color': color test
-            'values': [(value, color), (value, color), ... ] sum of values = 100
-            'mleft': message on left
-            'mright': message on right otherwise a percentage
-        }
-    """
-    # Evaluate size without short name
-    name = data['name'] if 'name' in data else ''
-    name_size = len(name) + 1 if 'name' in data else 0
-    size_bar = size_w - name_size - 1
-    # Show short name linear gauge
-    name_color = data['color'] if 'color' in data else curses.A_NORMAL
-    stdscr.addstr(pos_y, pos_x, name, name_color)
-    # Draw gauge
-    online = data['online'] if 'online' in data else True
-    if online:
-        values = data['values']if 'name' in data else []
-        # Draw gauge border
-        stdscr.addstr(pos_y, pos_x + name_size, "[" + " " * size_bar + "]", curses.A_BOLD)
-        # size dynamic bar
-        total = sum([value for value, _ in values])
-        n_bar = total * size_bar // 100
-        # Draw bar
-        str_progress_bar = bar * n_bar + " " * (size_bar - n_bar)
-        # Add label right otherwise write a percent
-        label_right = data['mright'] if 'mright' in data else "{:.0f}%".format(total)
-        str_progress_bar = str_progress_bar[:size_bar - len(label_right)] + label_right
-        # Add message on left
-        if 'mleft' in data:
-            str_progress_bar = data['mleft'] + str_progress_bar[len(data['mleft']):]
-        # Draw all values
-        x_bar_start = 0
-        old_val = 0
-        for value, color in values:
-            x_bar_end = ((old_val + value) * size_bar) // 100
-            stdscr.addstr(pos_y, pos_x + name_size + x_bar_start + 1, str_progress_bar[x_bar_start:x_bar_end], color)
-            x_bar_start = x_bar_end
-            old_val += value
-        # Draw grey part or message
-        grey_part = str_progress_bar[n_bar:]
-        stdscr.addstr(pos_y, pos_x + name_size + x_bar_start + 1, grey_part, curses.A_DIM)
-    else:
-        # Draw offline gauge
-        stdscr.addstr(pos_y, pos_x + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "), curses.color_pair(7))
-        # Show message status
-        stdscr.addstr(pos_y, pos_x + name_size + 4, "OFF", curses.color_pair(7))
+from .lib.linear_gauge import cpu_gauge, freq_gauge
 
 
 def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0):
@@ -100,28 +44,6 @@ def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_
         idx_row += 1
     # return matrix
     return step_height, step_width, size_columns, size_rows
-
-
-def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
-    # Draw gauge
-    data = {
-        'name': str(idx) + (" " if idx <= 9 else ""),
-        'color': curses.color_pair(6) | curses.A_BOLD,
-        'online': cpu['online'],
-        'values': [
-            (int(cpu['user']), curses.color_pair(1)),
-            (int(cpu['nice']), curses.color_pair(2)),
-            (int(cpu['system']), curses.color_pair(3)),
-        ],
-    }
-    if size_w < 16:
-        basic_gauge(stdscr, pos_y, pos_x, size_w - 1, data)
-    else:
-        # Draw gauge
-        basic_gauge(stdscr, pos_y, pos_x, size_w - 8, data)
-        # Draw current frequency
-        curr_string = value_to_string(cpu['freq']['cur'], cpu['freq']['unit'])
-        stdscr.addstr(pos_y, pos_x + size_w - 6, curr_string, curses.A_NORMAL)
 
 
 def compact_cpus(stdscr, pos_y, width, jetson):
@@ -157,7 +79,8 @@ class CPU(Page):
         # Print info
         freq = cpu['freq']
         freq['online'] = cpu['online']
-        linear_frequency_gauge(stdscr, pos_y + size_h, pos_x, size_w, "Frq", cpu['freq'])
+        freq['name'] = "Frq"
+        freq_gauge(stdscr, pos_y + size_h, pos_x, size_w, cpu['freq'])
 
     def draw(self, key, mouse):
         # Screen size
