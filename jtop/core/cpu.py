@@ -85,6 +85,23 @@ def read_idle(path):
     return idle
 
 
+def read_freq_cpu(path, type_freq):
+    # build dict freq
+    freq = {}
+    # Unit Frequency
+    freq['unit'] = 'k'
+    # Min frequency
+    with open("{path}/cpufreq/{type_freq}_min_freq".format(path=path, type_freq=type_freq), 'r') as f:
+        freq['min'] = int(f.read())
+    # Max frequency
+    with open("{path}/cpufreq/{type_freq}_max_freq".format(path=path, type_freq=type_freq), 'r') as f:
+        freq['max'] = int(f.read())
+    # Current frequency
+    with open("{path}/cpufreq/{type_freq}_cur_freq".format(path=path, type_freq=type_freq), 'r') as f:
+        freq['cur'] = int(f.read())
+    return freq
+
+
 def read_system_cpu(path, cpu_status={}):
     # Online status
     cpu_status['online'] = True
@@ -95,21 +112,9 @@ def read_system_cpu(path, cpu_status={}):
     if os.path.isdir(path + "/cpufreq"):
         with open(path + "/cpufreq/scaling_governor", 'r') as f:
             cpu_status['governor'] = f.read().strip()
-        # build dict freq
-        freq = {}
-        # Unit Frequency
-        freq['unit'] = 'k'
-        # Min frequency
-        with open(path + "/cpufreq/scaling_min_freq", 'r') as f:
-            freq['min'] = int(f.read())
-        # Max frequency
-        with open(path + "/cpufreq/scaling_max_freq", 'r') as f:
-            freq['max'] = int(f.read())
-        # Current frequency
-        with open(path + "/cpufreq/scaling_cur_freq", 'r') as f:
-            freq['cur'] = int(f.read())
         # Store values
-        cpu_status['freq'] = freq
+        cpu_status['scaling_freq'] = read_freq_cpu(path, 'scaling')
+        cpu_status['freq'] = read_freq_cpu(path, 'cpuinfo')
     # Read idle CPU
     if os.path.isdir(path + "/cpuidle"):
         cpu_status['idle_state'] = read_idle(path + "/cpuidle")
