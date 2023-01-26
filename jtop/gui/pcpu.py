@@ -21,12 +21,64 @@ from curses.textpad import rectangle
 # Page class definition
 from .jtopgui import Page
 from .lib.chart import Chart
-from .lib.common import (check_curses,
-                         label_freq)
+from .lib.common import value_to_string
 from .lib.linear_gauge import linear_frequency_gauge
 
 
-def cpu_grid(list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0):
+def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
+    """_summary_
+
+        data = {
+            'name': name value
+            'color': color test
+            'values': [(value, color), (value, color), ... ] sum of values = 100
+            'mleft': message on left
+            'mright': message on right otherwise a percentage
+        }
+    """
+    # Evaluate size without short name
+    name = data['name'] if 'name' in data else ''
+    name_size = len(name) + 1 if 'name' in data else 0
+    size_bar = size_w - name_size - 1
+    # Show short name linear gauge
+    name_color = data['color'] if 'color' in data else curses.A_NORMAL
+    stdscr.addstr(pos_y, pos_x, name, name_color)
+    # Draw gauge
+    online = data['online'] if 'online' in data else True
+    if online:
+        values = data['values']if 'name' in data else []
+        # Draw gauge border
+        stdscr.addstr(pos_y, pos_x + name_size, "[" + " " * size_bar + "]", curses.A_BOLD)
+        # size dynamic bar
+        total = sum([value for value, _ in values])
+        n_bar = total * size_bar // 100
+        # Draw bar
+        str_progress_bar = bar * n_bar + " " * (size_bar - n_bar)
+        # Add label right otherwise write a percent
+        label_right = data['mright'] if 'mright' in data else "{:.0f}%".format(total)
+        str_progress_bar = str_progress_bar[:size_bar - len(label_right)] + label_right
+        # Add message on left
+        if 'mleft' in data:
+            str_progress_bar = data['mleft'] + str_progress_bar[len(data['mleft']):]
+        # Draw all values
+        x_bar_start = 0
+        old_val = 0
+        for value, color in values:
+            x_bar_end = ((old_val + value) * size_bar) // 100
+            stdscr.addstr(pos_y, pos_x + name_size + x_bar_start + 1, str_progress_bar[x_bar_start:x_bar_end], color)
+            x_bar_start = x_bar_end
+            old_val += value
+        # Draw grey part or message
+        grey_part = str_progress_bar[n_bar:]
+        stdscr.addstr(pos_y, pos_x + name_size + x_bar_start + 1, grey_part, curses.A_DIM)
+    else:
+        # Draw offline gauge
+        stdscr.addstr(pos_y, pos_x + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "), curses.color_pair(7))
+        # Show message status
+        stdscr.addstr(pos_y, pos_x + name_size + 4, "OFF", curses.color_pair(7))
+
+
+def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0):
     num_cpu = len(list_cpu)
     size_columns = 4
     # Measure size rows and columns
@@ -34,7 +86,7 @@ def cpu_grid(list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0)
     size_columns = int(num_cpu / size_rows) + bool((num_cpu / size_rows) % 1)
     # Measure step height and width
     step_height = round(size_height / size_rows) if size_height > 0 else 1
-    step_width = round(size_width / size_columns) if size_width > 0 else 1
+    step_width = int(size_width / size_columns) if size_width > 0 else 1
     # Build Grid
     idx_row = 0
     idx_column = 0
@@ -44,10 +96,37 @@ def cpu_grid(list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0)
             idx_row = 0
             idx_column += 1
         # Get CPU in grid
-        print_cpu(idx, cpu, start_y + idx_row * step_height, start_x + idx_column * step_width, step_height - 1, step_width - 1)
+        print_cpu(stdscr, idx, cpu, start_y + idx_row * step_height, start_x + idx_column * step_width, step_height - 1, step_width - 1)
         idx_row += 1
     # return matrix
     return step_height, step_width, size_columns, size_rows
+
+
+def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
+    # Draw gauge
+    data = {
+        'name': str(idx) + (" " if idx <= 9 else ""),
+        'color': curses.color_pair(6) | curses.A_BOLD,
+        'online': cpu['online'],
+        'values': [
+            (int(cpu['user']), curses.color_pair(1)),
+            (int(cpu['nice']), curses.color_pair(2)),
+            (int(cpu['system']), curses.color_pair(3)),
+        ],
+    }
+    if size_w < 16:
+        basic_gauge(stdscr, pos_y, pos_x, size_w - 1, data)
+    else:
+        # Draw gauge
+        basic_gauge(stdscr, pos_y, pos_x, size_w - 8, data)
+        # Draw current frequency
+        curr_string = value_to_string(cpu['freq']['cur'], cpu['freq']['unit'])
+        stdscr.addstr(pos_y, pos_x + size_w - 6, curr_string, curses.A_NORMAL)
+
+
+def compact_cpus(stdscr, pos_y, width, jetson):
+    _, _, _, size_rows = cpu_grid(stdscr, jetson.cpu['cpu'], cpu_gauge, pos_y, 1, size_width=width - 2)
+    return size_rows
 
 
 class CPU(Page):
@@ -64,21 +143,21 @@ class CPU(Page):
             'value': [100 - cpu.get("idle", 0)],
         }
 
-    def print_cpu(self, idx, cpu, pos_y, pos_x, size_h, size_w):
+    def print_cpu(self, stdscr, idx, cpu, pos_y, pos_x, size_h, size_w):
         # Print status CPU
         governor = cpu.get('governor', '').capitalize()
         label_chart_cpu = "{percent: >3.0f}% {governor}".format(percent=100 - cpu.get('idle', 0), governor=governor)
         # Print chart
         chart = self._chart_cpus[idx]
-        chart.draw(self.stdscr, [pos_x, pos_x + size_w], [pos_y, pos_y + size_h - 2], label=label_chart_cpu, y_label=False)
+        chart.draw(stdscr, [pos_x, pos_x + size_w], [pos_y, pos_y + size_h - 2], label=label_chart_cpu, y_label=False)
         # Print model
         model = cpu['model'] if 'model' in cpu else ''
         model = model[:size_w]
-        self.stdscr.addstr(pos_y + size_h - 1, pos_x, model, curses.A_NORMAL)
+        stdscr.addstr(pos_y + size_h - 1, pos_x, model, curses.A_NORMAL)
         # Print info
         freq = cpu['freq']
         freq['online'] = cpu['online']
-        linear_frequency_gauge(self.stdscr, pos_y + size_h, pos_x, size_w, "Frq", cpu['freq'])
+        linear_frequency_gauge(stdscr, pos_y + size_h, pos_x, size_w, "Frq", cpu['freq'])
 
     def draw(self, key, mouse):
         # Screen size
@@ -87,102 +166,9 @@ class CPU(Page):
         self.stdscr.addstr(first + 1, 1, "CPU ALL STATUS", curses.A_BOLD)
         # Print all GRID CPU
         step_height, step_width, size_columns, size_rows = cpu_grid(
-            self.jetson.cpu['cpu'], self.print_cpu, first + 2, 1, size_height=height - 4, size_width=width - 8)
+            self.stdscr, self.jetson.cpu['cpu'], self.print_cpu, first + 2, 1, size_height=height - 4, size_width=width - 8)
         # Print CPU Y axis
         chart = self._chart_cpus[0]
         for i in range(size_rows):
             chart.draw_y_axis(self.stdscr, first + 2 + i * step_height, 1 + step_width * size_columns, step_height - 3)
-
-
-class CPU_OLD(Page):
-
-    def __init__(self, stdscr, jetson):
-        super(CPU_OLD, self).__init__("CPU", stdscr, jetson)
-        # List all CPU
-        self.chart_cpus = []
-        for name, value in enumerate(self.jetson.cpu['cpu']):
-            chart = Chart(jetson, "CPU{name}".format(name=name), self.update_chart, color_text=curses.COLOR_BLUE)
-            self.chart_cpus += [chart]
-
-    def update_chart(self, jetson, name):
-        cpu = jetson.cpu['cpu'][int(name[3:])]
-        status = True if cpu else False
-        return {
-            'value': [cpu.get("val", 0)],
-            'active': status
-        }
-
-    @check_curses
-    def draw(self, key, mouse):
-        """
-            Draw a plot with GPU payload
-        """
-        n_cpu = sum([1 if cpu else 0 for _, cpu in self.jetson.cpu.items()])
-        # Screen size
-        height, width, first = self.size_page()
-        # Make all CPU charts
-        counter = 0
-        x_offset = width // 4
-        # Draw info rectangle
-        rectangle(self.stdscr, first + 1, 0, height - 2 + first, first + x_offset)
-        # Draw title side area
-        self.stdscr.addstr(first + 1, 1, " Platform ", curses.A_BOLD)
-        # Architecture CPU cores
-        # architecture = self.jetson.architecture
-        offset_table = 2
-        for idx, name in enumerate(self.jetson.cpu):
-            cpu = self.jetson.cpu[name]
-            status = 'ON' if cpu else 'OFF'
-            active = True if cpu else False
-            frq = label_freq(cpu['frq'], start='k') if 'frq' in cpu else ''
-            # Load model architecture
-            model = cpu['model'].split()[0] if 'model' in cpu else ''
-            model = model[:x_offset - (first + 3) - 4]
-            governor = cpu.get('governor', '').capitalize()
-            # governor = governor[:x_size + add_size - 12]
-            # Draw info
-            color = curses.color_pair(8) if active else curses.color_pair(7)
-            name = "CPU{name}".format(name=name)
-            try:
-                self.stdscr.addstr(first + offset_table + idx * 2, 2, name, color)
-                if active:
-                    self.stdscr.addstr(first + offset_table + idx * 2, 3 + len(name), governor, curses.color_pair(3) | curses.A_BOLD)
-                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 2, model, curses.A_NORMAL)
-                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 3 + len(model), "Frq:", curses.A_NORMAL)
-                    self.stdscr.addstr(first + offset_table + idx * 2 + 1, 7 + len(model), "{}".format(frq), curses.A_BOLD)
-                else:
-                    self.stdscr.addstr(first + offset_table + idx * 2, 2 + len(name) + 1, status, curses.A_NORMAL)
-            except curses.error:
-                pass
-            # Add alert ARROW Down
-            if first + offset_table + idx * 2 > height - 4:
-                for n_arrow in range(x_offset - 1):
-                    self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
-        # Evaluate size single chart
-        x_size = (width - x_offset - 6) // (n_cpu // 2)
-        y_size = (height - 2 - first) // 2
-        # Measure offset label
-        offest_label = width - (2 + x_offset + x_size * (n_cpu // 2))
-        # Plot all CPUs
-        idx_n = 0
-        for chart, name in zip(self.chart_cpus, sorted(self.jetson.cpu)):
-            data = copy.deepcopy(self.jetson.cpu[name])
-            # status CPU
-            status = True if data else False
-            if not status:
-                continue
-            y_label = idx_n % (n_cpu // 2) == (n_cpu // 2) - 1
-            # Select line
-            line = 1 if idx_n >= n_cpu // 2 else 0
-            # Increase counter
-            counter = idx_n - line * (n_cpu // 2)
-            # Evaluate size chart
-            add_size = offest_label if y_label else 0
-            size_x = [x_offset + 2 + (counter * (x_size)), x_offset + x_size * (1 + counter) + add_size]
-            size_y = [first + 1 + (line * (y_size)), first + y_size * (1 + line)]
-            # Value and frequency
-            if status:
-                label_chart_cpu = "{percent: >3d}%".format(percent=data.get('val', 0))
-                chart.draw(self.stdscr, size_x, size_y, label=label_chart_cpu, y_label=y_label)
-            idx_n += 1
 # EOF

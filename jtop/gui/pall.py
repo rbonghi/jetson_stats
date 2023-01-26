@@ -23,6 +23,7 @@ from .lib.common import (
     size_min,
     label_freq)
 from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
+from .pcpu import compact_cpus
 # Menu GUI pages
 from .jtopguimenu import (
     plot_watts,
@@ -45,7 +46,7 @@ class ALL(Page):
         height, width, first = self.size_page()
         line_counter = first + 1
         # Plot Status CPU
-        line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.cpu['cpu'], width)
+        line_counter += compact_cpus(self.stdscr, line_counter, width, self.jetson)
         # RAM linear gauge info
         line_counter += 1
         ram_status = self.jetson.ram
