@@ -29,7 +29,6 @@ from .jtopguimenu import (
     plot_watts,
     compact_info,
     plot_temperatures,
-    plot_CPUs,
     plot_GPUs)
 
 

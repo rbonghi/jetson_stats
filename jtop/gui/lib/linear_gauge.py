@@ -80,11 +80,15 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
 
 
 def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
+    if 'name' in cpu:
+        name = cpu['name']
+    else:
+        name = str(idx) + (" " if idx <= 9 else "")
     # Draw gauge
     data = {
-        'name': str(idx) + (" " if idx <= 9 else ""),
+        'name': name,
         'color': curses.color_pair(6) | curses.A_BOLD,
-        'online': cpu['online'],
+        'online': cpu['online'] if 'online' in cpu else True,
         'values': [
             (cpu['user'], curses.color_pair(2)),
             (cpu['nice'], curses.color_pair(3)),
@@ -93,12 +97,12 @@ def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
     }
     if size_w < 16:
         basic_gauge(stdscr, pos_y, pos_x, size_w - 1, data)
-    else:
-        # Draw gauge
-        basic_gauge(stdscr, pos_y, pos_x, size_w - 8, data)
+    elif 'freq' in cpu:
         # Draw current frequency
         curr_string = value_to_string(cpu['freq']['cur'], cpu['freq']['unit'])
         stdscr.addstr(pos_y, pos_x + size_w - 6, curr_string, curses.A_NORMAL)
+    # Draw gauge
+    basic_gauge(stdscr, pos_y, pos_x, size_w - 8, data)
 
 
 def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):

@@ -86,7 +86,9 @@ class CPU(Page):
         # Screen size
         height, width, first = self.size_page()
         # Print gauge all CPU
-        self.stdscr.addstr(first + 1, 1, "CPU ALL STATUS", curses.A_BOLD)
+        total = self.jetson.cpu['total']
+        total['name'] = 'ALL'
+        cpu_gauge(self.stdscr, 0, total, first + 1, 1, '', width)
         # Print all GRID CPU
         step_height, step_width, size_columns, size_rows = cpu_grid(
             self.stdscr, self.jetson.cpu['cpu'], self.print_cpu, first + 2, 1, size_height=height - 4, size_width=width - 8)
