@@ -26,6 +26,8 @@ NUM_PROCESSES = 20
 
 
 def check_attributes(jetson):
+    # Jetson stats
+    assert isinstance(jetson.stats, dict)
     # uptime
     assert isinstance(jetson.uptime, timedelta)
     # Status disk
