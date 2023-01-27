@@ -193,6 +193,9 @@ class CPUService(object):
                         self._cpu_total['last_cpu'] = deepcopy(delta)
                         # Store utilization
                         total = get_utilization(delta)
+                else:
+                    # All CPU are in order on this file, if don't match we can skip it
+                    break
         return total, cpu_out
 
     def get_status(self):
