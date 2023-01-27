@@ -98,12 +98,13 @@ class Chart(object):
         # Plot chart shape and labels
         self._plot_y_axis(stdscr, size_x, size_y, label=y_label)
         # Plot chart lines
-        if self.active:
-            # Plot values
-            self._plot_values(stdscr, size_x, size_y, label=y_label)
-        else:
+        # Plot values
+        self._plot_values(stdscr, size_x, size_y, label=y_label)
+        # Add messsage not active
+        if not self.active:
             l_label = size_x[1] - 6 if y_label else size_x[1] - 1
-            rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1] - 2, l_label)
+            # rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1], l_label)
+            stdscr.hline(size_y[0] + 1, size_x[0], curses.ACS_HLINE, l_label - size_x[0] + 1)
             # Write message
             middle_x = (l_label - size_x[0] - len(self.message)) // 2
             middle_y = (size_y[1] - size_y[0]) // 2

@@ -126,6 +126,7 @@ def read_system_cpu(path, cpu_status={}):
 class CPUService(object):
 
     def __init__(self):
+        self._cpu_online = []
         # Load cpuinfo
         list_cpu = cpu_info()
         # List all CPU available
@@ -197,10 +198,20 @@ class CPUService(object):
     def get_status(self):
         # Status CPU
         cpu_list = [{} for i in range(len(self._cpu))]
+        cpu_online = []
         # Add cpu status with frequency and idle config
         for cpu, data in enumerate(self._cpu):
             # store all data
             cpu_list[cpu] = read_system_cpu(data['path'], cpu_list[cpu])
+            cpu_online += [cpu_list[cpu]['online']]
+        # Status number CPU changed if changed reset esimators
+        # Fix weird TOTAL status when the number of CPU are changed (Numbers negative)
+        for new, old in zip(cpu_online, self._cpu_online):
+            if new != old:
+                logger.info("Number of CPU online changed, reset estimators")
+                self.reset_estimation()
+                break
+        self._cpu_online = cpu_online
         # Usage CPU
         # https://stackoverflow.com/questions/8952462/cpu-usage-from-a-file-on-linux
         # https://www.linuxhowtos.org/System/procstat.htm

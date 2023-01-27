@@ -114,7 +114,7 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
     curr_string = value_to_string(freq_data['cur'], freq_data['unit'])
     # If there is a min and a max
     if 'max' in freq_data:
-        value = ((freq_data['cur'] - freq_data['min']) / (freq_data['max'] - freq_data['min'])) * 100
+        value = ((freq_data['cur'] - freq_data['min']) / (freq_data['max'] - freq_data['min'])) * 100 if freq_data['min'] != freq_data['max'] else 0
         # Convert values data
         data = {
             'name': name,

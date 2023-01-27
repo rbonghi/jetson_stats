@@ -62,13 +62,14 @@ class CPU(Page):
     def update_chart(self, jetson, name):
         cpu = jetson.cpu['cpu'][int(name) - 1]
         return {
-            'value': [100 - cpu.get("idle", 0)],
+            'active': cpu['online'],
+            'value': [100 - cpu.get("idle", 100)],
         }
 
     def print_cpu(self, stdscr, idx, cpu, pos_y, pos_x, size_h, size_w):
         # Print status CPU
         governor = cpu.get('governor', '').capitalize()
-        label_chart_cpu = "{percent: >3.0f}% {governor}".format(percent=100 - cpu.get('idle', 0), governor=governor)
+        label_chart_cpu = "{percent: >3.0f}% {governor}".format(percent=100 - cpu.get('idle', 100), governor=governor)
         # Print chart
         chart = self._chart_cpus[idx]
         chart.draw(stdscr, [pos_x, pos_x + size_w], [pos_y, pos_y + size_h - 2], label=label_chart_cpu, y_label=False)
