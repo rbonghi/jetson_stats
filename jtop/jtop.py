@@ -281,9 +281,30 @@ class jtop(Thread):
     @property
     def engine(self):
         """
-        Engine status, in this property you can find:
+        Engine status, in this property you can find like: APE, DLA, NVDEC, NVENC, and other
+        
+        The output of this property is a dictionary:
+        
+        * **name group X** - In this group are collected all engines similar
+            * **name engine a** - In this key there is a dictionary with engine status
+            * **name engine b** - Same like above, there is the dictionary status engine
+        
+        For each engine the dictionary is defined like the table below:
+        
+        ========== ========= ==============================================
+        Name       Type      Description
+        ========== ========= ==============================================
+        online     `boolean` Status of the engine
+        unit       `string`  The size value of the frequency, usually **k**
+        min        `int`     Minimum frequency of the core :sup:`A`
+        max        `int`     Maximum frequency of the core :sup:`A`
+        cur        `int`     Current frequency of the core
+        ========== ========= ==============================================
 
-        APE, DLA, NVDEC, NVENC, and other
+        .. note::
+        
+                Note **A**
+                    Some engines doesn't have a *min* and *max* frequency
 
         :return: Dictionary of all active engines
         :rtype: dict
@@ -698,19 +719,54 @@ class jtop(Thread):
     @property
     def cpu(self):
         """
-        CPU status. From this dictionary you can read the status of the CPU.
+        this property return a dictionary with all information for each core about frequency, idle, and other.
+        
+        This dictionary is made:
+        
+        * **total** - The aggregate values for all cores of (user, nice, system, idle)
+        * **cpu** - a list with a dictionary for each core
+        
+        For each core the dictionary is defined:
+        
+        ========== ========= =======================================
+        Name       Type      Description
+        ========== ========= =======================================
+        online     `boolean` Status core
+        governor   `string`  Type of governor running on the core
+        freq       `dict`    Frequency of the core :sup:`A`
+        info_freq  `dict`    Frequency of the core :sup:`A`
+        idle_state `dict`    All Idle state running
+        user       `int`     User percentage utilization :sup:`B`
+        nice       `int`     Nice percentage utilization :sup:`B`
+        system     `int`     System percentage utilization :sup:`B`
+        idle       `int`     Idle percentage :sup:`B`
+        model      `string`  Model core running
+        ========== ========= =======================================
+        
+        .. note::
+   
+            Note **A**
+                The frequency dictionary is defined like below:
+                
+                ========== ========= ==============================================
+                Name       Type      Description
+                ========== ========= ==============================================
+                unit       `string`  The size value of the frequency, usually **k**
+                min        `int`     Minimum frequency of the core
+                max        `int`     Maximum frequency of the core
+                cur        `int`     Current frequency of the core
+                ========== ========= ==============================================
 
-        For each CPU all fields are:
+            Note **B**
+                If a core is offline, this data is not key is not available
 
-        * **min_freq** - Minimum frequency in kHz
-        * **max_freq** - Maximum frequency in kHz
-        * **frq** - Running frequency in kHz
-        * **governor** - Governor selected
-        * **val** - Status CPU, value between [0, 100]
-        * **model** - Model Architecture
-        * **IdleStates**
+        .. admonition:: Reference
+        
+            #. https://docs.kernel.org/admin-guide/pm/cpuidle.html
+            #. https://www.linuxhowtos.org/System/procstat.htm
+            #. https://rosettacode.org/wiki/Linux_CPU_utilization
 
-        :return: CPU configuration, frequencies and speed
+        :return: A dictionary with the aggregate status and a list of all CPUs, described above.
         :rtype: dict
         """
         # Add cpu info in list
