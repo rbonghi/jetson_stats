@@ -282,15 +282,15 @@ class jtop(Thread):
     def engine(self):
         """
         Engine status, in this property you can find like: APE, DLA, NVDEC, NVENC, and other
-        
+
         The output of this property is a dictionary:
-        
+
         * **name group X** - In this group are collected all engines similar
             * **name engine a** - In this key there is a dictionary with engine status
             * **name engine b** - Same like above, there is the dictionary status engine
-        
+
         For each engine the dictionary is defined like the table below:
-        
+
         ========== ========= ==============================================
         Name       Type      Description
         ========== ========= ==============================================
@@ -302,7 +302,7 @@ class jtop(Thread):
         ========== ========= ==============================================
 
         .. note::
-        
+
                 Note **A**
                     Some engines doesn't have a *min* and *max* frequency
 
@@ -720,14 +720,14 @@ class jtop(Thread):
     def cpu(self):
         """
         this property return a dictionary with all information for each core about frequency, idle, and other.
-        
+
         This dictionary is made:
-        
+
         * **total** - The aggregate values for all cores of (user, nice, system, idle)
         * **cpu** - a list with a dictionary for each core
-        
+
         For each core the dictionary is defined:
-        
+
         ========== ========= =======================================
         Name       Type      Description
         ========== ========= =======================================
@@ -742,12 +742,12 @@ class jtop(Thread):
         idle       `int`     Idle percentage :sup:`B`
         model      `string`  Model core running
         ========== ========= =======================================
-        
+
         .. note::
-   
+
             Note **A**
                 The frequency dictionary is defined like below:
-                
+
                 ========== ========= ==============================================
                 Name       Type      Description
                 ========== ========= ==============================================
@@ -761,7 +761,7 @@ class jtop(Thread):
                 If a core is offline, this data is not key is not available
 
         .. admonition:: Reference
-        
+
             #. https://docs.kernel.org/admin-guide/pm/cpuidle.html
             #. https://www.linuxhowtos.org/System/procstat.htm
             #. https://rosettacode.org/wiki/Linux_CPU_utilization
