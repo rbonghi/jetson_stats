@@ -98,7 +98,7 @@ class CTRL(Page):
     def update_chart(self, jetson, name):
         # Append in list
         return {
-            'value': [jetson.fan.speed if jetson.fan.speed != None else 0],
+            'value': [jetson.fan.speed if jetson.fan.speed is not None else 0],
             'active': True if jetson.fan else False
         }
 
