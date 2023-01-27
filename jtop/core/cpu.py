@@ -156,7 +156,7 @@ class CPUService(object):
     def get_cpu_info(self):
         return self._cpu_info
 
-    def get_utilization(self):
+    def get_utilization(self, cpu_out):
         # CPU lines
         # - user: normal processes executing in user mode
         # - nice: niced processes executing in user mode
@@ -165,7 +165,6 @@ class CPUService(object):
         # - iowait: waiting for I/O to complete
         # - irq: servicing interrupts
         # - softirq: servicing softirqs
-        cpu_out = [{} for i in range(len(self._cpu))]
         total = {}
         with open("/proc/stat", 'r') as f:
             for line in f:
@@ -196,14 +195,16 @@ class CPUService(object):
         return total, cpu_out
 
     def get_status(self):
-        # Usage CPU
-        # https://stackoverflow.com/questions/8952462/cpu-usage-from-a-file-on-linux
-        # https://www.linuxhowtos.org/System/procstat.htm
-        # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
-        total, cpu_list = self.get_utilization()
+        # Status CPU
+        cpu_list = [{} for i in range(len(self._cpu))]
         # Add cpu status with frequency and idle config
         for cpu, data in enumerate(self._cpu):
             # store all data
             cpu_list[cpu] = read_system_cpu(data['path'], cpu_list[cpu])
+        # Usage CPU
+        # https://stackoverflow.com/questions/8952462/cpu-usage-from-a-file-on-linux
+        # https://www.linuxhowtos.org/System/procstat.htm
+        # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
+        total, cpu_list = self.get_utilization(cpu_list)
         return {'total': total, 'cpu': cpu_list}
 # EOF

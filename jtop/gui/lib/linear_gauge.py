@@ -80,20 +80,22 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
 
 
 def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
-    if 'name' in cpu:
-        name = cpu['name']
-    else:
-        name = str(idx + 1) + (" " if idx < 9 else "")
+    # online status
+    online = cpu['online'] if 'online' in cpu else True
+    # name cpu - workararound for TOTAL cpu
+    name = cpu['name'] if 'name' in cpu else str(idx + 1) + (" " if idx < 9 else "")
+    # Plot values
+    values = [
+        (cpu['user'], curses.color_pair(2)),
+        (cpu['nice'], curses.color_pair(3)),
+        (cpu['system'], curses.color_pair(1)),
+    ] if online else []
     # Draw gauge
     data = {
         'name': name,
         'color': curses.color_pair(6) | curses.A_BOLD,
-        'online': cpu['online'] if 'online' in cpu else True,
-        'values': [
-            (cpu['user'], curses.color_pair(2)),
-            (cpu['nice'], curses.color_pair(3)),
-            (cpu['system'], curses.color_pair(1)),
-        ],
+        'online': online,
+        'values': values,
     }
     if size_w < 16:
         basic_gauge(stdscr, pos_y, pos_x, size_w - 1, data)
@@ -112,16 +114,14 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
     curr_string = value_to_string(freq_data['cur'], freq_data['unit'])
     # If there is a min and a max
     if 'max' in freq_data:
-        value = (freq_data['cur'] / (freq_data['max'] - freq_data['min'])) * 100
+        value = ((freq_data['cur'] - freq_data['min']) / (freq_data['max'] - freq_data['min'])) * 100
         # Convert values data
         data = {
             'name': name,
             'color': curses.color_pair(6),
             'online': freq_data['online'],
-            'values': [
-                (value, curses.color_pair(2)),
-            ],
-            'mleft': value_to_string(freq_data['min'], freq_data['unit']) if 'max' in freq_data else "",
+            'values': [(value, curses.color_pair(2))],
+            'mleft': value_to_string(freq_data['min'], freq_data['unit']) if 'min' in freq_data else "",
             'mright': value_to_string(freq_data['max'], freq_data['unit']) if 'max' in freq_data else "",
         }
         basic_gauge(stdscr, pos_y, pos_x, size - 8, data, bar=":")
