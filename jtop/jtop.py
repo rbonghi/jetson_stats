@@ -178,7 +178,7 @@ class jtop(Thread):
 
         The input of your callback will be the jetson object.
 
-        To detach a function, please look :func:`~jtop.jtop.jtop.detach`
+        To detach a function, please look :func:`~detach`
 
         :param observer: The function to call
         :type observer: function
@@ -189,7 +189,7 @@ class jtop(Thread):
         """
         Detach an observer from jtop
 
-        To attach a function, please look :func:`~jtop.jtop.jtop.attach`
+        To attach a function, please look :func:`~attach`
 
         :param observer:  The function to detach
         :type observer: function
@@ -203,7 +203,7 @@ class jtop(Thread):
         * **switch off** jetson_clocks
         * **Disable** jetson_clocks on boot
         * **fan**
-            * set to **default**, please follow the fan reference :func:`~jtop.jtop.jtop.fan`
+            * set to **default**, please follow the fan reference :py:attr:`~fan`
             * set fan speed to 0 (This operation can require time)
         * If active **disable** the jtop swap
         * **Clear** the internal jtop configuration file
@@ -501,23 +501,20 @@ class jtop(Thread):
         The field listed are:
 
         * **time** - A `datetime` variable with the local time in your board
-        * **uptime** - A `timedelta` with the up time of your board, same from :func:`~jtop.jtop.jtop.uptime`
-        * **jetson_clocks** - Status of jetson_clocks, human readable :func:`~jtop.jtop.jtop.jetson_clocks`
-        * **nvp model** - If exist, the NV Power Model name active :func:`~jtop.jtop.jtop.nvpmodel`
-        * **cpu X** - The status for each cpu in your board, if disabled you will read *OFF*
-        * **GPU** - Status of your GPU :func:`~jtop.jtop.jtop.gpu`
-        * **RAM** - Used ram :func:`~jtop.jtop.jtop.ram`
-        * **EMC** - If exist, the used emc :func:`~jtop.jtop.jtop.emc`
-        * **IRAM** - If exist, the used iram :func:`~jtop.jtop.jtop.iram`
-        * **SWAP** - If exist, the used swap :func:`~jtop.jtop.jtop.swap`
-        * **APE** - Frequency APE engine :func:`~jtop.jtop.jtop.engine`
-        * **NVENC** - Frequency NVENC engine :func:`~jtop.jtop.jtop.engine`
-        * **NVDEC** - Frequency NVDEC engine :func:`~jtop.jtop.jtop.engine`
-        * **NVJPG** - Frequency NVJPG engine :func:`~jtop.jtop.jtop.engine`
-        * **fan** - Status fan speed :func:`~jtop.jtop.jtop.fan`
-        * **Temp X** - X temperature :func:`~jtop.jtop.jtop.temperature`
-        * **power cur** - Total current power :func:`~jtop.jtop.jtop.power`
-        * **power avg** - Total average power :func:`~jtop.jtop.jtop.power`
+        * **uptime** - A `timedelta` with the up time of your board, same from :py:attr:`~uptime`
+        * **jetson_clocks** - Status of jetson_clocks, human readable :py:attr:`~jetson_clocks`
+        * **nvp model** - If exist, the NV Power Model name active :py:attr:`~nvpmodel`
+        * **cpu X** - The status for each cpu in your board, if disabled *OFF* :py:attr:`~cpu`
+        * **GPU** - Status of your GPU :py:attr:`~gpu`
+        * **RAM** - Used ram :py:attr:`~ram`
+        * **EMC** - If exist, the used emc :py:attr:`~emc`
+        * **IRAM** - If exist, the used iram :py:attr:`~iram`
+        * **SWAP** - If exist, the used swap :py:attr:`~swap`
+        * **engine X** - Frequency for each engine, if disabled *OFF* :py:attr:`~engine`
+        * **fan** - Status fan speed :py:attr:`~fan`
+        * **Temp X** - X temperature :py:attr:`~temperature`
+        * **power cur** - Total current power :py:attr:`~power`
+        * **power avg** - Total average power :py:attr:`~power`
 
         :return: Compacts jetson statistics
         :rtype: dict
@@ -955,7 +952,7 @@ sudo systemctl restart jtop.service""".format(
     @property
     def interval(self):
         """
-        Speed jtop service. This speed can be different compare the speed specified in :func:`~jtop.jtop.jtop` constructor
+        Speed jtop service. This speed can be different compare the speed specified in :func:`~jtop` constructor
 
         :return: jtop interval (in seconds)
         :rtype: float
@@ -965,7 +962,7 @@ sudo systemctl restart jtop.service""".format(
     @property
     def interval_user(self):
         """
-        This is the same speed specified in :func:`~jtop.jtop.jtop` constructor
+        This is the same speed specified in :func:`~jtop` constructor
 
         :return: jtop user interval (in seconds)
         :rtype: float
@@ -976,7 +973,7 @@ sudo systemctl restart jtop.service""".format(
         """
         This blocking method is needed when you design your python code to work only by callback.
 
-        Before to run this method remember to attach a callback using :func:`~jtop.jtop.jtop.attach`
+        Before to run this method remember to attach a callback using :func:`~attach`
 
         A simple example to use this method is below
 
