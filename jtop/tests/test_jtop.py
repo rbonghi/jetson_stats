@@ -30,6 +30,8 @@ def check_attributes(jetson):
     assert isinstance(jetson.stats, dict)
     # uptime
     assert isinstance(jetson.uptime, timedelta)
+    # CPU
+    assert isinstance(jetson.cpu, dict)
     # Status disk
     assert isinstance(jetson.disk, dict)
     # local interfaces

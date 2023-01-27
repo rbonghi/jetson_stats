@@ -506,8 +506,6 @@ class jtop(Thread):
         * **nvp model** - If exist, the NV Power Model name active :func:`~jtop.jtop.jtop.nvpmodel`
         * **cpu X** - The status for each cpu in your board, if disabled you will read *OFF*
         * **GPU** - Status of your GPU :func:`~jtop.jtop.jtop.gpu`
-        * **MTS FG** - Foreground tasks :func:`~jtop.jtop.jtop.mts`
-        * **MTS BG** - Background tasks :func:`~jtop.jtop.jtop.mts`
         * **RAM** - Used ram :func:`~jtop.jtop.jtop.ram`
         * **EMC** - If exist, the used emc :func:`~jtop.jtop.jtop.emc`
         * **IRAM** - If exist, the used iram :func:`~jtop.jtop.jtop.iram`
@@ -532,16 +530,11 @@ class jtop(Thread):
         if self.nvpmodel is not None:
             stats['nvp model'] = self.nvpmodel.name
         # -- CPU --
-        cpus = self.cpu['cpu']
-        for cpu in sorted(cpus):
-            stats["CPU{cpu}".format(cpu=cpu + 1)] = 100 - int(cpus[cpu]['idle'])
+        for idx, cpu in enumerate(self.cpu['cpu']):
+            stats["CPU{idx}".format(idx=idx + 1)] = 100 - int(cpu['idle']) if cpu['online'] else 'OFF'
         # -- GPU --
         for n_gpu in self.gpu:
             stats['GPU{n_gpu}'.format(n_gpu=n_gpu)] = self.gpu[n_gpu]['val']
-        # -- MTS --
-        if self.mts:
-            stats['MTS FG'] = self.mts['fg']
-            stats['MTS BG'] = self.mts['bg']
         # -- RAM --
         stats['RAM'] = self.ram['use']
         # -- EMC --
