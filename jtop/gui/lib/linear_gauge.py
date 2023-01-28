@@ -16,6 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import curses
+from .colors import NColors
 from .common import check_curses
 from .common import value_to_string
 
@@ -45,7 +46,7 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
     # Draw gauge
     online = data['online'] if 'online' in data else True
     # Draw gauge border
-    color_offline = curses.color_pair(7)
+    color_offline = NColors.ired()
     stdscr.addstr(pos_y, pos_x + name_size, "[" + " " * size_bar + "]", curses.A_BOLD if online else color_offline)
     # Draw bar
     if online:
@@ -86,14 +87,14 @@ def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
     name = cpu['name'] if 'name' in cpu else str(idx + 1) + (" " if idx < 9 else "")
     # Plot values
     values = [
-        (cpu['user'], curses.color_pair(2)),
-        (cpu['nice'], curses.color_pair(3)),
-        (cpu['system'], curses.color_pair(1)),
+        (cpu['user'], NColors.green()),
+        (cpu['nice'], NColors.yellow()),
+        (cpu['system'], NColors.red()),
     ] if online else []
     # Draw gauge
     data = {
         'name': name,
-        'color': curses.color_pair(6) | curses.A_BOLD,
+        'color': NColors.cyan() | curses.A_BOLD,
         'online': online,
         'values': values,
     }
@@ -118,22 +119,22 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
         # Convert values data
         data = {
             'name': name,
-            'color': curses.color_pair(6),
+            'color': NColors.cyan(),
             'online': freq_data['online'],
-            'values': [(value, curses.color_pair(2))],
+            'values': [(value, NColors.green())],
             'mleft': value_to_string(freq_data['min'], freq_data['unit']) if 'min' in freq_data else "",
             'mright': value_to_string(freq_data['max'], freq_data['unit']) if 'max' in freq_data else "",
         }
         basic_gauge(stdscr, pos_y, pos_x, size - 8, data, bar=":")
     else:
         # Draw name engine
-        stdscr.addstr(pos_y, pos_x, name, curses.color_pair(6))
+        stdscr.addstr(pos_y, pos_x, name, NColors.cyan())
         # Write online bar
         size_bar = size - len(name) - len(curr_string) - 4
         start_bar = pos_x + len(name) + 1 if len(name) > 0 else pos_x
         end_bar = start_bar + size_bar
         # Check if there is a limit
-        color_bar = curses.color_pair(2) if freq_data['online'] else curses.color_pair(1)
+        color_bar = NColors.green() if freq_data['online'] else NColors.red()
         if freq_data['online']:
             stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
             stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
@@ -167,7 +168,7 @@ class GaugeBar:
 def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="ON", percent="", label="", bar="|"):
     name = GaugeName(name) if isinstance(name, str) else name
     label = GaugeName(label) if isinstance(label, str) else label
-    values = (GaugeBar(value, curses.color_pair(2)), ) if isinstance(value, (int, float)) else value
+    values = (GaugeBar(value, NColors.green()), ) if isinstance(value, (int, float)) else value
     # Evaluate size without short name
     name_size = len(name.text)
     size_bar = size - name_size - 4
@@ -201,8 +202,8 @@ def linear_gauge(stdscr, offset=0, start=0, size=10, name="", value=0, status="O
             stdscr.addstr(offset, start + name_size + 2 + size_bar - len(grey_part), grey_part, curses.A_DIM)
     else:
         # Show bracket linear gauge and label
-        stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "), curses.color_pair(7))
+        stdscr.addstr(offset, start + name_size + 1, ("[{value:>" + str(size_bar) + "}]").format(value=" "), NColors.ired())
         # Show bracket linear gauge and label
         status = status if status else "OFF"
-        stdscr.addstr(offset, start + name_size + 4, status, curses.color_pair(7))
+        stdscr.addstr(offset, start + name_size + 4, status, NColors.ired())
 # EOF

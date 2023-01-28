@@ -19,6 +19,7 @@
 import curses
 from curses.textpad import rectangle
 from threading import Thread
+from .colors import NColors
 # Size button
 SIZE_BUTTON_HEIGHT = 2
 
@@ -115,7 +116,7 @@ class ButtonList:
                 y_line += SIZE_BUTTON_HEIGHT + 1
                 x_line = 0
             # Draw button
-            color = curses.A_REVERSE if status else curses.color_pair(1)
+            color = curses.A_REVERSE if status else NColors.red()
             selected = True if select == idx else not status
             button.draw(posy + y_line, posx + x_line, key, mouse, color=color, exstatus=selected)
             # Increase x counter

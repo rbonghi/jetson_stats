@@ -18,6 +18,7 @@
 import curses
 # Page class definition
 from .jtopgui import Page
+from .lib.colors import NColors
 from .lib.common import value_to_string, plot_name_info
 from .lib.linear_gauge import freq_gauge
 
@@ -119,7 +120,7 @@ class ENGINE(Page):
                 # Plot block name
                 if len(engines) > 1 and len(name_array) > 1:
                     self.stdscr.addstr(offset_y + gidx * 2, offset_x + (size_eng + 1) * idx,
-                                       "{group}".format(group=group), curses.color_pair(6) | curses.A_BOLD)
+                                       "{group}".format(group=group), NColors.cyan() | curses.A_BOLD)
                 # Plot Gauge
                 new_name = ' '.join(name_array[1:]) if len(name_array) > 1 and len(engines) > 1 else name
                 # Add name in plot string

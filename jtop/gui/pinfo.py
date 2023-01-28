@@ -23,6 +23,7 @@ from ..core.common import get_var
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
+from .lib.colors import NColors
 from .lib.common import plot_name_info, plot_dictionary
 # Regex
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
@@ -35,7 +36,7 @@ def plot_libraries(stdscr, pos_y, pos_x, libraries):
     opencv = libraries['OpenCV']
     opencv_cuda = libraries['OpenCV-Cuda']
     opencv_cuda_string = "YES" if opencv_cuda else "NO"
-    color = curses.color_pair(2) if opencv_cuda else curses.color_pair(1)
+    color = NColors.green() if opencv_cuda else NColors.red()
     del libraries['OpenCV']
     del libraries['OpenCV-Cuda']
     # Plot Library

@@ -25,6 +25,7 @@ from .lib.common import (check_curses,
                          label_freq,
                          jetson_clocks_gui,
                          nvp_model_gui)
+from .lib.colors import NColors
 from .lib.linear_gauge import linear_gauge, GaugeName
 from .pengine import compact_engines
 
@@ -44,7 +45,7 @@ def plot_CPUs(stdscr, offest, list_cpus, width):
         name = "{name}".format(name=idx) + (" " if idx <= 9 and len(list_cpus) > 9 else "")
         linear_gauge(
             stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
-            name=GaugeName(name, color=curses.color_pair(6)),
+            name=GaugeName(name, color=NColors.cyan()),
             value=cpu['user'] + cpu['nice'] + cpu['system'],
             status='ON' if cpu else 'OFF',
             percent=percent,
@@ -66,7 +67,7 @@ def plot_GPUs(stdscr, offest, list_gpus, width):
         name = "GPU{name}".format(name=name) if len(list_gpus) > 1 else "GPU"
         linear_gauge(
             stdscr, offset=int(offest + off_idx), start=start, size=max_bar if len(list_gpus) > 1 else width,
-            name=GaugeName(name, color=curses.color_pair(6)),
+            name=GaugeName(name, color=NColors.cyan()),
             value=gpu.get('val', 0),
             label=label_freq(gpu['frq'], start='k'))
     # Size block CPU
@@ -79,8 +80,8 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
     start = start + (width - 17) // 2
     # Define color temperatures
     color_options = {
-        60: curses.color_pair(1),
-        40: curses.color_pair(3),
+        60: NColors.red(),
+        40: NColors.yellow(),
         20: curses.A_NORMAL,
     }
     list_options = sorted(color_options.keys(), reverse=True)
@@ -145,7 +146,7 @@ def compact_info(stdscr, start, offset, width, height, jetson):
             linear_gauge(
                 stdscr,
                 offset=offset + counter, start=start + 1, size=width,
-                name=GaugeName('FAN', color=curses.color_pair(6)),
+                name=GaugeName('FAN', color=NColors.cyan()),
                 value=speed,
                 status='ON' if jetson.fan else 'DISABLED',
                 label=label)
@@ -154,7 +155,7 @@ def compact_info(stdscr, start, offset, width, height, jetson):
         linear_gauge(
             stdscr,
             offset=offset + counter, start=start + 1, size=width,
-            name=GaugeName('FAN', color=curses.color_pair(6)),
+            name=GaugeName('FAN', color=NColors.cyan()),
             status='DISABLED')
         counter += 1
     # Jetson clocks status: Running (Green) or Normal (Grey)

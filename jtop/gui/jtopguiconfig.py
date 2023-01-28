@@ -21,6 +21,7 @@ import curses
 import logging
 # local modules
 from ..core import get_var
+from .lib.colors import NColors
 # Create logger
 logger = logging.getLogger(__name__)
 # Gui refresh rate
@@ -100,7 +101,7 @@ class JTOPCONFIG:
                 # Print output
                 if isinstance(status, bool):
                     message = " OK " if status else "FAIL"
-                    color_status = curses.color_pair(2) if status else curses.color_pair(1)
+                    color_status = NColors.green() if status else NColors.red()
                     self.stdscr.addstr(center_y + idx, center_x - 6, message, color_status | curses.A_BOLD)
                 elif isinstance(status, str):
                     self.stdscr.addstr(center_y + idx, center_x - 6, status)
