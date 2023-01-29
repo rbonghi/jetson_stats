@@ -184,7 +184,8 @@ class Chart(object):
                     # Full block: \u2588 - 3/4 block \u2586 - Lower block: \u2584 - Small lower block: \u2581
                     if self.fill:
                         for n in range(cell_val_int - 1):
-                            stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'), curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'),
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         # Add head chart
                         if cell_val < 1.0:
                             stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581'.encode('utf-8'),
