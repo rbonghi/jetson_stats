@@ -174,14 +174,15 @@ def plot_dictionary(stdscr, pos_y, pos_x, name, data, size=None):
         # Plot nanme
         stdscr.addstr(pos_y + idx + 1, pos_x + 1, str(name) + ":", curses.A_BOLD)
         # Plot value
+        color = curses.A_NORMAL if value else NColors.red()
         if not value:
-            value = "Missing"
+            value = "MISSING"
         len_value = len(value)
         if size:
             if len(name) + len(value) + 3 > size:
                 len_value = size - len(name) - 3
         try:
-            stdscr.addstr(pos_y + idx + 1, pos_x + 3 + len(name), value[:len_value], curses.A_NORMAL)
+            stdscr.addstr(pos_y + idx + 1, pos_x + 3 + len(name), value[:len_value], color)
         except curses.error:
             pass
         size_x = max(size_x, len(name) + len(value) + 3)

@@ -29,7 +29,7 @@ def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_
     size_rows = int(num_cpu / size_columns) + bool((num_cpu / size_columns) % 1)
     size_columns = int(num_cpu / size_rows) + bool((num_cpu / size_rows) % 1)
     # Measure step height and width
-    step_height = round(size_height / size_rows) if size_height > 0 else 1
+    step_height = int(round(size_height / size_rows)) if size_height > 0 else 1
     step_width = int(size_width / size_columns) if size_width > 0 else 1
     # Build Grid
     idx_row = 0

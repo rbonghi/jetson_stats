@@ -272,8 +272,11 @@ class NVPModelService(object):
         """ Read nvpmodel to know the status of the board """
         num = -1
         mode = ""
-        nvpmodel_p = Command([nvp_model, '-q'])
-        lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+        try:
+            nvpmodel_p = Command([nvp_model, '-q'])
+            lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+        except (OSError, Command.CommandException):
+            raise JtopException("nvpmodel missing")
         # Extract lines
         for idx, line in enumerate(lines):
             # Search configuration NVPmodel

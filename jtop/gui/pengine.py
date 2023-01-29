@@ -60,6 +60,7 @@ MAP_JETSON_MODELS = {
     'xavier': map_xavier,
     'jetson nano': map_jetson_nano,
     'nintendo': map_jetson_nano,
+    'jetson tx1': map_jetson_nano,
 }
 
 

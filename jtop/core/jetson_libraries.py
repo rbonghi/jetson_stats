@@ -88,7 +88,8 @@ def get_all_modules():
             if len(cells) > 2:
                 name = cells[1]
                 version = cells[2]
-                modules[name] = version
+                if version not in ['arm64', 'amd64']:
+                    modules[name] = version
     except (OSError, Command.CommandException):
         pass
     return modules

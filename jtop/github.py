@@ -130,8 +130,8 @@ def hyperlink(message, url, text):
     # Generate hyperlink for shell
     # Check type of shell
     try:
-        link = u"\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (press CTRL + Click)".format(url=url, text=text)
-    except UnicodeEncodeError:
+        link = u'\u001b]8;;{url}\u001b\\{text}\u001b]8;;\u001b\\ (press CTRL + Click)'.format(url=url, text=text)
+    except UnicodeDecodeError:
         link = "{text}".format(text=text)
     print("  {link}".format(link=link))
 
