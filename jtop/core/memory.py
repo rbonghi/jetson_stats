@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 # Memory regular exception
 MEMINFO_REG = re.compile(r'(?P<key>.+):\s+(?P<value>.+) (?P<unit>.)B')
 BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(?P<nr_free>.*)')
-MEM_TABLE_REG = re.compile(r'(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<value>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
+MEM_TABLE_REG = re.compile(r'(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
+TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
 
 
 def meminfo():
@@ -71,17 +72,34 @@ def convert_cell(key, string_cell):
 
 
 def read_mem_table():
+    table = [
+        ['user', 'process', 'PID', 'size'],
+    ]
+    total = {}
     with open("/sys/kernel/debug/nvmap/iovmm/maps", "r") as fp:
         for line in fp:
             # Search line
-            match = re.search(MEM_TABLE_REG, line.strip())
+            match = re.search(MEM_TABLE_REG, line)
             if match:
                 parsed_line = match.groupdict()
-                print(parsed_line)
+                data = [
+                    parsed_line['user'],
+                    parsed_line['process'],
+                    parsed_line['PID'],
+                    {'size': int(parsed_line['size']), 'unit': parsed_line['unit'].lower()}
+                ]
+                table += [data]
+                continue
+            # Find total on table
+            match = re.search(TOT_TABLE_REG, line)
+            if match:
+                total = match.groupdict()
+                continue
+    # Append table name at the beginnign of the list
+    return total, table
+
 
 class MemoryService(object):
-
-    COLUMNS = ["Client", "Process", "PID", "Size"]
 
     def __init__(self):
         # Extract memory page size
@@ -103,31 +121,33 @@ class MemoryService(object):
         # Status Memory
         status_mem = meminfo()
         # Read memory use
+        # NvMapMemUsed: Is the shared memory between CPU and GPU
+        # This key is always available on Jetson (not really always)
+        ram_shared = status_mem.get('NvMapMemUsed', {})
+        ram_shared_val = ram_shared.get('size', 0)
+        table = []
         if self._isJetson:
             # Update table
-            read_mem_table()
-            #total, table = self._update_table()
+            # Use the memory table to measure
+            total, table = read_mem_table()
             # Update shared size
-            #nv_usage['shared'] = total['val']
-            # Add table nv memory
-            #nv_usage['table'] = [self.COLUMNS, table]
+            ram_shared_val = total['size'] if ram_shared_val == 0 else ram_shared_val
         # Extract memory info
         ram_total = status_mem.get('MemTotal', {})
         ram_available = status_mem.get('MemAvailable', {})
         ram_buffer = status_mem.get('Buffers', {})
-        # NvMapMemUsed: Is the shared memory between CPU and GPU
-        # This key is always available on Jetson (not really always)
-        # Use the memory table to measure
-        ram_shared = status_mem.get('NvMapMemUsed', {})
         # Add fields for RAM
         memory['RAM'] = {
             'tot': ram_total.get('val', 0),
             'used': ram_total.get('val', 0) - ram_available.get('val', 0),
             'buffers': ram_buffer.get('val', 0),
-            'shared': ram_shared.get('val', 0),
+            'shared': ram_shared_val,
             'unit': ram_total.get('unit', 'k'),
             'lfb': large_free_bank,  # In 4MB
         }
+        # Add memory table ONLY if available
+        if table:
+            memory['RAM']['table'] = table
         # Extract swap numbers
         swap_total = status_mem.get('SwapTotal', {})
         swap_free = status_mem.get('SwapFree', {})
@@ -140,50 +160,6 @@ class MemoryService(object):
             'unit': swap_total.get('unit', 'k'),
         }
         # TODO Add EMC
+        # TODO Add IRAM
         return memory
-
-    def nv_usage(self):
-        """
-        Extract all memory information about board.
-        - NvMapMemUsed: Is the shared memory between CPU and GPU
-        - NvMapMemFree: To be define
-        """
-        meminfo = mem_info()
-        total = meminfo.get('MemTotal', {})
-        available = meminfo.get('MemAvailable', {})
-        shared = meminfo.get('NvMapMemUsed', {})
-        nv_usage = {
-            'tot': total.get('val', 0),
-            'use': total.get('val', 0) - available.get('val', 0),
-            'shared': shared.get('val', 0),
-            'unit': total.get('unit', 'k')
-        }
-        if os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps"):
-            # Update table
-            self._update_table()
-            # Update shared size
-            nv_usage['shared'] = self._total['val']
-            # Add table nv memory
-            nv_usage['table'] = [self.COLUMNS, self._table]
-        return nv_usage
-
-    def _update_table(self):
-        table = []
-        total = {}
-        first = True
-        with open("/sys/kernel/debug/nvmap/iovmm/maps", 'r') as fp:
-            for row in fp.readlines():
-                if row[0].isspace():
-                    continue
-                cells = row.split()
-                # Load titles
-                if first:
-                    first = False
-                    continue
-                if cells[0] == 'total':
-                    total_string = cells[-1]
-                    total = {'val': int(total_string[:-1]), 'unit': total_string[-1].lower()}
-                    continue
-                table += [{self.COLUMNS[idx]: convert_cell(self.COLUMNS[idx], cell) for idx, cell in enumerate(cells)}]
-        return total, table
 # EOF
