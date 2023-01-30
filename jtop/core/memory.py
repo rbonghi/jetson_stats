@@ -20,6 +20,7 @@ import re
 # Logging
 import logging
 from .engine import read_engine
+from .common import cat
 # Create logger
 logger = logging.getLogger(__name__)
 # Memory regular exception
@@ -168,13 +169,17 @@ class MemoryService(object):
             # TODO Add percentage utilizaiton
         # Read IRAM if available
         if os.path.isdir("/sys/kernel/debug/nvmap/iram"):
-            table = read_mem_table("/sys/kernel/debug/nvmap/iram/clients")
-            for value in range(1, len(table)):
-                print(value)
+            size = 0
+            if os.path.isfile("/sys/kernel/debug/nvmap/iram/size"):
+                # Convert from Hex to decimal - Number in bytes
+                size = int(cat("/sys/kernel/debug/nvmap/iram/size"), 16)
+                size = size // 1024
+            used_total, _ = read_mem_table("/sys/kernel/debug/nvmap/iram/clients")
             memory['IRAM'] = {
-                'tot': 0,
-                'used': 0,
-                'unit': 'k',
+                'tot': size,
+                'used': used_total.get('val', 0),
+                'unit': used_total.get('unit', 'k'),
+                'lfs': size,  # TODO To check
             }
         return memory
 # EOF
