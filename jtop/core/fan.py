@@ -39,7 +39,7 @@ def get_all_fans(root_path):
     paths = {}
     # Reference folders "/sys/devices/platform/pwm-fan*/hwmon/hwmon*/pwm*"
     for item in os.listdir(root_path):
-        # Search alll pwm-fan that have hwmon folder
+        # Search all pwm-fan that have hwmon folder
         path = os.path.join(root_path, item)
         if os.path.isdir(path) and item.startswith("pwm-fan"):
             path = os.path.join(path, "hwmon")
@@ -196,7 +196,7 @@ class ABCFanService(ABC):
         self._config = config
         # Initialize dictionary status
         self._status = {}
-        # PWM max capcity
+        # PWM max capacity
         self._pwm_cap = FAN_PWM_CAP
         # Fan configurations
         self.CONFIGS = []

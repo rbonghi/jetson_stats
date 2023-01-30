@@ -18,7 +18,6 @@
 # Math functions
 from math import ceil
 import curses
-from curses.textpad import rectangle
 from collections import deque
 from .common import check_curses
 
@@ -79,35 +78,40 @@ class Chart(object):
         value = data.get("value", [0])
         self.values.append(value)
 
+    def draw_y_axis(self, stdscr, pos_y, pos_x, size_height):
+        self._plot_y_axis(stdscr, [0, pos_x + 4], [pos_y, pos_y + size_height])
+
     @check_curses
     def draw(self, stdscr, size_x, size_y, label="", y_label=True):
         curses.init_pair(Chart.OFFSET_COLOR_TEXT, self.color_text, curses.COLOR_BLACK)
         # Evaluate Diplay X, and Y size
         displayX = size_x[1] - size_x[0] + 1
-        displayY = size_y[1] - size_y[0] - 1
+        # displayY = size_y[1] - size_y[0] - 1
         # Text label
         stdscr.addstr(size_y[0], size_x[0], self.name, curses.A_BOLD)
         if label:
             stdscr.addstr(size_y[0], size_x[0] + len(self.name) + 1, label[:displayX - len(self.name)],
                           curses.color_pair(Chart.OFFSET_COLOR_TEXT) | curses.A_BOLD)
         # Draw ticks and labels
-        self._plot_x_axis(stdscr, size_x, size_y, displayX, label=y_label)
+        self._plot_x_axis(stdscr, size_x, size_y, label=y_label)
         # Plot chart shape and labels
-        self._plot_y_axis(stdscr, size_x, size_y, displayY, label=y_label)
+        self._plot_y_axis(stdscr, size_x, size_y, label=y_label)
         # Plot chart lines
-        if self.active:
-            # Plot values
-            self._plot_values(stdscr, size_x, size_y, label=y_label)
-        else:
+        # Plot values
+        self._plot_values(stdscr, size_x, size_y, label=y_label)
+        # Add messsage not active
+        if not self.active:
             l_label = size_x[1] - 6 if y_label else size_x[1] - 1
-            rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1] - 2, l_label)
+            # rectangle(stdscr, size_y[0] + 1, size_x[0], size_y[1], l_label)
+            stdscr.hline(size_y[0] + 1, size_x[0], curses.ACS_HLINE, l_label - size_x[0] + 1)
             # Write message
             middle_x = (l_label - size_x[0] - len(self.message)) // 2
             middle_y = (size_y[1] - size_y[0]) // 2
             stdscr.addstr(size_y[0] + middle_y, size_x[0] + middle_x, self.message, curses.A_BOLD)
 
-    def _plot_y_axis(self, stdscr, size_x, size_y, displayY, label=True):
+    def _plot_y_axis(self, stdscr, size_x, size_y, label=True):
         # Plot chart shape and labels
+        displayY = size_y[1] - size_y[0] - 1
         label_x = size_x[1] - 5 if label else size_x[1]
         for point in range(displayY):
             if displayY != point:
@@ -124,7 +128,8 @@ class Chart(object):
                 except curses.error:
                     pass
 
-    def _plot_x_axis(self, stdscr, size_x, size_y, displayX, label=True):
+    def _plot_x_axis(self, stdscr, size_x, size_y, label=True):
+        displayX = size_x[1] - size_x[0] + 1
         val = float(displayX - 2) / float(len(self.values))
         # Draw ticks and labels
         ten_sec = int(self.tik * 1000 / self.refresh)
@@ -179,21 +184,22 @@ class Chart(object):
                     # Full block: \u2588 - 3/4 block \u2586 - Lower block: \u2584 - Small lower block: \u2581
                     if self.fill:
                         for n in range(cell_val_int - 1):
-                            stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, u'\u2588', curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                            stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'),
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         # Add head chart
                         if cell_val < 1.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581'.encode('utf-8'),
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant == 0.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2584',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2584'.encode('utf-8'),
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant <= 0.5:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2586',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2586'.encode('utf-8'),
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant < 1.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581'.encode('utf-8'),
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2588',
+                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'),
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                     else:
                         stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(Chart.OFFSET_COLOR_TEXT))

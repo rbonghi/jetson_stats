@@ -20,12 +20,12 @@ import logging
 # Operative system
 # import signal
 import re
-import copy
 import os
 import sys
 import stat
 import shlex
 import subprocess as sp
+from copy import deepcopy
 from grp import getgrnam
 from shutil import copyfile
 from multiprocessing import Process, Queue, Event, Value
@@ -35,7 +35,7 @@ from multiprocessing.managers import SyncManager
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core import (
     Command,
-    cpu_models,
+    CPUService,
     MemoryService,
     JtopException,
     Tegrastats,
@@ -59,7 +59,7 @@ except NameError:
 try:
     import queue
 except ImportError:
-    import Queue as queue
+    import Queue as queue  # pyright: ignore[reportMissingImports]
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
@@ -252,6 +252,9 @@ class JtopServer(Process):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jtop service need sudo to work")
+        # Save version jtop
+        self._version = deepcopy(get_var(VERSION_RE))
+        logger.info("jetson_stats {version} - server loaded".format(version=self._version))
         # Load configuration
         self.config = Config()
         # Error queue
@@ -297,6 +300,8 @@ class JtopServer(Process):
         except JtopException as error:
             logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
             self.nvpmodel = None
+        # Setup cpu service
+        self.cpu = CPUService()
         # Setup engine service
         self.engine = EngineService("/sys/kernel/debug/clk")
         # Setup memory service
@@ -393,9 +398,10 @@ class JtopServer(Process):
                             logger.info("tegrastats started {interval}ms".format(interval=int(interval * 1000)))
                         # send configuration board
                         init = {
-                            'version': get_var(VERSION_RE),
+                            'version': self._version,
                             'board': self.board,
                             'interval': self.interval.value,
+                            'cpu': self.cpu.get_cpu_info(),
                             'swap': self.swap.path,
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks is not None,
@@ -405,6 +411,8 @@ class JtopServer(Process):
                     timeout = TIMEOUT_GAIN if interval <= TIMEOUT_GAIN else interval * TIMEOUT_GAIN
                 except queue.Empty:
                     self.sync_event.clear()
+                    # Reset CPU estimation
+                    self.cpu.reset_estimation()
                     # Close and log status
                     if self.tegra.close():
                         logger.info("tegrastats close")
@@ -421,7 +429,7 @@ class JtopServer(Process):
             pass
         except Exception as e:
             logger.error("Error subprocess {error}".format(error=e), exc_info=1)
-            # Write error messag
+            # Write error message
             self._error.put(sys.exc_info())
         finally:
             # Close tegra
@@ -453,7 +461,7 @@ class JtopServer(Process):
         self.sync_event = self.broadcaster.sync_event()
         # Change owner
         os.chown(JTOP_PIPE, os.getuid(), gid)
-        # Change mode cotroller and stats
+        # Change mode controller and stats
         # https://www.tutorialspoint.com/python/os_chmod.htm
         # Equivalent permission 660 srw-rw----
         os.chmod(JTOP_PIPE, stat.S_IREAD | stat.S_IWRITE | stat.S_IWGRP | stat.S_IRGRP)
@@ -544,7 +552,10 @@ class JtopServer(Process):
         # Make configuration dict
         # logger.debug("tegrastats read")
         data = {}
-        jetson_clocks_show = copy.deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
+        jetson_clocks_show = deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
+        # -- CPU --
+        # Read CPU data
+        data['cpu'] = self.cpu.get_status()
         # -- Engines --
         data['engines'] = self.engine.get_status()
         # -- Power --
@@ -565,29 +576,6 @@ class JtopServer(Process):
             if temp.startswith('CV'):
                 del tegrastats['TEMP'][temp]
         data['temperature'] = tegrastats['TEMP']
-        # -- CPU --
-        data['cpu'] = tegrastats['CPU']
-        # Update data from jetson_clocks show
-        if 'CPU' in jetson_clocks_show:
-            for name, v in tegrastats['CPU'].items():
-                # Extract jc_cpu info
-                jc_cpu = jetson_clocks_show['CPU'].get(name, {})
-                # Remove current frequency
-                del jc_cpu['current_freq']
-                # Fix online status
-                if 'Online' in jc_cpu:
-                    if jc_cpu['Online']:
-                        # Remove online info
-                        del jc_cpu['Online']
-                        # Update CPU information
-                        v.update(jc_cpu)
-                elif v:
-                    # Update CPU information
-                    v.update(jc_cpu)
-                data['cpu'][name] = v
-        for name, value in cpu_models().items():
-            if name in data['cpu']:
-                data['cpu'][name]['model'] = value
         # -- MTS --
         if 'MTS' in tegrastats:
             data['mts'] = tegrastats['MTS']
@@ -621,8 +609,6 @@ class JtopServer(Process):
         data['swap'] = {
             'list': self.swap.all(),
             'all': tegrastats['SWAP'] if 'SWAP' in tegrastats else {}}
-        # -- OTHER --
-        data['other'] = dict((k, tegrastats[k]) for k in tegrastats if k not in LIST_PRINT)
         # -- FAN --
         # Update status fan speed
         data['fan'] = self.fan.update()
@@ -636,8 +622,6 @@ class JtopServer(Process):
         # -- NVP MODEL --
         if self.nvpmodel is not None:
             # Read nvp_mode
-            # REMOVE jetson_clock for future release
-            # > nvp_mode = jetson_clocks_show['NVP'] if 'NVP' in jetson_clocks_show else self.nvpmodel.get()
             nvp_mode = self.nvpmodel.get()
             if not self.nvpmodel.is_running():
                 self.nvp_mode = nvp_mode
@@ -645,9 +629,6 @@ class JtopServer(Process):
                 'modes': self.nvpmodel.modes(),
                 'thread': self.nvpmodel.is_running(),
                 'mode': self.nvp_mode}
-        # -- Cluster --
-        if 'cluster' in jetson_clocks_show:
-            data['cluster'] = jetson_clocks_show['cluster']
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)

@@ -22,13 +22,14 @@ from .jtopgui import Page
 from .lib.common import (
     size_min,
     label_freq)
+from .lib.colors import NColors
 from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
+from .pcpu import compact_cpus
 # Menu GUI pages
 from .jtopguimenu import (
     plot_watts,
     compact_info,
     plot_temperatures,
-    plot_CPUs,
     plot_GPUs)
 
 
@@ -45,19 +46,7 @@ class ALL(Page):
         height, width, first = self.size_page()
         line_counter = first + 1
         # Plot Status CPU
-        line_counter = plot_CPUs(self.stdscr, line_counter, self.jetson.cpu, width)
-        # Plot MTS
-        if self.jetson.mts:
-            line_counter += 1
-            self.stdscr.addstr(line_counter, 0, "MTS ", curses.color_pair(5))
-            # Show FG linear gauge
-            linear_gauge(self.stdscr, offset=line_counter, start=4, size=width // 2 - 2,
-                         name=GaugeName('FG', color=curses.color_pair(5)),
-                         value=self.jetson.mts['fg'])
-            # Show BG linear gauge
-            linear_gauge(self.stdscr, offset=line_counter, start=2 + width // 2, size=width // 2 - 2,
-                         name=GaugeName('BG', color=curses.color_pair(5)),
-                         value=self.jetson.mts['bg'])
+        line_counter += compact_cpus(self.stdscr, line_counter, width, self.jetson)
         # RAM linear gauge info
         line_counter += 1
         ram_status = self.jetson.ram
@@ -71,10 +60,10 @@ class ALL(Page):
         # Plot Linear Gauge
         cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
         shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
-        cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
-        gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
+        cpu_bar = GaugeBar(cpu_val, NColors.cyan())
+        gpu_bar = GaugeBar(shared_val, NColors.green())
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('Mem', color=curses.color_pair(6)),
+                     name=GaugeName('Mem', color=NColors.cyan()),
                      value=(cpu_bar, gpu_bar, ),
                      label=label_lfb,
                      percent=percent)
@@ -88,7 +77,7 @@ class ALL(Page):
             label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
                                                      unit=iram_status['lfb']['unit'])
             linear_gauge(self.stdscr, offset=line_counter, size=width,
-                         name=GaugeName('Imm', color=curses.color_pair(6)),
+                         name=GaugeName('Imm', color=NColors.cyan()),
                          value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
                          label=label_lfb,
                          percent=percent)
@@ -102,7 +91,7 @@ class ALL(Page):
         label_lfb = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'),
                                                     unit=swap_cached.get('unit', ''))
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('Swp', color=curses.color_pair(6)),
+                     name=GaugeName('Swp', color=NColors.cyan()),
                      value=int(swap_status.get('use', 0) / float(swap_status.get('tot', 1)) * 100.0),
                      label=label_lfb,
                      percent=percent,
@@ -110,7 +99,7 @@ class ALL(Page):
         # EMC linear gauge info
         line_counter += 1
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('EMC', color=curses.color_pair(6)),
+                     name=GaugeName('EMC', color=NColors.cyan()),
                      value=self.jetson.emc.get('val', 0),
                      label=label_freq(self.jetson.emc['frq'], start='k'))
         # GPU linear gauge info
@@ -120,7 +109,7 @@ class ALL(Page):
         line_counter += 1
         disk_status = self.jetson.disk
         linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('Dsk', color=curses.color_pair(3)),
+                     name=GaugeName('Dsk', color=NColors.yellow()),
                      value=int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
                      percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
                      bar="#")

@@ -20,6 +20,7 @@ from .jtopgui import Page
 # Graphics elements
 from .lib.common import check_curses
 # Graphic library
+from .lib.colors import NColors
 from .lib.chart import Chart
 from .lib.button import Button, ButtonList
 
@@ -98,7 +99,7 @@ class CTRL(Page):
     def update_chart(self, jetson, name):
         # Append in list
         return {
-            'value': [jetson.fan.speed],
+            'value': [jetson.fan.speed if jetson.fan.speed is not None else 0],
             'active': True if jetson.fan else False
         }
 
@@ -121,13 +122,13 @@ class CTRL(Page):
         self.stdscr.addstr(start_y + 4, start_x + 5, jetson_clocks_string, curses.A_UNDERLINE)
         # Read status jetson_clocks
         if jc_status_name == "running":
-            color = (curses.A_BOLD | curses.color_pair(2))  # Running (Bold)
+            color = (curses.A_BOLD | NColors.green())  # Running (Bold)
         elif jc_status_name == "inactive":
             color = curses.A_NORMAL       # Normal (Grey)
         elif "ing" in jc_status_name:
-            color = curses.color_pair(3)  # Warning (Yellow)
+            color = NColors.yellow()  # Warning (Yellow)
         else:
-            color = curses.color_pair(1)  # Error (Red)
+            color = NColors.red()  # Error (Red)
         # Status jetson_clocks
         self.stdscr.addstr(
             start_y + 4, start_x + len(jetson_clocks_string) + 6,
@@ -155,7 +156,7 @@ class CTRL(Page):
             self.stdscr.addstr(start_y + 10, start_x + 16, str(nvp_id), curses.A_NORMAL)
             # Status NVP model service
             if nvpmodel.is_running:
-                self.stdscr.addch(start_y + 10, start_x + 25, curses.ACS_DIAMOND, curses.color_pair(2) | curses.A_BOLD)
+                self.stdscr.addch(start_y + 10, start_x + 25, curses.ACS_DIAMOND, NColors.green() | curses.A_BOLD)
             # Draw keys to increase nvpmodel
             if nvp_id != len(self.jetson.nvpmodel.modes) - 1:
                 self.nvp_increase.draw(start_y + 9, start_x + 18, key, mouse)

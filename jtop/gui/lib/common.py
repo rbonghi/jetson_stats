@@ -20,6 +20,7 @@ import sys
 # control command line
 import curses
 # Functions and decorators
+from .colors import NColors
 from functools import wraps
 
 
@@ -54,13 +55,13 @@ def jetson_clocks_gui(stdscr, offset, start, jetson):
     jc_status_name = jetson.jetson_clocks.status
     # Read status jetson_clocks
     if jc_status_name == "running":
-        color = (curses.A_BOLD | curses.color_pair(2))  # Running (Bold)
+        color = (curses.A_BOLD | NColors.green())  # Running (Bold)
     elif jc_status_name == "inactive":
         color = curses.A_NORMAL       # Normal (Grey)
     elif "ing" in jc_status_name:
-        color = curses.color_pair(3)  # Warning (Yellow)
+        color = NColors.yellow()  # Warning (Yellow)
     else:
-        color = curses.color_pair(1)  # Error (Red)
+        color = NColors.red()  # Error (Red)
     # Show if JetsonClock is enabled or not
     if jetson.jetson_clocks.boot:
         jc_status_name = "[" + jc_status_name + "]"
@@ -92,12 +93,12 @@ def check_size(height_max, width_max):
                     self.stdscr.addstr(height_c - 1, int((width - len(string_warning_msg)) / 2), string_warning_msg, curses.A_BOLD)
                     # Show size window
                     if width < width_max:
-                        self.stdscr.addstr(height_c, int((width - len(size_window_width)) / 2), str(size_window_width), curses.color_pair(1))
+                        self.stdscr.addstr(height_c, int((width - len(size_window_width)) / 2), str(size_window_width), NColors.red())
                     else:
                         size_window_width = "Width OK!"
                         self.stdscr.addstr(height_c, int((width - len(size_window_width)) / 2), size_window_width, curses.A_BOLD)
                     if height < height_max:
-                        self.stdscr.addstr(height_c + 1, int((width - len(size_window_height)) / 2), str(size_window_height), curses.color_pair(1))
+                        self.stdscr.addstr(height_c + 1, int((width - len(size_window_height)) / 2), str(size_window_height), NColors.red())
                     else:
                         size_window_height = "Height OK!"
                         self.stdscr.addstr(height_c + 1, int((width - len(size_window_height)) / 2), str(size_window_height), curses.A_BOLD)
@@ -159,7 +160,8 @@ def value_to_string(value, unit, type='Hz'):
     value, _, unit = size_min(value, start=unit)
     value_string = str(value)
     if len(value_string) > 3:
-        value_string = value_string.rstrip('0').rstrip('.')
+        # value_string = value_string.rstrip('0').rstrip('.')
+        value_string = value_string[:3]
     return "{value}{unit}{type}".format(value=value_string, unit=unit, type=type)
 
 
@@ -172,14 +174,15 @@ def plot_dictionary(stdscr, pos_y, pos_x, name, data, size=None):
         # Plot nanme
         stdscr.addstr(pos_y + idx + 1, pos_x + 1, str(name) + ":", curses.A_BOLD)
         # Plot value
+        color = curses.A_NORMAL if value else NColors.red()
         if not value:
-            value = "Missing"
+            value = "MISSING"
         len_value = len(value)
         if size:
             if len(name) + len(value) + 3 > size:
                 len_value = size - len(name) - 3
         try:
-            stdscr.addstr(pos_y + idx + 1, pos_x + 3 + len(name), value[:len_value], curses.A_NORMAL)
+            stdscr.addstr(pos_y + idx + 1, pos_x + 3 + len(name), value[:len_value], color)
         except curses.error:
             pass
         size_x = max(size_x, len(name) + len(value) + 3)

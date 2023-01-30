@@ -17,13 +17,13 @@
 
 import re
 import argparse
-
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core import (get_cuda,
                    get_opencv,
                    get_libraries,
                    get_var,
-                   NVPModelService)
+                   NVPModelService,
+                   JtopException)
 from .service import status_service
 from .terminal_colors import bcolors
 # Version match
@@ -42,6 +42,7 @@ def main():
     args = parser.parse_args()
     # Read all Jetson Variables
     jetson = get_jetson_variables()
+    print(jetson)
     # Print headline
     if jetson['Jetpack']:
         print("Model: {model} - Jetpack {jetpack} [L4T {L4T}]".format(model=bcolors.bold(jetson['Model']),
@@ -54,11 +55,14 @@ def main():
     del jetson['Jetpack']
     del jetson['L4T']
     # Print NVP model status
-    nvp_number, nvp_name = NVPModelService.query('nvpmodel')
-    print("{service}: {name} - Type: {number}".format(
-        service=bcolors.bold("NV Power Mode"),
-        name=bcolors.ok(nvp_name),
-        number=bcolors.ok(nvp_number)))
+    try:
+        nvp_number, nvp_name = NVPModelService.query('nvpmodel')
+        print("{service}: {name} - Type: {number}".format(
+            service=bcolors.bold("NV Power Mode"),
+            name=bcolors.ok(nvp_name),
+            number=bcolors.ok(nvp_number)))
+    except JtopException:
+        pass
     # Print jetson hardware variables
     if args.verbose:
         print(bcolors.ok(bcolors.bold("Hardware:")))

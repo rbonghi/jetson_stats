@@ -18,12 +18,13 @@
 import curses
 # Page class definition
 from .jtopgui import Page
+from .lib.colors import NColors
 from .lib.common import value_to_string, plot_name_info
-from .lib.linear_gauge import linear_frequency_gauge
+from .lib.linear_gauge import freq_gauge
 
 
 def get_value_engine(engine):
-    return value_to_string(engine['curr'], engine['unit']) if engine['status'] else '[OFF]'
+    return value_to_string(engine['cur'], engine['unit']) if engine['online'] else '[OFF]'
 
 
 def pass_agx_orin(engine):
@@ -59,6 +60,7 @@ MAP_JETSON_MODELS = {
     'xavier': map_xavier,
     'jetson nano': map_jetson_nano,
     'nintendo': map_jetson_nano,
+    'jetson tx1': map_jetson_nano,
 }
 
 
@@ -119,8 +121,10 @@ class ENGINE(Page):
                 # Plot block name
                 if len(engines) > 1 and len(name_array) > 1:
                     self.stdscr.addstr(offset_y + gidx * 2, offset_x + (size_eng + 1) * idx,
-                                       "{group}".format(group=group), curses.color_pair(6) | curses.A_BOLD)
+                                       "{group}".format(group=group), NColors.cyan() | curses.A_BOLD)
                 # Plot Gauge
                 new_name = ' '.join(name_array[1:]) if len(name_array) > 1 and len(engines) > 1 else name
-                linear_frequency_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, new_name, engine)
+                # Add name in plot string
+                engine['name'] = new_name
+                freq_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, engine)
 # EOF

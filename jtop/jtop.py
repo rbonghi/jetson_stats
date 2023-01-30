@@ -136,6 +136,8 @@ class jtop(Thread):
         self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
+        # Initialize cpu info
+        self._cpu_info = []
         # Initialize swap
         self._swap = None
         # Load jetson_clocks status
@@ -176,7 +178,7 @@ class jtop(Thread):
 
         The input of your callback will be the jetson object.
 
-        To detach a function, please look :func:`~jtop.jtop.jtop.detach`
+        To detach a function, please look :func:`~detach`
 
         :param observer: The function to call
         :type observer: function
@@ -187,7 +189,7 @@ class jtop(Thread):
         """
         Detach an observer from jtop
 
-        To attach a function, please look :func:`~jtop.jtop.jtop.attach`
+        To attach a function, please look :func:`~attach`
 
         :param observer:  The function to detach
         :type observer: function
@@ -201,7 +203,7 @@ class jtop(Thread):
         * **switch off** jetson_clocks
         * **Disable** jetson_clocks on boot
         * **fan**
-            * set to **default**, please follow the fan reference :func:`~jtop.jtop.jtop.fan`
+            * set to **default**, please follow the fan reference :py:attr:`~fan`
             * set fan speed to 0 (This operation can require time)
         * If active **disable** the jtop swap
         * **Clear** the internal jtop configuration file
@@ -279,9 +281,30 @@ class jtop(Thread):
     @property
     def engine(self):
         """
-        Engine status, in this property you can find:
+        Engine status, in this property you can find like: APE, DLA, NVDEC, NVENC, and other
 
-        APE, DLA, NVDEC, NVENC, and other
+        The output of this property is a dictionary:
+
+        * **name group X** - In this group are collected all engines similar
+            * **name engine a** - In this key there is a dictionary with engine status
+            * **name engine b** - Same like above, there is the dictionary status engine
+
+        For each engine the dictionary is defined like the table below:
+
+        ========== ========= ==============================================
+        Name       Type      Description
+        ========== ========= ==============================================
+        online     `boolean` Status of the engine
+        unit       `string`  The size value of the frequency, usually **k**
+        min        `int`     Minimum frequency of the core :sup:`A`
+        max        `int`     Maximum frequency of the core :sup:`A`
+        cur        `int`     Current frequency of the core
+        ========== ========= ==============================================
+
+        .. note::
+
+                Note **A**
+                    Some engines doesn't have a *min* and *max* frequency
 
         :return: Dictionary of all active engines
         :rtype: dict
@@ -499,25 +522,20 @@ class jtop(Thread):
         The field listed are:
 
         * **time** - A `datetime` variable with the local time in your board
-        * **uptime** - A `timedelta` with the up time of your board, same from :func:`~jtop.jtop.jtop.uptime`
-        * **jetson_clocks** - Status of jetson_clocks, human readable :func:`~jtop.jtop.jtop.jetson_clocks`
-        * **nvp model** - If exist, the NV Power Model name active :func:`~jtop.jtop.jtop.nvpmodel`
-        * **cpu X** - The status for each cpu in your board, if disabled you will read *OFF*
-        * **GPU** - Status of your GPU :func:`~jtop.jtop.jtop.gpu`
-        * **MTS FG** - Foreground tasks :func:`~jtop.jtop.jtop.mts`
-        * **MTS BG** - Background tasks :func:`~jtop.jtop.jtop.mts`
-        * **RAM** - Used ram :func:`~jtop.jtop.jtop.ram`
-        * **EMC** - If exist, the used emc :func:`~jtop.jtop.jtop.emc`
-        * **IRAM** - If exist, the used iram :func:`~jtop.jtop.jtop.iram`
-        * **SWAP** - If exist, the used swap :func:`~jtop.jtop.jtop.swap`
-        * **APE** - Frequency APE engine :func:`~jtop.jtop.jtop.engine`
-        * **NVENC** - Frequency NVENC engine :func:`~jtop.jtop.jtop.engine`
-        * **NVDEC** - Frequency NVDEC engine :func:`~jtop.jtop.jtop.engine`
-        * **NVJPG** - Frequency NVJPG engine :func:`~jtop.jtop.jtop.engine`
-        * **fan** - Status fan speed :func:`~jtop.jtop.jtop.fan`
-        * **Temp X** - X temperature :func:`~jtop.jtop.jtop.temperature`
-        * **power cur** - Total current power :func:`~jtop.jtop.jtop.power`
-        * **power avg** - Total average power :func:`~jtop.jtop.jtop.power`
+        * **uptime** - A `timedelta` with the up time of your board, same from :py:attr:`~uptime`
+        * **jetson_clocks** - Status of jetson_clocks, human readable :py:attr:`~jetson_clocks`
+        * **nvp model** - If exist, the NV Power Model name active :py:attr:`~nvpmodel`
+        * **cpu X** - The status for each cpu in your board, if disabled *OFF* :py:attr:`~cpu`
+        * **GPU** - Status of your GPU :py:attr:`~gpu`
+        * **RAM** - Used ram :py:attr:`~ram`
+        * **EMC** - If exist, the used emc :py:attr:`~emc`
+        * **IRAM** - If exist, the used iram :py:attr:`~iram`
+        * **SWAP** - If exist, the used swap :py:attr:`~swap`
+        * **engine X** - Frequency for each engine, if disabled *OFF* :py:attr:`~engine`
+        * **fan** - Status fan speed :py:attr:`~fan`
+        * **Temp X** - X temperature :py:attr:`~temperature`
+        * **power cur** - Total current power :py:attr:`~power`
+        * **power avg** - Total average power :py:attr:`~power`
 
         :return: Compacts jetson statistics
         :rtype: dict
@@ -530,15 +548,11 @@ class jtop(Thread):
         if self.nvpmodel is not None:
             stats['nvp model'] = self.nvpmodel.name
         # -- CPU --
-        for cpu in sorted(self.cpu):
-            stats["CPU{cpu}".format(cpu=cpu)] = self.cpu[cpu].get('val', 'OFF')
+        for idx, cpu in enumerate(self.cpu['cpu']):
+            stats["CPU{idx}".format(idx=idx + 1)] = 100 - int(cpu['idle']) if cpu['online'] else 'OFF'
         # -- GPU --
         for n_gpu in self.gpu:
             stats['GPU{n_gpu}'.format(n_gpu=n_gpu)] = self.gpu[n_gpu]['val']
-        # -- MTS --
-        if self.mts:
-            stats['MTS FG'] = self.mts['fg']
-            stats['MTS BG'] = self.mts['bg']
         # -- RAM --
         stats['RAM'] = self.ram['use']
         # -- EMC --
@@ -703,54 +717,63 @@ class jtop(Thread):
         return self._stats['ram']
 
     @property
-    def mts(self):
-        """
-        MTS foreground and background tasks.
-
-        If your board support the MTS variable, the output will be:
-
-        * **fg** - foreground tasks
-        * **bg** - background tasks
-
-        :return: mts status
-        :rtype: dict
-        """
-        warn('This property will be deprecated in the next release. Will be used jtop.cpu()', DeprecationWarning, stacklevel=2)
-        return self._stats.get('mts', {})
-
-    @property
     def cpu(self):
         """
-        CPU status. From this dictionary you can read the status of the CPU.
+        this property return a dictionary with all information for each core about frequency, idle, and other.
 
-        For each CPU all fields are:
+        This dictionary is made:
 
-        * **min_freq** - Minimum frequency in kHz
-        * **max_freq** - Maximum frequency in kHz
-        * **frq** - Running frequency in kHz
-        * **governor** - Governor selected
-        * **val** - Status CPU, value between [0, 100]
-        * **model** - Model Architecture
-        * **IdleStates**
+        * **total** - The aggregate values for all cores of (user, nice, system, idle)
+        * **cpu** - a list with a dictionary for each core
 
-        :return: CPU configuration, frequencies and speed
+        For each core the dictionary is defined:
+
+        ========== ========= =======================================
+        Name       Type      Description
+        ========== ========= =======================================
+        online     `boolean` Status core
+        governor   `string`  Type of governor running on the core
+        freq       `dict`    Frequency of the core :sup:`A`
+        info_freq  `dict`    Frequency of the core :sup:`A`
+        idle_state `dict`    All Idle state running
+        user       `int`     User percentage utilization :sup:`B`
+        nice       `int`     Nice percentage utilization :sup:`B`
+        system     `int`     System percentage utilization :sup:`B`
+        idle       `int`     Idle percentage :sup:`B`
+        model      `string`  Model core running
+        ========== ========= =======================================
+
+        .. note::
+
+            Note **A**
+                The frequency dictionary is defined like below:
+
+                ========== ========= ==============================================
+                Name       Type      Description
+                ========== ========= ==============================================
+                unit       `string`  The size value of the frequency, usually **k**
+                min        `int`     Minimum frequency of the core
+                max        `int`     Maximum frequency of the core
+                cur        `int`     Current frequency of the core
+                ========== ========= ==============================================
+
+            Note **B**
+                If a core is offline, this data is not key is not available
+
+        .. admonition:: Reference
+
+            #. https://docs.kernel.org/admin-guide/pm/cpuidle.html
+            #. https://www.linuxhowtos.org/System/procstat.htm
+            #. https://rosettacode.org/wiki/Linux_CPU_utilization
+
+        :return: A dictionary with the aggregate status and a list of all CPUs, described above.
         :rtype: dict
         """
+        # Add cpu info in list
+        for idx, cpu in enumerate(self._stats['cpu']['cpu']):
+            cpu.update(self._cpu_info[idx])
         # Return CPU status
         return self._stats['cpu']
-
-    @property
-    def cluster(self):
-        """
-        Cluster status of your board.
-
-        If this data is not available in your board will return an empty string
-
-        :return: Status cluster in your board
-        :rtype: string
-        """
-        warn('This property will be deprecated in the next release. Will be used jtop.cpu()', DeprecationWarning, stacklevel=2)
-        return self._stats.get('cluster', '')
 
     @property
     def gpu(self):
@@ -961,6 +984,8 @@ sudo systemctl restart jtop.service""".format(
         self._server_interval = init['interval']
         # Load board information
         self._board['hardware'] = init['board']['hardware']
+        # Initialize cpu basic info
+        self._cpu_info = init['cpu']
         # Initialize jetson_clocks sender
         self._swap = Swap(self._controller, init['swap'])
         # Initialize jetson_clock
@@ -983,7 +1008,7 @@ sudo systemctl restart jtop.service""".format(
     @property
     def interval(self):
         """
-        Speed jtop service. This speed can be different compare the speed specified in :func:`~jtop.jtop.jtop` constructor
+        Speed jtop service. This speed can be different compare the speed specified in :func:`~jtop` constructor
 
         :return: jtop interval (in seconds)
         :rtype: float
@@ -993,7 +1018,7 @@ sudo systemctl restart jtop.service""".format(
     @property
     def interval_user(self):
         """
-        This is the same speed specified in :func:`~jtop.jtop.jtop` constructor
+        This is the same speed specified in :func:`~jtop` constructor
 
         :return: jtop user interval (in seconds)
         :rtype: float
@@ -1004,7 +1029,7 @@ sudo systemctl restart jtop.service""".format(
         """
         This blocking method is needed when you design your python code to work only by callback.
 
-        Before to run this method remember to attach a callback using :func:`~jtop.jtop.jtop.attach`
+        Before to run this method remember to attach a callback using :func:`~attach`
 
         A simple example to use this method is below
 

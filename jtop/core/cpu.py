@@ -15,13 +15,26 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
+import os
 import re
+from copy import deepcopy
+# Logging
+import logging
+# Create logger
+logger = logging.getLogger(__name__)
+# All regular exceptions
 REGEXP = re.compile(r'(.+?): ((.*))')
+CPU_SYS_REG = re.compile(r'cpu[0-9]')
+CPU_SYS_STATE_REG = re.compile(r'state[0-9]')
+# Proc stat CPU usage
+# https://www.linuxhowtos.org/System/procstat.htm
+# cpu0 793125 280 352516 16192366 50291 0 2012 0 0 0
+CPU_PROG_REG = re.compile(r'cpu(.+?) ((.*))')
 
 
 def cpu_info():
     list_cpu = {}
+    num_cpu = 0
     with open("/proc/cpuinfo", "r") as fp:
         for line in fp:
             # Search line
@@ -31,21 +44,181 @@ def cpu_info():
                 value = match.group(2).rstrip()
                 # Load value or if it is a new processor initialize a new field
                 if key == "processor":
-                    idx = int(value) + 1
-                    # name = "CPU{idx}".format(idx=idx)
-                    list_cpu[idx] = {}
-                else:
-                    # Load cpu info
-                    list_cpu[idx][key] = value
+                    num_cpu = int(value)
+                    list_cpu[num_cpu] = {}
+                    continue
+                # Load cpu info
+                list_cpu[num_cpu][key] = value
     return list_cpu
 
 
-def cpu_models():
-    # Load cpuinfo
-    list_cpu = cpu_info()
-    models = {}
-    # Find all models
-    for name, info in list_cpu.items():
-        models[name] = info.get("model name", "")
-    return models
+# CPU lines
+# - user: normal processes executing in user mode
+# - nice: niced processes executing in user mode
+# - system: processes executing in kernel mode
+# - idle: twiddling thumbs
+# - iowait: waiting for I/O to complete
+# - irq: servicing interrupts
+# - softirq: servicing softirqs
+CPU_STAT_LABEL = ['user', 'nice', 'system', 'idle', 'iowait', 'irq', 'softirq', 'total']
+
+
+def get_utilization(delta):
+    # Return major outputs
+    return {'user': 100.0 * (delta[0] / delta[-1]),
+            'nice': 100.0 * (delta[1] / delta[-1]),
+            'system': 100.0 * (delta[2] / delta[-1]),
+            'idle': 100.0 * (delta[3] / delta[-1])
+            }
+
+
+def read_idle(path):
+    # https://docs.kernel.org/admin-guide/pm/cpuidle.html
+    states = [item for item in os.listdir(path) if os.path.isdir(os.path.join(path, item)) and CPU_SYS_STATE_REG.search(item)]
+    idle = {}
+    for state in sorted(states):
+        with open("{path}/{state}/name".format(path=path, state=state), 'r') as f:
+            name = f.read().strip()
+        with open("{path}/{state}/disable".format(path=path, state=state), 'r') as f:
+            disable = int(f.read())
+        idle[name] = disable
+    return idle
+
+
+def read_freq_cpu(path, type_freq):
+    # build dict freq
+    freq = {}
+    # Unit Frequency
+    freq['unit'] = 'k'
+    # Min frequency
+    with open("{path}/cpufreq/{type_freq}_min_freq".format(path=path, type_freq=type_freq), 'r') as f:
+        freq['min'] = int(f.read())
+    # Max frequency
+    with open("{path}/cpufreq/{type_freq}_max_freq".format(path=path, type_freq=type_freq), 'r') as f:
+        freq['max'] = int(f.read())
+    # Current frequency
+    current_path = "{path}/cpufreq/{type_freq}_cur_freq".format(path=path, type_freq=type_freq)
+    if os.path.isfile(current_path):
+        with open(current_path, 'r') as f:
+            freq['cur'] = int(f.read())
+    return freq
+
+
+def read_system_cpu(path, cpu_status={}):
+    # Online status
+    cpu_status['online'] = True
+    if os.path.isfile(path + "/online"):
+        with open(path + "/online", 'r') as f:
+            cpu_status['online'] = f.read().strip() == '1'
+    # Read governor
+    if os.path.isdir(path + "/cpufreq"):
+        with open(path + "/cpufreq/scaling_governor", 'r') as f:
+            cpu_status['governor'] = f.read().strip()
+        # Store values
+        cpu_status['freq'] = read_freq_cpu(path, 'scaling')
+        cpu_status['info_freq'] = read_freq_cpu(path, 'cpuinfo')
+    # Read idle CPU
+    if os.path.isdir(path + "/cpuidle"):
+        cpu_status['idle_state'] = read_idle(path + "/cpuidle")
+    return cpu_status
+
+
+class CPUService(object):
+
+    def __init__(self):
+        self._cpu_online = []
+        # Load cpuinfo
+        list_cpu = cpu_info()
+        # List all CPU available
+        path_system_cpu = "/sys/devices/system/cpu"
+        cpu_list = {int(item[3:]): {'path': "{path}/{item}".format(path=path_system_cpu, item=item),
+                                    'last_cpu': [0.0] * len(CPU_STAT_LABEL),
+                                    'model': list_cpu.get(int(item[3:]), {}).get("model name", "")
+                                    }
+                    for item in os.listdir(path_system_cpu) if os.path.isdir(os.path.join(path_system_cpu, item)) and CPU_SYS_REG.search(item)}
+        # Sort CPU list in a list by CPU name
+        self._cpu = [cpu_list[i] for i in sorted(cpu_list)]
+        self._cpu_info = [{'model': list_cpu.get(cpu, {}).get("model name", "")} for cpu in range(len(self._cpu))]
+        # Build CPU total info
+        self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
+        # Check available cpufreq and cpuidle
+        if not os.path.isdir(path_system_cpu + "/cpu0/cpufreq"):
+            logger.warning("cpufreq folder not available on this device!")
+        if not os.path.isdir(path_system_cpu + "/cpu0/cpuidle"):
+            logger.warning("cpuidle folder not available on this device!")
+
+    def reset_estimation(self):
+        # reset estimation status cpu
+        for cpu in self._cpu:
+            cpu['last_cpu'] = [0.0] * len(CPU_STAT_LABEL)
+        # Build CPU total info
+        self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
+
+    def get_cpu_info(self):
+        return self._cpu_info
+
+    def get_utilization(self, cpu_out):
+        # CPU lines
+        # - user: normal processes executing in user mode
+        # - nice: niced processes executing in user mode
+        # - system: processes executing in kernel mode
+        # - idle: twiddling thumbs
+        # - iowait: waiting for I/O to complete
+        # - irq: servicing interrupts
+        # - softirq: servicing softirqs
+        total = {}
+        with open("/proc/stat", 'r') as f:
+            for line in f:
+                match = CPU_PROG_REG.search(line)
+                if match:
+                    # Get all fields
+                    # 7 is equal to len(CPU_STAT_LABEL) - 1 (no total)
+                    fields = [float(column) for column in match.group(2).strip().split()[:7]]
+                    # Add total in last field
+                    fields += [sum(fields)]
+                    if match.group(1).isdigit():
+                        num_cpu = int(match.group(1))
+                        # Evaluate delta all values
+                        # https://rosettacode.org/wiki/Linux_CPU_utilization
+                        delta = [now - last for now, last in zip(fields, self._cpu[num_cpu]['last_cpu'])]
+                        # Update last value
+                        self._cpu[num_cpu]['last_cpu'] = deepcopy(fields)
+                        # Store utilization
+                        cpu_out[num_cpu].update(get_utilization(delta))
+                    else:
+                        # Evaluate delta all values
+                        # https://rosettacode.org/wiki/Linux_CPU_utilization
+                        delta = [now - last for now, last in zip(fields, self._cpu_total['last_cpu'])]
+                        # Update last value
+                        self._cpu_total['last_cpu'] = deepcopy(delta)
+                        # Store utilization
+                        total = get_utilization(delta)
+                else:
+                    # All CPU are in order on this file, if don't match we can skip it
+                    break
+        return total, cpu_out
+
+    def get_status(self):
+        # Status CPU
+        cpu_list = [{} for i in range(len(self._cpu))]
+        cpu_online = []
+        # Add cpu status with frequency and idle config
+        for cpu, data in enumerate(self._cpu):
+            # store all data
+            cpu_list[cpu] = read_system_cpu(data['path'], cpu_list[cpu])
+            cpu_online += [cpu_list[cpu]['online']]
+        # Status number CPU changed if changed reset esimators
+        # Fix weird TOTAL status when the number of CPU are changed (Numbers negative)
+        for new, old in zip(cpu_online, self._cpu_online):
+            if new != old:
+                logger.info("Number of CPU online changed, reset estimators")
+                self.reset_estimation()
+                break
+        self._cpu_online = cpu_online
+        # Usage CPU
+        # https://stackoverflow.com/questions/8952462/cpu-usage-from-a-file-on-linux
+        # https://www.linuxhowtos.org/System/procstat.htm
+        # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
+        total, cpu_list = self.get_utilization(cpu_list)
+        return {'total': total, 'cpu': cpu_list}
 # EOF

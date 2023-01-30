@@ -21,6 +21,7 @@ from curses.textpad import rectangle
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
+from .lib.colors import NColors
 from .lib.common import (size_min)
 from .lib.linear_gauge import linear_gauge, GaugeName
 from .lib.chart import Chart
@@ -107,11 +108,11 @@ class MEM(Page):
             used = swap['used'] / divider
             # Change color for type partition
             if swap['type'] == 'partition':
-                color = curses.color_pair(5)
+                color = NColors.magenta()
             elif swap['type'] == 'file':
-                color = curses.color_pair(3)
+                color = NColors.yellow()
             else:
-                color = curses.color_pair(6)
+                color = NColors.cyan()
             linear_gauge(self.stdscr, offset=line_counter, size=size, start=start,
                          name=GaugeName(path.basename(name), color=color),
                          value=value,
@@ -122,7 +123,7 @@ class MEM(Page):
         self.stdscr.hline(line_counter, start, curses.ACS_HLINE, size - 1)
         line_counter += 1
         linear_gauge(self.stdscr, offset=line_counter, size=size, start=start,
-                     name=GaugeName('TOT', color=curses.color_pair(6)),
+                     name=GaugeName('TOT', color=NColors.cyan()),
                      value=int(swap_status.get('use', 0) / float(swap_status.get('tot', 1)) * 100.0),
                      percent=percent,
                      status='ON' if swap_status else 'OFF')
@@ -138,8 +139,8 @@ class MEM(Page):
         # Draw name
         self.stdscr.addstr(start_y + 1, start_x + 3, "RAM Legend", curses.A_BOLD)
         # Draw CPU
-        self.stdscr.addstr(start_y + 2, start_x + 2, "CPU:", (curses.color_pair(12) | curses.A_BOLD))
-        self.stdscr.addstr(start_y + 3, start_x + 2, "GPU:", (curses.color_pair(8) | curses.A_BOLD))
+        self.stdscr.addstr(start_y + 2, start_x + 2, "CPU:", (NColors.icyan() | curses.A_BOLD))
+        self.stdscr.addstr(start_y + 3, start_x + 2, "GPU:", (NColors.igreen() | curses.A_BOLD))
         # Line
         self.stdscr.hline(start_y + 4, start_x + 2, curses.ACS_HLINE, r_width - 3)
         # Total used
@@ -211,7 +212,7 @@ class MEM(Page):
         try:
             self.stdscr.addstr(start_y + 4 + len(table), start_x + 2 + size * (len(columns_title) - 2),
                                "Shared Tot: {GPU}".format(GPU=gpu_val_string),
-                               (curses.color_pair(8) | curses.A_BOLD))
+                               (NColors.igreen() | curses.A_BOLD))
         except curses.error:
             pass
         return r_height + 1
@@ -238,8 +239,8 @@ class MEM(Page):
         # Plot Linear Gauge
         # cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
         # shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
-        # cpu_bar = GaugeBar(cpu_val, curses.color_pair(6))
-        # gpu_bar = GaugeBar(shared_val, curses.color_pair(2))
+        # cpu_bar = GaugeBar(cpu_val, NColors.cyan())
+        # gpu_bar = GaugeBar(shared_val, NColors.green())
         # RAM linear gauge info
         if 'table' in self.jetson.ram:
             size_table = self.draw_nv_table(size_y[1] + 2, 1, size_x[1])
@@ -269,9 +270,9 @@ class MEM(Page):
             self.button_increase.draw(first + height - 4, start_pos + 6, key, mouse)
             # Draw selected number
             if self._swap_size > self._swap_old_size:
-                color = curses.color_pair(2)
+                color = NColors.green()
             elif self._swap_size < self._swap_old_size:
-                color = curses.color_pair(3)
+                color = NColors.yellow()
             else:
                 color = curses.A_NORMAL
             try:

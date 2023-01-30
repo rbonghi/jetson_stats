@@ -25,7 +25,7 @@ import subprocess as sp
 try:
     import queue
 except ImportError:
-    import Queue as queue
+    import Queue as queue  # pyright: ignore[reportMissingImports]
 # Create logger
 logger = logging.getLogger(__name__)
 EXTRA_TIMEOUT = 1.0

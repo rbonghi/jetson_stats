@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019-2023 Raffaello Bonghi.
@@ -15,26 +16,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
+from jtop import jtop
 
-from .jetson_libraries import get_cuda, get_opencv, get_libraries
-from .nvpmodel import NVPModel, NVPModelService
-from .tegrastats import Tegrastats
-from .fan import Fan, FanService, FanServiceLegacy
-from .jetson_clocks import JetsonClocks, JetsonClocksService
-from .swap import Swap, SwapService
-from .cpu import CPUService
-from .engine import EngineService, read_engine
-from .config import Config
-from .memory import MemoryService
-from .command import Command
-from .common import (
-    locate_commands,
-    import_os_variables,
-    get_var,
-    get_uptime,
-    status_disk,
-    get_key,
-    get_local_interfaces)
-from .exceptions import JtopException
+
+if __name__ == "__main__":
+
+    print("Simple jtop cpu reader")
+
+    with jtop() as jetson:
+        # jetson.ok() will provide the proper update frequency
+        if jetson.ok():
+            # Print all cpu
+            for idx, cpu in enumerate(jetson.cpu['cpu']):
+                print("------ CPU{idx} ------".format(idx=idx))
+                for key, value in cpu.items():
+                    print("{key}: {value}".format(key=key, value=value))
+            # read aggregate CPU status
+            total = jetson.cpu['total']
+            print("------ TOTAL ------")
+            for key, value in total.items():
+                print("{key}: {value}".format(key=key, value=value))
 # EOF
