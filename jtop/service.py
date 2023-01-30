@@ -306,10 +306,10 @@ class JtopServer(Process):
         self.engine = EngineService("/sys/kernel/debug/clk")
         # Setup memory service
         self.memory = MemoryService()
-        # Setup tegrastats
-        self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
         # Swap manager
         self.swap = SwapService(self.config)
+        # Setup tegrastats
+        self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
 
     def run(self):
         # Read nvp_mode
@@ -556,7 +556,12 @@ class JtopServer(Process):
         # -- CPU --
         # Read CPU data
         data['cpu'] = self.cpu.get_status()
+        # -- RAM --
+        # Read memory data
+        data['mem'] = self.memory.get_status()
         # -- Engines --
+        # Read all engines available
+        # Can be empty for x86 architecture
         data['engines'] = self.engine.get_status()
         # -- Power --
         # Remove NC power (Orin family)
@@ -576,9 +581,6 @@ class JtopServer(Process):
             if temp.startswith('CV'):
                 del tegrastats['TEMP'][temp]
         data['temperature'] = tegrastats['TEMP']
-        # -- MTS --
-        if 'MTS' in tegrastats:
-            data['mts'] = tegrastats['MTS']
         # -- GPU --
         data['gpu'] = {1: tegrastats['GR3D']}
         # For more GPU change in a next future with
@@ -590,25 +592,6 @@ class JtopServer(Process):
                 data['gpu'][idx].update(jetson_clocks_show['GPU'])
                 # Remove current_freq data
                 del data['gpu'][idx]['current_freq']
-        # -- RAM --
-        nv_usage = self.memory.nv_usage()
-        data['ram'] = tegrastats['RAM']
-        data['ram'].update(nv_usage)
-        # -- IRAM --
-        if 'IRAM' in tegrastats:
-            data['iram'] = tegrastats['IRAM']
-        # -- EMC --
-        if 'EMC' in tegrastats:
-            data['emc'] = tegrastats['EMC']
-            if self.jetson_clocks is not None:
-                if 'EMC' in jetson_clocks_show:
-                    data['emc'].update(jetson_clocks_show['EMC'])
-                    # Remove current_freq data
-                    del data['emc']['current_freq']
-        # -- SWAP --
-        data['swap'] = {
-            'list': self.swap.all(),
-            'all': tegrastats['SWAP'] if 'SWAP' in tegrastats else {}}
         # -- FAN --
         # Update status fan speed
         data['fan'] = self.fan.update()

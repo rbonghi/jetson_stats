@@ -23,31 +23,124 @@ import logging
 # Create logger
 logger = logging.getLogger(__name__)
 # Memory regular exception
-REGEXP = re.compile(r'(.+?):\s+(.+?) (.?)B')
+MEMINFO_REG = re.compile(r'(?P<key>.+):\s+(?P<value>.+) (?P<unit>.)B')
+BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(?P<nr_free>.*)')
+MEM_TABLE_REG = re.compile(r'(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<value>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
 
 
-def mem_info(path="/proc/meminfo"):
-    list_memory = {}
-    with open(path, "r") as fp:
+def meminfo():
+    # Read meminfo and decode
+    status_mem = {}
+    with open("/proc/meminfo", "r") as fp:
         for line in fp:
             # Search line
-            match = REGEXP.search(line)
+            match = re.search(MEMINFO_REG, line.strip())
             if match:
-                key = str(match.group(1).strip())
-                value = int(match.group(2).strip())
-                unit = str(match.group(3).strip())
-                list_memory[key] = {'val': value, 'unit': unit}
-    return list_memory
+                parsed_line = match.groupdict()
+                status_mem[parsed_line['key']] = {'val': int(parsed_line['value']), 'unit': parsed_line['unit']}
+    return status_mem
 
+
+def buddyinfo(page_size):
+    # Read status free memory
+    # http://andorian.blogspot.com/2014/03/making-sense-of-procbuddyinfo.html
+    buddyhash = {}
+    buddyinfo = open("/proc/buddyinfo").readlines()
+    for line in buddyinfo:
+        # Decode line
+        parsed_line = re.match(BUDDYINFO_REG, line.strip()).groupdict()
+        # detect buddy size
+        numa_node = int(parsed_line["numa_node"])
+        free_fragments = [int(i) for i in parsed_line["nr_free"].split()]
+        max_order = len(free_fragments)
+        fragment_sizes = [page_size * 2**order for order in range(0, max_order)]
+        usage_in_bytes = [free * fragmented for free, fragmented in zip(free_fragments, fragment_sizes)]
+        data = {
+            "zone": parsed_line["zone"],
+            "nr_free": free_fragments,
+            "sz_fragment": fragment_sizes,
+            "usage": usage_in_bytes}
+        buddyhash[numa_node] = buddyhash[numa_node] + [data] if numa_node in buddyhash else [data]
+    return buddyhash
+
+
+def convert_cell(key, string_cell):
+    if key == "Size":
+        return {'val': int(string_cell[:-1]), 'unit': string_cell[-1].lower()}
+    return string_cell
+
+
+def read_mem_table():
+    with open("/sys/kernel/debug/nvmap/iovmm/maps", "r") as fp:
+        for line in fp:
+            # Search line
+            match = re.search(MEM_TABLE_REG, line.strip())
+            if match:
+                parsed_line = match.groupdict()
+                print(parsed_line)
 
 class MemoryService(object):
 
     COLUMNS = ["Client", "Process", "PID", "Size"]
 
-    def __init__(self, path="/sys/kernel/debug/nvmap/iovmm/maps"):
-        self._path = path
-        self._table = []
-        self._total = {}
+    def __init__(self):
+        # Extract memory page size
+        self._page_size = os.sysconf("SC_PAGE_SIZE")
+        # board type
+        self._isJetson = os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps")
+        # TEMP
+        memory = self.get_status()
+        print(memory)
+
+    def get_status(self):
+        memory = {}
+        # Measure the largest free bank for 4MB
+        mem_size = buddyinfo(self._page_size)
+        # Count only the biggest Large free bank (lfb)
+        large_free_bank = 0
+        for _, data in mem_size.items():
+            large_free_bank += sum([zone['nr_free'][-1] for zone in data])
+        # Status Memory
+        status_mem = meminfo()
+        # Read memory use
+        if self._isJetson:
+            # Update table
+            read_mem_table()
+            #total, table = self._update_table()
+            # Update shared size
+            #nv_usage['shared'] = total['val']
+            # Add table nv memory
+            #nv_usage['table'] = [self.COLUMNS, table]
+        # Extract memory info
+        ram_total = status_mem.get('MemTotal', {})
+        ram_available = status_mem.get('MemAvailable', {})
+        ram_buffer = status_mem.get('Buffers', {})
+        # NvMapMemUsed: Is the shared memory between CPU and GPU
+        # This key is always available on Jetson (not really always)
+        # Use the memory table to measure
+        ram_shared = status_mem.get('NvMapMemUsed', {})
+        # Add fields for RAM
+        memory['RAM'] = {
+            'tot': ram_total.get('val', 0),
+            'used': ram_total.get('val', 0) - ram_available.get('val', 0),
+            'buffers': ram_buffer.get('val', 0),
+            'shared': ram_shared.get('val', 0),
+            'unit': ram_total.get('unit', 'k'),
+            'lfb': large_free_bank,  # In 4MB
+        }
+        # Extract swap numbers
+        swap_total = status_mem.get('SwapTotal', {})
+        swap_free = status_mem.get('SwapFree', {})
+        swap_cached = status_mem.get('SwapCached', {})
+        # Add fields for swap
+        memory['SWAP'] = {
+            'tot': swap_total.get('val', 0),
+            'used': swap_total.get('val', 0) - swap_free.get('val', 0),
+            'cached': swap_cached.get('val', 0),
+            'unit': swap_total.get('unit', 'k'),
+        }
+        # TODO Add EMC
+        return memory
 
     def nv_usage(self):
         """
@@ -65,7 +158,7 @@ class MemoryService(object):
             'shared': shared.get('val', 0),
             'unit': total.get('unit', 'k')
         }
-        if os.path.isfile(self._path):
+        if os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps"):
             # Update table
             self._update_table()
             # Update shared size
@@ -74,15 +167,11 @@ class MemoryService(object):
             nv_usage['table'] = [self.COLUMNS, self._table]
         return nv_usage
 
-    def _convert_cell(self, key, string_cell):
-        if key == "Size":
-            return {'val': int(string_cell[:-1]), 'unit': string_cell[-1].lower()}
-        return string_cell
-
     def _update_table(self):
-        self._table = []
+        table = []
+        total = {}
         first = True
-        with open(self._path, 'r') as fp:
+        with open("/sys/kernel/debug/nvmap/iovmm/maps", 'r') as fp:
             for row in fp.readlines():
                 if row[0].isspace():
                     continue
@@ -93,7 +182,8 @@ class MemoryService(object):
                     continue
                 if cells[0] == 'total':
                     total_string = cells[-1]
-                    self._total = {'val': int(total_string[:-1]), 'unit': total_string[-1].lower()}
+                    total = {'val': int(total_string[:-1]), 'unit': total_string[-1].lower()}
                     continue
-                self._table += [{self.COLUMNS[idx]: self._convert_cell(self.COLUMNS[idx], cell) for idx, cell in enumerate(cells)}]
+                table += [{self.COLUMNS[idx]: convert_cell(self.COLUMNS[idx], cell) for idx, cell in enumerate(cells)}]
+        return total, table
 # EOF

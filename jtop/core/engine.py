@@ -94,8 +94,11 @@ class EngineService(object):
                     else:
                         self.engines_path[name.upper()] = sorted(matching)
         # Print all engines found
-        engines_string = ' '.join(name for name in self.engines_path)
-        logger.info("Engines found: [{engines}]".format(engines=engines_string))
+        if self.engines_path:
+            engines_string = ' '.join(name for name in self.engines_path)
+            logger.info("Engines found: [{engines}]".format(engines=engines_string))
+        else:
+            logger.warn("Not engines found!")
 
     def get_status(self):
         status = {}
