@@ -32,7 +32,7 @@ def add_engine_in_list(label, engine, group, name):
 
 def pass_agx_orin(engine):
     return [
-        add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_AXI'),
+        add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_CPU_AXI'),
         add_engine_in_list('DLA0c', engine, 'DLA0', 'DLA0_CORE') + add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE'),
         add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
         add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
@@ -76,8 +76,11 @@ def engine_model(model):
 def map_engines(jetson):
     # Check if there is a map for each engine
     func_list_engines = engine_model(jetson.board['hardware']["Module"])
-    if func_list_engines:
-        return func_list_engines(jetson.engine)
+    try:
+        if func_list_engines:
+            return func_list_engines(jetson.engine)
+    except KeyError:
+        pass
     # Otherwise if not mapped show all engines
     list_engines = []
     for group in jetson.engine:
