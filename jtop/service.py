@@ -573,7 +573,8 @@ class JtopServer(Process):
                 # Extract jc_cpu info
                 jc_cpu = jetson_clocks_show['CPU'].get(name, {})
                 # Remove current frequency
-                del jc_cpu['current_freq']
+                if 'current_freq' in jc_cpu:
+                    del jc_cpu['current_freq']
                 # Fix online status
                 if 'Online' in jc_cpu:
                     if jc_cpu['Online']:
