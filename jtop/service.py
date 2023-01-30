@@ -305,7 +305,7 @@ class JtopServer(Process):
         # Setup engine service
         self.engine = EngineService("/sys/kernel/debug/clk")
         # Setup memory service
-        self.memory = MemoryService()
+        self.memory = MemoryService(self.config)
         # Swap manager
         self.swap = SwapService(self.config)
         # Setup tegrastats

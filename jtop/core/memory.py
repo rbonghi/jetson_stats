@@ -21,6 +21,7 @@ import re
 import logging
 from .engine import read_engine
 from .common import cat
+from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
 # Memory regular exception
@@ -28,6 +29,10 @@ MEMINFO_REG = re.compile(r'(?P<key>.+):\s+(?P<value>.+) (?P<unit>.)B')
 BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(?P<nr_free>.*)')
 MEM_TABLE_REG = re.compile(r'(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
 TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
+SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>\d+)')
+# Swap configuration
+CONFIG_DEFAULT_SWAP_DIRECTORY = ''
+CONFIG_DEFAULT_SWAP_NAME = 'swfile'
 
 
 def meminfo():
@@ -67,12 +72,6 @@ def buddyinfo(page_size):
     return buddyhash
 
 
-def convert_cell(key, string_cell):
-    if key == "Size":
-        return {'val': int(string_cell[:-1]), 'unit': string_cell[-1].lower()}
-    return string_cell
-
-
 def read_mem_table(path_table):
     table = [
         ['user', 'process', 'PID', 'size'],
@@ -101,9 +100,31 @@ def read_mem_table(path_table):
     return total, table
 
 
+def read_swapon():
+    table = [
+        ['name', 'type', 'prio', 'size']
+    ]
+    swap = Command(['swapon', '--show', '--raw', '--byte'])
+    lines = swap()
+    for line in lines:
+        # Search line
+        match = re.search(SWAP_REG, line.strip())
+        if match:
+            parsed_line = match.groupdict()
+            data = [
+                parsed_line['name'],
+                parsed_line['type'],
+                int(parsed_line['prio']),
+                {'size': int(parsed_line['size']) // 1024, 'used': int(parsed_line['used']), 'unit': 'k'}
+            ]
+            table += [data]
+    return table
+
+
 class MemoryService(object):
 
-    def __init__(self):
+    def __init__(self, config):
+        self._config = config
         # Extract memory page size
         self._page_size = os.sysconf("SC_PAGE_SIZE")
         # board type
@@ -162,12 +183,15 @@ class MemoryService(object):
             'used': swap_total.get('val', 0) - swap_free.get('val', 0),
             'cached': swap_cached.get('val', 0),
             'unit': swap_total.get('unit', 'k'),
+            'table': read_swapon(),
         }
-        # TODO Add list swap
         # Read EMC status
         if os.path.isdir("/sys/kernel/debug/clk/emc"):
             memory['EMC'] = read_engine("/sys/kernel/debug/clk/emc")
-            # TODO Add percentage utilization
+            # Percentage utilization
+            # https://forums.developer.nvidia.com/t/real-time-emc-bandwidth-with-sysfs/107479/3
+            utilization = int(cat("/sys/kernel/actmon_avg_activity/mc_all"))
+            memory['EMC']['val'] = utilization // memory['EMC']['cur']
         # Read IRAM if available
         if os.path.isdir("/sys/kernel/debug/nvmap/iram"):
             size = 0
@@ -179,7 +203,7 @@ class MemoryService(object):
                 'tot': size,
                 'used': used_total.get('val', 0),
                 'unit': used_total.get('unit', 'k'),
-                'lfs': (size - total) // 1024,  # TODO To check
+                'lfs': size - used_total.get('val', 0),  # TODO To check
             }
         return memory
 # EOF
