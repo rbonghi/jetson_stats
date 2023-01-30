@@ -32,6 +32,7 @@ TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
 
 def meminfo():
     # Read meminfo and decode
+    # https://access.redhat.com/solutions/406773
     status_mem = {}
     with open("/proc/meminfo", "r") as fp:
         for line in fp:
@@ -166,20 +167,19 @@ class MemoryService(object):
         # Read EMC status
         if os.path.isdir("/sys/kernel/debug/clk/emc"):
             memory['EMC'] = read_engine("/sys/kernel/debug/clk/emc")
-            # TODO Add percentage utilizaiton
+            # TODO Add percentage utilization
         # Read IRAM if available
         if os.path.isdir("/sys/kernel/debug/nvmap/iram"):
             size = 0
             if os.path.isfile("/sys/kernel/debug/nvmap/iram/size"):
                 # Convert from Hex to decimal - Number in bytes
-                size = int(cat("/sys/kernel/debug/nvmap/iram/size"), 16)
-                size = size // 1024
+                size = int(cat("/sys/kernel/debug/nvmap/iram/size"), 16) // 1024
             used_total, _ = read_mem_table("/sys/kernel/debug/nvmap/iram/clients")
             memory['IRAM'] = {
                 'tot': size,
                 'used': used_total.get('val', 0),
                 'unit': used_total.get('unit', 'k'),
-                'lfs': size,  # TODO To check
+                'lfs': (size - total) // 1024,  # TODO To check
             }
         return memory
 # EOF
