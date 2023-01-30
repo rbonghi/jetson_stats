@@ -77,7 +77,7 @@ def map_engines(jetson):
     # Check if there is a map for each engine
     func_list_engines = engine_model(jetson.board['hardware']["Module"])
     if func_list_engines:
-            return func_list_engines(jetson.engine)
+        return func_list_engines(jetson.engine)
     # Otherwise if not mapped show all engines
     list_engines = []
     for group in jetson.engine:
