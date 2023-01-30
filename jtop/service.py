@@ -558,6 +558,11 @@ class JtopServer(Process):
         data['cpu'] = self.cpu.get_status()
         # -- RAM --
         # Read memory data
+        # In this dictionary are collected
+        # - RAM
+        # - SWAP
+        # - EMC (If available)
+        # - IRAM (If available)
         data['mem'] = self.memory.get_status()
         # -- Engines --
         # Read all engines available

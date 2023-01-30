@@ -19,7 +19,7 @@ import os
 import re
 # Logging
 import logging
-# from .exceptions import JtopException
+from .engine import read_engine
 # Create logger
 logger = logging.getLogger(__name__)
 # Memory regular exception
@@ -71,12 +71,12 @@ def convert_cell(key, string_cell):
     return string_cell
 
 
-def read_mem_table():
+def read_mem_table(path_table):
     table = [
         ['user', 'process', 'PID', 'size'],
     ]
     total = {}
-    with open("/sys/kernel/debug/nvmap/iovmm/maps", "r") as fp:
+    with open(path_table, "r") as fp:
         for line in fp:
             # Search line
             match = re.search(MEM_TABLE_REG, line)
@@ -95,7 +95,7 @@ def read_mem_table():
             if match:
                 total = match.groupdict()
                 continue
-    # Append table name at the beginnign of the list
+    # return total and table
     return total, table
 
 
@@ -106,6 +106,8 @@ class MemoryService(object):
         self._page_size = os.sysconf("SC_PAGE_SIZE")
         # board type
         self._isJetson = os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps")
+        if not os.path.isdir("/sys/kernel/debug/clk/emc"):
+            logger.warn("EMC not available")
         # TEMP
         memory = self.get_status()
         print(memory)
@@ -129,7 +131,7 @@ class MemoryService(object):
         if self._isJetson:
             # Update table
             # Use the memory table to measure
-            total, table = read_mem_table()
+            total, table = read_mem_table("/sys/kernel/debug/nvmap/iovmm/maps")
             # Update shared size
             ram_shared_val = total['size'] if ram_shared_val == 0 else ram_shared_val
         # Extract memory info
@@ -159,7 +161,20 @@ class MemoryService(object):
             'cached': swap_cached.get('val', 0),
             'unit': swap_total.get('unit', 'k'),
         }
-        # TODO Add EMC
-        # TODO Add IRAM
+        # TODO Add list swap
+        # Read EMC status
+        if os.path.isdir("/sys/kernel/debug/clk/emc"):
+            memory['EMC'] = read_engine("/sys/kernel/debug/clk/emc")
+            # TODO Add percentage utilizaiton
+        # Read IRAM if available
+        if os.path.isdir("/sys/kernel/debug/nvmap/iram"):
+            table = read_mem_table("/sys/kernel/debug/nvmap/iram/clients")
+            for value in range(1, len(table)):
+                print(value)
+            memory['IRAM'] = {
+                'tot': 0,
+                'used': 0,
+                'unit': 'k',
+            }
         return memory
 # EOF
