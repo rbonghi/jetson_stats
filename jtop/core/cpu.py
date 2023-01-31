@@ -100,7 +100,9 @@ def read_freq_cpu(path, type_freq):
     current_path = "{path}/cpufreq/{type_freq}_cur_freq".format(path=path, type_freq=type_freq)
     if os.path.isfile(current_path):
         with open(current_path, 'r') as f:
-            freq['cur'] = int(f.read())
+            data = f.read().strip()
+            if data.isdigit():
+                freq['cur'] = int(data)
     return freq
 
 

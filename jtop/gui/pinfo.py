@@ -42,14 +42,14 @@ def plot_libraries(stdscr, pos_y, pos_x, libraries):
     # Plot Library
     libraries_size_y, libraries_size_x = plot_dictionary(stdscr, pos_y, pos_x, 'Libraries', libraries)
     # Plot OpenCV and CUDA
-    opencv_string = opencv if opencv else "Missing"
-    opencv_size_x = plot_name_info(stdscr, pos_y + libraries_size_y, pos_x + 1, 'OpenCV', opencv_string)
+    opencv_string = opencv if opencv else "MISSING"
+    opencv_color = curses.A_NORMAL if opencv else NColors.red()
+    opencv_size_x = plot_name_info(stdscr, pos_y + libraries_size_y, pos_x + 1, 'OpenCV', opencv_string, color=opencv_color)
     len_opencv = opencv_size_x
-    stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 2, str(len_opencv))
     if opencv:
-        stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 1, " - with CUDA:")
-        stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 15, opencv_cuda_string, color | curses.A_BOLD)
-        len_opencv += len(opencv_cuda_string) + 14
+        stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 1, " with CUDA:")
+        stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 13, opencv_cuda_string, color | curses.A_BOLD)
+        len_opencv += len(opencv_cuda_string) + 15
     return libraries_size_y + 1, max(libraries_size_x, len_opencv)
 
 

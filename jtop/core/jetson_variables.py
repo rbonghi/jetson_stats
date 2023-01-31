@@ -144,6 +144,8 @@ JTOP_VARIABLE_FILE = 'jtop_env.sh'
 DTSFILENAME_RE = re.compile(r'(.*)-p')
 SOC_RE = re.compile(r'[0-9]+')
 DPKG_L4T_CORE_RE = re.compile(r'^nvidia-l4t-core.*install$')
+# Number 7 is for Jetson TX2
+I2C_EEPROM_BUS = [0, 1, 2, 7]
 RAW_FILES = ['/etc/nv_tegra_release',
              '/sys/firmware/devicetree/base/model',
              '/proc/device-tree/nvidia,boardids',
@@ -167,7 +169,7 @@ def get_raw_output():
     for file in RAW_FILES:
         raw_output[file] = cat(file).strip('\n') if os.path.isfile(file) else "No such file or directory"
     # Read all output from all I2C ports
-    for bus_number in range(3):
+    for bus_number in I2C_EEPROM_BUS:
         try:
             bus = SMBus(bus_number)
             size_block = 16
@@ -254,7 +256,7 @@ def get_part_number():
     part_number = ''
     jetson_part_number = ''
     # Find 699-level part number from EEPROM and extract P-number
-    for bus_number in range(3):
+    for bus_number in I2C_EEPROM_BUS:
         try:
             bus = SMBus(bus_number)
             part_number = bus.read_i2c_block_data(0x50, 20, 29)
