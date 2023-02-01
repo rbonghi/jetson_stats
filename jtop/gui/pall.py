@@ -20,17 +20,44 @@ from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import (
-    size_min,
-    label_freq)
+    strfdelta,
+    plot_name_info,
+    jetson_clocks_gui,
+    nvp_model_gui)
 from .lib.colors import NColors
-from .lib.linear_gauge import linear_gauge, GaugeName, GaugeBar
+from .lib.linear_gauge import linear_gauge, basic_gauge, GaugeName, GaugeBar
 from .pcpu import compact_cpus
+from .pmem import compact_memory
 # Menu GUI pages
 from .jtopguimenu import (
     plot_watts,
     compact_info,
     plot_temperatures,
     plot_GPUs)
+
+
+def compact_status(stdscr, pos_y, pos_x, width, jetson):
+    line_counter = 1
+    # Fan status
+    data = {
+        'name': 'Fan',
+        'color': NColors.cyan(),
+        'online': jetson.fan,
+        'values': []
+    }
+    basic_gauge(stdscr, pos_y, pos_x + 1, width - 3, data)
+    # Jetson clocks status: Running (Green) or Normal (Grey)
+    if jetson.jetson_clocks is not None:
+        jetson_clocks_gui(stdscr, pos_y + line_counter, pos_x + 2, jetson)
+        line_counter += 1
+    # NVP Model
+    if jetson.nvpmodel is not None:
+        nvp_model_gui(stdscr, pos_y + line_counter, pos_x + 2, jetson)
+        line_counter += 1
+    # Model board information
+    uptime_string = strfdelta(jetson.uptime, "{days} days {hours}:{minutes}:{seconds}")
+    plot_name_info(stdscr, pos_y + line_counter, pos_x + 2, "UpT", uptime_string)
+    return line_counter + 1
 
 
 class ALL(Page):
@@ -46,64 +73,15 @@ class ALL(Page):
         height, width, first = self.size_page()
         line_counter = first + 1
         # Plot Status CPU
-        line_counter += compact_cpus(self.stdscr, line_counter, width, self.jetson)
-        # RAM linear gauge info
-        line_counter += 1
-        ram_status = self.jetson.ram
-        lfb_status = self.jetson.ram['lfb']
-        szw, divider, unit = size_min(ram_status['tot'], start=ram_status['unit'])
-        # lfb label
-        percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=ram_status['use'] / divider, unit=unit, tot=szw)
-        label_lfb = "(lfb {nblock}x{size}{unit}B)".format(nblock=lfb_status['nblock'],
-                                                          size=lfb_status['size'],
-                                                          unit=lfb_status['unit'])
-        # Plot Linear Gauge
-        cpu_val = int((ram_status['use'] - ram_status['shared']) / float(ram_status['tot']) * 100.0)
-        shared_val = int(ram_status['shared'] / float(ram_status['tot']) * 100.0)
-        cpu_bar = GaugeBar(cpu_val, NColors.cyan())
-        gpu_bar = GaugeBar(shared_val, NColors.green())
-        linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('Mem', color=NColors.cyan()),
-                     value=(cpu_bar, gpu_bar, ),
-                     label=label_lfb,
-                     percent=percent)
-        # IRAM linear gauge info
-        if self.jetson.iram:
-            iram_status = self.jetson.iram
-            line_counter += 1
-            szw, divider, unit = size_min(iram_status['tot'], start=iram_status['unit'])
-            # lfb label
-            percent = "{use:2.1f}{unit}/{tot:2.1f}{unit}B".format(use=iram_status['use'] / divider, unit=unit, tot=szw)
-            label_lfb = "(lfb {size}{unit}B)".format(size=iram_status['lfb']['size'],
-                                                     unit=iram_status['lfb']['unit'])
-            linear_gauge(self.stdscr, offset=line_counter, size=width,
-                         name=GaugeName('Imm', color=NColors.cyan()),
-                         value=int(iram_status['use'] / float(iram_status['tot']) * 100.0),
-                         label=label_lfb,
-                         percent=percent)
-        # SWAP linear gauge info
-        line_counter += 1
-        swap_status = self.jetson.swap
-        swap_cached = swap_status.get('cached', {})
-        # lfb label
-        szw, divider, unit = size_min(swap_status.get('tot', 0), start=swap_status.get('unit', ''))
-        percent = "{use}{unit}B/{tot}{unit}B".format(use=swap_status.get('use', 0) / divider, tot=szw, unit=unit)
-        label_lfb = "(cached {size}{unit}B)".format(size=swap_cached.get('size', '0'),
-                                                    unit=swap_cached.get('unit', ''))
-        linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('Swp', color=NColors.cyan()),
-                     value=int(swap_status.get('use', 0) / float(swap_status.get('tot', 1)) * 100.0),
-                     label=label_lfb,
-                     percent=percent,
-                     status='ON' if swap_status else 'OFF')
-        # EMC linear gauge info
-        line_counter += 1
-        linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('EMC', color=NColors.cyan()),
-                     value=self.jetson.emc.get('val', 0),
-                     label=label_freq(self.jetson.emc['frq'], start='k'))
+        line_counter += compact_cpus(self.stdscr, line_counter, 0, width, self.jetson)
+        # Plot status memory
+        size_memory = compact_memory(self.stdscr, line_counter, 0, width // 2, self.jetson)
+        # Plot compact info
+        size_status = compact_status(self.stdscr, line_counter, width // 2, width // 2, self.jetson)
+        # Update line counter
+        line_counter += max(size_memory, size_status)
         # GPU linear gauge info
-        line_counter += 2
+        line_counter += 1
         line_counter = plot_GPUs(self.stdscr, line_counter, self.jetson.gpu, width)
         # Status disk
         line_counter += 1

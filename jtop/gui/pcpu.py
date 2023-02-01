@@ -46,8 +46,8 @@ def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_
     return step_height, step_width, size_columns, size_rows
 
 
-def compact_cpus(stdscr, pos_y, width, jetson):
-    _, _, _, size_rows = cpu_grid(stdscr, jetson.cpu['cpu'], cpu_gauge, pos_y, 1, size_width=width - 2)
+def compact_cpus(stdscr, pos_y, pos_x, width, jetson):
+    _, _, _, size_rows = cpu_grid(stdscr, jetson.cpu['cpu'], cpu_gauge, pos_y, pos_x + 1, size_width=width - 2)
     return size_rows
 
 

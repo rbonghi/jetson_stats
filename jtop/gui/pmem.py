@@ -22,13 +22,66 @@ from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .lib.colors import NColors
-from .lib.common import (size_min)
-from .lib.linear_gauge import linear_gauge, GaugeName
+from .lib.common import (size_min, value_to_string)
+from .lib.linear_gauge import linear_gauge, GaugeName, basic_gauge
 from .lib.chart import Chart
 from .lib.button import Button
 
 SWAP_MAX_SIZE = 15
 SWAP_MIN_SIZE = 2
+
+
+def mem_gauge(stdscr, pos_y, pos_x, size, mem_data):
+    # Plot values
+    values = [
+        (mem_data['used'] / mem_data['tot'] * 100.0, NColors.green()),
+        (mem_data['buffers'] / mem_data['tot'] * 100.0, NColors.blue()),
+        (mem_data['cached'] / mem_data['tot'] * 100.0, NColors.yellow()),
+        (mem_data['shared'] / mem_data['tot'] * 100.0, NColors.green() | curses.A_BOLD),
+    ]
+    used = value_to_string(mem_data['used'], mem_data['unit'], "")
+    total = value_to_string(mem_data['tot'], mem_data['unit'], "")
+    # Draw gauge
+    data = {
+        'name': 'Mem',
+        'color': NColors.cyan() | curses.A_BOLD,
+        'values': values,
+        'mright': "{used}/{total}".format(used=used, total=total)
+    }
+    # Draw gauge
+    basic_gauge(stdscr, pos_y, pos_x, size - 1, data)
+
+
+def swap_gauge(stdscr, pos_y, pos_x, size, mem_data):
+    # Plot values
+    values = [
+        (mem_data['used'] / mem_data['tot'] * 100.0, NColors.red()),
+        (mem_data['cached'] / mem_data['tot'] * 100.0, NColors.yellow()),
+    ]
+    used = value_to_string(mem_data['used'], mem_data['unit'], "")
+    total = value_to_string(mem_data['tot'], mem_data['unit'], "")
+    # Draw gauge
+    data = {
+        'name': 'Swp',
+        'color': NColors.cyan() | curses.A_BOLD,
+        'values': values,
+        'mright': "{used}/{total}".format(used=used, total=total)
+    }
+    # Draw gauge
+    basic_gauge(stdscr, pos_y, pos_x, size - 1, data)
+
+
+def compact_memory(stdscr, pos_y, pos_x, width, jetson):
+    line_counter = 1
+    # Draw memory gauge
+    mem_gauge(stdscr, pos_y, pos_x, width, jetson.memory['RAM'])
+    if 'SWAP' in jetson.memory:
+        swap_gauge(stdscr, pos_y + 1, pos_x, width, jetson.memory['SWAP'])
+        line_counter += 1
+    if 'EMC' in jetson.memory:
+        #emc_gauge(stdscr, pos_y + 1, 0, width, jetson.memory['EMC'])
+        line_counter += 1
+    return line_counter
 
 
 class MEM(Page):
@@ -69,23 +122,29 @@ class MEM(Page):
             self._swap_size -= 1
 
     def update_chart(self, jetson, name):
-        parameter = jetson.ram
+        #parameter = jetson.ram
         # Get max value if is present
-        max_val = parameter.get("tot", 100)
+        #max_val = parameter.get("tot", 100)
         # Get unit
-        unit = parameter.get("unit", "k")
+        #unit = parameter.get("unit", "k")
         # Get value
-        use_val = parameter.get("use", 0)
-        cpu_val = parameter.get("use", 0) - parameter.get("shared", 0)
-        szw, divider, unit = size_min(max_val, start=unit)
+        #use_val = parameter.get("use", 0)
+        #cpu_val = parameter.get("use", 0) - parameter.get("shared", 0)
+        #szw, divider, unit = size_min(max_val, start=unit)
         # Append in list
-        use_out = use_val / divider
-        cpu_out = cpu_val / divider
+        #use_out = use_val / divider
+        #cpu_out = cpu_val / divider
         return {
-            'value': [use_out, cpu_out],
-            'max': szw,
-            'unit': unit
+        #    'value': [use_out, cpu_out],
+        #    'max': szw,
+        #    'unit': unit
         }
+
+    def draw(self, key, mouse):
+        # Screen size
+        height, width, first = self.size_page()
+        
+        mem_gauge(self.stdscr, 2, 1, width, self.jetson.memory['RAM'])
 
     def swap_menu(self, lc, size, start, width):
         line_counter = lc + 1
@@ -217,7 +276,7 @@ class MEM(Page):
             pass
         return r_height + 1
 
-    def draw(self, key, mouse):
+    def draw_old(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
         # Set size chart memory

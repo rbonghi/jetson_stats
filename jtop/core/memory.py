@@ -121,6 +121,26 @@ def read_swapon():
     return table
 
 
+class Memory(object):
+
+    def __init__(self, controller):
+        self._controller = controller
+
+    def clear_cache(self):
+        # Set new swap size configuration
+        self._controller.put({'memory': ''})
+
+    def set(self, value, on_boot=False):
+        if not isinstance(value, (int, float)):
+            raise ValueError("Need a Number")
+        # Set new swap size configuration
+        self._controller.put({'swap': {'size': value, 'boot': on_boot}})
+
+    def deactivate(self):
+        # Set new swap size configuration
+        self._controller.put({'swap': {}})
+
+
 class MemoryService(object):
 
     def __init__(self, config):
@@ -159,13 +179,17 @@ class MemoryService(object):
             ram_shared_val = total['size'] if ram_shared_val == 0 else ram_shared_val
         # Extract memory info
         ram_total = status_mem.get('MemTotal', {})
+        ram_free = status_mem.get('MemFree', {})
         ram_available = status_mem.get('MemAvailable', {})
         ram_buffer = status_mem.get('Buffers', {})
+        ram_cached = status_mem.get('Cached', {})
         # Add fields for RAM
         memory['RAM'] = {
             'tot': ram_total.get('val', 0),
             'used': ram_total.get('val', 0) - ram_available.get('val', 0),
+            'free': ram_free.get('val', 0),
             'buffers': ram_buffer.get('val', 0),
+            'cached': ram_cached.get('val', 0),
             'shared': ram_shared_val,
             'unit': ram_total.get('unit', 'k'),
             'lfb': large_free_bank,  # In 4MB

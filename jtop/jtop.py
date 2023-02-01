@@ -69,7 +69,6 @@ from .core import (
     get_cuda,
     get_opencv,
     get_libraries,
-    Swap,
     Fan,
     NVPModel,
     get_uptime,
@@ -139,7 +138,7 @@ class jtop(Thread):
         # Initialize cpu info
         self._cpu_info = []
         # Initialize swap
-        self._swap = None
+        # self._swap = None
         # Load jetson_clocks status
         self._jc = None
         # Initialize fan
@@ -581,140 +580,14 @@ class jtop(Thread):
         return stats
 
     @property
-    def swap(self):
-        """
-        SWAP manager and reader
-
-        If you want read the status of your board will return a dictionary with
-
-        * **use** - Amount of SWAP in use
-        * **tot** - Total amount of SWAP available for applications
-        * **unit** - Unit SWAP, usually in MB
-        * **cached**
-            * **size** - Cache size
-            * **unit** - Unit cache size
-
-        This property has other extra methods show below
-
-            * If you want know how many swap are active you can run this extra method
-
-        .. code-block:: python
-
-            all_swap = jetson.swap.all
-
-        The output will be a dictionary, where for each swap:
-
-                * **used** - Used Swap in kB
-                * **size** - Size in kB
-                * **type** - Type
-                * **prio** - Priority
-
-        * The method inside this property enable a new swap in your board.
-          To work need to write a *size* in GB and if you want this swap enable in boot you can set
-          *on_boot* on True (default False).
-          This method will create a new swap located usually in **"/"** and called **"swfile"**
-
-        .. code-block:: python
-
-            jetson.swap.set(size, on_boot=False)
-
-        * If you want disable the swap created you can run this method
-
-        .. code-block:: python
-
-            jetson.swap.deactivate()
-
-        * This method will show the status of your SWAP created
-
-        .. code-block:: python
-
-            status = jetson.swap.is_enable
-
-        * This method will show the current swap size created
-
-        .. code-block:: python
-
-            size = jetson.swap.size()
-
-        * If you need to clear the cache in your NVIDIA Jetson you can run this extra call
-
-        .. code-block:: python
-
-            jetson.swap.clear_cache()
-
-        :return: swap status
-        :rtype: dict
-        """
-        return self._swap
-
-    @property
-    def emc(self):
-        """
-        EMC is the external memory controller, through which all sysmem/carve-out/GART memory accesses go.
-
-        If your board have the EMC, the fields are:
-
-        * **min_freq** - Minimum frequency in kHz
-        * **max_freq** - Maximum frequency in kHz
-        * **frq** - Running frequency in kHz
-        * **val** - Status EMC, value between [0, 100]
-        * **FreqOverride** - Status override
-
-        :return: emc status
-        :rtype: dict
-        """
-        warn('This property will be deprecated in the next release. Will be used jtop.ram()', DeprecationWarning, stacklevel=2)
-        return self._stats.get('emc', {})
-
-    @property
-    def iram(self):
-        """
-        IRAM is memory local to the video hardware engine.
-        If your board have the IRAM, the fields are:
-
-        * **use** - status iram used
-        * **tot** - Total size IRAM
-        * **unit** - Unit size IRAM, usually in kB
-        * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
-            * **size** - Size of the largest free block
-            * **unit** - Unit size lfb
-
-        Largest Free Block (lfb) is a statistic about the memory allocator.
-        It refers to the largest contiguous block of physical memory
-        that can currently be allocated: at most 4 MB.
-        It can become smaller with memory fragmentation.
-        The physical allocations in virtual memory can be bigger.
-
-        :return: iram status
-        :rtype: dict
-        """
-        warn('This property will be deprecated in the next release. Will be used jtop.ram()', DeprecationWarning, stacklevel=2)
-        return self._stats.get('iram', {})
-
-    @property
-    def ram(self):
+    def memory(self):
         """
         RAM available on your board.
 
-        * **use** - status iram used
-        * **shared** - status of shared memory used from GPU
-        * **tot** - Total size RAM
-        * **unit** - Unit size RAM, usually in kB
-        * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
-            * **nblock** - Number of block used
-            * **size** - Size of the largest free block
-            * **unit** - Unit size lfb
-
-        Largest Free Block (lfb) is a statistic about the memory allocator.
-        It refers to the largest contiguous block of physical memory
-        that can currently be allocated: at most 4 MB.
-        It can become smaller with memory fragmentation.
-        The physical allocations in virtual memory can be bigger.
-
-        :return: ram status
+        :return: memory status
         :rtype: dict
         """
-        return self._stats['ram']
+        return self._stats['mem']
 
     @property
     def cpu(self):
@@ -869,7 +742,7 @@ class jtop(Thread):
         """
         self._stats = data
         # -- SWAP --
-        self._swap._update(data['swap'])
+        #self._swap._update(data['swap'])
         # -- FAN --
         self._fan._update(data['fan'])
         # -- JETSON_CLOCKS --
@@ -987,7 +860,7 @@ sudo systemctl restart jtop.service""".format(
         # Initialize cpu basic info
         self._cpu_info = init['cpu']
         # Initialize jetson_clocks sender
-        self._swap = Swap(self._controller, init['swap'])
+        # self._swap = Swap(self._controller, init['swap'])
         # Initialize jetson_clock
         if init['jc']:
             self._jc = JetsonClocks(self._controller)

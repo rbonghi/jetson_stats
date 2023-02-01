@@ -32,6 +32,9 @@ if __name__ == "__main__":
             # CPU
             print('*** CPUs ***')
             print(jetson.cpu)
+            # CPU
+            print('*** Memory ***')
+            print(jetson.memory)
             # GPU
             print('*** GPU ***')
             print(jetson.gpu)
