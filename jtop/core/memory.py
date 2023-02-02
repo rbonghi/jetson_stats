@@ -94,7 +94,8 @@ def read_mem_table(path_table):
             # Find total on table
             match = re.search(TOT_TABLE_REG, line)
             if match:
-                total = match.groupdict()
+                parsed_line = match.groupdict()
+                total = {'size': int(parsed_line['size']), 'unit': parsed_line['unit']}
                 continue
     # return total and table
     return total, table
@@ -115,7 +116,7 @@ def read_swapon():
                 parsed_line['name'],
                 parsed_line['type'],
                 int(parsed_line['prio']),
-                {'size': int(parsed_line['size']) // 1024, 'used': int(parsed_line['used']), 'unit': 'k'}
+                {'size': int(parsed_line['size']) // 1024, 'used': int(parsed_line['used']) // 1024, 'unit': 'k'}
             ]
             table += [data]
     return table
@@ -180,16 +181,20 @@ class MemoryService(object):
         # Extract memory info
         ram_total = status_mem.get('MemTotal', {})
         ram_free = status_mem.get('MemFree', {})
-        ram_available = status_mem.get('MemAvailable', {})
+        # ram_available = status_mem.get('MemAvailable', {})
         ram_buffer = status_mem.get('Buffers', {})
         ram_cached = status_mem.get('Cached', {})
+        ram_SReclaimable = status_mem.get('SReclaimable', {})
+        ram_Shmem = status_mem.get('Shmem', {})
+        total_used_memory = ram_total.get('val', 0) - ram_free.get('val', 0)
+        cached_memory = ram_cached.get('val', 0) + ram_SReclaimable.get('val', 0)  # + ram_Shmem.get('val', 0)
         # Add fields for RAM
         memory['RAM'] = {
             'tot': ram_total.get('val', 0),
-            'used': ram_total.get('val', 0) - ram_available.get('val', 0),
+            'used': total_used_memory - (ram_buffer.get('val', 0) + cached_memory),
             'free': ram_free.get('val', 0),
             'buffers': ram_buffer.get('val', 0),
-            'cached': ram_cached.get('val', 0),
+            'cached': cached_memory + ram_Shmem.get('val', 0),
             'shared': ram_shared_val,
             'unit': ram_total.get('unit', 'k'),
             'lfb': large_free_bank,  # In 4MB

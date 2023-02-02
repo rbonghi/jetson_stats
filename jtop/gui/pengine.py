@@ -19,12 +19,12 @@ import curses
 # Page class definition
 from .jtopgui import Page
 from .lib.colors import NColors
-from .lib.common import value_to_string, plot_name_info
+from .lib.common import unit_to_string, plot_name_info
 from .lib.linear_gauge import freq_gauge
 
 
 def get_value_engine(engine):
-    return value_to_string(engine['cur'], engine['unit']) if engine['online'] else '[OFF]'
+    return unit_to_string(engine['cur'], engine['unit'], 'Hz') if engine['online'] else '[OFF]'
 
 
 def pass_agx_orin(engine):

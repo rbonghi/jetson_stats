@@ -18,7 +18,7 @@
 import curses
 from .colors import NColors
 from .common import check_curses
-from .common import value_to_string
+from .common import unit_to_string
 
 
 def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
@@ -80,39 +80,11 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
         stdscr.addstr(pos_y, pos_x + name_size + 2, "OFF", color_offline)
 
 
-def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
-    # online status
-    online = cpu['online'] if 'online' in cpu else True
-    # name cpu - workararound for TOTAL cpu
-    name = cpu['name'] if 'name' in cpu else str(idx + 1) + (" " if idx < 9 else "")
-    # Plot values
-    values = [
-        (cpu['user'], NColors.green()),
-        (cpu['nice'], NColors.yellow()),
-        (cpu['system'], NColors.red()),
-    ] if online else []
-    # Draw gauge
-    data = {
-        'name': name,
-        'color': NColors.cyan() | curses.A_BOLD,
-        'online': online,
-        'values': values,
-    }
-    if size_w < 16:
-        basic_gauge(stdscr, pos_y, pos_x, size_w - 1, data)
-    elif 'freq' in cpu:
-        # Draw current frequency
-        curr_string = value_to_string(cpu['freq']['cur'], cpu['freq']['unit'])
-        stdscr.addstr(pos_y, pos_x + size_w - 6, curr_string, curses.A_NORMAL)
-    # Draw gauge
-    basic_gauge(stdscr, pos_y, pos_x, size_w - 8, data)
-
-
 def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
     # Name gauge
     name = freq_data['name'] if 'name' in freq_data else ""
     # Current value in string
-    curr_string = value_to_string(freq_data['cur'], freq_data['unit'])
+    curr_string = unit_to_string(freq_data['cur'], freq_data['unit'], 'Hz')
     # If there is a min and a max
     if 'max' in freq_data:
         value = ((freq_data['cur'] - freq_data['min']) / (freq_data['max'] - freq_data['min'])) * 100 if freq_data['min'] != freq_data['max'] else 0
@@ -122,8 +94,8 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
             'color': NColors.cyan(),
             'online': freq_data['online'],
             'values': [(value, NColors.green())],
-            'mleft': value_to_string(freq_data['min'], freq_data['unit']) if 'min' in freq_data else "",
-            'mright': value_to_string(freq_data['max'], freq_data['unit']) if 'max' in freq_data else "",
+            'mleft': unit_to_string(freq_data['min'], freq_data['unit'], 'Hz') if 'min' in freq_data else "",
+            'mright': unit_to_string(freq_data['max'], freq_data['unit'], 'Hz') if 'max' in freq_data else "",
         }
         basic_gauge(stdscr, pos_y, pos_x, size - 8, data, bar=":")
     else:
@@ -146,7 +118,7 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
             else:
                 stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', color_bar | curses.A_NORMAL)
     # Draw current frequency
-    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, curses.A_NORMAL)
+    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, curses.A_ITALIC)
 
 
 # OLD - TO REMOVE

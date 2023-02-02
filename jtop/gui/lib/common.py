@@ -146,22 +146,38 @@ def label_freq(frq, start='k'):
 
 
 def size_min(num, divider=1.0, n=0, start=''):
-    if num >= divider * 1000.0:
+    return find_unit(num, 1024.0, divider, n, start)
+
+
+def unit_min(num, divider=1.0, n=0, start=''):
+    return find_unit(num, 1000.0, divider, n, start)
+
+
+def find_unit(num, multiplier, divider=1.0, n=0, start=''):
+    if num >= divider * multiplier:
         n += 1
-        divider *= 1000.0
-        return size_min(num, divider, n, start)
+        divider *= multiplier
+        return find_unit(num, multiplier, divider, n, start)
     else:
         vect = ['', 'k', 'M', 'G', 'T']
         idx = vect.index(start)
         return round(num / divider, 1), divider, vect[n + idx]
 
 
-def value_to_string(value, unit, type='Hz'):
-    value, _, unit = size_min(value, start=unit)
+def size_to_string(value, unit):
+    return value_to_string(value, unit, "", size_min)
+
+
+def unit_to_string(value, unit, type):
+    return value_to_string(value, unit, type, unit_min)
+
+
+def value_to_string(value, unit, type, func):
+    value, _, unit = func(value, start=unit)
     value_string = str(value)
     if value >= 100:
-        #value_string = value_string.rstrip('0').rstrip('.')
-        value_string = value_string[:3]
+        # value_string = value_string.rstrip('0').rstrip('.')
+        value_string = value_string[:3].rstrip('.')
     return "{value}{unit}{type}".format(value=value_string, unit=unit, type=type)
 
 

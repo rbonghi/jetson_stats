@@ -37,26 +37,29 @@ from .jtopguimenu import (
 
 
 def compact_status(stdscr, pos_y, pos_x, width, jetson):
-    line_counter = 1
+    line_counter = 0
     # Fan status
-    data = {
-        'name': 'Fan',
-        'color': NColors.cyan(),
-        'online': jetson.fan,
-        'values': []
-    }
-    basic_gauge(stdscr, pos_y, pos_x + 1, width - 3, data)
+    if jetson.fan.all_speed().items():
+        for fan, speed in jetson.fan.all_speed().items():
+            line_counter += 1
+            data = {
+                'name': 'Fan',
+                'color': NColors.magenta(),
+                'online': jetson.fan,
+                'values': [(speed, NColors.magenta() | curses.A_BOLD)]
+            }
+            basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)
     # Jetson clocks status: Running (Green) or Normal (Grey)
     if jetson.jetson_clocks is not None:
-        jetson_clocks_gui(stdscr, pos_y + line_counter, pos_x + 2, jetson)
+        jetson_clocks_gui(stdscr, pos_y + line_counter, pos_x + 1, jetson)
         line_counter += 1
     # NVP Model
     if jetson.nvpmodel is not None:
-        nvp_model_gui(stdscr, pos_y + line_counter, pos_x + 2, jetson)
+        nvp_model_gui(stdscr, pos_y + line_counter, pos_x + 1, jetson)
         line_counter += 1
     # Model board information
     uptime_string = strfdelta(jetson.uptime, "{days} days {hours}:{minutes}:{seconds}")
-    plot_name_info(stdscr, pos_y + line_counter, pos_x + 2, "UpT", uptime_string)
+    plot_name_info(stdscr, pos_y + line_counter, pos_x + 1, "Uptime", uptime_string)
     return line_counter + 1
 
 

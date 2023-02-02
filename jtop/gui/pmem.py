@@ -22,7 +22,7 @@ from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .lib.colors import NColors
-from .lib.common import (size_min, value_to_string)
+from .lib.common import (size_min, unit_to_string, size_to_string, plot_name_info)
 from .lib.linear_gauge import linear_gauge, GaugeName, basic_gauge
 from .lib.chart import Chart
 from .lib.button import Button
@@ -34,17 +34,17 @@ SWAP_MIN_SIZE = 2
 def mem_gauge(stdscr, pos_y, pos_x, size, mem_data):
     # Plot values
     values = [
-        (mem_data['used'] / mem_data['tot'] * 100.0, NColors.green()),
+        ((mem_data['used'] - mem_data['shared']) / mem_data['tot'] * 100.0, NColors.green()),
+        (mem_data['shared'] / mem_data['tot'] * 100.0, NColors.green() | curses.A_BOLD),
         (mem_data['buffers'] / mem_data['tot'] * 100.0, NColors.blue()),
         (mem_data['cached'] / mem_data['tot'] * 100.0, NColors.yellow()),
-        (mem_data['shared'] / mem_data['tot'] * 100.0, NColors.green() | curses.A_BOLD),
     ]
-    used = value_to_string(mem_data['used'], mem_data['unit'], "")
-    total = value_to_string(mem_data['tot'], mem_data['unit'], "")
+    used = size_to_string(mem_data['used'], mem_data['unit'])
+    total = size_to_string(mem_data['tot'], mem_data['unit'])
     # Draw gauge
     data = {
         'name': 'Mem',
-        'color': NColors.cyan() | curses.A_BOLD,
+        'color': NColors.cyan(),
         'values': values,
         'mright': "{used}/{total}".format(used=used, total=total)
     }
@@ -58,12 +58,12 @@ def swap_gauge(stdscr, pos_y, pos_x, size, mem_data):
         (mem_data['used'] / mem_data['tot'] * 100.0, NColors.red()),
         (mem_data['cached'] / mem_data['tot'] * 100.0, NColors.yellow()),
     ]
-    used = value_to_string(mem_data['used'], mem_data['unit'], "")
-    total = value_to_string(mem_data['tot'], mem_data['unit'], "")
+    used = size_to_string(mem_data['used'], mem_data['unit'])
+    total = size_to_string(mem_data['tot'], mem_data['unit'])
     # Draw gauge
     data = {
         'name': 'Swp',
-        'color': NColors.cyan() | curses.A_BOLD,
+        'color': NColors.cyan(),
         'values': values,
         'mright': "{used}/{total}".format(used=used, total=total)
     }
@@ -71,17 +71,62 @@ def swap_gauge(stdscr, pos_y, pos_x, size, mem_data):
     basic_gauge(stdscr, pos_y, pos_x, size - 1, data)
 
 
+def emc_gauge(stdscr, pos_y, pos_x, size, mem_data):
+    # online status
+    online = mem_data['online'] if 'online' in mem_data else True
+    # Plot values
+    values = [
+        (mem_data['cur'] / mem_data['max'] * 100.0, NColors.green()),
+    ] if online else []
+    # Draw gauge
+    data = {
+        'name': 'Emc',
+        'color': NColors.cyan(),
+        'values': values,
+        'mleft': unit_to_string(mem_data['min'], mem_data['unit'], 'Hz'),
+        'mright': unit_to_string(mem_data['max'], mem_data['unit'], 'Hz'),
+    }
+    # Draw gauge
+    basic_gauge(stdscr, pos_y, pos_x, size - 13, data, bar=':')
+    # Draw info EMC
+    curr_string = unit_to_string(mem_data['cur'], mem_data['unit'], 'Hz')
+    stdscr.addstr(pos_y, pos_x + size - 11, curr_string, curses.A_ITALIC)
+    curr_string = "{val:3.0f}%".format(val=mem_data['val'])
+    stdscr.addstr(pos_y, pos_x + size - 4, curr_string, curses.A_BOLD)
+
+
 def compact_memory(stdscr, pos_y, pos_x, width, jetson):
     line_counter = 1
     # Draw memory gauge
     mem_gauge(stdscr, pos_y, pos_x, width, jetson.memory['RAM'])
     if 'SWAP' in jetson.memory:
-        swap_gauge(stdscr, pos_y + 1, pos_x, width, jetson.memory['SWAP'])
+        swap_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['SWAP'])
         line_counter += 1
     if 'EMC' in jetson.memory:
-        #emc_gauge(stdscr, pos_y + 1, 0, width, jetson.memory['EMC'])
+        emc_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['EMC'])
+        line_counter += 1
+    if 'IRAM' in jetson.memory:
+        # TODO add Iram gauge
+        stdscr.addstr(pos_y + line_counter, pos_x, "TODO", curses.A_BOLD)
         line_counter += 1
     return line_counter
+
+
+def ram_legend(stdscr, pos_y, pos_x, jetson):
+    stdscr.addstr(pos_y, pos_x + 1, "     RAM     ", curses.A_REVERSE)
+    # Plot all RAM values
+    used = size_to_string(jetson.memory['RAM']['used'], jetson.memory['RAM']['unit'])
+    plot_name_info(stdscr, pos_y + 1, pos_x + 1, 'Used', used, spacing=3, color=NColors.cyan())
+    shared = size_to_string(jetson.memory['RAM']['shared'], jetson.memory['RAM']['unit'])
+    plot_name_info(stdscr, pos_y + 2, pos_x + 1, 'Shared', shared, spacing=1, color=NColors.green())
+    buffers = size_to_string(jetson.memory['RAM']['buffers'], jetson.memory['RAM']['unit'])
+    plot_name_info(stdscr, pos_y + 3, pos_x + 1, 'Buffers', buffers, color=NColors.blue())
+    cached = size_to_string(jetson.memory['RAM']['cached'], jetson.memory['RAM']['unit'])
+    plot_name_info(stdscr, pos_y + 4, pos_x + 1, 'Cached', cached, spacing=1, color=NColors.yellow())
+    free = size_to_string(jetson.memory['RAM']['free'], jetson.memory['RAM']['unit'])
+    plot_name_info(stdscr, pos_y + 5, pos_x + 1, 'Free', free, spacing=3)
+    total = size_to_string(jetson.memory['RAM']['tot'], jetson.memory['RAM']['unit'])
+    plot_name_info(stdscr, pos_y + 6, pos_x + 1, 'TOT', total, spacing=4, color=curses.A_BOLD)
 
 
 class MEM(Page):
@@ -122,29 +167,76 @@ class MEM(Page):
             self._swap_size -= 1
 
     def update_chart(self, jetson, name):
-        #parameter = jetson.ram
+        parameter = jetson.memory['RAM']
         # Get max value if is present
-        #max_val = parameter.get("tot", 100)
+        max_val = parameter.get("tot", 100)
         # Get unit
-        #unit = parameter.get("unit", "k")
+        unit = parameter.get("unit", "k")
         # Get value
-        #use_val = parameter.get("use", 0)
-        #cpu_val = parameter.get("use", 0) - parameter.get("shared", 0)
-        #szw, divider, unit = size_min(max_val, start=unit)
+        use_val = parameter.get("used", 0)
+        cpu_val = parameter.get("used", 0) - parameter.get("shared", 0)
+        szw, divider, unit = size_min(max_val, start=unit)
         # Append in list
-        #use_out = use_val / divider
-        #cpu_out = cpu_val / divider
+        use_out = use_val / divider
+        cpu_out = cpu_val / divider
         return {
-        #    'value': [use_out, cpu_out],
-        #    'max': szw,
-        #    'unit': unit
+            'value': [use_out, cpu_out],
+            'max': szw,
+            'unit': unit
         }
 
     def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
-        
-        mem_gauge(self.stdscr, 2, 1, width, self.jetson.memory['RAM'])
+
+        # Set size chart memory
+        size_x = [1, width - 18]
+        size_y = [first + 1, height // 2 - 2]
+        # Draw the GPU chart
+        # lfb label
+        mem_data = self.jetson.memory['RAM']
+        used = size_to_string(mem_data['used'], mem_data['unit'])
+        total = size_to_string(mem_data['tot'], mem_data['unit'])
+        percent = "{used}/{total}B".format(used=used, total=total)
+        label_lfb = "(lfb {nblock}x4MB)".format(nblock=mem_data['lfb'])
+        self.chart_ram.draw(self.stdscr, size_x, size_y, label="{percent} - {lfb}".format(percent=percent, lfb=label_lfb))
+        # Draw all RAM
+        ram_legend(self.stdscr, first + 1, width - 16, self.jetson)
+        # Draw swap list
+        self.draw_swap(first + height // 2 - 1, 0, width - 16, height - 2)
+
+    def draw_swap(self, pos_y, pos_x, width, height):
+        swap_table = self.jetson.memory['SWAP']['table']
+        self.stdscr.addstr(pos_y, pos_x, str(len(swap_table)), curses.A_NORMAL)
+        for idx, swap in enumerate(swap_table):
+            if pos_y + idx < height - 1:
+                if idx == 0:
+                    self.stdscr.addstr(pos_y + idx, pos_x, str(swap), curses.A_REVERSE)
+                else:
+                    # Color gauge
+                    # Change color for type partition
+                    if swap[1] == 'partition':
+                        color = NColors.magenta()
+                    elif swap[1] == 'file':
+                        color = NColors.yellow()
+                    else:
+                        color = NColors.cyan()
+                    # data gauge
+                    swap_status = swap[3]
+                    used = size_to_string(swap_status['used'], swap_status['unit'])
+                    total = size_to_string(swap_status['size'], swap_status['unit'])
+                    data = {
+                        'name': path.basename(swap[0]),
+                        'color': color,
+                        'values': [(swap_status.get('used', 0) / swap_status.get('size', 0) * 100.0, color)],
+                        'mright': "{used}/{total}".format(used=used, total=total),
+                    }
+                    basic_gauge(self.stdscr, pos_y + idx, pos_x + 1, width - 8, data)
+                    # Draw Priority
+                    self.stdscr.addstr(pos_y + idx, width - 5, "P={prio: d}".format(prio=swap[2]), curses.A_NORMAL)
+            else:
+                self.stdscr.addstr(height - 1, pos_x, "BB", curses.A_NORMAL)
+                break
 
     def swap_menu(self, lc, size, start, width):
         line_counter = lc + 1
@@ -186,38 +278,6 @@ class MEM(Page):
                      value=int(swap_status.get('use', 0) / float(swap_status.get('tot', 1)) * 100.0),
                      percent=percent,
                      status='ON' if swap_status else 'OFF')
-
-    def memory_legend(self, start_y, start_x):
-        r_height = 6
-        r_width = 20
-        # Draw border legend
-        try:
-            rectangle(self.stdscr, start_y, start_x, start_y + r_height, start_x + r_width)
-        except curses.error:
-            pass
-        # Draw name
-        self.stdscr.addstr(start_y + 1, start_x + 3, "RAM Legend", curses.A_BOLD)
-        # Draw CPU
-        self.stdscr.addstr(start_y + 2, start_x + 2, "CPU:", (NColors.icyan() | curses.A_BOLD))
-        self.stdscr.addstr(start_y + 3, start_x + 2, "GPU:", (NColors.igreen() | curses.A_BOLD))
-        # Line
-        self.stdscr.hline(start_y + 4, start_x + 2, curses.ACS_HLINE, r_width - 3)
-        # Total used
-        self.stdscr.addstr(start_y + 5, start_x + 2, "USE:", curses.A_BOLD)
-        # Draw values
-        cpu_val = (self.jetson.ram['use'] - self.jetson.ram['shared'])
-        cpu_val, divider, cpu_unit = size_min(cpu_val, start=self.jetson.ram['unit'])
-        gpu_val = self.jetson.ram['shared']
-        gpu_val, divider, gpu_unit = size_min(gpu_val, start=self.jetson.ram['unit'])
-        use_val = self.jetson.ram['use']
-        use_val, divider, use_unit = size_min(use_val, start=self.jetson.ram['unit'])
-        self.stdscr.addstr(start_y + 2, start_x + 7, "{value: 3.1f}".format(value=cpu_val), curses.A_NORMAL)
-        self.stdscr.addstr(start_y + 3, start_x + 7, "{value: 3.1f}".format(value=gpu_val), curses.A_NORMAL)
-        self.stdscr.addstr(start_y + 5, start_x + 7, "{value: 3.1f}".format(value=use_val), curses.A_NORMAL)
-        # Unit
-        self.stdscr.addstr(start_y + 2, start_x + 16, "{unit}B".format(unit=cpu_unit), curses.A_NORMAL)
-        self.stdscr.addstr(start_y + 3, start_x + 16, "{unit}B".format(unit=gpu_unit), curses.A_NORMAL)
-        self.stdscr.addstr(start_y + 5, start_x + 16, "{unit}B".format(unit=use_unit), curses.A_NORMAL)
 
     def draw_nv_table(self, start_y, start_x, r_width):
         columns_title = self.jetson.ram['table'][0]
