@@ -64,6 +64,7 @@ from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
 from .core.jetson_variables import get_platform_variables
+from .core.memory import Memory
 from .core import (
     get_var,
     get_cuda,
@@ -137,8 +138,8 @@ class jtop(Thread):
         self._thread_libraries.start()
         # Initialize cpu info
         self._cpu_info = []
-        # Initialize swap
-        # self._swap = None
+        # Initialize memory controller
+        self._memory = None
         # Load jetson_clocks status
         self._jc = None
         # Initialize fan
@@ -549,20 +550,12 @@ class jtop(Thread):
         # -- CPU --
         for idx, cpu in enumerate(self.cpu['cpu']):
             stats["CPU{idx}".format(idx=idx + 1)] = 100 - int(cpu['idle']) if cpu['online'] else 'OFF'
+        # -- MEMORY --
+        if 'use' in self.swap:
+            stats['SWAP'] = self.swap['use']
         # -- GPU --
         for n_gpu in self.gpu:
             stats['GPU{n_gpu}'.format(n_gpu=n_gpu)] = self.gpu[n_gpu]['val']
-        # -- RAM --
-        stats['RAM'] = self.ram['use']
-        # -- EMC --
-        if self.emc:
-            stats['EMC'] = self.emc['val']
-        # -- IRAM --
-        if self.iram:
-            stats['IRAM'] = self.iram['use']
-        # -- SWAP --
-        if 'use' in self.swap:
-            stats['SWAP'] = self.swap['use']
         # -- Engines --
         for group in self.engine:
             for name, engine in self.engine[group].items():
@@ -587,7 +580,7 @@ class jtop(Thread):
         :return: memory status
         :rtype: dict
         """
-        return self._stats['mem']
+        return self._memory
 
     @property
     def cpu(self):
@@ -741,8 +734,8 @@ class jtop(Thread):
         Internal decode function to decode and refactoring data
         """
         self._stats = data
-        # -- SWAP --
-        #self._swap._update(data['swap'])
+        # -- MEMORY --
+        self._memory._update(data['mem'])
         # -- FAN --
         self._fan._update(data['fan'])
         # -- JETSON_CLOCKS --
@@ -751,12 +744,6 @@ class jtop(Thread):
         # -- NVP Model --
         if 'nvp' in data:
             self._nvp._update(data['nvp'])
-        # Set trigger
-        self._trigger.set()
-        # Notify all observers
-        for observer in self._observers:
-            # Call all observer in list
-            observer(self)
 
     def run(self):
         """ """
@@ -771,6 +758,12 @@ class jtop(Thread):
                 data = self._get_data()
                 # Decode and update all jtop data
                 self._decode(data)
+                # Set trigger
+                self._trigger.set()
+                # Notify all observers
+                for observer in self._observers:
+                    # Call all observer in list
+                    observer(self)
         except Exception:
             # Store error message
             self._error = sys.exc_info()
@@ -859,8 +852,8 @@ sudo systemctl restart jtop.service""".format(
         self._board['hardware'] = init['board']['hardware']
         # Initialize cpu basic info
         self._cpu_info = init['cpu']
-        # Initialize jetson_clocks sender
-        # self._swap = Swap(self._controller, init['swap'])
+        # Initialize memory controller
+        self._memory = Memory(self._controller, init['memory'])
         # Initialize jetson_clock
         if init['jc']:
             self._jc = JetsonClocks(self._controller)

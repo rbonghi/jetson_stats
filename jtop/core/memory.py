@@ -17,8 +17,11 @@
 
 import os
 import re
+import stat
+import shlex
 # Logging
 import logging
+import subprocess as sp
 from .engine import read_engine
 from .common import cat
 from .command import Command
@@ -29,8 +32,9 @@ MEMINFO_REG = re.compile(r'(?P<key>.+):\s+(?P<value>.+) (?P<unit>.)B')
 BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(?P<nr_free>.*)')
 MEM_TABLE_REG = re.compile(r'(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
 TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
-SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>\d+)')
+SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>-?\d+)')
 # Swap configuration
+PATH_FSTAB = '/etc/fstab'
 CONFIG_DEFAULT_SWAP_DIRECTORY = ''
 CONFIG_DEFAULT_SWAP_NAME = 'swfile'
 
@@ -73,9 +77,19 @@ def buddyinfo(page_size):
 
 
 def read_mem_table(path_table):
-    table = [
-        ['user', 'process', 'PID', 'size'],
-    ]
+    """
+    This method list all processes working with GPU
+
+    ========== ============ ======== =============
+    user       process      PID      size
+    ========== ============ ======== =============
+    user       name process number   dictionary
+    ========== ============ ======== =============
+
+    :return: list of all processes
+    :type spin: list
+    """
+    table = []
     total = {}
     with open(path_table, "r") as fp:
         for line in fp:
@@ -102,9 +116,19 @@ def read_mem_table(path_table):
 
 
 def read_swapon():
-    table = [
-        ['name', 'type', 'prio', 'size']
-    ]
+    """
+    This method list all processes working with GPU
+
+    ============== ======================= ======== =============
+    name           type                    prio     size
+    ============== ======================= ======== =============
+    name partition type: partition or file priority dictionary
+    ============== ======================= ======== =============
+
+    :return: list of all processes
+    :type spin: list
+    """
+    table = {}
     swap = Command(['swapon', '--show', '--raw', '--byte'])
     lines = swap()
     for line in lines:
@@ -112,34 +136,60 @@ def read_swapon():
         match = re.search(SWAP_REG, line.strip())
         if match:
             parsed_line = match.groupdict()
-            data = [
-                parsed_line['name'],
-                parsed_line['type'],
-                int(parsed_line['prio']),
-                {'size': int(parsed_line['size']) // 1024, 'used': int(parsed_line['used']) // 1024, 'unit': 'k'}
-            ]
-            table += [data]
+            data = {
+                'type': parsed_line['type'],
+                'prio': int(parsed_line['prio']),
+                'size': int(parsed_line['size']) // 1024,
+                'used': int(parsed_line['used']) // 1024,
+                'unit': 'k',
+            }
+            table[parsed_line['name']] = data
     return table
+
+
+def check_fstab(table_line):
+    with open(PATH_FSTAB, "r") as fp:
+        for line in fp:
+            if table_line == line.strip():
+                return True
+    return False
 
 
 class Memory(object):
 
-    def __init__(self, controller):
+    def __init__(self, controller, swap_path):
         self._controller = controller
+        self._data = {}
+        self._swap_path = swap_path
 
     def clear_cache(self):
         # Set new swap size configuration
-        self._controller.put({'memory': ''})
+        self._controller.put({'clear_cache': ''})
 
-    def set(self, value, on_boot=False):
+    def swap_is_enable(self):
+        return self._swap_path in self._data['SWAP']['table']
+
+    def swap_set(self, value, on_boot=False):
         if not isinstance(value, (int, float)):
             raise ValueError("Need a Number")
         # Set new swap size configuration
         self._controller.put({'swap': {'size': value, 'boot': on_boot}})
 
-    def deactivate(self):
+    def swap_deactivate(self):
         # Set new swap size configuration
         self._controller.put({'swap': {}})
+
+    def _update(self, data):
+        self._data = data
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __next__(self):
+        return next(self._data)
 
 
 class MemoryService(object):
@@ -152,9 +202,69 @@ class MemoryService(object):
         self._isJetson = os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps")
         if not os.path.isdir("/sys/kernel/debug/clk/emc"):
             logger.warn("EMC not available")
-        # TEMP
-        memory = self.get_status()
-        print(memory)
+
+    def swap_path(self):
+        config = self._config.get('swap', {})
+        directory = config.get('directory', CONFIG_DEFAULT_SWAP_DIRECTORY)
+        swap_name = config.get('name', CONFIG_DEFAULT_SWAP_NAME)
+        return "{directory}/{name}".format(directory=directory, name=swap_name)
+
+    def clear_cache(self):
+        """
+        Clear cache following https://coderwall.com/p/ef1gcw/managing-ram-and-swap
+        """
+        clear_cache = Command(['sysctl', 'vm.drop_caches=3'])
+        out = clear_cache()
+        return True if out else False
+
+    def swap_set(self, size, on_boot=False):
+        # Load swap configuration
+        path_swap = self.swap_path()
+        logger.info("Activate {path_swap} auto={on_boot}".format(path_swap=path_swap, on_boot=on_boot))
+        # Create a swapfile for Ubuntu at the current directory location
+        sp.call(shlex.split('fallocate -l {size}G {path_swap}'.format(size=size, path_swap=path_swap)))
+        # Change permissions so that only root can use it
+        # https://www.tutorialspoint.com/python/os_chmod.htm
+        # Equivalent permission 600 srw-------
+        os.chmod(path_swap, stat.S_IREAD | stat.S_IWRITE)
+        # Set up the Linux swap area
+        sp.call(shlex.split('mkswap {path_swap}'.format(path_swap=path_swap)))
+        # Now start using the swapfile
+        sp.call(shlex.split('swapon {path_swap}'.format(path_swap=path_swap)))
+        # Add not on boot return
+        if not on_boot:
+            return
+        # Find if is already on boot
+        swap_string_boot = "{path_swap} none swap sw 0 0".format(path_swap=path_swap)
+        if check_fstab(swap_string_boot):
+            logger.warn("{path_swap} Already on boot".format(path_swap=path_swap))
+            return
+        # Append swap line
+        file_object = open(PATH_FSTAB, 'a')
+        file_object.write("{swap_string_boot}\n".format(swap_string_boot=swap_string_boot))
+        file_object.close()
+
+    def swap_deactivate(self):
+        # Load swap configuration
+        path_swap = self.swap_path()
+        # Disable swap
+        sp.call(shlex.split('swapoff {path_swap}'.format(path_swap=path_swap)))
+        # Remove swap
+        os.remove(path_swap)
+        # Remove if on fstab
+        swap_string_boot = "{path_swap} none swap sw 0 0".format(path_swap=path_swap)
+        if not check_fstab(swap_string_boot):
+            return
+        # Check if is on boot
+        logger.info("Remove {path_swap} from fstab".format(path_swap=path_swap))
+        with open(PATH_FSTAB, "r") as f:
+            lines = f.readlines()
+        with open(PATH_FSTAB, "w") as f:
+            for line in lines:
+                if line.strip("\n") != swap_string_boot:
+                    f.write(line)
+        # Run script
+        logger.info("Deactivate {path_swap}".format(path_swap=path_swap))
 
     def get_status(self):
         memory = {}
@@ -232,7 +342,7 @@ class MemoryService(object):
                 'tot': size,
                 'used': used_total.get('val', 0),
                 'unit': used_total.get('unit', 'k'),
-                'lfs': size - used_total.get('val', 0),  # TODO To check
+                'lfb': size - used_total.get('val', 0),  # TODO To check
             }
         return memory
 # EOF

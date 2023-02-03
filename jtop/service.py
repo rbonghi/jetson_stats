@@ -45,7 +45,6 @@ from .core import (
     EngineService,
     FanService,
     FanServiceLegacy,
-    SwapService,
     get_key,
     get_var)
 # Create logger
@@ -77,11 +76,10 @@ JTOP_SERVICE_NAME = 'jtop.service'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
 TIMEOUT_SWITCHOFF = 3.0
-LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
 
 
-def status_service():
-    return os.system('systemctl is-active --quiet {service}'.format(service=JTOP_SERVICE_NAME)) == 0
+def status_service(service=JTOP_SERVICE_NAME):
+    return os.system('systemctl is-active --quiet {service}'.format(service=service)) == 0
 
 
 def remove_service_pipe():
@@ -98,7 +96,7 @@ def uninstall_service(name=JTOP_SERVICE_NAME):
     if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)) or os.path.islink('/etc/systemd/system/{name}'.format(name=name)):
         logger.info("Found {name}".format(name=name))
         # Check if service is active
-        if os.system('systemctl is-active --quiet {name}'.format(name=name)) == 0:
+        if status_service(service=name):
             # Stop service
             logger.info(" - STOP {name}".format(name=name))
             sp.call(shlex.split('systemctl stop {name}'.format(name=name)))
@@ -302,12 +300,10 @@ class JtopServer(Process):
             self.nvpmodel = None
         # Setup cpu service
         self.cpu = CPUService()
-        # Setup engine service
-        self.engine = EngineService("/sys/kernel/debug/clk")
         # Setup memory service
         self.memory = MemoryService(self.config)
-        # Swap manager
-        self.swap = SwapService(self.config)
+        # Setup engine service
+        self.engine = EngineService()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
 
@@ -345,9 +341,14 @@ class JtopServer(Process):
                     if 'swap' in control:
                         swap = control['swap']
                         if swap:
-                            self.swap.set(swap['size'], swap['boot'])
+                            self.memory.swap_set(swap['size'], swap['boot'])
                         else:
-                            self.swap.deactivate()
+                            self.memory.swap_deactivate()
+                    # Clear cache
+                    if 'clear_cache' in control:
+                        logger.info("Clear cache")
+                        # Clear cache
+                        self.memory.clear_cache()
                     # Manage jetson_clocks
                     if 'config' in control:
                         command = control['config']
@@ -380,10 +381,6 @@ class JtopServer(Process):
                         logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
                         self.nvpmodel.set(mode)
-                    if 'memory' in control:
-                        logger.info("Clear cache")
-                        # Clear cache
-                        self.swap.clear_cache()
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
@@ -402,7 +399,7 @@ class JtopServer(Process):
                             'board': self.board,
                             'interval': self.interval.value,
                             'cpu': self.cpu.get_cpu_info(),
-                            'swap': self.swap.path,
+                            'memory': self.memory.swap_path(),
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks is not None,
                             'nvpmodel': self.nvpmodel is not None}

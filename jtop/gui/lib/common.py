@@ -153,15 +153,15 @@ def unit_min(num, divider=1.0, n=0, start=''):
     return find_unit(num, 1000.0, divider, n, start)
 
 
-def find_unit(num, multiplier, divider=1.0, n=0, start=''):
-    if num >= divider * multiplier:
+def find_unit(size, power, divider=1.0, n=0, start=''):
+    n = 0
+    power_labels = ['', 'k', 'M', 'G', 'T']
+    while size > power - 1:
+        divider *= power
+        size /= power
         n += 1
-        divider *= multiplier
-        return find_unit(num, multiplier, divider, n, start)
-    else:
-        vect = ['', 'k', 'M', 'G', 'T']
-        idx = vect.index(start)
-        return round(num / divider, 1), divider, vect[n + idx]
+    idx = power_labels.index(start)
+    return round(size, 1), divider, power_labels[n + idx]
 
 
 def size_to_string(value, unit):
