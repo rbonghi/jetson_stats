@@ -110,7 +110,7 @@ def read_mem_table(path_table):
             match = re.search(TOT_TABLE_REG, line)
             if match:
                 parsed_line = match.groupdict()
-                total = {'size': int(parsed_line['size']), 'unit': parsed_line['unit']}
+                total = {'size': int(parsed_line['size']), 'unit': parsed_line['unit'].lower()}
                 continue
     # return total and table
     return total, table
@@ -251,6 +251,9 @@ class Memory(object):
 
     def _update(self, data):
         self._data = data
+
+    def items(self):
+        return self._data.items()
 
     def __getitem__(self, key):
         return self._data[key]

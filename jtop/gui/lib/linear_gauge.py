@@ -121,7 +121,7 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
             else:
                 stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', color_bar | curses.A_NORMAL)
     # Draw current frequency
-    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, curses.A_ITALIC)
+    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, NColors.italic())
 
 
 # OLD - TO REMOVE

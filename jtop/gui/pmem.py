@@ -83,16 +83,33 @@ def emc_gauge(stdscr, pos_y, pos_x, size, mem_data):
         'name': 'Emc',
         'color': NColors.cyan(),
         'values': values,
-        'mleft': unit_to_string(mem_data['min'], mem_data['unit'], 'Hz'),
-        'mright': unit_to_string(mem_data['max'], mem_data['unit'], 'Hz'),
+        'mleft': unit_to_string(mem_data['min'], mem_data['unit'], 'Hz') if 'min' in mem_data else '',
+        'mright': unit_to_string(mem_data['max'], mem_data['unit'], 'Hz') if 'max' in mem_data else '',
     }
     # Draw gauge
     basic_gauge(stdscr, pos_y, pos_x, size - 13, data, bar=':')
     # Draw info EMC
     curr_string = unit_to_string(mem_data['cur'], mem_data['unit'], 'Hz')
-    stdscr.addstr(pos_y, pos_x + size - 11, curr_string, curses.A_ITALIC)
+    stdscr.addstr(pos_y, pos_x + size - 11, curr_string, NColors.italic())
     curr_string = "{val:3.0f}%".format(val=mem_data['val'])
     stdscr.addstr(pos_y, pos_x + size - 4, curr_string, curses.A_BOLD)
+
+
+def iram_gauge(stdscr, pos_y, pos_x, size, mem_data):
+    used = size_to_string(mem_data['used'], mem_data['unit'])
+    total = size_to_string(mem_data['tot'], mem_data['unit'])
+    # Make data for gauge
+    data = {
+        'name': 'Iram',
+        'color': NColors.cyan(),
+        'values': [(mem_data['used'] / mem_data['tot'] * 100.0, NColors.cyan())],
+        'mright': "{used}/{total}".format(used=used, total=total),
+    }
+    basic_gauge(stdscr, pos_y, pos_x, size - 12, data)
+    # Write lfb
+    percent = "{used}/{total}B".format(used=used, total=total)
+    label_lfb = "(lfb {nblock}{unit}B)".format(nblock=mem_data['lfb'], unit=mem_data['unit'])
+    stdscr.addstr(pos_y, pos_x + size - 11, label_lfb, curses.A_NORMAL)
 
 
 def compact_memory(stdscr, pos_y, pos_x, width, jetson):
@@ -106,8 +123,7 @@ def compact_memory(stdscr, pos_y, pos_x, width, jetson):
         emc_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['EMC'])
         line_counter += 1
     if 'IRAM' in jetson.memory:
-        # TODO add Iram gauge
-        stdscr.addstr(pos_y + line_counter, pos_x, "TODO", curses.A_BOLD)
+        iram_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['IRAM'])
         line_counter += 1
     return line_counter
 
@@ -299,8 +315,7 @@ class MEM(Page):
             emc_gauge(self.stdscr, first + height // 2 - 1 + line_counter, 1, width - 22, self.jetson.memory['EMC'])
             line_counter += 1
         if 'IRAM' in self.jetson.memory:
-            # TODO add Iram gauge
-            self.stdscr.addstr(self.stdscr, first + height // 2 - 1 + line_counter, 1, "TODO", curses.A_BOLD)
+            iram_gauge(self.stdscr, first + height // 2 - 1 + line_counter, 1, width - 22, self.jetson.memory['IRAM'])
             line_counter += 1
         # Draw buttons
         self._button_cache.draw(first + height // 2, width - 20, key, mouse, label="clear cache ")

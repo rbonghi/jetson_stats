@@ -49,7 +49,7 @@ def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
     elif 'freq' in cpu:
         # Draw current frequency
         curr_string = unit_to_string(cpu['freq']['cur'], cpu['freq']['unit'], 'Hz')
-        stdscr.addstr(pos_y, pos_x + size_w - 6, curr_string, curses.A_ITALIC)
+        stdscr.addstr(pos_y, pos_x + size_w - 6, curr_string, NColors.italic())
     # Draw gauge
     basic_gauge(stdscr, pos_y, pos_x, size_w - 8, data)
 
