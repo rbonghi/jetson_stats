@@ -49,6 +49,15 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
                 'values': [(speed, NColors.magenta() | curses.A_BOLD)]
             }
             basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)
+    else:
+        line_counter += 1
+        data = {
+            'name': 'Fan',
+            'color': NColors.magenta(),
+            'online': False,
+            'message': 'DISABLED',
+        }
+        basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)
     # Jetson clocks status: Running (Green) or Normal (Grey)
     if jetson.jetson_clocks is not None:
         jetson_clocks_gui(stdscr, pos_y + line_counter, pos_x + 1, jetson)

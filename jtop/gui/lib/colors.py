@@ -84,7 +84,7 @@ class NColors:
 
     @staticmethod
     def iyellow():
-        return curses.color_pair(NColors.YELLOW)
+        return curses.color_pair(NColors.iYELLOW)
 
     @staticmethod
     def iblue():

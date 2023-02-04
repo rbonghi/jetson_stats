@@ -157,27 +157,36 @@ def check_fstab(table_line):
 
 class Memory(object):
 
-    def __init__(self, controller, swap_path):
+    def __init__(self, controller, path):
         self._controller = controller
         self._data = {}
-        self._swap_path = swap_path
+        self._swap_path = path
+
+    def swap_path(self):
+        return self._swap_path
 
     def clear_cache(self):
         # Set new swap size configuration
         self._controller.put({'clear_cache': ''})
 
-    def swap_is_enable(self):
-        return self._swap_path in self._data['SWAP']['table']
+    def swap_is_enable(self, path):
+        return path in self._data['SWAP']['table']
 
-    def swap_set(self, value, on_boot=False):
+    def swap_set(self, value, path='', on_boot=False):
         if not isinstance(value, (int, float)):
             raise ValueError("Need a Number")
+        # if path_swap is empty load from default configuration
+        if not path:
+            path = self._swap_path
         # Set new swap size configuration
-        self._controller.put({'swap': {'size': value, 'boot': on_boot}})
+        self._controller.put({'swap': {'type': 'set', 'path': path, 'size': value, 'boot': on_boot}})
 
-    def swap_deactivate(self):
+    def swap_deactivate(self, path=''):
+        # if path_swap is empty load from default configuration
+        if not path:
+            path = self._swap_path
         # Set new swap size configuration
-        self._controller.put({'swap': {}})
+        self._controller.put({'swap': {'type': 'unset', 'path': path}})
 
     def _update(self, data):
         self._data = data
@@ -217,9 +226,8 @@ class MemoryService(object):
         out = clear_cache()
         return True if out else False
 
-    def swap_set(self, size, on_boot=False):
+    def swap_set(self, size, path_swap, on_boot):
         # Load swap configuration
-        path_swap = self.swap_path()
         logger.info("Activate {path_swap} auto={on_boot}".format(path_swap=path_swap, on_boot=on_boot))
         # Create a swapfile for Ubuntu at the current directory location
         sp.call(shlex.split('fallocate -l {size}G {path_swap}'.format(size=size, path_swap=path_swap)))
@@ -244,9 +252,7 @@ class MemoryService(object):
         file_object.write("{swap_string_boot}\n".format(swap_string_boot=swap_string_boot))
         file_object.close()
 
-    def swap_deactivate(self):
-        # Load swap configuration
-        path_swap = self.swap_path()
+    def swap_deactivate(self, path_swap):
         # Disable swap
         sp.call(shlex.split('swapoff {path_swap}'.format(path_swap=path_swap)))
         # Remove swap

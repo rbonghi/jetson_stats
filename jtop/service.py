@@ -340,10 +340,10 @@ class JtopServer(Process):
                     # Manage swap
                     if 'swap' in control:
                         swap = control['swap']
-                        if swap:
-                            self.memory.swap_set(swap['size'], swap['boot'])
-                        else:
-                            self.memory.swap_deactivate()
+                        if swap['type'] == 'set':
+                            self.memory.swap_set(swap['size'], swap['path'], swap['boot'])
+                        elif swap['type'] == 'unset':
+                            self.memory.swap_deactivate(swap['path'])
                     # Clear cache
                     if 'clear_cache' in control:
                         logger.info("Clear cache")

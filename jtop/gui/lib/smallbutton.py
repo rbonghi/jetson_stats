@@ -28,11 +28,11 @@ class SmallButton:
         self._start_pressed = False
         self._old_status = False
 
-    def draw(self, pos_y, pos_x, key, mouse, label=''):
+    def draw(self, pos_y, pos_x, key, mouse, data={}, label='', color=curses.A_REVERSE):
         # String label
-        if key and label:
+        if self._key and label:
             string = "[{key}] {label}".format(label=label, key=self._key)
-        elif not key:
+        elif not self._key:
             string = "{label}".format(label=label)
         else:
             string = "[{key}]".format(key=self._key)
@@ -49,11 +49,11 @@ class SmallButton:
                 self._timer = 0
             self._timer += 1
         # Draw button
-        self.stdscr.addstr(pos_y, pos_x, string, curses.A_NORMAL if self._start_pressed else curses.A_REVERSE)
+        self.stdscr.addstr(pos_y, pos_x, string, curses.A_NORMAL if self._start_pressed else color)
         # Run action
         if status:
             # Run action
-            self._action(self._key)
+            self._action(data)
 
     def _keyPressed(self, key):
         # Default status
