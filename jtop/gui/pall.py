@@ -56,7 +56,7 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
             'color': NColors.magenta(),
             'online': False,
             'coffline': NColors.imagenta(),
-            'message': 'DISABLED',
+            'message': 'NOT AVAILABLE',
         }
         basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)
     # Jetson clocks status: Running (Green) or Normal (Grey)

@@ -22,6 +22,7 @@ swapfile
 test.*
 jtop_test.*
 *.csv
+.dccache
 
 .vscode/
 .venv*/

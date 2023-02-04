@@ -33,7 +33,7 @@ SWAP_MIN_SIZE = 1
 def mem_gauge(stdscr, pos_y, pos_x, size, mem_data):
     # Plot values
     values = [
-        ((mem_data['used'] - mem_data['shared']) / mem_data['tot'] * 100.0, NColors.green()),
+        ((mem_data['used'] - mem_data['shared']) / mem_data['tot'] * 100.0, NColors.cyan()),
         (mem_data['shared'] / mem_data['tot'] * 100.0, NColors.green() | curses.A_BOLD),
         (mem_data['buffers'] / mem_data['tot'] * 100.0, NColors.blue()),
         (mem_data['cached'] / mem_data['tot'] * 100.0, NColors.yellow()),

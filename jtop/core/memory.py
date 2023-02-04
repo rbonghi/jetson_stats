@@ -43,7 +43,7 @@ def meminfo():
     # Read meminfo and decode
     # https://access.redhat.com/solutions/406773
     status_mem = {}
-    with open("/proc/meminfo", "r") as fp:
+    with open("/proc/meminfo", 'r') as fp:
         for line in fp:
             # Search line
             match = re.search(MEMINFO_REG, line.strip())
@@ -57,7 +57,8 @@ def buddyinfo(page_size):
     # Read status free memory
     # http://andorian.blogspot.com/2014/03/making-sense-of-procbuddyinfo.html
     buddyhash = {}
-    buddyinfo = open("/proc/buddyinfo").readlines()
+    with open("/proc/buddyinfo", 'r') as fp:
+        buddyinfo = fp.readlines()
     for line in buddyinfo:
         # Decode line
         parsed_line = re.match(BUDDYINFO_REG, line.strip()).groupdict()

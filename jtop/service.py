@@ -27,7 +27,7 @@ import shlex
 import subprocess as sp
 from copy import deepcopy
 from grp import getgrnam
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 
@@ -86,7 +86,7 @@ def remove_service_pipe():
     # Remove old pipes if exists
     if os.path.isdir(JTOP_PIPE):
         logger.info("Remove folder {pipe}".format(pipe=JTOP_PIPE))
-        os.rmdir(JTOP_PIPE)
+        rmtree(JTOP_PIPE)
     elif os.path.isfile(JTOP_PIPE):
         logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
         os.remove(JTOP_PIPE)
@@ -187,7 +187,7 @@ def status_permission_group(group=JTOP_USER):
 
 
 def status_permission(group=JTOP_USER):
-    return status_permission_group(group) and status_permission_group(group)
+    return status_permission_user(group) and status_permission_group(group)
 
 
 def unset_service_permission(group=JTOP_USER):
