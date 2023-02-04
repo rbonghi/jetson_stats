@@ -214,7 +214,7 @@ class Memory(object):
 
     def swap_set(self, value, path='', on_boot=False):
         """
-        Create a new swap on a default path `/` 
+        Create a new swap on a default path `/`
 
         :param value: Size in **G** of a new SWAP
         :type value: int
