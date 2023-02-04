@@ -56,7 +56,7 @@ def swap_gauge(stdscr, pos_y, pos_x, size, mem_data):
     values = [
         (mem_data['used'] / mem_data['tot'] * 100.0, NColors.red()),
         (mem_data['cached'] / mem_data['tot'] * 100.0, NColors.yellow()),
-    ]
+    ] if mem_data['tot'] > 0 else []
     used = size_to_string(mem_data['used'], mem_data['unit'])
     total = size_to_string(mem_data['tot'], mem_data['unit'])
     # Draw gauge
@@ -64,6 +64,7 @@ def swap_gauge(stdscr, pos_y, pos_x, size, mem_data):
         'name': 'Swp',
         'color': NColors.cyan(),
         'values': values,
+        'online': mem_data['tot'] > 0,
         'mright': "{used}/{total}".format(used=used, total=total)
     }
     # Draw gauge

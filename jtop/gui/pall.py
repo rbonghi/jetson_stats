@@ -55,6 +55,7 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
             'name': 'Fan',
             'color': NColors.magenta(),
             'online': False,
+            'coffline': NColors.imagenta(),
             'message': 'DISABLED',
         }
         basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)

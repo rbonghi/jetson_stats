@@ -28,10 +28,11 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
             'name': name value
             'color': color test
             'online': bool status
-            'message': Offline message default OFF
+            'message': Offline message - Default OFF
+            'coffline': Color offline - Default RED
             'values': [(value, color), (value, color), ... ] sum of values = 100
             'mleft': message on left
-            'mright': message on right otherwise a percentage
+            'mright': message on right - Default percentage
         }
     """
     # Evaluate size without short name
@@ -48,7 +49,7 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
     # Draw gauge
     online = data['online'] if 'online' in data else True
     # Draw gauge border
-    color_offline = NColors.ired()
+    color_offline = data['coffline'] if 'coffline' in data else NColors.ired()
     stdscr.addstr(pos_y, pos_x + name_size, "[" + " " * size_bar + "]", curses.A_BOLD if online else color_offline)
     # Draw bar
     if online:
