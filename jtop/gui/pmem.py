@@ -22,7 +22,7 @@ from .jtopgui import Page
 # Graphics elements
 from .lib.colors import NColors
 from .lib.common import (size_min, unit_to_string, size_to_string, plot_name_info)
-from .lib.linear_gauge import basic_gauge
+from .lib.linear_gauge import basic_gauge, basic_gauge_simple
 from .lib.chart import Chart
 from .lib.smallbutton import SmallButton
 
@@ -75,22 +75,27 @@ def emc_gauge(stdscr, pos_y, pos_x, size, mem_data):
     # online status
     online = mem_data['online'] if 'online' in mem_data else True
     # Plot values
-    values = [
-        (mem_data['cur'] / mem_data['max'] * 100.0, NColors.green()),
-    ] if online else []
-    # Draw gauge
-    data = {
-        'name': 'Emc',
-        'color': NColors.cyan(),
-        'values': values,
-        'mleft': unit_to_string(mem_data['min'], mem_data['unit'], 'Hz') if 'min' in mem_data else '',
-        'mright': unit_to_string(mem_data['max'], mem_data['unit'], 'Hz') if 'max' in mem_data else '',
-    }
-    # Draw gauge
-    basic_gauge(stdscr, pos_y, pos_x, size - 13, data, bar=':')
-    # Draw info EMC
-    curr_string = unit_to_string(mem_data['cur'], mem_data['unit'], 'Hz')
-    stdscr.addstr(pos_y, pos_x + size - 11, curr_string, NColors.italic())
+    if 'max' in mem_data:
+        values = [
+            (mem_data['cur'] / mem_data['max'] * 100.0, NColors.green()),
+        ] if online else []
+        # Draw gauge
+        data = {
+            'name': 'Emc',
+            'color': NColors.cyan(),
+            'values': values,
+            'mleft': unit_to_string(mem_data['min'], mem_data['unit'], 'Hz') if 'min' in mem_data else '',
+            'mright': unit_to_string(mem_data['max'], mem_data['unit'], 'Hz'),
+        }
+        # Draw gauge
+        basic_gauge(stdscr, pos_y, pos_x, size - 13, data, bar=':')
+        # Draw info EMC
+        curr_string = unit_to_string(mem_data['cur'], mem_data['unit'], 'Hz')
+        stdscr.addstr(pos_y, pos_x + size - 11, curr_string, NColors.italic())
+    else:
+        mem_data['name'] = 'Emc'
+        basic_gauge_simple(stdscr, pos_y, pos_x, size - 6, mem_data)
+    # Show val    
     curr_string = "{val:3.0f}%".format(val=mem_data['val'])
     stdscr.addstr(pos_y, pos_x + size - 4, curr_string, curses.A_BOLD)
 

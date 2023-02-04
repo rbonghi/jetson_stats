@@ -83,6 +83,33 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
         stdscr.addstr(pos_y, pos_x + name_size + 2, data['message'] if 'message' in data else "OFF", color_offline)
 
 
+def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data):
+    # Name gauge
+    name = freq_data['name'] if 'name' in freq_data else ""
+    # Current value in string
+    curr_string = unit_to_string(freq_data['cur'], freq_data['unit'], 'Hz')
+    # Draw name engine
+    stdscr.addstr(pos_y, pos_x, name, NColors.cyan())
+    # Write online bar
+    size_bar = size - len(name) - len(curr_string) - 4
+    start_bar = pos_x + len(name) + 1 if len(name) > 0 else pos_x
+    end_bar = start_bar + size_bar
+    # Check if there is a limit
+    color_bar = NColors.green() if freq_data['online'] else NColors.red()
+    if freq_data['online']:
+        stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
+        stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
+        stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)
+    else:
+        stdscr.hline(pos_y, start_bar + 1, curses.ACS_BULLET, size_bar)
+        if size_bar > 7:
+            stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', color_bar | curses.A_NORMAL)
+        else:
+            stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', color_bar | curses.A_NORMAL)
+    # Draw current frequency
+    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, NColors.italic())
+
+
 def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
     # Name gauge
     name = freq_data['name'] if 'name' in freq_data else ""
@@ -101,27 +128,10 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
             'mright': unit_to_string(freq_data['max'], freq_data['unit'], 'Hz') if 'max' in freq_data else "",
         }
         basic_gauge(stdscr, pos_y, pos_x, size - 8, data, bar=":")
+        # Draw current frequency
+        stdscr.addstr(pos_y, pos_x + size - 6, curr_string, NColors.italic())
     else:
-        # Draw name engine
-        stdscr.addstr(pos_y, pos_x, name, NColors.cyan())
-        # Write online bar
-        size_bar = size - len(name) - len(curr_string) - 4
-        start_bar = pos_x + len(name) + 1 if len(name) > 0 else pos_x
-        end_bar = start_bar + size_bar
-        # Check if there is a limit
-        color_bar = NColors.green() if freq_data['online'] else NColors.red()
-        if freq_data['online']:
-            stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
-            stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
-            stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)
-        else:
-            stdscr.hline(pos_y, start_bar + 1, curses.ACS_BULLET, size_bar)
-            if size_bar > 7:
-                stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', color_bar | curses.A_NORMAL)
-            else:
-                stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', color_bar | curses.A_NORMAL)
-    # Draw current frequency
-    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, NColors.italic())
+        basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data)
 
 
 # OLD - TO REMOVE
