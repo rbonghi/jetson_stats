@@ -17,7 +17,6 @@
 
 from os import path
 import curses
-from copy import deepcopy
 # Page class definition
 from .jtopgui import Page
 # Graphics elements
