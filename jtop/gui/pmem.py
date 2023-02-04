@@ -107,7 +107,6 @@ def iram_gauge(stdscr, pos_y, pos_x, size, mem_data):
     }
     basic_gauge(stdscr, pos_y, pos_x, size - 12, data)
     # Write lfb
-    percent = "{used}/{total}B".format(used=used, total=total)
     label_lfb = "(lfb {nblock}{unit}B)".format(nblock=mem_data['lfb'], unit=mem_data['unit'])
     stdscr.addstr(pos_y, pos_x + size - 11, label_lfb, curses.A_NORMAL)
 
