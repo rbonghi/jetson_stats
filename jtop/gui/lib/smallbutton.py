@@ -28,7 +28,6 @@ class SmallButton:
         self._start_pressed = False
         self._old_status = False
 
-
     def draw(self, pos_y, pos_x, key, mouse, label=''):
         # String label
         if key and label:

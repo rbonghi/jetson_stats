@@ -58,7 +58,7 @@ Follow the next attributes to know in detail how you can you in your python proj
 import logging
 import re
 import sys
-from warnings import warn
+# from warnings import warn
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
@@ -526,11 +526,11 @@ class jtop(Thread):
         * **jetson_clocks** - Status of jetson_clocks, human readable :py:attr:`~jetson_clocks`
         * **nvp model** - If exist, the NV Power Model name active :py:attr:`~nvpmodel`
         * **cpu X** - The status for each cpu in your board, if disabled *OFF* :py:attr:`~cpu`
+        * **RAM** - Used ram :py:attr:`~memory`
+        * **SWAP** - used swap :py:attr:`~memory`
+        * **EMC** - If exist, the used emc :py:attr:`~memory`
+        * **IRAM** - If exist, the used iram :py:attr:`~memory`
         * **GPU** - Status of your GPU :py:attr:`~gpu`
-        * **RAM** - Used ram :py:attr:`~ram`
-        * **EMC** - If exist, the used emc :py:attr:`~emc`
-        * **IRAM** - If exist, the used iram :py:attr:`~iram`
-        * **SWAP** - If exist, the used swap :py:attr:`~swap`
         * **engine X** - Frequency for each engine, if disabled *OFF* :py:attr:`~engine`
         * **fan** - Status fan speed :py:attr:`~fan`
         * **Temp X** - X temperature :py:attr:`~temperature`
@@ -551,8 +551,12 @@ class jtop(Thread):
         for idx, cpu in enumerate(self.cpu['cpu']):
             stats["CPU{idx}".format(idx=idx + 1)] = 100 - int(cpu['idle']) if cpu['online'] else 'OFF'
         # -- MEMORY --
-        if 'use' in self.swap:
-            stats['SWAP'] = self.swap['use']
+        stats['RAM'] = self.memory['RAM']['used']
+        stats['SWAP'] = self.memory['SWAP']['used']
+        if 'EMC' in self.memory:
+            stats['EMC'] = self.memory['EMC']['val']
+        if 'IRAM' in self.memory:
+            stats['IRAM'] = self.memory['IRAM']['used']
         # -- GPU --
         for n_gpu in self.gpu:
             stats['GPU{n_gpu}'.format(n_gpu=n_gpu)] = self.gpu[n_gpu]['val']

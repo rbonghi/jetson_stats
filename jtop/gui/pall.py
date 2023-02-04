@@ -25,7 +25,7 @@ from .lib.common import (
     jetson_clocks_gui,
     nvp_model_gui)
 from .lib.colors import NColors
-from .lib.linear_gauge import linear_gauge, basic_gauge, GaugeName, GaugeBar
+from .lib.linear_gauge import linear_gauge, basic_gauge, GaugeName
 from .pcpu import compact_cpus
 from .pmem import compact_memory
 # Menu GUI pages
