@@ -169,8 +169,9 @@ class MEM(Page):
         if self._swap_pressed != -1:
             # Read name swap
             name = list(swap_table.keys())[self._swap_pressed]
+            swap = swap_table[name]
             # Deactivate SWAP
-            if self.jetson.memory.swap_is_enable(name):
+            if self.jetson.memory.swap_is_enable(name) and swap['type'] == 'file':
                 self.jetson.memory.swap_deactivate(name)
 
     def action_increase(self, data):
@@ -262,22 +263,27 @@ class MEM(Page):
     def draw_swap_controller(self, pos_y, pos_x, key, mouse):
         swap_info = self.jetson.memory['SWAP']
         swap_table = swap_info['table']
-        name = ''
+        string_name = ''
+        color = curses.A_REVERSE
         # Read swap name
         if self._swap_pressed != -1:
+            operation = ''
             # Read name swap
             name = list(swap_table.keys())[self._swap_pressed]
             # Get info swap
             swap = swap_table[name]
             if swap['type'] == 'partition':
-                color = NColors.magenta()
+                color = NColors.imagenta()
             elif swap['type'] == 'file':
-                color = NColors.yellow()
+                color = NColors.iyellow()
+                operation = 'Disable '
             else:
-                color = NColors.cyan()
+                color = NColors.icyan()
+            # Swap name and operation
+            string_name = "{operation}{name}".format(operation=operation, name=name)
         # Swap controller button
-        label = 'Disable {name}'.format(name=name) if name else 'Select swap'
-        self._button_swap.draw(pos_y, pos_x, key, mouse, label=label, color=NColors.iyellow())
+        label = string_name if string_name else 'Select swap'
+        self._button_swap.draw(pos_y, pos_x, key, mouse, label=label, color=color)
         # Button create new swap
         self._button_create.draw(pos_y + 2, pos_x, key, mouse, label="Create new")
         # Draw selected number

@@ -397,6 +397,8 @@ class MemoryService(object):
         # Read EMC status
         if os.path.isdir("/sys/kernel/debug/clk/emc"):
             memory['EMC'] = read_engine("/sys/kernel/debug/clk/emc")
+            # Set always online this engine
+            memory['EMC']['online'] = True
             # Percentage utilization
             # https://forums.developer.nvidia.com/t/real-time-emc-bandwidth-with-sysfs/107479/3
             utilization = int(cat("/sys/kernel/actmon_avg_activity/mc_all"))
