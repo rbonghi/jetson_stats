@@ -95,7 +95,7 @@ def emc_gauge(stdscr, pos_y, pos_x, size, mem_data):
     else:
         mem_data['name'] = 'Emc'
         basic_gauge_simple(stdscr, pos_y, pos_x, size - 6, mem_data)
-    # Show val    
+    # Show val
     curr_string = "{val:3.0f}%".format(val=mem_data['val'])
     stdscr.addstr(pos_y, pos_x + size - 4, curr_string, curses.A_BOLD)
 
