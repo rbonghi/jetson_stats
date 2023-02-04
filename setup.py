@@ -255,7 +255,6 @@ setup(
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
     data_files=[('jetson_stats', ['services/jtop.service', 'scripts/jtop_env.sh'])],
     # Install extra scripts
-    scripts=['scripts/jetson_swap'],
     cmdclass={'develop': JTOPDevelopCommand,
               'install': JTOPInstallCommand},
     # The following provide a command called `jtop`
@@ -263,6 +262,7 @@ setup(
         'jtop=jtop.__main__:main',
         'jetson_release = jtop.jetson_release:main',
         'jetson_config = jtop.jetson_config:main',
+        'jetson_swap = jtop.jetson_swap:main',
     ]},
 )
 # EOF

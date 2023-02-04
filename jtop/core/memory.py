@@ -290,7 +290,11 @@ class MemoryService(object):
         out = clear_cache()
         return True if out else False
 
-    def swap_set(self, size, path_swap, on_boot):
+    @staticmethod
+    def swap_set(size, path_swap, on_boot):
+        if os.path.isfile(path_swap):
+            logger.error("{path_swap} already exist".format(path_swap=path_swap))
+            return
         # Load swap configuration
         logger.info("Activate {path_swap} auto={on_boot}".format(path_swap=path_swap, on_boot=on_boot))
         # Create a swapfile for Ubuntu at the current directory location
@@ -316,7 +320,12 @@ class MemoryService(object):
         file_object.write("{swap_string_boot}\n".format(swap_string_boot=swap_string_boot))
         file_object.close()
 
-    def swap_deactivate(self, path_swap):
+    @staticmethod
+    def swap_deactivate(path_swap):
+        # Check if exist swap
+        if not os.path.isfile(path_swap):
+            logger.error("{path_swap} Does not exist".format(path_swap=path_swap))
+            return
         # Disable swap
         sp.call(shlex.split('swapoff {path_swap}'.format(path_swap=path_swap)))
         # Remove swap
