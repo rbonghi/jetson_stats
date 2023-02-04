@@ -51,6 +51,7 @@ class NVPModel(object):
         * AGX Xavier: https://www.jetsonhacks.com/2018/10/07/nvpmodel-nvidia-jetson-agx-xavier-developer-kit/
         * Nano: https://www.jetsonhacks.com/2019/04/10/jetson-nano-use-more-power/
     """
+
     def __init__(self):
         self._nvpm = {}
         # Initialize mode
@@ -230,6 +231,9 @@ class NVPModelService(object):
         # self._thread.daemon = True
         self._thread.start()
         return True
+
+    def status_set(self):
+        self._thread.join()
 
     def reset(self):
         status = self.set_mode(self.selected)
