@@ -11,7 +11,7 @@ jetson-stats
    jtop
    advanced-usage
    docker
-   reference
+   reference/index
    other-tools/index
    contributing
    GitHub <https://github.com/rbonghi/jetson_stats>
@@ -69,7 +69,7 @@ The more in-depth :doc:`advanced-usage` guide is the place to jtop such a python
          # Read tegra stats
          print(jetson.stats)
 
-The :doc:`reference` documentation provides API-level documentation.
+The :doc:`reference/index` documentation provides API-level documentation.
 
 
 Compatibility

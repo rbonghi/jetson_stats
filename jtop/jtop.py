@@ -139,7 +139,7 @@ class jtop(Thread):
         # Initialize cpu info
         self._cpu_info = []
         # Initialize memory controller
-        self._memory = None
+        self._memory = Memory()
         # Load jetson_clocks status
         self._jc = None
         # Initialize fan
@@ -579,10 +579,87 @@ class jtop(Thread):
     @property
     def memory(self):
         """
-        RAM available on your board.
+        This property show in a simple way all memories available, the main output is available in this way:
+
+        * **RAM** - It is a dictionary with all information about RAM
+        * **SWAP** - It is a dictionary with all information about SWAP
+        * **EMC** - It is a dictionary with EMC data, not in all boards this data is available
+        * **IRAM** - It is a dictionary with SWAP data, not in all boards this data is available
+
+        You can also use this property to set a new swap, deactivate or clear cache,
+        read all methods available :py:class:`~jtop.core.memory.Memory`
+
+
+        For each dictionary there are specific outputs
+
+        *RAM*
+
+        ========== ========= ====================================================
+        Name       Type      Description
+        ========== ========= ====================================================
+        tot        `int`     Total RAM
+        used       `int`     Total used RAM
+        free       `int`     Free RAM
+        buffers    `int`     Buffered RAM
+        cached     `int`     Cached RAM
+        shared     `int`     Shared RAM, for NVIDIA Jetson the RAM used from GPU
+        lfb        `int`     Large Free Block in **4MB**
+        unit       `int`     Unit for all values, always **k**
+        ========== ========= ====================================================
+
+        *SWAP*
+
+        ========== ========= ====================================================
+        Name       Type      Description
+        ========== ========= ====================================================
+        tot        `int`     Total SWAP
+        used       `int`     Total used SWAP
+        cached     `int`     Cached RAM
+        unit       `int`     Unit for all values, always **k**
+        table      `dict`    Dictionary with all swap available :sup:`A`
+        ========== ========= ====================================================
+
+        *EMC* (if available on your device)
+
+        ========== ========= ==========================================================
+        Name       Type      Description
+        ========== ========= ==========================================================
+        online     `bool`    Status EMC
+        val        `int`     Percentage of bandwidth used relative to running frequency
+        cur        `int`     Current working frequency
+        max        `int`     Max EMC frequency usable
+        min        `int`     Min EMC frequency usable
+        unit       `int`     Unit for all values, always **k**
+        ========== ========= ==========================================================
+
+        *IRAM* (if available on your device)
+
+        ========== ========= ====================================================
+        Name       Type      Description
+        ========== ========= ====================================================
+        tot        `int`     Total IRAM
+        used       `int`     Total used IRAM
+        unit       `int`     Unit for all values, always **k**
+        lfb        `int`     Large Free Block in **4MB**
+        ========== ========= ====================================================
+
+        .. note::
+
+            Note **A**
+                The swap table is a list of dictionary with this data
+
+                ========== ========= ==============================================
+                Name       Type      Description
+                ========== ========= ==============================================
+                type       `string`  Type of partition
+                prio       `int`     Priority partition
+                size       `int`     Size partition
+                used       `int`     Used part of this partition
+                unit       `int`     Unit for all values, always **k**
+                ========== ========= ==============================================
 
         :return: memory status
-        :rtype: dict
+        :rtype: Memory
         """
         return self._memory
 
@@ -857,7 +934,7 @@ sudo systemctl restart jtop.service""".format(
         # Initialize cpu basic info
         self._cpu_info = init['cpu']
         # Initialize memory controller
-        self._memory = Memory(self._controller, init['memory'])
+        self._memory._initialize(self._controller, init['memory'])
         # Initialize jetson_clock
         if init['jc']:
             self._jc = JetsonClocks(self._controller)

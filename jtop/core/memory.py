@@ -157,23 +157,74 @@ def check_fstab(table_line):
 
 
 class Memory(object):
+    """
+    This class get the output from your memory, this class is readable like a dictionary,
+    please read the documentation on :py:attr:`~jtop.jtop.memory` but is also usable to enable, disable swap on your device
 
-    def __init__(self, controller, path):
-        self._controller = controller
+    .. code-block:: python
+
+        with jtop() as jetson:
+            if jetson.ok():
+                jetson.memory.swap_set(10, on_boot=False)
+
+
+    or if you want to deactivate a swap you can use this command
+
+    .. code-block:: python
+
+        with jtop() as jetson:
+            if jetson.ok():
+                jetson.memory.swap_deactivate()
+
+    Below all methods available using the :py:attr:`~jtop.jtop.memory` attribute
+    """
+
+    def __init__(self):
+        self._controller = None
         self._data = {}
-        self._swap_path = path
+        self._swap_path = ''
 
     def swap_path(self):
+        """
+        Return the default SWAP path
+
+        :return: Path swap
+        :rtype: str
+        """
         return self._swap_path
 
     def clear_cache(self):
+        """
+        Clear the memory cache
+        """
         # Set new swap size configuration
         self._controller.put({'clear_cache': ''})
 
     def swap_is_enable(self, path):
+        """
+        Check if a swap is on list
+
+        :param path: Path swap
+        :type path: str
+
+        :return: Status swap
+        :rtype: bool
+        """
         return path in self._data['SWAP']['table']
 
     def swap_set(self, value, path='', on_boot=False):
+        """
+
+        Create a new swap on a default path `/` 
+
+        :param value: Size in **G** of a new SWAP
+        :type value: int
+        :param path: Path swap
+        :type path: str
+        :param on_boot: Set this swap on boot
+        :type on_boot: bool
+        :raises ValueError: Wrong speed number or wrong mode name
+        """
         if not isinstance(value, (int, float)):
             raise ValueError("Need a Number")
         # if path_swap is empty load from default configuration
@@ -183,11 +234,21 @@ class Memory(object):
         self._controller.put({'swap': {'type': 'set', 'path': path, 'size': value, 'boot': on_boot}})
 
     def swap_deactivate(self, path=''):
+        """
+        Deactivate a swap from a path or from default location `/`
+
+        :param path: Path swap
+        :type path: str
+        """
         # if path_swap is empty load from default configuration
         if not path:
             path = self._swap_path
         # Set new swap size configuration
         self._controller.put({'swap': {'type': 'unset', 'path': path}})
+
+    def _initialize(self, controller, path):
+        self._controller = controller
+        self._swap_path = path
 
     def _update(self, data):
         self._data = data
