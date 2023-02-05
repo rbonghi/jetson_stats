@@ -416,10 +416,6 @@ class JtopServer(Process):
                     # Close and log status
                     if self.tegra.close():
                         logger.info("tegrastats close")
-                        # Start jetson_clocks
-                        if self.jetson_clocks is not None:
-                            self.jetson_clocks.stop()
-                            logger.info("jetson_clocks show closed")
                     # Disable timeout
                     timeout = None
                     self.interval.value = -1.0
