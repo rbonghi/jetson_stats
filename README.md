@@ -105,7 +105,7 @@ More information available at [_docker_](https://rnext.it/jetson_stats/docker.ht
 
 ## Sponsorship
 
-If your company benefits from this library, please consider [:sparkling_heart: sponsoring its development](https://github.com/sponsors/rbonghi).
+If your company benefits from this library, please consider [💖 sponsoring its development](https://github.com/sponsors/rbonghi).
 
 ## Documentation
 

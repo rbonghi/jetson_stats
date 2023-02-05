@@ -24,7 +24,7 @@ import platform
 import logging
 from shutil import copyfile
 try:
-    from smbus import SMBus
+    from smbus2 import SMBus
 except ImportError:
     print("Skip for setup.py")
 # Load distro library from python3 or use platform
@@ -113,20 +113,26 @@ CUDA_TABLE = {
     'tegra124': '3.2',  # JETSON TK1
 }
 
-
+# Module reference
+# https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3231/index.html
+# https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/IN/QuickStart.html
 MODULE_NAME_TABLE = {
+    'p3767-0000': 'NVIDIA Jetson Orin NX',
+    'p3701-0004': 'NVIDIA Jetson AGX Orin (32GB ram)',
     'p3701-0000': 'NVIDIA Jetson AGX Orin',
-    'p3668-0003': 'NVIDIA Jetson Xavier NX 16GB',
+    'p3668-0003': 'NVIDIA Jetson Xavier NX (16GB ram)',
     'p3668-0001': 'NVIDIA Jetson Xavier NX',
     'p3668-0000': 'NVIDIA Jetson Xavier NX (Developer kit)',
     'p2888-0008': 'NVIDIA Jetson AGX Xavier Industrial (32 GB ram)',
     'p2888-0006': 'NVIDIA Jetson AGX Xavier (8 GB ram)',
     'p2888-0005': 'NVIDIA Jetson AGX Xavier (64 GB ram)',
     'p2888-0004': 'NVIDIA Jetson AGX Xavier (32 GB ram)',
+    'p2888-0003': 'NVIDIA Jetson AGX Xavier (32 GB ram)',
     'p2888-0001': 'NVIDIA Jetson AGX Xavier (16 GB ram)',
     'p3448-0003': 'NVIDIA Jetson Nano (2 GB ram)',
     'p3448-0002': 'NVIDIA Jetson Nano module (16Gb eMMC)',
     'p3448-0000': 'NVIDIA Jetson Nano (4 GB ram)',
+    'p3636-0001': 'NVIDIA Jetson TX2 NX',
     'p3509-0000': 'NVIDIA Jetson TX2 NX',
     'p3489-0888': 'NVIDIA Jetson TX2 (4 GB ram)',
     'p3489-0000': 'NVIDIA Jetson TX2i',

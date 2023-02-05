@@ -27,31 +27,35 @@ def get_value_engine(engine):
     return unit_to_string(engine['cur'], engine['unit'], 'Hz') if engine['online'] else '[OFF]'
 
 
+def add_engine_in_list(label, engine, group, name):
+    return [(label, get_value_engine(engine[group][name]))] if group in engine else []
+
+
 def pass_agx_orin(engine):
     return [
-        [('APE', get_value_engine(engine['APE']['APE'])), ('PVA0a', get_value_engine(engine['PVA0']['PVA0_CPU_AXI']))],
-        [('DLA0c', get_value_engine(engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(engine['DLA1']['DLA1_CORE']))],
-        [('NVENC', get_value_engine(engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(engine['NVDEC']['NVDEC']))],
-        [('NVJPG', get_value_engine(engine['NVJPG']['NVJPG'])), ('NVJPG1', get_value_engine(engine['NVJPG']['NVJPG1']))],
-        [('SE', get_value_engine(engine['SE']['SE'])), ('VIC', get_value_engine(engine['VIC']['VIC']))],
+        add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_CPU_AXI'),
+        add_engine_in_list('DLA0c', engine, 'DLA0', 'DLA0_CORE') + add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE'),
+        add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
+        add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
+        add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
     ]
 
 
 def map_xavier(engine):
     return [
-        [('APE', get_value_engine(engine['APE']['APE'])), ('CVNAS', get_value_engine(engine['CVNAS']['CVNAS']))],
-        [('DLA0c', get_value_engine(engine['DLA0']['DLA0_CORE'])), ('DLA1c', get_value_engine(engine['DLA1']['DLA1_CORE']))],
-        [('NVENC', get_value_engine(engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(engine['NVDEC']['NVDEC']))],
-        [('NVJPG', get_value_engine(engine['NVJPG']['NVJPG'])), ('PVA0a', get_value_engine(engine['PVA0']['PVA0_AXI']))],
-        [('SE', get_value_engine(engine['SE']['SE'])), ('VIC', get_value_engine(engine['VIC']['VIC']))],
+        add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('CVNAS', engine, 'CVNAS', 'CVNAS'),
+        add_engine_in_list('DLA0c', engine, 'DLA0', 'DLA0_CORE') + add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE'),
+        add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
+        add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_AXI'),
+        add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
     ]
 
 
 def map_jetson_nano(engine):
     return [
-        [('APE', get_value_engine(engine['APE']['APE']))],
-        [('NVENC', get_value_engine(engine['NVENC']['NVENC'])), ('NVDEC', get_value_engine(engine['NVDEC']['NVDEC']))],
-        [('NVJPG', get_value_engine(engine['NVJPG']['NVJPG'])), ('SE', get_value_engine(engine['SE']['SE']))],
+        add_engine_in_list('APE', engine, 'APE', 'APE'),
+        add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
+        add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('SE', engine, 'SE', 'SE'),
     ]
 
 
@@ -74,8 +78,11 @@ def engine_model(model):
 def map_engines(jetson):
     # Check if there is a map for each engine
     func_list_engines = engine_model(jetson.board['hardware']["Module"])
-    if func_list_engines:
-        return func_list_engines(jetson.engine)
+    try:
+        if func_list_engines:
+            return func_list_engines(jetson.engine)
+    except KeyError:
+        pass
     # Otherwise if not mapped show all engines
     list_engines = []
     for group in jetson.engine:
@@ -95,7 +102,8 @@ def compact_engines(stdscr, pos_x, pos_y, width, jetson):
     for gidx, row in enumerate(map_eng):
         size_eng = width // len(row) - 1
         for idx, (name, value) in enumerate(row):
-            plot_name_info(stdscr, pos_y + gidx + 1, pos_x + (size_eng + 1) * idx + 1, name, value)
+            if name is not None:
+                plot_name_info(stdscr, pos_y + gidx + 1, pos_x + (size_eng + 1) * idx + 1, name, value)
     return size_map
 
 
