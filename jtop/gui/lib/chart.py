@@ -25,7 +25,7 @@ from .common import check_curses
 class Chart(object):
 
     OFFSET_COLOR_CHART = 18
-    OFFSET_COLOR_TEXT = 25
+    OFFSET_COLOR_TEXT = 30
 
     """
     Chart draw object
@@ -171,9 +171,11 @@ class Chart(object):
         for idx, values in enumerate(reversed(points)):
             counter = 0
             counter_color = 0
-            prev_color = curses.COLOR_BLACK
-            for value, color_chart in zip(values, self.color_chart):
-                curses.init_pair(Chart.OFFSET_COLOR_CHART + counter_color, color_chart, prev_color)
+            for chart_idx, (value, color_chart) in enumerate(zip(values, self.color_chart)):
+                curses.init_pair(Chart.OFFSET_COLOR_CHART + counter_color, color_chart,
+                                 self.color_chart[chart_idx - 1] if chart_idx > 1 else curses.COLOR_BLACK)
+                curses.init_pair(Chart.OFFSET_COLOR_CHART + counter_color + 1, color_chart,
+                                 self.color_chart[chart_idx - 2] if chart_idx > 2 else curses.COLOR_BLACK)
 
                 cell_val = value * size_y / self.max_val
                 cell_val_int = int(cell_val)
@@ -195,15 +197,14 @@ class Chart(object):
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                         elif cell_val_mant <= 0.5:
                             stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2586'.encode('utf-8'),
-                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color + 1))
                         elif cell_val_mant < 1.0:
                             stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581'.encode('utf-8'),
-                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color + 1))
                             stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'),
                                           curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
                     else:
                         stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(Chart.OFFSET_COLOR_TEXT))
                 counter += 1
-                counter_color += 1
-                prev_color = color_chart
+                counter_color += 2
 # EOF

@@ -107,7 +107,7 @@ def main():
         except JtopException as e:
             print(e)
         # Close service
-        exit(0)
+        sys.exit(0)
     # Initialize logging level
     logging.basicConfig()
     # Convert refresh to second
@@ -126,7 +126,7 @@ def main():
         except JtopException as e:
             print(e)
         # Close service
-        exit(0)
+        sys.exit(0)
     # Run health jtop
     if args.health:
         jtop_config()
@@ -137,7 +137,7 @@ def main():
         with open('{cwd}/{name}'.format(cwd=os.getcwd(), name=JTOP_LOG_NAME), 'w') as writer:
             writer.write(body)
         print("LOG '{name}' generated in {path}".format(name=JTOP_LOG_NAME, path=os.getcwd()))
-        exit(0)
+        sys.exit(0)
     # jtop client start
     try:
         # Open jtop client

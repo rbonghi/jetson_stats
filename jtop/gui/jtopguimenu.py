@@ -20,38 +20,10 @@
 import curses
 # Graphics elements
 from .lib.common import (check_curses,
-                         strfdelta,
-                         plot_name_info,
-                         label_freq,
-                         jetson_clocks_gui,
-                         nvp_model_gui)
+                         label_freq)
 from .lib.colors import NColors
 from .lib.linear_gauge import linear_gauge, GaugeName
 from .pengine import compact_engines
-
-
-@check_curses
-def plot_CPUs(stdscr, offest, list_cpus, width):
-    max_bar = int(float(width) / 2.0)
-    for idx, cpu in enumerate(list_cpus):
-        # Split in double list
-        start = max_bar if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else 1
-        off_idx = idx - len(list_cpus) / 2 if idx >= len(list_cpus) / 2 and len(list_cpus) > 4 else idx
-        # Check if exist governor and add in percent name
-        percent = ""
-        if 'governor' in cpu:
-            percent = "{gov} -{val: 4.0f}%".format(gov=cpu['governor'].capitalize(), val=100 - cpu['idle'])
-        # Show linear gauge
-        name = "{name}".format(name=idx) + (" " if idx <= 9 and len(list_cpus) > 9 else "")
-        linear_gauge(
-            stdscr, offset=int(offest + off_idx), start=start, size=max_bar,
-            name=GaugeName(name, color=NColors.cyan()),
-            value=cpu['user'] + cpu['nice'] + cpu['system'],
-            status='ON' if cpu else 'OFF',
-            percent=percent,
-            label=label_freq(cpu['frq'], start='k') if 'frq' in cpu else '')
-    # Size block CPU
-    return int(offest + idx / 2 + 1) if len(list_cpus) > 4 else int(offest + idx + 1)
 
 
 @check_curses
@@ -134,37 +106,6 @@ def compact_info(stdscr, start, offset, width, height, jetson):
     # Title menu
     stdscr.addstr(offset, start + (width - 7) // 2, " [info] ", curses.A_BOLD)
     counter = 1
-    # Model board information
-    uptime_string = strfdelta(jetson.uptime, "{days} days {hours}:{minutes}:{seconds}")
-    plot_name_info(stdscr, offset + counter, start + 1, "UpT", uptime_string)
-    counter += 1
-    # FAN status
-    if jetson.fan.all_speed().items():
-        for fan, speed in jetson.fan.all_speed().items():
-            ctrl = "Ta" if jetson.fan.auto else "Tm"
-            label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=speed)
-            linear_gauge(
-                stdscr,
-                offset=offset + counter, start=start + 1, size=width,
-                name=GaugeName('FAN', color=NColors.cyan()),
-                value=speed,
-                status='ON' if jetson.fan else 'DISABLED',
-                label=label)
-            counter += 1
-    else:
-        linear_gauge(
-            stdscr,
-            offset=offset + counter, start=start + 1, size=width,
-            name=GaugeName('FAN', color=NColors.cyan()),
-            status='DISABLED')
-        counter += 1
-    # Jetson clocks status: Running (Green) or Normal (Grey)
-    jetson_clocks_gui(stdscr, offset + counter, start + 1, jetson)
-    counter += 1
-    # NVP Model
-    if jetson.nvpmodel is not None:
-        nvp_model_gui(stdscr, offset + counter, start + 1, jetson)
-        counter += 1
     # Write all engines
     counter += compact_engines(stdscr, start, offset + counter, width, jetson)
     return counter

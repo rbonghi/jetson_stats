@@ -58,7 +58,7 @@ class EngineService(object):
 
     ENGINES = ['ape', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc']
 
-    def __init__(self, path):
+    def __init__(self):
         # Sort list before start
         EngineService.ENGINES.sort()
         self.engines_path = {}
@@ -69,12 +69,12 @@ class EngineService(object):
         for name in EngineService.ENGINES:
             if name.endswith('.'):
                 name = name[:-1]
-                local_path = "{path}/{name}".format(path=path, name=name)
+                local_path = "{path}/{name}".format(path=engine_path, name=name)
                 if os.path.isdir(local_path):
                     self.engines_path[name.upper()] = [local_path]
             else:
                 # https://stackoverflow.com/questions/4843158/how-to-check-if-a-string-is-a-substring-of-items-in-a-list-of-strings
-                local_path = "{path}/{name}".format(path=path, name=name)
+                local_path = "{path}/{name}".format(path=engine_path, name=name)
                 # In this search are removed all engines that have a '.' on their name
                 # like ape.buffer or nvdec.buf
                 matching = [s for s in list_all_engines if local_path in s and '.' not in s]
@@ -94,8 +94,11 @@ class EngineService(object):
                     else:
                         self.engines_path[name.upper()] = sorted(matching)
         # Print all engines found
-        engines_string = ' '.join(name for name in self.engines_path)
-        logger.info("Engines found: [{engines}]".format(engines=engines_string))
+        if self.engines_path:
+            engines_string = ' '.join(name for name in self.engines_path)
+            logger.info("Engines found: [{engines}]".format(engines=engines_string))
+        else:
+            logger.warn("Not engines found!")
 
     def get_status(self):
         status = {}

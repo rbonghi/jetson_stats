@@ -18,7 +18,7 @@
 import curses
 from .colors import NColors
 from .common import check_curses
-from .common import value_to_string
+from .common import unit_to_string
 
 
 def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
@@ -27,9 +27,12 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
         data = {
             'name': name value
             'color': color test
+            'online': bool status
+            'message': Offline message - Default OFF
+            'coffline': Color offline - Default RED
             'values': [(value, color), (value, color), ... ] sum of values = 100
             'mleft': message on left
-            'mright': message on right otherwise a percentage
+            'mright': message on right - Default percentage
         }
     """
     # Evaluate size without short name
@@ -46,7 +49,7 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
     # Draw gauge
     online = data['online'] if 'online' in data else True
     # Draw gauge border
-    color_offline = NColors.ired()
+    color_offline = data['coffline'] if 'coffline' in data else NColors.ired()
     stdscr.addstr(pos_y, pos_x + name_size, "[" + " " * size_bar + "]", curses.A_BOLD if online else color_offline)
     # Draw bar
     if online:
@@ -77,42 +80,41 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
         stdscr.addstr(pos_y, pos_x + name_size + x_bar_start + 1, grey_part, curses.A_DIM)
     else:
         # Show message status
-        stdscr.addstr(pos_y, pos_x + name_size + 2, "OFF", color_offline)
+        stdscr.addstr(pos_y, pos_x + name_size + 2, data['message'] if 'message' in data else "OFF", color_offline)
 
 
-def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
-    # online status
-    online = cpu['online'] if 'online' in cpu else True
-    # name cpu - workararound for TOTAL cpu
-    name = cpu['name'] if 'name' in cpu else str(idx + 1) + (" " if idx < 9 else "")
-    # Plot values
-    values = [
-        (cpu['user'], NColors.green()),
-        (cpu['nice'], NColors.yellow()),
-        (cpu['system'], NColors.red()),
-    ] if online else []
-    # Draw gauge
-    data = {
-        'name': name,
-        'color': NColors.cyan() | curses.A_BOLD,
-        'online': online,
-        'values': values,
-    }
-    if size_w < 16:
-        basic_gauge(stdscr, pos_y, pos_x, size_w - 1, data)
-    elif 'freq' in cpu:
-        # Draw current frequency
-        curr_string = value_to_string(cpu['freq']['cur'], cpu['freq']['unit'])
-        stdscr.addstr(pos_y, pos_x + size_w - 6, curr_string, curses.A_NORMAL)
-    # Draw gauge
-    basic_gauge(stdscr, pos_y, pos_x, size_w - 8, data)
+def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data):
+    # Name gauge
+    name = freq_data['name'] if 'name' in freq_data else ""
+    # Current value in string
+    curr_string = unit_to_string(freq_data['cur'], freq_data['unit'], 'Hz')
+    # Draw name engine
+    stdscr.addstr(pos_y, pos_x, name, NColors.cyan())
+    # Write online bar
+    size_bar = size - len(name) - len(curr_string) - 4
+    start_bar = pos_x + len(name) + 1 if len(name) > 0 else pos_x
+    end_bar = start_bar + size_bar
+    # Check if there is a limit
+    color_bar = NColors.green() if freq_data['online'] else NColors.red()
+    if freq_data['online']:
+        stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
+        stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
+        stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)
+    else:
+        stdscr.hline(pos_y, start_bar + 1, curses.ACS_BULLET, size_bar)
+        if size_bar > 7:
+            stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', color_bar | curses.A_NORMAL)
+        else:
+            stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', color_bar | curses.A_NORMAL)
+    # Draw current frequency
+    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, NColors.italic())
 
 
 def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
     # Name gauge
     name = freq_data['name'] if 'name' in freq_data else ""
     # Current value in string
-    curr_string = value_to_string(freq_data['cur'], freq_data['unit'])
+    curr_string = unit_to_string(freq_data['cur'], freq_data['unit'], 'Hz')
     # If there is a min and a max
     if 'max' in freq_data:
         value = ((freq_data['cur'] - freq_data['min']) / (freq_data['max'] - freq_data['min'])) * 100 if freq_data['min'] != freq_data['max'] else 0
@@ -122,31 +124,14 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
             'color': NColors.cyan(),
             'online': freq_data['online'],
             'values': [(value, NColors.green())],
-            'mleft': value_to_string(freq_data['min'], freq_data['unit']) if 'min' in freq_data else "",
-            'mright': value_to_string(freq_data['max'], freq_data['unit']) if 'max' in freq_data else "",
+            'mleft': unit_to_string(freq_data['min'], freq_data['unit'], 'Hz') if 'min' in freq_data else "",
+            'mright': unit_to_string(freq_data['max'], freq_data['unit'], 'Hz') if 'max' in freq_data else "",
         }
         basic_gauge(stdscr, pos_y, pos_x, size - 8, data, bar=":")
+        # Draw current frequency
+        stdscr.addstr(pos_y, pos_x + size - 6, curr_string, NColors.italic())
     else:
-        # Draw name engine
-        stdscr.addstr(pos_y, pos_x, name, NColors.cyan())
-        # Write online bar
-        size_bar = size - len(name) - len(curr_string) - 4
-        start_bar = pos_x + len(name) + 1 if len(name) > 0 else pos_x
-        end_bar = start_bar + size_bar
-        # Check if there is a limit
-        color_bar = NColors.green() if freq_data['online'] else NColors.red()
-        if freq_data['online']:
-            stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
-            stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
-            stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)
-        else:
-            stdscr.hline(pos_y, start_bar + 1, curses.ACS_BULLET, size_bar)
-            if size_bar > 7:
-                stdscr.addstr(pos_y, start_bar + (size_bar - 5) // 2, ' OFF ', color_bar | curses.A_NORMAL)
-            else:
-                stdscr.addstr(pos_y, start_bar + (size_bar - 3) // 2, 'OFF', color_bar | curses.A_NORMAL)
-    # Draw current frequency
-    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, curses.A_NORMAL)
+        basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data)
 
 
 # OLD - TO REMOVE

@@ -19,6 +19,7 @@ import os
 from datetime import timedelta
 import logging
 from jtop import jtop
+from jtop.core.memory import Memory
 from multiprocessing.pool import Pool
 # Create logger
 logger = logging.getLogger(__name__)
@@ -32,6 +33,12 @@ def check_attributes(jetson):
     assert isinstance(jetson.uptime, timedelta)
     # CPU
     assert isinstance(jetson.cpu, dict)
+    # Memory
+    assert isinstance(jetson.memory, Memory)
+    # GPU
+    assert isinstance(jetson.gpu, dict)
+    # Engines
+    assert isinstance(jetson.engine, dict)
     # Status disk
     assert isinstance(jetson.disk, dict)
     # local interfaces

@@ -27,7 +27,7 @@ import shlex
 import subprocess as sp
 from copy import deepcopy
 from grp import getgrnam
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 
@@ -45,7 +45,6 @@ from .core import (
     EngineService,
     FanService,
     FanServiceLegacy,
-    SwapService,
     get_key,
     get_var)
 # Create logger
@@ -77,18 +76,17 @@ JTOP_SERVICE_NAME = 'jtop.service'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
 TIMEOUT_SWITCHOFF = 3.0
-LIST_PRINT = ['CPU', 'MTS', 'RAM', 'IRAM', 'SWAP', 'EMC', 'GR3D', 'TEMP', 'WATT', 'FAN', 'APE', 'NVENC', 'NVDEC', 'MSENC']
 
 
-def status_service():
-    return os.system('systemctl is-active --quiet {service}'.format(service=JTOP_SERVICE_NAME)) == 0
+def status_service(service=JTOP_SERVICE_NAME):
+    return os.system('systemctl is-active --quiet {service}'.format(service=service)) == 0
 
 
 def remove_service_pipe():
     # Remove old pipes if exists
     if os.path.isdir(JTOP_PIPE):
         logger.info("Remove folder {pipe}".format(pipe=JTOP_PIPE))
-        os.rmdir(JTOP_PIPE)
+        rmtree(JTOP_PIPE)
     elif os.path.isfile(JTOP_PIPE):
         logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
         os.remove(JTOP_PIPE)
@@ -98,7 +96,7 @@ def uninstall_service(name=JTOP_SERVICE_NAME):
     if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)) or os.path.islink('/etc/systemd/system/{name}'.format(name=name)):
         logger.info("Found {name}".format(name=name))
         # Check if service is active
-        if os.system('systemctl is-active --quiet {name}'.format(name=name)) == 0:
+        if status_service(service=name):
             # Stop service
             logger.info(" - STOP {name}".format(name=name))
             sp.call(shlex.split('systemctl stop {name}'.format(name=name)))
@@ -189,7 +187,7 @@ def status_permission_group(group=JTOP_USER):
 
 
 def status_permission(group=JTOP_USER):
-    return status_permission_group(group) and status_permission_group(group)
+    return status_permission_user(group) and status_permission_group(group)
 
 
 def unset_service_permission(group=JTOP_USER):
@@ -302,14 +300,12 @@ class JtopServer(Process):
             self.nvpmodel = None
         # Setup cpu service
         self.cpu = CPUService()
-        # Setup engine service
-        self.engine = EngineService("/sys/kernel/debug/clk")
         # Setup memory service
-        self.memory = MemoryService()
+        self.memory = MemoryService(self.config)
+        # Setup engine service
+        self.engine = EngineService()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
-        # Swap manager
-        self.swap = SwapService(self.config)
 
     def run(self):
         # Read nvp_mode
@@ -344,10 +340,15 @@ class JtopServer(Process):
                     # Manage swap
                     if 'swap' in control:
                         swap = control['swap']
-                        if swap:
-                            self.swap.set(swap['size'], swap['boot'])
-                        else:
-                            self.swap.deactivate()
+                        if swap['type'] == 'set':
+                            self.memory.swap_set(swap['size'], swap['path'], swap['boot'])
+                        elif swap['type'] == 'unset':
+                            self.memory.swap_deactivate(swap['path'])
+                    # Clear cache
+                    if 'clear_cache' in control:
+                        logger.info("Clear cache")
+                        # Clear cache
+                        self.memory.clear_cache()
                     # Manage jetson_clocks
                     if 'config' in control:
                         command = control['config']
@@ -380,10 +381,6 @@ class JtopServer(Process):
                         logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
                         self.nvpmodel.set(mode)
-                    if 'memory' in control:
-                        logger.info("Clear cache")
-                        # Clear cache
-                        self.swap.clear_cache()
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
@@ -402,7 +399,7 @@ class JtopServer(Process):
                             'board': self.board,
                             'interval': self.interval.value,
                             'cpu': self.cpu.get_cpu_info(),
-                            'swap': self.swap.path,
+                            'memory': self.memory.swap_path(),
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks is not None,
                             'nvpmodel': self.nvpmodel is not None}
@@ -556,7 +553,17 @@ class JtopServer(Process):
         # -- CPU --
         # Read CPU data
         data['cpu'] = self.cpu.get_status()
+        # -- RAM --
+        # Read memory data
+        # In this dictionary are collected
+        # - RAM
+        # - SWAP
+        # - EMC (If available)
+        # - IRAM (If available)
+        data['mem'] = self.memory.get_status()
         # -- Engines --
+        # Read all engines available
+        # Can be empty for x86 architecture
         data['engines'] = self.engine.get_status()
         # -- Power --
         # Remove NC power (Orin family)
@@ -576,9 +583,6 @@ class JtopServer(Process):
             if temp.startswith('CV'):
                 del tegrastats['TEMP'][temp]
         data['temperature'] = tegrastats['TEMP']
-        # -- MTS --
-        if 'MTS' in tegrastats:
-            data['mts'] = tegrastats['MTS']
         # -- GPU --
         data['gpu'] = {1: tegrastats['GR3D']}
         # For more GPU change in a next future with
@@ -590,25 +594,6 @@ class JtopServer(Process):
                 data['gpu'][idx].update(jetson_clocks_show['GPU'])
                 # Remove current_freq data
                 del data['gpu'][idx]['current_freq']
-        # -- RAM --
-        nv_usage = self.memory.nv_usage()
-        data['ram'] = tegrastats['RAM']
-        data['ram'].update(nv_usage)
-        # -- IRAM --
-        if 'IRAM' in tegrastats:
-            data['iram'] = tegrastats['IRAM']
-        # -- EMC --
-        if 'EMC' in tegrastats:
-            data['emc'] = tegrastats['EMC']
-            if self.jetson_clocks is not None:
-                if 'EMC' in jetson_clocks_show:
-                    data['emc'].update(jetson_clocks_show['EMC'])
-                    # Remove current_freq data
-                    del data['emc']['current_freq']
-        # -- SWAP --
-        data['swap'] = {
-            'list': self.swap.all(),
-            'all': tegrastats['SWAP'] if 'SWAP' in tegrastats else {}}
         # -- FAN --
         # Update status fan speed
         data['fan'] = self.fan.update()

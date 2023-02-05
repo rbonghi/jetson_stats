@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019-2023 Raffaello Bonghi.
@@ -15,16 +16,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
+from jtop import jtop
 
-from .core import JtopException
-from .jtop import jtop
 
-__author__ = "Raffaello Bonghi"
-__email__ = "raffaello@rnext.it"
-__cr__ = "(c) 2023, RB"
-__copyright__ = "(c) 2023, Raffaello Bonghi"
-# Version package
-# https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "4.2.0"
+if __name__ == "__main__":
+
+    print("Simple jtop memory reader")
+
+    with jtop() as jetson:
+        # jetson.ok() will provide the proper update frequency
+        if jetson.ok():
+            # Print all cpu
+            for name, data in jetson.memory.items():
+                print("------ {name} ------".format(name=name))
+                print(data)
 # EOF

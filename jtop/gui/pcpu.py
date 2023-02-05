@@ -19,7 +19,39 @@ import curses
 # Page class definition
 from .jtopgui import Page
 from .lib.chart import Chart
-from .lib.linear_gauge import cpu_gauge, freq_gauge
+from .lib.colors import NColors
+from .lib.common import unit_to_string
+from .lib.linear_gauge import freq_gauge, basic_gauge
+
+
+def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
+    # online status
+    online = cpu['online'] if 'online' in cpu else True
+    # name cpu - workararound for TOTAL cpu
+    name = cpu['name'] if 'name' in cpu else str(idx + 1) + (" " if idx < 9 else "")
+    # Plot values
+    values = [
+        (cpu['user'], NColors.green()),
+        (cpu['nice'], NColors.yellow()),
+        (cpu['system'], NColors.red()),
+    ] if online else []
+    # Draw gauge
+    data = {
+        'name': name,
+        'color': NColors.cyan(),
+        'online': online,
+        'values': values,
+        # 'mleft': cpu.get('governor', '').capitalize(),
+    }
+    if size_w < 16:
+        basic_gauge(stdscr, pos_y, pos_x, size_w - 1, data)
+        return
+    elif 'freq' in cpu:
+        # Draw current frequency
+        curr_string = unit_to_string(cpu['freq']['cur'], cpu['freq']['unit'], 'Hz')
+        stdscr.addstr(pos_y, pos_x + size_w - 6, curr_string, NColors.italic())
+    # Draw gauge
+    basic_gauge(stdscr, pos_y, pos_x, size_w - 8, data)
 
 
 def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0):
@@ -46,8 +78,8 @@ def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_
     return step_height, step_width, size_columns, size_rows
 
 
-def compact_cpus(stdscr, pos_y, width, jetson):
-    _, _, _, size_rows = cpu_grid(stdscr, jetson.cpu['cpu'], cpu_gauge, pos_y, 1, size_width=width - 2)
+def compact_cpus(stdscr, pos_y, pos_x, width, jetson):
+    _, _, _, size_rows = cpu_grid(stdscr, jetson.cpu['cpu'], cpu_gauge, pos_y, pos_x + 1, size_width=width - 2)
     return size_rows
 
 

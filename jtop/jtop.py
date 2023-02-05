@@ -58,18 +58,18 @@ Follow the next attributes to know in detail how you can you in your python proj
 import logging
 import re
 import sys
-from warnings import warn
+# from warnings import warn
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
 from .core.jetson_variables import get_platform_variables
+from .core.memory import Memory
 from .core import (
     get_var,
     get_cuda,
     get_opencv,
     get_libraries,
-    Swap,
     Fan,
     NVPModel,
     get_uptime,
@@ -138,8 +138,8 @@ class jtop(Thread):
         self._thread_libraries.start()
         # Initialize cpu info
         self._cpu_info = []
-        # Initialize swap
-        self._swap = None
+        # Initialize memory controller
+        self._memory = Memory()
         # Load jetson_clocks status
         self._jc = None
         # Initialize fan
@@ -526,11 +526,11 @@ class jtop(Thread):
         * **jetson_clocks** - Status of jetson_clocks, human readable :py:attr:`~jetson_clocks`
         * **nvp model** - If exist, the NV Power Model name active :py:attr:`~nvpmodel`
         * **cpu X** - The status for each cpu in your board, if disabled *OFF* :py:attr:`~cpu`
+        * **RAM** - Used ram :py:attr:`~memory`
+        * **SWAP** - used swap :py:attr:`~memory`
+        * **EMC** - If exist, the used emc :py:attr:`~memory`
+        * **IRAM** - If exist, the used iram :py:attr:`~memory`
         * **GPU** - Status of your GPU :py:attr:`~gpu`
-        * **RAM** - Used ram :py:attr:`~ram`
-        * **EMC** - If exist, the used emc :py:attr:`~emc`
-        * **IRAM** - If exist, the used iram :py:attr:`~iram`
-        * **SWAP** - If exist, the used swap :py:attr:`~swap`
         * **engine X** - Frequency for each engine, if disabled *OFF* :py:attr:`~engine`
         * **fan** - Status fan speed :py:attr:`~fan`
         * **Temp X** - X temperature :py:attr:`~temperature`
@@ -550,20 +550,16 @@ class jtop(Thread):
         # -- CPU --
         for idx, cpu in enumerate(self.cpu['cpu']):
             stats["CPU{idx}".format(idx=idx + 1)] = 100 - int(cpu['idle']) if cpu['online'] else 'OFF'
+        # -- MEMORY --
+        stats['RAM'] = self.memory['RAM']['used']
+        stats['SWAP'] = self.memory['SWAP']['used']
+        if 'EMC' in self.memory:
+            stats['EMC'] = self.memory['EMC']['val']
+        if 'IRAM' in self.memory:
+            stats['IRAM'] = self.memory['IRAM']['used']
         # -- GPU --
         for n_gpu in self.gpu:
             stats['GPU{n_gpu}'.format(n_gpu=n_gpu)] = self.gpu[n_gpu]['val']
-        # -- RAM --
-        stats['RAM'] = self.ram['use']
-        # -- EMC --
-        if self.emc:
-            stats['EMC'] = self.emc['val']
-        # -- IRAM --
-        if self.iram:
-            stats['IRAM'] = self.iram['use']
-        # -- SWAP --
-        if 'use' in self.swap:
-            stats['SWAP'] = self.swap['use']
         # -- Engines --
         for group in self.engine:
             for name, engine in self.engine[group].items():
@@ -581,140 +577,91 @@ class jtop(Thread):
         return stats
 
     @property
-    def swap(self):
+    def memory(self):
         """
-        SWAP manager and reader
+        This property show in a simple way all memories available, the main output is available in this way:
 
-        If you want read the status of your board will return a dictionary with
+        * **RAM** - It is a dictionary with all information about RAM
+        * **SWAP** - It is a dictionary with all information about SWAP
+        * **EMC** - It is a dictionary with EMC data, not in all boards this data is available
+        * **IRAM** - It is a dictionary with SWAP data, not in all boards this data is available
 
-        * **use** - Amount of SWAP in use
-        * **tot** - Total amount of SWAP available for applications
-        * **unit** - Unit SWAP, usually in MB
-        * **cached**
-            * **size** - Cache size
-            * **unit** - Unit cache size
+        You can also use this property to set a new swap, deactivate or clear cache,
+        read all methods available :py:class:`~jtop.core.memory.Memory`
 
-        This property has other extra methods show below
 
-            * If you want know how many swap are active you can run this extra method
+        For each dictionary there are specific outputs
 
-        .. code-block:: python
+        *RAM*
 
-            all_swap = jetson.swap.all
+        ========== ========= ====================================================
+        Name       Type      Description
+        ========== ========= ====================================================
+        tot        `int`     Total RAM
+        used       `int`     Total used RAM
+        free       `int`     Free RAM
+        buffers    `int`     Buffered RAM
+        cached     `int`     Cached RAM
+        shared     `int`     Shared RAM, for NVIDIA Jetson the RAM used from GPU
+        lfb        `int`     Large Free Block in **4MB**
+        unit       `int`     Unit for all values, always **k**
+        ========== ========= ====================================================
 
-        The output will be a dictionary, where for each swap:
+        *SWAP*
 
-                * **used** - Used Swap in kB
-                * **size** - Size in kB
-                * **type** - Type
-                * **prio** - Priority
+        ========== ========= ====================================================
+        Name       Type      Description
+        ========== ========= ====================================================
+        tot        `int`     Total SWAP
+        used       `int`     Total used SWAP
+        cached     `int`     Cached RAM
+        unit       `int`     Unit for all values, always **k**
+        table      `dict`    Dictionary with all swap available :sup:`A`
+        ========== ========= ====================================================
 
-        * The method inside this property enable a new swap in your board.
-          To work need to write a *size* in GB and if you want this swap enable in boot you can set
-          *on_boot* on True (default False).
-          This method will create a new swap located usually in **"/"** and called **"swfile"**
+        *EMC* (if available on your device)
 
-        .. code-block:: python
+        ========== ========= ==========================================================
+        Name       Type      Description
+        ========== ========= ==========================================================
+        online     `bool`    Status EMC
+        val        `int`     Percentage of bandwidth used relative to running frequency
+        cur        `int`     Current working frequency
+        max        `int`     Max EMC frequency usable
+        min        `int`     Min EMC frequency usable
+        unit       `int`     Unit for all values, always **k**
+        ========== ========= ==========================================================
 
-            jetson.swap.set(size, on_boot=False)
+        *IRAM* (if available on your device)
 
-        * If you want disable the swap created you can run this method
+        ========== ========= ====================================================
+        Name       Type      Description
+        ========== ========= ====================================================
+        tot        `int`     Total IRAM
+        used       `int`     Total used IRAM
+        unit       `int`     Unit for all values, always **k**
+        lfb        `int`     Large Free Block in **4MB**
+        ========== ========= ====================================================
 
-        .. code-block:: python
+        .. note::
 
-            jetson.swap.deactivate()
+            Note **A**
+                The swap table is a list of dictionary with this data
 
-        * This method will show the status of your SWAP created
+                ========== ========= ==============================================
+                Name       Type      Description
+                ========== ========= ==============================================
+                type       `string`  Type of partition
+                prio       `int`     Priority partition
+                size       `int`     Size partition
+                used       `int`     Used part of this partition
+                unit       `int`     Unit for all values, always **k**
+                ========== ========= ==============================================
 
-        .. code-block:: python
-
-            status = jetson.swap.is_enable
-
-        * This method will show the current swap size created
-
-        .. code-block:: python
-
-            size = jetson.swap.size()
-
-        * If you need to clear the cache in your NVIDIA Jetson you can run this extra call
-
-        .. code-block:: python
-
-            jetson.swap.clear_cache()
-
-        :return: swap status
-        :rtype: dict
+        :return: memory status
+        :rtype: Memory
         """
-        return self._swap
-
-    @property
-    def emc(self):
-        """
-        EMC is the external memory controller, through which all sysmem/carve-out/GART memory accesses go.
-
-        If your board have the EMC, the fields are:
-
-        * **min_freq** - Minimum frequency in kHz
-        * **max_freq** - Maximum frequency in kHz
-        * **frq** - Running frequency in kHz
-        * **val** - Status EMC, value between [0, 100]
-        * **FreqOverride** - Status override
-
-        :return: emc status
-        :rtype: dict
-        """
-        warn('This property will be deprecated in the next release. Will be used jtop.ram()', DeprecationWarning, stacklevel=2)
-        return self._stats.get('emc', {})
-
-    @property
-    def iram(self):
-        """
-        IRAM is memory local to the video hardware engine.
-        If your board have the IRAM, the fields are:
-
-        * **use** - status iram used
-        * **tot** - Total size IRAM
-        * **unit** - Unit size IRAM, usually in kB
-        * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
-            * **size** - Size of the largest free block
-            * **unit** - Unit size lfb
-
-        Largest Free Block (lfb) is a statistic about the memory allocator.
-        It refers to the largest contiguous block of physical memory
-        that can currently be allocated: at most 4 MB.
-        It can become smaller with memory fragmentation.
-        The physical allocations in virtual memory can be bigger.
-
-        :return: iram status
-        :rtype: dict
-        """
-        warn('This property will be deprecated in the next release. Will be used jtop.ram()', DeprecationWarning, stacklevel=2)
-        return self._stats.get('iram', {})
-
-    @property
-    def ram(self):
-        """
-        RAM available on your board.
-
-        * **use** - status iram used
-        * **shared** - status of shared memory used from GPU
-        * **tot** - Total size RAM
-        * **unit** - Unit size RAM, usually in kB
-        * **lfb** - Largest Free Block (lfb) is a statistic about the memory allocator
-            * **nblock** - Number of block used
-            * **size** - Size of the largest free block
-            * **unit** - Unit size lfb
-
-        Largest Free Block (lfb) is a statistic about the memory allocator.
-        It refers to the largest contiguous block of physical memory
-        that can currently be allocated: at most 4 MB.
-        It can become smaller with memory fragmentation.
-        The physical allocations in virtual memory can be bigger.
-
-        :return: ram status
-        :rtype: dict
-        """
-        return self._stats['ram']
+        return self._memory
 
     @property
     def cpu(self):
@@ -868,8 +815,8 @@ class jtop(Thread):
         Internal decode function to decode and refactoring data
         """
         self._stats = data
-        # -- SWAP --
-        self._swap._update(data['swap'])
+        # -- MEMORY --
+        self._memory._update(data['mem'])
         # -- FAN --
         self._fan._update(data['fan'])
         # -- JETSON_CLOCKS --
@@ -878,12 +825,6 @@ class jtop(Thread):
         # -- NVP Model --
         if 'nvp' in data:
             self._nvp._update(data['nvp'])
-        # Set trigger
-        self._trigger.set()
-        # Notify all observers
-        for observer in self._observers:
-            # Call all observer in list
-            observer(self)
 
     def run(self):
         """ """
@@ -898,6 +839,12 @@ class jtop(Thread):
                 data = self._get_data()
                 # Decode and update all jtop data
                 self._decode(data)
+                # Set trigger
+                self._trigger.set()
+                # Notify all observers
+                for observer in self._observers:
+                    # Call all observer in list
+                    observer(self)
         except Exception:
             # Store error message
             self._error = sys.exc_info()
@@ -986,8 +933,8 @@ sudo systemctl restart jtop.service""".format(
         self._board['hardware'] = init['board']['hardware']
         # Initialize cpu basic info
         self._cpu_info = init['cpu']
-        # Initialize jetson_clocks sender
-        self._swap = Swap(self._controller, init['swap'])
+        # Initialize memory controller
+        self._memory._initialize(self._controller, init['memory'])
         # Initialize jetson_clock
         if init['jc']:
             self._jc = JetsonClocks(self._controller)

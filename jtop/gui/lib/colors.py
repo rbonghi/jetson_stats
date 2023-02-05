@@ -51,6 +51,11 @@ class NColors:
         curses.init_pair(NColors.iCYAN, curses.COLOR_WHITE, curses.COLOR_CYAN)
 
     @staticmethod
+    def italic():
+        # Check if Italic is included
+        return curses.A_ITALIC if hasattr(curses, 'A_ITALIC') else curses.A_NORMAL
+
+    @staticmethod
     def red():
         return curses.color_pair(NColors.RED)
 
@@ -84,7 +89,7 @@ class NColors:
 
     @staticmethod
     def iyellow():
-        return curses.color_pair(NColors.YELLOW)
+        return curses.color_pair(NColors.iYELLOW)
 
     @staticmethod
     def iblue():
