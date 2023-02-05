@@ -24,7 +24,7 @@ import platform
 import logging
 from shutil import copyfile
 try:
-    from smbus import SMBus
+    from smbus2 import SMBus
 except ImportError:
     print("Skip for setup.py")
 # Load distro library from python3 or use platform
