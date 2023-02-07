@@ -20,7 +20,6 @@ from .common import cat
 import os
 # Logging
 import logging
-# from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 
@@ -64,10 +63,6 @@ class TemperatureService(object):
             self._temperature = initialize_discrete_temperature(thermal_path)
         else:
             logging.error("Temperature folder found!")
-        # Test output temperature
-        status = self.get_status()
-        for tmp, value in status.items():
-            print(tmp, value)
 
     def get_status(self):
         status = {}
