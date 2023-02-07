@@ -33,6 +33,7 @@ from multiprocessing.managers import SyncManager
 
 # jetson_stats imports
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
+from .core.temperature import TemperatureService
 from .core import (
     Command,
     CPUService,
@@ -304,6 +305,8 @@ class JtopServer(Process):
         self.memory = MemoryService(self.config)
         # Setup engine service
         self.engine = EngineService()
+        # Setup Temperature Service
+        self.temperature = TemperatureService()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
 
@@ -565,6 +568,8 @@ class JtopServer(Process):
         # Read all engines available
         # Can be empty for x86 architecture
         data['engines'] = self.engine.get_status()
+        # -- Temperature --
+        data['temperature'] = self.temperature.get_status()
         # -- Power --
         # Remove NC power (Orin family)
         # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#jetson-agx-orin-series
@@ -574,15 +579,6 @@ class JtopServer(Process):
         total, power = self._total_power(tegrastats['WATT'])
         power = {k.replace("VDDQ_", "").replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in power.items()}
         data['power'] = {'all': total, 'power': power}
-        # -- Temperature --
-        # Remove PMIC temperature (TX family)
-        if 'PMIC' in tegrastats['TEMP']:
-            del tegrastats['TEMP']['PMIC']
-        # Remove all CV temperatures (Orin family)
-        for temp in list(tegrastats['TEMP'].keys()):
-            if temp.startswith('CV'):
-                del tegrastats['TEMP'][temp]
-        data['temperature'] = tegrastats['TEMP']
         # -- GPU --
         data['gpu'] = {1: tegrastats['GR3D']}
         # For more GPU change in a next future with
