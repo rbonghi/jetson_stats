@@ -101,11 +101,13 @@ def list_all_i2c_ports(path):
             # Remove NC power (Orin family)
             # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#jetson-agx-orin-series
             if 'NC' in raw_name:
+                logger.warn("Skipped NC {path}".format(path=power_label_path))
                 continue
             # Build list current and average power read
             number_port = int(item.split("_")[0].strip("in"))
             # Skip "sum of shunt voltages" always number 7
             if number_port == 7:
+                logger.warn("Skipped \"sum of shunt voltages\" {path}".format(path=power_label_path))
                 continue
             # Build list of path
             sensor_name[raw_name] = {

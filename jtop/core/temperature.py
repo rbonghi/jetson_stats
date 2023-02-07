@@ -42,9 +42,11 @@ def initialize_discrete_temperature(thermal_path):
             # Remove all CV temperatures and GPU negative in (Orin family)
             value = float(cat(path_value)) / 1000.0
             if value == -256:
+                logger.warn("Skipped {name} temperature= -256C".format(name=name))
                 continue
             # Remove PMIC temperature (TX family)
             if 'PMIC' in name:
+                logger.warn("Skipped PMIC")
                 continue
             # Store new temperature
             temperature[name] = thermal_path
