@@ -25,8 +25,10 @@ logger = logging.getLogger(__name__)
 
 
 def gpu_detect():
-    if os.path.exists("/dev/nvhost-gpu"):
+    if os.path.exists("/dev/nvhost-gpu") or os.path.exists("/dev/nvhost-power-gpu"):
         return 'integrated'
+    elif os.path.exists("/dev/nvidiactl") or os.path.isdir("/dev/nvgpu-pci"):
+        return 'discrete'
     return ''
 
 
@@ -40,7 +42,18 @@ def check_nvidia_smi():
     return False
 
 
-def read_igpu(path):
+def igpu_read_load():
+    load = []
+    # From JP5.1
+    # https://forums.developer.nvidia.com/t/how-to-programmatically-query-igpu-load/237266
+    if os.path.isfile("/sys/devices/platform/gpu.0/load"):
+        load += int(cat("/sys/devices/platform/gpu.0/load"))
+    elif os.path.isfile("/sys/devices/gpu.0/load"):
+        load += int(cat("/sys/devices/gpu.0/load"))
+    return load
+
+
+def igpu_read_freq(path):
     # Read status online
     gpu = {}
     gpu['unit'] = 'k'
@@ -66,7 +79,7 @@ def read_igpu(path):
 
 
 def find_igpu():
-    igpu = {}
+    igpu = []
     igpu_path = "/sys/class/devfreq/"
     for item in os.listdir(igpu_path):
         item_path = os.path.join(igpu_path, item)
@@ -77,27 +90,51 @@ def find_igpu():
                 # Decode name
                 name = cat(name_path)
                 # Check if gpu
-                if name in ['gv11b', 'gp10b', 'gpu']:
-                    igpu[name] = item_path
+                if name in ['gv11b', 'gp10b', 'ga10b', 'gpu']:
+                    igpu += [{'name': name, 'path': item_path}]
+                    logger.info("GPU found {name} in {path}".format(name=name, path=item_path))
+                else:
+                    logger.info("Skipped {name}".format(name=name))
     return igpu
 
 
 class GPUService(object):
 
-    def __init__(self):
-        # Detect wich GPU is running
+    def __init__(self, architecture):
+        self._gpu_list = []
+        self._architecture = architecture
+        # Detect which GPU is running
         self._gpu_type = gpu_detect()
         # Search gpu path
         logger.info("Gpu Detected type: {type}".format(type=self._gpu_type))
+        # Detect GPU folder
         if self._gpu_type == 'integrated':
-            igpu = find_igpu()
-            print(igpu)
-            status = read_igpu(igpu['gpu'])
-            print(status)
+            self._gpu_list = find_igpu()
+        elif self._gpu_type == 'discrete':
+            print("TODO discrete GPU")
+        else:
+            logger.info("No NVIDIA GPU available")
+        # TEMP
+        status = self.get_status()
+        print(status)
 
     def get_status(self):
-        status = {}
-        if self._gpu_type == 'integraged':
-            status = read_igpu()
+        status = {'type': self._gpu_type}
+        # Detect frequency and load
+        if self._gpu_type == 'integrated':
+            # Read iGPU frequency
+            status['gpu'] = []
+            for data in self._gpu_list:
+                # Read frequency
+                gpu = {'freq': igpu_read_freq(data['path'])}
+                # Read GPU load
+                gpu['load'] = igpu_read_load()
+                # Read also
+                # TPC_POWER_GATING: /sys/devices/gpu.0/tpc_pg_mask
+                # GPU_POWER_CONTROL_ENABLE: /sys/devices/gpu.0/power/control
+                status['gpu'] += [gpu]
+        elif self._gpu_type == 'discrete':
+            # TODO
+            pass
         return status
 # EOF
