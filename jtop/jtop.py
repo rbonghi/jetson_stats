@@ -572,10 +572,11 @@ class jtop(Thread):
             stats["Temp {name}".format(name=temp)] = self.temperature[temp]
         # -- Power --
         # Load all current power from each power rail
-        for name, rail in self.power['rail'].items():
-            stats["Power {name}".format(name=temp)] = rail['power']
-        # Load total current power
-        stats['power TOT'] = self.power['tot']['power']
+        if self.power:
+            for name, rail in self.power['rail'].items():
+                stats["Power {name}".format(name=temp)] = rail['power']
+            # Load total current power
+            stats['power TOT'] = self.power['tot']['power']
         return stats
 
     @property
