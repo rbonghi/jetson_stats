@@ -47,9 +47,9 @@ def igpu_read_load():
     # From JP5.1
     # https://forums.developer.nvidia.com/t/how-to-programmatically-query-igpu-load/237266
     if os.path.isfile("/sys/devices/platform/gpu.0/load"):
-        load += int(cat("/sys/devices/platform/gpu.0/load"))
+        load += [int(cat("/sys/devices/platform/gpu.0/load"))]
     elif os.path.isfile("/sys/devices/gpu.0/load"):
-        load += int(cat("/sys/devices/gpu.0/load"))
+        load += [int(cat("/sys/devices/gpu.0/load"))]
     return load
 
 
@@ -100,9 +100,9 @@ def find_igpu():
 
 class GPUService(object):
 
-    def __init__(self, architecture):
+    def __init__(self):
         self._gpu_list = []
-        self._architecture = architecture
+        # self._architecture = architecture
         # Detect which GPU is running
         self._gpu_type = gpu_detect()
         # Search gpu path
