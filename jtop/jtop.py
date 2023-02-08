@@ -568,7 +568,7 @@ class jtop(Thread):
         if self.fan:
             stats['fan'] = self.fan.speed
         # -- Temperature --
-        for temp in sorted(self.temperature):
+        for temp in self.temperature:
             stats["Temp {name}".format(name=temp)] = self.temperature[temp]
         # -- Power --
         # Load all current power from each power rail

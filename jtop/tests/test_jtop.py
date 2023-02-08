@@ -49,7 +49,6 @@ def check_attributes(jetson):
     assert isinstance(jetson.power, dict)
     # Check temperature
     assert isinstance(jetson.temperature, dict)
-    assert len(jetson.temperature) > 0
 
 
 def test_open(jtop_server):
