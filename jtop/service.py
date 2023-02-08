@@ -438,6 +438,8 @@ class JtopServer(Process):
             # Close tegra
             if self.tegra.close(timeout=TIMEOUT_SWITCHOFF):
                 logger.info("Force tegrastats close")
+                # Reset avg temperatures
+                self.power.reset_avg_power()
                 # Start jetson_clocks
                 if self.jetson_clocks is not None:
                     self.jetson_clocks.close()

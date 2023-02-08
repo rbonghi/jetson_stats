@@ -193,9 +193,9 @@ class PowerService(object):
             # Read status sensors
             values = read_power_status(sensors)
             # Measure power
-            power = values['volt'] * (values['curr'] // 1000)
             if 'power' not in values:
-                values['power'] = power
+                power = values['volt'] * (float(values['curr']) / 1000)
+                values['power'] = int(power)
             # print(name, 'Power', values['power'], power)
             # Measure average Power between first and previous interval
             if name in self._power_avg:
