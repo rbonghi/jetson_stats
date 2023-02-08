@@ -157,6 +157,7 @@ class PowerService(object):
 
     def __init__(self):
         self._power_sensor = {}
+        self._power_avg = {}
         # Find all I2C sensors on board
         power_sensor = find_all_i2c_power_monitor()
         if not power_sensor:
@@ -169,12 +170,18 @@ class PowerService(object):
                 self._power_sensor.update(sensors)
         # Sort all power sensors
         self._power_sensor = dict(sorted(self._power_sensor.items(), key=lambda item: item[0]))
+        # Initialize average dictionary
+        self.reset_avg_power()
         # temp
         print("-------------- TEMP DATA --------------")
         status = self.get_status()
         for name, value in status.items():
             print(name, value)
         print("-------------- TEMP DATA - END --------------")
+
+    def reset_avg_power(self):
+        # Reset dictionary
+        self._power_avg = {}
 
     def get_status(self):
         # If threre are no sensors return an empty list
@@ -191,11 +198,18 @@ class PowerService(object):
                 values['power'] = power
             # print(name, 'Power', values['power'], power)
             # Measure average Power between first and previous interval
-            values['avg'] = (values['power'] - values['avg']) // 2 if 'avg' in values else values['power']
+            if name in self._power_avg:
+                old_avg = self._power_avg[name]
+                values['avg'] = (values['power'] + old_avg) // 2
+                self._power_avg[name] = values['avg']
+            else:
+                values['avg'] = values['power']
+                self._power_avg[name] = values['power']
             # Add unit
             values['unit'] = 'm'
             # Add on power status
             rails[name] = values
+        # Measure total power
         total, rails = total_power(rails)
         return {'rail': rails, 'tot': total}
 # EOF
