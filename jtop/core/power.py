@@ -110,7 +110,13 @@ def find_all_hwmon_power_monitor():
 
 
 def read_power_status(data):
-    return {name: int(cat(path)) for name, path in data.items()}
+    values = {}
+    for name, path in data.items():
+        # Fix from values with "ma" in the end, like
+        # warn 32760 ma
+        raw_value = cat(path).split(" ")[0]
+        values[name] = int(raw_value)
+    return values
 
 
 def list_all_i2c_ports(path):
@@ -159,7 +165,7 @@ def list_all_i2c_ports(path):
                 'curr': "{path}/in_voltage{num}_input".format(path=path, num=number_port),  # Current in mA
                 'power': "{path}/in_power{num}_input".format(path=path, num=number_port),  # Power in mW
                 'warn': "{path}/warn_current_limit_{num}".format(path=path, num=number_port),  # in mA
-                'curr': "{path}/crit_current_limit_{num}".format(path=path, num=number_port),  # in mA
+                'crit': "{path}/crit_current_limit_{num}".format(path=path, num=number_port),  # in mA
             }
     return sensor_name
 
@@ -193,10 +199,10 @@ class PowerService(object):
             # Read status sensors
             values = read_power_status(sensors)
             # Measure power
-            power = values['volt'] * values['curr']
+            power = values['volt'] * (values['curr'] // 1000)
             if 'power' not in values:
                 values['power'] = power
-            print('power', values['power'], power)
+            print(name, 'Power', values['power'], power)
             # Add unit
             values['unit'] = 'm'
             # Add on power status
