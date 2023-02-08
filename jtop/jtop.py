@@ -534,8 +534,8 @@ class jtop(Thread):
         * **engine X** - Frequency for each engine, if disabled *OFF* :py:attr:`~engine`
         * **fan** - Status fan speed :py:attr:`~fan`
         * **Temp X** - X temperature :py:attr:`~temperature`
-        * **power cur** - Total current power :py:attr:`~power`
-        * **power avg** - Total average power :py:attr:`~power`
+        * **Power X** - Current power from rail X :py:attr:`~power`
+        * **Power TOT** - Total current power :py:attr:`~power`
 
         :return: Compacts jetson statistics
         :rtype: dict
@@ -571,9 +571,11 @@ class jtop(Thread):
         for temp in sorted(self.temperature):
             stats["Temp {name}".format(name=temp)] = self.temperature[temp]
         # -- Power --
-        total, _ = self.power
-        stats['power cur'] = total['cur']
-        stats['power avg'] = total['avg']
+        # Load all current power from each power rail
+        for name, rail in self.power['rail'].items():
+            stats["Power {name}".format(name=temp)] = rail['power']
+        # Load total current power
+        stats['power TOT'] = self.power['tot']['power']
         return stats
 
     @property

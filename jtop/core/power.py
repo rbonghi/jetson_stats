@@ -44,13 +44,13 @@ def total_power(power):
     # Example for Jetson Xavier
     # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
     if total_name:
-        total = power[total_name]
+        total = {'power': power[total_name]['power'], 'avg': power[total_name]['avg']}
         del power[total_name]
         return total, power
     # Otherwise measure all total power
-    total = {'cur': 0, 'avg': 0}
+    total = {'power': 0, 'avg': 0}
     for value in power.values():
-        total['cur'] += value['cur']
+        total['power'] += value['power']
         total['avg'] += value['avg']
     return total, power
 
@@ -89,23 +89,6 @@ def find_all_i2c_power_monitor():
             if 'ina3221' in raw_name:
                 # Check which type of driver is working
                 power_sensor[item] = find_driver_power_folders(path)
-    return power_sensor
-
-
-def find_all_hwmon_power_monitor():
-    power_sensor = {}
-    hwmon_path = "/sys/class/hwmon"
-    items = os.listdir(hwmon_path)
-    for item in items:
-        # Decode full path
-        path = "{base_path}/{item}".format(base_path=hwmon_path, item=item)
-        name_path = "{path}/name".format(path=path)
-        if os.path.isfile(name_path):
-            raw_name = cat(name_path).strip()
-            # Find all shunt and bus voltage monitor mounted on board
-            # https://www.ti.com/product/INA3221
-            if 'ina3221' in raw_name:
-                power_sensor[item] = path
     return power_sensor
 
 
@@ -194,7 +177,11 @@ class PowerService(object):
         print("-------------- TEMP DATA - END --------------")
 
     def get_status(self):
-        all_power = {}
+        # If threre are no sensors return an empty list
+        if not self._power_sensor:
+            return {}
+        # Otherwise measure all values
+        rails = {}
         for name, sensors in self._power_sensor.items():
             # Read status sensors
             values = read_power_status(sensors)
@@ -202,10 +189,13 @@ class PowerService(object):
             power = values['volt'] * (values['curr'] // 1000)
             if 'power' not in values:
                 values['power'] = power
-            print(name, 'Power', values['power'], power)
+            # print(name, 'Power', values['power'], power)
+            # Measure average Power between first and previous interval
+            values['avg'] = (values['power'] - values['avg']) // 2 if 'avg' in values else values['power']
             # Add unit
             values['unit'] = 'm'
             # Add on power status
-            all_power[name] = values
-        return {'power': all_power, 'total': 0}
+            rails[name] = values
+        total, rails = total_power(rails)
+        return {'rail': rails, 'tot': total}
 # EOF
