@@ -40,14 +40,14 @@ def initialize_discrete_temperature(thermal_path):
             name = raw_name.split("-")[0] if '-' in raw_name else raw_name.split("_")[0]
             # Check value is not -256
             # Remove all CV temperatures and GPU negative in (Orin family)
-            value = float(cat(path_value)) / 1000.0
-            if value == -256:
-                logger.warn("Skipped {name} temperature= -256C".format(name=name))
-                # continue
+            # value = float(cat(path_value)) / 1000.0
+            # if value == -256:
+            #     logger.warn("Skipped {name} temperature= -256C".format(name=name))
+            #     continue
             # Remove PMIC temperature (TX family)
-            if 'PMIC' in name:
-                logger.warn("Skipped PMIC")
-                # continue
+            # if 'PMIC' in name:
+            #     logger.warn("Skipped PMIC")
+            #     continue
             # Store new temperature
             temperature[name] = thermal_path
     # Sort all temperatures
@@ -66,9 +66,11 @@ class TemperatureService(object):
         else:
             logging.error("Temperature folder found!")
         # temp
+        print("-------------- TEMP DATA --------------")
         status = self.get_status()
         for name, value in status.items():
             print(name, value)
+        print("-------------- TEMP DATA - END --------------")
 
     def get_status(self):
         status = {}

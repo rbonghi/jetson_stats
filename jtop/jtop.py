@@ -754,9 +754,7 @@ class jtop(Thread):
         :return: Two dictionaries, total and a list of all power consumption available from the board
         :rtype: dict, dict
         """
-        total = self._stats['power']['all']
-        power = self._stats['power']['power']
-        return total, power
+        return self._stats['power']
 
     @property
     def temperature(self):

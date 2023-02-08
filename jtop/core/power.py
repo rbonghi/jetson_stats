@@ -65,6 +65,9 @@ def find_driver_power_folders(path):
         if os.path.isdir(os.path.join(path, item)):
             driver_path = "{base_path}/{item}".format(base_path=path, item=item)
             if 'hwmon' in item:
+                # Bring the second hwmon folder
+                hwmon_name = os.listdir(driver_path)[0]
+                driver_path = "{base_path}/{item}".format(base_path=driver_path, item=hwmon_name)
                 subdirectories += [driver_path]
             elif 'iio:device' in item:
                 subdirectories += [driver_path]
@@ -106,6 +109,10 @@ def find_all_hwmon_power_monitor():
     return power_sensor
 
 
+def read_power_status(data):
+    return {name: int(cat(path)) for name, path in data.items()}
+
+
 def list_all_i2c_ports(path):
     sensor_name = {}
     # Build list label and path
@@ -127,9 +134,18 @@ def list_all_i2c_ports(path):
                 logger.warn("Skipped \"sum of shunt voltages\" {path}".format(path=power_label_path))
                 continue
             # Build list of path
+            warnings = {
+                'crit_alarm': "{path}/curr{num}_crit_alarm".format(path=path, num=number_port),
+                'max_alarm': "{path}/curr{num}_max_alarm".format(path=path, num=number_port),
+            }
+            values = read_power_status(warnings)
+            logger.info("Alarms {name} - {data}".format(name=raw_name, data=values))
+            # Read Voltage, current and limits
             sensor_name[raw_name] = {
-                'input': "{path}/in{num}_input".format(path=path, num=number_port),
-                'curr': "{path}/curr{num}_input".format(path=path, num=number_port),
+                'volt': "{path}/in{num}_input".format(path=path, num=number_port),  # Voltage in mV
+                'curr': "{path}/curr{num}_input".format(path=path, num=number_port),  # Current in mA
+                'warn': "{path}/curr{num}_max".format(path=path, num=number_port),  # in mA
+                'crit': "{path}/curr{num}_crit".format(path=path, num=number_port),  # in mA
             }
         elif item.startswith("rail_name_"):
             # Decode name for JP 4 or previous
@@ -139,10 +155,12 @@ def list_all_i2c_ports(path):
             # Build list of path
             # https://forums.developer.nvidia.com/t/jetson-tx1-ina226-power-monitor-with-i2c-interface/43819/5
             sensor_name[raw_name] = {
-                'input': "{path}/in_power{num}_input".format(path=path, num=number_port),
-                'curr': "{path}/crit_current_limit_{num}".format(path=path, num=number_port),
+                'volt': "{path}/in_current{num}_input".format(path=path, num=number_port),  # Voltage in mV
+                'curr': "{path}/in_voltage{num}_input".format(path=path, num=number_port),  # Current in mA
+                'power': "{path}/in_power{num}_input".format(path=path, num=number_port),  # Power in mW
+                'warn': "{path}/warn_current_limit_{num}".format(path=path, num=number_port),  # in mA
+                'curr': "{path}/crit_current_limit_{num}".format(path=path, num=number_port),  # in mA
             }
-
     return sensor_name
 
 
@@ -160,17 +178,28 @@ class PowerService(object):
             for path in paths:
                 sensors = list_all_i2c_ports(path)
                 self._power_sensor.update(sensors)
-        print(self._power_sensor)
         # Sort all power sensors
         self._power_sensor = dict(sorted(self._power_sensor.items(), key=lambda item: item[0]))
         # temp
+        print("-------------- TEMP DATA --------------")
         status = self.get_status()
-        for name, value in status:
+        for name, value in status.items():
             print(name, value)
+        print("-------------- TEMP DATA - END --------------")
 
     def get_status(self):
-        status = {}
-        for name, path in self._power_sensor.items():
-            print(name, path)
-        return status
+        all_power = {}
+        for name, sensors in self._power_sensor.items():
+            # Read status sensors
+            values = read_power_status(sensors)
+            # Measure power
+            power = values['volt'] * values['curr']
+            if 'power' not in values:
+                values['power'] = power
+            print('power', values['power'], power)
+            # Add unit
+            values['unit'] = 'm'
+            # Add on power status
+            all_power[name] = values
+        return {'power': all_power, 'total': 0}
 # EOF
