@@ -55,6 +55,22 @@ def total_power(power):
     return total, power
 
 
+def find_driver_power_folders(path):
+    subdirectories = []
+    driver_items = os.listdir(path)
+    for item in driver_items:
+        # All folder starting with:
+        # - hwmon are JP5 compatible
+        # - iio:device from JP4 or below
+        if os.path.isdir(os.path.join(path, item)):
+            driver_path = "{base_path}/{item}".format(base_path=path, item=item)
+            if 'hwmon' in item:
+                subdirectories += [driver_path]
+            elif 'iio:device' in item:
+                subdirectories += [driver_path]
+    return subdirectories
+
+
 def find_all_i2c_power_monitor():
     power_sensor = {}
     i2c_path = "/sys/bus/i2c/devices"
@@ -68,7 +84,8 @@ def find_all_i2c_power_monitor():
             # Find all shunt and bus voltage monitor mounted on board
             # https://www.ti.com/product/INA3221
             if 'ina3221' in raw_name:
-                power_sensor[item] = path
+                # Check which type of driver is working
+                power_sensor[item] = find_driver_power_folders(path)
     return power_sensor
 
 
@@ -93,10 +110,10 @@ def list_all_i2c_ports(path):
     sensor_name = {}
     # Build list label and path
     for item in os.listdir(path):
+        power_label_path = "{path}/{item}".format(path=path, item=item)
         # Check if there is a label
         if item.endswith("_label"):
-            power_label_path = "{path}/{item}".format(path=path, item=item)
-            # Decode name
+            # Decode name for JP 5 or above
             raw_name = cat(power_label_path).strip()
             # Remove NC power (Orin family)
             # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#jetson-agx-orin-series
@@ -114,6 +131,18 @@ def list_all_i2c_ports(path):
                 'input': "{path}/in{num}_input".format(path=path, num=number_port),
                 'curr': "{path}/curr{num}_input".format(path=path, num=number_port),
             }
+        elif item.startswith("rail_name_"):
+            # Decode name for JP 4 or previous
+            raw_name = cat(power_label_path).strip()
+            # Build list current and average power read
+            number_port = int(item.lstrip("rail_name_"))
+            # Build list of path
+            # https://forums.developer.nvidia.com/t/jetson-tx1-ina226-power-monitor-with-i2c-interface/43819/5
+            sensor_name[raw_name] = {
+                'input': "{path}/in_power{num}_input".format(path=path, num=number_port),
+                'curr': "{path}/crit_current_limit_{num}".format(path=path, num=number_port),
+            }
+
     return sensor_name
 
 
@@ -121,18 +150,17 @@ class PowerService(object):
 
     def __init__(self):
         self._power_sensor = {}
+        # Find all I2C sensors on board
+        power_sensor = find_all_i2c_power_monitor()
+        if not power_sensor:
+            logging.error("Power sensors not found!")
+        # Build list of all power folder outputs
         # Find all voltage and current monitor
-        if os.path.isdir("/sys/class/hwmon"):
-            # Find all hwmons sensors
-            hwmons = find_all_hwmon_power_monitor()
-            # Find all ports to read
-            for name, path in hwmons.items():
-                self._power_sensor.update(list_all_i2c_ports(path))
-        elif os.path.isdir("/sys/bus/i2c/devices"):
-            # Find all sensors using I2C device
-            find_all_i2c_power_monitor()
-        else:
-            logging.error("Temperature folder found!")
+        for name, paths in power_sensor.items():
+            for path in paths:
+                sensors = list_all_i2c_ports(path)
+                self._power_sensor.update(sensors)
+        print(self._power_sensor)
         # Sort all power sensors
         self._power_sensor = dict(sorted(self._power_sensor.items(), key=lambda item: item[0]))
         # temp
