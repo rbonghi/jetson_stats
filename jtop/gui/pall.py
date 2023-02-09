@@ -16,7 +16,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import curses
-from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import (
@@ -116,28 +115,21 @@ class ALL(Page):
         column_width = (width) // (self._n_columns)
         column_height = height - line_counter - 3 + first
         # Plot compact info
+        column = 0
         if self.jetson.engine:
             size_info = compact_engines(self.stdscr, 0, line_counter + 1, column_width + 2, self.jetson)
             if size_info > column_height:
                 for n_arrow in range(column_width + 1):
                     self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+            column += column_width
         # Plot temperatures
         if self.jetson.temperature:
-            self.add_line(line_counter + 1, column_width + 2, column_height)
-            size_temperatures = plot_temperatures(self.stdscr, column_width + 2, line_counter + 1, column_width - 4, column_height, self.jetson)
+            size_temperatures = plot_temperatures(self.stdscr, column, line_counter + 1, column_width - 4, column_height, self.jetson)
             if size_temperatures > column_height:
                 for n_arrow in range(column_width - 5):
-                    self.stdscr.addch(first + height - 2, column_width + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+                    self.stdscr.addch(first + height - 2, column + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+            column += column_width
         # plot watts
         if self.jetson.power:
-            self.add_line(line_counter + 1, 2 * column_width - 2, column_height)
-            plot_watts(self.stdscr, 2 * column_width - 1, line_counter + 1, column_width + 2, column_height, self.jetson)
-
-    def add_line(self, pos_y, pos_x, height):
-        """
-        http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
-        """
-        self.stdscr.addch(pos_y, pos_x, curses.ACS_TTEE)
-        self.stdscr.vline(pos_y + 1, pos_x, curses.ACS_VLINE, height)
-        # self.stdscr.addch(pos_y + height, pos_x, curses.ACS_BTEE)
+            plot_watts(self.stdscr, column, line_counter + 1, column_width - 4, column_height, self.jetson)
 # EOF

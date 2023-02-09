@@ -36,7 +36,7 @@ def initialize_discrete_temperature(thermal_path):
         path_value = "{path}/temp".format(path=thermal_path)
         if os.path.isfile(path_name) and os.path.isfile(path_value):
             # Decode name
-            raw_name = cat(path_name)
+            raw_name = cat(path_name).strip()
             name = raw_name.split("-")[0] if '-' in raw_name else raw_name.split("_")[0]
             # Check value is not -256
             # Remove all CV temperatures and GPU negative in (Orin family)

@@ -37,17 +37,16 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
         40: NColors.yellow(),
         20: curses.A_NORMAL,
     }
-    list_options = sorted(color_options.keys(), reverse=True)
     # Plot title
     stdscr.addstr(offset, start - 1, " [Sensor] ", curses.A_BOLD)
     stdscr.addstr(offset, start + 11, " [Temp] ", curses.A_BOLD)
     # Plot name and temperatures
-    for idx, name in enumerate(sorted(jetson.temperature)):
+    for idx, name in enumerate(jetson.temperature):
         # Print temperature name
         value = jetson.temperature[name]
         # Set color temperature
         color = curses.A_NORMAL
-        for k in list_options:
+        for k in color_options.keys():
             if value >= k:
                 color = color_options[k]
                 break
@@ -65,7 +64,7 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
 def plot_watts(stdscr, start, offset, width, height, jetson):
     start = start + (width - 6) // 2
     # Plot title
-    stdscr.addstr(offset, start - 11, " [Rail] ", curses.A_BOLD)
+    stdscr.addstr(offset, start - 11, " [Power] ", curses.A_BOLD)
     stdscr.addstr(offset, start + 2, " [Inst] ", curses.A_BOLD)
     stdscr.addstr(offset, start + 9, " [Avg] ", curses.A_BOLD)
     # Plot watts

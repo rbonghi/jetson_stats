@@ -92,13 +92,13 @@ def find_all_i2c_power_monitor():
     return power_sensor
 
 
-def read_power_status(data):
+def read_power_status(data, power_type):
     values = {}
     for name, path in data.items():
         # Fix from values with "ma" in the end, like
         # warn 32760 ma
-        raw_value = cat(path).split(" ")[0]
-        values[name] = int(raw_value)
+        raw_value = int(cat(path).split(" ")[0])
+        values[name] = raw_value // 1000 if power_type == 'SYSTEM' else raw_value
     return values
 
 
@@ -153,21 +153,54 @@ def list_all_i2c_ports(path):
     return sensor_name
 
 
+def find_all_system_monitor():
+    sensor_name = {}
+    system_monitor = "/sys/class/power_supply"
+    for folder in os.listdir(system_monitor):
+        local_path = "{path}/{folder}".format(path=system_monitor, folder=folder)
+        name = folder.replace("ucsi-source-psy-", "")
+        # Read type
+        path_type = "{path}/type".format(path=local_path)
+        type_supply = cat(path_type).strip()
+        # Read model name
+        path_name = "{path}/model_name".format(path=local_path)
+        model_name = cat(path_name).strip() if os.path.isfile(path_name) else ""
+        logger.info("Found name={name} type={type} model={model}".format(name=name, type=type_supply, model=model_name))
+        # Find power, current and voltage
+        voltage_path = "{path}/voltage_now".format(path=local_path)
+        current_path = "{path}/current_now".format(path=local_path)
+        if os.path.isfile(voltage_path) and os.path.isfile(current_path):
+            sensor_name[name] = {
+                'volt': voltage_path,  # Voltage in mV
+                'curr': current_path,  # Current in mA
+            }
+    return sensor_name
+
+
 class PowerService(object):
 
     def __init__(self):
         self._power_sensor = {}
         self._power_avg = {}
+        self._power_type = ''
         # Find all I2C sensors on board
         power_sensor = find_all_i2c_power_monitor()
-        if not power_sensor:
-            logging.error("Power sensors not found!")
-        # Build list of all power folder outputs
-        # Find all voltage and current monitor
-        for name, paths in power_sensor.items():
-            for path in paths:
-                sensors = list_all_i2c_ports(path)
-                self._power_sensor.update(sensors)
+        sys_sensor = find_all_system_monitor()
+        if power_sensor:
+            self._power_type = 'I2C'
+            logger.info("Found I2C power monitor")
+            # Build list of all power folder outputs
+            # Find all voltage and current monitor
+            for name, paths in power_sensor.items():
+                for path in paths:
+                    sensors = list_all_i2c_ports(path)
+                    self._power_sensor.update(sensors)
+        elif sys_sensor:
+            self._power_type = 'SYSTEM'
+            logger.info("Found SYSTEM power monitor")
+            self._power_sensor = sys_sensor
+        else:
+            logger.error("Power sensors not found!")
         # Sort all power sensors
         self._power_sensor = dict(sorted(self._power_sensor.items(), key=lambda item: item[0]))
 
@@ -176,14 +209,14 @@ class PowerService(object):
         self._power_avg = {}
 
     def get_status(self):
-        # If threre are no sensors return an empty list
+        # If there are no sensors return an empty list
         if not self._power_sensor:
             return {}
         # Otherwise measure all values
         rails = {}
         for name, sensors in self._power_sensor.items():
             # Read status sensors
-            values = read_power_status(sensors)
+            values = read_power_status(sensors, self._power_type)
             # Measure power
             if 'power' not in values:
                 power = values['volt'] * (float(values['curr']) / 1000)
