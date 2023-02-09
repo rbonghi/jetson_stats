@@ -169,11 +169,14 @@ def find_all_system_monitor():
         # Find power, current and voltage
         voltage_path = "{path}/voltage_now".format(path=local_path)
         current_path = "{path}/current_now".format(path=local_path)
+        current_max_path = "{path}/current_max".format(path=local_path)
         if os.path.isfile(voltage_path) and os.path.isfile(current_path):
             sensor_name[name] = {
                 'volt': voltage_path,  # Voltage in mV
                 'curr': current_path,  # Current in mA
             }
+            if os.path.isfile(current_max_path):
+                sensor_name[name]['warn'] = current_max_path
     return sensor_name
 
 
