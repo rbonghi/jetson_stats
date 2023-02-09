@@ -20,12 +20,34 @@ from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import NColors
-from .lib.common import (plot_name_info,
+from .lib.common import (check_curses,
+                         plot_name_info,
                          label_freq,
                          jetson_clocks_gui,
                          nvp_model_gui,
                          size_min)
 from .lib.chart import Chart
+from .lib.linear_gauge import linear_gauge, GaugeName
+
+
+@check_curses
+def plot_GPUs(stdscr, offest, list_gpus, width):
+    # list_gpus = {1: list_gpus[1]}
+    max_bar = int(float(width) / 2.0)
+    for idx, name in enumerate(sorted(list_gpus)):
+        gpu = list_gpus[name]
+        # Split in double list
+        start = max_bar if idx >= len(list_gpus) / 2 else 0
+        off_idx = idx - len(list_gpus) / 2 if idx >= len(list_gpus) / 2 else idx
+        # Show linear gauge
+        name = "GPU{name}".format(name=name) if len(list_gpus) > 1 else "GPU"
+        linear_gauge(
+            stdscr, offset=int(offest + off_idx), start=start, size=max_bar if len(list_gpus) > 1 else width,
+            name=GaugeName(name, color=NColors.cyan()),
+            value=gpu.get('val', 0),
+            label=label_freq(gpu['frq'], start='k'))
+    # Size block CPU
+    return int(offest + idx / 2)
 
 
 class GPU(Page):

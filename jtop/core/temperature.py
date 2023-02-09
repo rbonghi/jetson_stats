@@ -45,9 +45,9 @@ def initialize_discrete_temperature(thermal_path):
             #     logger.warn("Skipped {name} temperature= -256C".format(name=name))
             #     continue
             # Remove PMIC temperature (TX family)
-            # if 'PMIC' in name:
-            #     logger.warn("Skipped PMIC")
-            #     continue
+            if 'PMIC' in name:
+                logger.warn("Skipped PMIC")
+                continue
             # Store new temperature
             temperature[name] = thermal_path
     # Sort all temperatures
@@ -65,12 +65,6 @@ class TemperatureService(object):
             self._temperature = initialize_discrete_temperature(thermal_path)
         else:
             logging.error("Temperature folder found!")
-        # temp
-        print("-------------- TEMP DATA --------------")
-        status = self.get_status()
-        for name, value in status.items():
-            print(name, value)
-        print("-------------- TEMP DATA - END --------------")
 
     def get_status(self):
         status = {}

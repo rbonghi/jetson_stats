@@ -18,13 +18,74 @@
 import curses
 from .jtopgui import Page
 # Graphics elements
-from .lib.common import check_curses
+from .lib.common import check_curses, unit_to_string
 # Graphic library
 from .lib.colors import NColors
 from .lib.chart import Chart
 from .lib.button import Button, ButtonList
 
 FAN_STEP = 10
+
+
+@check_curses
+def plot_temperatures(stdscr, start, offset, width, height, jetson):
+    counter = 0
+    start = start + (width - 17) // 2
+    # Define color temperatures
+    color_options = {
+        60: NColors.red(),
+        40: NColors.yellow(),
+        20: curses.A_NORMAL,
+    }
+    list_options = sorted(color_options.keys(), reverse=True)
+    # Plot title
+    stdscr.addstr(offset, start - 1, " [Sensor] ", curses.A_BOLD)
+    stdscr.addstr(offset, start + 11, " [Temp] ", curses.A_BOLD)
+    # Plot name and temperatures
+    for idx, name in enumerate(sorted(jetson.temperature)):
+        # Print temperature name
+        value = jetson.temperature[name]
+        # Set color temperature
+        color = curses.A_NORMAL
+        for k in list_options:
+            if value >= k:
+                color = color_options[k]
+                break
+        # Print temperature value
+        try:
+            stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=name))
+            stdscr.addstr(offset + idx + 1, start + offset // 2 + 3, ("{val:8.2f}C").format(val=value), color)
+        except curses.error:
+            pass
+        counter = idx
+    return counter + 2
+
+
+@check_curses
+def plot_watts(stdscr, start, offset, width, height, jetson):
+    start = start + (width - 6) // 2
+    # Plot title
+    stdscr.addstr(offset, start - 11, " [Rail] ", curses.A_BOLD)
+    stdscr.addstr(offset, start + 2, " [Inst] ", curses.A_BOLD)
+    stdscr.addstr(offset, start + 9, " [Avg] ", curses.A_BOLD)
+    # Plot watts
+    power = jetson.power['rail']
+    for idx, name in enumerate(power):
+        value = power[name]
+        string_name = name.replace("VDD_", "").replace("_", " ")
+        stdscr.addstr(offset + idx + 1, start - 10, string_name, curses.A_NORMAL)
+        unit_power = unit_to_string(value['power'], value['unit'], 'W')
+        stdscr.addstr(offset + idx + 1, start + 3, unit_power, curses.A_NORMAL)
+        unit_avg = unit_to_string(value['avg'], value['unit'], 'W')
+        stdscr.addstr(offset + idx + 1, start + 10, unit_avg, curses.A_NORMAL)
+    # Plot totals before finishing
+    total = jetson.power['tot']
+    len_power = len(power)
+    stdscr.addstr(offset + len_power + 1, start - 10, 'ALL', curses.A_BOLD)
+    unit_power = unit_to_string(total['power'], total['unit'], 'W')
+    stdscr.addstr(offset + len_power + 1, start + 3, unit_power, curses.A_BOLD)
+    unit_avg = unit_to_string(total['avg'], total['unit'], 'W')
+    stdscr.addstr(offset + len_power + 1, start + 10, unit_avg, curses.A_BOLD)
 
 
 class CTRL(Page):

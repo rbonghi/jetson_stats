@@ -44,11 +44,11 @@ def total_power(power):
     # Example for Jetson Xavier
     # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
     if total_name:
-        total = {'power': power[total_name]['power'], 'avg': power[total_name]['avg']}
+        total = {'power': power[total_name]['power'], 'avg': power[total_name]['avg'], 'unit': 'm'}
         del power[total_name]
         return total, power
     # Otherwise measure all total power
-    total = {'power': 0, 'avg': 0}
+    total = {'power': 0, 'avg': 0, 'unit': 'm'}
     for value in power.values():
         total['power'] += value['power']
         total['avg'] += value['avg']
@@ -170,14 +170,6 @@ class PowerService(object):
                 self._power_sensor.update(sensors)
         # Sort all power sensors
         self._power_sensor = dict(sorted(self._power_sensor.items(), key=lambda item: item[0]))
-        # Initialize average dictionary
-        self.reset_avg_power()
-        # temp
-        print("-------------- TEMP DATA --------------")
-        status = self.get_status()
-        for name, value in status.items():
-            print(name, value)
-        print("-------------- TEMP DATA - END --------------")
 
     def reset_avg_power(self):
         # Reset dictionary
