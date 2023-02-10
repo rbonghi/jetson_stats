@@ -16,7 +16,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import curses
-from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import (
@@ -27,13 +26,10 @@ from .lib.common import (
 from .lib.colors import NColors
 from .lib.linear_gauge import linear_gauge, basic_gauge, GaugeName
 from .pcpu import compact_cpus
+from .pgpu import plot_GPUs
 from .pmem import compact_memory
-# Menu GUI pages
-from .jtopguimenu import (
-    plot_watts,
-    compact_info,
-    plot_temperatures,
-    plot_GPUs)
+from .pengine import compact_engines
+from .pcontrol import plot_temperatures, plot_watts
 
 
 def compact_status(stdscr, pos_y, pos_x, width, jetson):
@@ -77,6 +73,14 @@ class ALL(Page):
 
     def __init__(self, stdscr, jetson):
         super(ALL, self).__init__("ALL", stdscr, jetson)
+        # Number columns
+        self._n_columns = 0
+        if jetson.engine:
+            self._n_columns += 1
+        if jetson.temperature:
+            self._n_columns += 1
+        if jetson.power:
+            self._n_columns += 1
 
     def draw(self, key, mouse):
         """
@@ -104,37 +108,28 @@ class ALL(Page):
                      value=int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
                      percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
                      bar="#")
-        # Last part of information
-        total, power = self.jetson.power
-        mini_menu = 1
-        mini_menu += 1 if self.jetson.temperature else 0
-        mini_menu += 1 if power else 0
-        column_width = (width) // (mini_menu)
+        # If empty return
+        if self._n_columns == 0:
+            return
+        # Add engines, temperature and power
+        column_width = (width) // (self._n_columns)
         column_height = height - line_counter - 3 + first
-        # Make rectangle
-        rectangle(self.stdscr, line_counter + 1, 0, line_counter + 1 + column_height, width - 1)
         # Plot compact info
-        size_info = compact_info(self.stdscr, 0, line_counter + 1, column_width + 2, column_height, self.jetson)
-        if size_info > column_height:
-            for n_arrow in range(column_width + 1):
-                self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+        column = 0
+        if self.jetson.engine:
+            size_info = compact_engines(self.stdscr, 0, line_counter + 1, column_width + 2, self.jetson)
+            if size_info > column_height:
+                for n_arrow in range(column_width + 1):
+                    self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+            column += column_width
         # Plot temperatures
         if self.jetson.temperature:
-            self.add_line(line_counter + 1, column_width + 2, column_height)
-            size_temperatures = plot_temperatures(self.stdscr, column_width + 2, line_counter + 1, column_width - 4, column_height, self.jetson)
+            size_temperatures = plot_temperatures(self.stdscr, column, line_counter + 1, column_width - 4, column_height, self.jetson)
             if size_temperatures > column_height:
                 for n_arrow in range(column_width - 5):
-                    self.stdscr.addch(first + height - 2, column_width + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+                    self.stdscr.addch(first + height - 2, column + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+            column += column_width
         # plot watts
-        if power:
-            self.add_line(line_counter + 1, 2 * column_width - 2, column_height)
-            plot_watts(self.stdscr, 2 * column_width - 1, line_counter + 1, column_width + 2, column_height, self.jetson)
-
-    def add_line(self, pos_y, pos_x, height):
-        """
-        http://www.melvilletheatre.com/articles/ncurses-extended-characters/index.html
-        """
-        self.stdscr.addch(pos_y, pos_x, curses.ACS_TTEE)
-        self.stdscr.vline(pos_y + 1, pos_x, curses.ACS_VLINE, height - 1)
-        self.stdscr.addch(pos_y + height, pos_x, curses.ACS_BTEE)
+        if self.jetson.power:
+            plot_watts(self.stdscr, column, line_counter + 1, column_width - 4, column_height, self.jetson)
 # EOF
