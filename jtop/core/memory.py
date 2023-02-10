@@ -343,7 +343,6 @@ class MemoryService(object):
         self._isJetson = os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps")
         if not os.path.isdir("/sys/kernel/debug/clk/emc"):
             logger.warn("EMC not available")
-        self.get_status()
 
     def swap_path(self):
         config = self._config.get('swap', {})
