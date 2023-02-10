@@ -156,6 +156,74 @@ def check_fstab(table_line):
     return False
 
 
+def read_emc():
+    emc = {}
+    if os.path.isdir("/sys/kernel/debug/bpmp/debug/clk/emc"):
+        path = "/sys/kernel/debug/bpmp/debug/clk/emc"
+        # Add unit
+        emc['unit'] = 'k'
+        # Check if access to this file
+        if os.access(path + "/rate", os.R_OK):
+            with open(path + "/rate", 'r') as f:
+                # Write min
+                emc['cur'] = int(f.read()) // 1000
+        # Check if access to this file
+        if os.access(path + "/max_rate", os.R_OK):
+            with open(path + "/max_rate", 'r') as f:
+                # Write min
+                emc['max'] = int(f.read()) // 1000
+        # Check if access to this file
+        if os.access(path + "/min_rate", os.R_OK):
+            with open(path + "/min_rate", 'r') as f:
+                # Write min
+                emc['min'] = int(f.read()) // 1000
+        # Check if access to this file
+        if os.access(path + "/mrq_rate_locked", os.R_OK):
+            with open(path + "/mrq_rate_locked", 'r') as f:
+                # Write min
+                emc['override'] = int(f.read()) // 1000
+    elif os.path.isdir("/sys/kernel/debug/tegra_bwmgr"):
+        path = "/sys/kernel/debug/clk/override.emc"
+        # Add unit
+        emc['unit'] = 'k'
+        # Check if access to this file
+        if os.access(path + "/clk_rate", os.R_OK):
+            with open(path + "/clk_rate", 'r') as f:
+                # Write min
+                emc['cur'] = int(f.read()) // 1000
+        # Check if access to this file
+        if os.access(path + "/clk_state", os.R_OK):
+            with open(path + "/clk_state", 'r') as f:
+                # Write min
+                emc['override'] = int(f.read()) // 1000
+        # Decode from tegra_bwmgr
+        path = "/sys/kernel/debug/tegra_bwmgr"
+        # Check if access to this file
+        if os.access(path + "/emc_max_rate", os.R_OK):
+            with open(path + "/emc_max_rate", 'r') as f:
+                # Write min
+                emc['max'] = int(f.read()) // 1000
+        # Check if access to this file
+        if os.access(path + "/emc_min_rate", os.R_OK):
+            with open(path + "/emc_min_rate", 'r') as f:
+                # Write min
+                emc['min'] = int(f.read()) // 1000
+    elif os.path.isdir("/sys/kernel/debug/clk/emc"):
+        emc = read_engine("/sys/kernel/debug/clk/emc")
+    # Fix max frequency
+    emc_cap = 0
+    # Check if access to this file
+    if os.access("/sys/kernel/nvpmodel_emc_cap/emc_iso_cap", os.R_OK):
+        with open("/sys/kernel/nvpmodel_emc_cap/emc_iso_cap", 'r') as f:
+            # Write min
+            emc_cap = int(f.read()) // 1000
+    # Fix max EMC
+    if 'max' in emc:
+        if emc_cap > 0 and emc_cap < emc['max']:
+            emc['max'] = emc_cap
+    return emc
+
+
 class Memory(object):
     """
     This class get the output from your memory, this class is readable like a dictionary,
@@ -275,6 +343,7 @@ class MemoryService(object):
         self._isJetson = os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps")
         if not os.path.isdir("/sys/kernel/debug/clk/emc"):
             logger.warn("EMC not available")
+        self.get_status()
 
     def swap_path(self):
         config = self._config.get('swap', {})
@@ -404,8 +473,9 @@ class MemoryService(object):
             'table': read_swapon(),
         }
         # Read EMC status
-        if os.path.isdir("/sys/kernel/debug/clk/emc"):
-            memory['EMC'] = read_engine("/sys/kernel/debug/clk/emc")
+        emc = read_emc()
+        if emc:
+            memory['EMC'] = emc
             # Set always online this engine
             memory['EMC']['online'] = True
             # Percentage utilization
