@@ -17,7 +17,6 @@
 
 import curses
 from .colors import NColors
-from .common import check_curses
 from .common import unit_to_string
 
 
