@@ -32,6 +32,7 @@ from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 
 # jetson_stats imports
+from .core.timer_reader import TimerReader
 from .core.cpu import CPUService
 from .core.memory import MemoryService
 from .core.gpu import GPUService
@@ -313,8 +314,8 @@ class JtopServer(Process):
         self.temperature = TemperatureService()
         # Setup Power meter service
         self.power = PowerService()
-        # Setup tegrastats
-        self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
+        # Initialize timer reader
+        self._timer_reader = TimerReader(self.jtop_stats)
 
     def run(self):
         # Read nvp_mode
@@ -394,14 +395,11 @@ class JtopServer(Process):
                     if 'interval' in control:
                         interval = control['interval']
                         # Run stats
-                        if self.tegra.open(interval=interval):
-                            # Start jetson_clocks
-                            if self.jetson_clocks is not None:
-                                self.jetson_clocks.start(interval)
+                        if self._timer_reader.open(interval=interval):
                             # Set interval value
                             self.interval.value = interval
                             # Status start tegrastats
-                            logger.info("tegrastats started {interval}ms".format(interval=int(interval * 1000)))
+                            logger.info("jtop timer thread started {interval}ms".format(interval=int(interval * 1000)))
                         # send configuration board
                         init = {
                             'version': self._version,
@@ -411,7 +409,8 @@ class JtopServer(Process):
                             'memory': self.memory.swap_path(),
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks is not None,
-                            'nvpmodel': self.nvpmodel is not None}
+                            'nvpmodel': self.nvpmodel is not None,
+                        }
                         self.q.put({'init': init})
                     # Update timeout interval
                     timeout = TIMEOUT_GAIN if interval <= TIMEOUT_GAIN else interval * TIMEOUT_GAIN
@@ -419,9 +418,11 @@ class JtopServer(Process):
                     self.sync_event.clear()
                     # Reset CPU estimation
                     self.cpu.reset_estimation()
+                    # Reset avg temperatures
+                    self.power.reset_avg_power()
                     # Close and log status
-                    if self.tegra.close():
-                        logger.info("tegrastats close")
+                    if self._timer_reader.close():
+                        logger.info("jtop timer thread close")
                     # Disable timeout
                     timeout = None
                     self.interval.value = -1.0
@@ -435,13 +436,12 @@ class JtopServer(Process):
             self._error.put(sys.exc_info())
         finally:
             # Close tegra
-            if self.tegra.close(timeout=TIMEOUT_SWITCHOFF):
-                logger.info("Force tegrastats close")
+            if self._timer_reader.close(timeout=TIMEOUT_SWITCHOFF):
+                logger.info("FORCE jtop timer thread close")
+                # Reset CPU estimation
+                self.cpu.reset_estimation()
                 # Reset avg temperatures
                 self.power.reset_avg_power()
-                # Start jetson_clocks
-                if self.jetson_clocks is not None:
-                    self.jetson_clocks.close()
 
     def start(self):
         # Initialize socket
@@ -521,9 +521,9 @@ class JtopServer(Process):
             logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
             os.remove(JTOP_PIPE)
 
-    def tegra_stats(self, tegrastats):
+    def jtop_stats(self):
         # Make configuration dict
-        # logger.debug("tegrastats read")
+        # logger.info("jtop read")
         data = {}
         # -- CPU --
         # Read CPU data

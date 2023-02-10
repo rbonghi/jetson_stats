@@ -564,7 +564,7 @@ class jtop(Thread):
         # -- Engines --
         for group in self.engine:
             for name, engine in self.engine[group].items():
-                stats[name] = engine['curr'] if engine['online'] else 'OFF'
+                stats[name] = engine['cur'] if engine['online'] else 'OFF'
         # -- FAN --
         if self.fan:
             stats['fan'] = self.fan.speed
