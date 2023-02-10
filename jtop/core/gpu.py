@@ -42,21 +42,15 @@ def check_nvidia_smi():
     return False
 
 
-def igpu_read_load():
-    load = []
-    # From JP5.1
-    # https://forums.developer.nvidia.com/t/how-to-programmatically-query-igpu-load/237266
-    if os.path.isfile("/sys/devices/platform/gpu.0/load"):
-        load += [int(cat("/sys/devices/platform/gpu.0/load"))]
-    elif os.path.isfile("/sys/devices/gpu.0/load"):
-        load += [int(cat("/sys/devices/gpu.0/load"))]
-    return load
-
-
 def igpu_read_freq(path):
     # Read status online
     gpu = {}
     gpu['unit'] = 'k'
+    # Check if access to this file
+    if os.access(path + "/governor", os.R_OK):
+        with open(path + "/governor", 'r') as f:
+            # Write current engine
+            gpu['governor'] = f.read().strip()
     # Check if access to this file
     if os.access(path + "/cur_freq", os.R_OK):
         with open(path + "/cur_freq", 'r') as f:
@@ -71,10 +65,38 @@ def igpu_read_freq(path):
         with open(path + "/min_freq", 'r') as f:
             # Write status engine
             gpu['min'] = int(f.read()) // 1000
-    if os.access(path + "/device/railgate_enable", os.R_OK):
-        with open(path + "/device/railgate_enable", 'r') as f:
+    # Read GPC status
+    for idx in range(2):
+        # Read power control status
+        path_gpc = "/sys/kernel/debug/bpmp/debug/clk/nafll_gpc{number}/pto_counter".format(number=idx)
+        if os.access(path_gpc, os.R_OK):
+            with open(path_gpc, 'r') as f:
+                gpu['GPC{number}'.format(number=idx)] = int(f.read()) // 1000
+    return gpu
+
+
+def igpu_read_status(path):
+    gpu = {}
+    # Railgate status
+    if os.access(path + "/railgate_enable", os.R_OK):
+        with open(path + "/railgate_enable", 'r') as f:
             # Write status engine
-            gpu['railgate'] = int(f.read()) // 1000
+            gpu['railgate'] = int(f.read()) == 1
+    # Mask status (Useful for nvpmodel)
+    if os.access(path + "/tpc_pg_mask", os.R_OK):
+        with open(path + "/tpc_pg_mask", 'r') as f:
+            # Write status engine
+            gpu['tpc_pg_mask'] = int(f.read()) == 1
+    # Status 3D scaling
+    if os.access(path + "/enable_3d_scaling", os.R_OK):
+        with open(path + "/enable_3d_scaling", 'r') as f:
+            # Write status engine
+            gpu['3d_scaling'] = int(f.read()) == 1
+    # Current load GPU
+    if os.access(path + "/load", os.R_OK):
+        with open(path + "/load", 'r') as f:
+            # Write status engine
+            gpu['load'] = int(f.read())
     return gpu
 
 
@@ -91,10 +113,13 @@ def find_igpu():
                 name = cat(name_path)
                 # Check if gpu
                 if name in ['gv11b', 'gp10b', 'ga10b', 'gpu']:
-                    igpu += [{'name': name, 'path': item_path}]
-                    logger.info("GPU found {name} in {path}".format(name=name, path=item_path))
+                    # Extract real path GPU device
+                    path = os.path.realpath(os.path.join(item_path, "device"))
+                    frq_path = os.path.realpath(item_path)
+                    igpu += [{'name': name, 'path': path, 'frq_path': frq_path}]
+                    logger.info("GPU found {name} in {path}".format(name=name, path=path))
                 else:
-                    logger.info("Skipped {name}".format(name=name))
+                    logger.debug("Skipped {name}".format(name=name))
     return igpu
 
 
@@ -102,7 +127,6 @@ class GPUService(object):
 
     def __init__(self):
         self._gpu_list = []
-        # self._architecture = architecture
         # Detect which GPU is running
         self._gpu_type = gpu_detect()
         # Search gpu path
@@ -114,9 +138,6 @@ class GPUService(object):
             print("TODO discrete GPU")
         else:
             logger.info("No NVIDIA GPU available")
-        # TEMP
-        status = self.get_status()
-        print(status)
 
     def get_status(self):
         status = {'type': self._gpu_type}
@@ -125,16 +146,19 @@ class GPUService(object):
             # Read iGPU frequency
             status['gpu'] = []
             for data in self._gpu_list:
-                # Read frequency
-                gpu = {'freq': igpu_read_freq(data['path'])}
-                # Read GPU load
-                gpu['load'] = igpu_read_load()
-                # Read also
-                # TPC_POWER_GATING: /sys/devices/gpu.0/tpc_pg_mask
-                # GPU_POWER_CONTROL_ENABLE: /sys/devices/gpu.0/power/control
+                gpu = {
+                    # Read status GPU
+                    'status': igpu_read_status(data['path']),
+                    # Read frequency
+                    'freq': igpu_read_freq(data['frq_path']),
+                }
+                # Read power control status
+                if os.access(data['path'] + "/power/control", os.R_OK):
+                    with open(data['path'] + "/power/control", 'r') as f:
+                        gpu['power_control'] = f.read().strip()
+                # Load all status in GPU
                 status['gpu'] += [gpu]
         elif self._gpu_type == 'discrete':
-            # TODO
-            pass
+            print("TODO discrete GPU")
         return status
 # EOF
