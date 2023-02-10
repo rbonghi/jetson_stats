@@ -24,14 +24,6 @@ from .command import Command
 logger = logging.getLogger(__name__)
 
 
-def gpu_detect():
-    if os.path.exists("/dev/nvhost-gpu") or os.path.exists("/dev/nvhost-power-gpu"):
-        return 'integrated'
-    elif os.path.exists("/dev/nvidiactl") or os.path.isdir("/dev/nvgpu-pci"):
-        return 'discrete'
-    return ''
-
-
 def check_nvidia_smi():
     cmd = Command(['nvidia-smi'])
     try:
@@ -96,11 +88,14 @@ def igpu_read_status(path):
     if os.access(path + "/load", os.R_OK):
         with open(path + "/load", 'r') as f:
             # Write status engine
-            gpu['load'] = int(f.read())
+            gpu['load'] = float(f.read()) / 10.0
     return gpu
 
 
 def find_igpu():
+    # Check if exist a integrated gpu
+    if not os.path.exists("/dev/nvhost-gpu") and not os.path.exists("/dev/nvhost-power-gpu"):
+        return []
     igpu = []
     igpu_path = "/sys/class/devfreq/"
     for item in os.listdir(igpu_path):
@@ -116,49 +111,52 @@ def find_igpu():
                     # Extract real path GPU device
                     path = os.path.realpath(os.path.join(item_path, "device"))
                     frq_path = os.path.realpath(item_path)
-                    igpu += [{'name': name, 'path': path, 'frq_path': frq_path}]
+                    igpu += [{'name': name, 'type': 'integrated', 'path': path, 'frq_path': frq_path}]
                     logger.info("GPU found {name} in {path}".format(name=name, path=path))
                 else:
                     logger.debug("Skipped {name}".format(name=name))
     return igpu
 
 
+def find_dgpu():
+    # Check if there are discrete gpu
+    if not os.path.exists("/dev/nvidiactl") and not os.path.isdir("/dev/nvgpu-pci"):
+        return []
+    logger.info("Discrete GPU found")
+    igpu = []
+    return igpu
+
+
 class GPUService(object):
 
     def __init__(self):
-        self._gpu_list = []
-        # Detect which GPU is running
-        self._gpu_type = gpu_detect()
-        # Search gpu path
-        logger.info("Gpu Detected type: {type}".format(type=self._gpu_type))
-        # Detect GPU folder
-        if self._gpu_type == 'integrated':
-            self._gpu_list = find_igpu()
-        elif self._gpu_type == 'discrete':
-            print("TODO discrete GPU")
-        else:
+        # Detect integrated GPU
+        self._gpu_list = find_igpu()
+        # Find discrete GPU
+        self._gpu_list += find_dgpu()
+        # Check status
+        if not self._gpu_list:
             logger.info("No NVIDIA GPU available")
 
     def get_status(self):
-        # Initialize GPU status
-        status = {'type': self._gpu_type, 'gpu': []}
-        # Detect frequency and load
-        if self._gpu_type == 'integrated':
-            # Read iGPU frequency
-            for data in self._gpu_list:
-                gpu = {
-                    # Read status GPU
-                    'status': igpu_read_status(data['path']),
-                    # Read frequency
-                    'freq': igpu_read_freq(data['frq_path']),
-                }
+        gpu_list = []
+        # Read iGPU frequency
+        for data in self._gpu_list:
+            # Initialize GPU status
+            gpu = {'name': data['name'], 'type': data['type']}
+            # Detect frequency and load
+            if gpu['type'] == 'integrated':
+                # Read status GPU
+                gpu['status'] = igpu_read_status(data['path'])
+                # Read frequency
+                gpu['freq'] = igpu_read_freq(data['frq_path'])
                 # Read power control status
                 if os.access(data['path'] + "/power/control", os.R_OK):
                     with open(data['path'] + "/power/control", 'r') as f:
                         gpu['power_control'] = f.read().strip()
-                # Load all status in GPU
-                status['gpu'] += [gpu]
-        elif self._gpu_type == 'discrete':
-            print("TODO discrete GPU")
-        return status
+            elif gpu['type'] == 'discrete':
+                logger.info("TODO discrete GPU")
+            # Load all status in GPU
+            gpu_list += [gpu]
+        return gpu_list
 # EOF

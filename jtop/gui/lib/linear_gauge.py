@@ -121,7 +121,7 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
         data = {
             'name': name,
             'color': NColors.cyan(),
-            'online': freq_data['online'],
+            'online': freq_data['online'] if 'online' in freq_data else True,
             'values': [(value, NColors.green())],
             'mleft': unit_to_string(freq_data['min'], freq_data['unit'], 'Hz') if 'min' in freq_data else "",
             'mright': unit_to_string(freq_data['max'], freq_data['unit'], 'Hz') if 'max' in freq_data else "",

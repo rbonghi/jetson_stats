@@ -20,14 +20,10 @@ from curses.textpad import rectangle
 from .jtopgui import Page
 # Graphics elements
 from .lib.common import NColors
-from .lib.common import (plot_name_info,
-                         label_freq,
-                         jetson_clocks_gui,
-                         nvp_model_gui,
-                         size_min)
+from .lib.common import plot_name_info, size_min
 from .lib.chart import Chart
 from .lib.common import unit_to_string
-from .lib.linear_gauge import basic_gauge
+from .lib.linear_gauge import basic_gauge, freq_gauge
 
 
 def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
@@ -41,17 +37,17 @@ def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
     if 'freq' in gpu_data:
         # Draw current frequency
         curr_string = unit_to_string(gpu_data['freq']['cur'], gpu_data['freq']['unit'], 'Hz')
-        stdscr.addstr(pos_y, pos_x + size - 7, curr_string, NColors.italic())
+        stdscr.addstr(pos_y, pos_x + size - 8, curr_string, NColors.italic())
     # Draw gauge
-    basic_gauge(stdscr, pos_y, pos_x, size - 9, data, bar=" ")
+    basic_gauge(stdscr, pos_y, pos_x, size - 10, data, bar=" ")
 
 
 def compact_gpu(stdscr, pos_y, pos_x, width, jetson):
     line_counter = 0
     # Status all GPUs
-    if jetson.gpu['gpu']:
-        for idx, gpu in enumerate(jetson.gpu['gpu']):
-            gpu_gauge(stdscr, pos_y, pos_x, width, gpu, idx)
+    if jetson.gpu:
+        for idx, gpu in enumerate(jetson.gpu):
+            gpu_gauge(stdscr, pos_y + line_counter, pos_x, width, gpu, idx)
             line_counter += 1
     else:
         data = {
@@ -72,56 +68,68 @@ class GPU(Page):
         super(GPU, self).__init__("GPU", stdscr, jetson)
         # Initialize GPU chart
         self.chart_gpus = []
-        for name in sorted(self.jetson.gpu):
-            chart = Chart(jetson, "GPU{name}".format(name=name), self.update_chart, color_text=curses.COLOR_GREEN)
+        for idx, name in enumerate(self.jetson.gpu):
+            chart = Chart(jetson, "GPU{name}".format(name=idx + 1), self.update_chart, color_text=curses.COLOR_GREEN)
             self.chart_gpus += [chart]
 
     def update_chart(self, jetson, name):
-        # gpu = jetson.gpu[int(name[3:])]
-        # Get max value if is present
-        # max_val = gpu.get("max_val", 100)
-        # Get unit
-        # unit = gpu.get("unit", "%")
+        # Decode GPU name
+        idx = int(name[3:]) - 1
+        gpu_data = jetson.gpu[idx]
+        gpu_status = gpu_data['status']
         # Append in list
         return {
-            #    'value': [gpu.get("val", 0)],
-            #    'max': max_val,
-            #    'unit': unit,
+            'value': [gpu_status['load']],
         }
 
     def draw(self, key, mouse):
-        """
-            Draw a plot with GPU payload
-        """
-        n_gpu = len(self.jetson.gpu)
         # Screen size
         height, width, first = self.size_page()
-        # Evaluate size single chart
-        x_size = (width - 2) // n_gpu
-        # Plot all GPUS
-        idx_n = 0
-        for chart, name in zip(self.chart_gpus, sorted(self.jetson.gpu)):
-            # Increase counter
-            size_x = [1 + idx_n * (x_size), (1 + idx_n) * (1 + x_size) - 2]
-            size_y = [first + 1, height * 2 // 3]
-            # Value and frequency
-            y_label = (idx_n) % n_gpu == n_gpu - 1
-            frq = label_freq(self.jetson.gpu[name]['frq'], start='k')
-            label_chart_gpu = "{percent: >2}%".format(percent=self.jetson.gpu[name]['val'])
-            if frq:
-                label_chart_gpu += " - {frq}".format(frq=frq)
-            chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu, y_label=y_label)
-            # Increase counter
-            idx_n += 1
-        # Temperature GPU
-        if 'GPU' in self.jetson.temperature:
-            temp_gpu = self.jetson.temperature['GPU']
-            plot_name_info(self.stdscr, first + height * 2 // 3 + 2, 1, "GPU Temp", str(temp_gpu) + "C")
-        # Jetson clocks status
-        jetson_clocks_gui(self.stdscr, first + height * 2 // 3 + 4, 1, self.jetson)
-        # NVP Model
-        if self.jetson.nvpmodel is not None:
-            nvp_model_gui(self.stdscr, first + height * 2 // 3 + 5, 1, self.jetson)
+        # Measure height
+        gpu_height = (height * 2 // 3 - 3) // len(self.jetson.gpu)
+        # Plot all GPU temperatures
+        self.stdscr.addstr(first + 1, 1, "Temperatures:", curses.A_NORMAL)
+        for idx, temp in enumerate(self.jetson.temperature):
+            if 'GPU' in temp:
+                value = self.jetson.temperature[temp]
+                self.stdscr.addstr(first + 1, 15, temp + " ", curses.A_BOLD)
+                self.stdscr.addstr(str(value) + "C", curses.A_NORMAL)
+        # Draw all GPU
+        for idx, (chart, gpu_data) in enumerate(zip(self.chart_gpus, self.jetson.gpu)):
+            gpu_status = gpu_data['status']
+            gpu_freq = gpu_data['freq']
+            # Set size chart gpu
+            size_x = [1, width - 2]
+            size_y = [first + 2 + idx * (gpu_height + 1), first + 2 + (idx + 1) * (gpu_height - 3)]
+            # Print status CPU
+            governor = gpu_freq.get('governor', '')
+            label_chart_gpu = "{percent: >3.0f}% - gov: {governor} - name: {name}".format(percent=gpu_status['load'], governor=governor, name=gpu_data['name'])
+            # Draw GPU chart
+            chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
+            # Print all status GPU
+            button_position = width // 4
+            button_idx = 0
+            # railgate status
+            railgate_string = "Active" if gpu_status['railgate'] else "Disable"
+            railgate_status = NColors.green() if gpu_status['railgate'] else NColors.red()
+            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1, "Railgate", railgate_string, color=railgate_status)
+            button_idx += button_position
+            # 3D scaling
+            scaling_string = "Active" if gpu_status['3d_scaling'] else "Disable"
+            scaling_status = NColors.green() if gpu_status['3d_scaling'] else NColors.red()
+            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling", scaling_string, color=scaling_status)
+            button_idx += button_position
+            # Power control
+            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Power ctrl", gpu_data['power_control'])
+            button_idx += button_position
+            # TPC PG Mask
+            tpc_pg_mask_string = "ON" if gpu_status['tpc_pg_mask'] else "OFF"
+            # tpc_pg_mask_status = NColors.green() if gpu_status['tpc_pg_mask'] else NColors.red()
+            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "TPC PG", tpc_pg_mask_string)
+            button_idx += button_position
+            # Print frequency info
+            gpu_freq['name'] = "Frq"
+            freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, 1, width - 3, gpu_freq)
 
     def draw_nv_table(self, start_y, start_x, r_width):
         columns_title = self.jetson.ram['table'][0]
