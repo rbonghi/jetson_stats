@@ -140,11 +140,11 @@ class GPUService(object):
             logger.info("No NVIDIA GPU available")
 
     def get_status(self):
-        status = {'type': self._gpu_type}
+        # Initialize GPU status
+        status = {'type': self._gpu_type, 'gpu': []}
         # Detect frequency and load
         if self._gpu_type == 'integrated':
             # Read iGPU frequency
-            status['gpu'] = []
             for data in self._gpu_list:
                 gpu = {
                     # Read status GPU
