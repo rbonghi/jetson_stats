@@ -558,8 +558,9 @@ class jtop(Thread):
         if 'IRAM' in self.memory:
             stats['IRAM'] = self.memory['IRAM']['used']
         # -- GPU --
-        for n_gpu in self.gpu:
-            stats['GPU{n_gpu}'.format(n_gpu=n_gpu)] = self.gpu[n_gpu]['val']
+        for idx, gpu in enumerate(self.gpu['gpu']):
+            gpu_name = 'GPU' if idx == 0 else 'GPU{idx}'.format(idx=idx)
+            stats[gpu_name] = gpu['status']['load']
         # -- Engines --
         for group in self.engine:
             for name, engine in self.engine[group].items():

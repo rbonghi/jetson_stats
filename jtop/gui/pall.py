@@ -25,15 +25,16 @@ from .lib.common import (
     jetson_clocks_gui,
     nvp_model_gui)
 from .lib.colors import NColors
-from .lib.linear_gauge import linear_gauge, basic_gauge, GaugeName
+from .lib.linear_gauge import basic_gauge
+from .lib.common import size_to_string
 from .pcpu import compact_cpus
 from .pmem import compact_memory
+from .pgpu import compact_gpu
 # Menu GUI pages
 from .jtopguimenu import (
     plot_watts,
     compact_info,
-    plot_temperatures,
-    plot_GPUs)
+    plot_temperatures)
 
 
 def compact_status(stdscr, pos_y, pos_x, width, jetson):
@@ -73,6 +74,21 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
     return line_counter + 1
 
 
+def disk_gauge(stdscr, pos_y, pos_x, size, disk_status):
+    # value disk
+    value = int(float(disk_status['used']) / float(disk_status['total']) * 100.0)
+    used = size_to_string(disk_status['used'], disk_status['unit'])
+    total = size_to_string(disk_status['total'], disk_status['unit'])
+    data = {
+        'name': 'Dsk',
+        'color': NColors.yellow(),
+        'values': [(value, NColors.yellow())],
+        'mright': "{used}/{total}".format(used=used, total=total)
+    }
+    basic_gauge(stdscr, pos_y, pos_x, size - 2, data, bar="#")
+    return 1
+
+
 class ALL(Page):
 
     def __init__(self, stdscr, jetson):
@@ -94,16 +110,9 @@ class ALL(Page):
         # Update line counter
         line_counter += max(size_memory, size_status)
         # GPU linear gauge info
-        line_counter += 1
-        line_counter = plot_GPUs(self.stdscr, line_counter, self.jetson.gpu, width)
+        line_counter += compact_gpu(self.stdscr, line_counter, 0, width, self.jetson)
         # Status disk
-        line_counter += 1
-        disk_status = self.jetson.disk
-        linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('Dsk', color=NColors.yellow()),
-                     value=int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
-                     percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
-                     bar="#")
+        line_counter += disk_gauge(self.stdscr, line_counter, 0, width, self.jetson.disk)
         # Last part of information
         total, power = self.jetson.power
         mini_menu = 1

@@ -26,6 +26,44 @@ from .lib.common import (plot_name_info,
                          nvp_model_gui,
                          size_min)
 from .lib.chart import Chart
+from .lib.common import unit_to_string
+from .lib.linear_gauge import basic_gauge
+
+
+def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
+    gpu_status = gpu_data['status']
+    # Data gauge
+    data = {
+        'name': 'GPU' if idx == 0 else 'GPU{idx}'.format(idx=idx),
+        'color': NColors.green() | curses.A_BOLD,
+        'values': [(gpu_status['load'], NColors.igreen())],
+    }
+    if 'freq' in gpu_data:
+        # Draw current frequency
+        curr_string = unit_to_string(gpu_data['freq']['cur'], gpu_data['freq']['unit'], 'Hz')
+        stdscr.addstr(pos_y, pos_x + size - 7, curr_string, NColors.italic())
+    # Draw gauge
+    basic_gauge(stdscr, pos_y, pos_x, size - 9, data, bar=" ")
+
+
+def compact_gpu(stdscr, pos_y, pos_x, width, jetson):
+    line_counter = 0
+    # Status all GPUs
+    if jetson.gpu['gpu']:
+        for idx, gpu in enumerate(jetson.gpu['gpu']):
+            gpu_gauge(stdscr, pos_y, pos_x, width, gpu, idx)
+            line_counter += 1
+    else:
+        data = {
+            'name': 'GPU',
+            'color': NColors.green(),
+            'online': False,
+            'coffline': NColors.igreen(),
+            'message': 'NOT AVAILABLE',
+        }
+        basic_gauge(stdscr, pos_y, pos_x, width - 2, data)
+        line_counter = 1
+    return line_counter
 
 
 class GPU(Page):
@@ -39,16 +77,16 @@ class GPU(Page):
             self.chart_gpus += [chart]
 
     def update_chart(self, jetson, name):
-        gpu = jetson.gpu[int(name[3:])]
+        # gpu = jetson.gpu[int(name[3:])]
         # Get max value if is present
-        max_val = gpu.get("max_val", 100)
+        # max_val = gpu.get("max_val", 100)
         # Get unit
-        unit = gpu.get("unit", "%")
+        # unit = gpu.get("unit", "%")
         # Append in list
         return {
-            'value': [gpu.get("val", 0)],
-            'max': max_val,
-            'unit': unit,
+            #    'value': [gpu.get("val", 0)],
+            #    'max': max_val,
+            #    'unit': unit,
         }
 
     def draw(self, key, mouse):
