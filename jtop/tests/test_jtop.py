@@ -40,7 +40,7 @@ def check_attributes(jetson):
     # Engines
     assert isinstance(jetson.engine, dict)
     # Status disk
-    assert isinstance(jetson.disk, dict)
+    assert isinstance(jetson.disk, list)
     # local interfaces
     assert isinstance(jetson.local_interfaces, dict)
     # Status disk
