@@ -37,6 +37,8 @@ from .core.memory import MemoryService
 from .core.gpu import GPUService
 from .core.engine import EngineService
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
+from .core.temperature import TemperatureService
+from .core.power import PowerService
 from .core import (
     Command,
     JtopException,
@@ -307,6 +309,10 @@ class JtopServer(Process):
         self.gpu = GPUService()
         # Setup engine service
         self.engine = EngineService()
+        # Setup Temperature service
+        self.temperature = TemperatureService()
+        # Setup Power meter service
+        self.power = PowerService()
         # Setup tegrastats
         self.tegra = Tegrastats(self.tegra_stats, path_tegrastats)
 
@@ -431,6 +437,8 @@ class JtopServer(Process):
             # Close tegra
             if self.tegra.close(timeout=TIMEOUT_SWITCHOFF):
                 logger.info("Force tegrastats close")
+                # Reset avg temperatures
+                self.power.reset_avg_power()
                 # Start jetson_clocks
                 if self.jetson_clocks is not None:
                     self.jetson_clocks.close()
@@ -513,37 +521,6 @@ class JtopServer(Process):
             logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
             os.remove(JTOP_PIPE)
 
-    def _total_power(self, power):
-        """
-        Private function to measure the total watt
-
-        :return: Total power and a second dictionary with all other measures
-        :rtype: dict, dict
-        """
-        # In according with:
-        # https://forums.developer.nvidia.com/t/power-consumption-monitoring/73608/8
-        # https://github.com/rbonghi/jetson_stats/issues/51
-        # https://forums.developer.nvidia.com/t/tegrastats-monitoring/217088/4?u=user62045
-        total_name = ""
-        for val in power:
-            if "POM_5V_IN" in val:
-                total_name = val
-                break
-        # Extract the total from list
-        # Otherwise sum all values
-        # Example for Jetson Xavier
-        # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
-        if total_name:
-            total = power[total_name]
-            del power[total_name]
-            return total, power
-        # Otherwise measure all total power
-        total = {'cur': 0, 'avg': 0}
-        for value in power.values():
-            total['cur'] += value['cur']
-            total['avg'] += value['avg']
-        return total, power
-
     def tegra_stats(self, tegrastats):
         # Make configuration dict
         # logger.debug("tegrastats read")
@@ -566,24 +543,10 @@ class JtopServer(Process):
         # Read all engines available
         # Can be empty for x86 architecture
         data['engines'] = self.engine.get_status()
-        # -- Power --
-        # Remove NC power (Orin family)
-        # https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#jetson-agx-orin-series
-        if 'NC' in tegrastats['WATT']:
-            del tegrastats['WATT']['NC']
-        # Refactor names
-        total, power = self._total_power(tegrastats['WATT'])
-        power = {k.replace("VDDQ_", "").replace("VDD_", "").replace("POM_", "").replace("_", " "): v for k, v in power.items()}
-        data['power'] = {'all': total, 'power': power}
         # -- Temperature --
-        # Remove PMIC temperature (TX family)
-        if 'PMIC' in tegrastats['TEMP']:
-            del tegrastats['TEMP']['PMIC']
-        # Remove all CV temperatures (Orin family)
-        for temp in list(tegrastats['TEMP'].keys()):
-            if temp.startswith('CV'):
-                del tegrastats['TEMP'][temp]
-        data['temperature'] = tegrastats['TEMP']
+        data['temperature'] = self.temperature.get_status()
+        # -- Power --
+        data['power'] = self.power.get_status()
         # -- FAN --
         # Update status fan speed
         data['fan'] = self.fan.update()

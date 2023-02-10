@@ -534,8 +534,8 @@ class jtop(Thread):
         * **engine X** - Frequency for each engine, if disabled *OFF* :py:attr:`~engine`
         * **fan** - Status fan speed :py:attr:`~fan`
         * **Temp X** - X temperature :py:attr:`~temperature`
-        * **power cur** - Total current power :py:attr:`~power`
-        * **power avg** - Total average power :py:attr:`~power`
+        * **Power X** - Current power from rail X :py:attr:`~power`
+        * **Power TOT** - Total current power :py:attr:`~power`
 
         :return: Compacts jetson statistics
         :rtype: dict
@@ -564,17 +564,20 @@ class jtop(Thread):
         # -- Engines --
         for group in self.engine:
             for name, engine in self.engine[group].items():
-                stats[name] = engine['curr'] if engine['status'] else 'OFF'
+                stats[name] = engine['curr'] if engine['online'] else 'OFF'
         # -- FAN --
         if self.fan:
             stats['fan'] = self.fan.speed
         # -- Temperature --
-        for temp in sorted(self.temperature):
+        for temp in self.temperature:
             stats["Temp {name}".format(name=temp)] = self.temperature[temp]
         # -- Power --
-        total, _ = self.power
-        stats['power cur'] = total['cur']
-        stats['power avg'] = total['avg']
+        # Load all current power from each power rail
+        if self.power:
+            for name, rail in self.power['rail'].items():
+                stats["Power {name}".format(name=temp)] = rail['power']
+            # Load total current power
+            stats['power TOT'] = self.power['tot']['power']
         return stats
 
     @property
@@ -755,9 +758,7 @@ class jtop(Thread):
         :return: Two dictionaries, total and a list of all power consumption available from the board
         :rtype: dict, dict
         """
-        total = self._stats['power']['all']
-        power = self._stats['power']['power']
-        return total, power
+        return self._stats['power']
 
     @property
     def temperature(self):

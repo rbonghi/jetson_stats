@@ -95,8 +95,7 @@ def compact_engines(stdscr, pos_x, pos_y, width, jetson):
     size_map = len(map_eng)
     # Write first line
     if size_map > 0:
-        stdscr.hline(pos_y, pos_x + 1, curses.ACS_HLINE, width - 1)
-        stdscr.addstr(pos_y, pos_x + (width - 13) // 2, " [HW engines] ", curses.A_BOLD)
+        stdscr.addstr(pos_y, pos_x + (width - 13) // 2, " [HW engines] ", NColors.icyan() | curses.A_BOLD)
         size_map += 1
     # Plot all engines
     for gidx, row in enumerate(map_eng):

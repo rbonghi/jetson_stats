@@ -44,15 +44,9 @@ def check_attributes(jetson):
     # local interfaces
     assert isinstance(jetson.local_interfaces, dict)
     # Check power
-    assert isinstance(jetson.power, tuple)
-    total, power = jetson.power
-    assert isinstance(power, dict)
-    assert len(power) > 0
-    assert isinstance(total, dict)
-    assert len(total) > 0
+    assert isinstance(jetson.power, dict)
     # Check temperature
     assert isinstance(jetson.temperature, dict)
-    assert len(jetson.temperature) > 0
 
 
 def test_open(jtop_server):

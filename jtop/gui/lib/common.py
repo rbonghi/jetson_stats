@@ -155,7 +155,7 @@ def unit_min(num, divider=1.0, n=0, start=''):
 
 def find_unit(size, power, divider=1.0, n=0, start=''):
     n = 0
-    power_labels = ['', 'k', 'M', 'G', 'T']
+    power_labels = ['m', '', 'k', 'M', 'G', 'T']
     while size > power - 1:
         divider *= power
         size /= power
