@@ -24,9 +24,10 @@ from .lib.common import (
     jetson_clocks_gui,
     nvp_model_gui)
 from .lib.colors import NColors
-from .lib.linear_gauge import linear_gauge, basic_gauge, GaugeName
+from .lib.linear_gauge import basic_gauge
+from .lib.common import size_to_string
 from .pcpu import compact_cpus
-from .pgpu import plot_GPUs
+from .pgpu import compact_gpu
 from .pmem import compact_memory
 from .pengine import compact_engines
 from .pcontrol import plot_temperatures, plot_watts
@@ -69,6 +70,21 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
     return line_counter + 1
 
 
+def disk_gauge(stdscr, pos_y, pos_x, size, disk_status):
+    # value disk
+    value = int(float(disk_status['used']) / float(disk_status['total']) * 100.0)
+    used = size_to_string(disk_status['used'], disk_status['unit'])
+    total = size_to_string(disk_status['total'], disk_status['unit'])
+    data = {
+        'name': 'Dsk',
+        'color': NColors.yellow(),
+        'values': [(value, NColors.yellow())],
+        'mright': "{used}/{total}".format(used=used, total=total)
+    }
+    basic_gauge(stdscr, pos_y, pos_x, size - 2, data, bar="#")
+    return 1
+
+
 class ALL(Page):
 
     def __init__(self, stdscr, jetson):
@@ -98,38 +114,33 @@ class ALL(Page):
         # Update line counter
         line_counter += max(size_memory, size_status)
         # GPU linear gauge info
-        line_counter += 1
-        line_counter = plot_GPUs(self.stdscr, line_counter, self.jetson.gpu, width)
+        line_counter += compact_gpu(self.stdscr, line_counter, 0, width, self.jetson)
         # Status disk
-        line_counter += 1
-        disk_status = self.jetson.disk
-        linear_gauge(self.stdscr, offset=line_counter, size=width,
-                     name=GaugeName('Dsk', color=NColors.yellow()),
-                     value=int(float(disk_status['used']) / float(disk_status['total']) * 100.0),
-                     percent="{0:2.1f}GB/{1:2.1f}GB".format(disk_status['used'], disk_status['total']),
-                     bar="#")
+        line_counter += disk_gauge(self.stdscr, line_counter, 0, width, self.jetson.disk)
         # If empty return
         if self._n_columns == 0:
             return
+        # Plot low bar background line
+        self.stdscr.addstr(line_counter, 0, " " * width, NColors.icyan())
         # Add engines, temperature and power
         column_width = (width) // (self._n_columns)
         column_height = height - line_counter - 3 + first
         # Plot compact info
         column = 0
         if self.jetson.engine:
-            size_info = compact_engines(self.stdscr, 0, line_counter + 1, column_width + 2, self.jetson)
+            size_info = compact_engines(self.stdscr, 0, line_counter, column_width + 2, self.jetson)
             if size_info > column_height:
                 for n_arrow in range(column_width + 1):
                     self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
             column += column_width
         # Plot temperatures
         if self.jetson.temperature:
-            size_temperatures = plot_temperatures(self.stdscr, column, line_counter + 1, column_width - 4, column_height, self.jetson)
+            size_temperatures = plot_temperatures(self.stdscr, column, line_counter, column_width - 4, column_height, self.jetson)
             if size_temperatures > column_height:
                 for n_arrow in range(column_width - 5):
                     self.stdscr.addch(first + height - 2, column + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
             column += column_width
         # plot watts
         if self.jetson.power:
-            plot_watts(self.stdscr, column, line_counter + 1, column_width - 4, column_height, self.jetson)
+            plot_watts(self.stdscr, column, line_counter, column_width - 4, column_height, self.jetson)
 # EOF

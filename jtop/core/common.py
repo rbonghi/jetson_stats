@@ -105,7 +105,8 @@ def status_disk(folder="/var/"):
     return {'total': totalSpace,
             'used': totalUsedSpace,
             'available': totalAvailSpace,
-            'available_no_root': totalAvailSpaceNonRoot
+            'available_no_root': totalAvailSpaceNonRoot,
+            'unit': 'G'
             }
 
 

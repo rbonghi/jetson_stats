@@ -32,19 +32,20 @@ from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 
 # jetson_stats imports
+from .core.cpu import CPUService
+from .core.memory import MemoryService
+from .core.gpu import GPUService
+from .core.engine import EngineService
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core.temperature import TemperatureService
 from .core.power import PowerService
 from .core import (
     Command,
-    CPUService,
-    MemoryService,
     JtopException,
     Tegrastats,
     JetsonClocksService,
     Config,
     NVPModelService,
-    EngineService,
     FanService,
     FanServiceLegacy,
     get_key,
@@ -304,6 +305,8 @@ class JtopServer(Process):
         self.cpu = CPUService()
         # Setup memory service
         self.memory = MemoryService(self.config)
+        # Setup gpu service
+        self.gpu = GPUService()
         # Setup engine service
         self.engine = EngineService()
         # Setup Temperature service
@@ -419,10 +422,6 @@ class JtopServer(Process):
                     # Close and log status
                     if self.tegra.close():
                         logger.info("tegrastats close")
-                        # Start jetson_clocks
-                        if self.jetson_clocks is not None:
-                            self.jetson_clocks.stop()
-                            logger.info("jetson_clocks show closed")
                     # Disable timeout
                     timeout = None
                     self.interval.value = -1.0
@@ -526,7 +525,6 @@ class JtopServer(Process):
         # Make configuration dict
         # logger.debug("tegrastats read")
         data = {}
-        jetson_clocks_show = deepcopy(self.jetson_clocks.show()) if self.jetson_clocks is not None else {}
         # -- CPU --
         # Read CPU data
         data['cpu'] = self.cpu.get_status()
@@ -538,6 +536,9 @@ class JtopServer(Process):
         # - EMC (If available)
         # - IRAM (If available)
         data['mem'] = self.memory.get_status()
+        # -- GPU ---
+        # Read GPU status
+        data['gpu'] = self.gpu.get_status()
         # -- Engines --
         # Read all engines available
         # Can be empty for x86 architecture
@@ -546,17 +547,6 @@ class JtopServer(Process):
         data['temperature'] = self.temperature.get_status()
         # -- Power --
         data['power'] = self.power.get_status()
-        # -- GPU --
-        data['gpu'] = {1: tegrastats['GR3D']}
-        # For more GPU change in a next future with
-        # data['gpu'] = [value for key,value in tegrastats.items() if key.startswith('GR3D')]
-        if 'GR3D2' in tegrastats:
-            data['gpu'][2] = tegrastats['GR3D2']
-        if 'GPU' in jetson_clocks_show:
-            for idx in range(1, len(data['gpu']) + 1):
-                data['gpu'][idx].update(jetson_clocks_show['GPU'])
-                # Remove current_freq data
-                del data['gpu'][idx]['current_freq']
         # -- FAN --
         # Update status fan speed
         data['fan'] = self.fan.update()

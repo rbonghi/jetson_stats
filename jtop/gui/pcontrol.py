@@ -38,8 +38,8 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
         20: curses.A_NORMAL,
     }
     # Plot title
-    stdscr.addstr(offset, start - 1, " [Sensor] ", curses.A_BOLD)
-    stdscr.addstr(offset, start + 11, " [Temp] ", curses.A_BOLD)
+    stdscr.addstr(offset, start - 1, " [Sensor] ", NColors.icyan() | curses.A_BOLD)
+    stdscr.addstr(offset, start + 11, " [Temp] ", NColors.icyan() | curses.A_BOLD)
     # Plot name and temperatures
     for idx, name in enumerate(jetson.temperature):
         # Print temperature name
@@ -64,9 +64,9 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
 def plot_watts(stdscr, start, offset, width, height, jetson):
     start = start + (width - 6) // 2
     # Plot title
-    stdscr.addstr(offset, start - 11, " [Power] ", curses.A_BOLD)
-    stdscr.addstr(offset, start + 2, " [Inst] ", curses.A_BOLD)
-    stdscr.addstr(offset, start + 9, " [Avg] ", curses.A_BOLD)
+    stdscr.addstr(offset, start - 11, " [Power] ", NColors.icyan() | curses.A_BOLD)
+    stdscr.addstr(offset, start + 2, " [Inst] ", NColors.icyan() | curses.A_BOLD)
+    stdscr.addstr(offset, start + 9, " [Avg] ", NColors.icyan() | curses.A_BOLD)
     # Plot watts
     power = jetson.power['rail']
     for idx, name in enumerate(power):
