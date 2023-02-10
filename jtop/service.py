@@ -32,18 +32,17 @@ from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 
 # jetson_stats imports
+from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core.timer_reader import TimerReader
 from .core.cpu import CPUService
 from .core.memory import MemoryService
 from .core.gpu import GPUService
 from .core.engine import EngineService
-from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core.temperature import TemperatureService
 from .core.power import PowerService
 from .core import (
     Command,
     JtopException,
-    Tegrastats,
     JetsonClocksService,
     Config,
     NVPModelService,
