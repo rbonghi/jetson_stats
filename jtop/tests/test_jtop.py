@@ -36,15 +36,13 @@ def check_attributes(jetson):
     # Memory
     assert isinstance(jetson.memory, Memory)
     # GPU
-    assert isinstance(jetson.gpu, dict)
+    assert isinstance(jetson.gpu, list)
     # Engines
     assert isinstance(jetson.engine, dict)
     # Status disk
-    assert isinstance(jetson.disk, list)
+    assert isinstance(jetson.disk, dict)
     # local interfaces
     assert isinstance(jetson.local_interfaces, dict)
-    # Status disk
-    assert isinstance(jetson.disk, dict)
     # Check power
     assert isinstance(jetson.power, tuple)
     total, power = jetson.power
