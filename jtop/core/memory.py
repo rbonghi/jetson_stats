@@ -341,7 +341,8 @@ class MemoryService(object):
         self._page_size = os.sysconf("SC_PAGE_SIZE")
         # board type
         self._isJetson = os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps")
-        if not os.path.isdir("/sys/kernel/debug/clk/emc"):
+        self._is_emc = True if read_emc() else False
+        if not self._is_emc:
             logger.warn("EMC not available")
 
     def swap_path(self):
@@ -472,9 +473,8 @@ class MemoryService(object):
             'table': read_swapon(),
         }
         # Read EMC status
-        emc = read_emc()
-        if emc:
-            memory['EMC'] = emc
+        if self._is_emc:
+            memory['EMC'] = read_emc()
             # Set always online this engine
             memory['EMC']['online'] = True
             # Percentage utilization
