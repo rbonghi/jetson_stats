@@ -19,18 +19,16 @@ import re
 import os
 import time
 import logging
-import sys
 # Launch command
 from datetime import timedelta
 from threading import Thread, Event
 # Local functions and classes
 from .command import Command
 from .common import get_uptime, locate_commands
-# Import exceptions
-from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 
+PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
 COMMAND_TIMEOUT = 3.0
 CONFIG_DEFAULT_BOOT = False
 CONFIG_DEFAULT_DELAY = 60  # In seconds
@@ -66,9 +64,27 @@ PVA_REGEXP = re.compile(r'PVA(.+?)_(.+?) MinFreq=(.+?) MaxFreq=(.+?) CurrentFreq
 # NVP Model
 # NV Power Mode: MAXN
 NVP_REGEXP = re.compile(r'NV Power Mode: ((.*))')
+# Type Engine
+JC_ENGINES = re.compile(r'^(?P<name>[^ ]+) .* MaxFreq=(?P<frq>[^ ]+) .*')
 
 
 def decode_show_message(lines):
+    status = {}
+    for line in lines:
+        # Search configuration CPU config
+        match = JC_ENGINES.search(line)
+        if match:
+            parsed_line = match.groupdict()
+            # Extract name
+            name = 'CPU' if 'cpu' in parsed_line['name'] else parsed_line['name']
+            # Extrac max frequency
+            freq = int(parsed_line['frq'])
+            # add engine
+            status[name] = freq
+    return status
+
+
+def _decode_show_message(lines):
     # Load lines
     status = {"CPU": {}}
     for line in lines:
@@ -169,26 +185,35 @@ def decode_show_message(lines):
     return status
 
 
-def jetson_clocks_alive(show):
-    # Make statistics
-    stat = []
-    if 'CPU' in show:
-        for cpu in show['CPU'].values():
-            # Check status CPU
-            stat += [cpu['max_freq'] == cpu['min_freq']]
-            stat += [cpu['max_freq'] == cpu['current_freq']]
-    # Check status GPU
-    if 'GPU' in show:
-        gpu = show['GPU']
-        stat += [gpu['max_freq'] == gpu['min_freq']]
-        stat += [gpu['max_freq'] == gpu['current_freq']]
-    # Don't need to check EMC frequency
-    # Check status EMC
-    # if 'EMC' in show:
-    #     emc = show['EMC']
-    #     stat += [emc['max_freq'] == emc['min_freq']]
-    #     stat += [emc['max_freq'] == emc['current_freq']]
-    return all(stat)
+def jetson_clocks_alive(engines, data):
+    for engine, frq in engines.items():
+        if engine == 'CPU':
+            # Check minum and max frequency
+            for cpu in data['cpu']['cpu']:
+                cpu_frqs = cpu['freq']
+                if not all([cpu_frqs['max'] == frq, cpu_frqs['min'] == frq]):
+                    return False
+        elif engine == 'GPU':
+            # Check minum and max frequency
+            for gpu in data['gpu']:
+                gpu_freqs = gpu['freq']
+                if not all([gpu_freqs['max'] == frq // 1000, gpu_freqs['min'] == frq // 1000]):
+                    return False
+        elif engine == 'EMC':
+            # Check minum and max frequency
+            # EMC check only if current frequency is the same of max
+            emc = data['mem']['EMC']
+            if not all([emc['max'] == frq // 1000, emc['cur'] == frq // 1000]):
+                return False
+        else:
+            # Find enging and check frequencies
+            for _, engines_group in data['engines'].items():
+                for name, engine_data in engines_group.items():
+                    if engine == name:
+                        # for all Engines check only if current frequency is the same of max
+                        if not all([engine_data['max'] == frq // 1000, engine_data['cur'] == frq // 1000]):
+                            return False
+    return True
 
 
 class JetsonClocks(object):
@@ -256,11 +281,9 @@ class JetsonClocksService(object):
 
     set_status = 'inactive'
 
-    def __init__(self, config, fan, jetson_clocks_path):
+    def __init__(self, config, fan):
         # Thread event show
-        self._running = False
         self.event_show = Event()
-        self._thread = None
         # Thread event jetson_clocks set
         self._set_jc = None
         # nvpmodel
@@ -270,31 +293,28 @@ class JetsonClocksService(object):
         jetson_clocks_file = config.get('jetson_clocks', {}).get('l4t_file', CONFIG_DEFAULT_L4T_FILE)
         # Config file
         self.config_l4t = config.path + "/" + jetson_clocks_file
-        # Jetson Clocks path
-        self.jc_bin = locate_commands("jetson_clocks", jetson_clocks_path)
         # Error message
         self._error = None
         # Fan configuration
         self.fan = fan
+        # Jetson Clocks path
+        self._jc_bin = locate_commands("jetson_clocks", PATH_JETSON_CLOCKS)
+        if not self._jc_bin:
+            logger.error("jetson_clocks not available")
+            return
+        else:
+            logger.info("jetson_clocks found in {cmd}".format(cmd=self._jc_bin))
+        # List of all engines required
+        self._engines_list = self.show()
+
+    def exists(self):
+        return True if self._jc_bin else False
 
     def initialization(self, nvpmodel):
+        if not self.exists():
+            logger.error("jetson_clocks not available")
+            return
         self.nvpmodel = nvpmodel
-        # Update status jetson_clocks
-        cmd = Command([self.jc_bin, '--show'])
-        for idx in range(5):
-            try:
-                lines = cmd(timeout=COMMAND_TIMEOUT)
-                break
-            except Command.CommandException as error:
-                logger.error("[{idx}] {error}".format(idx=idx, error=error))
-                # Sleep for a while before run again this script
-                time.sleep(1.0)
-        if idx == 4:
-            raise JtopException("I cannot initialize jetson_clocks controller")
-        # Decode jetson_clocks --show
-        self._show = decode_show_message(lines)
-        if not self.event_show.is_set():
-            self.event_show.set()
         # Check if exist configuration file
         if not os.path.isfile(self.config_l4t):
             if self.alive(wait=False):
@@ -312,6 +332,20 @@ class JetsonClocksService(object):
             # Start thread Service client
             self._set_jc = Thread(target=self._th_start, args=(False, ))
             self._set_jc.start()
+
+    def get_status(self, data):
+        # If jetson_clocks does not exist return empty
+        if not self.exists():
+            logger.error("jetson_clocks not available")
+            return {}
+        # Get status jetson_clocks
+        status = {
+            'status': self.alive(data, wait=False),
+            'thread': self.is_running(),
+            'config': self.is_config(),
+            'boot': self.boot,
+        }
+        return status
 
     def _fix_fan(self, speed, status):
         logger.debug("fan mode: {mode}".format(mode=self.fan.mode))
@@ -353,9 +387,9 @@ class JetsonClocksService(object):
         # Read fan speed
         speed = self.fan.speed if self.fan.is_speed() else 0
         # Start jetson_clocks
-        Command.run_command([self.jc_bin], repeat=5, timeout=COMMAND_TIMEOUT)
+        Command.run_command([self._jc_bin], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
-        self._fix_fan(speed, True)
+        # ----------------------------------------------- self._fix_fan(speed, True)
         # Reset nvpmodel
         if reset and self.nvpmodel is not None:
             self.nvpmodel.reset()
@@ -367,9 +401,9 @@ class JetsonClocksService(object):
         # Read fan speed
         speed = self.fan.speed if self.fan.is_speed() else 0
         # Run jetson_clocks
-        Command.run_command([self.jc_bin, '--restore', self.config_l4t], repeat=5, timeout=COMMAND_TIMEOUT)
+        Command.run_command([self._jc_bin, '--restore', self.config_l4t], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
-        self._fix_fan(speed, False)
+        # ----------------------------------------------- self._fix_fan(speed, False)
         # Reset nvpmodel
         if reset and self.nvpmodel is not None:
             self.nvpmodel.reset()
@@ -417,64 +451,25 @@ class JetsonClocksService(object):
         # Set new jetson_clocks configuration
         self._config.set('jetson_clocks', config)
 
-    def alive(self, wait=True):
+    def alive(self, data, wait=True):
         if wait and not self.event_show.is_set():
             logger.info("Wait from jetson_clocks show")
             if not self.event_show.wait(timeout=COMMAND_TIMEOUT):
-                raise JtopException("Lost connection from jtop")
+                logger.error("Lost connection from jtop")
+                return False
         self.event_show.clear()
         # Return status jetson_clocks
-        return jetson_clocks_alive(self._show)
+        return jetson_clocks_alive(self._engines_list, data)
 
     def show(self):
-        return self._show
-
-    def _th_show(self, interval):
-        cmd = Command([self.jc_bin, '--show'])
+        cmd = Command([self._jc_bin, '--show'])
+        list_engines = {}
         try:
-            while self._running:
-                try:
-                    start = time.time()
-                    lines = cmd(timeout=COMMAND_TIMEOUT)
-                    self._show = decode_show_message(lines)
-                    # Set event from jetson_clocks
-                    if not self.event_show.is_set():
-                        self.event_show.set()
-                    # Measure jetson_clocks sleep time
-                    delta = time.time() - start
-                    sleep_time = interval - delta if interval - delta > JC_MIN_SLEEP else JC_MIN_SLEEP
-                    time.sleep(sleep_time)
-                except Command.TimeoutException as e:
-                    logger.warning("Timeout {}".format(e))
-        except Exception as e:
-            logger.error("Exception in 'jetson_clocks --show': {}".format(e))
-            # Store error message
-            self._error = sys.exc_info()
-        finally:
-            # Reset running boolean
-            self._running = False
-        # Reset running boolean
-        self._running = False
-        logger.debug("Close 'jetson_clocks --show' thread")
-
-    def start(self, interval):
-        # If there are exception raise
-        self._error_status()
-        # Check if thread show is running or not
-        if not self._running:
-            logger.debug("Initialize thread jetson_clocks show interval= {interval}s".format(interval=interval))
-            self._thread = Thread(target=self._th_show, args=(interval + 0.2, ))
-        # If thread is not alive start
-        if not self._thread.is_alive():
-            self._running = True
-            # Run service
-            self._thread.start()
-
-    def stop(self):
-        # If there are exception raise
-        self._error_status()
-        # Stop service
-        self._running = False
+            lines = cmd(timeout=COMMAND_TIMEOUT)
+            list_engines = decode_show_message(lines)
+        except Command.TimeoutException as e:
+            logger.warning("Timeout {}".format(e))
+        return list_engines
 
     def close(self):
         # Switch off thread jetson clocks

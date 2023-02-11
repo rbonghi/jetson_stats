@@ -344,6 +344,8 @@ class MemoryService(object):
         self._is_emc = True if read_emc() else False
         if not self._is_emc:
             logger.warn("EMC not available")
+        # Initialization memory
+        logger.info("Memory service started")
 
     def swap_path(self):
         config = self._config.get('swap', {})

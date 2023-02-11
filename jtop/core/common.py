@@ -44,9 +44,8 @@ def cat(path):
 def locate_commands(name, commands):
     for cmd in commands:
         if os.path.exists(cmd):
-            logger.info("{name} loaded on {cmd}".format(name=name, cmd=cmd))
             return cmd
-    raise JtopException("{name} is not available on this board".format(name=name))
+    return None
 
 
 def import_os_variables(SOURCE, PATTERN):

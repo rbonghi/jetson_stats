@@ -22,6 +22,8 @@ import logging
 # Create logger
 logger = logging.getLogger(__name__)
 
+TIMER_READER_MIN_SLEEP = 0.05
+
 
 class TimerReader:
 
@@ -38,10 +40,14 @@ class TimerReader:
         logger.debug("jtop timer start at {interval}s".format(interval=interval))
         try:
             while stop_event.is_set():
+                start = time.time()
                 # Callback function
                 self._callback()
+                # Measure timer_callback sleep time
+                delta = time.time() - start
                 # Start to sleep
-                time.sleep(interval)
+                if interval > delta:
+                    time.sleep(interval - delta)
         except (KeyboardInterrupt, SystemExit):
             pass
         except AttributeError:

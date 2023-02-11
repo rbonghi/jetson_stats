@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 def read_engine(path):
     # Read status online
     engine = {}
-    engine['unit'] = 'M'
+    engine['unit'] = 'k'
     # Check if access to this file
     if os.access(path + "/clk_enable_count", os.R_OK):
         with open(path + "/clk_enable_count", 'r') as f:
@@ -36,7 +36,7 @@ def read_engine(path):
     if os.access(path + "/clk_rate", os.R_OK):
         with open(path + "/clk_rate", 'r') as f:
             # Write current engine
-            engine['cur'] = int(f.read()) // 1000000
+            engine['cur'] = int(f.read()) // 1000
     # Decode clock rate
     max_value = False
     if os.access(path + "/clk_max_rate", os.R_OK):
@@ -45,12 +45,12 @@ def read_engine(path):
             value = int(f.read())
             # 18446744073709551615 = FFFF FFFF FFFF FFFF = 2 ^ 16
             if value != 18446744073709551615:
-                engine['max'] = value // 1000000
+                engine['max'] = value // 1000
                 max_value = True
     if os.access(path + "/clk_min_rate", os.R_OK) and max_value:
         with open(path + "/clk_min_rate", 'r') as f:
             # Write status engine
-            engine['min'] = int(f.read()) // 1000000
+            engine['min'] = int(f.read()) // 1000
     return engine
 
 

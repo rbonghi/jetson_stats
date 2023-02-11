@@ -127,7 +127,7 @@ def list_all_i2c_ports(path):
                 'crit_alarm': "{path}/curr{num}_crit_alarm".format(path=path, num=number_port),
                 'max_alarm': "{path}/curr{num}_max_alarm".format(path=path, num=number_port),
             }
-            values = read_power_status(warnings)
+            values = read_power_status(warnings, 'I2C')
             logger.info("Alarms {name} - {data}".format(name=raw_name, data=values))
             # Read Voltage, current and limits
             sensor_name[raw_name] = {

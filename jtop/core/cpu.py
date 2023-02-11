@@ -141,6 +141,8 @@ class CPUService(object):
         # Sort CPU list in a list by CPU name
         self._cpu = [cpu_list[i] for i in sorted(cpu_list)]
         self._cpu_info = [{'model': list_cpu.get(cpu, {}).get("model name", "")} for cpu in range(len(self._cpu))]
+        # Status CPU service at start
+        logger.info("Found {cpu} CPU".format(cpu=len(cpu_list)))
         # Build CPU total info
         self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
         # Check available cpufreq and cpuidle

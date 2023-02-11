@@ -65,8 +65,6 @@ except ImportError:
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
-PATH_TEGRASTATS = ['/usr/bin/tegrastats', '/home/nvidia/tegrastats']
-PATH_JETSON_CLOCKS = ['/usr/bin/jetson_clocks', '/home/nvidia/jetson_clocks.sh']
 PATH_FAN_LEGACY = ['/sys/kernel/debug/tegra_fan', '/sys/devices/pwm-fan']
 PATH_FAN = ['/sys/devices/platform']
 PATH_NVPMODEL = ['nvpmodel']
@@ -248,7 +246,7 @@ class JtopServer(Process):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self, force=False, path_tegrastats=PATH_TEGRASTATS, path_jetson_clocks=PATH_JETSON_CLOCKS, path_fan=PATH_FAN, path_nvpmodel=PATH_NVPMODEL):
+    def __init__(self, force=False, path_fan=PATH_FAN, path_nvpmodel=PATH_NVPMODEL):
         self.force = force
         # Check if running a root
         if os.getuid() != 0:
@@ -290,11 +288,7 @@ class JtopServer(Process):
             logger.warning("{error} in paths {path}".format(error=error, path=path_fan))
             self.fan = FanServiceLegacy(self.config, path_fan if is_debug else PATH_FAN_LEGACY)
         # Initialize jetson_clocks controller
-        try:
-            self.jetson_clocks = JetsonClocksService(self.config, self.fan, path_jetson_clocks)
-        except JtopException as error:
-            logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
-            self.jetson_clocks = None
+        self.jetson_clocks = JetsonClocksService(self.config, self.fan)
         # Initialize nvpmodel controller
         try:
             self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
@@ -321,8 +315,7 @@ class JtopServer(Process):
         if self.nvpmodel is not None:
             self.nvp_mode = self.nvpmodel.get()
         # Run setup
-        if self.jetson_clocks is not None:
-            self.jetson_clocks.initialization(self.nvpmodel)
+        self.jetson_clocks.initialization(self.nvpmodel)
         # Initialize jetson_fan
         self.fan.initialization(self.jetson_clocks)
         # Initialize variables
@@ -407,7 +400,7 @@ class JtopServer(Process):
                             'cpu': self.cpu.get_cpu_info(),
                             'memory': self.memory.swap_path(),
                             'fan': self.fan.get_configs(),
-                            'jc': self.jetson_clocks is not None,
+                            'jc': self.jetson_clocks.exists(),
                             'nvpmodel': self.nvpmodel is not None,
                         }
                         self.q.put({'init': init})
@@ -550,12 +543,10 @@ class JtopServer(Process):
         # Update status fan speed
         data['fan'] = self.fan.update()
         # -- JETSON_CLOCKS --
-        if self.jetson_clocks is not None:
-            data['jc'] = {
-                'status': self.jetson_clocks.alive(wait=False),
-                'thread': self.jetson_clocks.is_running(),
-                'config': self.jetson_clocks.is_config(),
-                'boot': self.jetson_clocks.boot}
+        jc = self.jetson_clocks.get_status(data)
+        # If not empty return status
+        if jc:
+            data['jc'] = jc
         # -- NVP MODEL --
         if self.nvpmodel is not None:
             # Read nvp_mode

@@ -110,7 +110,7 @@ class jtop(Thread):
     :type interval: float
     """
 
-    def __init__(self, interval=0.5):
+    def __init__(self, interval=1.0):
         # Initialize Thread super class
         super(jtop, self).__init__()
         # Local Event thread

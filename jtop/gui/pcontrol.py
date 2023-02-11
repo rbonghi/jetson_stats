@@ -57,7 +57,7 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
         except curses.error:
             pass
         counter = idx
-    return counter + 2
+    return counter
 
 
 @check_curses
@@ -71,7 +71,7 @@ def plot_watts(stdscr, start, offset, width, height, jetson):
     power = jetson.power['rail']
     for idx, name in enumerate(power):
         value = power[name]
-        string_name = name.replace("VDD_", "").replace("_", " ")
+        string_name = name.replace("VDDQ_", "").replace("VDD_", "").replace("_", " ")
         stdscr.addstr(offset + idx + 1, start - 10, string_name, curses.A_NORMAL)
         unit_power = unit_to_string(value['power'], value['unit'], 'W')
         stdscr.addstr(offset + idx + 1, start + 3, unit_power, curses.A_NORMAL)
