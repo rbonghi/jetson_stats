@@ -596,11 +596,13 @@ class JtopServer(Process):
         data['gpu'] = {1: tegrastats['GR3D']}
         # For more GPU change in a next future with
         # data['gpu'] = [value for key,value in tegrastats.items() if key.startswith('GR3D')]
-        if 'GR3D2' in tegrastats:
-            data['gpu'][2] = tegrastats['GR3D2']
+        #if 'GR3D2' in tegrastats:
+        #    data['gpu'][2] = tegrastats['GR3D2']
         if 'GPU' in jetson_clocks_show:
             for idx in range(1, len(data['gpu']) + 1):
                 data['gpu'][idx].update(jetson_clocks_show['GPU'])
+                # Temporary fix GPU freq
+                data['gpu'][idx]['frq'] = data['gpu'][idx]['current_freq'] // 1000
                 # Remove current_freq data
                 del data['gpu'][idx]['current_freq']
         # -- RAM --
