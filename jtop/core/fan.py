@@ -20,10 +20,13 @@ import os
 from math import ceil
 # Logging
 import logging
+# Launch command
+from .command import Command
 from .common import cat
 # Create logger
 logger = logging.getLogger(__name__)
 
+COMMAND_TIMEOUT = 4.0
 FAN_PWM_CAP = 255
 FAN_PWM_RE = re.compile(r'^pwm\d+$')
 
@@ -88,7 +91,7 @@ class FanService(object):
     def __init__(self, config):
         # Load configuration
         self._config = config
-        # Fin all fan avaialable
+        # Fin all fan available
         self._fan_list = get_all_cooling_system()
         self._fan_list.update(get_all_legacy_fan())
         # Check if there is nvfan control
@@ -119,7 +122,7 @@ class FanService(object):
                 else:
                     logger.info("Mode {mode} already active".format(mode=mode))
             else:
-                logger.error("Mode {mode} doean't exist")
+                logger.error("Mode {mode} doesn't exist")
         return True
 
     def set_speed(self, name, speed):
@@ -138,6 +141,18 @@ class FanService(object):
                 with open(pwm_path, 'w') as f:
                     f.write(pwm)
 
+    def nvfancontrol_query(self):
+        status = {}
+        try:
+            nvpmodel_p = Command(['nvfancontrol', '-q'])
+            lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+            for line in lines:
+                print(line)
+
+        except (OSError, Command.CommandException):
+            pass
+        return status
+
     def get_status(self):
         fan_status = {'fan': {}}
         # Read all fan status
@@ -145,8 +160,10 @@ class FanService(object):
             # Read pwm from all fan
             fan_status['fan'][name] = [PWMtoValue(cat(pwm)) for pwm in list_pwm]
         # Check status fan control
-        nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
-        fan_status['mode'] = 'system' if nvfancontrol_is_active else 'manual'
-        fan_status['auto'] = nvfancontrol_is_active
+        if self._nvfancontrol:
+            nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
+            status = self.nvfancontrol_query()
+            fan_status['mode'] = 'system' if nvfancontrol_is_active else 'manual'
+            fan_status['auto'] = nvfancontrol_is_active
         return fan_status
 # EOF
