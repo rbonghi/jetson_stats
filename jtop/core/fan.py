@@ -37,7 +37,7 @@ def ValueToPWM(value, pwm_cap=FAN_PWM_CAP):
 
 
 def get_all_cooling_system():
-    pwm_files = []
+    pwm_files = {}
     path = "/sys/class/hwmon"
     for dir in os.listdir(path):
         full_path = os.path.join(path, dir)
@@ -51,17 +51,13 @@ def get_all_cooling_system():
             if fan_device_paths:
                 name_file = os.path.join(full_path, 'name')
                 name = cat(name_file).strip() if os.path.isfile(name_file) else dir
-                pwm_file = {
-                    'name': name,
-                    'path': fan_device_paths
-                }
-                pwm_files += [pwm_file]
+                pwm_files[name] = fan_device_paths
                 logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
     return pwm_files
 
 
-def get_all_legay_fan():
-    pwm_files = []
+def get_all_legacy_fan():
+    pwm_files = {}
     root_path = ""
     for path in ['/sys/kernel/debug/tegra_fan', '/sys/devices/pwm-fan']:
         if os.path.exists(path):
@@ -77,12 +73,6 @@ def get_all_legay_fan():
     logger.info("Found legacy Jetson {name} in {root_path}".format(name=name, root_path=root_path))
     return pwm_files
 
-
-def check_nvfancontrol():
-    name = "nvfancontrol.service"
-    if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)) or os.path.islink('/etc/systemd/system/{name}'.format(name=name)):
-        print("AAA")
-    return False
 
 class Fan(object):
 
@@ -100,24 +90,60 @@ class FanService(object):
         self._config = config
         # Fin all fan avaialable
         self._fan_list = get_all_cooling_system()
-        self._fan_list += get_all_legay_fan()
+        self._fan_list.update(get_all_legacy_fan())
         # Check if there is nvfan control
-        self._nvfancontrol = check_nvfancontrol()
-        
+        nvfancontrol = "nvfancontrol.service"
+        self._nvfancontrol = os.path.isfile('/etc/systemd/system/{name}'.format(name=nvfancontrol)
+                                            ) or os.path.islink('/etc/systemd/system/{name}'.format(name=nvfancontrol))
+        if nvfancontrol:
+            logger.info("Found {service}".format(service=nvfancontrol))
         print(self.get_status())
 
     def initialization(self):
         pass
 
+    def set_mode(self, mode):
+        if self._nvfancontrol:
+            nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
+            # Check first if the fan control is active and after enable the service
+            if mode == 'system':
+                if not nvfancontrol_is_active:
+                    os.system('systemctl start nvfancontrol')
+                    logger.info("Mode set {mode}".format(mode=mode))
+                else:
+                    logger.info("Mode {mode} already active".format(mode=mode))
+            elif mode == 'manual':
+                if nvfancontrol_is_active:
+                    os.system('systemctl stop nvfancontrol')
+                    logger.info("Mode set {mode}".format(mode=mode))
+                else:
+                    logger.info("Mode {mode} already active".format(mode=mode))
+            else:
+                logger.error("Mode {mode} doean't exist")
+        return True
+
+    def set_speed(self, name, speed):
+        if name not in self._fan_list:
+            return
+        # Check constraints
+        if speed > 100:
+            speed = 100
+        if speed < 0:
+            speed = 0
+        # Convert in PWM
+        pwm = str(ValueToPWM(speed))
+        # Set for all pwm the same speed value
+        for pwm_path in self._fan_list[name]:
+            if os.access(pwm_path, os.W_OK):
+                with open(pwm_path, 'w') as f:
+                    f.write(pwm)
+
     def get_status(self):
-        fan_status = {'fan': []}
+        fan_status = {'fan': {}}
         # Read all fan status
-        for fan in self._fan_list:
+        for name, list_pwm in self._fan_list.items():
             # Read pwm from all fan
-            speeds = []
-            for pwm in fan['path']:
-                speeds += [PWMtoValue(cat(pwm))]
-            fan_status['fan'] += [{'name': fan['name'], 'speed': speeds}]
+            fan_status['fan'][name] = [PWMtoValue(cat(pwm)) for pwm in list_pwm]
         # Check status fan control
         nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
         fan_status['mode'] = 'system' if nvfancontrol_is_active else 'manual'
