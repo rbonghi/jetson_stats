@@ -65,12 +65,12 @@ from threading import Thread
 from .service import JtopManager
 from .core.jetson_variables import get_platform_variables
 from .core.memory import Memory
+from .core.fan import Fan
 from .core import (
     get_var,
     get_cuda,
     get_opencv,
     get_libraries,
-    Fan,
     NVPModel,
     get_uptime,
     status_disk,

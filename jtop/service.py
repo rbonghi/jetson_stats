@@ -40,14 +40,13 @@ from .core.gpu import GPUService
 from .core.engine import EngineService
 from .core.temperature import TemperatureService
 from .core.power import PowerService
+from .core.fan import FanService
 from .core import (
     Command,
     JtopException,
     JetsonClocksService,
     Config,
     NVPModelService,
-    FanService,
-    FanServiceLegacy,
     get_key,
     get_var)
 # Create logger
@@ -65,8 +64,6 @@ except ImportError:
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
-PATH_FAN_LEGACY = ['/sys/kernel/debug/tegra_fan', '/sys/devices/pwm-fan']
-PATH_FAN = ['/sys/devices/platform']
 PATH_NVPMODEL = ['nvpmodel']
 # Pipe configuration
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
@@ -246,7 +243,7 @@ class JtopServer(Process):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self, force=False, path_fan=PATH_FAN, path_nvpmodel=PATH_NVPMODEL):
+    def __init__(self, force=False, path_nvpmodel=PATH_NVPMODEL):
         self.force = force
         # Check if running a root
         if os.getuid() != 0:
@@ -275,26 +272,11 @@ class JtopServer(Process):
         JtopManager.register('sync_event', callable=lambda: self.event)
         # Generate key and open broadcaster
         self.broadcaster = JtopManager()
-        # Load board information
-        is_debug = True if "JETSON_DEBUG" in os.environ else False
         # Load board and platform variables
         self.board = {'hardware': get_jetson_variables()}
         data_platform = get_platform_variables()
         logger.info("Running on Python: {python_version}".format(python_version=data_platform['Python']))
-        # Initialize Fan
-        try:
-            self.fan = FanService(self.config, path_fan)
-        except JtopException as error:
-            logger.warning("{error} in paths {path}".format(error=error, path=path_fan))
-            self.fan = FanServiceLegacy(self.config, path_fan if is_debug else PATH_FAN_LEGACY)
-        # Initialize jetson_clocks controller
-        self.jetson_clocks = JetsonClocksService(self.config, self.fan)
-        # Initialize nvpmodel controller
-        try:
-            self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
-        except JtopException as error:
-            logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
-            self.nvpmodel = None
+        # From this point are initialized or hardware services
         # Setup cpu service
         self.cpu = CPUService()
         # Setup memory service
@@ -307,6 +289,16 @@ class JtopServer(Process):
         self.temperature = TemperatureService()
         # Setup Power meter service
         self.power = PowerService()
+        # Initialize Fan
+        self.fan = FanService(self.config)
+        # Initialize jetson_clocks controller
+        self.jetson_clocks = JetsonClocksService(self.config, self.fan)
+        # Initialize nvpmodel controller
+        try:
+            self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
+        except JtopException as error:
+            logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
+            self.nvpmodel = None
         # Initialize timer reader
         self._timer_reader = TimerReader(self.jtop_stats)
 

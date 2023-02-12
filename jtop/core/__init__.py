@@ -20,7 +20,6 @@
 from .jetson_libraries import get_cuda, get_opencv, get_libraries
 from .nvpmodel import NVPModel, NVPModelService
 from .tegrastats import Tegrastats
-from .fan import Fan, FanService, FanServiceLegacy
 from .jetson_clocks import JetsonClocks, JetsonClocksService
 from .cpu import CPUService
 from .engine import EngineService, read_engine
