@@ -36,16 +36,17 @@ from .pcontrol import plot_temperatures, plot_watts
 def compact_status(stdscr, pos_y, pos_x, width, jetson):
     line_counter = 0
     # Fan status
-    if jetson.fan.all_speed().items():
-        for fan, speed in jetson.fan.all_speed().items():
-            line_counter += 1
-            data = {
-                'name': 'Fan',
-                'color': NColors.magenta(),
-                'online': jetson.fan,
-                'values': [(speed, NColors.magenta() | curses.A_BOLD)]
-            }
-            basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)
+    if jetson.fan:
+        for _, fan in jetson.fan.items():
+            for speed in fan['speed']:
+                line_counter += 1
+                data = {
+                    'name': 'Fan',
+                    'color': NColors.magenta(),
+                    'online': jetson.fan,
+                    'values': [(speed, NColors.magenta() | curses.A_BOLD)]
+                }
+                basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)
     else:
         line_counter += 1
         data = {

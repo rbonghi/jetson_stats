@@ -163,11 +163,35 @@ def change_nvfancontrol_default(name, value):
 
 class Fan(object):
 
-    def __init__(self, controller, CONFIGS):
+    def __init__(self):
+        self._controller = None
+        self._info = {}
+        self._data = {}
+
+    def _initialize(self, controller, info):
         self._controller = controller
-        self._CONFIGS = CONFIGS
-        # Initialize fan
-        self._status = {}
+        self._info = info
+
+    def _update(self, data):
+        self._data = data
+
+    def items(self):
+        return self._data.items()
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __next__(self):
+        return next(self._data)
+
+    def __str__(self):
+        return str(self._data)
 
 
 class FanService(object):
@@ -204,10 +228,8 @@ class FanService(object):
                     logger.info("Fan temp controller {name} found in {root_path}".format(name=name, root_path=control))
                 # Add default profile
                 self._fan_list[name]['profile'] += [FAN_MANUAL_NAME]
-        print(self._fan_list)
-        print(self.get_status())
-        print(self.set_profile('pwmfan', 'cool'))
-        # self.set_speed('pwmfan', 100, 0)
+        if not self._fan_list:
+            logger.info("No fan found")
 
     def initialization(self):
         # Load configuration
@@ -215,14 +237,14 @@ class FanService(object):
         for name, fan in fan_config.items():
             if 'profile' in fan:
                 profile = fan['profile']
+                logger.info("Initialization {name}".format(name=name))
                 self.set_profile(name, profile)
-                logger.info("Initialization {name} with profile {profile}".format(name=name, profile=profile))
                 if profile == FAN_MANUAL_NAME and 'speed' in fan:
                     speed, index = fan['speed']
                     self.set_speed(name, speed, index)
                     logger.info("Initialization {name} {index} speed {speed}%".format(name=name, index=index, speed=speed))
 
-    def get_profiles(self):
+    def get_configs(self):
         governors = {}
         for fan, data in self._fan_list.items():
             governors[fan] = data['profile']
@@ -246,7 +268,7 @@ class FanService(object):
     def set_profile(self, name, profile):
         # Check current status before change
         if profile == self.get_profile(name):
-            logger.info("Profile {profile} already active".format(profile=profile))
+            logger.warning("Fan {name} profile {profile} already active".format(name=name, profile=profile))
             return True
         if self._nvfancontrol:
             nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0

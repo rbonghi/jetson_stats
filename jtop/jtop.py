@@ -140,10 +140,10 @@ class jtop(Thread):
         self._cpu_info = []
         # Initialize memory controller
         self._memory = Memory()
+        # Initialize fan
+        self._fan = Fan()
         # Load jetson_clocks status
         self._jc = None
-        # Initialize fan
-        self._fan = None
         # Load NV Power Mode
         self._nvp = None
 
@@ -566,8 +566,10 @@ class jtop(Thread):
             for name, engine in self.engine[group].items():
                 stats[name] = engine['cur'] if engine['online'] else 'OFF'
         # -- FAN --
-        if self.fan:
-            stats['fan'] = self.fan.speed
+        # Print all Fan
+        for name, fan in self.fan.items():
+            for idx, speed in enumerate(fan['speed']):
+                stats['fan {name}{idx}'.format(idx=idx, name=name)] = speed
         # -- Temperature --
         for temp in self.temperature:
             stats["Temp {name}".format(name=temp)] = self.temperature[temp]
@@ -940,8 +942,8 @@ sudo systemctl restart jtop.service""".format(
         # Initialize jetson_clock
         if init['jc']:
             self._jc = JetsonClocks(self._controller)
-        # Init FAN (If exist)
-        self._fan = Fan(self._controller, init['fan'])
+        # Initialize fan
+        self._fan._initialize(self._controller, init['fan'])
         # Init NVP model (if exist)
         if init['nvpmodel']:
             self._nvp = NVPModel()

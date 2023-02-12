@@ -323,6 +323,9 @@ class Memory(object):
     def items(self):
         return self._data.items()
 
+    def __len__(self):
+        return len(self._data)
+
     def __getitem__(self, key):
         return self._data[key]
 
@@ -331,6 +334,9 @@ class Memory(object):
 
     def __next__(self):
         return next(self._data)
+
+    def __str__(self):
+        return str(self._data)
 
 
 class MemoryService(object):

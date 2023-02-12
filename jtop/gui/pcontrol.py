@@ -93,9 +93,16 @@ class CTRL(Page):
         super(CTRL, self).__init__("CTRL", stdscr, jetson)
         # Only if exist a fan will be load a chart
         # Initialize FAN chart
-        self.chart_fan = Chart(jetson, "FAN", self.update_chart, line="o", color_text=curses.COLOR_BLUE, color_chart=[curses.COLOR_BLUE])
-        if self.jetson.fan:
-            self.chart_fan.statusChart(False, "NO FAN")
+        self._fan_gui = {}
+        for fan_idx, fan_name in enumerate(self.jetson.fan):
+            fan = self.jetson.fan[fan_name]
+            self._fan_gui[fan_name] = []
+            for idx, speed in enumerate(fan['speed']):
+                chart_fan = Chart(jetson, "{name} {idx}".format(name=fan_name.upper(), idx=idx), self.update_chart,
+                                  line="o", color_text=curses.COLOR_BLUE, color_chart=[curses.COLOR_BLUE])
+                self._fan_gui[fan_name] += [{'chart': chart_fan}]
+        # if self.jetson.fan:
+        #    self.chart_fan.statusChart(False, "NO FAN")
         # Initialize buttons
         self.service_start = Button(stdscr, key="s", action=self.action_service_start)
         self.service_enable = Button(stdscr, key="e", action=self.action_service_enable)
@@ -106,11 +113,11 @@ class CTRL(Page):
             mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
             self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
         # Fan controller
-        if self.jetson.fan:
-            self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
-            self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
-            # Fan options
-            self.fan_list = ButtonList(stdscr, self.jetson.fan.configs, action=self.action_fan)
+        # if self.jetson.fan:
+        #    self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
+        #    self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
+        #    # Fan options
+        #    self.fan_list = ButtonList(stdscr, self.jetson.fan.configs, action=self.action_fan)
 
     def action_fan(self, key):
         # Get config name
@@ -157,14 +164,39 @@ class CTRL(Page):
             self.jetson.fan.speed = 0
 
     def update_chart(self, jetson, name):
+        info_chart = name.split(" ")
+        name = info_chart[0].lower()
+        idx = int(info_chart[1])
+        speed = jetson.fan[name]['speed'][idx]
         # Append in list
         return {
-            'value': [jetson.fan.speed if jetson.fan.speed is not None else 0],
-            'active': True if jetson.fan else False
+            'value': [speed],
         }
 
-    @check_curses
     def draw(self, key, mouse):
+        # Screen size
+        height, width, first = self.size_page()
+        # Measure height
+        fan_height = (height * 1 // 3) // len(self.jetson.fan)
+        # Draw all GPU
+        for fan_idx, (fan_gui, fan_name) in enumerate(zip(self._fan_gui, self.jetson.fan)):
+            gui_chart = self._fan_gui[fan_gui]
+            fan = self.jetson.fan[fan_name]
+            # Split width for each pwm
+            fan_speed_width = (width - 2) // len(fan['speed'])
+            for idx, speed in enumerate(fan['speed']):
+                # Set size chart gpu
+                size_x = [1 + idx * fan_speed_width, 1 + (fan_idx + 1) * (fan_speed_width - 2)]
+                size_y = [first + 1 + fan_idx * (fan_height + 1), first + 1 + (fan_idx + 1) * (fan_height - 3)]
+                # Prin speed and RPM
+                label_fan = "PWM {speed: >3.0f}%".format(speed=speed)
+                if 'rpm' in fan:
+                    label_fan += " - {rpm}rpm".format(rpm=fan['rpm'][idx])
+                # Draw GPU chart
+                gui_chart[idx]['chart'].draw(self.stdscr, size_x, size_y, label=label_fan)
+
+    @check_curses
+    def draw_old(self, key, mouse):
         """ Control board, check status jetson_clocks and change NVP model """
         # Screen size
         height, width, first = self.size_page()
