@@ -29,6 +29,9 @@ logger = logging.getLogger(__name__)
 COMMAND_TIMEOUT = 4.0
 FAN_PWM_CAP = 255
 FAN_PWM_RE = re.compile(r'^pwm\d+$')
+FAN_NVFAN_NAME_RE = re.compile(r'^<FAN (?P<num>\d+)>$')
+FAN_NVFAN_OPTIONS_RE = re.compile(r'FAN_(?P<type>\w+) (?P<value>\w+) {$')
+FAN_NVFAN_DEFAULT_RE = re.compile(r'FAN_DEFAULT_(?P<type>\w+) (?P<value>\w+)')
 
 
 def PWMtoValue(pwm, pwm_cap=FAN_PWM_CAP):
@@ -54,7 +57,7 @@ def get_all_cooling_system():
             if fan_device_paths:
                 name_file = os.path.join(full_path, 'name')
                 name = cat(name_file).strip() if os.path.isfile(name_file) else dir
-                pwm_files[name] = fan_device_paths
+                pwm_files[name] = {'path': fan_device_paths}
                 logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
     return pwm_files
 
@@ -75,6 +78,64 @@ def get_all_legacy_fan():
     name = os.path.basename(root_path)
     logger.info("Found legacy Jetson {name} in {root_path}".format(name=name, root_path=root_path))
     return pwm_files
+
+
+def nvfancontrol_query():
+    status = {}
+    try:
+        nvpmodel_p = Command(['nvfancontrol', '-q'])
+        lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+        for line in lines:
+            values = line.split(':')
+            fan_name = values[0].lower()
+            query = values[1].replace("FAN_", "").lower()
+            if fan_name not in status:
+                status[fan_name] = {}
+            status[fan_name][query] = values[2]
+    except (OSError, Command.CommandException):
+        pass
+    return status
+
+
+def decode_nvfancontrol():
+    nvfan = {}
+    current_fan = ''
+    if os.path.isfile("/etc/nvfancontrol.conf"):
+        with open("/etc/nvfancontrol.conf", 'r') as fp:
+            for line in fp:
+                match_name = re.search(FAN_NVFAN_NAME_RE, line.strip())
+                match_values = re.search(FAN_NVFAN_OPTIONS_RE, line.strip())
+                # match_defaults = re.search(FAN_NVFAN_DEFAULT_RE, line.strip())
+                if match_name:
+                    parsed_line = match_name.groupdict()
+                    current_fan = 'fan{num}'.format(num=parsed_line['num'])
+                    nvfan[current_fan] = {}
+                elif match_values:
+                    parsed_line = match_values.groupdict()
+                    type_name = parsed_line['type'].lower()
+                    if type_name not in nvfan[current_fan]:
+                        nvfan[current_fan][type_name] = []
+                    nvfan[current_fan][type_name] += [parsed_line['value']]
+                # elif match_defaults:
+                #    parsed_line = match_defaults.groupdict()
+                #    type_name = parsed_line['type'].lower()
+                #    nvfan[current_fan]['default_{name}'.format(name=type_name)] = parsed_line['value']
+    return nvfan
+
+
+def change_nvfancontrol_default(name, value):
+    with open("/etc/nvfancontrol.conf", "r") as f:
+        lines = f.readlines()
+    with open("/etc/nvfancontrol.conf", "w") as f:
+        for line in lines:
+            match_defaults = re.search(FAN_NVFAN_DEFAULT_RE, line.strip())
+            if match_defaults:
+                parsed_line = match_defaults.groupdict()
+                if name.upper() == parsed_line['type']:
+                    # Override line with new value
+                    line = line.replace(parsed_line['value'], value)
+            # Print line
+            f.write(line)
 
 
 class Fan(object):
@@ -100,29 +161,67 @@ class FanService(object):
                                             ) or os.path.islink('/etc/systemd/system/{name}'.format(name=nvfancontrol))
         if nvfancontrol:
             logger.info("Found {service}".format(service=nvfancontrol))
-        print(self.get_status())
+            nv_fan_modes = decode_nvfancontrol()
+            # Add all nvfanmodes
+            for fan, nvfan in zip(self._fan_list, nv_fan_modes):
+                self._fan_list[fan].update(nv_fan_modes[nvfan])
+                # Add extra profile for disabled service
+                if 'profile' in self._fan_list[fan]:
+                    self._fan_list[fan]['profile'] += ['manual']
 
     def initialization(self):
         pass
 
-    def set_mode(self, mode):
+    def get_profiles(self):
+        governors = {}
+        for fan, data in self._fan_list.items():
+            governors[fan] = data['profile']
+        return governors
+
+    def get_profile(self, fan):
+        profile = "manual"
+        nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
+        if nvfancontrol_is_active:
+            nvfan_query = nvfancontrol_query()
+            for fan_list_name, nvfan in zip(self._fan_list, nvfan_query):
+                if fan_list_name == fan:
+                    return nvfan_query[nvfan]['profile']
+        return profile
+
+    def set_profile(self, fan, profile):
         if self._nvfancontrol:
             nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
             # Check first if the fan control is active and after enable the service
-            if mode == 'system':
-                if not nvfancontrol_is_active:
+            if profile in self._fan_list[fan]['profile']:
+                if profile == 'manual':
+                    if nvfancontrol_is_active:
+                        os.system('systemctl stop nvfancontrol')
+                        logger.info("Profile set {profile}".format(profile=profile))
+                    else:
+                        logger.info("Profile {profile} already active".format(profile=profile))
+                else:
+                    # Check current status before change
+                    if profile == self.get_profile(fan):
+                        logger.info("Profile {profile} already active".format(profile=profile))
+                        return True
+                    # Check if active and stop
+                    if nvfancontrol_is_active:
+                        os.system('systemctl stop nvfancontrol')
+                        logger.info("Stop nvfancontrol service")
+                    # Update nvfile
+                    change_nvfancontrol_default('profile', profile)
+                    logger.info("Change /etc/nvfancontrol.conf profile in {profile}".format(profile=profile))
+                    # Remove nvfancontrol staus file
+                    if os.path.isfile("/var/lib/nvfancontrol/status"):
+                        os.remove("/var/lib/nvfancontrol/status")
+                        logger.info("Removed /var/lib/nvfancontrol/status")
+                    # Restart service
                     os.system('systemctl start nvfancontrol')
-                    logger.info("Mode set {mode}".format(mode=mode))
-                else:
-                    logger.info("Mode {mode} already active".format(mode=mode))
-            elif mode == 'manual':
-                if nvfancontrol_is_active:
-                    os.system('systemctl stop nvfancontrol')
-                    logger.info("Mode set {mode}".format(mode=mode))
-                else:
-                    logger.info("Mode {mode} already active".format(mode=mode))
+                    logger.info("Profile set {profile}".format(profile=profile))
             else:
-                logger.error("Mode {mode} doesn't exist")
+                logger.error("Profile {mode} doesn't exist")
+        else:
+            print("TODO SET PROFILE")
         return True
 
     def set_speed(self, name, speed):
@@ -136,34 +235,27 @@ class FanService(object):
         # Convert in PWM
         pwm = str(ValueToPWM(speed))
         # Set for all pwm the same speed value
-        for pwm_path in self._fan_list[name]:
+        for pwm_path in self._fan_list[name]['path']:
             if os.access(pwm_path, os.W_OK):
                 with open(pwm_path, 'w') as f:
                     f.write(pwm)
 
-    def nvfancontrol_query(self):
-        status = {}
-        try:
-            nvpmodel_p = Command(['nvfancontrol', '-q'])
-            lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
-            for line in lines:
-                print(line)
-
-        except (OSError, Command.CommandException):
-            pass
-        return status
-
     def get_status(self):
-        fan_status = {'fan': {}}
+        fan_status = {}
         # Read all fan status
-        for name, list_pwm in self._fan_list.items():
+        for name, data in self._fan_list.items():
+            list_pwm = data['path']
             # Read pwm from all fan
-            fan_status['fan'][name] = [PWMtoValue(cat(pwm)) for pwm in list_pwm]
+            fan_status[name] = {'speed': [PWMtoValue(cat(pwm)) for pwm in list_pwm]}
         # Check status fan control
         if self._nvfancontrol:
             nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
-            status = self.nvfancontrol_query()
-            fan_status['mode'] = 'system' if nvfancontrol_is_active else 'manual'
-            fan_status['auto'] = nvfancontrol_is_active
+            nvfan_query = nvfancontrol_query()
+            if nvfancontrol_is_active:
+                for fan, nvfan in zip(fan_status, nvfan_query):
+                    fan_status[fan].update(nvfan_query[nvfan])
+            else:
+                for fan in fan_status:
+                    fan_status[fan]['profile'] = 'manual'
         return fan_status
 # EOF
