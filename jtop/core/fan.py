@@ -46,6 +46,22 @@ def ValueToPWM(value, pwm_cap=FAN_PWM_CAP):
     return int(ceil((pwm_cap) * value / 100.0))
 
 
+def get_all_rpm_system():
+    pwm_files = {}
+    path = "/sys/class/hwmon"
+    for dir in os.listdir(path):
+        full_path = os.path.join(path, dir)
+        if os.path.isdir(full_path):
+            # Find all pwm in folder
+            for file in os.listdir(full_path):
+                if 'rpm' == file:
+                    name_file = os.path.join(full_path, 'name')
+                    name = cat(name_file).strip() if os.path.isfile(name_file) else dir
+                    pwm_files[name] = os.path.join(full_path, file)
+                    logger.info("RPM {name} found in {root_path}".format(name=name, root_path=full_path))
+    return pwm_files
+
+
 def get_all_cooling_system():
     pwm_files = {}
     path = "/sys/class/hwmon"
@@ -67,28 +83,10 @@ def get_all_cooling_system():
                 name = cat(name_file).strip() if os.path.isfile(name_file) else dir
                 pwm_files[name] = {'path': full_path, 'pwm': fan_device_paths, 'rpm': fan_rpm_path}
                 logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
-    return pwm_files
-
-
-def get_all_rpm_system():
-    pwm_files = {}
-    path = "/sys/class/hwmon"
-    for dir in os.listdir(path):
-        full_path = os.path.join(path, dir)
-        if os.path.isdir(full_path):
-            fan_device_paths = []
-            # Find all pwm in folder
-            for file in os.listdir(full_path):
-                if 'rpm' == file:
-                    print(full_path, file)
-                    fan_device_paths += [os.path.join(full_path, file)]
-            # If there are pwm is added in list
-            if fan_device_paths:
-                name_file = os.path.join(full_path, 'name')
-                name = cat(name_file).strip() if os.path.isfile(name_file) else dir
-                pwm_files[name] = {'path': fan_device_paths}
-                logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
-    print(pwm_files)
+    # Find all rpm systems
+    rpm_list = get_all_rpm_system()
+    for fan, rpm in zip(pwm_files, rpm_list):
+        pwm_files[fan]['rpm'] = [rpm_list[rpm]]
     return pwm_files
 
 
@@ -178,7 +176,6 @@ class FanService(object):
         # Load configuration
         self._config = config
         # Fin all fan available
-        get_all_rpm_system()
         self._fan_list = get_all_cooling_system()
         self._fan_list.update(get_all_legacy_fan())
         # Check if there is nvfan control
@@ -209,8 +206,8 @@ class FanService(object):
                 self._fan_list[name]['profile'] += [FAN_MANUAL_NAME]
         print(self._fan_list)
         print(self.get_status())
-        print(self.set_profile('tegra_pwmfan', 'temp_control'))
-        self.set_speed('tegra_pwmfan', 0, 0)
+        print(self.set_profile('pwmfan', 'cool'))
+        # self.set_speed('pwmfan', 100, 0)
 
     def initialization(self):
         # Load configuration
@@ -275,7 +272,7 @@ class FanService(object):
                     os.system('systemctl start nvfancontrol')
                     logger.info("Profile set {profile}".format(profile=profile))
             else:
-                logger.error("Profile {mode} doesn't exist")
+                logger.error("Profile {profile} doesn't exist".format(profile=profile))
                 return False
         else:
             if profile in self._fan_list[name]['profile']:
@@ -289,7 +286,7 @@ class FanService(object):
                             f.write(control_value)
                     logger.info("Profile set {profile}".format(profile=profile))
             else:
-                logger.error("Profile {mode} doesn't exist")
+                logger.error("Profile {profile} doesn't exist".format(profile=profile))
                 return False
         # Update configuration on board
         fan_config = self._config.get('fan', {})
