@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 COMMAND_TIMEOUT = 4.0
 FAN_MANUAL_NAME = 'manual'
+FAN_TEMP_CONTROL_NAME = 'temp_control'
 FAN_PWM_RE = re.compile(r'^pwm\d+$')
 FAN_NVFAN_NAME_RE = re.compile(r'^<FAN (?P<num>\d+)>$')
 FAN_NVFAN_OPTIONS_RE = re.compile(r'FAN_(?P<type>\w+) (?P<value>\w+) {$')
@@ -52,15 +53,19 @@ def get_all_cooling_system():
         full_path = os.path.join(path, dir)
         if os.path.isdir(full_path):
             fan_device_paths = []
+            fan_rpm_path = []
             # Find all pwm in folder
             for file in os.listdir(full_path):
                 if FAN_PWM_RE.match(file) or file == 'target_pwm':
                     fan_device_paths += [os.path.join(full_path, file)]
+                # Check if there are rpm values
+                if file == 'rpm_measured':
+                    fan_rpm_path += [os.path.join(full_path, file)]
             # If there are pwm is added in list
             if fan_device_paths:
                 name_file = os.path.join(full_path, 'name')
                 name = cat(name_file).strip() if os.path.isfile(name_file) else dir
-                pwm_files[name] = {'path': fan_device_paths}
+                pwm_files[name] = {'path': full_path, 'pwm': fan_device_paths, 'rpm': fan_rpm_path}
                 logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
     return pwm_files
 
@@ -74,8 +79,8 @@ def get_all_rpm_system():
             fan_device_paths = []
             # Find all pwm in folder
             for file in os.listdir(full_path):
-                if 'rpm' in file:
-                    print(file)
+                if 'rpm' == file:
+                    print(full_path, file)
                     fan_device_paths += [os.path.join(full_path, file)]
             # If there are pwm is added in list
             if fan_device_paths:
@@ -177,11 +182,10 @@ class FanService(object):
         self._fan_list = get_all_cooling_system()
         self._fan_list.update(get_all_legacy_fan())
         # Check if there is nvfan control
-        nvfancontrol = "nvfancontrol.service"
-        self._nvfancontrol = os.path.isfile('/etc/systemd/system/{name}'.format(name=nvfancontrol)
-                                            ) or os.path.islink('/etc/systemd/system/{name}'.format(name=nvfancontrol))
-        if nvfancontrol:
-            logger.info("Found {service}".format(service=nvfancontrol))
+        self._nvfancontrol = os.path.isfile('/etc/systemd/system/nvfancontrol.service') or os.path.islink('/etc/systemd/system/nvfancontrol.service')
+        # Initialize controller
+        if self._nvfancontrol:
+            logger.info("Found nvfancontrol.service")
             nv_fan_modes = decode_nvfancontrol()
             # Add all nvfanmodes
             for fan, nvfan in zip(self._fan_list, nv_fan_modes):
@@ -190,7 +194,23 @@ class FanService(object):
                 if 'profile' in self._fan_list[fan]:
                     self._fan_list[fan]['profile'] += [FAN_MANUAL_NAME]
         else:
-            print("Check temp_control")
+            for name, fan in self._fan_list.items():
+                # Initialize profile list
+                self._fan_list[name]['profile'] = []
+                # Find temp controller
+                control = os.path.join(fan['path'], FAN_TEMP_CONTROL_NAME)
+                if os.path.isfile(control):
+                    # Add control path
+                    self._fan_list[name]['control'] = control
+                    # Add profiles
+                    self._fan_list[name]['profile'] += [FAN_TEMP_CONTROL_NAME]
+                    logger.info("Fan temp controller {name} found in {root_path}".format(name=name, root_path=control))
+                # Add default profile
+                self._fan_list[name]['profile'] += [FAN_MANUAL_NAME]
+        print(self._fan_list)
+        print(self.get_status())
+        print(self.set_profile('tegra_pwmfan', 'temp_control'))
+        self.set_speed('tegra_pwmfan', 0, 0)
 
     def initialization(self):
         # Load configuration
@@ -201,9 +221,9 @@ class FanService(object):
                 self.set_profile(name, profile)
                 logger.info("Initialization {name} with profile {profile}".format(name=name, profile=profile))
                 if profile == FAN_MANUAL_NAME and 'speed' in fan:
-                    speed = fan['speed']
-                    self.set_speed(name, speed)
-                    logger.info("Initialization {name} speed {speed}%".format(name=name, speed=speed))
+                    speed, index = fan['speed']
+                    self.set_speed(name, speed, index)
+                    logger.info("Initialization {name} {index} speed {speed}%".format(name=name, index=index, speed=speed))
 
     def get_profiles(self):
         governors = {}
@@ -211,17 +231,26 @@ class FanService(object):
             governors[fan] = data['profile']
         return governors
 
-    def get_profile(self, fan):
+    def get_profile(self, name):
         profile = FAN_MANUAL_NAME
-        nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
-        if nvfancontrol_is_active:
-            nvfan_query = nvfancontrol_query()
-            for fan_list_name, nvfan in zip(self._fan_list, nvfan_query):
-                if fan_list_name == fan:
-                    return nvfan_query[nvfan]['profile']
+        if self._nvfancontrol:
+            nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
+            if nvfancontrol_is_active:
+                nvfan_query = nvfancontrol_query()
+                for fan_list_name, nvfan in zip(self._fan_list, nvfan_query):
+                    if fan_list_name == name:
+                        return nvfan_query[nvfan]['profile']
+        else:
+            if 'control' in self._fan_list[name]:
+                control_value = int(cat(self._fan_list[name]['control'])) == 1
+                return FAN_TEMP_CONTROL_NAME if control_value else FAN_MANUAL_NAME
         return profile
 
     def set_profile(self, name, profile):
+        # Check current status before change
+        if profile == self.get_profile(name):
+            logger.info("Profile {profile} already active".format(profile=profile))
+            return True
         if self._nvfancontrol:
             nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
             # Check first if the fan control is active and after enable the service
@@ -230,13 +259,7 @@ class FanService(object):
                     if nvfancontrol_is_active:
                         os.system('systemctl stop nvfancontrol')
                         logger.info("Profile set {profile}".format(profile=profile))
-                    else:
-                        logger.info("Profile {profile} already active".format(profile=profile))
                 else:
-                    # Check current status before change
-                    if profile == self.get_profile(name):
-                        logger.info("Profile {profile} already active".format(profile=profile))
-                        return True
                     # Check if active and stop
                     if nvfancontrol_is_active:
                         os.system('systemctl stop nvfancontrol')
@@ -251,22 +274,39 @@ class FanService(object):
                     # Restart service
                     os.system('systemctl start nvfancontrol')
                     logger.info("Profile set {profile}".format(profile=profile))
-                # Update configuration on board
-                fan_config = self._config.get('fan', {})
-                # Set new profile
-                if name not in fan_config:
-                    fan_config[name] = {}
-                fan_config[name]['profile'] = profile
-                # Set new jetson_clocks configuration
-                self._config.set('fan', fan_config)
             else:
                 logger.error("Profile {mode} doesn't exist")
+                return False
         else:
-            print("TODO SET PROFILE")
+            if profile in self._fan_list[name]['profile']:
+                control_value = "0" if FAN_MANUAL_NAME else "1"
+                # Write control if exist
+                if 'control' in self._fan_list[name]:
+                    control = self._fan_list[name]['control']
+                    # Set for all pwm the same speed value
+                    if os.access(control, os.W_OK):
+                        with open(control, 'w') as f:
+                            f.write(control_value)
+                    logger.info("Profile set {profile}".format(profile=profile))
+            else:
+                logger.error("Profile {mode} doesn't exist")
+                return False
+        # Update configuration on board
+        fan_config = self._config.get('fan', {})
+        # Set new profile
+        if name not in fan_config:
+            fan_config[name] = {}
+        fan_config[name]['profile'] = profile
+        # Set new jetson_clocks configuration
+        self._config.set('fan', fan_config)
         return True
 
-    def set_speed(self, name, speed):
+    def set_speed(self, name, speed, index):
         if name not in self._fan_list:
+            logger.error("This fan {name} doesn't exist".format(name=name))
+            return
+        if index >= len(self._fan_list[name]['pwm']):
+            logger.error("Wrong index {index} for {name}".format(index=index, name=name))
             return
         # Check constraints
         if speed > 100:
@@ -278,33 +318,40 @@ class FanService(object):
         # Set new profile
         if name not in fan_config:
             fan_config[name] = {}
-        fan_config[name]['speed'] = speed
+        fan_config[name]['speed'] = (speed, index)
         # Set new jetson_clocks configuration
         self._config.set('fan', fan_config)
         # Convert in PWM
         pwm = str(ValueToPWM(speed))
         # Set for all pwm the same speed value
-        for pwm_path in self._fan_list[name]['path']:
-            if os.access(pwm_path, os.W_OK):
-                with open(pwm_path, 'w') as f:
-                    f.write(pwm)
+        pwm_path = self._fan_list[name]['pwm'][index]
+        if os.access(pwm_path, os.W_OK):
+            with open(pwm_path, 'w') as f:
+                f.write(pwm)
 
     def get_status(self):
         fan_status = {}
         # Read all fan status
         for name, data in self._fan_list.items():
-            list_pwm = data['path']
             # Read pwm from all fan
-            fan_status[name] = {'speed': [PWMtoValue(cat(pwm)) for pwm in list_pwm]}
+            fan_status[name] = {
+                'speed': [PWMtoValue(cat(pwm)) for pwm in data['pwm']],
+                'rpm': [int(cat(rpm)) for rpm in data['rpm']],
+            }
         # Check status fan control
         if self._nvfancontrol:
             nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
-            nvfan_query = nvfancontrol_query()
             if nvfancontrol_is_active:
+                nvfan_query = nvfancontrol_query()
                 for fan, nvfan in zip(fan_status, nvfan_query):
                     fan_status[fan].update(nvfan_query[nvfan])
             else:
                 for fan in fan_status:
                     fan_status[fan]['profile'] = FAN_MANUAL_NAME
+        else:
+            for name, data in self._fan_list.items():
+                if 'control' in data:
+                    control_value = int(cat(data['control'])) == 1
+                    fan_status[name]['profile'] = FAN_TEMP_CONTROL_NAME if control_value else FAN_MANUAL_NAME
         return fan_status
 # EOF
