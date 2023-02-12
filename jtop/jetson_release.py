@@ -42,7 +42,6 @@ def main():
     args = parser.parse_args()
     # Read all Jetson Variables
     jetson = get_jetson_variables()
-    print(jetson)
     # Print headline
     if jetson['Jetpack']:
         print("Model: {model} - Jetpack {jetpack} [L4T {L4T}]".format(model=bcolors.bold(jetson['Model']),
@@ -56,7 +55,7 @@ def main():
     del jetson['L4T']
     # Print NVP model status
     try:
-        nvp_number, nvp_name = NVPModelService.query('nvpmodel')
+        nvp_number, nvp_name = NVPModelService.query()
         print("{service}: {name} - Type: {number}".format(
             service=bcolors.bold("NV Power Mode"),
             name=bcolors.ok(nvp_name),

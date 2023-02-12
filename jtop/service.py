@@ -64,7 +64,6 @@ except ImportError:
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
-PATH_NVPMODEL = ['nvpmodel']
 # Pipe configuration
 # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s13.html
 # https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
@@ -243,7 +242,7 @@ class JtopServer(Process):
         - https://docs.python.org/2.7/reference/datamodel.html
     """
 
-    def __init__(self, force=False, path_nvpmodel=PATH_NVPMODEL):
+    def __init__(self, force=False):
         self.force = force
         # Check if running a root
         if os.getuid() != 0:
@@ -294,17 +293,13 @@ class JtopServer(Process):
         # Initialize jetson_clocks controller
         self.jetson_clocks = JetsonClocksService(self.config, self.fan)
         # Initialize nvpmodel controller
-        try:
-            self.nvpmodel = NVPModelService(self.jetson_clocks, nvp_model=path_nvpmodel)
-        except JtopException as error:
-            logger.warning("{error} in paths {path}".format(error=error, path=path_nvpmodel))
-            self.nvpmodel = None
+        self.nvpmodel = NVPModelService(self.jetson_clocks)
         # Initialize timer reader
         self._timer_reader = TimerReader(self.jtop_stats)
 
     def run(self):
         # Read nvp_mode
-        if self.nvpmodel is not None:
+        if self.nvpmodel.exists():
             self.nvp_mode = self.nvpmodel.get()
         # Run setup
         self.jetson_clocks.initialization(self.nvpmodel)
@@ -393,7 +388,7 @@ class JtopServer(Process):
                             'memory': self.memory.swap_path(),
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks.exists(),
-                            'nvpmodel': self.nvpmodel is not None,
+                            'nvpmodel': self.nvpmodel.exists(),
                         }
                         self.q.put({'init': init})
                     # Update timeout interval
@@ -537,12 +532,11 @@ class JtopServer(Process):
         # -- JETSON_CLOCKS --
         # Jetson Clock to check if is running need to read the status from:
         # CPU, EMC, GPU, ENGINES
-        jc = self.jetson_clocks.get_status(data)
         # If not empty return status
-        if jc:
-            data['jc'] = jc
+        if self.jetson_clocks.exists():
+            data['jc'] = self.jetson_clocks.get_status(data)
         # -- NVP MODEL --
-        if self.nvpmodel is not None:
+        if self.nvpmodel.exists():
             # Read nvp_mode
             nvp_mode = self.nvpmodel.get()
             if not self.nvpmodel.is_running():

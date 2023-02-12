@@ -124,16 +124,16 @@ class NVPModel(object):
 
 class NVPModelService(object):
 
-    def __init__(self, jetson_clocks, nvp_model):
-        self.nvpmodel_name = "".join(nvp_model)
+    def __init__(self, jetson_clocks):
         # Initialize thread
         self._thread = None
         # Initialize jetson_clocks config
         self.jetson_clocks = jetson_clocks
         # Read all lines and extract modes
         self._nvpm = {}
+        self._is_nvpmodel = True
         try:
-            nvpmodel_p = Command([self.nvpmodel_name, '-p', '--verbose'])
+            nvpmodel_p = Command(['nvpmodel', '-p', '--verbose'])
             lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
             # Decode lines
             for line in lines:
@@ -147,10 +147,13 @@ class NVPModelService(object):
                     # Save in nvpm list
                     self._nvpm[mode_id] = {'name': mode_name, 'status': True}
             # Get starting model
-            self.selected, _ = NVPModelService.query(self.nvpmodel_name)
+            self.selected, _ = NVPModelService.query()
         except (OSError, Command.CommandException):
-            logger.warning("This board does not have NVP Model")
-            raise JtopException("NVPmodel does not exist for this board")
+            self._is_nvpmodel = False
+            logger.warning("nvpmodel not available")
+
+    def exists(self):
+        return self._is_nvpmodel
 
     def _thread_set_nvp_model(self, value):
         if self.jetson_clocks is None:
@@ -250,7 +253,7 @@ class NVPModelService(object):
         # Set the new nvpmodel status
         try:
             # If there are no errors return the NV Power mode
-            lines = Command.run_command([self.nvpmodel_name, '-m', str(level)], repeat=5, timeout=COMMAND_TIMEOUT)
+            lines = Command.run_command(['nvpmodel', '-m', str(level)], repeat=5, timeout=COMMAND_TIMEOUT)
             # Check if error is in vector
             for line in lines:
                 if "NVPM ERROR" in line:
@@ -267,17 +270,17 @@ class NVPModelService(object):
 
     def get(self):
         # Initialize mode and num
-        _, mode = NVPModelService.query(self.nvpmodel_name)
+        _, mode = NVPModelService.query()
         # Return the mode
         return mode
 
     @staticmethod
-    def query(nvp_model):
+    def query():
         """ Read nvpmodel to know the status of the board """
         num = -1
         mode = ""
         try:
-            nvpmodel_p = Command([nvp_model, '-q'])
+            nvpmodel_p = Command(['nvpmodel', '-q'])
             lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
         except (OSError, Command.CommandException):
             raise JtopException("nvpmodel missing")

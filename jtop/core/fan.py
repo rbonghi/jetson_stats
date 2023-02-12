@@ -34,7 +34,6 @@ FAN_NVFAN_NAME_RE = re.compile(r'^<FAN (?P<num>\d+)>$')
 FAN_NVFAN_OPTIONS_RE = re.compile(r'FAN_(?P<type>\w+) (?P<value>\w+) {$')
 FAN_NVFAN_DEFAULT_RE = re.compile(r'FAN_DEFAULT_(?P<type>\w+) (?P<value>\w+)')
 # Fan configurations
-CONFIG_DEFAULT_FAN_SPEED = 0.0
 FAN_PWM_CAP = 255
 
 
@@ -211,7 +210,7 @@ class FanService(object):
         if self._nvfancontrol:
             logger.info("Found nvfancontrol.service")
             nv_fan_modes = decode_nvfancontrol()
-            # Add all nvfanmodes
+            # Add all nvfan profiles
             for fan, nvfan in zip(self._fan_list, nv_fan_modes):
                 self._fan_list[fan].update(nv_fan_modes[nvfan])
                 # Add extra profile for disabled service
@@ -289,7 +288,7 @@ class FanService(object):
                     # Update nvfile
                     change_nvfancontrol_default('profile', profile)
                     logger.info("Change /etc/nvfancontrol.conf profile in {profile}".format(profile=profile))
-                    # Remove nvfancontrol staus file
+                    # Remove nvfancontrol status file
                     if os.path.isfile("/var/lib/nvfancontrol/status"):
                         os.remove("/var/lib/nvfancontrol/status")
                         logger.info("Removed /var/lib/nvfancontrol/status")
