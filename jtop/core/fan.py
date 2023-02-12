@@ -82,9 +82,10 @@ def get_all_cooling_system():
                 name_file = os.path.join(full_path, 'name')
                 name = cat(name_file).strip() if os.path.isfile(name_file) else dir
                 pwm_files[name] = {'path': full_path, 'pwm': fan_device_paths}
+                logger.info("Fan {name}({num}) found in {root_path}".format(name=name, root_path=full_path, num=len(fan_device_paths)))
             if fan_rpm_path:
                 pwm_files[name]['rpm'] = fan_rpm_path
-                logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
+                logger.info("RPM {name}({num}) found in {root_path}".format(name=name, root_path=full_path, num=len(fan_device_paths)))
     # Find all rpm systems
     rpm_list = get_all_rpm_system()
     for fan, rpm in zip(pwm_files, rpm_list):
