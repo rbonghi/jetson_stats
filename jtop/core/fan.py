@@ -27,11 +27,14 @@ from .common import cat
 logger = logging.getLogger(__name__)
 
 COMMAND_TIMEOUT = 4.0
-FAN_PWM_CAP = 255
+FAN_MANUAL_NAME = 'manual'
 FAN_PWM_RE = re.compile(r'^pwm\d+$')
 FAN_NVFAN_NAME_RE = re.compile(r'^<FAN (?P<num>\d+)>$')
 FAN_NVFAN_OPTIONS_RE = re.compile(r'FAN_(?P<type>\w+) (?P<value>\w+) {$')
 FAN_NVFAN_DEFAULT_RE = re.compile(r'FAN_DEFAULT_(?P<type>\w+) (?P<value>\w+)')
+# Fan configurations
+CONFIG_DEFAULT_FAN_SPEED = 0.0
+FAN_PWM_CAP = 255
 
 
 def PWMtoValue(pwm, pwm_cap=FAN_PWM_CAP):
@@ -167,10 +170,20 @@ class FanService(object):
                 self._fan_list[fan].update(nv_fan_modes[nvfan])
                 # Add extra profile for disabled service
                 if 'profile' in self._fan_list[fan]:
-                    self._fan_list[fan]['profile'] += ['manual']
+                    self._fan_list[fan]['profile'] += [FAN_MANUAL_NAME]
 
     def initialization(self):
-        pass
+        # Load configuration
+        fan_config = self._config.get('fan', {})
+        for name, fan in fan_config.items():
+            if 'profile' in fan:
+                profile = fan['profile']
+                self.set_profile(name, profile)
+                logger.info("Initialization {name} with profile {profile}".format(name=name, profile=profile))
+                if profile == FAN_MANUAL_NAME and 'speed' in fan:
+                    speed = fan['speed']
+                    self.set_speed(name, speed)
+                    logger.info("Initialization {name} speed {speed}%".format(name=name, speed=speed))
 
     def get_profiles(self):
         governors = {}
@@ -179,7 +192,7 @@ class FanService(object):
         return governors
 
     def get_profile(self, fan):
-        profile = "manual"
+        profile = FAN_MANUAL_NAME
         nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
         if nvfancontrol_is_active:
             nvfan_query = nvfancontrol_query()
@@ -188,12 +201,12 @@ class FanService(object):
                     return nvfan_query[nvfan]['profile']
         return profile
 
-    def set_profile(self, fan, profile):
+    def set_profile(self, name, profile):
         if self._nvfancontrol:
             nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
             # Check first if the fan control is active and after enable the service
-            if profile in self._fan_list[fan]['profile']:
-                if profile == 'manual':
+            if profile in self._fan_list[name]['profile']:
+                if profile == FAN_MANUAL_NAME:
                     if nvfancontrol_is_active:
                         os.system('systemctl stop nvfancontrol')
                         logger.info("Profile set {profile}".format(profile=profile))
@@ -201,7 +214,7 @@ class FanService(object):
                         logger.info("Profile {profile} already active".format(profile=profile))
                 else:
                     # Check current status before change
-                    if profile == self.get_profile(fan):
+                    if profile == self.get_profile(name):
                         logger.info("Profile {profile} already active".format(profile=profile))
                         return True
                     # Check if active and stop
@@ -218,6 +231,14 @@ class FanService(object):
                     # Restart service
                     os.system('systemctl start nvfancontrol')
                     logger.info("Profile set {profile}".format(profile=profile))
+                # Update configuration on board
+                fan_config = self._config.get('fan', {})
+                # Set new profile
+                if name not in fan_config:
+                    fan_config[name] = {}
+                fan_config[name]['profile'] = profile
+                # Set new jetson_clocks configuration
+                self._config.set('fan', fan_config)
             else:
                 logger.error("Profile {mode} doesn't exist")
         else:
@@ -232,6 +253,14 @@ class FanService(object):
             speed = 100
         if speed < 0:
             speed = 0
+        # Update configuration on board
+        fan_config = self._config.get('fan', {})
+        # Set new profile
+        if name not in fan_config:
+            fan_config[name] = {}
+        fan_config[name]['speed'] = speed
+        # Set new jetson_clocks configuration
+        self._config.set('fan', fan_config)
         # Convert in PWM
         pwm = str(ValueToPWM(speed))
         # Set for all pwm the same speed value
@@ -256,6 +285,6 @@ class FanService(object):
                     fan_status[fan].update(nvfan_query[nvfan])
             else:
                 for fan in fan_status:
-                    fan_status[fan]['profile'] = 'manual'
+                    fan_status[fan]['profile'] = FAN_MANUAL_NAME
         return fan_status
 # EOF

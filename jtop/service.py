@@ -309,7 +309,7 @@ class JtopServer(Process):
         # Run setup
         self.jetson_clocks.initialization(self.nvpmodel)
         # Initialize jetson_fan
-        self.fan.initialization(self.jetson_clocks)
+        self.fan.initialization()
         # Initialize variables
         timeout = None
         interval = 1
