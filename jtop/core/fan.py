@@ -65,6 +65,28 @@ def get_all_cooling_system():
     return pwm_files
 
 
+def get_all_rpm_system():
+    pwm_files = {}
+    path = "/sys/class/hwmon"
+    for dir in os.listdir(path):
+        full_path = os.path.join(path, dir)
+        if os.path.isdir(full_path):
+            fan_device_paths = []
+            # Find all pwm in folder
+            for file in os.listdir(full_path):
+                if 'rpm' in file:
+                    print(file)
+                    fan_device_paths += [os.path.join(full_path, file)]
+            # If there are pwm is added in list
+            if fan_device_paths:
+                name_file = os.path.join(full_path, 'name')
+                name = cat(name_file).strip() if os.path.isfile(name_file) else dir
+                pwm_files[name] = {'path': fan_device_paths}
+                logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
+    print(pwm_files)
+    return pwm_files
+
+
 def get_all_legacy_fan():
     pwm_files = {}
     root_path = ""
@@ -151,6 +173,7 @@ class FanService(object):
         # Load configuration
         self._config = config
         # Fin all fan available
+        get_all_rpm_system()
         self._fan_list = get_all_cooling_system()
         self._fan_list.update(get_all_legacy_fan())
         # Check if there is nvfan control
