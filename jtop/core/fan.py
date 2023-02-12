@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import os
 from math import ceil
 # Logging
@@ -24,6 +25,7 @@ from .common import cat
 logger = logging.getLogger(__name__)
 
 FAN_PWM_CAP = 255
+FAN_PWM_RE = re.compile(r'^pwm\d+$')
 
 
 def PWMtoValue(pwm, pwm_cap=FAN_PWM_CAP):
@@ -43,7 +45,7 @@ def get_all_cooling_system():
             fan_device_paths = []
             # Find all pwm in folder
             for file in os.listdir(full_path):
-                if 'pwm' in file:
+                if FAN_PWM_RE.match(file) or file == 'target_pwm':
                     fan_device_paths += [os.path.join(full_path, file)]
             # If there are pwm is added in list
             if fan_device_paths:
@@ -54,6 +56,7 @@ def get_all_cooling_system():
                     'path': fan_device_paths
                 }
                 pwm_files += [pwm_file]
+                logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
     return pwm_files
 
 
@@ -66,9 +69,20 @@ def get_all_legay_fan():
             break
     if not root_path:
         return pwm_files
-    logger.info("Found legacy Jetson fan in {root_path}".format(root_path=root_path))
+    # Check if this fan is already listed
+    if os.path.isdir(os.path.join(root_path, 'hwmon')):
+        return pwm_files
+    # Otherwise add in list
+    name = os.path.basename(root_path)
+    logger.info("Found legacy Jetson {name} in {root_path}".format(name=name, root_path=root_path))
     return pwm_files
 
+
+def check_nvfancontrol():
+    name = "nvfancontrol.service"
+    if os.path.isfile('/etc/systemd/system/{name}'.format(name=name)) or os.path.islink('/etc/systemd/system/{name}'.format(name=name)):
+        print("AAA")
+    return False
 
 class Fan(object):
 
@@ -87,9 +101,13 @@ class FanService(object):
         # Fin all fan avaialable
         self._fan_list = get_all_cooling_system()
         self._fan_list += get_all_legay_fan()
-
-        print(self._fan_list)
+        # Check if there is nvfan control
+        self._nvfancontrol = check_nvfancontrol()
+        
         print(self.get_status())
+
+    def initialization(self):
+        pass
 
     def get_status(self):
         fan_status = {'fan': []}
