@@ -533,7 +533,7 @@ class JtopServer(Process):
         data['power'] = self.power.get_status()
         # -- FAN --
         # Update status fan speed
-        data['fan'] = self.fan.update()
+        data['fan'] = self.fan.get_status()
         # -- JETSON_CLOCKS --
         # Jetson Clock to check if is running need to read the status from:
         # CPU, EMC, GPU, ENGINES

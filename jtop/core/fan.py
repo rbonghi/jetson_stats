@@ -108,7 +108,6 @@ def decode_nvfancontrol():
             for line in fp:
                 match_name = re.search(FAN_NVFAN_NAME_RE, line.strip())
                 match_values = re.search(FAN_NVFAN_OPTIONS_RE, line.strip())
-                # match_defaults = re.search(FAN_NVFAN_DEFAULT_RE, line.strip())
                 if match_name:
                     parsed_line = match_name.groupdict()
                     current_fan = 'fan{num}'.format(num=parsed_line['num'])
@@ -119,10 +118,6 @@ def decode_nvfancontrol():
                     if type_name not in nvfan[current_fan]:
                         nvfan[current_fan][type_name] = []
                     nvfan[current_fan][type_name] += [parsed_line['value']]
-                # elif match_defaults:
-                #    parsed_line = match_defaults.groupdict()
-                #    type_name = parsed_line['type'].lower()
-                #    nvfan[current_fan]['default_{name}'.format(name=type_name)] = parsed_line['value']
     return nvfan
 
 
@@ -171,6 +166,8 @@ class FanService(object):
                 # Add extra profile for disabled service
                 if 'profile' in self._fan_list[fan]:
                     self._fan_list[fan]['profile'] += [FAN_MANUAL_NAME]
+        else:
+            print("Check temp_control")
 
     def initialization(self):
         # Load configuration
