@@ -98,7 +98,8 @@ def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data):
     if freq_data['online']:
         stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
         stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
-        stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)
+        if size_bar > 7:
+            stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)
     else:
         stdscr.hline(pos_y, start_bar + 1, curses.ACS_BULLET, size_bar)
         if size_bar > 7:

@@ -375,5 +375,7 @@ class FanService(object):
                 if 'control' in data:
                     control_value = int(cat(data['control'])) == 1
                     fan_status[name]['profile'] = FAN_TEMP_CONTROL_NAME if control_value else FAN_MANUAL_NAME
+                else:
+                    fan_status[name]['profile'] = FAN_MANUAL_NAME
         return fan_status
 # EOF

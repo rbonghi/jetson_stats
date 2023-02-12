@@ -63,7 +63,10 @@ def igpu_read_freq(path):
         path_gpc = "/sys/kernel/debug/bpmp/debug/clk/nafll_gpc{number}/pto_counter".format(number=idx)
         if os.access(path_gpc, os.R_OK):
             with open(path_gpc, 'r') as f:
-                gpu['GPC{number}'.format(number=idx)] = int(f.read()) // 1000
+                # List all frequencies
+                if 'GPC' not in gpu:
+                    gpu['GPC'] = []
+                gpu['GPC'] += [int(f.read()) // 1000]
     return gpu
 
 

@@ -127,9 +127,23 @@ class GPU(Page):
             # tpc_pg_mask_status = NColors.green() if gpu_status['tpc_pg_mask'] else NColors.red()
             plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "TPC PG", tpc_pg_mask_string)
             button_idx += button_position
+            # Checj if GPC data is included
+            frq_size = width - 3
+            if 'GPC' in gpu_freq:
+                size_gpc_gauge = (width - 2) // (2 + len(gpu_freq['GPC']))
+                for gpc_idx, gpc in enumerate(gpu_freq['GPC']):
+                    freq_data = {
+                        'name': 'GPC{idx}'.format(idx=gpc_idx),
+                        'cur': gpc,
+                        'unit': gpu_data['freq']['unit'],
+                        'online': gpc > 0,
+                    }
+                    freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, width // 2 + gpc_idx * (size_gpc_gauge) + 2, size_gpc_gauge - 1, freq_data)
+                # Change size frequency GPU
+                frq_size = width // 2
             # Print frequency info
             gpu_freq['name'] = "Frq"
-            freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, 1, width - 3, gpu_freq)
+            freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, 1, frq_size, gpu_freq)
 
     def draw_nv_table(self, start_y, start_x, r_width):
         columns_title = self.jetson.ram['table'][0]
