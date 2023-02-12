@@ -177,7 +177,7 @@ class CTRL(Page):
         # Screen size
         height, width, first = self.size_page()
         # Measure height
-        fan_height = (height * 1 // 3) // len(self.jetson.fan)
+        fan_height = (height * 2 // 3 - 4) // len(self.jetson.fan)
         # Draw all GPU
         for fan_idx, (fan_gui, fan_name) in enumerate(zip(self._fan_gui, self.jetson.fan)):
             gui_chart = self._fan_gui[fan_gui]
@@ -186,9 +186,9 @@ class CTRL(Page):
             fan_speed_width = (width - 2) // len(fan['speed'])
             for idx, speed in enumerate(fan['speed']):
                 # Set size chart gpu
-                size_x = [1 + idx * fan_speed_width, 1 + (fan_idx + 1) * (fan_speed_width - 2)]
+                size_x = [1 + idx * fan_speed_width, 1 + (idx + 1) * (fan_speed_width - 2)]
                 size_y = [first + 1 + fan_idx * (fan_height + 1), first + 1 + (fan_idx + 1) * (fan_height - 3)]
-                # Prin speed and RPM
+                # Print speed and RPM
                 label_fan = "PWM {speed: >3.0f}%".format(speed=speed)
                 if 'rpm' in fan:
                     label_fan += " - {rpm}rpm".format(rpm=fan['rpm'][idx])

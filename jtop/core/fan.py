@@ -81,7 +81,9 @@ def get_all_cooling_system():
             if fan_device_paths:
                 name_file = os.path.join(full_path, 'name')
                 name = cat(name_file).strip() if os.path.isfile(name_file) else dir
-                pwm_files[name] = {'path': full_path, 'pwm': fan_device_paths, 'rpm': fan_rpm_path}
+                pwm_files[name] = {'path': full_path, 'pwm': fan_device_paths}
+            if fan_rpm_path:
+                pwm_files[name]['rpm'] = fan_rpm_path
                 logger.info("Fan {name} found in {root_path}".format(name=name, root_path=full_path))
     # Find all rpm systems
     rpm_list = get_all_rpm_system()
@@ -355,8 +357,9 @@ class FanService(object):
             # Read pwm from all fan
             fan_status[name] = {
                 'speed': [PWMtoValue(cat(pwm)) for pwm in data['pwm']],
-                'rpm': [int(cat(rpm)) for rpm in data['rpm']],
             }
+            if 'rpm' in data:
+                fan_status[name]['rpm'] = [int(cat(rpm)) for rpm in data['rpm']]
         # Check status fan control
         if self._nvfancontrol:
             nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0

@@ -37,18 +37,17 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
     line_counter = 0
     # Fan status
     if jetson.fan:
-        for _, fan in jetson.fan.items():
-            for speed in fan['speed']:
-                line_counter += 1
+        for name, fan in jetson.fan.items():
+            for idx, speed in enumerate(fan['speed']):
                 data = {
-                    'name': 'Fan',
+                    'name': 'Fan {idx}'.format(idx=idx) if len(fan['speed']) > 1 else 'FAN',
                     'color': NColors.magenta(),
                     'online': jetson.fan,
                     'values': [(speed, NColors.magenta() | curses.A_BOLD)]
                 }
-                basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)
+                basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, width - 3, data)
+                line_counter += 1
     else:
-        line_counter += 1
         data = {
             'name': 'Fan',
             'color': NColors.magenta(),
@@ -56,7 +55,8 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
             'coffline': NColors.imagenta(),
             'message': 'NOT AVAILABLE',
         }
-        basic_gauge(stdscr, pos_y, pos_x + line_counter, width - 3, data)
+        basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, width - 3, data)
+        line_counter += 1
     # Jetson clocks status: Running (Green) or Normal (Grey)
     if jetson.jetson_clocks is not None:
         jetson_clocks_gui(stdscr, pos_y + line_counter, pos_x + 1, jetson)

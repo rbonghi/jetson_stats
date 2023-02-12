@@ -300,7 +300,7 @@ class JetsonClocksService(object):
         # Jetson Clocks path
         self._jc_bin = locate_commands("jetson_clocks", PATH_JETSON_CLOCKS)
         if not self._jc_bin:
-            logger.error("jetson_clocks not available")
+            logger.warning("jetson_clocks not available")
             return
         else:
             logger.info("jetson_clocks found in {cmd}".format(cmd=self._jc_bin))
@@ -312,7 +312,6 @@ class JetsonClocksService(object):
 
     def initialization(self, nvpmodel):
         if not self.exists():
-            logger.error("jetson_clocks not available")
             return
         self.nvpmodel = nvpmodel
         # Check if exist configuration file
@@ -336,7 +335,6 @@ class JetsonClocksService(object):
     def get_status(self, data):
         # If jetson_clocks does not exist return empty
         if not self.exists():
-            logger.error("jetson_clocks not available")
             return {}
         # Get status jetson_clocks
         status = {

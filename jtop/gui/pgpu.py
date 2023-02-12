@@ -52,7 +52,7 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson):
     else:
         data = {
             'name': 'GPU',
-            'color': NColors.green(),
+            'color': NColors.green() | curses.A_BOLD,
             'online': False,
             'coffline': NColors.igreen(),
             'message': 'NOT AVAILABLE',

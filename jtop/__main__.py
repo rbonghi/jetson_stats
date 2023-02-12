@@ -145,7 +145,10 @@ def main():
             # Call the curses wrapper
             color_filter = bool(os.getenv('JTOP_COLOR_FILTER', args.color_filter))
             # Build list pages available
-            pages = [ALL, GPU, CPU, MEM]
+            pages = [ALL]
+            if jetson.gpu:
+                pages += [GPU]
+            pages += [CPU, MEM]
             if jetson.engine:
                 pages += [ENGINE]
             pages += [CTRL, INFO]
