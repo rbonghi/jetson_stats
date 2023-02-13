@@ -132,7 +132,14 @@ class CPUService(object):
         # Load cpuinfo
         list_cpu = cpu_info()
         # List all CPU available
+        self._proc_stat = "/proc/stat"
         path_system_cpu = "/sys/devices/system/cpu"
+        # if os.getenv('JTOP_TESTING', False):
+        #     self._proc_stat = "/fake_sys/stat"
+        #     path_system_cpu = "/fake_sys/devices/system/cpu"
+        #     logger.warning("Running in JTOP_TESTING file={root_dir}".format(root_dir=self._proc_stat))
+        #     logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=path_system_cpu))
+        # Build a CPU list
         cpu_list = {int(item[3:]): {'path': "{path}/{item}".format(path=path_system_cpu, item=item),
                                     'last_cpu': [0.0] * len(CPU_STAT_LABEL),
                                     'model': list_cpu.get(int(item[3:]), {}).get("model name", "")
@@ -171,7 +178,7 @@ class CPUService(object):
         # - irq: servicing interrupts
         # - softirq: servicing softirqs
         total = {}
-        with open("/proc/stat", 'r') as f:
+        with open(self._proc_stat, 'r') as f:
             for line in f:
                 match = CPU_PROG_REG.search(line)
                 if match:

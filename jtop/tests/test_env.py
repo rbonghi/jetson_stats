@@ -15,17 +15,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
+import pytest
 from jtop import jtop
 
 
-def test_load(jtop_server):
-    with jtop() as jetson:
-        board = jetson.board
-        assert board is not None
-
-
-def test_env(jtop_server):
+def test_example(setup_jtop_server):
     with jtop() as jetson:
         # Check contain hardware variables
         assert len(jetson.board['hardware']) > 0
@@ -33,4 +27,7 @@ def test_env(jtop_server):
         assert len(jetson.board['libraries']) > 0
         # Check contain platform variables
         assert len(jetson.board['platform']) > 0
+
+
+test_example = pytest.mark.parametrize("setup_jtop_server", [['empty']], indirect=True)(test_example)
 # EOF

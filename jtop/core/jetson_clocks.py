@@ -302,8 +302,7 @@ class JetsonClocksService(object):
         if not self._jc_bin:
             logger.warning("jetson_clocks not available")
             return
-        else:
-            logger.info("jetson_clocks found in {cmd}".format(cmd=self._jc_bin))
+        logger.info("jetson_clocks found in {cmd}".format(cmd=self._jc_bin))
         # List of all engines required
         self._engines_list = self.show()
 
@@ -328,14 +327,12 @@ class JetsonClocksService(object):
         # If jetson_clocks on boot run a thread
         config = self._config.get('jetson_clocks', {})
         if config.get('boot', CONFIG_DEFAULT_BOOT):
+            logger.info("Starting jetson_clocks on boot")
             # Start thread Service client
             self._set_jc = Thread(target=self._th_start, args=(False, ))
             self._set_jc.start()
 
     def get_status(self, data):
-        # If jetson_clocks does not exist return empty
-        if not self.exists():
-            return {}
         # Get status jetson_clocks
         status = {
             'status': self.alive(data, wait=False),
@@ -379,11 +376,11 @@ class JetsonClocksService(object):
             delta = (boot_time - up_time).total_seconds()
             logger.info("Starting jetson_clocks in: {delta}s".format(delta=delta))
         # Status jetson_clocks
-        logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
+        logger.info("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
         if up_time < boot_time:
             time.sleep(delta)
         # Read fan speed
-        speed = self.fan.speed if self.fan.is_speed() else 0
+        # speed = self.fan.speed if self.fan.is_speed() else 0
         # Start jetson_clocks
         Command.run_command([self._jc_bin], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed
@@ -397,7 +394,7 @@ class JetsonClocksService(object):
         JetsonClocksService.set_status = 'deactivating'
         logger.debug("Start jetson_clocks with {status}".format(status=JetsonClocksService.set_status))
         # Read fan speed
-        speed = self.fan.speed if self.fan.is_speed() else 0
+        # speed = self.fan.speed if self.fan.is_speed() else 0
         # Run jetson_clocks
         Command.run_command([self._jc_bin, '--restore', self.config_l4t], repeat=5, timeout=COMMAND_TIMEOUT)
         # Fix fan speed

@@ -148,6 +148,7 @@ class NVPModelService(object):
                     self._nvpm[mode_id] = {'name': mode_name, 'status': True}
             # Get starting model
             self.selected, _ = NVPModelService.query()
+            logger.info("nvpmodel found status {selected}".format(selected=self.selected))
         except (OSError, Command.CommandException):
             self._is_nvpmodel = False
             logger.warning("nvpmodel not available")
@@ -156,7 +157,7 @@ class NVPModelService(object):
         return self._is_nvpmodel
 
     def _thread_set_nvp_model(self, value):
-        if self.jetson_clocks is None:
+        if not self.jetson_clocks.exists():
             # Set NV Power Mode
             status = self.set_mode(value)
             self._nvpm[value]['status'] = status

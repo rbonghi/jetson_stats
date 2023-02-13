@@ -95,12 +95,14 @@ def igpu_read_status(path):
     return gpu
 
 
-def find_igpu():
+def find_igpu(igpu_path):
     # Check if exist a integrated gpu
     if not os.path.exists("/dev/nvhost-gpu") and not os.path.exists("/dev/nvhost-power-gpu"):
         return []
     igpu = []
-    igpu_path = "/sys/class/devfreq/"
+    if not os.path.isdir(igpu_path):
+        logger.error("Folder {root_dir} doesn't exist".format(root_dir=igpu_path))
+        return igpu
     for item in os.listdir(igpu_path):
         item_path = os.path.join(igpu_path, item)
         if os.path.isfile(item_path) or os.path.islink(item_path):
@@ -134,12 +136,16 @@ class GPUService(object):
 
     def __init__(self):
         # Detect integrated GPU
-        self._gpu_list = find_igpu()
+        igpu_path = "/sys/class/devfreq/"
+        if os.getenv('JTOP_TESTING', False):
+            igpu_path = "/fake_sys/class/devfreq/"
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=igpu_path))
+        self._gpu_list = find_igpu(igpu_path)
         # Find discrete GPU
         self._gpu_list += find_dgpu()
         # Check status
         if not self._gpu_list:
-            logger.info("No NVIDIA GPU available")
+            logger.warning("No NVIDIA GPU available")
 
     def get_status(self):
         gpu_list = []

@@ -45,11 +45,10 @@ def ValueToPWM(value, pwm_cap=FAN_PWM_CAP):
     return int(ceil((pwm_cap) * value / 100.0))
 
 
-def get_all_rpm_system():
+def get_all_rpm_system(root_dir):
     pwm_files = {}
-    path = "/sys/class/hwmon"
-    for dir in os.listdir(path):
-        full_path = os.path.join(path, dir)
+    for dir in os.listdir(root_dir):
+        full_path = os.path.join(root_dir, dir)
         if os.path.isdir(full_path):
             # Find all pwm in folder
             for file in os.listdir(full_path):
@@ -61,11 +60,14 @@ def get_all_rpm_system():
     return pwm_files
 
 
-def get_all_cooling_system():
+def get_all_cooling_system(root_dir):
     pwm_files = {}
-    path = "/sys/class/hwmon"
-    for dir in os.listdir(path):
-        full_path = os.path.join(path, dir)
+    if not os.path.isdir(root_dir):
+        logger.error("Folder {root_dir} doesn't exist".format(root_dir=root_dir))
+        return pwm_files
+    # Fin all fans
+    for dir in os.listdir(root_dir):
+        full_path = os.path.join(root_dir, dir)
         if os.path.isdir(full_path):
             fan_device_paths = []
             fan_rpm_path = []
@@ -86,7 +88,7 @@ def get_all_cooling_system():
                 pwm_files[name]['rpm'] = fan_rpm_path
                 logger.info("RPM {name}({num}) found in {root_path}".format(name=name, root_path=full_path, num=len(fan_device_paths)))
     # Find all rpm systems
-    rpm_list = get_all_rpm_system()
+    rpm_list = get_all_rpm_system(root_dir)
     for fan, rpm in zip(pwm_files, rpm_list):
         pwm_files[fan]['rpm'] = [rpm_list[rpm]]
     return pwm_files
@@ -201,8 +203,13 @@ class FanService(object):
     def __init__(self, config):
         # Load configuration
         self._config = config
-        # Fin all fan available
-        self._fan_list = get_all_cooling_system()
+        # Load base hwmon folder
+        root_dir = "/sys/class/hwmon"
+        if os.getenv('JTOP_TESTING', False):
+            root_dir = "/fake_sys/class/hwmon"
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=root_dir))
+        # Find all fan available
+        self._fan_list = get_all_cooling_system(root_dir)
         self._fan_list.update(get_all_legacy_fan())
         # Check if there is nvfan control
         self._nvfancontrol = os.path.isfile('/etc/systemd/system/nvfancontrol.service') or os.path.islink('/etc/systemd/system/nvfancontrol.service')
@@ -231,7 +238,7 @@ class FanService(object):
                 # Add default profile
                 self._fan_list[name]['profile'] += [FAN_MANUAL_NAME]
         if not self._fan_list:
-            logger.info("No fan found")
+            logger.warning("No fan found")
 
     def initialization(self):
         # Load configuration

@@ -74,9 +74,11 @@ def find_driver_power_folders(path):
     return subdirectories
 
 
-def find_all_i2c_power_monitor():
+def find_all_i2c_power_monitor(i2c_path):
     power_sensor = {}
-    i2c_path = "/sys/bus/i2c/devices"
+    if not os.path.isdir(i2c_path):
+        logger.error("Folder {root_dir} doesn't exist".format(root_dir=i2c_path))
+        return power_sensor
     items = os.listdir(i2c_path)
     for item in items:
         # Decode full path
@@ -153,9 +155,12 @@ def list_all_i2c_ports(path):
     return sensor_name
 
 
-def find_all_system_monitor():
+def find_all_system_monitor(system_monitor):
     sensor_name = {}
-    system_monitor = "/sys/class/power_supply"
+    if not os.path.isdir(system_monitor):
+        logger.error("Folder {root_dir} doesn't exist".format(root_dir=system_monitor))
+        return sensor_name
+    # Find all system power monitor
     for folder in os.listdir(system_monitor):
         local_path = "{path}/{folder}".format(path=system_monitor, folder=folder)
         name = folder.replace("ucsi-source-psy-", "")
@@ -187,8 +192,15 @@ class PowerService(object):
         self._power_avg = {}
         self._power_type = ''
         # Find all I2C sensors on board
-        power_sensor = find_all_i2c_power_monitor()
-        sys_sensor = find_all_system_monitor()
+        i2c_path = "/sys/bus/i2c/devices"
+        system_monitor = "/sys/class/power_supply"
+        if os.getenv('JTOP_TESTING', False):
+            i2c_path = "/fake_sys/bus/i2c/devices"
+            system_monitor = "/fake_sys/class/power_supply"
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=i2c_path))
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=system_monitor))
+        power_sensor = find_all_i2c_power_monitor(i2c_path)
+        sys_sensor = find_all_system_monitor(system_monitor)
         if power_sensor:
             self._power_type = 'I2C'
             logger.info("Found I2C power monitor")
@@ -203,7 +215,7 @@ class PowerService(object):
             logger.info("Found SYSTEM power monitor")
             self._power_sensor = sys_sensor
         else:
-            logger.error("Power sensors not found!")
+            logger.warning("Power sensors not found!")
         # Sort all power sensors
         self._power_sensor = dict(sorted(self._power_sensor.items(), key=lambda item: item[0]))
 

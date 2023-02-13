@@ -15,29 +15,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import curses
+import pytest
 from jtop import jtop
-# Import gui test
-from ..gui import JTOPGUI, ALL, GPU, CPU, MEM, CTRL, INFO
 
 
-def openGUI(stdscr, jetson):
-    # Initialization Menu
-    pages = JTOPGUI(stdscr, jetson, [ALL, GPU, CPU, MEM, CTRL, INFO], start=False)
-    return pages
-
-
-def test_openGUI(jtop_server):
-    # Load command line controller
-    stdscr = curses.initscr()
-    # Initialize colors
-    curses.start_color()
-    # Run jtop
+def test_example(setup_jtop_server):
     with jtop() as jetson:
+        print("Running test with parameter:", setup_jtop_server)
         if jetson.ok():
-            # Open JTOPGUI
-            pages = openGUI(stdscr, jetson)
-            # Start with selected page
-            pages.set(0)
-    assert True
+            # Read fan status
+            fan = jetson.fan
+            # Status fan
+            print("Fan output: {fan}".format(fan=fan))
+            # Check depend of parameter
+            if setup_jtop_server == ['fan']:
+                assert len(fan) > 0
+            elif setup_jtop_server == ['empty']:
+                assert len(fan) == 0
+
+
+test_example = pytest.mark.parametrize("setup_jtop_server", [['fan'], ['empty']], indirect=True)(test_example)
 # EOF

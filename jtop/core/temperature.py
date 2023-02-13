@@ -60,11 +60,14 @@ class TemperatureService(object):
         self._temperature = {}
         # Find all temperature available
         thermal_path = "/sys/devices/virtual/thermal"
+        if os.getenv('JTOP_TESTING', False):
+            thermal_path = "/fake_sys/devices/virtual/thermal"
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=thermal_path))
         if os.path.isdir(thermal_path):
             # Sort all temperatures
             self._temperature = initialize_discrete_temperature(thermal_path)
         else:
-            logging.error("Temperature folder found!")
+            logger.warning("Temperature not folder found!")
 
     def get_status(self):
         status = {}

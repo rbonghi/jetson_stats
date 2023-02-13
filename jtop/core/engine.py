@@ -64,6 +64,9 @@ class EngineService(object):
         self.engines_path = {}
         # List all engines available
         engine_path = "/sys/kernel/debug/clk"
+        if os.getenv('JTOP_TESTING', False):
+            engine_path = "/fake_sys/kernel/debug/clk"
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=engine_path))
         list_all_engines = [x[0] for x in os.walk(engine_path)]
         # Search all available engines
         for name in EngineService.ENGINES:

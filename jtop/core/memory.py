@@ -158,6 +158,7 @@ def check_fstab(table_line):
 
 def read_emc():
     emc = {}
+    # emc_path = "/sys/kernel/debug/bpmp/debug/clk/emc"
     if os.path.isdir("/sys/kernel/debug/bpmp/debug/clk/emc"):
         path = "/sys/kernel/debug/bpmp/debug/clk/emc"
         # Add unit

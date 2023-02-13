@@ -29,7 +29,6 @@ import socket
 import fcntl
 import struct
 import array
-from .exceptions import JtopException
 # Load Author
 AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 # Create logger

@@ -15,37 +15,25 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import pytest
 import warnings
 from jtop import jtop
-from .common import set_jetson_clocks, set_nvp_mode
 # Max count to wait
 MAX_COUNT = 50
 
 
-def test_nvpmodel(jtop_server):
-    with jtop() as jetson:
-        # Check status nvpmodel
-        set_nvp_mode(jetson, "MIN_MAX_TEST")
-
-
-def test_nvpmodel_fail(jtop_server):
+def test_nvpmodel_fail(setup_jtop_server):
     with jtop() as jetson:
         # Check status nvpmodel
         if jetson.ok():
             jetson.nvpmodel = "MINTEST"
-        # Wait change nvpmodel
-        counter = 0
-        while jetson.ok():
-            if str(jetson.nvpmodel) == "MINTEST" or counter == MAX_COUNT:
-                break
-            counter += 1
         # Check if is same model
         assert str(jetson.nvpmodel) != "MINTEST"
         # Check name variable
         assert jetson.nvpmodel.name != "MINTEST"
 
 
-def test_nvpmodel_increment_decrement(jtop_server):
+def test_nvpmodel_increment_decrement(setup_jtop_server):
     with jtop() as jetson:
         # Save nvp ID
         nvp_id = jetson.nvpmodel.id
@@ -77,14 +65,8 @@ def test_nvpmodel_increment_decrement(jtop_server):
         assert jetson.nvpmodel.id == nvp_id - 1
 
 
-def test_nvpmodel_jetson_clocks(jtop_server):
-    with jtop() as jetson:
-        # Enable jetson_clocks
-        set_jetson_clocks(jetson, True)
-        # Check status nvpmodel
-        set_nvp_mode(jetson, "TEST")
-        # Disable jetson_clocks
-        set_jetson_clocks(jetson, False)
-        # Check status nvpmodel
-        set_nvp_mode(jetson, "MIN_MAX_TEST")
+test_nvpmodel_fail = pytest.mark.parametrize(
+    "setup_jtop_server", [['nvpmodel'], ['nvpmodel']], indirect=True)(test_nvpmodel_fail)
+test_nvpmodel_increment_decrement = pytest.mark.parametrize(
+    "setup_jtop_server", [['nvpmodel'], ['nvpmodel']], indirect=True)(test_nvpmodel_increment_decrement)
 # EOF

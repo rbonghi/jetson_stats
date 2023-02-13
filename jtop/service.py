@@ -535,6 +535,7 @@ class JtopServer(Process):
         # If not empty return status
         if self.jetson_clocks.exists():
             data['jc'] = self.jetson_clocks.get_status(data)
+            print(data['jc'])
         # -- NVP MODEL --
         if self.nvpmodel.exists():
             # Read nvp_mode
