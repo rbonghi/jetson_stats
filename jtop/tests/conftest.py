@@ -197,7 +197,7 @@ def reset_environment():
 def run_script():
     # Check the system architecture
     arch = platform.machine()
-    if 'arm' in arch:
+    if 'arm' in arch or 'aarch64' in arch:
         # Stop pytest if running on an ARM-based system
         pytest.exit("Tests cannot be run on ARM-based systems")
 
