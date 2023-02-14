@@ -205,7 +205,7 @@ def is_docker():
 @pytest.fixture(scope='session', autouse=True)
 def run_script():
     # Check if running inside a Docker container
-    if not os.path.exists('/.dockerenv') and not is_docker():
+    if not is_docker():
         # Stop pytest if running inside a Docker container
         pytest.exit("Tests cannot be run inside a Docker container")
 
