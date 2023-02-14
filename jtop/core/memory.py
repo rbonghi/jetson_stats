@@ -248,7 +248,7 @@ class Memory(GenericInterface):
     """
 
     def __init__(self):
-        super().__init__()
+        super(Memory, self).__init__()
 
     def swap_path(self):
         """

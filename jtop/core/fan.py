@@ -168,7 +168,7 @@ def change_nvfancontrol_default(name, value):
 class Fan(GenericInterface):
 
     def __init__(self):
-        super().__init__()
+        super(Fan, self).__init__()
 
 
 class FanService(object):

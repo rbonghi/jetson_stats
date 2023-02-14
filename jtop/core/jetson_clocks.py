@@ -309,8 +309,6 @@ class JetsonClocksService(object):
         return True if self._jc_bin else False
 
     def initialization(self, nvpmodel, data):
-        if not self.exists():
-            return
         self._data = data
         self.nvpmodel = nvpmodel
         # Check if exist configuration file

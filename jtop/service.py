@@ -302,8 +302,9 @@ class JtopServer(Process):
         if self.nvpmodel.exists():
             self.nvp_mode = self.nvpmodel.get()
         # Run setup
-        data = self.jtop_decode()
-        self.jetson_clocks.initialization(self.nvpmodel, data)
+        if self.jetson_clocks.exists():
+            data = self.jtop_decode()
+            self.jetson_clocks.initialization(self.nvpmodel, data)
         # Initialize jetson_fan
         self.fan.initialization()
         # Initialize variables
