@@ -168,7 +168,7 @@ class NVPModelService(object):
             self._nvpm[value]['status'] = status
             return status
         # Otherwise disable the jetson_clocks
-        old_status = self.jetson_clocks.alive(wait=False)
+        old_status = self.jetson_clocks.alive()
         # Switch off jetson_clocks if is running
         if old_status:
             for idx in range(NVP_RESEND_JETSON_CLOCKS_MESSAGE):
@@ -227,9 +227,12 @@ class NVPModelService(object):
         # https://docs.python.org/2.7/library/threading.html#threading.Thread.is_alive
         return self._thread.is_alive()
 
-    def set(self, value):
+    def set(self, value, data={}):
         if self.is_running():
             return False
+        # You can pass also from this function
+        if data:
+            self._data = data
         # Start thread Service client
         self._thread = Thread(target=self._thread_set_nvp_model, args=(value, ))
         # self._thread.daemon = True

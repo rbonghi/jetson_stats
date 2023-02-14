@@ -22,7 +22,7 @@ from math import ceil
 import logging
 # Launch command
 from .command import Command
-from .common import cat
+from .common import cat, GenericInterface
 # Create logger
 logger = logging.getLogger(__name__)
 
@@ -165,37 +165,10 @@ def change_nvfancontrol_default(name, value):
             f.write(line)
 
 
-class Fan(object):
+class Fan(GenericInterface):
 
     def __init__(self):
-        self._controller = None
-        self._info = {}
-        self._data = {}
-
-    def _initialize(self, controller, info):
-        self._controller = controller
-        self._info = info
-
-    def _update(self, data):
-        self._data = data
-
-    def items(self):
-        return self._data.items()
-
-    def __len__(self):
-        return len(self._data)
-
-    def __getitem__(self, key):
-        return self._data[key]
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __next__(self):
-        return next(self._data)
-
-    def __str__(self):
-        return str(self._data)
+        super().__init__()
 
 
 class FanService(object):

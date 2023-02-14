@@ -23,7 +23,7 @@ import shlex
 import logging
 import subprocess as sp
 from .engine import read_engine
-from .common import cat
+from .common import cat, GenericInterface
 from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
@@ -156,11 +156,10 @@ def check_fstab(table_line):
     return False
 
 
-def read_emc():
+def read_emc(root_path):
     emc = {}
-    # emc_path = "/sys/kernel/debug/bpmp/debug/clk/emc"
-    if os.path.isdir("/sys/kernel/debug/bpmp/debug/clk/emc"):
-        path = "/sys/kernel/debug/bpmp/debug/clk/emc"
+    if os.path.isdir(root_path + "/bpmp/debug/clk/emc"):
+        path = root_path + "/bpmp/debug/clk/emc"
         # Add unit
         emc['unit'] = 'k'
         # Check if access to this file
@@ -183,8 +182,8 @@ def read_emc():
             with open(path + "/mrq_rate_locked", 'r') as f:
                 # Write min
                 emc['override'] = int(f.read()) // 1000
-    elif os.path.isdir("/sys/kernel/debug/tegra_bwmgr"):
-        path = "/sys/kernel/debug/clk/override.emc"
+    elif os.path.isdir(root_path + "/tegra_bwmgr"):
+        path = root_path + "/clk/override.emc"
         # Add unit
         emc['unit'] = 'k'
         # Check if access to this file
@@ -198,7 +197,7 @@ def read_emc():
                 # Write min
                 emc['override'] = int(f.read()) // 1000
         # Decode from tegra_bwmgr
-        path = "/sys/kernel/debug/tegra_bwmgr"
+        path = root_path + "/tegra_bwmgr"
         # Check if access to this file
         if os.access(path + "/emc_max_rate", os.R_OK):
             with open(path + "/emc_max_rate", 'r') as f:
@@ -209,8 +208,8 @@ def read_emc():
             with open(path + "/emc_min_rate", 'r') as f:
                 # Write min
                 emc['min'] = int(f.read()) // 1000
-    elif os.path.isdir("/sys/kernel/debug/clk/emc"):
-        emc = read_engine("/sys/kernel/debug/clk/emc")
+    elif os.path.isdir(root_path + "/clk/emc"):
+        emc = read_engine(root_path + "/clk/emc")
     # Fix max frequency
     emc_cap = 0
     # Check if access to this file
@@ -225,7 +224,7 @@ def read_emc():
     return emc
 
 
-class Memory(object):
+class Memory(GenericInterface):
     """
     This class get the output from your memory, this class is readable like a dictionary,
     please read the documentation on :py:attr:`~jtop.jtop.memory` but is also usable to enable, disable swap on your device
@@ -249,9 +248,7 @@ class Memory(object):
     """
 
     def __init__(self):
-        self._controller = None
-        self._data = {}
-        self._swap_path = ''
+        super().__init__()
 
     def swap_path(self):
         """
@@ -260,7 +257,7 @@ class Memory(object):
         :return: Path swap
         :rtype: str
         """
-        return self._swap_path
+        return self._init
 
     def clear_cache(self):
         """
@@ -297,7 +294,7 @@ class Memory(object):
             raise ValueError("Need a Number")
         # if path_swap is empty load from default configuration
         if not path:
-            path = self._swap_path
+            path = self._init
         # Set new swap size configuration
         self._controller.put({'swap': {'type': 'set', 'path': path, 'size': value, 'boot': on_boot}})
 
@@ -310,34 +307,9 @@ class Memory(object):
         """
         # if path_swap is empty load from default configuration
         if not path:
-            path = self._swap_path
+            path = self._init
         # Set new swap size configuration
         self._controller.put({'swap': {'type': 'unset', 'path': path}})
-
-    def _initialize(self, controller, path):
-        self._controller = controller
-        self._swap_path = path
-
-    def _update(self, data):
-        self._data = data
-
-    def items(self):
-        return self._data.items()
-
-    def __len__(self):
-        return len(self._data)
-
-    def __getitem__(self, key):
-        return self._data[key]
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __next__(self):
-        return next(self._data)
-
-    def __str__(self):
-        return str(self._data)
 
 
 class MemoryService(object):
@@ -347,8 +319,12 @@ class MemoryService(object):
         # Extract memory page size
         self._page_size = os.sysconf("SC_PAGE_SIZE")
         # board type
-        self._isJetson = os.path.isfile("/sys/kernel/debug/nvmap/iovmm/maps")
-        self._is_emc = True if read_emc() else False
+        self._root_path = "/sys/kernel/debug"
+        if os.getenv('JTOP_TESTING', False):
+            self._root_path = "/fake_sys/kernel/debug"
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=self._root_path))
+        self._isJetson = os.path.isfile(self._root_path + "/nvmap/iovmm/maps")
+        self._is_emc = True if read_emc(self._root_path) else False
         if not self._is_emc:
             logger.warn("EMC not available")
         # Initialization memory
@@ -442,7 +418,7 @@ class MemoryService(object):
         if self._isJetson:
             # Update table
             # Use the memory table to measure
-            total, table = read_mem_table("/sys/kernel/debug/nvmap/iovmm/maps")
+            total, table = read_mem_table(self._root_path + "/nvmap/iovmm/maps")
             # Update shared size
             ram_shared_val = total['size'] if ram_shared_val == 0 else ram_shared_val
         # Extract memory info
@@ -483,7 +459,7 @@ class MemoryService(object):
         }
         # Read EMC status
         if self._is_emc:
-            memory['EMC'] = read_emc()
+            memory['EMC'] = read_emc(self._root_path)
             # Set always online this engine
             memory['EMC']['online'] = True
             # Percentage utilization

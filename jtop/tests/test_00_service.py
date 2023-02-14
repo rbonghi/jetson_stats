@@ -15,19 +15,34 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import pytest
-from jtop import jtop
+import time
+from jtop import jtop, JtopException
+from ..service import JtopServer
+from .conftest import reset_environment, install_cpu
 
 
-def test_example(setup_jtop_server):
-    with jtop() as jetson:
-        # Check contain hardware variables
-        assert len(jetson.board['hardware']) > 0
-        # Check contain Libraries information
-        assert len(jetson.board['libraries']) > 0
-        # Check contain platform variables
-        assert len(jetson.board['platform']) > 0
-
-
-test_example = pytest.mark.parametrize("setup_jtop_server", [['empty']], indirect=True)(test_example)
+def test_service():
+    reset_environment()
+    install_cpu()
+    # Start jtop Server
+    jtop_server = JtopServer(force=True)
+    jtop_server.start()
+    # Check if is alive
+    assert jtop_server.is_alive()
+    # Init and open jtop
+    jetson = jtop()
+    jetson.start()
+    # Wait
+    time.sleep(0.5)
+    # Close service
+    jtop_server.close()
+    # Close jetson
+    try:
+        jetson.close()
+    except JtopException:
+        pass
+    # Check if service is off
+    assert not jtop_server.is_alive()
+    # Reset environment
+    reset_environment()
 # EOF

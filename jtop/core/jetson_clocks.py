@@ -21,7 +21,7 @@ import time
 import logging
 # Launch command
 from datetime import timedelta
-from threading import Thread, Event
+from threading import Thread
 # Local functions and classes
 from .command import Command
 from .common import get_uptime, locate_commands
@@ -282,8 +282,7 @@ class JetsonClocksService(object):
     set_status = 'inactive'
 
     def __init__(self, config, fan):
-        # Thread event show
-        self.event_show = Event()
+        self._data = {}
         # Thread event jetson_clocks set
         self._set_jc = None
         # nvpmodel
@@ -333,14 +332,14 @@ class JetsonClocksService(object):
             self._set_jc.start()
 
     def get_status(self, data):
+        self._data = data
         # Get status jetson_clocks
-        status = {
-            'status': self.alive(data, wait=False),
+        return {
+            'status': self.alive(),
             'thread': self.is_running(),
             'config': self.is_config(),
             'boot': self.boot,
         }
-        return status
 
     def _fix_fan(self, speed, status):
         logger.debug("fan mode: {mode}".format(mode=self.fan.mode))
@@ -446,15 +445,9 @@ class JetsonClocksService(object):
         # Set new jetson_clocks configuration
         self._config.set('jetson_clocks', config)
 
-    def alive(self, data, wait=True):
-        if wait and not self.event_show.is_set():
-            logger.info("Wait from jetson_clocks show")
-            if not self.event_show.wait(timeout=COMMAND_TIMEOUT):
-                logger.error("Lost connection from jtop")
-                return False
-        self.event_show.clear()
+    def alive(self):
         # Return status jetson_clocks
-        return jetson_clocks_alive(self._engines_list, data)
+        return jetson_clocks_alive(self._engines_list, self._data)
 
     def show(self):
         cmd = Command([self._jc_bin, '--show'])
@@ -469,13 +462,15 @@ class JetsonClocksService(object):
     def close(self):
         # Switch off thread jetson clocks
         self._running = False
-        if self._thread.is_alive():
-            logger.warning("Wait switch off set jetson_clocks --show")
-            self._thread.join(COMMAND_TIMEOUT)
-        if self._set_jc is not None:
-            if self._set_jc.is_alive():
-                logger.warning("Wait switch off set jetson_clocks")
-                self._set_jc.join(COMMAND_TIMEOUT)
+        # If jetson_clocks doesn't exist skip
+        if not self.exists():
+            return
+        # If there are no thread running skip
+        if self._set_jc is None:
+            return
+        if self._set_jc.is_alive():
+            logger.warning("Wait switch off set jetson_clocks")
+            self._set_jc.join(COMMAND_TIMEOUT)
 
     def _error_status(self):
         # Catch exception if exist
@@ -490,7 +485,7 @@ class JetsonClocksService(object):
 
     def store(self):
         # Store configuration jetson_clocks
-        cmd = Command([self.jc_bin, '--store', self.config_l4t])
+        cmd = Command([self._jc_bin, '--store', self.config_l4t])
         try:
             message = cmd(timeout=COMMAND_TIMEOUT)
         except Command.CommandException:

@@ -316,7 +316,7 @@ class JtopServer(Process):
                     # Check if the configuration exist
                     if self.jetson_clocks.exists():
                         if not self.jetson_clocks.is_config():
-                            if not self.jetson_clocks.alive(wait=False):
+                            if not self.jetson_clocks.alive():
                                 self.jetson_clocks.store()
                     # Check if control is not empty
                     if not control:
@@ -335,18 +335,9 @@ class JtopServer(Process):
                             self.memory.swap_deactivate(swap['path'])
                     # Clear cache
                     if 'clear_cache' in control:
-                        logger.info("Clear cache")
                         # Clear cache
                         self.memory.clear_cache()
-                    # Manage jetson_clocks
-                    if 'config' in control:
-                        command = control['config']
-                        if command == 'reset':
-                            logger.info('Reset configuration')
-                            self.config.clear()
-                            if self.jetson_clocks is not None:
-                                logger.info('Remove jetson_clocks config')
-                                self.jetson_clocks.clear()
+                        logger.info("Clear cache")
                     if 'jc' in control:
                         jc = control['jc']
                         # Enable / disable jetson_clocks
@@ -359,17 +350,17 @@ class JtopServer(Process):
                     if 'fan' in control:
                         fan = control['fan']
                         for key, value in fan.items():
-                            logger.info('Fan config {} {}'.format(key, value))
                             if key == 'mode':
                                 self.fan.mode = value
                             elif key == 'speed':
                                 self.fan.speed = value
+                            logger.info('Fan config {} {}'.format(key, value))
                     # Decode nvp model
                     if 'nvp' in control:
                         mode = control['nvp']
-                        logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                         # Set new NV Power Mode
                         self.nvpmodel.set(mode)
+                        logger.info("Set new NV Power Mode {mode}".format(mode=mode))
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
@@ -391,6 +382,15 @@ class JtopServer(Process):
                             'nvpmodel': self.nvpmodel.exists(),
                         }
                         self.q.put({'init': init})
+                    # Manage jetson_clocks
+                    if 'config' in control:
+                        command = control['config']
+                        if command == 'reset':
+                            logger.info('Reset configuration')
+                            self.config.clear()
+                            if self.jetson_clocks.exists():
+                                logger.info('Remove jetson_clocks config')
+                                self.jetson_clocks.clear()
                     # Update timeout interval
                     timeout = TIMEOUT_GAIN if interval <= TIMEOUT_GAIN else interval * TIMEOUT_GAIN
                 except queue.Empty:
@@ -490,6 +490,8 @@ class JtopServer(Process):
         except queue.Empty:
             pass
         self.remove_files()
+        # Switch off jetson_clocks if there are threads alive
+        self.jetson_clocks.close()
         # Close stats server
         logger.info("Service closed")
         return True
@@ -534,8 +536,8 @@ class JtopServer(Process):
         # CPU, EMC, GPU, ENGINES
         # If not empty return status
         if self.jetson_clocks.exists():
+            # Get status jetson_clocks
             data['jc'] = self.jetson_clocks.get_status(data)
-            print(data['jc'])
         # -- NVP MODEL --
         if self.nvpmodel.exists():
             # Read nvp_mode

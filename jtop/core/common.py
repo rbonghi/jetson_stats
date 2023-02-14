@@ -35,6 +35,39 @@ AUTH_RE = re.compile(r""".*__author__ = ["'](.*?)['"]""", re.S)
 logger = logging.getLogger(__name__)
 
 
+class GenericInterface(object):
+
+    def __init__(self):
+        self._controller = None
+        self._init = None
+        self._data = {}
+
+    def _initialize(self, controller, init):
+        self._controller = controller
+        self._init = init
+
+    def _update(self, data):
+        self._data = data
+
+    def items(self):
+        return self._data.items()
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __next__(self):
+        return next(self._data)
+
+    def __str__(self):
+        return str(self._data)
+
+
 def cat(path):
     with open(path, 'r') as f:
         return f.readline().rstrip('\x00')

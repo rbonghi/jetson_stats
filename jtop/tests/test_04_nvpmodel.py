@@ -18,8 +18,15 @@
 import pytest
 import warnings
 from jtop import jtop
+from .marco_functions import set_jetson_clocks, set_nvp_mode
 # Max count to wait
 MAX_COUNT = 50
+
+
+def test_nvpmodel(setup_jtop_server):
+    with jtop() as jetson:
+        # Check status nvpmodel
+        set_nvp_mode(jetson, "MIN_MAX_TEST")
 
 
 def test_nvpmodel_fail(setup_jtop_server):
@@ -65,8 +72,24 @@ def test_nvpmodel_increment_decrement(setup_jtop_server):
         assert jetson.nvpmodel.id == nvp_id - 1
 
 
+def test_nvpmodel_jetson_clocks(setup_jtop_server):
+    with jtop() as jetson:
+        # Enable jetson_clocks
+        set_jetson_clocks(jetson, True)
+        # Check status nvpmodel
+        set_nvp_mode(jetson, "TEST")
+        # Disable jetson_clocks
+        set_jetson_clocks(jetson, False)
+        # Check status nvpmodel
+        set_nvp_mode(jetson, "MIN_MAX_TEST")
+
+
+test_nvpmodel = pytest.mark.parametrize(
+    "setup_jtop_server", [['nvpmodel']], indirect=True)(test_nvpmodel)
 test_nvpmodel_fail = pytest.mark.parametrize(
-    "setup_jtop_server", [['nvpmodel'], ['nvpmodel']], indirect=True)(test_nvpmodel_fail)
+    "setup_jtop_server", [['nvpmodel'], ['nvpmodel', 'jetson_clocks', 'igpu', 'emc']], indirect=True)(test_nvpmodel_fail)
 test_nvpmodel_increment_decrement = pytest.mark.parametrize(
-    "setup_jtop_server", [['nvpmodel'], ['nvpmodel']], indirect=True)(test_nvpmodel_increment_decrement)
+    "setup_jtop_server", [['nvpmodel'], ['nvpmodel', 'jetson_clocks', 'igpu', 'emc']], indirect=True)(test_nvpmodel_increment_decrement)
+test_nvpmodel_jetson_clocks = pytest.mark.parametrize(
+    "setup_jtop_server", [['nvpmodel', 'jetson_clocks', 'igpu', 'emc']], indirect=True)(test_nvpmodel_jetson_clocks)
 # EOF

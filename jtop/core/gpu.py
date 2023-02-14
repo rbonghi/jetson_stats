@@ -97,8 +97,8 @@ def igpu_read_status(path):
 
 def find_igpu(igpu_path):
     # Check if exist a integrated gpu
-    if not os.path.exists("/dev/nvhost-gpu") and not os.path.exists("/dev/nvhost-power-gpu"):
-        return []
+    # if not os.path.exists("/dev/nvhost-gpu") and not os.path.exists("/dev/nvhost-power-gpu"):
+    #     return []
     igpu = []
     if not os.path.isdir(igpu_path):
         logger.error("Folder {root_dir} doesn't exist".format(root_dir=igpu_path))
@@ -117,7 +117,8 @@ def find_igpu(igpu_path):
                     path = os.path.realpath(os.path.join(item_path, "device"))
                     frq_path = os.path.realpath(item_path)
                     igpu += [{'name': name, 'type': 'integrated', 'path': path, 'frq_path': frq_path}]
-                    logger.info("GPU found {name} in {path}".format(name=name, path=path))
+                    logger.info("GPU \"{name}\" status in {path}".format(name=name, path=path))
+                    logger.info("GPU \"{name}\" frq in {path}".format(name=name, path=frq_path))
                 else:
                     logger.debug("Skipped {name}".format(name=name))
     return igpu

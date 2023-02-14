@@ -17,6 +17,12 @@
 
 # Emulator for NVIDIA Jetson jetson_clock
 
+# Define global variables
+BASE_FAKE_DIR="/fake_sys"
+BASE_DIR="$BASE_FAKE_DIR/devices/system/cpu"
+FAKE_GPU_NAME="10101010.gpu"
+FAKE_JETSON_CLOCK_FILE="/tmp/jetson_clocks_test"
+
 usage()
 {
     if [ "$1" != "" ]; then
@@ -43,12 +49,12 @@ cat << EOF
 SOC family:tegra186  Machine:quill
 Online CPUs: 0,3-5
 CPU Cluster Switching: Disabled
-cpu0: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1 
-cpu1: Online=0 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1113600 IdleStates: C1=1 c6=1 c7=1 
-cpu2: Online=0 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1113600 IdleStates: C1=1 c6=1 c7=1 
-cpu3: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1881600 IdleStates: C1=1 c7=1 
-cpu4: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1 
-cpu5: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1 
+cpu0: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1
+cpu1: Online=0 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1113600 IdleStates: C1=1 c6=1 c7=1
+cpu2: Online=0 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1113600 IdleStates: C1=1 c6=1 c7=1
+cpu3: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=1881600 IdleStates: C1=1 c7=1
+cpu4: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1
+cpu5: Online=1 Governor=schedutil MinFreq=345600 MaxFreq=2035200 CurrentFreq=2035200 IdleStates: C1=1 c7=1
 GPU MinFreq=114750000 MaxFreq=1134750000 CurrentFreq=114750000
 EMC MinFreq=40800000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
 Fan: speed=0
@@ -56,58 +62,76 @@ NV Power Mode: MAXP_CORE_ARM
 EOF
 }
 
-show_off()
+
+# Function to write to frequency files
+write_to_freq_files()
 {
-cat << EOF
-SOC family:TEST  Machine:TEST
-Online CPUs: 0-3
-CPU Cluster Switching: Disabled
-cpu0: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: 
-cpu1: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 c6=1 c8=1
-cpu2: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
-cpu3: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
-cpu4: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
-cpu5: Online=1 Governor=schedutil MinFreq=102000 MaxFreq=1428000 CurrentFreq=100000 IdleStates: WFI=1 c7=1 
-GPU MinFreq=76800000 MaxFreq=921600000 CurrentFreq=100000
-EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
-Fan: speed=0
-EOF
+    local num_iterations=$1
+    local max_val=$2
+    local min_val=$3
+    local cur_val=$4
+    local gpu_max_val=$5
+    local gpu_min_val=$6
+    local gpu_cur_val=$7
+    local emc_max_val=$8
+    local emc_min_val=$9
+    local emc_cur_val=$10
+    
+    # Loop over CPUs
+    for i in $(seq 0 $((num_iterations - 1))); do
+        freq_dir="$BASE_DIR/cpu$i/cpufreq"
+        
+        # Create directory if it doesn't exist
+        if [ ! -d "$freq_dir" ]; then
+            # echo "Directory $freq_dir not found, creating it..."
+            mkdir -p "$freq_dir"
+        fi
+        
+        # Write to files
+        echo "$max_val" > "$freq_dir/scaling_max_freq"
+        # echo "Wrote $max_val to file: $freq_dir/scaling_max_freq"
+        
+        echo "$min_val" > "$freq_dir/scaling_min_freq"
+        # echo "Wrote $min_val to file: $freq_dir/scaling_min_freq"
+        
+        echo "$cur_val" > "$freq_dir/scaling_cur_freq"
+        # echo "Wrote $cur_val to file: $freq_dir/scaling_cur_freq"
+    done
+
+    # GPU update
+    local gpu_path="$BASE_FAKE_DIR/devices/platform/$FAKE_GPU_NAME/devfreq/$FAKE_GPU_NAME"
+    echo "$gpu_max_val" > "$gpu_path/cur_freq"
+    echo "$gpu_min_val" > "$gpu_path/max_freq"
+    echo "$gpu_cur_val" > "$gpu_path/min_freq"
 }
 
-
-show_on()
+# Function to print CPU information
+fake_show()
 {
-cat << EOF
-SOC family:TEST  Machine:TEST
-Online CPUs: 0-3
-CPU Cluster Switching: Disabled
-cpu0: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1
-cpu1: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 
-cpu2: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1 C1=1
-cpu3: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates:
-cpu4: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
-cpu5: Online=1 Governor=schedutil MinFreq=1428000 MaxFreq=1428000 CurrentFreq=1428000 IdleStates: WFI=1 c7=1
-GPU MinFreq=921600000 MaxFreq=921600000 CurrentFreq=921600000
-EMC MinFreq=204000000 MaxFreq=1600000000 CurrentFreq=1600000000 FreqOverride=0
-Fan: speed=255
-EOF
-}
-
-show()
-{
+    local num_iterations=$1
+    local nvp_model_level=$2
+    local max_val=$3
+    local min_val=$4
+    local cur_val=$5
+    local gpu_max_val=$6
+    local gpu_min_val=$7
+    local gpu_cur_val=$8
+    local emc_max_val=$9
+    local emc_min_val=$10
+    local emc_cur_val=$11
+    
     local modes=("MAXTEST" "TEST" "MINTEST" "MIN_MAX_TEST")
-    local level=0
-    # Load level from temp file
-    if [ -f "/tmp/nvp_model_test" ] ; then
-        level=$(cat /tmp/nvp_model_test)
-    fi
-    # Show status
-    if [ -f "/tmp/jetson_clocks_test" ] ; then
-        show_on
-    else
-        show_off
-    fi
-    echo "NV Power Mode: ${modes[level]}"
+    # Print all fake data
+    echo "SOC family:TEST  Machine:TEST"
+    echo "Online CPUs: 0-$num_iterations"
+    # Loop over CPUs
+    for i in $(seq 0 $((num_iterations - 1))); do
+        echo "cpu$i: Online=1 Governor=schedutil MinFreq=$min_val MaxFreq=$max_val CurrentFreq=$cur_val IdleStates: WFI=1 c7=1 C1=1"
+    done
+    echo "GPU MinFreq=$gpu_min_val MaxFreq=$gpu_max_val CurrentFreq=$gpu_cur_val"
+    # echo "EMC MinFreq=$emc_min_val MaxFreq=$emc_max_val CurrentFreq=$emc_cur_val FreqOverride=0"
+    echo "Fan: speed=255"
+    echo "NV Power Mode: ${modes[nvp_model_level]}"
 }
 
 main()
@@ -122,53 +146,109 @@ main()
         case "$1" in
             --show)
                 SHOW="True"
-                ;;
+            ;;
             --restore)
                 conf=$2
                 RESTORE="True"
                 shift 1
-                ;;
+            ;;
             --store)
                 conf=$2
                 STORE="True"
                 shift 1
-                ;;
+            ;;
             -h|--help)
                 usage
                 exit 0
-                ;;
+            ;;
             *)
                 usage "[ERROR] Unknown option: $1"
                 exit 1
             ;;
         esac
-            shift 1
+        shift 1
     done
-
+    
     if [ $(id -u) -ne 0 ] ; then
         echo "Please run as root"
         exit 1
     fi
-
+    
     # Go to sleep for an interval
     sleep $TIME_SLEEP
-
+    
+    # Load number of iterations from file
+    local num_iterations=4
+    if [ -f "/tmp/cpu_numbers" ] ; then
+        num_iterations=$(cat /tmp/cpu_numbers)
+    fi
+    
+    local max_val="2035200"
+    local min_val="0"
+    local cur_val="200000"
+    local gpu_max_val="921600000"
+    local gpu_min_val="0"
+    local gpu_cur_val="1000000"
+    local emc_max_val="204000000"
+    local emc_min_val="0"
+    local emc_cur_val="4000000"
+    if [ -f $FAKE_JETSON_CLOCK_FILE ] ; then
+        # fake jetson_clocks is running
+        max_val="2035200"
+        min_val="2035200"
+        cur_val="2035200"
+        gpu_max_val="921600000"
+        gpu_min_val="921600000"
+        gpu_cur_val="921600000"
+        emc_max_val="204000000"
+        emc_min_val="204000000"
+        emc_cur_val="204000000"
+    fi
+    
+    # Show data nvpmodel
+    local nvp_model_level=0
+    if [ -f "/tmp/nvp_model_test" ] ; then
+        nvp_model_level=$(cat /tmp/nvp_model_test)
+    fi
+    
     # Run show message
     if [ "$SHOW" = "True" ] ; then
-        # Show data
-        show
+        fake_show "$num_iterations" "$nvp_model_level" "$max_val" "$min_val" "$cur_val" "$gpu_max_val" "$gpu_min_val" "$gpu_cur_val" "$emc_max_val" "$emc_min_val" "$emc_cur_val"
         exit 0
     fi
     # Make a temporary file to show the status of the board
     if [ "$RESTORE" = "True" ] ; then
-        if [ -f "/tmp/jetson_clocks_test" ] ; then
+        if [ -f $FAKE_JETSON_CLOCK_FILE ] ; then
+            max_val="2035200"
+            min_val="0"
+            cur_val="200000"
+            gpu_max_val="921600000"
+            gpu_min_val="0"
+            gpu_cur_val="1000000"
+            emc_max_val="204000000"
+            emc_min_val="0"
+            emc_cur_val="4000000"
+            # Write fake values
+            write_to_freq_files "$num_iterations" "$max_val" "$min_val" "$cur_val" "$gpu_max_val" "$gpu_min_val" "$gpu_cur_val" "$emc_max_val" "$emc_min_val" "$emc_cur_val"
             # Remove fake test file
-            rm "/tmp/jetson_clocks_test"
+            rm $FAKE_JETSON_CLOCK_FILE
         fi
     elif [ "$STORE" = "True" ] ; then
         touch $conf
     else
-        touch "/tmp/jetson_clocks_test"
+        max_val="2035200"
+        min_val="2035200"
+        cur_val="2035200"
+        gpu_max_val="921600000"
+        gpu_min_val="921600000"
+        gpu_cur_val="921600000"
+        emc_max_val="204000000"
+        emc_min_val="204000000"
+        emc_cur_val="204000000"
+        # Write fake values
+        write_to_freq_files "$num_iterations" "$max_val" "$min_val" "$cur_val" "$gpu_max_val" "$gpu_min_val" "$gpu_cur_val" "$emc_max_val" "$emc_min_val" "$emc_cur_val"
+        # Create file
+        touch $FAKE_JETSON_CLOCK_FILE
     fi
 }
 
