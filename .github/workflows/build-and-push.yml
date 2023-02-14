@@ -41,7 +41,7 @@ jobs:
     - name: Test with tox
       run: |
         # https://github.com/actions/setup-python/issues/225
-        sudo GITHUB_ACTIONS=True env "PATH=$PATH" tox -e py${{ matrix.python-version }}
+        sudo env "PATH=$PATH" tox -e py${{ matrix.python-version }}
 
   docker:
     name: "Build Docker image develop"

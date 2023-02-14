@@ -18,6 +18,7 @@
 import os
 import shutil
 import pytest
+import platform
 from ..service import JtopServer
 from ..core import JtopException
 # pytest fixture reference
@@ -192,23 +193,13 @@ def reset_environment():
         os.remove('/usr/bin/jetson_clocks')
 
 
-def is_docker():
-    # https://gist.github.com/anantkamath/623ce7f5432680749e087cf8cfba9b69
-    with open('/proc/self/cgroup', 'r') as procfile:
-        for line in procfile:
-            fields = line.strip().split('/')
-            if 'docker' in fields or 'buildkit' in fields:
-                return True
-    return False
-
-
 @pytest.fixture(scope='session', autouse=True)
 def run_script():
-    github_action = os.environ.get('GITHUB_ACTIONS', False)
-    # Check if running inside a Docker container
-    if not is_docker() and not github_action:
-        # Stop pytest if running inside a Docker container
-        pytest.exit("Tests cannot be run outside a Docker container or a github action {}".format(github_action))
+    # Check the system architecture
+    arch = platform.machine()
+    if 'arm' in arch:
+        # Stop pytest if running on an ARM-based system
+        pytest.exit("Tests cannot be run on ARM-based systems")
 
 
 @pytest.fixture
