@@ -18,6 +18,7 @@
 import os
 import shutil
 import pytest
+import platform
 from ..service import JtopServer
 from ..core import JtopException
 # pytest fixture reference
@@ -94,6 +95,22 @@ def install_igpu():
     open(os.path.join(path_status_igpu, "load"), "w").write("900")
 
 
+def install_emc():
+    emc_path = os.path.join(FAKE_DIRECTORY, "kernel/debug", "bpmp/debug/clk/emc")
+    if not os.path.isdir(emc_path):
+        print('The directory {path} is not present. Creating a new one..'.format(path=emc_path))
+        os.makedirs(emc_path)
+    open(os.path.join(emc_path, "rate"), "w").write("4000000")
+    open(os.path.join(emc_path, "max_rate"), "w").write("204000000")
+    open(os.path.join(emc_path, "min_rate"), "w").write("0")
+    open(os.path.join(emc_path, "mrq_rate_locked"), "w").write("204000000")
+    path_activity = os.path.join(FAKE_DIRECTORY, "kernel/actmon_avg_activity")
+    if not os.path.isdir(path_activity):
+        print('The directory {path} is not present. Creating a new one..'.format(path=path_activity))
+        os.makedirs(path_activity)
+    open(os.path.join(path_activity, "mc_all"), "w").write("0")
+
+
 def install_fan():
     path_fan = os.path.join(FAKE_DIRECTORY, "class/hwmon", "hwmon27")
     print("Installing Fan in {path}".format(path=path_fan))
@@ -136,6 +153,7 @@ def empty_func():
 def install_devices(params):
     OPTIONS = {
         'igpu': install_igpu,
+        'emc': install_emc,
         'fan': install_fan,
         'nvpmodel': install_nvpmodel,
         'jetson_clocks': install_jetson_clocks,
@@ -173,6 +191,24 @@ def reset_environment():
     if os.path.isfile('/usr/bin/jetson_clocks'):
         print('Removing jetson_clocks')
         os.remove('/usr/bin/jetson_clocks')
+
+
+def is_docker():
+    # https://gist.github.com/anantkamath/623ce7f5432680749e087cf8cfba9b69
+    with open('/proc/self/cgroup', 'r') as procfile:
+        for line in procfile:
+            fields = line.strip().split('/')
+            if 'docker' in fields or 'buildkit' in fields:
+                return True
+    return False
+
+
+@pytest.fixture(scope='session', autouse=True)
+def run_script():
+    # Check if running inside a Docker container
+    if not os.path.exists('/.dockerenv') and not is_docker():
+        # Stop pytest if running inside a Docker container
+        pytest.exit("Tests cannot be run inside a Docker container")
 
 
 @pytest.fixture

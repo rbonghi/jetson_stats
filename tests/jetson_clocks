@@ -66,16 +66,16 @@ EOF
 # Function to write to frequency files
 write_to_freq_files()
 {
-    local num_iterations=$1
-    local max_val=$2
-    local min_val=$3
-    local cur_val=$4
-    local gpu_max_val=$5
-    local gpu_min_val=$6
-    local gpu_cur_val=$7
-    local emc_max_val=$8
-    local emc_min_val=$9
-    local emc_cur_val=$10
+    local num_iterations=${1}
+    local max_val=${2}
+    local min_val=${3}
+    local cur_val=${4}
+    local gpu_max_val=${5}
+    local gpu_min_val=${6}
+    local gpu_cur_val=${7}
+    local emc_max_val=${8}
+    local emc_min_val=${9}
+    local emc_cur_val=${10}
     
     # Loop over CPUs
     for i in $(seq 0 $((num_iterations - 1))); do
@@ -97,28 +97,35 @@ write_to_freq_files()
         echo "$cur_val" > "$freq_dir/scaling_cur_freq"
         # echo "Wrote $cur_val to file: $freq_dir/scaling_cur_freq"
     done
-
+    
     # GPU update
     local gpu_path="$BASE_FAKE_DIR/devices/platform/$FAKE_GPU_NAME/devfreq/$FAKE_GPU_NAME"
-    echo "$gpu_max_val" > "$gpu_path/cur_freq"
-    echo "$gpu_min_val" > "$gpu_path/max_freq"
-    echo "$gpu_cur_val" > "$gpu_path/min_freq"
+    echo "$gpu_max_val" > "$gpu_path/max_freq"
+    echo "$gpu_min_val" > "$gpu_path/min_freq"
+    echo "$gpu_cur_val" > "$gpu_path/cur_freq"
+    
+    local emc_path="$BASE_FAKE_DIR/kernel/debug/bpmp/debug/clk/emc"
+    echo "$emc_max_val" > "$emc_path/max_rate"
+    echo "$emc_min_val" > "$emc_path/min_rate"
+    echo "$emc_cur_val" > "$emc_path/rate"
 }
 
 # Function to print CPU information
 fake_show()
 {
-    local num_iterations=$1
-    local nvp_model_level=$2
-    local max_val=$3
-    local min_val=$4
-    local cur_val=$5
-    local gpu_max_val=$6
-    local gpu_min_val=$7
-    local gpu_cur_val=$8
-    local emc_max_val=$9
-    local emc_min_val=$10
-    local emc_cur_val=$11
+    local num_iterations=${1}
+    local nvp_model_level=${2}
+    local max_val=${3}
+    local min_val=${4}
+    local cur_val=${5}
+    local gpu_max_val=${6}
+    local gpu_min_val=${7}
+    local gpu_cur_val=${8}
+    local emc_max_val=${9}
+    local emc_min_val=${10}
+    local emc_cur_val=${11}
+    
+    echo "$@"
     
     local modes=("MAXTEST" "TEST" "MINTEST" "MIN_MAX_TEST")
     # Print all fake data
@@ -129,7 +136,7 @@ fake_show()
         echo "cpu$i: Online=1 Governor=schedutil MinFreq=$min_val MaxFreq=$max_val CurrentFreq=$cur_val IdleStates: WFI=1 c7=1 C1=1"
     done
     echo "GPU MinFreq=$gpu_min_val MaxFreq=$gpu_max_val CurrentFreq=$gpu_cur_val"
-    # echo "EMC MinFreq=$emc_min_val MaxFreq=$emc_max_val CurrentFreq=$emc_cur_val FreqOverride=0"
+    echo "EMC MinFreq=$emc_min_val MaxFreq=$emc_max_val CurrentFreq=$emc_cur_val FreqOverride=0"
     echo "Fan: speed=255"
     echo "NV Power Mode: ${modes[nvp_model_level]}"
 }
@@ -233,7 +240,7 @@ main()
             # Remove fake test file
             rm $FAKE_JETSON_CLOCK_FILE
         fi
-    elif [ "$STORE" = "True" ] ; then
+        elif [ "$STORE" = "True" ] ; then
         touch $conf
     else
         max_val="2035200"

@@ -19,7 +19,7 @@ import pytest
 from jtop import jtop
 
 
-def test_example(setup_jtop_server):
+def test_fan(setup_jtop_server):
     with jtop() as jetson:
         print("Running test with parameter:", setup_jtop_server)
         if jetson.ok():
@@ -34,5 +34,5 @@ def test_example(setup_jtop_server):
                 assert len(fan) == 0
 
 
-test_example = pytest.mark.parametrize("setup_jtop_server", [['fan'], ['empty']], indirect=True)(test_example)
+test_fan = pytest.mark.parametrize("setup_jtop_server", [['fan'], ['empty']], indirect=True)(test_fan)
 # EOF

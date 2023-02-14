@@ -158,8 +158,8 @@ def check_fstab(table_line):
 
 def read_emc(root_path):
     emc = {}
-    if os.path.isdir(root_path + "/bpmp/debug/clk/emc"):
-        path = root_path + "/bpmp/debug/clk/emc"
+    if os.path.isdir(root_path + "/debug/bpmp/debug/clk/emc"):
+        path = root_path + "/debug/bpmp/debug/clk/emc"
         # Add unit
         emc['unit'] = 'k'
         # Check if access to this file
@@ -182,8 +182,8 @@ def read_emc(root_path):
             with open(path + "/mrq_rate_locked", 'r') as f:
                 # Write min
                 emc['override'] = int(f.read()) // 1000
-    elif os.path.isdir(root_path + "/tegra_bwmgr"):
-        path = root_path + "/clk/override.emc"
+    elif os.path.isdir(root_path + "/debug/tegra_bwmgr"):
+        path = root_path + "/debug/clk/override.emc"
         # Add unit
         emc['unit'] = 'k'
         # Check if access to this file
@@ -213,8 +213,8 @@ def read_emc(root_path):
     # Fix max frequency
     emc_cap = 0
     # Check if access to this file
-    if os.access("/sys/kernel/nvpmodel_emc_cap/emc_iso_cap", os.R_OK):
-        with open("/sys/kernel/nvpmodel_emc_cap/emc_iso_cap", 'r') as f:
+    if os.access(root_path + "/nvpmodel_emc_cap/emc_iso_cap", os.R_OK):
+        with open(root_path + "/nvpmodel_emc_cap/emc_iso_cap", 'r') as f:
             # Write min
             emc_cap = int(f.read()) // 1000
     # Fix max EMC
@@ -319,14 +319,14 @@ class MemoryService(object):
         # Extract memory page size
         self._page_size = os.sysconf("SC_PAGE_SIZE")
         # board type
-        self._root_path = "/sys/kernel/debug"
+        self._root_path = "/sys/kernel"
         if os.getenv('JTOP_TESTING', False):
-            self._root_path = "/fake_sys/kernel/debug"
+            self._root_path = "/fake_sys/kernel"
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=self._root_path))
-        self._isJetson = os.path.isfile(self._root_path + "/nvmap/iovmm/maps")
+        self._isJetson = os.path.isfile(self._root_path + "/debug/nvmap/iovmm/maps")
         self._is_emc = True if read_emc(self._root_path) else False
-        if not self._is_emc:
-            logger.warn("EMC not available")
+        if self._is_emc:
+            logger.info("Found EMC!")
         # Initialization memory
         logger.info("Memory service started")
 
@@ -418,7 +418,7 @@ class MemoryService(object):
         if self._isJetson:
             # Update table
             # Use the memory table to measure
-            total, table = read_mem_table(self._root_path + "/nvmap/iovmm/maps")
+            total, table = read_mem_table(self._root_path + "/debug/nvmap/iovmm/maps")
             # Update shared size
             ram_shared_val = total['size'] if ram_shared_val == 0 else ram_shared_val
         # Extract memory info
@@ -464,15 +464,15 @@ class MemoryService(object):
             memory['EMC']['online'] = True
             # Percentage utilization
             # https://forums.developer.nvidia.com/t/real-time-emc-bandwidth-with-sysfs/107479/3
-            utilization = int(cat("/sys/kernel/actmon_avg_activity/mc_all"))
+            utilization = int(cat(self._root_path + "/actmon_avg_activity/mc_all"))
             memory['EMC']['val'] = utilization // memory['EMC']['cur']
         # Read IRAM if available
-        if os.path.isdir("/sys/kernel/debug/nvmap/iram"):
+        if os.path.isdir(self._root_path + "/debug/nvmap/iram"):
             size = 0
-            if os.path.isfile("/sys/kernel/debug/nvmap/iram/size"):
+            if os.path.isfile(self._root_path + "/debug/nvmap/iram/size"):
                 # Convert from Hex to decimal - Number in bytes
-                size = int(cat("/sys/kernel/debug/nvmap/iram/size"), 16) // 1024
-            used_total, _ = read_mem_table("/sys/kernel/debug/nvmap/iram/clients")
+                size = int(cat(self._root_path + "/debug/nvmap/iram/size"), 16) // 1024
+            used_total, _ = read_mem_table(self._root_path + "/debug/nvmap/iram/clients")
             memory['IRAM'] = {
                 'tot': size,
                 'used': used_total.get('val', 0),

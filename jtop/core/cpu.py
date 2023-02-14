@@ -141,6 +141,8 @@ class CPUService(object):
             path_system_cpu = "/fake_sys/devices/system/cpu"
             logger.warning("Running in JTOP_TESTING file={root_dir}".format(root_dir=self._proc_stat))
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=path_system_cpu))
+        if not os.path.isdir("/sys/devices/system/cpu"):
+            raise Exception("Doesn't exist any CPU!")
         # Build a CPU list
         cpu_list = {int(item[3:]): {'path': "{path}/{item}".format(path=path_system_cpu, item=item),
                                     'last_cpu': [0.0] * len(CPU_STAT_LABEL),
