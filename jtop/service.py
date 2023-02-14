@@ -302,7 +302,8 @@ class JtopServer(Process):
         if self.nvpmodel.exists():
             self.nvp_mode = self.nvpmodel.get()
         # Run setup
-        self.jetson_clocks.initialization(self.nvpmodel)
+        data = self.jtop_decode()
+        self.jetson_clocks.initialization(self.nvpmodel, data)
         # Initialize jetson_fan
         self.fan.initialization()
         # Initialize variables
@@ -502,9 +503,8 @@ class JtopServer(Process):
             logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
             os.remove(JTOP_PIPE)
 
-    def jtop_stats(self):
+    def jtop_decode(self):
         # Make configuration dict
-        # logger.info("jtop read")
         data = {}
         # -- CPU --
         # Read CPU data
@@ -548,6 +548,11 @@ class JtopServer(Process):
                 'modes': self.nvpmodel.modes(),
                 'thread': self.nvpmodel.is_running(),
                 'mode': self.nvp_mode}
+        return data
+
+    def jtop_stats(self):
+        # logger.info("jtop read")
+        data = self.jtop_decode()
         # Pack and send all data
         # https://stackoverflow.com/questions/6416131/add-a-new-item-to-a-dictionary-in-python
         self.sync_data.update(data)
