@@ -30,8 +30,6 @@ jobs:
       run: |
         # Make group jtop
         sudo groupadd jtop
-        # Install test dependencies
-        sudo ./tests/develop.sh -s
         # Upgrade pip
         # https://github.com/actions/setup-python/issues/225
         sudo -H env "PATH=$PATH" python -m pip install --upgrade pip
