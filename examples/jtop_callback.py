@@ -21,7 +21,7 @@ from jtop import jtop, JtopException
 
 def read_stats(jetson):
     """
-    This is your callback function where you can read all files when are availables.
+    This is your callback function where you can read all files when are available.
     """
     print(jetson.stats)
 

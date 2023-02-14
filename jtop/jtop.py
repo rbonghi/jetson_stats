@@ -939,11 +939,11 @@ sudo systemctl restart jtop.service""".format(
         self._cpu_info = init['cpu']
         # Initialize memory controller
         self._memory._initialize(self._controller, init['memory'])
+        # Initialize fan
+        self._fan._initialize(self._controller, init['fan'])
         # Initialize jetson_clock
         if init['jc']:
             self._jc = JetsonClocks(self._controller)
-        # Initialize fan
-        self._fan._initialize(self._controller, init['fan'])
         # Init NVP model (if exist)
         if init['nvpmodel']:
             self._nvp = NVPModel()

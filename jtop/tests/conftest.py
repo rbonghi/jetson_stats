@@ -136,6 +136,7 @@ def install_nvpmodel():
         print('Copied test/nvpmodel')
     else:
         print('/usr/bin/nvpmodel already exists')
+        pytest.exit("I cannot install a fake nvpmodel! nvpmodel already exist")
 
 
 def install_jetson_clocks():
@@ -144,6 +145,7 @@ def install_jetson_clocks():
         print('Copied test/jetson_clocks')
     else:
         print('/usr/bin/jetson_clocks already exists')
+        pytest.exit("I cannot install a fake jetson_clocks! jetson_clocks already exist")
 
 
 def empty_func():
@@ -207,7 +209,6 @@ def setup_jtop_server(request):
     params = request.param
     # Find functions to load
     print("Start initialization test")
-    reset_environment()
     # Install fake cpu
     install_cpu()
     # Install all functions

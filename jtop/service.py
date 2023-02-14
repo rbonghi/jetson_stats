@@ -331,15 +331,41 @@ class JtopServer(Process):
                     # Manage swap
                     if 'swap' in control:
                         swap = control['swap']
-                        if swap['type'] == 'set':
-                            self.memory.swap_set(swap['size'], swap['path'], swap['boot'])
-                        elif swap['type'] == 'unset':
-                            self.memory.swap_deactivate(swap['path'])
+                        if 'command' in swap:
+                            command = swap['command']
+                            if command == 'set':
+                                self.memory.swap_set(swap['size'], swap['path'], swap['boot'])
+                            elif command == 'unset':
+                                self.memory.swap_deactivate(swap['path'])
+                            else:
+                                logger.error("swap command not detected: {command}".format(command=command))
+                        else:
+                            logger.error("no swap command in this message {message}".format(message=swap))
                     # Clear cache
                     if 'clear_cache' in control:
                         # Clear cache
                         self.memory.clear_cache()
                         logger.info("Clear cache")
+                    # Speed Fan and configuration
+                    if 'fan' in control:
+                        fan = control['fan']
+                        if 'command' in fan:
+                            command = fan['command']
+                            if command == 'profile':
+                                name = fan['name']
+                                profile = fan['profile']
+                                logger.info('Fan \"{name}\" set profile {profile}'.format(name=name, profile=profile))
+                                self.fan.set_profile(name, profile)
+                            elif command == 'speed':
+                                name = fan['name']
+                                speed = fan['speed']
+                                idx = fan['idx']
+                                logger.info('Fan \"{name}[{idx}]\" set speed {speed}'.format(name=name, idx=idx, speed=speed))
+                                self.fan.set_speed(name, speed, idx)
+                            else:
+                                logger.error("fan command not detected: {command}".format(command=command))
+                        else:
+                            logger.error("no fan command in this message {message}".format(message=fan))
                     if 'jc' in control:
                         jc = control['jc']
                         # Enable / disable jetson_clocks
@@ -348,15 +374,6 @@ class JtopServer(Process):
                         # Update jetson_clocks configuration
                         if 'boot' in jc:
                             self.jetson_clocks.boot = jc['boot']
-                    # Speed Fan and configuration
-                    if 'fan' in control:
-                        fan = control['fan']
-                        for key, value in fan.items():
-                            if key == 'mode':
-                                self.fan.mode = value
-                            elif key == 'speed':
-                                self.fan.speed = value
-                            logger.info('Fan config {} {}'.format(key, value))
                     # Decode nvp model
                     if 'nvp' in control:
                         mode = control['nvp']

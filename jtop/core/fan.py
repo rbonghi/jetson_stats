@@ -169,6 +169,15 @@ class Fan(GenericInterface):
 
     def __init__(self):
         super(Fan, self).__init__()
+        # list of all profiles in self._init (check services)
+
+    def set_profile(self, name, profile):
+        # Set new fan profile
+        self._controller.put({'fan': {'command': 'profile', 'name': name, 'profile': profile}})
+
+    def set_speed(self, name, speed, idx):
+        # Set new fan speed
+        self._controller.put({'fan': {'command': 'speed', 'name': name, 'speed': speed, 'idx': idx}})
 
 
 class FanService(object):
