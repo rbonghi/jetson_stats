@@ -204,10 +204,11 @@ def is_docker():
 
 @pytest.fixture(scope='session', autouse=True)
 def run_script():
+    github_action = os.environ.get('GITHUB_ACTIONS', False)
     # Check if running inside a Docker container
-    if not is_docker() and not os.environ.get('GITHUB_ACTIONS', False):
+    if not is_docker() and not github_action:
         # Stop pytest if running inside a Docker container
-        pytest.exit("Tests cannot be run outside a Docker container or a github action")
+        pytest.exit("Tests cannot be run outside a Docker container or a github action {}".format(github_action))
 
 
 @pytest.fixture
