@@ -314,7 +314,7 @@ class JtopServer(Process):
                     # Decode control message
                     control = self.q.get(timeout=timeout)
                     # Check if the configuration exist
-                    if self.jetson_clocks:
+                    if self.jetson_clocks.exists():
                         if not self.jetson_clocks.is_config():
                             if not self.jetson_clocks.alive(wait=False):
                                 self.jetson_clocks.store()
