@@ -150,7 +150,7 @@ def setup_jtop_server(request):
     print("Start initialization test")
     clan_all_folder()
     # Install fake cpu
-    # install_cpu()
+    install_cpu()
     # Install all functions
     for param in params:
         print("Install function \"{param}\"".format(param=param))

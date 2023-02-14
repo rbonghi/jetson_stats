@@ -64,6 +64,8 @@ CPU_STAT_LABEL = ['user', 'nice', 'system', 'idle', 'iowait', 'irq', 'softirq', 
 
 
 def get_utilization(delta):
+    if delta[-1] == 0:
+        return {'user': 0, 'nice': 0, 'system': 0, 'idle': 0}
     # Return major outputs
     return {'user': 100.0 * (delta[0] / delta[-1]),
             'nice': 100.0 * (delta[1] / delta[-1]),
@@ -134,11 +136,11 @@ class CPUService(object):
         # List all CPU available
         self._proc_stat = "/proc/stat"
         path_system_cpu = "/sys/devices/system/cpu"
-        # if os.getenv('JTOP_TESTING', False):
-        #     self._proc_stat = "/fake_sys/stat"
-        #     path_system_cpu = "/fake_sys/devices/system/cpu"
-        #     logger.warning("Running in JTOP_TESTING file={root_dir}".format(root_dir=self._proc_stat))
-        #     logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=path_system_cpu))
+        if os.getenv('JTOP_TESTING', False):
+            self._proc_stat = "/fake_sys/stat"
+            path_system_cpu = "/fake_sys/devices/system/cpu"
+            logger.warning("Running in JTOP_TESTING file={root_dir}".format(root_dir=self._proc_stat))
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=path_system_cpu))
         # Build a CPU list
         cpu_list = {int(item[3:]): {'path': "{path}/{item}".format(path=path_system_cpu, item=item),
                                     'last_cpu': [0.0] * len(CPU_STAT_LABEL),
