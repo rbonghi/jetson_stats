@@ -314,7 +314,7 @@ class JetsonClocksService(object):
         self.nvpmodel = nvpmodel
         # Check if exist configuration file
         if not os.path.isfile(self.config_l4t):
-            if self.alive(wait=False):
+            if self.alive():
                 logger.warning("I can't store jetson_clocks is already running")
             else:
                 self.store()
