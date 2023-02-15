@@ -119,8 +119,23 @@ def install_fan():
         os.makedirs(path_fan)
     # Build now a fake folder
     open(os.path.join(path_fan, "pwm1"), "w").write("0")
-    open(os.path.join(path_fan, "pwm2"), "w").write("0")
+    # open(os.path.join(path_fan, "pwm2"), "w").write("0")
     open(os.path.join(path_fan, "name"), "w").write("test_fan")
+
+
+def install_legacy_fan():
+    path_fan = os.path.join(FAKE_DIRECTORY, "class/hwmon", "hwmon12")
+    print("Installing Fan sensor {path}".format(path=path_fan))
+    if not os.path.isdir(path_fan):
+        print('The directory {path} is not present. Creating a new one..'.format(path=path_fan))
+        os.makedirs(path_fan)
+    # Build now a fake folder
+    open(os.path.join(path_fan, "target_pwm"), "w").write("127")
+    open(os.path.join(path_fan, "rpm_measured"), "w").write("0")
+    open(os.path.join(path_fan, "temp_control"), "w").write("1")
+
+
+def install_rpm_system():
     # Make a fake rpm fan
     path_rpm = os.path.join(FAKE_DIRECTORY, "class/hwmon", "hwmon32")
     if not os.path.isdir(path_rpm):
@@ -128,6 +143,15 @@ def install_fan():
         os.makedirs(path_rpm)
     open(os.path.join(path_rpm, "rpm"), "w").write("1000")
     open(os.path.join(path_rpm, "name"), "w").write("test_rpm")
+
+
+def install_nvfancontrol():
+    if not os.path.exists('/usr/bin/nvfancontrol'):
+        shutil.copy('tests/nvfancontrol', '/usr/bin/nvfancontrol')
+        print('Copied test/nvfancontrol')
+    else:
+        print('/usr/bin/nvfancontrol already exists')
+        pytest.exit("I cannot install a fake nvfancontrol! nvfancontrol already exist")
 
 
 def install_nvpmodel():
@@ -159,12 +183,39 @@ def install_devices(params):
         'fan': install_fan,
         'nvpmodel': install_nvpmodel,
         'jetson_clocks': install_jetson_clocks,
+        'nvfancontrol': install_nvfancontrol,
     }
     if params == ['all']:
         print("Install all functions")
         params = list(OPTIONS.keys())
     # Install all functions
     for param in params:
+        print("Install function \"{param}\"".format(param=param))
+        function = OPTIONS.get(param, empty_func)
+        function()
+
+
+def emulate_device(device):
+    OPTIONS = {
+        'cpu': install_cpu,
+        'igpu': install_igpu,
+        'emc': install_emc,
+        'fan': install_fan,
+        'legacy_fan': install_legacy_fan,
+        'rpm_system': install_rpm_system,
+        'nvpmodel': install_nvpmodel,
+        'jetson_clocks': install_jetson_clocks,
+    }
+    DEVICES = {
+        'tk' : ['cpu', 'igpu', 'emc'],
+        'tx' : ['cpu', 'igpu', 'emc', 'legacy_fan' 'jetson_clocks'],
+        'nano' : ['cpu', 'igpu', 'emc', 'legacy_fan' 'jetson_clocks', 'nvpmodel'],
+        'xavier' : ['cpu', 'igpu', 'emc', 'fan', 'jetson_clocks', 'nvpmodel'],
+        'orin' : ['cpu', 'igpu', 'emc', 'fan', 'rpm_system', 'jetson_clocks', 'nvpmodel', 'nvfancontrol'],
+    }
+    print("Emulate device: \"{param}\"".format(param=param))
+    # Install all functions
+    for param in DEVICES.get(params, ['cpu']):
         print("Install function \"{param}\"".format(param=param))
         function = OPTIONS.get(param, empty_func)
         function()
