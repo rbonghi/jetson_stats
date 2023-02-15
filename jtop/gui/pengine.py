@@ -31,7 +31,7 @@ def add_engine_in_list(label, engine, group, name):
     return [(label, get_value_engine(engine[group][name]))] if group in engine else []
 
 
-def pass_agx_orin(engine):
+def pass_orin(engine):
     return [
         add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_CPU_AXI'),
         add_engine_in_list('DLA0c', engine, 'DLA0', 'DLA0_CORE') + add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE'),
@@ -60,7 +60,8 @@ def map_jetson_nano(engine):
 
 
 MAP_JETSON_MODELS = {
-    'agx orin': pass_agx_orin,
+    'orin nx': pass_orin,
+    'agx orin': pass_orin,
     'xavier': map_xavier,
     'jetson nano': map_jetson_nano,
     'nintendo': map_jetson_nano,
