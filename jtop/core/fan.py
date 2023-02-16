@@ -17,12 +17,12 @@
 
 import re
 import os
-from math import ceil
 # Logging
 import logging
 # Launch command
 from .command import Command
 from .common import cat, GenericInterface
+from .exceptions import JtopException
 # Create logger
 logger = logging.getLogger(__name__)
 
@@ -34,15 +34,15 @@ FAN_NVFAN_NAME_RE = re.compile(r'^<FAN (?P<num>\d+)>$')
 FAN_NVFAN_OPTIONS_RE = re.compile(r'FAN_(?P<type>\w+) (?P<value>\w+) {$')
 FAN_NVFAN_DEFAULT_RE = re.compile(r'FAN_DEFAULT_(?P<type>\w+) (?P<value>\w+)')
 # Fan configurations
-FAN_PWM_CAP = 255
-
-
-def PWMtoValue(pwm, pwm_cap=FAN_PWM_CAP):
-    return float(pwm) * 100.0 / (pwm_cap)
+FAN_PWM_CAP = 256
 
 
 def ValueToPWM(value, pwm_cap=FAN_PWM_CAP):
-    return int(ceil((pwm_cap) * value / 100.0))
+    return int(value * pwm_cap / 100)
+
+
+def PWMtoValue(value, pwm_cap=FAN_PWM_CAP):
+    return float(value * 100 / pwm_cap)
 
 
 def get_all_rpm_system(root_dir):
@@ -171,13 +171,102 @@ class Fan(GenericInterface):
         super(Fan, self).__init__()
         # list of all profiles in self._init (check services)
 
+    def all_profiles(self, name):
+        if name not in self._data:
+            raise JtopException("Fan \"{name}\" does not exist".format(name=name))
+        return self._init[name]
+
     def set_profile(self, name, profile):
+        if name not in self._data:
+            raise JtopException("Fan \"{name}\" does not exist".format(name=name))
+        if profile not in self.all_profiles(name):
+            all_profiles = ' '.join(self.all_profiles(name))
+            raise JtopException("Profile \"{profile}\" does not exist for Fan \"{name}\". Available: {all_profiles}".format(
+                profile=profile, name=name, all_profiles=all_profiles))
+        # Skip if the new profile is the same of the previous
+        if profile == self._data[name]['profile']:
+            return
         # Set new fan profile
         self._controller.put({'fan': {'command': 'profile', 'name': name, 'profile': profile}})
 
-    def set_speed(self, name, speed, idx):
+    def get_profile(self, name):
+        if name not in self._data:
+            raise JtopException("Fan \"{name}\" does not exist".format(name=name))
+        return self._data[name]['profile']
+
+    @property
+    def profile(self):
+        # Return first fan name and get speed
+        if len(self._data) > 0:
+            # Extract first name
+            name = list(self._data.keys())[0]
+            # Get profile
+            return self.get_profile(name)
+        return None
+
+    @profile.setter
+    def profile(self, value):
+        if len(self._data) > 0:
+            # Extract first name
+            name = list(self._data.keys())[0]
+            # Set speed for first fan
+            self.set_profile(name, value)
+
+    def set_speed(self, name, speed, idx=0):
+        if name not in self._data:
+            raise JtopException("Fan \"{name}\" does not exist".format(name=name))
+        if idx >= len(self._data[name]['speed']) or idx < 0:
+            raise JtopException("Fan \"{name}\" have only {len} fans".format(name=name, len=len(self._data[name]['speed'])))
+        # Skip if the new profile is the same of the previous
+        if speed == self._data[name]['speed'][idx]:
+            return
         # Set new fan speed
         self._controller.put({'fan': {'command': 'speed', 'name': name, 'speed': speed, 'idx': idx}})
+
+    def get_speed(self, name, idx=0):
+        if name not in self._data:
+            raise JtopException("Fan \"{name}\" does not exist".format(name=name))
+        if idx >= len(self._data[name]['speed']) or idx < 0:
+            raise JtopException("Fan \"{name}\" have only {len} fans".format(name=name, len=len(self._data[name]['speed'])))
+        return self._data[name]['speed'][idx]
+
+    @property
+    def speed(self):
+        # Return first fan name and get speed
+        if len(self._data) > 0:
+            # Extract first name
+            name = list(self._data.keys())[0]
+            return_value = self.get_speed(name)
+            # Return first speed
+            return return_value
+        return None
+
+    @speed.setter
+    def speed(self, value):
+        if len(self._data) > 0:
+            # Extract first name
+            name = list(self._data.keys())[0]
+            # Set speed for first fan
+            self.set_speed(name, value)
+
+    def get_rpm(self, name, idx=0):
+        if name not in self._data:
+            raise JtopException("Fan \"{name}\" does not exist".format(name=name))
+        if 'rpm' not in self._data[name]:
+            raise JtopException("Fan \"{name}\" doesn't have RPM".format(name=name))
+        if idx >= len(self._data[name]['rpm']) or idx < 0:
+            raise JtopException("Fan \"{name}\" have only {len} fans".format(name=name, len=len(self._data[name]['rpm'])))
+        return self._data[name]['rpm'][idx]
+
+    @property
+    def rpm(self):
+        # Return first fan name and get speed
+        if len(self._data) > 0:
+            # Extract first name
+            name = list(self._data.keys())[0]
+            # Return first speed
+            return self.get_rpm(name)
+        return None
 
 
 class FanService(object):
@@ -257,6 +346,7 @@ class FanService(object):
         return profile
 
     def set_profile(self, name, profile):
+        logger.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         # Check current status before change
         if profile == self.get_profile(name):
             logger.warning("Fan {name} profile {profile} already active".format(name=name, profile=profile))
@@ -345,7 +435,7 @@ class FanService(object):
         for name, data in self._fan_list.items():
             # Read pwm from all fan
             fan_status[name] = {
-                'speed': [PWMtoValue(cat(pwm)) for pwm in data['pwm']],
+                'speed': [PWMtoValue(float(cat(pwm))) for pwm in data['pwm']],
             }
             if 'rpm' in data:
                 fan_status[name]['rpm'] = [int(cat(rpm)) for rpm in data['rpm']]

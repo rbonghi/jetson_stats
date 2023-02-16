@@ -125,8 +125,6 @@ fake_show()
     local emc_min_val=${10}
     local emc_cur_val=${11}
     
-    echo "$@"
-    
     local modes=("MAXTEST" "TEST" "MINTEST" "MIN_MAX_TEST")
     # Print all fake data
     echo "SOC family:TEST  Machine:TEST"

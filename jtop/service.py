@@ -298,15 +298,15 @@ class JtopServer(Process):
         self._timer_reader = TimerReader(self.jtop_stats)
 
     def run(self):
-        # Read nvp_mode
-        if self.nvpmodel.exists():
-            self.nvp_mode = self.nvpmodel.get()
+        # Initialize jetson_fan
+        self.fan.initialization()
         # Run setup
         if self.jetson_clocks.exists():
             data = self.jtop_decode()
             self.jetson_clocks.initialization(self.nvpmodel, data)
-        # Initialize jetson_fan
-        self.fan.initialization()
+        # Read nvp_mode
+        if self.nvpmodel.exists():
+            self.nvp_mode = self.nvpmodel.get()
         # Initialize variables
         timeout = None
         interval = 1

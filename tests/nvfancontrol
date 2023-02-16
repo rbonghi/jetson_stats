@@ -15,9 +15,85 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+usage()
+{
+    if [ "$1" != "" ]; then
+        tput setaf 1
+        echo "$1"
+        tput sgr0
+    fi
+    
+    echo "FAKE Nvidia Fan Control Userspace Daemon"
+    echo
+    echo "Usage:"
+    echo "nvfancontrol [-h | --help] [--verbose] [-q | --query] [-f | --file]"
+    echo "        -h, --help:	Print this help info."
+    echo "        -f, --file:	nvfancontrol conf file path."
+    echo "        -q, --query:	print the current fan control status info."
+    echo "        --verbose:	Enable verbose log."
+}
+
+
+query()
+{
+    # Input file to be read
+    input_file="nvfancontrol.conf"
+    
+    local fan_profile=""
+    local fan_governor=""
+    local default_control=""
+    # Loop through each line of the file
+    while read line; do
+        if [[ "$line" == *"FAN_DEFAULT_PROFILE"* ]]; then
+            # Extract the second word from the line
+            fan_profile=$(echo "$line" | awk '{print $2}')
+        fi
+        if [[ "$line" == *"FAN_DEFAULT_GOVERNOR"* ]]; then
+            # Extract the second word from the line
+            fan_governor=$(echo "$line" | awk '{print $2}')
+        fi
+        if [[ "$line" == *"FAN_DEFAULT_CONTROL"* ]]; then
+            # Extract the second word from the line
+            default_control=$(echo "$line" | awk '{print $2}')
+        fi
+    done < "$input_file"
+    
+    echo "FAN1:FAN_PROFILE:$fan_profile"
+    echo "FAN1:FAN_GOVERNOR:$fan_governor"
+    echo "FAN1:FAN_CONTROL:$default_control"
+}
+
+
 main()
 {
-    echo "TODO"
+    local VERBOSE=false
+    
+    if [ $(id -u) -ne 0 ] ; then
+        echo "NVFAN ERROR: Sudo permissions are required to execute nvfancontrol user daemon"
+        exit 1
+    fi
+    
+    # Decode all information from startup
+    while [ -n "$1" ]; do
+        case "$1" in
+            -q)
+                query
+                exit 0
+            ;;
+            --verbose)
+                VERBOSE=true
+            ;;
+            -h|--help)
+                usage
+                exit 0
+            ;;
+            *)
+                usage "[ERROR] Unknown option: $1"
+                exit 1
+            ;;
+        esac
+        shift 1
+    done
 }
 
 main $@

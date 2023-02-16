@@ -296,7 +296,7 @@ class Memory(GenericInterface):
         if not path:
             path = self._init
         # Set new swap size configuration
-        self._controller.put({'swap': {'type': 'set', 'path': path, 'size': value, 'boot': on_boot}})
+        self._controller.put({'swap': {'command': 'set', 'path': path, 'size': value, 'boot': on_boot}})
 
     def swap_deactivate(self, path=''):
         """
@@ -309,7 +309,7 @@ class Memory(GenericInterface):
         if not path:
             path = self._init
         # Set new swap size configuration
-        self._controller.put({'swap': {'type': 'unset', 'path': path}})
+        self._controller.put({'swap': {'command': 'unset', 'path': path}})
 
 
 class MemoryService(object):

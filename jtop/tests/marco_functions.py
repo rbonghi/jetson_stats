@@ -25,26 +25,36 @@ MAX_COUNT = 50
 # - [3] MIN_MAX_TEST
 
 
-def set_nvp_mode(jetson, mode):
-    # Check if status is different
-    print("NVP-MODE: BEFORE assert str(jetson.nvpmodel)={nvp} - mode={mode}".format(nvp=str(jetson.nvpmodel), mode=mode))
-    if str(jetson.nvpmodel) != mode:
-        # Check status nvpmodel
-        if jetson.ok():
-            jetson.nvpmodel = mode
-        # Wait change nvpmodel
-        counter = 0
-        while jetson.ok():
-            if str(jetson.nvpmodel) == mode or counter == MAX_COUNT:
-                break
-            counter += 1
-        if counter == MAX_COUNT:
-            warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
-    # Check if is same model
-    print("NVP-MODE: assert jetson.nvpmodel={nvp} - mode={mode}".format(nvp=str(jetson.nvpmodel), mode=mode))
-    assert str(jetson.nvpmodel) == mode
-    # Check name variable
-    assert jetson.nvpmodel.name == mode
+def set_fan_profile(jetson, new_profile):
+    # Set new speed
+    if jetson.ok():
+        jetson.fan.profile = new_profile
+    # Wait jetson_clocks on
+    counter = 0
+    while jetson.ok():
+        if jetson.fan.profile == new_profile or counter == MAX_COUNT:
+            break
+        counter += 1
+    if counter == MAX_COUNT:
+        warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
+    # Check if is true
+    assert jetson.fan.profile == new_profile
+
+
+def set_fan_speed(jetson, new_speed):
+    # Set new speed
+    if jetson.ok():
+        jetson.fan.speed = new_speed
+    # Wait jetson_clocks on
+    counter = 0
+    while jetson.ok():
+        if jetson.fan.speed == new_speed or counter == MAX_COUNT:
+            break
+        counter += 1
+    if counter == MAX_COUNT:
+        warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
+    # Check if is true
+    assert jetson.fan.speed == new_speed
 
 
 def set_jetson_clocks(jetson, status):
@@ -66,4 +76,26 @@ def set_jetson_clocks(jetson, status):
             warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
     # Check if is true
     assert bool(jetson.jetson_clocks) == status
+
+
+def set_nvp_mode(jetson, mode):
+    # Check if status is different
+    print("NVP-MODE: BEFORE assert str(jetson.nvpmodel)={nvp} - mode={mode}".format(nvp=str(jetson.nvpmodel), mode=mode))
+    if str(jetson.nvpmodel) != mode:
+        # Check status nvpmodel
+        if jetson.ok():
+            jetson.nvpmodel = mode
+        # Wait change nvpmodel
+        counter = 0
+        while jetson.ok():
+            if str(jetson.nvpmodel) == mode or counter == MAX_COUNT:
+                break
+            counter += 1
+        if counter == MAX_COUNT:
+            warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
+    # Check if is same model
+    print("NVP-MODE: assert jetson.nvpmodel={nvp} - mode={mode}".format(nvp=str(jetson.nvpmodel), mode=mode))
+    assert str(jetson.nvpmodel) == mode
+    # Check name variable
+    assert jetson.nvpmodel.name == mode
 # EOF

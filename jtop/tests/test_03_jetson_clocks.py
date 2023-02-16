@@ -94,10 +94,16 @@ def test_set_boot(setup_jtop_server):
         assert not jetson.jetson_clocks.boot
 
 
+def test_boot_set_true(setup_jtop_server):
+    pass
+
+
 test_jetson_clocks_output = pytest.mark.parametrize(
     "setup_jtop_server", emulate_all_devices(), indirect=True)(test_jetson_clocks_output)
 test_set_true_false = pytest.mark.parametrize(
     "setup_jtop_server", ['tx', 'nano', 'xavier', 'orin'], indirect=True)(test_set_true_false)
 test_set_boot = pytest.mark.parametrize(
     "setup_jtop_server", ['tx', 'nano', 'xavier', 'orin'], indirect=True)(test_set_boot)
+test_boot_set_true = pytest.mark.parametrize(
+    "setup_jtop_server", ['tx', 'nano', 'xavier', 'orin'], indirect=True)(test_boot_set_true)
 # EOF
