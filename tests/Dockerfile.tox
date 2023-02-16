@@ -31,6 +31,6 @@ RUN sudo groupadd jtop && \
     sudo -H pip install tox
 
 # Run tox
-#RUN sudo tox -e py${PYTHON_VERSION%.*}
+RUN sudo tox -e py${PYTHON_VERSION%.*}
 
 CMD ["bash"]
