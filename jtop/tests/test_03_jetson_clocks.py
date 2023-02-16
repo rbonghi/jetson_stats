@@ -17,8 +17,25 @@
 
 import pytest
 from jtop import jtop
+from jtop.core.jetson_clocks import JetsonClocks
+from .conftest import emulate_all_devices
 # test functions
 MAX_COUNT = 10
+
+
+def test_jetson_clocks_output(setup_jtop_server):
+    with jtop() as jetson:
+        print("Running test with parameter:", setup_jtop_server)
+        if jetson.ok():
+            # Read jetson_clocks status
+            jetson_clocks = jetson.jetson_clocks
+            # Status jetson_clocks
+            print("jetson_clocks output: {jetson_clocks}".format(jetson_clocks=jetson_clocks))
+            # Check depend of parameter
+            if setup_jtop_server in ['simple', 'tk']:
+                assert jetson_clocks is None
+            else:
+                assert isinstance(jetson_clocks, JetsonClocks)
 
 
 def test_set_true_false(setup_jtop_server):
@@ -77,8 +94,10 @@ def test_set_boot(setup_jtop_server):
         assert not jetson.jetson_clocks.boot
 
 
+test_jetson_clocks_output = pytest.mark.parametrize(
+    "setup_jtop_server", emulate_all_devices(), indirect=True)(test_jetson_clocks_output)
 test_set_true_false = pytest.mark.parametrize(
-    "setup_jtop_server", [['jetson_clocks', 'igpu', 'emc'], ['jetson_clocks', 'igpu', 'emc', 'fan']], indirect=True)(test_set_true_false)
+    "setup_jtop_server", ['tx', 'nano', 'xavier', 'orin'], indirect=True)(test_set_true_false)
 test_set_boot = pytest.mark.parametrize(
-    "setup_jtop_server", [['jetson_clocks', 'igpu', 'emc'], ['jetson_clocks', 'igpu', 'emc', 'fan']], indirect=True)(test_set_boot)
+    "setup_jtop_server", ['tx', 'nano', 'xavier', 'orin'], indirect=True)(test_set_boot)
 # EOF

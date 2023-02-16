@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+#!/bin/bash
 # This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
 # Copyright (c) 2019-2023 Raffaello Bonghi.
 #
@@ -15,25 +15,37 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import pytest
-from jtop import jtop
-from .conftest import emulate_all_devices
+main()
+{
 
+    if [ $(id -u) -ne 0 ] ; then
+        echo "Please run as root"
+        exit 1
+    fi
 
-def test_fan(setup_jtop_server):
-    with jtop() as jetson:
-        print("Running test with parameter:", setup_jtop_server)
-        if jetson.ok():
-            # Read fan status
-            fan = jetson.fan
-            # Status fan
-            print("Fan output: {fan}".format(fan=fan))
-            # Check depend of parameter
-            if setup_jtop_server in ['simple', 'tk']:
-                assert len(fan) == 0
-            else:
-                assert len(fan) > 0
+    if [ "$#" -lt 2 ]; then
+    echo "FAKE systemctl ERROR: You must provide at least 2 arguments"
+    exit 1
+    fi
 
+    local COMMAND=$1
 
-test_fan = pytest.mark.parametrize("setup_jtop_server", emulate_all_devices(), indirect=True)(test_fan)
+    if [[ ! "start stop restart enable disable" =~ (^|[[:space:]])"$COMMAND"($|[[:space:]]) ]]; then
+    echo "FAKE systemctl ERROR: The first argument must be 'start', 'stop', 'restart', 'enable', or 'disable'"
+    exit 1
+    fi
+
+    local SERVICE=$2
+
+    if [ "$SERVICE" != "nvfancontrol" ]; then
+    echo "FAKE systemctl ERROR: The second argument must be 'nvfancontrol'"
+    exit 1
+    fi
+    
+    # echo "$COMMAND $SERVICE"
+}
+
+main $@
+exit 0
+
 # EOF

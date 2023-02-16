@@ -28,7 +28,7 @@ FAKE_DIRECTORY = "/fake_sys"
 NUM_CPU = 4
 
 
-def install_cpu():
+def install_cpu(args):
     path_cpu = os.path.join(FAKE_DIRECTORY, "devices/system/cpu")
     # Build a list of fake CPU
     file_proc_stat = "cpu  26716126 25174 7198445 948399047 900582 0 354519 0 0 0\n"
@@ -60,7 +60,7 @@ def install_cpu():
     open(proc_stat_file, "w").write(file_proc_stat)
 
 
-def install_igpu():
+def install_igpu(args):
     name_gpu = "10101010.gpu"
     # Build full file
     path_igpu_device = os.path.join(FAKE_DIRECTORY, "devices/platform", name_gpu, "devfreq", name_gpu, "device/of_node")
@@ -95,7 +95,7 @@ def install_igpu():
     open(os.path.join(path_status_igpu, "load"), "w").write("900")
 
 
-def install_emc():
+def install_emc(args):
     emc_path = os.path.join(FAKE_DIRECTORY, "kernel/debug", "bpmp/debug/clk/emc")
     if not os.path.isdir(emc_path):
         print('The directory {path} is not present. Creating a new one..'.format(path=emc_path))
@@ -111,7 +111,7 @@ def install_emc():
     open(os.path.join(path_activity, "mc_all"), "w").write("0")
 
 
-def install_fan():
+def install_fan(args):
     path_fan = os.path.join(FAKE_DIRECTORY, "class/hwmon", "hwmon27")
     print("Installing Fan in {path}".format(path=path_fan))
     if not os.path.isdir(path_fan):
@@ -123,7 +123,7 @@ def install_fan():
     open(os.path.join(path_fan, "name"), "w").write("test_fan")
 
 
-def install_legacy_fan():
+def install_legacy_fan(args):
     path_fan = os.path.join(FAKE_DIRECTORY, "class/hwmon", "hwmon12")
     print("Installing Fan sensor {path}".format(path=path_fan))
     if not os.path.isdir(path_fan):
@@ -135,7 +135,7 @@ def install_legacy_fan():
     open(os.path.join(path_fan, "temp_control"), "w").write("1")
 
 
-def install_rpm_system():
+def install_rpm_system(args):
     # Make a fake rpm fan
     path_rpm = os.path.join(FAKE_DIRECTORY, "class/hwmon", "hwmon32")
     if not os.path.isdir(path_rpm):
@@ -145,25 +145,7 @@ def install_rpm_system():
     open(os.path.join(path_rpm, "name"), "w").write("test_rpm")
 
 
-def install_nvfancontrol():
-    if not os.path.exists('/usr/bin/nvfancontrol'):
-        shutil.copy('tests/nvfancontrol', '/usr/bin/nvfancontrol')
-        print('Copied test/nvfancontrol')
-    else:
-        print('/usr/bin/nvfancontrol already exists')
-        pytest.exit("I cannot install a fake nvfancontrol! nvfancontrol already exist")
-
-
-def install_nvpmodel():
-    if not os.path.exists('/usr/bin/nvpmodel'):
-        shutil.copy('tests/nvpmodel', '/usr/bin/nvpmodel')
-        print('Copied test/nvpmodel')
-    else:
-        print('/usr/bin/nvpmodel already exists')
-        pytest.exit("I cannot install a fake nvpmodel! nvpmodel already exist")
-
-
-def install_jetson_clocks():
+def install_jetson_clocks(args):
     if not os.path.exists('/usr/bin/jetson_clocks'):
         shutil.copy('tests/jetson_clocks', '/usr/bin/jetson_clocks')
         print('Copied test/jetson_clocks')
@@ -172,64 +154,23 @@ def install_jetson_clocks():
         pytest.exit("I cannot install a fake jetson_clocks! jetson_clocks already exist")
 
 
-def empty_func():
-    pass
+def uninstall_jetson_clocks(args):
+    # Clean jetson_clocks
+    if os.path.isfile('/usr/bin/jetson_clocks'):
+        print('Removing jetson_clocks')
+        os.remove('/usr/bin/jetson_clocks')
 
 
-def install_devices(params):
-    OPTIONS = {
-        'igpu': install_igpu,
-        'emc': install_emc,
-        'fan': install_fan,
-        'nvpmodel': install_nvpmodel,
-        'jetson_clocks': install_jetson_clocks,
-        'nvfancontrol': install_nvfancontrol,
-    }
-    if params == ['all']:
-        print("Install all functions")
-        params = list(OPTIONS.keys())
-    # Install all functions
-    for param in params:
-        print("Install function \"{param}\"".format(param=param))
-        function = OPTIONS.get(param, empty_func)
-        function()
+def install_nvpmodel(args):
+    if not os.path.exists('/usr/bin/nvpmodel'):
+        shutil.copy('tests/nvpmodel', '/usr/bin/nvpmodel')
+        print('Copied test/nvpmodel')
+    else:
+        print('/usr/bin/nvpmodel already exists')
+        pytest.exit("I cannot install a fake nvpmodel! nvpmodel already exist")
 
 
-def emulate_device(device):
-    OPTIONS = {
-        'cpu': install_cpu,
-        'igpu': install_igpu,
-        'emc': install_emc,
-        'fan': install_fan,
-        'legacy_fan': install_legacy_fan,
-        'rpm_system': install_rpm_system,
-        'nvpmodel': install_nvpmodel,
-        'jetson_clocks': install_jetson_clocks,
-    }
-    DEVICES = {
-        'tk' : ['cpu', 'igpu', 'emc'],
-        'tx' : ['cpu', 'igpu', 'emc', 'legacy_fan' 'jetson_clocks'],
-        'nano' : ['cpu', 'igpu', 'emc', 'legacy_fan' 'jetson_clocks', 'nvpmodel'],
-        'xavier' : ['cpu', 'igpu', 'emc', 'fan', 'jetson_clocks', 'nvpmodel'],
-        'orin' : ['cpu', 'igpu', 'emc', 'fan', 'rpm_system', 'jetson_clocks', 'nvpmodel', 'nvfancontrol'],
-    }
-    print("Emulate device: \"{param}\"".format(param=param))
-    # Install all functions
-    for param in DEVICES.get(params, ['cpu']):
-        print("Install function \"{param}\"".format(param=param))
-        function = OPTIONS.get(param, empty_func)
-        function()
-
-
-def reset_environment():
-    # Remove configuration file
-    if os.path.isfile('/usr/local/jtop/config.json'):
-        print('Removing /usr/local/jtop/config.json')
-        os.remove('/usr/local/jtop/config.json')
-    # Remove all fake devices
-    if os.path.isdir(FAKE_DIRECTORY):
-        print('Removing {path}'.format(path=FAKE_DIRECTORY))
-        shutil.rmtree(FAKE_DIRECTORY)
+def uninstall_nvpmodel(args):
     # Clean nvpmodel
     if os.path.isfile('/usr/bin/nvpmodel'):
         print('Removing nvpmodel')
@@ -240,10 +181,92 @@ def reset_environment():
     if os.path.isfile('/tmp/nvp_model_test'):
         print('Removing /tmp/nvp_model_test')
         os.remove('/tmp/nvp_model_test')
-    # Clean jetson_clocks
-    if os.path.isfile('/usr/bin/jetson_clocks'):
-        print('Removing jetson_clocks')
-        os.remove('/usr/bin/jetson_clocks')
+
+
+def install_nvfancontrol(args):
+    # Install fake systemctl emulator
+    if not os.path.exists('/usr/bin/systemctl'):
+        shutil.copy('tests/systemctl', '/usr/bin/systemctl')
+        print('Copied test/systemctl')
+    else:
+        print('/usr/bin/systemctl already exists')
+        pytest.exit("I cannot install a fake systemctl! systemctl already exist")
+    # Install a fake nvfancontrol
+    if not os.path.exists('/usr/bin/nvfancontrol'):
+        shutil.copy('tests/nvfancontrol', '/usr/bin/nvfancontrol')
+        print('Copied test/nvfancontrol')
+    else:
+        print('/usr/bin/nvfancontrol already exists')
+        pytest.exit("I cannot install a fake nvfancontrol! nvfancontrol already exist")
+
+
+def uninstall_nvfancontrol(args):
+    # Clean nvfancontrol
+    if os.path.isfile('/usr/bin/systemctl'):
+        print('Removing systemctl')
+        os.remove('/usr/bin/systemctl')
+    if os.path.isfile('/usr/bin/nvfancontrol'):
+        print('Removing nvfancontrol')
+        os.remove('/usr/bin/nvfancontrol')
+
+
+def empty_func(args):
+    pass
+
+
+# List of all fake devices
+OPTIONS = {
+    'cpu': {'install': install_cpu, 'args': [4]},
+    'igpu': {'install': install_igpu},
+    'emc': {'install': install_emc},
+    'fan': {'install': install_fan},
+    'legacy_fan': {'install': install_legacy_fan},
+    'rpm_system': {'install': install_rpm_system},
+    'jetson_clocks': {'install': install_jetson_clocks, 'uninstall': uninstall_jetson_clocks},
+    'nvpmodel': {'install': install_nvpmodel, 'uninstall': uninstall_nvpmodel},
+    'nvfancontrol': {'install': install_nvfancontrol, 'uninstall': uninstall_nvfancontrol},
+}
+# List of all devices
+DEVICES = {
+    'simple': ['cpu', 'igpu'],
+    'tk': ['cpu', 'igpu', 'emc'],
+    'tx': ['cpu', 'igpu', 'emc', 'legacy_fan', 'jetson_clocks'],
+    'nano': ['cpu', 'igpu', 'emc', 'legacy_fan', 'jetson_clocks', 'nvpmodel'],
+    'xavier': ['cpu', 'igpu', 'emc', 'fan', 'jetson_clocks', 'nvpmodel'],
+    'orin': ['cpu', 'igpu', 'emc', 'fan', 'rpm_system', 'jetson_clocks', 'nvpmodel', 'nvfancontrol'],
+}
+
+
+def emulate_all_devices():
+    return list(DEVICES.keys())
+
+
+def emulate_device(device=""):
+    print("Emulate device: \"{device}\"".format(device=device))
+    # Install all functions
+    for param in DEVICES.get(device, ['cpu']):
+        peripheral = OPTIONS.get(param, {'install': empty_func})
+        print("Install function \"{param}\"".format(param=param))
+        install = peripheral['install']
+        install(peripheral.get('args', []))
+
+
+def reset_environment(device=""):
+    # Remove configuration file
+    if os.path.isfile('/usr/local/jtop/config.json'):
+        print('Removing /usr/local/jtop/config.json')
+        os.remove('/usr/local/jtop/config.json')
+    # Remove all fake devices
+    if os.path.isdir(FAKE_DIRECTORY):
+        print('Removing {path}'.format(path=FAKE_DIRECTORY))
+        shutil.rmtree(FAKE_DIRECTORY)
+    # Uninstall functions
+    for param in DEVICES.get(device, []):
+        peripheral = OPTIONS.get(param, {'install': empty_func})
+        if 'uninstall' in peripheral:
+            print("Uninstall function \"{param}\"".format(param=param))
+            uninstall = peripheral['uninstall']
+            uninstall(peripheral.get('args', []))
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -260,10 +283,8 @@ def setup_jtop_server(request):
     params = request.param
     # Find functions to load
     print("Start initialization test")
-    # Install fake cpu
-    install_cpu()
     # Install all functions
-    install_devices(params)
+    emulate_device(params)
     # Start jtop
     print("Starting jtop service")
     jtop_server = JtopServer(force=True)
@@ -281,5 +302,5 @@ def setup_jtop_server(request):
     # Teardown code here
     print("Close jtop service")
     # Clean test folder
-    reset_environment()
+    reset_environment(params)
 # EOF

@@ -18,9 +18,26 @@
 import pytest
 import warnings
 from jtop import jtop
+from jtop.core.nvpmodel import NVPModel
 from .marco_functions import set_jetson_clocks, set_nvp_mode
+from .conftest import emulate_all_devices
 # Max count to wait
 MAX_COUNT = 50
+
+
+def test_nvpmodel_output(setup_jtop_server):
+    with jtop() as jetson:
+        print("Running test with parameter:", setup_jtop_server)
+        if jetson.ok():
+            # Read nvpmodel status
+            nvpmodel = jetson.nvpmodel
+            # Status nvpmodel
+            print("nvpmodel output: {nvpmodel}".format(nvpmodel=nvpmodel))
+            # Check depend of parameter
+            if setup_jtop_server in ['simple', 'tk', 'tx']:
+                assert nvpmodel is None
+            else:
+                assert isinstance(nvpmodel, NVPModel)
 
 
 def test_nvpmodel(setup_jtop_server):
@@ -84,12 +101,14 @@ def test_nvpmodel_jetson_clocks(setup_jtop_server):
         set_nvp_mode(jetson, "MIN_MAX_TEST")
 
 
+test_nvpmodel_output = pytest.mark.parametrize(
+    "setup_jtop_server", emulate_all_devices(), indirect=True)(test_nvpmodel_output)
 test_nvpmodel = pytest.mark.parametrize(
-    "setup_jtop_server", [['nvpmodel']], indirect=True)(test_nvpmodel)
+    "setup_jtop_server", ['nano', 'xavier', 'orin'], indirect=True)(test_nvpmodel)
 test_nvpmodel_fail = pytest.mark.parametrize(
-    "setup_jtop_server", [['nvpmodel'], ['nvpmodel', 'jetson_clocks', 'igpu', 'emc']], indirect=True)(test_nvpmodel_fail)
+    "setup_jtop_server", ['nano', 'xavier', 'orin'], indirect=True)(test_nvpmodel_fail)
 test_nvpmodel_increment_decrement = pytest.mark.parametrize(
-    "setup_jtop_server", [['nvpmodel'], ['nvpmodel', 'jetson_clocks', 'igpu', 'emc']], indirect=True)(test_nvpmodel_increment_decrement)
+    "setup_jtop_server", ['nano', 'xavier', 'orin'], indirect=True)(test_nvpmodel_increment_decrement)
 test_nvpmodel_jetson_clocks = pytest.mark.parametrize(
-    "setup_jtop_server", [['nvpmodel', 'jetson_clocks', 'igpu', 'emc']], indirect=True)(test_nvpmodel_jetson_clocks)
+    "setup_jtop_server", ['nano', 'xavier', 'orin'], indirect=True)(test_nvpmodel_jetson_clocks)
 # EOF

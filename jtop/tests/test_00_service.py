@@ -18,12 +18,11 @@
 import time
 from jtop import jtop, JtopException
 from ..service import JtopServer
-from .conftest import reset_environment, install_cpu, install_devices
+from .conftest import reset_environment, emulate_device
 
 
 def test_service():
-    reset_environment()
-    install_cpu()
+    emulate_device()
     # Start jtop Server
     jtop_server = JtopServer(force=True)
     jtop_server.start()
@@ -48,10 +47,9 @@ def test_service():
 
 
 def test_service_all_test_devices():
-    reset_environment()
-    install_cpu()
+    device = 'orin'
     # Install ALL fake devices and test
-    install_devices(['all'])
+    emulate_device(device)
     # Start jtop Server
     jtop_server = JtopServer(force=True)
     jtop_server.start()
@@ -72,5 +70,5 @@ def test_service_all_test_devices():
     # Check if service is off
     assert not jtop_server.is_alive()
     # Reset environment
-    reset_environment()
+    reset_environment(device)
 # EOF

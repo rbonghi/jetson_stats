@@ -21,6 +21,8 @@ from datetime import timedelta
 from multiprocessing.pool import Pool
 from jtop import jtop
 from jtop.core.memory import Memory
+from jtop.core.fan import Fan
+from .conftest import emulate_all_devices
 NUM_PROCESSES = 20
 
 
@@ -33,6 +35,8 @@ def check_attributes(jetson):
     assert isinstance(jetson.cpu, dict)
     # Memory
     assert isinstance(jetson.memory, Memory)
+    # Fan
+    assert isinstance(jetson.fan, Fan)
     # GPU
     assert isinstance(jetson.gpu, list)
     # Engines
@@ -100,8 +104,8 @@ def test_multiple_run(setup_jtop_server):
     p.join()
 
 
-test_hardware = pytest.mark.parametrize("setup_jtop_server", [['empty']], indirect=True)(test_hardware)
-test_open = pytest.mark.parametrize("setup_jtop_server", [['empty'], ['all']], indirect=True)(test_open)
-test_open_callback = pytest.mark.parametrize("setup_jtop_server", [['empty'], ['all']], indirect=True)(test_open_callback)
-test_multiple_run = pytest.mark.parametrize("setup_jtop_server", [['empty'], ['all']], indirect=True)(test_multiple_run)
+test_hardware = pytest.mark.parametrize("setup_jtop_server", emulate_all_devices(), indirect=True)(test_hardware)
+test_open = pytest.mark.parametrize("setup_jtop_server", emulate_all_devices(), indirect=True)(test_open)
+test_open_callback = pytest.mark.parametrize("setup_jtop_server", emulate_all_devices(), indirect=True)(test_open_callback)
+test_multiple_run = pytest.mark.parametrize("setup_jtop_server", emulate_all_devices(), indirect=True)(test_multiple_run)
 # EOF
