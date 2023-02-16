@@ -1,0 +1,10 @@
+[Unit]
+Description=Fake nvfanservice control
+
+[Service]
+ExecStart=/usr/bin/touch /tmp/nvfancontrol_tmp
+ExecStop=/bin/rm /tmp/nvfancontrol_tmp
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

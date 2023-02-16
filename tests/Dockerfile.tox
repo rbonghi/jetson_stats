@@ -19,7 +19,7 @@ ARG PYTHON_VERSION=3.12.0a3-slim-bullseye
 FROM python:${PYTHON_VERSION}
 
 RUN apt-get update && \
-    apt-get install -y sudo bc && \
+    apt-get install -y sudo bc systemctl && \
     rm -rf /var/lib/apt/lists/*
 
 COPY . /jetson_stats
@@ -31,6 +31,6 @@ RUN sudo groupadd jtop && \
     sudo -H pip install tox
 
 # Run tox
-RUN sudo tox -e py${PYTHON_VERSION%.*}
+#RUN sudo tox -e py${PYTHON_VERSION%.*}
 
 CMD ["bash"]

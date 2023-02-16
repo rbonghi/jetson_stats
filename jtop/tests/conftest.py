@@ -184,13 +184,6 @@ def uninstall_nvpmodel(args):
 
 
 def install_nvfancontrol(args):
-    # Install fake systemctl emulator
-    if not os.path.exists('/usr/bin/systemctl'):
-        shutil.copy('tests/systemctl', '/usr/bin/systemctl')
-        print('Copied test/systemctl')
-    else:
-        print('/usr/bin/systemctl already exists')
-        pytest.exit("I cannot install a fake systemctl! systemctl already exist")
     # Install a fake nvfancontrol
     if not os.path.exists('/usr/bin/nvfancontrol'):
         shutil.copy('tests/nvfancontrol', '/usr/bin/nvfancontrol')
@@ -204,15 +197,15 @@ def install_nvfancontrol(args):
         print('Copied nvfancontrol.conf')
     # Create fake nvfancontrol service
     if not os.path.isfile('/etc/systemd/system/nvfancontrol.service'):
-        open("/etc/systemd/system/nvfancontrol.service", "w").write("TEST")
-        print('Fake empty file /etc/systemd/system/nvfancontrol.service')
+        shutil.copy('tests/nvfancontrol.service', '/etc/systemd/system/nvfancontrol.service')
+        print('Copy a fake /etc/systemd/system/nvfancontrol.service')
+    # reload daemon
+    os.system('systemctl daemon-reload')
+    os.system('systemctl start nvfancontrol.service')
 
 
 def uninstall_nvfancontrol(args):
     # Clean nvfancontrol
-    if os.path.isfile('/usr/bin/systemctl'):
-        print('Removing systemctl')
-        os.remove('/usr/bin/systemctl')
     if os.path.isfile('/usr/bin/nvfancontrol'):
         print('Removing nvfancontrol')
         os.remove('/usr/bin/nvfancontrol')
@@ -228,6 +221,13 @@ def uninstall_nvfancontrol(args):
     if os.path.isfile('/tmp/nvfancontrol_tmp'):
         print('Removing /tmp/nvfancontrol_tmp')
         os.remove('/tmp/nvfancontrol_tmp')
+    # remove service
+    os.system('systemctl stop nvfancontrol.service')
+    os.system('systemctl disable nvfancontrol.service')
+    os.system('systemctl daemon-reload')
+    if os.path.isfile('/etc/systemd/system/nvfancontrol.service'):
+        print('Removing /etc/systemd/system/nvfancontrol.service')
+        os.remove('/etc/systemd/system/nvfancontrol.service')
 
 
 def empty_func(args):
