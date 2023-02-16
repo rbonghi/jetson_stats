@@ -95,4 +95,7 @@ class Config:
             os.remove(self.config_file)
             return True
         return False
+
+    def __str__(self):
+        return str(self._config)
 # EOF

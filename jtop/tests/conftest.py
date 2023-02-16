@@ -198,6 +198,14 @@ def install_nvfancontrol(args):
     else:
         print('/usr/bin/nvfancontrol already exists')
         pytest.exit("I cannot install a fake nvfancontrol! nvfancontrol already exist")
+    # Copy fake configuration control
+    if not os.path.exists('/etc/nvfancontrol.conf'):
+        shutil.copy('tests/nvfancontrol.conf', '/etc/nvfancontrol.conf')
+        print('Copied nvfancontrol.conf')
+    # Create fake nvfancontrol service
+    if not os.path.isfile('/etc/systemd/system/nvfancontrol.service'):
+        open("/etc/systemd/system/nvfancontrol.service", "w").write("TEST")
+        print('Fake empty file /etc/systemd/system/nvfancontrol.service')
 
 
 def uninstall_nvfancontrol(args):
@@ -208,6 +216,18 @@ def uninstall_nvfancontrol(args):
     if os.path.isfile('/usr/bin/nvfancontrol'):
         print('Removing nvfancontrol')
         os.remove('/usr/bin/nvfancontrol')
+    if os.path.isfile('/etc/nvfancontrol.conf'):
+        print('Removing /etc/nvfancontrol.conf')
+        os.remove('/etc/nvfancontrol.conf')
+    if os.path.isfile('/var/lib/nvfancontrol/status'):
+        print('Removing /var/lib/nvfancontrol/status')
+        os.remove('/var/lib/nvfancontrol/status')
+    if os.path.isfile('/etc/systemd/system/nvfancontrol.service'):
+        print('Removing /etc/systemd/system/nvfancontrol.service')
+        os.remove('/etc/systemd/system/nvfancontrol.service')
+    if os.path.isfile('/tmp/nvfancontrol_tmp'):
+        print('Removing /tmp/nvfancontrol_tmp')
+        os.remove('/tmp/nvfancontrol_tmp')
 
 
 def empty_func(args):
@@ -232,7 +252,7 @@ DEVICES = {
     'tk': ['cpu', 'igpu', 'emc'],
     'tx': ['cpu', 'igpu', 'emc', 'legacy_fan', 'jetson_clocks'],
     'nano': ['cpu', 'igpu', 'emc', 'legacy_fan', 'jetson_clocks', 'nvpmodel'],
-    'xavier': ['cpu', 'igpu', 'emc', 'fan', 'jetson_clocks', 'nvpmodel'],
+    'xavier': ['cpu', 'igpu', 'emc', 'fan', 'jetson_clocks', 'nvpmodel', 'nvfancontrol'],
     'orin': ['cpu', 'igpu', 'emc', 'fan', 'rpm_system', 'jetson_clocks', 'nvpmodel', 'nvfancontrol'],
 }
 
@@ -256,6 +276,9 @@ def reset_environment(device=""):
     if os.path.isfile('/usr/local/jtop/config.json'):
         print('Removing /usr/local/jtop/config.json')
         os.remove('/usr/local/jtop/config.json')
+    if os.path.isfile('/usr/local/local/jtop/config.json'):
+        print('Removing /usr/local/local/jtop/config.json')
+        os.remove('/usr/local/local/jtop/config.json')
     # Remove all fake devices
     if os.path.isdir(FAKE_DIRECTORY):
         print('Removing {path}'.format(path=FAKE_DIRECTORY))
@@ -280,11 +303,11 @@ def run_script():
 
 @pytest.fixture
 def setup_jtop_server(request):
-    params = request.param
+    device = request.param
     # Find functions to load
     print("Start initialization test")
     # Install all functions
-    emulate_device(params)
+    emulate_device(device)
     # Start jtop
     print("Starting jtop service")
     jtop_server = JtopServer(force=True)
@@ -296,11 +319,11 @@ def setup_jtop_server(request):
     # Check if is alive
     assert jtop_server.is_alive()
     # Pass param for test
-    yield params
+    yield device, jtop_server
     # Close server
     jtop_server.close()
     # Teardown code here
     print("Close jtop service")
     # Clean test folder
-    reset_environment(params)
+    reset_environment(device)
 # EOF

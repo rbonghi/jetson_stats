@@ -19,20 +19,22 @@ import pytest
 from jtop import jtop
 from jtop.core.jetson_clocks import JetsonClocks
 from .conftest import emulate_all_devices
+from .marco_functions import set_jetson_clocks_boot
 # test functions
 MAX_COUNT = 10
 
 
 def test_jetson_clocks_output(setup_jtop_server):
+    device, jtop_server = setup_jtop_server
     with jtop() as jetson:
-        print("Running test with parameter:", setup_jtop_server)
+        print("Running test with parameter:", device)
         if jetson.ok():
             # Read jetson_clocks status
             jetson_clocks = jetson.jetson_clocks
             # Status jetson_clocks
             print("jetson_clocks output: {jetson_clocks}".format(jetson_clocks=jetson_clocks))
             # Check depend of parameter
-            if setup_jtop_server in ['simple', 'tk']:
+            if device in ['simple', 'tk']:
                 assert jetson_clocks is None
             else:
                 assert isinstance(jetson_clocks, JetsonClocks)
@@ -71,31 +73,14 @@ def test_set_true_false(setup_jtop_server):
 
 
 def test_set_boot(setup_jtop_server):
+    device, jtop_server = setup_jtop_server
     with jtop() as jetson:
-        # Check status boot
-        jetson.jetson_clocks.boot = True
-        # Wait jetson_clocks boot
-        counter = 0
-        while jetson.ok():
-            if jetson.jetson_clocks.boot or counter == MAX_COUNT:
-                break
-            counter += 1
-        # Check if is not set
-        assert jetson.jetson_clocks.boot
-        # Check status boot
-        jetson.jetson_clocks.boot = False
-        # Wait jetson_clocks boot
-        counter = 0
-        while jetson.ok():
-            if not jetson.jetson_clocks.boot or counter == MAX_COUNT:
-                break
-            counter += 1
-        # Check if is not set
-        assert not jetson.jetson_clocks.boot
-
-
-def test_boot_set_true(setup_jtop_server):
-    pass
+        # Set to false jetson_clocks
+        assert not bool(jetson.jetson_clocks)
+        # Enable on boot
+        set_jetson_clocks_boot(jetson, True)
+        # Disable on boot
+        assert bool(jetson.jetson_clocks.boot)
 
 
 test_jetson_clocks_output = pytest.mark.parametrize(
@@ -104,6 +89,4 @@ test_set_true_false = pytest.mark.parametrize(
     "setup_jtop_server", ['tx', 'nano', 'xavier', 'orin'], indirect=True)(test_set_true_false)
 test_set_boot = pytest.mark.parametrize(
     "setup_jtop_server", ['tx', 'nano', 'xavier', 'orin'], indirect=True)(test_set_boot)
-test_boot_set_true = pytest.mark.parametrize(
-    "setup_jtop_server", ['tx', 'nano', 'xavier', 'orin'], indirect=True)(test_boot_set_true)
 # EOF

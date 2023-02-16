@@ -22,27 +22,30 @@ from .conftest import emulate_all_devices
 
 
 def test_fan(setup_jtop_server):
+    device, jtop_server = setup_jtop_server
+    # Run test
     with jtop() as jetson:
-        print("Running test with parameter:", setup_jtop_server)
+        print("Running test with parameter:", device)
         if jetson.ok():
             # Read fan status
             fan = jetson.fan
             # Status fan
             print("Fan output: {fan}".format(fan=fan))
             # Check depend of parameter
-            if setup_jtop_server in ['simple', 'tk']:
+            if device in ['simple', 'tk']:
                 assert len(fan) == 0
             else:
                 assert len(fan) > 0
 
 
 def test_fan_set_profile(setup_jtop_server):
+    device, jtop_server = setup_jtop_server
     with jtop() as jetson:
         # Detect which emulation is running and select a test profile
-        if setup_jtop_server in ['tx', 'nano']:
+        if device in ['tx', 'nano']:
             set_fan_profile(jetson, 'temp_control')
         else:
-            assert True
+            set_fan_profile(jetson, 'quiet')
 
 
 def test_fan_set_speed(setup_jtop_server):

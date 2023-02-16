@@ -331,6 +331,9 @@ class FanService(object):
         return governors
 
     def get_profile(self, name):
+        if name not in self._fan_list:
+            logger.error("Fan \"{name}\" does not exist".format(name=name))
+            return ""
         profile = FAN_MANUAL_NAME
         if self._nvfancontrol:
             nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
@@ -346,7 +349,9 @@ class FanService(object):
         return profile
 
     def set_profile(self, name, profile):
-        logger.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        if name not in self._fan_list:
+            logger.error("Fan \"{name}\" does not exist".format(name=name))
+            return False
         # Check current status before change
         if profile == self.get_profile(name):
             logger.warning("Fan {name} profile {profile} already active".format(name=name, profile=profile))

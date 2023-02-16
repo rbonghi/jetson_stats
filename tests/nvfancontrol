@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Emulation of
+# https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html
+
 usage()
 {
     if [ "$1" != "" ]; then
@@ -37,11 +40,11 @@ usage()
 query()
 {
     # Input file to be read
-    input_file="nvfancontrol.conf"
+    input_file="/etc/nvfancontrol.conf"
     
     local fan_profile=""
     local fan_governor=""
-    local default_control=""
+    local fan_control=""
     # Loop through each line of the file
     while read line; do
         if [[ "$line" == *"FAN_DEFAULT_PROFILE"* ]]; then
@@ -54,13 +57,19 @@ query()
         fi
         if [[ "$line" == *"FAN_DEFAULT_CONTROL"* ]]; then
             # Extract the second word from the line
-            default_control=$(echo "$line" | awk '{print $2}')
+            fan_control=$(echo "$line" | awk '{print $2}')
         fi
     done < "$input_file"
     
     echo "FAN1:FAN_PROFILE:$fan_profile"
     echo "FAN1:FAN_GOVERNOR:$fan_governor"
-    echo "FAN1:FAN_CONTROL:$default_control"
+    echo "FAN1:FAN_CONTROL:$fan_control"
+    
+    mkdir -p /var/lib/nvfancontrol
+    
+    echo "FAN1:FAN_PROFILE:$fan_profile" > /var/lib/nvfancontrol/status
+    echo "FAN1:FAN_GOVERNOR:$fan_governor" >> /var/lib/nvfancontrol/status
+    echo "FAN1:FAN_CONTROL:$fan_control" >> /var/lib/nvfancontrol/status
 }
 
 

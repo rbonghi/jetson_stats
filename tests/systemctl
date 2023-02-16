@@ -28,21 +28,38 @@ main()
     exit 1
     fi
 
-    local COMMAND=$1
+    local COMMAND=""
+    local SERVICE=""
+    local quiet=false
 
-    if [[ ! "start stop restart enable disable" =~ (^|[[:space:]])"$COMMAND"($|[[:space:]]) ]]; then
-    echo "FAKE systemctl ERROR: The first argument must be 'start', 'stop', 'restart', 'enable', or 'disable'"
-    exit 1
-    fi
-
-    local SERVICE=$2
-
-    if [ "$SERVICE" != "nvfancontrol" ]; then
-    echo "FAKE systemctl ERROR: The second argument must be 'nvfancontrol'"
-    exit 1
-    fi
+    # Decode all information from startup
+    while [ -n "$1" ]; do
+        case "$1" in
+            start|stop|restart|enable|disable|is-active)
+                COMMAND=$1
+            ;;
+            --quiet)
+                quiet=true
+            ;;
+            nvfancontrol)
+                SERVICE=$1
+            ;;
+        esac
+        shift 1
+    done
     
     # echo "$COMMAND $SERVICE"
+
+    if [[ "$COMMAND" == "is-active" ]]; then
+        if [ -f "/tmp/nvfancontrol_tmp" ] ; then
+            exit 0
+        fi
+        exit 1
+    elif [[ "$COMMAND" == "start" ]]; then
+        touch /tmp/nvfancontrol_tmp
+    elif [[ "$COMMAND" == "stop" ]]; then
+        rm /tmp/nvfancontrol_tmp
+    fi
 }
 
 main $@

@@ -26,15 +26,16 @@ MAX_COUNT = 50
 
 
 def test_nvpmodel_output(setup_jtop_server):
+    device, jtop_server = setup_jtop_server
     with jtop() as jetson:
-        print("Running test with parameter:", setup_jtop_server)
+        print("Running test with parameter:", device)
         if jetson.ok():
             # Read nvpmodel status
             nvpmodel = jetson.nvpmodel
             # Status nvpmodel
             print("nvpmodel output: {nvpmodel}".format(nvpmodel=nvpmodel))
             # Check depend of parameter
-            if setup_jtop_server in ['simple', 'tk', 'tx']:
+            if device in ['simple', 'tk', 'tx']:
                 assert nvpmodel is None
             else:
                 assert isinstance(nvpmodel, NVPModel)
