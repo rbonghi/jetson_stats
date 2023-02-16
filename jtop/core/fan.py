@@ -17,6 +17,7 @@
 
 import re
 import os
+import subprocess
 # Logging
 import logging
 # Launch command
@@ -163,6 +164,12 @@ def change_nvfancontrol_default(name, value):
                     line = line.replace(parsed_line['value'], value)
             # Print line
             f.write(line)
+
+
+def nvfancontrol_is_active():
+    cmd = ['systemctl', 'status', 'nvfancontrol.service']
+    output = subprocess.run(cmd, capture_output=True, text=True).stdout
+    return 'Active: active (running)' in output
 
 
 class Fan(GenericInterface):
@@ -336,8 +343,7 @@ class FanService(object):
             return ""
         profile = FAN_MANUAL_NAME
         if self._nvfancontrol:
-            nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
-            if nvfancontrol_is_active:
+            if nvfancontrol_is_active():
                 nvfan_query = nvfancontrol_query()
                 for fan_list_name, nvfan in zip(self._fan_list, nvfan_query):
                     if fan_list_name == name:
@@ -357,16 +363,16 @@ class FanService(object):
             logger.warning("Fan {name} profile {profile} already active".format(name=name, profile=profile))
             return True
         if self._nvfancontrol:
-            nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
+            is_active = nvfancontrol_is_active()
             # Check first if the fan control is active and after enable the service
             if profile in self._fan_list[name]['profile']:
                 if profile == FAN_MANUAL_NAME:
-                    if nvfancontrol_is_active:
+                    if is_active:
                         os.system('systemctl stop nvfancontrol')
                         logger.info("Profile set {profile}".format(profile=profile))
                 else:
                     # Check if active and stop
-                    if nvfancontrol_is_active:
+                    if is_active:
                         os.system('systemctl stop nvfancontrol')
                         logger.info("Stop nvfancontrol service")
                     # Update nvfile
@@ -446,8 +452,7 @@ class FanService(object):
                 fan_status[name]['rpm'] = [int(cat(rpm)) for rpm in data['rpm']]
         # Check status fan control
         if self._nvfancontrol:
-            nvfancontrol_is_active = os.system('systemctl is-active --quiet nvfancontrol') == 0
-            if nvfancontrol_is_active:
+            if nvfancontrol_is_active():
                 nvfan_query = nvfancontrol_query()
                 for fan, nvfan in zip(fan_status, nvfan_query):
                     fan_status[fan].update(nvfan_query[nvfan])
