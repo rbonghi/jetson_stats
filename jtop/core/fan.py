@@ -172,7 +172,7 @@ def nvfancontrol_is_active():
     status_is_active = os.system('systemctl is-active nvfancontrol.service')
     logger.info("nvfancontrol is-active output={status_is_active}".format(status_is_active=status_is_active))
     logger.info("nvfancontrol status output={output}".format(output=output))
-    return 'Active: active (running)' in output
+    return 'Active: active' in output
 
 
 class Fan(GenericInterface):
