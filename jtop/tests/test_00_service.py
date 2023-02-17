@@ -22,9 +22,10 @@ from .conftest import reset_environment, emulate_device
 
 
 def test_service():
-    emulate_device()
+    device = 'orin'
+    emulate_device(device)
     # Start jtop Server
-    jtop_server = JtopServer(force=True)
+    jtop_server = JtopServer()
     jtop_server.start()
     # Check if is alive
     assert jtop_server.is_alive()
@@ -43,7 +44,7 @@ def test_service():
     # Check if service is off
     assert not jtop_server.is_alive()
     # Reset environment
-    reset_environment()
+    reset_environment(device)
 
 
 def test_service_all_test_devices():
@@ -51,7 +52,7 @@ def test_service_all_test_devices():
     # Install ALL fake devices and test
     emulate_device(device)
     # Start jtop Server
-    jtop_server = JtopServer(force=True)
+    jtop_server = JtopServer()
     jtop_server.start()
     # Check if is alive
     assert jtop_server.is_alive()

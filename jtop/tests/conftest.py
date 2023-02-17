@@ -215,9 +215,6 @@ def uninstall_nvfancontrol(args):
     if os.path.isfile('/var/lib/nvfancontrol/status'):
         print('Removing /var/lib/nvfancontrol/status')
         os.remove('/var/lib/nvfancontrol/status')
-    if os.path.isfile('/etc/systemd/system/nvfancontrol.service'):
-        print('Removing /etc/systemd/system/nvfancontrol.service')
-        os.remove('/etc/systemd/system/nvfancontrol.service')
     if os.path.isfile('/tmp/nvfancontrol_tmp'):
         print('Removing /tmp/nvfancontrol_tmp')
         os.remove('/tmp/nvfancontrol_tmp')
@@ -264,9 +261,9 @@ def emulate_all_devices():
 def emulate_device(device=""):
     print("Emulate device: \"{device}\"".format(device=device))
     # Install all functions
-    for param in DEVICES.get(device, ['cpu']):
+    for param in DEVICES.get(device, []):
         peripheral = OPTIONS.get(param, {'install': empty_func})
-        print("Install function \"{param}\"".format(param=param))
+        print(" - Install function \"{param}\"".format(param=param))
         install = peripheral['install']
         install(peripheral.get('args', []))
 
@@ -310,7 +307,7 @@ def setup_jtop_server(request):
     emulate_device(device)
     # Start jtop
     print("Starting jtop service")
-    jtop_server = JtopServer(force=True)
+    jtop_server = JtopServer()
     try:
         jtop_server.start()
     except JtopException as e:

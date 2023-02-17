@@ -450,7 +450,7 @@ class JtopServer(Process):
             raise JtopException("Group {jtop_user} does not exist!".format(jtop_user=JTOP_USER))
         # Remove old pipes if exists
         if self.force:
-            remove_service_pipe()
+            self.remove_files()
         else:
             raise JtopException("Service already active! Please check before run it again")
         # Start broadcaster
@@ -517,9 +517,7 @@ class JtopServer(Process):
 
     def remove_files(self):
         # If exist remove pipe
-        if os.path.exists(JTOP_PIPE):
-            logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
-            os.remove(JTOP_PIPE)
+        remove_service_pipe()
 
     def jtop_decode(self):
         # Make configuration dict
