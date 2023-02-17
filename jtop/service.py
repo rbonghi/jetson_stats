@@ -520,6 +520,9 @@ class JtopServer(Process):
         # If exist remove pipe
         remove_service_pipe()
 
+    def config_clear(self):
+        self.config.clear()
+
     def jtop_decode(self):
         # Make configuration dict
         data = {}

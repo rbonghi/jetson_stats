@@ -29,11 +29,14 @@ NUM_CPU = 4
 
 
 def install_cpu(args):
+    num_cpu = args[0]
     path_cpu = os.path.join(FAKE_DIRECTORY, "devices/system/cpu")
+    # Set number of CPU for fake jetson_clocks
+    open('/tmp/cpu_numbers', "w").write(str(num_cpu))
     # Build a list of fake CPU
     file_proc_stat = "cpu  26716126 25174 7198445 948399047 900582 0 354519 0 0 0\n"
-    print('Building CPU {num} in {path}'.format(num=NUM_CPU, path=path_cpu))
-    for cpu_num in range(4):
+    print('Building CPU {num} in {path}'.format(num=num_cpu, path=path_cpu))
+    for cpu_num in range(num_cpu):
         file_proc_stat += "cpu{num} 1673575 1889 461134 59280326 55795 0 10322 0 0 0\n".format(num=cpu_num)
         # Build a fake folder
         cpu_path = os.path.join(path_cpu, "cpu{num}".format(num=cpu_num), "cpufreq")
@@ -135,7 +138,7 @@ def install_legacy_fan(args):
     # Build now a fake folder
     open(os.path.join(path_fan, "target_pwm"), "w").write("127")
     open(os.path.join(path_fan, "rpm_measured"), "w").write("0")
-    open(os.path.join(path_fan, "temp_control"), "w").write("1")
+    open(os.path.join(path_fan, "temp_control"), "w").write("0")
 
 
 def install_rpm_system(args):
@@ -236,7 +239,7 @@ def empty_func(args):
 
 # List of all fake devices
 OPTIONS = {
-    'cpu': {'install': install_cpu, 'args': [4]},
+    'cpu': {'install': install_cpu, 'args': [NUM_CPU]},
     'igpu': {'install': install_igpu},
     'emc': {'install': install_emc},
     'fan': {'install': install_fan},
@@ -272,13 +275,6 @@ def emulate_device(device=""):
 
 
 def reset_environment(device=""):
-    # Remove configuration file
-    if os.path.isfile('/usr/local/jtop/config.json'):
-        print('Removing /usr/local/jtop/config.json')
-        os.remove('/usr/local/jtop/config.json')
-    if os.path.isfile('/usr/local/local/jtop/config.json'):
-        print('Removing /usr/local/local/jtop/config.json')
-        os.remove('/usr/local/local/jtop/config.json')
     # Remove all fake devices
     if os.path.isdir(FAKE_DIRECTORY):
         print('Removing {path}'.format(path=FAKE_DIRECTORY))
@@ -290,6 +286,21 @@ def reset_environment(device=""):
             print("Uninstall function \"{param}\"".format(param=param))
             uninstall = peripheral['uninstall']
             uninstall(peripheral.get('args', []))
+
+
+def pytest_sessionfinish(session, exitstatus):
+    if exitstatus != 0:
+        # If session fail clear environment
+        print("Session fail [{exitstatus}]".format(exitstatus=exitstatus))
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_keyboard_interrupt(excinfo):
+    """ called for keyboard interrupt. """
+    # The test session was interrupted by the user
+    print("pytest was interrupted by the user")
+    print("Clear environment")
+    reset_environment('orin')
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -322,6 +333,8 @@ def setup_jtop_server(request):
     yield device, jtop_server
     # Close server
     jtop_server.close()
+    # Clear configuration
+    jtop_server.config_clear()
     # Teardown code here
     print("Close jtop service")
     # Clean test folder

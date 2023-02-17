@@ -43,33 +43,8 @@ def test_service():
         pass
     # Check if service is off
     assert not jtop_server.is_alive()
-    # Reset environment
-    reset_environment(device)
-
-
-def test_service_all_test_devices():
-    device = 'orin'
-    # Install ALL fake devices and test
-    emulate_device(device)
-    # Start jtop Server
-    jtop_server = JtopServer()
-    jtop_server.start()
-    # Check if is alive
-    assert jtop_server.is_alive()
-    # Init and open jtop
-    jetson = jtop()
-    jetson.start()
-    # Wait
-    time.sleep(0.5)
-    # Close service
-    jtop_server.close()
-    # Close jetson
-    try:
-        jetson.close()
-    except JtopException:
-        pass
-    # Check if service is off
-    assert not jtop_server.is_alive()
+    # Clear configuration
+    jtop_server.config_clear()
     # Reset environment
     reset_environment(device)
 # EOF

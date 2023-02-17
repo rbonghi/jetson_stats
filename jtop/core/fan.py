@@ -169,6 +169,9 @@ def change_nvfancontrol_default(name, value):
 def nvfancontrol_is_active():
     cmd = ['systemctl', 'status', 'nvfancontrol.service']
     output = subprocess.run(cmd, capture_output=True, text=True).stdout
+    status_is_active = os.system('systemctl is-active nvfancontrol.service')
+    logger.info("nvfancontrol is-active output={status_is_active}".format(status_is_active=status_is_active))
+    logger.info("nvfancontrol status output={output}".format(output=output))
     return 'Active: active (running)' in output
 
 
@@ -390,7 +393,7 @@ class FanService(object):
                 return False
         else:
             if profile in self._fan_list[name]['profile']:
-                control_value = "0" if FAN_MANUAL_NAME else "1"
+                control_value = "0" if profile == FAN_MANUAL_NAME else "1"
                 # Write control if exist
                 if 'control' in self._fan_list[name]:
                     control = self._fan_list[name]['control']
@@ -452,7 +455,9 @@ class FanService(object):
                 fan_status[name]['rpm'] = [int(cat(rpm)) for rpm in data['rpm']]
         # Check status fan control
         if self._nvfancontrol:
-            if nvfancontrol_is_active():
+            is_active = nvfancontrol_is_active()
+            print("nvfancontrol_is_active={is_active}".format(is_active=is_active))
+            if is_active:
                 nvfan_query = nvfancontrol_query()
                 for fan, nvfan in zip(fan_status, nvfan_query):
                     fan_status[fan].update(nvfan_query[nvfan])
