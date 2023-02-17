@@ -65,12 +65,14 @@ def install_igpu(args):
     # Build full file
     path_igpu_device = os.path.join(FAKE_DIRECTORY, "devices/platform", name_gpu, "devfreq", name_gpu, "device/of_node")
     print("Installing Fake iGPU {name_gpu}".format(name_gpu=name_gpu))
-    print('Creating directory {path} if is not present'.format(path=path_igpu_device))
-    os.makedirs(path_igpu_device, exist_ok=True)
+    if not os.path.isdir(path_igpu_device):
+        print('Creating directory {path}'.format(path=path_igpu_device))
+        os.makedirs(path_igpu_device)
     # Link file
     path_dev_freq = os.path.join(FAKE_DIRECTORY, "class/devfreq")
-    print('Creating directory {path} if is not present'.format(path=path_dev_freq))
-    os.makedirs(path_dev_freq, exist_ok=True)
+    if not os.path.isdir(path_dev_freq):
+        print('Creating directory {path}'.format(path=path_dev_freq))
+        os.makedirs(path_dev_freq)
     # Make a link for devfreq
     path_igpu_device_short = os.path.join(FAKE_DIRECTORY, "devices/platform", name_gpu, "devfreq", name_gpu)
     path_devfreq = os.path.join(path_dev_freq, name_gpu)
