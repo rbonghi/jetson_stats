@@ -76,6 +76,9 @@ def install_igpu(args):
     # Make a link for devfreq
     path_igpu_device_short = os.path.join(FAKE_DIRECTORY, "devices/platform", name_gpu, "devfreq", name_gpu)
     path_devfreq = os.path.join(path_dev_freq, name_gpu)
+    if os.path.isfile(path_devfreq):
+        print("Removing {path_name}".format(path_name=path_devfreq))
+        os.remove(path_devfreq)
     os.symlink(path_igpu_device_short, path_devfreq)
     print("Linking {path_igpu} -> {path_devfreq}".format(path_igpu=path_igpu_device_short, path_devfreq=path_devfreq))
     # Write fake name
