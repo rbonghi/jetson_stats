@@ -2,7 +2,6 @@
 Description=Fake nvfanservice control
 
 [Service]
-Type=forking
 ExecStart=/usr/bin/touch /tmp/nvfancontrol_tmp
 ExecStop=/bin/rm /tmp/nvfancontrol_tmp
 RemainAfterExit=yes

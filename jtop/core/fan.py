@@ -17,7 +17,6 @@
 
 import re
 import os
-import subprocess
 # Logging
 import logging
 # Launch command
@@ -167,12 +166,12 @@ def change_nvfancontrol_default(name, value):
 
 
 def nvfancontrol_is_active():
-    cmd = ['systemctl', 'status', 'nvfancontrol.service']
-    output = subprocess.run(cmd, capture_output=True, text=True).stdout
-    status_is_active = os.system('systemctl is-active nvfancontrol.service')
-    logger.info("nvfancontrol is-active output={status_is_active}".format(status_is_active=status_is_active))
-    logger.info("nvfancontrol status output={output}".format(output=output))
-    return 'Active: active' in output
+    output = Command.run_command(['systemctl', 'status', 'nvfancontrol.service'])
+    # output = subprocess.run(cmd, capture_output=True, text=True).stdout
+    # status_is_active = os.system('systemctl is-active nvfancontrol.service')
+    # logger.info("nvfancontrol is-active output={status_is_active}".format(status_is_active=status_is_active))
+    # logger.info("nvfancontrol status output={output}".format(output=output))
+    return 'Active: active' in '\n'.join(output)
 
 
 class Fan(GenericInterface):

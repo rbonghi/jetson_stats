@@ -136,7 +136,7 @@ def install_legacy_fan(args):
         print('The directory {path} is not present. Creating a new one..'.format(path=path_fan))
         os.makedirs(path_fan)
     # Build now a fake folder
-    open(os.path.join(path_fan, "target_pwm"), "w").write("127")
+    open(os.path.join(path_fan, "target_pwm"), "w").write("128")
     open(os.path.join(path_fan, "rpm_measured"), "w").write("0")
     open(os.path.join(path_fan, "temp_control"), "w").write("0")
 
@@ -152,7 +152,7 @@ def install_rpm_system(args):
 
 
 def install_jetson_clocks(args):
-    if not os.path.exists('/usr/bin/jetson_clocks'):
+    if not os.path.isfile('/usr/bin/jetson_clocks'):
         shutil.copy('tests/jetson_clocks', '/usr/bin/jetson_clocks')
         print('Copied test/jetson_clocks')
     else:
@@ -168,7 +168,7 @@ def uninstall_jetson_clocks(args):
 
 
 def install_nvpmodel(args):
-    if not os.path.exists('/usr/bin/nvpmodel'):
+    if not os.path.isfile('/usr/bin/nvpmodel'):
         shutil.copy('tests/nvpmodel', '/usr/bin/nvpmodel')
         print('Copied test/nvpmodel')
     else:
@@ -191,14 +191,14 @@ def uninstall_nvpmodel(args):
 
 def install_nvfancontrol(args):
     # Install a fake nvfancontrol
-    if not os.path.exists('/usr/bin/nvfancontrol'):
+    if not os.path.isfile('/usr/bin/nvfancontrol'):
         shutil.copy('tests/nvfancontrol', '/usr/bin/nvfancontrol')
         print('Copied test/nvfancontrol')
     else:
         print('/usr/bin/nvfancontrol already exists')
         pytest.exit("I cannot install a fake nvfancontrol! nvfancontrol already exist")
     # Copy fake configuration control
-    if not os.path.exists('/etc/nvfancontrol.conf'):
+    if not os.path.isfile('/etc/nvfancontrol.conf'):
         shutil.copy('tests/nvfancontrol.conf', '/etc/nvfancontrol.conf')
         print('Copied nvfancontrol.conf')
     # Create fake nvfancontrol service
