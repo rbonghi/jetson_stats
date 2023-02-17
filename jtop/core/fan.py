@@ -454,9 +454,7 @@ class FanService(object):
                 fan_status[name]['rpm'] = [int(cat(rpm)) for rpm in data['rpm']]
         # Check status fan control
         if self._nvfancontrol:
-            is_active = nvfancontrol_is_active()
-            print("nvfancontrol_is_active={is_active}".format(is_active=is_active))
-            if is_active:
+            if nvfancontrol_is_active():
                 nvfan_query = nvfancontrol_query()
                 for fan, nvfan in zip(fan_status, nvfan_query):
                     fan_status[fan].update(nvfan_query[nvfan])
