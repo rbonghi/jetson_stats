@@ -451,7 +451,8 @@ class JtopServer(Process):
         # Remove old pipes if exists
         if self.force:
             self.remove_files()
-        else:
+        # If exist JTOP pipe raise exception
+        if os.path.exists(JTOP_PIPE):
             raise JtopException("Service already active! Please check before run it again")
         # Start broadcaster
         try:
