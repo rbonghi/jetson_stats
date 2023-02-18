@@ -271,25 +271,25 @@ class JetsonClocks(object):
         return self._alive
 
     def __and__(self, other):
-        return self.value & bool(other)
+        return self._alive & bool(other)
 
     def __or__(self, other):
-        return self.value | bool(other)
+        return self._alive | bool(other)
 
     def __xor__(self, other):
-        return self.value ^ bool(other)
+        return self._alive ^ bool(other)
 
     def __int__(self):
-        return int(self.value)
+        return int(self._alive)
 
     def __index__(self):
-        return int(self.value)
+        return int(self._alive)
 
     def __eq__(self, other):
         if isinstance(other, bool):
-            return self.value == other
+            return self._alive == other
         elif isinstance(other, JetsonClocks):
-            return self.value == other.value
+            return self._alive == other._alive
         else:
             return False
 
