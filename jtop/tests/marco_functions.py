@@ -62,20 +62,20 @@ def set_jetson_clocks(jetson, status):
         warnings.warn("jetson_clocks does not exists, please check file", UserWarning)
         return
     # Check if status is different
-    if bool(jetson.jetson_clocks) != status:
+    if jetson.jetson_clocks != status:
         # Set true jetson_clocks
         if jetson.ok():
             jetson.jetson_clocks = status
         # Wait jetson_clocks on
         counter = 0
         while jetson.ok():
-            if bool(jetson.jetson_clocks) == status or counter == MAX_COUNT:
+            if jetson.jetson_clocks == status or counter == MAX_COUNT:
                 break
             counter += 1
         if counter == MAX_COUNT:
             warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
     # Check if is true
-    assert bool(jetson.jetson_clocks) == status
+    assert jetson.jetson_clocks == status
 
 
 def set_jetson_clocks_boot(jetson, status):
@@ -88,13 +88,13 @@ def set_jetson_clocks_boot(jetson, status):
     # Wait jetson_clocks on
     counter = 0
     while jetson.ok():
-        if bool(jetson.jetson_clocks.boot) == status or counter == MAX_COUNT:
+        if jetson.jetson_clocks.boot == status or counter == MAX_COUNT:
             break
         counter += 1
     if counter == MAX_COUNT:
         warnings.warn("Max time counter {counter}".format(counter=MAX_COUNT), UserWarning)
     # Check if is true
-    assert bool(jetson.jetson_clocks.boot) == status
+    assert jetson.jetson_clocks.boot == status
 
 
 def set_nvp_mode(jetson, mode):

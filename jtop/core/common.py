@@ -52,20 +52,53 @@ class GenericInterface(object):
     def items(self):
         return self._data.items()
 
+    def keys(self):
+        return self._data.keys()
+
+    def values(self):
+        return self._data.values()
+
+    def get(self, key, default=None):
+        return self._data.get(key, default)
+
     def __len__(self):
         return len(self._data)
 
     def __getitem__(self, key):
         return self._data[key]
 
+    def __contains__(self, key):
+        return key in self._data
+
     def __iter__(self):
         return iter(self._data)
 
-    def __next__(self):
-        return next(self._data)
+    def __reversed__(self):
+        return reversed(self._data)
+
+    def __missing__(self, key):
+        raise KeyError(key)
+
+    def __eq__(self, other):
+        if isinstance(other, GenericInterface):
+            return self._data == other._data
+        elif isinstance(other, dict):
+            return self._data == other
+        else:
+            return NotImplemented
+
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return result
+        else:
+            return not result
 
     def __str__(self):
         return str(self._data)
+
+    def __repr__(self):
+        return repr(self._data)
 
 
 def cat(path):

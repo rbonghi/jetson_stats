@@ -258,20 +258,43 @@ class JetsonClocks(object):
     def is_alive(self):
         return self._alive
 
+    def _update(self, jc_status):
+        self._config = jc_status['config']
+        self._alive = jc_status['status']
+        self._boot = jc_status['boot']
+        self._thread = jc_status['thread']
+
     def __nonzero__(self):
         return self._alive
 
     def __bool__(self):
         return self._alive
 
+    def __and__(self, other):
+        return self.value & bool(other)
+
+    def __or__(self, other):
+        return self.value | bool(other)
+
+    def __xor__(self, other):
+        return self.value ^ bool(other)
+
+    def __int__(self):
+        return int(self.value)
+
+    def __index__(self):
+        return int(self.value)
+
+    def __eq__(self, other):
+        if isinstance(other, bool):
+            return self.value == other
+        elif isinstance(other, JetsonClocks):
+            return self.value == other.value
+        else:
+            return False
+
     def __repr__(self):
         return str(self._alive)
-
-    def _update(self, jc_status):
-        self._config = jc_status['config']
-        self._alive = jc_status['status']
-        self._boot = jc_status['boot']
-        self._thread = jc_status['thread']
 
 
 class JetsonClocksService(object):

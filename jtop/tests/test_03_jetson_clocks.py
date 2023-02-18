@@ -45,42 +45,42 @@ def test_set_true_false(setup_jtop_server):
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'inactive'
         # check status is false
-        assert not bool(jetson.jetson_clocks)
+        assert not jetson.jetson_clocks
         # Set true jetson_clocks
         jetson.jetson_clocks = True
         # Wait jetson_clocks on
         counter = 0
         while jetson.ok():
-            if bool(jetson.jetson_clocks) or counter == MAX_COUNT:
+            if jetson.jetson_clocks or counter == MAX_COUNT:
                 break
             counter += 1
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'running'
         # Check if is true
-        assert bool(jetson.jetson_clocks)
+        assert jetson.jetson_clocks
         # Switch off jetson_clocks
         jetson.jetson_clocks = False
         # Wait jetson_clocks on
         counter = 0
         while jetson.ok():
-            if not bool(jetson.jetson_clocks) or counter == MAX_COUNT:
+            if not jetson.jetson_clocks or counter == MAX_COUNT:
                 break
             counter += 1
         # Check jetson_clocks status
         assert jetson.jetson_clocks.status == 'inactive'
         # Set to false jetson_clocks
-        assert not bool(jetson.jetson_clocks)
+        assert not jetson.jetson_clocks
 
 
 def test_set_boot(setup_jtop_server):
     device, jtop_server = setup_jtop_server
     with jtop() as jetson:
         # Set to false jetson_clocks
-        assert not bool(jetson.jetson_clocks)
+        assert not jetson.jetson_clocks
         # Enable on boot
         set_jetson_clocks_boot(jetson, True)
         # Disable on boot
-        assert bool(jetson.jetson_clocks.boot)
+        assert jetson.jetson_clocks.boot
 
 
 test_jetson_clocks_output = pytest.mark.parametrize(
