@@ -523,8 +523,6 @@ class jtop(Thread):
 
         * **time** - A `datetime` variable with the local time in your board
         * **uptime** - A `timedelta` with the up time of your board, same from :py:attr:`~uptime`
-        * **jetson_clocks** - Status of jetson_clocks, human readable :py:attr:`~jetson_clocks`
-        * **nvp model** - If exist, the NV Power Model name active :py:attr:`~nvpmodel`
         * **cpu X** - The status for each cpu in your board, if disabled *OFF* :py:attr:`~cpu`
         * **RAM** - Used ram :py:attr:`~memory`
         * **SWAP** - used swap :py:attr:`~memory`
@@ -536,17 +534,13 @@ class jtop(Thread):
         * **Temp X** - X temperature :py:attr:`~temperature`
         * **Power X** - Current power from rail X :py:attr:`~power`
         * **Power TOT** - Total current power :py:attr:`~power`
+        * **jetson_clocks** - Status of jetson_clocks, human readable :py:attr:`~jetson_clocks`
+        * **nvp model** - If exist, the NV Power Model name active :py:attr:`~nvpmodel`
 
         :return: Compacts jetson statistics
         :rtype: dict
         """
         stats = {'time': datetime.now(), 'uptime': self.uptime}
-        # -- jetson_clocks --
-        if self.jetson_clocks is not None:
-            stats['jetson_clocks'] = 'ON' if self.jetson_clocks else 'OFF'
-        # -- NV Power Model --
-        if self.nvpmodel is not None:
-            stats['nvp model'] = self.nvpmodel.name
         # -- CPU --
         for idx, cpu in enumerate(self.cpu['cpu']):
             stats["CPU{idx}".format(idx=idx + 1)] = 100 - int(cpu['idle']) if cpu['online'] else 'OFF'
@@ -569,7 +563,7 @@ class jtop(Thread):
         # Print all Fan
         for name, fan in self.fan.items():
             for idx, speed in enumerate(fan['speed']):
-                stats['fan {name}{idx}'.format(idx=idx, name=name)] = speed
+                stats['Fan {name}{idx}'.format(idx=idx, name=name)] = speed
         # -- Temperature --
         for temp in self.temperature:
             stats["Temp {name}".format(name=temp)] = self.temperature[temp]
@@ -579,7 +573,13 @@ class jtop(Thread):
             for name, rail in self.power['rail'].items():
                 stats["Power {name}".format(name=temp)] = rail['power']
             # Load total current power
-            stats['power TOT'] = self.power['tot']['power']
+            stats['Power TOT'] = self.power['tot']['power']
+        # -- jetson_clocks --
+        if self.jetson_clocks is not None:
+            stats['jetson_clocks'] = 'ON' if self.jetson_clocks else 'OFF'
+        # -- NV Power Model --
+        if self.nvpmodel is not None:
+            stats['nvp model'] = self.nvpmodel.name
         return stats
 
     @property

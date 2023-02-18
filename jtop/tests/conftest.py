@@ -291,7 +291,7 @@ def reset_environment(device=""):
 def pytest_sessionfinish(session, exitstatus):
     if exitstatus != 0:
         # If session fail clear environment
-        print("Session fail [{exitstatus}]".format(exitstatus=exitstatus))
+        print("[{exitstatus}] Session fail".format(exitstatus=exitstatus))
 
 
 @pytest.hookimpl(tryfirst=True)

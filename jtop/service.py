@@ -302,7 +302,13 @@ class JtopServer(Process):
         self.fan.initialization()
         # Run setup
         if self.jetson_clocks.exists():
+            # Decode for initialization and reset
             data = self.jtop_decode()
+            # Reset CPU estimation
+            self.cpu.reset_estimation()
+            # Reset avg temperatures
+            self.power.reset_avg_power()
+            # Initialization jetson_clocks
             self.jetson_clocks.initialization(self.nvpmodel, data)
         # Read nvp_mode
         if self.nvpmodel.exists():
