@@ -16,56 +16,76 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import curses
+import time
+from copy import deepcopy
 
 
 class SmallButton:
-
-    def __init__(self, stdscr, action, key=''):
+    def __init__(self, stdscr, on_click, label='', toggle=False, trigger_key=None, info={}):
         self.stdscr = stdscr
-        self._key = key
-        self._action = action
-        self._timer = 0
-        self._start_pressed = False
-        self._old_status = False
+        self.on_click = on_click
+        self.toggle = toggle
+        self.selected = False
+        self.trigger_key = trigger_key
+        self.info = info
+        self.label = label
+        self.highlight_time = None
 
-    def draw(self, pos_y, pos_x, key, mouse, data={}, label='', color=curses.A_REVERSE):
-        # String label
-        if self._key and label:
-            string = "[{key}] {label}".format(label=label, key=self._key)
-        elif not self._key:
-            string = "{label}".format(label=label)
+    def update(self, y, x, label='', key=None, mouse=None, color=None):
+        label = label if label else self.label
+        if mouse and mouse[1] == y and x <= mouse[0] <= x + len(label) + 1:
+            self.selected = not self.selected if self.toggle else True
+            self.on_click(self.info, selected=self.selected)
+            self.highlight_time = time.time()
+        elif key == self.trigger_key:
+            self.selected = not self.selected if self.toggle else True
+            self.on_click(self.info, selected=self.selected)
+            self.highlight_time = time.time()
+
+        color_normal = color if color else curses.A_NORMAL
+
+        if self.trigger_key:
+            self.stdscr.addstr(y, x, '[{trigger_key}]{label}'.format(trigger_key=self.trigger_key,
+                               label=" " + label if label else ""), curses.A_REVERSE if self.selected else color_normal)
         else:
-            string = "[{key}]".format(key=self._key)
-        # status
-        status = self._keyPressed(key) or self._mousePressed(pos_y, pos_x, mouse, string)
-        # Update status
-        if self._old_status != status:
-            self._start_pressed = True
-            self._old_status = status
-        # Counter status pressed
-        if self._start_pressed:
-            if self._timer > 5:
-                self._start_pressed = False
-                self._timer = 0
-            self._timer += 1
-        # Draw button
-        self.stdscr.addstr(pos_y, pos_x, string, curses.A_NORMAL if self._start_pressed else color)
-        # Run action
-        if status:
-            # Run action
-            self._action(data)
+            self.stdscr.addstr(y, x, '[{label}]'.format(label=label), curses.A_REVERSE if self.selected else color_normal)
+        if self.highlight_time and not self.toggle and time.time() - self.highlight_time > 0.1:
+            self.selected = False
+            self.highlight_time = None
 
-    def _keyPressed(self, key):
-        # Default status
-        if not self._key:
-            return False
-        return key == ord(self._key)
+    def is_selected(self):
+        return self.selected
 
-    def _mousePressed(self, pos_y, pos_x, mouse, string):
-        if mouse:
-            mx, my = mouse
-            if my >= pos_y and my <= pos_y and \
-               mx >= pos_x and mx <= pos_x + len(string):
-                return True
-        return False
+    def set_selected(self, value):
+        self.selected = value
+
+    def get_label(self):
+        return self.label
+
+
+class ButtonList:
+    def __init__(self, stdscr, on_click, buttons=[], info={}):
+        self.buttons = []
+        self.on_click = on_click
+        self.stdscr = stdscr
+        self.info = info
+        self._selected = ''
+        # Load all buttons
+        for button in buttons:
+            self.add_button(button)
+
+    def add_button(self, label):
+        info_button = deepcopy(self.info)
+        info_button['label'] = label
+        button = SmallButton(self.stdscr, self.on_click, toggle=True, label=label, info=info_button)
+        self.buttons.append(button)
+
+    def update(self, y, x, key, mouse, selected_button):
+        # Update selected button
+        self._selected = selected_button
+        # Show all buttons
+        for i, button in enumerate(self.buttons):
+            name = button.get_label()
+            button.set_selected(self._selected == name)
+            button.update(y + i, x, key=key, mouse=mouse)
 # EOF

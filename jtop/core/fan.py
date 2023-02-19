@@ -166,12 +166,11 @@ def change_nvfancontrol_default(name, value):
 
 
 def nvfancontrol_is_active():
-    output = Command.run_command(['systemctl', 'status', 'nvfancontrol.service'])
-    # output = subprocess.run(cmd, capture_output=True, text=True).stdout
-    # status_is_active = os.system('systemctl is-active nvfancontrol.service')
-    # logger.info("nvfancontrol is-active output={status_is_active}".format(status_is_active=status_is_active))
-    # logger.info("nvfancontrol status output={output}".format(output=output))
-    return 'Active: active' in '\n'.join(output)
+    try:
+        output = Command.run_command(['systemctl', 'status', 'nvfancontrol.service'])
+        return 'Active: active' in '\n'.join(output)
+    except Command.CommandException:
+        return False
 
 
 class Fan(GenericInterface):
@@ -386,7 +385,7 @@ class FanService(object):
                         logger.info("Removed /var/lib/nvfancontrol/status")
                     # Restart service
                     os.system('systemctl start nvfancontrol')
-                    logger.info("Profile set {profile}".format(profile=profile))
+                    logger.info("Restart nvfancontrol With profile: \"{profile}\"".format(profile=profile))
             else:
                 logger.error("Profile {profile} doesn't exist".format(profile=profile))
                 return False
@@ -421,11 +420,6 @@ class FanService(object):
         if index >= len(self._fan_list[name]['pwm']):
             logger.error("Wrong index {index} for {name}".format(index=index, name=name))
             return
-        # Check constraints
-        if speed > 100:
-            speed = 100
-        if speed < 0:
-            speed = 0
         # Update configuration on board
         fan_config = self._config.get('fan', {})
         # Set new profile
@@ -435,12 +429,13 @@ class FanService(object):
         # Set new jetson_clocks configuration
         self._config.set('fan', fan_config)
         # Convert in PWM
-        pwm = str(ValueToPWM(speed))
+        pwm = ValueToPWM(speed)
+        pwm = FAN_PWM_CAP - 1 if pwm >= FAN_PWM_CAP else pwm
         # Set for all pwm the same speed value
         pwm_path = self._fan_list[name]['pwm'][index]
         if os.access(pwm_path, os.W_OK):
             with open(pwm_path, 'w') as f:
-                f.write(pwm)
+                f.write(str(pwm))
 
     def get_status(self):
         fan_status = {}

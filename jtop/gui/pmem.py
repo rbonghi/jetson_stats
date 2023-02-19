@@ -142,10 +142,10 @@ class MEM(Page):
                                color_text=curses.COLOR_CYAN,
                                color_chart=[curses.COLOR_YELLOW, curses.COLOR_BLUE, curses.COLOR_GREEN, curses.COLOR_CYAN])
         # Initialize buttons
-        self._button_cache = SmallButton(stdscr, self.action_cache, key='c')
-        self._button_increase = SmallButton(stdscr, self.action_increase, key='+')
-        self._button_decrease = SmallButton(stdscr, self.action_decrease, key='-')
-        self._button_create = SmallButton(stdscr, self.action_create, key='s')
+        self._button_cache = SmallButton(stdscr, self.action_cache, "clear cache", trigger_key='c')
+        self._button_increase = SmallButton(stdscr, self.action_increase, trigger_key='+')
+        self._button_decrease = SmallButton(stdscr, self.action_decrease, trigger_key='-')
+        self._button_create = SmallButton(stdscr, self.action_create, "Create new", trigger_key='s')
         self._button_swap = SmallButton(stdscr, self.action_swap)
         # Size swap
         self._swap_size = SWAP_MIN_SIZE
@@ -154,16 +154,16 @@ class MEM(Page):
         self._swap_pressed = -1
         self._swap_name = self.get_new_swap_name()
 
-    def action_cache(self, data):
+    def action_cache(self, info, selected):
         self.jetson.memory.clear_cache()
 
-    def action_create(self, data):
+    def action_create(self, info, selected):
         # Change status swap
         if not self.jetson.memory.swap_is_enable(self._swap_name):
             self.jetson.memory.swap_set(self._swap_size, self._swap_name, on_boot=True)
             self._swap_old_size = self._swap_size
 
-    def action_swap(self, data):
+    def action_swap(self, info, selected):
         swap_info = self.jetson.memory['SWAP']
         swap_table = swap_info['table']
         if self._swap_pressed != -1:
@@ -174,11 +174,11 @@ class MEM(Page):
             if self.jetson.memory.swap_is_enable(name) and swap['type'] == 'file':
                 self.jetson.memory.swap_deactivate(name)
 
-    def action_increase(self, data):
+    def action_increase(self, info, selected):
         if self._swap_size < SWAP_MAX_SIZE:
             self._swap_size += 1
 
-    def action_decrease(self, data):
+    def action_decrease(self, info, selected):
         if self._swap_size > SWAP_MIN_SIZE:
             self._swap_size -= 1
 
@@ -283,9 +283,9 @@ class MEM(Page):
             string_name = "{operation}{name}".format(operation=operation, name=name)
         # Swap controller button
         label = string_name if string_name else 'Select swap'
-        self._button_swap.draw(pos_y, pos_x, key, mouse, label=label, color=color)
+        self._button_swap.update(pos_y, pos_x, label, key, mouse, color=color)
         # Button create new swap
-        self._button_create.draw(pos_y + 2, pos_x, key, mouse, label="Create new")
+        self._button_create.update(pos_y + 2, pos_x, key=key, mouse=mouse)
         # Draw selected number
         if self._swap_size > self._swap_old_size:
             color = NColors.green()
@@ -296,8 +296,8 @@ class MEM(Page):
         self.stdscr.addstr(pos_y + 3, pos_x + 5, "{size: <2}".format(size=self._swap_size), color)
         self.stdscr.addstr(pos_y + 3, pos_x + 8, "GB", curses.A_BOLD)
         # Draw buttons
-        self._button_increase.draw(pos_y + 3, pos_x, key, mouse)
-        self._button_decrease.draw(pos_y + 3, pos_x + 11, key, mouse)
+        self._button_decrease.update(pos_y + 3, pos_x, key=key, mouse=mouse)
+        self._button_increase.update(pos_y + 3, pos_x + 11, key=key, mouse=mouse)
         # Draw swap name
         self._swap_name = self.get_new_swap_name()
         self.stdscr.addstr(pos_y + 4, pos_x, "New: ")
@@ -328,7 +328,7 @@ class MEM(Page):
             iram_gauge(self.stdscr, first + height // 2 - 1 + line_counter, 1, width - 22, self.jetson.memory['IRAM'])
             line_counter += 1
         # Draw buttons
-        self._button_cache.draw(first + height // 2, width - 20, key, mouse, label="clear cache ")
+        self._button_cache.update(first + height // 2, width - 20, key=key, mouse=mouse)
         self.draw_swap_controller(first + height // 2 + 2, width - 20, key, mouse)
         # Draw swap list
         self.draw_swap_table(first + height // 2 - 1 + line_counter, 0, width - 22, height - 2, key, mouse)

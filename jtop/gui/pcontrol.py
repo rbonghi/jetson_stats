@@ -22,9 +22,10 @@ from .lib.common import check_curses, unit_to_string
 # Graphic library
 from .lib.colors import NColors
 from .lib.chart import Chart
-from .lib.button import Button, ButtonList
+from .lib.smallbutton import SmallButton, ButtonList
 
 FAN_STEP = 10
+PROFILE_STR = "Profiles:"
 
 
 @check_curses
@@ -94,74 +95,77 @@ class CTRL(Page):
         # Only if exist a fan will be load a chart
         # Initialize FAN chart
         self._fan_gui = {}
-        for fan_idx, fan_name in enumerate(self.jetson.fan):
+        for fan_name in self.jetson.fan:
             fan = self.jetson.fan[fan_name]
-            self._fan_gui[fan_name] = []
-            for idx, speed in enumerate(fan['speed']):
+            # Initialize profile and list of fan
+            profiles = jetson.fan.all_profiles(fan_name)
+            button_list = ButtonList(stdscr, self.action_fan_profile, profiles, info={'name': fan_name})
+            size_profile = max([len(profile) for profile in profiles] + [len(PROFILE_STR)]) + 2
+            self._fan_gui[fan_name] = {'profile': button_list, 'fan': [], 'size_w': size_profile, 'len_profiles': len(profiles)}
+            # Initialize all fan chart and buttons
+            for idx in range(len(fan['speed'])):
                 chart_fan = Chart(jetson, "{name} {idx}".format(name=fan_name.upper(), idx=idx), self.update_chart,
                                   line="o", color_text=curses.COLOR_BLUE, color_chart=[curses.COLOR_BLUE])
-                self._fan_gui[fan_name] += [{'chart': chart_fan}]
-        # if self.jetson.fan:
-        #    self.chart_fan.statusChart(False, "NO FAN")
-        # Initialize buttons
-        self.service_start = Button(stdscr, key="s", action=self.action_service_start)
-        self.service_enable = Button(stdscr, key="e", action=self.action_service_enable)
-        # NVP Model controller
+                button_increase = SmallButton(stdscr, self.action_fan_increase, info={'name': fan_name, 'idx': idx})
+                button_decrease = SmallButton(stdscr, self.action_fan_decrease, info={'name': fan_name, 'idx': idx})
+                self._fan_gui[fan_name]['fan'] += [{'chart': chart_fan, 'increase': button_increase, 'decrease': button_decrease}]
+        # Initialize jetson_clocks buttons
+        if self.jetson.jetson_clocks is not None:
+            self._jetson_clocks_start = SmallButton(stdscr, self.action_jetson_clocks_start, trigger_key='s')
+            self._jetson_clocks_boot = SmallButton(stdscr, self.action_jetson_clocks_boot, trigger_key='e')
+        # Initialize NVP Model buttons
         if self.jetson.nvpmodel is not None:
-            self.nvp_increase = Button(stdscr, key="+", action=self.action_nvp_increase, underline=False)
-            self.nvp_decrease = Button(stdscr, key="-", action=self.action_nvp_decrease, underline=False)
-            mode_names = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
-            self.nvp_list = ButtonList(stdscr, mode_names, action=self.action_nvp)
-        # Fan controller
-        # if self.jetson.fan:
-        #    self.fan_status_increase = Button(stdscr, key="p", action=self.action_fan_increase)
-        #    self.fan_status_decrease = Button(stdscr, key="m", action=self.action_fan_decrease)
-        #    # Fan options
-        #    self.fan_list = ButtonList(stdscr, self.jetson.fan.configs, action=self.action_fan)
+            # nvp_modes = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
+            nvp_modes = self.jetson.nvpmodel.modes
+            self._nvpmodel_profile = ButtonList(stdscr, self.action_nvpmodels, nvp_modes)
+            self._nvpmodel_increase = SmallButton(stdscr, self.action_nvp_increase, trigger_key='+')
+            self._nvpmodel_decrease = SmallButton(stdscr, self.action_nvp_decrease, trigger_key='-')
 
-    def action_fan(self, key):
-        # Get config name
-        name = self.jetson.fan.configs[int(key)]
-        # Set new fan mode
-        self.jetson.fan.mode = name
+    def action_fan_profile(self, info, selected):
+        # Set new fan profile
+        self.jetson.fan.set_profile(info['name'], info['label'])
 
-    def action_nvp_increase(self, key):
-        # NVPmodel controller
-        self.jetson.nvpmodel += 1
+    def action_fan_increase(self, info, selected):
+        # Read current speed
+        speed = self.jetson.fan.get_speed(info['name'], info['idx'])
+        # Round and increase speed
+        spd = round(speed / 10) * 10 + FAN_STEP
+        new_speed = spd if spd <= 100 else 100
+        # Update fan speed
+        self.jetson.fan.set_speed(info['name'], new_speed, info['idx'])
 
-    def action_nvp_decrease(self, key):
-        # NVPmodel controller
-        self.jetson.nvpmodel -= 1
+    def action_fan_decrease(self, info, selected):
+        # Read current speed
+        speed = self.jetson.fan.get_speed(info['name'], info['idx'])
+        # Round and decrease speed
+        spd = round(speed / 10) * 10 - FAN_STEP
+        new_speed = spd if spd >= 0 else 0
+        # Update fan speed
+        self.jetson.fan.set_speed(info['name'], new_speed, info['idx'])
 
-    def action_nvp(self, key):
-        # Set new nvpmodel
-        self.jetson.nvpmodel = int(key)
-
-    def action_service_enable(self, key):
-        # Start jetson_clocks
-        self.jetson.jetson_clocks.boot = not self.jetson.jetson_clocks.boot
-
-    def action_service_start(self, key):
+    def action_jetson_clocks_start(self, info, selected):
         # Start jetson_clocks
         self.jetson.jetson_clocks = not self.jetson.jetson_clocks
 
-    def action_fan_increase(self, key):
-        speed = self.jetson.fan.speed
-        # Round speed
-        spd = (speed // 10) * 10
-        # Increase the speed
-        if spd + FAN_STEP <= 100:
-            self.jetson.fan.speed = spd + FAN_STEP
+    def action_jetson_clocks_boot(self, info, selected):
+        # Start jetson_clocks
+        self.jetson.jetson_clocks.boot = not self.jetson.jetson_clocks.boot
 
-    def action_fan_decrease(self, key):
-        speed = self.jetson.fan.speed
-        # Round speed
-        spd = (speed // 10) * 10
-        # Increase the speed
-        if spd - FAN_STEP >= 0:
-            self.jetson.fan.speed = spd - FAN_STEP
-        if speed < FAN_STEP:
-            self.jetson.fan.speed = 0
+    def action_nvpmodels(self, info, selected):
+        # Set new nvpmodel
+        self.jetson.nvpmodel = info['label']
+
+    def action_nvp_increase(self, info, selected):
+        # NVPmodel controller
+        if self.jetson.nvpmodel.id >= len(self.jetson.nvpmodel.modes) - 1:
+            return
+        self.jetson.nvpmodel += 1
+
+    def action_nvp_decrease(self, info, selected):
+        # NVPmodel controller
+        if self.jetson.nvpmodel.id <= 0:
+            return
+        self.jetson.nvpmodel -= 1
 
     def update_chart(self, jetson, name):
         info_chart = name.split(" ")
@@ -173,126 +177,81 @@ class CTRL(Page):
             'value': [speed],
         }
 
+    def compact_jetson_clocks(self, pos_y, pos_x, key, mouse):
+        if self.jetson.jetson_clocks is None:
+            return
+        # Show jetson_clocks
+        self.stdscr.addstr(pos_y, pos_x, "Jetson Clocks:", curses.A_BOLD)
+        # Status jetson clocks
+        jetson_clocks_status = self.jetson.jetson_clocks.status
+        # Color status
+        if jetson_clocks_status == "running":
+            color = (curses.A_BOLD | NColors.green())  # Running (Bold)
+        elif jetson_clocks_status == "inactive":
+            color = curses.A_NORMAL       # Normal (Grey)
+        elif "ing" in jetson_clocks_status:
+            color = NColors.yellow()  # Warning (Yellow)
+        else:
+            color = NColors.red()  # Error (Red)
+        # Draw status button
+        self._jetson_clocks_start.update(pos_y, pos_x + 15, jetson_clocks_status, key, mouse, color=color)
+        # Draw boot button
+        boot = self.jetson.jetson_clocks.boot
+        jetson_clocks_boot = "enable" if boot else "disable"
+        self.stdscr.addstr(pos_y, pos_x + 31, "on boot:", curses.A_BOLD)
+        color_boot = NColors.green() if boot else curses.A_NORMAL
+        self._jetson_clocks_boot.update(pos_y, pos_x + 40, jetson_clocks_boot, key, mouse, color=color_boot)
+
+    def compact_nvpmodes(self, pos_y, pos_x, key, mouse):
+        if self.jetson.nvpmodel is None:
+            return
+        # Draw all profiles
+        self.stdscr.addstr(pos_y, pos_x, "NVP modes:", curses.A_BOLD)
+        # Write ID NVP model
+        id = self.jetson.nvpmodel.id
+        color = NColors.yellow() if self.jetson.nvpmodel.is_running else curses.A_BOLD
+        self.stdscr.addstr(pos_y, pos_x + 16, str(id), color)
+        # Add buttons -/+
+        self._nvpmodel_decrease.update(pos_y, pos_x + 11, key=key, mouse=mouse)
+        self._nvpmodel_increase.update(pos_y, pos_x + 18, key=key, mouse=mouse)
+        # Draw all modes
+        current_mode = self.jetson.nvpmodel.name
+        self._nvpmodel_profile.update(pos_y + 1, pos_x + 2, key, mouse, current_mode)
+
     def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
         # Measure height
-        fan_height = (height * 2 // 3 - 4) // len(self.jetson.fan)
+        fan_height = (height * 1 // 3 + 2) // len(self.jetson.fan) if len(self.jetson.fan) > 0 else 0
         # Draw all GPU
         for fan_idx, (fan_gui, fan_name) in enumerate(zip(self._fan_gui, self.jetson.fan)):
             gui_chart = self._fan_gui[fan_gui]
             fan = self.jetson.fan[fan_name]
             # Split width for each pwm
             fan_speed_width = (width - 2) // len(fan['speed'])
+            # Print all profiles
+            pos_y_profiles = fan_height // 2 - gui_chart['len_profiles']
+            size_profile = gui_chart['size_w']
+            self.stdscr.addstr(first + 1 + fan_idx * (fan_height + 1) + pos_y_profiles - 1, 1, PROFILE_STR, curses.A_BOLD)
+            # Draw a button list with all profiles
+            profile = self.jetson.fan.get_profile(fan_name)
+            gui_chart['profile'].update(first + 1 + fan_idx * (fan_height + 1) + pos_y_profiles, 1, key, mouse, profile)
+            # Print all fans
             for idx, speed in enumerate(fan['speed']):
                 # Set size chart gpu
-                size_x = [1 + idx * fan_speed_width, 1 + (idx + 1) * (fan_speed_width - 2)]
-                size_y = [first + 1 + fan_idx * (fan_height + 1), first + 1 + (fan_idx + 1) * (fan_height - 3)]
+                size_x = [1 + idx * fan_speed_width + size_profile, 1 + (idx + 1) * (fan_speed_width - 2)]
+                size_y = [first + 1 + fan_idx * (fan_height + 1), first + 1 + (fan_idx + 1) * (fan_height - 1)]
                 # Print speed and RPM
                 label_fan = "PWM {speed: >3.0f}%".format(speed=speed)
                 if 'rpm' in fan:
-                    label_fan += " - {rpm}rpm".format(rpm=fan['rpm'][idx])
+                    label_fan += " - {rpm}RPM".format(rpm=fan['rpm'][idx])
                 # Draw GPU chart
-                gui_chart[idx]['chart'].draw(self.stdscr, size_x, size_y, label=label_fan)
-
-    @check_curses
-    def draw_old(self, key, mouse):
-        """ Control board, check status jetson_clocks and change NVP model """
-        # Screen size
-        height, width, first = self.size_page()
-        # Position information
-        start_y = first + 1
-        start_x = 1
-        # Status jetson_clocks
-        # Write status jetson_clocks
-        jc_status_name = self.jetson.jetson_clocks.status
-        # Show service status
-        if self.jetson.jetson_clocks.is_config:
-            self.service_start.draw(start_y + 3, start_x, key, mouse)
-        # Field service
-        jetson_clocks_string = "jetson_clocks"
-        self.stdscr.addstr(start_y + 4, start_x + 5, jetson_clocks_string, curses.A_UNDERLINE)
-        # Read status jetson_clocks
-        if jc_status_name == "running":
-            color = (curses.A_BOLD | NColors.green())  # Running (Bold)
-        elif jc_status_name == "inactive":
-            color = curses.A_NORMAL       # Normal (Grey)
-        elif "ing" in jc_status_name:
-            color = NColors.yellow()  # Warning (Yellow)
-        else:
-            color = NColors.red()  # Error (Red)
-        # Status jetson_clocks
-        self.stdscr.addstr(
-            start_y + 4, start_x + len(jetson_clocks_string) + 6,
-            jc_status_name.capitalize(),
-            color)
-        # button start/stop jetson clocks
-        self.service_enable.draw(start_y + 6, start_x, key, mouse)
-        # Read status jetson_clocks
-        jetson_clocks_boot_string = "boot"
-        self.stdscr.addstr(start_y + 7, start_x + 5, jetson_clocks_boot_string, curses.A_UNDERLINE)
-        boot = self.jetson.jetson_clocks.boot
-        self.stdscr.addstr(
-            start_y + 7, start_x + len(jetson_clocks_boot_string) + 6,
-            "Enable" if boot else "Disable",
-            curses.A_BOLD if boot else curses.A_NORMAL)
-        # Build NVP model list
-        nvpmodel = self.jetson.nvpmodel
-        if nvpmodel is not None:
-            nvp_id = nvpmodel.id
-            self.stdscr.addstr(start_y + 10, start_x, "NVP model", curses.A_BOLD)
-            # Draw keys to decrease nvpmodel
-            if nvp_id != 0:
-                self.nvp_decrease.draw(start_y + 9, start_x + 10, key, mouse)
-            # Draw selected number
-            self.stdscr.addstr(start_y + 10, start_x + 16, str(nvp_id), curses.A_NORMAL)
-            # Status NVP model service
-            if nvpmodel.is_running:
-                self.stdscr.addch(start_y + 10, start_x + 25, curses.ACS_DIAMOND, NColors.green() | curses.A_BOLD)
-            # Draw keys to increase nvpmodel
-            if nvp_id != len(self.jetson.nvpmodel.modes) - 1:
-                self.nvp_increase.draw(start_y + 9, start_x + 18, key, mouse)
-            # Write list of available modes
-            self.nvp_list.draw(
-                start_y + 12, start_x, width * 3 // 5 - start_x, key, mouse,
-                lstatus=nvpmodel.status,
-                select=nvp_id)
-        # Evaluate size chart
-        size_x = [start_x + width * 3 // 5 + 1, width - start_x - 1]
-        size_y = [start_y + 3, height - 3]
-        # Add label
-        label = ''
-        if self.jetson.fan:
-            speed0 = list(iter(self.jetson.fan.all_speed().values()))[0]
-            # Read status control fan and make label
-            ctrl = "Ta" if self.jetson.fan.auto else "Tm"
-            label = "{ctrl}={target: >3.0f}%".format(ctrl=ctrl, target=speed0)
-            # Fan label
-            self.stdscr.addstr(start_y, start_x, "Fan", curses.A_NORMAL)
-            self.stdscr.addstr(start_y + 1, start_x, "Speed", curses.A_BOLD)
-            # Draw keys to decrease fan speed
-            self.fan_status_decrease.draw(start_y, start_x + 6, key, mouse)
-            # Draw selected number
-            speed_str = "{speed: >3.0f}%".format(speed=speed0)
-            self.stdscr.addstr(start_y + 1, start_x + 12, speed_str, curses.A_NORMAL)
-            # Draw keys to increase fan speed
-            self.fan_status_increase.draw(start_y, start_x + 17, key, mouse)
-            # Write list of available modes
-            self.stdscr.addstr(start_y, start_x + 24, "Fan", curses.A_NORMAL)
-            self.stdscr.addstr(start_y + 1, start_x + 24, "Mode", curses.A_BOLD)
-            # Get ID from fan mode
-            fan_mode = self.jetson.fan.mode
-            fan_id = self.jetson.fan.configs.index(fan_mode)
-            self.fan_list.draw(start_y, start_x + 30, width, key, mouse, select=fan_id)
-        # Draw the GPU chart
-        self.chart_fan.draw(self.stdscr, size_x, size_y, label=label)
-
-    def keyboard(self, key):
-        if key == ord('f'):
-            l_configs = len(self.jetson.fan.configs)
-            idx = self.jetson.fan.configs.index(self.jetson.fan.mode)
-            # Get config name
-            name = self.jetson.fan.configs[(idx + 1) % l_configs]
-            # Set new fan mode
-            self.jetson.fan.mode = name
+                gui_chart['fan'][idx]['chart'].draw(self.stdscr, size_x, size_y, label=label_fan)
+                # buttons
+                gui_chart['fan'][idx]['decrease'].update(first + 1 + fan_idx * (fan_height + 1), 40, '-', key, mouse)
+                gui_chart['fan'][idx]['increase'].update(first + 1 + fan_idx * (fan_height + 1), 45, '+', key, mouse)
+        # Draw jetson clocks
+        self.compact_jetson_clocks(first + 1 + fan_height + 0, 1, key, mouse)
+        # Draw nvpmodels
+        self.compact_nvpmodes(first + 1 + fan_height + 1, 1, key, mouse)
 # EOF
