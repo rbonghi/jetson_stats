@@ -221,39 +221,47 @@ class CTRL(Page):
     def control_power(self, pos_y, pos_x, key, mouse):
         if not self.jetson.power:
             return
+        # Width  table
+        width = 53
         # Draw all power
         power = self.jetson.power['rail']
+        # Draw head table
+        self.stdscr.addch(pos_y, pos_x, curses.ACS_ULCORNER)
+        self.stdscr.addch(pos_y, pos_x + width - 1, curses.ACS_URCORNER)
+        self.stdscr.hline(pos_y, pos_x + 1, curses.ACS_HLINE, width - 2)
+        self.stdscr.addstr(pos_y, pos_x + 5, " Power ", curses.A_BOLD)
         # Draw header table
-        self.stdscr.addstr(pos_y, pos_x, "[Name]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y, pos_x + 18, "[Power]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y, pos_x + 26, "[Volt]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y, pos_x + 33, "[Curr]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y, pos_x + 40, "[Warn]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y, pos_x + 47, "[Crit]", curses.A_BOLD)
+        self.stdscr.addstr(pos_y + 1, pos_x, "[Name]", curses.A_BOLD)
+        self.stdscr.addstr(pos_y + 1, pos_x + 18, "[Power]", curses.A_BOLD)
+        self.stdscr.addstr(pos_y + 1, pos_x + 26, "[Volt]", curses.A_BOLD)
+        self.stdscr.addstr(pos_y + 1, pos_x + 33, "[Curr]", curses.A_BOLD)
+        self.stdscr.addstr(pos_y + 1, pos_x + 40, "[Warn]", curses.A_BOLD)
+        self.stdscr.addstr(pos_y + 1, pos_x + 47, "[Crit]", curses.A_BOLD)
         # Draw all values
+        pos_y_table = pos_y + 2
         for idx, name in enumerate(power):
             value = power[name]
-            self.stdscr.addstr(pos_y + 1 + idx, pos_x, name, curses.A_NORMAL)
+            self.stdscr.addstr(pos_y_table+ idx, pos_x, name, curses.A_NORMAL)
             # Convert all values in readable strings
             unit_volt = unit_to_string(value['volt'], value['unit'], 'V')
             unit_curr = unit_to_string(value['curr'], value['unit'], 'A')
             unit_power = unit_to_string(value['power'], value['unit'], 'W')
             # Print all values
-            self.stdscr.addstr(pos_y + 1 + idx, pos_x + 18, unit_power, curses.A_NORMAL)
-            self.stdscr.addstr(pos_y + 1 + idx, pos_x + 26, unit_volt, curses.A_NORMAL)
-            self.stdscr.addstr(pos_y + 1 + idx, pos_x + 33, unit_curr, curses.A_NORMAL)
+            self.stdscr.addstr(pos_y_table + idx, pos_x + 18, unit_power, curses.A_NORMAL)
+            self.stdscr.addstr(pos_y_table + idx, pos_x + 26, unit_volt, curses.A_NORMAL)
+            self.stdscr.addstr(pos_y_table + idx, pos_x + 33, unit_curr, curses.A_NORMAL)
             if 'warn' in value:
                 unit_curr_warn = unit_to_string(value['warn'], value['unit'], 'A')
-                self.stdscr.addstr(pos_y + 1 + idx, pos_x + 40, unit_curr_warn, curses.A_NORMAL)
+                self.stdscr.addstr(pos_y_table + idx, pos_x + 40, unit_curr_warn, curses.A_NORMAL)
             if 'crit' in value:
                 unit_curr_crit = unit_to_string(value['crit'], value['unit'], 'A')
-                self.stdscr.addstr(pos_y + 1 + idx, pos_x + 47, unit_curr_crit, curses.A_NORMAL)
+                self.stdscr.addstr(pos_y_table + idx, pos_x + 47, unit_curr_crit, curses.A_NORMAL)
         # Draw total power
         total = self.jetson.power['tot']
         len_power = len(power)
-        self.stdscr.addstr(pos_y + len_power + 1, pos_x, 'ALL', curses.A_BOLD)
+        self.stdscr.addstr(pos_y_table + len_power, pos_x, 'ALL', curses.A_BOLD)
         unit_power_total = unit_to_string(total['power'], total['unit'], 'W')
-        self.stdscr.addstr(pos_y + len_power + 1, pos_x + 18, unit_power_total, curses.A_BOLD)
+        self.stdscr.addstr(pos_y_table + len_power, pos_x + 18, unit_power_total, curses.A_BOLD)
 
     def draw(self, key, mouse):
         # Screen size
@@ -292,5 +300,5 @@ class CTRL(Page):
         # Draw nvpmodels
         self.control_nvpmodes(first + 1 + fan_height + 1, 1, key, mouse)
         # Draw all power info
-        self.control_power(first + 1 + fan_height + 2, width // 2 - 16, key, mouse)
+        self.control_power(first + 1 + fan_height + 1, width // 2 - 16, key, mouse)
 # EOF
