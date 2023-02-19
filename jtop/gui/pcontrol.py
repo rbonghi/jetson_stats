@@ -303,8 +303,8 @@ class CTRL(Page):
         # Draw nvpmodels
         width_spacing = 0
         if self.jetson.nvpmodel is not None:
-            self.control_nvpmodes(first + 1 + fan_height + line_counter, 1, key, mouse)
+            self.control_nvpmodes(first + 1 + line_counter, 1, key, mouse)
             width_spacing += width // 2 - 16
         # Draw all power info
-        self.control_power(first + 1 + fan_height + line_counter, width_spacing, key, mouse)
+        self.control_power(first + 1 + line_counter, width_spacing, key, mouse)
 # EOF
