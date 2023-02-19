@@ -47,7 +47,7 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
                 }
                 # Show RPM if exist
                 if 'rpm' in fan:
-                    rpm = "{rpm}RPM".format(rpm=fan['rpm'][idx])
+                    rpm = "{rpm:>4}RPM".format(rpm=fan['rpm'][idx])
                     stdscr.addstr(pos_y + line_counter, pos_x + width - 9, rpm, NColors.magenta())
                 size_fan_gauge = width - 12 if 'rpm' in fan else width - 3
                 basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, size_fan_gauge, data)
@@ -132,7 +132,11 @@ class ALL(Page):
             return
         # Plot low bar background line
         pos_y_mini_menu = height - 1 - self._height_menu
-        self.stdscr.hline(pos_y_mini_menu, 0, curses.ACS_HLINE, width)
+        self.stdscr.addch(pos_y_mini_menu, 0, curses.ACS_ULCORNER)
+        self.stdscr.addch(pos_y_mini_menu, width - 1, curses.ACS_URCORNER)
+        self.stdscr.hline(pos_y_mini_menu, 1, curses.ACS_HLINE, width - 2)
+        self.stdscr.vline(pos_y_mini_menu + 1, 0, curses.ACS_VLINE, pos_y_mini_menu - 1)
+        self.stdscr.vline(pos_y_mini_menu + 1, width - 1, curses.ACS_VLINE, pos_y_mini_menu - 1)
         # Add engines, temperature and power
         column_width = (width) // (self._n_columns)
         column_height = height - line_counter - 3 + first
@@ -146,7 +150,7 @@ class ALL(Page):
             column += column_width + 1
         # Plot temperatures
         if self.jetson.temperature:
-            size_temperatures = plot_temperatures(self.stdscr, column, pos_y_mini_menu, column_width - 4, column_height, self.jetson)
+            size_temperatures = plot_temperatures(self.stdscr, column + 1, pos_y_mini_menu, column_width - 4, column_height, self.jetson)
             if size_temperatures > column_height:
                 for n_arrow in range(column_width - 5):
                     self.stdscr.addch(first + height - 2, column + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)

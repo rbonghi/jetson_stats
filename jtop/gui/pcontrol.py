@@ -54,7 +54,7 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
         # Print temperature value
         try:
             stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=name))
-            stdscr.addstr(offset + idx + 1, start + offset // 2 + 3, ("{val:8.2f}C").format(val=value), color)
+            stdscr.addstr(offset + idx + 1, start + offset // 2 + 1, ("{val:8.2f}C").format(val=value), color)
         except curses.error:
             pass
         counter = idx
