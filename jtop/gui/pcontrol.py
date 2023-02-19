@@ -178,8 +178,6 @@ class CTRL(Page):
         }
 
     def control_jetson_clocks(self, pos_y, pos_x, key, mouse):
-        if self.jetson.jetson_clocks is None:
-            return
         # Show jetson_clocks
         self.stdscr.addstr(pos_y, pos_x, "Jetson Clocks:", curses.A_BOLD)
         # Status jetson clocks
@@ -203,8 +201,6 @@ class CTRL(Page):
         self._jetson_clocks_boot.update(pos_y, pos_x + 40, jetson_clocks_boot, key, mouse, color=color_boot)
 
     def control_nvpmodes(self, pos_y, pos_x, key, mouse):
-        if self.jetson.nvpmodel is None:
-            return
         # Draw all profiles
         self.stdscr.addstr(pos_y, pos_x, "NVP modes:", curses.A_BOLD)
         # Write ID NVP model
@@ -292,13 +288,23 @@ class CTRL(Page):
                     label_fan += " - {rpm}RPM".format(rpm=fan['rpm'][idx])
                 # Draw GPU chart
                 gui_chart['fan'][idx]['chart'].draw(self.stdscr, size_x, size_y, label=label_fan)
-                # buttons
-                gui_chart['fan'][idx]['decrease'].update(first + 1 + fan_idx * (fan_height + 1), 40, '-', key, mouse)
-                gui_chart['fan'][idx]['increase'].update(first + 1 + fan_idx * (fan_height + 1), 45, '+', key, mouse)
+                # Draw speed buttons
+                pos_x_control_fan = fan_speed_width // 2
+                self.stdscr.addstr(first + 1 + fan_idx * (fan_height + 1), 1 + fan_speed_width - pos_x_control_fan, "Control", curses.A_BOLD)
+                gui_chart['fan'][idx]['decrease'].update(first + 1 + fan_idx * (fan_height + 1),
+                                                         1 + fan_speed_width - pos_x_control_fan + 8, '-', key, mouse)
+                gui_chart['fan'][idx]['increase'].update(first + 1 + fan_idx * (fan_height + 1),
+                                                         1 + fan_speed_width - pos_x_control_fan + 12, '+', key, mouse)
         # Draw jetson clocks
-        self.control_jetson_clocks(first + 1 + fan_height, 1, key, mouse)
+        line_counter = fan_height
+        if self.jetson.jetson_clocks is not None:
+            self.control_jetson_clocks(first + 1 + line_counter, 1, key, mouse)
+            line_counter += 1
         # Draw nvpmodels
-        self.control_nvpmodes(first + 1 + fan_height + 1, 1, key, mouse)
+        width_spacing = 0
+        if self.jetson.nvpmodel is not None:
+            self.control_nvpmodes(first + 1 + fan_height + line_counter, 1, key, mouse)
+            width_spacing += width // 2 - 16
         # Draw all power info
-        self.control_power(first + 1 + fan_height + 1, width // 2 - 16, key, mouse)
+        self.control_power(first + 1 + fan_height + line_counter, width_spacing, key, mouse)
 # EOF
