@@ -36,6 +36,7 @@ from .core.jetson_variables import get_jetson_variables, get_platform_variables
 from .core.timer_reader import TimerReader
 from .core.cpu import CPUService
 from .core.memory import MemoryService
+from .core.processes import ProcessService
 from .core.gpu import GPUService
 from .core.engine import EngineService
 from .core.temperature import TemperatureService
@@ -278,6 +279,8 @@ class JtopServer(Process):
         # From this point are initialized or hardware services
         # Setup cpu service
         self.cpu = CPUService()
+        # Setup process service
+        self.processes = ProcessService()
         # Setup memory service
         self.memory = MemoryService(self.config)
         # Setup gpu service
@@ -535,6 +538,9 @@ class JtopServer(Process):
         # -- CPU --
         # Read CPU data
         data['cpu'] = self.cpu.get_status()
+        # -- All processes
+        total, table = self.processes.get_status()
+        data['processes'] = table
         # -- RAM --
         # Read memory data
         # In this dictionary are collected
@@ -542,7 +548,7 @@ class JtopServer(Process):
         # - SWAP
         # - EMC (If available)
         # - IRAM (If available)
-        data['mem'] = self.memory.get_status()
+        data['mem'] = self.memory.get_status(total)
         # -- GPU ---
         # Read GPU status
         data['gpu'] = self.gpu.get_status()

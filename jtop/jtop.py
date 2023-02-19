@@ -729,6 +729,16 @@ class jtop(Thread):
         return self._stats['cpu']
 
     @property
+    def processes(self):
+        """
+        List of all GPU processes running.
+
+        :return: GPU processes, frequencies and speed
+        :rtype: dict
+        """
+        return self._stats['processes']
+
+    @property
     def gpu(self):
         """
         GPU engine. The fields are:

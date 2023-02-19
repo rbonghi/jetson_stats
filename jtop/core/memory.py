@@ -22,6 +22,7 @@ import shlex
 # Logging
 import logging
 import subprocess as sp
+from .processes import read_process_table
 from .engine import read_engine
 from .common import cat, GenericInterface
 from .command import Command
@@ -30,8 +31,6 @@ logger = logging.getLogger(__name__)
 # Memory regular exception
 MEMINFO_REG = re.compile(r'(?P<key>.+):\s+(?P<value>.+) (?P<unit>.)B')
 BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(?P<nr_free>.*)')
-MEM_TABLE_REG = re.compile(r'(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
-TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
 SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>-?\d+)')
 # Swap configuration
 PATH_FSTAB = '/etc/fstab'
@@ -75,45 +74,6 @@ def buddyinfo(page_size):
             "usage": usage_in_bytes}
         buddyhash[numa_node] = buddyhash[numa_node] + [data] if numa_node in buddyhash else [data]
     return buddyhash
-
-
-def read_mem_table(path_table):
-    """
-    This method list all processes working with GPU
-
-    ========== ============ ======== =============
-    user       process      PID      size
-    ========== ============ ======== =============
-    user       name process number   dictionary
-    ========== ============ ======== =============
-
-    :return: list of all processes
-    :type spin: list
-    """
-    table = []
-    total = {}
-    with open(path_table, "r") as fp:
-        for line in fp:
-            # Search line
-            match = re.search(MEM_TABLE_REG, line)
-            if match:
-                parsed_line = match.groupdict()
-                data = [
-                    parsed_line['user'],
-                    parsed_line['process'],
-                    parsed_line['PID'],
-                    {'size': int(parsed_line['size']), 'unit': parsed_line['unit'].lower()}
-                ]
-                table += [data]
-                continue
-            # Find total on table
-            match = re.search(TOT_TABLE_REG, line)
-            if match:
-                parsed_line = match.groupdict()
-                total = {'size': int(parsed_line['size']), 'unit': parsed_line['unit'].lower()}
-                continue
-    # return total and table
-    return total, table
 
 
 def read_swapon():
@@ -323,7 +283,6 @@ class MemoryService(object):
         if os.getenv('JTOP_TESTING', False):
             self._root_path = "/fake_sys/kernel"
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=self._root_path))
-        self._isJetson = os.path.isfile(self._root_path + "/debug/nvmap/iovmm/maps")
         self._is_emc = True if read_emc(self._root_path) else False
         if self._is_emc:
             logger.info("Found EMC!")
@@ -399,7 +358,7 @@ class MemoryService(object):
         # Run script
         logger.info("Deactivate {path_swap}".format(path_swap=path_swap))
 
-    def get_status(self):
+    def get_status(self, mem_total):
         memory = {}
         # Measure the largest free bank for 4MB
         mem_size = buddyinfo(self._page_size)
@@ -414,13 +373,9 @@ class MemoryService(object):
         # This key is always available on Jetson (not really always)
         ram_shared = status_mem.get('NvMapMemUsed', {})
         ram_shared_val = ram_shared.get('size', 0)
-        table = []
-        if self._isJetson:
-            # Update table
-            # Use the memory table to measure
-            total, table = read_mem_table(self._root_path + "/debug/nvmap/iovmm/maps")
+        if mem_total:
             # Update shared size
-            ram_shared_val = total['size'] if ram_shared_val == 0 else ram_shared_val
+            ram_shared_val = mem_total['size'] if ram_shared_val == 0 else ram_shared_val
         # Extract memory info
         ram_total = status_mem.get('MemTotal', {})
         ram_free = status_mem.get('MemFree', {})
@@ -442,9 +397,6 @@ class MemoryService(object):
             'unit': ram_total.get('unit', 'k'),
             'lfb': large_free_bank,  # In 4MB
         }
-        # Add memory table ONLY if available
-        if table:
-            memory['RAM']['table'] = table
         # Extract swap numbers
         swap_total = status_mem.get('SwapTotal', {})
         swap_free = status_mem.get('SwapFree', {})
@@ -472,7 +424,7 @@ class MemoryService(object):
             if os.path.isfile(self._root_path + "/debug/nvmap/iram/size"):
                 # Convert from Hex to decimal - Number in bytes
                 size = int(cat(self._root_path + "/debug/nvmap/iram/size"), 16) // 1024
-            used_total, _ = read_mem_table(self._root_path + "/debug/nvmap/iram/clients")
+            used_total, _ = read_process_table(self._root_path + "/debug/nvmap/iram/clients")
             memory['IRAM'] = {
                 'tot': size,
                 'used': used_total.get('val', 0),
