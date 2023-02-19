@@ -63,17 +63,22 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson):
 
 def compact_processes(stdscr, pos_y, pos_x, width, height, key, mouse, processes):
     column = 20
+    line_sort = 3
     # Plot low bar background line
     stdscr.addstr(pos_y, 0, " " * width, NColors.igreen())
-    stdscr.addstr(pos_y, 0, "PID", NColors.igreen())
-    stdscr.addstr(pos_y, column, "USER", NColors.igreen())
-    stdscr.addstr(pos_y, 2 * column, "Command", NColors.igreen())
-    stdscr.addstr(pos_y, 3 * column, "Memory", NColors.igreen())
+    stdscr.addstr(pos_y, 0, "PID", NColors.igreen() | curses.A_BOLD)
+    stdscr.addstr(pos_y, column, "USER", NColors.igreen() | curses.A_BOLD)
+    stdscr.addstr(pos_y, 2 * column, "Command", NColors.igreen() | curses.A_BOLD)
+    stdscr.addstr(pos_y, 3 * column, "Memory", NColors.igreen() | curses.A_BOLD)
+    # Sort table for selected line
+    sorted_processes = sorted(processes, key=lambda x: x[line_sort], reverse=True)
     # Draw all processes
-    for nprocess, process in enumerate(processes):
-        for ncolumn, value in enumerate(process):
-            # if ncolumn
-            value = size_to_string(value['size'], value['unit']) if ncolumn == len(process) - 1 else value
+    for nprocess, process in enumerate(sorted_processes):
+        # Skip unit size process
+        for ncolumn in range(4):
+            value = process[ncolumn]
+            # if size process, rewrite in a nice view
+            value = size_to_string(value, process[-1]) if ncolumn == 3 else value
             stdscr.addstr(pos_y + nprocess + 1, ncolumn * column, str(value), curses.A_NORMAL)
     return len(processes)
 

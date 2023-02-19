@@ -51,7 +51,8 @@ def read_process_table(path_table):
                     parsed_line['PID'],
                     parsed_line['user'],
                     parsed_line['process'],
-                    {'size': int(parsed_line['size']), 'unit': parsed_line['unit'].lower()}
+                    int(parsed_line['size']),
+                    parsed_line['unit'].lower(),
                 ]
                 table += [data]
                 continue
