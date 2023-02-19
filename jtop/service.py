@@ -279,12 +279,12 @@ class JtopServer(Process):
         # From this point are initialized or hardware services
         # Setup cpu service
         self.cpu = CPUService()
+        # Setup gpu service
+        self.gpu = GPUService()
         # Setup process service
         self.processes = ProcessService()
         # Setup memory service
         self.memory = MemoryService(self.config)
-        # Setup gpu service
-        self.gpu = GPUService()
         # Setup engine service
         self.engine = EngineService()
         # Setup Temperature service
@@ -538,6 +538,9 @@ class JtopServer(Process):
         # -- CPU --
         # Read CPU data
         data['cpu'] = self.cpu.get_status()
+        # -- GPU ---
+        # Read GPU status
+        data['gpu'] = self.gpu.get_status()
         # -- All processes
         total, table = self.processes.get_status()
         data['processes'] = table
@@ -549,9 +552,6 @@ class JtopServer(Process):
         # - EMC (If available)
         # - IRAM (If available)
         data['mem'] = self.memory.get_status(total)
-        # -- GPU ---
-        # Read GPU status
-        data['gpu'] = self.gpu.get_status()
         # -- Engines --
         # Read all engines available
         # Can be empty for x86 architecture

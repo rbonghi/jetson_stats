@@ -66,6 +66,46 @@ def read_process_table(path_table):
     return total, table
 
 
+def read_all_processes():
+    processes = []
+    sc_clk_tck = os.sysconf('SC_CLK_TCK')
+    sc_page_size = os.sysconf('SC_PAGE_SIZE')
+    # Loop over all processes in /proc
+    for pid in os.listdir('/proc'):
+        if pid.isdigit():
+            with open(os.path.join('/proc', pid, 'cmdline'), 'rb') as f:
+                cmdline = f.read().decode('utf-8').replace('\0', ' ')
+                # Skip if there is no name
+                if not cmdline:
+                    continue
+            with open(os.path.join('/proc', pid, 'stat'), 'rb') as f:
+                stat = f.read().decode('utf-8')
+                fields = stat.split()
+                pid = fields[0]
+                utime = float(fields[13]) / sc_clk_tck
+                stime = float(fields[14]) / sc_clk_tck
+                with open(os.path.join('/proc', pid, 'statm'), 'rb') as f:
+                    statm = f.read().decode('utf-8')
+                    mem = int(statm.split()[0]) * sc_page_size / (1024.0 ** 2)
+                priority = fields[17]
+                tasks = int(open(os.path.join('/proc', pid, 'status')).read().split('Threads:\t')[1].split('\n')[0])
+                state = fields[2]
+            cpu = 100 * (utime + stime) / float(open('/proc/uptime', 'r').readline().split()[0])
+            process = {
+                'PID': pid,
+                'CMD': cmdline,
+                'CPU': cpu,
+                'MEM': mem,
+                'UTIME': utime,
+                'STIME': stime,
+                'PRIORITY': priority,
+                'TASKS': tasks,
+                'STATE': state
+            }
+            processes.append(process)
+    return process
+
+
 class ProcessService(object):
 
     def __init__(self):
