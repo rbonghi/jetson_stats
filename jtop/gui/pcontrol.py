@@ -105,7 +105,7 @@ class CTRL(Page):
             # Initialize all fan chart and buttons
             for idx in range(len(fan['speed'])):
                 chart_fan = Chart(jetson, "{name} {idx}".format(name=fan_name.upper(), idx=idx), self.update_chart,
-                                  line="o", color_text=curses.COLOR_BLUE, color_chart=[curses.COLOR_BLUE])
+                                  line="o", color_text=curses.COLOR_CYAN, color_chart=[curses.COLOR_CYAN])
                 button_increase = SmallButton(stdscr, self.action_fan_increase, info={'name': fan_name, 'idx': idx})
                 button_decrease = SmallButton(stdscr, self.action_fan_decrease, info={'name': fan_name, 'idx': idx})
                 self._fan_gui[fan_name]['fan'] += [{'chart': chart_fan, 'increase': button_increase, 'decrease': button_decrease}]

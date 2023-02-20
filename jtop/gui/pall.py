@@ -21,8 +21,7 @@ from .jtopgui import Page
 from .lib.common import (
     strfdelta,
     plot_name_info,
-    jetson_clocks_gui,
-    nvp_model_gui)
+    jetson_clocks_gui)
 from .lib.colors import NColors
 from .lib.linear_gauge import basic_gauge
 from .lib.common import size_to_string
@@ -41,23 +40,23 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
             for idx, speed in enumerate(fan['speed']):
                 data = {
                     'name': 'Fan {idx}'.format(idx=idx) if len(fan['speed']) > 1 else 'FAN',
-                    'color': NColors.magenta(),
+                    'color': NColors.cyan(),
                     'online': jetson.fan,
-                    'values': [(speed, NColors.magenta() | curses.A_BOLD)]
+                    'values': [(speed, NColors.cyan())]
                 }
                 # Show RPM if exist
                 if 'rpm' in fan:
                     rpm = "{rpm:>4}RPM".format(rpm=fan['rpm'][idx])
-                    stdscr.addstr(pos_y + line_counter, pos_x + width - 9, rpm, NColors.magenta())
+                    stdscr.addstr(pos_y + line_counter, pos_x + width - 9, rpm, curses.A_NORMAL)
                 size_fan_gauge = width - 12 if 'rpm' in fan else width - 3
                 basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, size_fan_gauge, data)
                 line_counter += 1
     else:
         data = {
             'name': 'Fan',
-            'color': NColors.magenta(),
+            'color': NColors.cyan(),
             'online': False,
-            'coffline': NColors.imagenta(),
+            'coffline': NColors.icyan(),
             'message': 'NOT AVAILABLE',
         }
         basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, width - 3, data)
@@ -68,7 +67,7 @@ def compact_status(stdscr, pos_y, pos_x, width, jetson):
         line_counter += 1
     # NVP Model
     if jetson.nvpmodel is not None:
-        nvp_model_gui(stdscr, pos_y + line_counter, pos_x + 1, jetson)
+        plot_name_info(stdscr, pos_y + line_counter, pos_x + 1, "NV Power[" + str(jetson.nvpmodel.id) + "]", jetson.nvpmodel.name)
         line_counter += 1
     # Model board information
     uptime_string = strfdelta(jetson.uptime, "{days} days {hours}:{minutes}:{seconds}")

@@ -66,35 +66,40 @@ def read_process_table(path_table):
     return total, table
 
 
-def read_all_processes():
-    processes = []
-    sc_clk_tck = os.sysconf('SC_CLK_TCK')
-    sc_page_size = os.sysconf('SC_PAGE_SIZE')
-    # Loop over all processes in /proc
-    for pid in os.listdir('/proc'):
-        if pid.isdigit():
-            with open(os.path.join('/proc', pid, 'cmdline'), 'rb') as f:
-                cmdline = f.read().decode('utf-8').replace('\0', ' ')
-                # Skip if there is no name
-                if not cmdline:
-                    continue
-            with open(os.path.join('/proc', pid, 'stat'), 'rb') as f:
-                stat = f.read().decode('utf-8')
-                fields = stat.split()
-                pid = fields[0]
-                utime = float(fields[13]) / sc_clk_tck
-                stime = float(fields[14]) / sc_clk_tck
-                with open(os.path.join('/proc', pid, 'statm'), 'rb') as f:
-                    statm = f.read().decode('utf-8')
-                    mem = int(statm.split()[0]) * sc_page_size / (1024.0 ** 2)
-                priority = fields[17]
-                tasks = int(open(os.path.join('/proc', pid, 'status')).read().split('Threads:\t')[1].split('\n')[0])
-                state = fields[2]
-            cpu = 100 * (utime + stime) / float(open('/proc/uptime', 'r').readline().split()[0])
+def get_process_info(clk_tck, page_size):
+    # Get the list of process IDs
+    pids = [pid for pid in os.listdir('/proc') if pid.isdigit()]
+
+    # Initialize an empty dictionary to store the process information
+    processes = {}
+
+    # Loop over all process IDs and read the stat, cmdline, and statm files
+    for pid in pids:
+        with open(f'/proc/{pid}/stat') as stat_file, open(f'/proc/{pid}/cmdline') as cmdline_file, open(f'/proc/{pid}/statm') as statm_file:
+            stat = stat_file.read().split()
+            cmdline = cmdline_file.read().replace('\0', ' ').strip()
+            statm = statm_file.read().split()
+            
+            if not cmdline:
+                continue
+            # Extract the process information from the stat and statm files
+            pid = stat[0]
+            utime = float(stat[13]) / clk_tck
+            stime = float(stat[14]) / clk_tck
+            mem = int(statm[0]) * page_size / (1024.0 ** 2)
+            priority = stat[17]
+            tasks = int(open(os.path.join('/proc', pid, 'status')).read().split('Threads:\t')[1].split('\n')[0])
+            state = stat[2]
+
+            # Calculate the CPU usage
+            uptime = open('/proc/uptime', 'r').readline().split()[0]
+            total_time = utime + stime
+            cpu_percent = 100 * ((total_time / clk_tck) / float(uptime))
+
+            # Store the process information in the dictionary
             process = {
-                'PID': pid,
                 'CMD': cmdline,
-                'CPU': cpu,
+                'CPU': cpu_percent,
                 'MEM': mem,
                 'UTIME': utime,
                 'STIME': stime,
@@ -102,8 +107,9 @@ def read_all_processes():
                 'TASKS': tasks,
                 'STATE': state
             }
-            processes.append(process)
-    return process
+            processes[pid] = process
+
+    return processes
 
 
 class ProcessService(object):
@@ -116,12 +122,25 @@ class ProcessService(object):
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=self._root_path))
         # Check if jetson board
         self._isJetson = os.path.isfile(self._root_path + "/debug/nvmap/iovmm/maps")
+        # Get the clock ticks per second and page size
+        self._clk_tck = os.sysconf('SC_CLK_TCK')
+        self._page_size = os.sysconf('SC_PAGE_SIZE')
         # Initialization memory
         logger.info("Process service started")
+        # Test
+        table = get_process_info(self._clk_tck, self._page_size)
+        threads = sum([process['TASKS'] for pid, process in table.items()]) - len(table)
+        running = sum([1 for pid, process in table.items() if process['STATE'] == 'R'])
+        print("Tasks:", len(table), "Threads:", threads, "Running:", running)
 
     def get_status(self):
         total = {}
         table = []
+        # load all processes
+        table = get_process_info(self._clk_tck, self._page_size)
+        threads = sum([process['TASKS'] for pid, process in table.items()]) - len(table)
+        running = sum([1 for pid, process in table.items() if process['STATE'] == 'R'])
+        print("Tasks:", len(table), "Threads:", threads, "Running:", running)
         # Update table
         if self._isJetson:
             # Use the memory table to measure
