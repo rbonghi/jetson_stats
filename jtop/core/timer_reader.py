@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from threading import Thread, Event
+import sys
 import time
+from threading import Thread, Event
 # Logging
 import logging
 # Create logger
@@ -49,14 +50,17 @@ class TimerReader:
                 if interval > delta:
                     time.sleep(interval - delta)
         except (KeyboardInterrupt, SystemExit):
-            pass
-        except AttributeError:
-            pass
-        except IOError:
-            pass
+            logger.info("KeyboardInterrupt or SystemExit, exit timer_reader thread")
+        except Exception as e:
+            logger.fatal("Exception in 'timer_reader thread': {}".format(e))
+            # Store error message
+            self._error = sys.exc_info()
         logger.debug("jtop timer stopped")
 
     def open(self, interval=0.5):
+        # Catch exception if exist
+        self._error_status()
+        # Check if not running
         if self._thread is not None:
             return False
         # Check if thread or process exist
@@ -68,15 +72,20 @@ class TimerReader:
 
     def close(self, timeout=None):
         # Catch exception if exist
-        if self._error:
-            # Extract exception and raise
-            ex_type, ex_value, tb_str = self._error
-            ex_value.__traceback__ = tb_str
-            raise ex_value
+        self._error_status()
         # Check if thread and process are already empty
         self._stop_event.clear()
         if self._thread is not None:
             self._thread.join(timeout)
             self._thread = None
         return True
+
+    def _error_status(self):
+        # Catch exception if exist
+        if not self._error:
+            return
+        # Extract exception and raise
+        ex_type, ex_value, tb_str = self._error
+        ex_value.__traceback__ = tb_str
+        raise ex_value
 # EOF

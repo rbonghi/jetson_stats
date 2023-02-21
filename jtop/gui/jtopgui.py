@@ -134,7 +134,8 @@ class JTOPGUI:
                 self.increase(loop=True)
                 old = datetime.now()
 
-    @check_size(20, 50)
+    # TODO Remove completely
+    # @check_size(20, 50)
     def draw(self):
         # First, clear the screen
         self.stdscr.erase()

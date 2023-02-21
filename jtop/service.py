@@ -85,7 +85,7 @@ def remove_service_pipe():
     if os.path.isdir(JTOP_PIPE):
         logger.info("Remove folder {pipe}".format(pipe=JTOP_PIPE))
         rmtree(JTOP_PIPE)
-    elif os.path.isfile(JTOP_PIPE):
+    elif os.path.exists(JTOP_PIPE):
         logger.info("Remove pipe {pipe}".format(pipe=JTOP_PIPE))
         os.remove(JTOP_PIPE)
 

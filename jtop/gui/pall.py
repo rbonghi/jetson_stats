@@ -98,15 +98,19 @@ class ALL(Page):
         # Add Process table
         self.process_table = ProcessTable(self.stdscr, self.jetson.processes)
         # Number columns
+        self._max_height_menu = 0
         self._n_columns = 0
         if jetson.engine:
             self._n_columns += 1
+            self._max_height_menu = max(self._max_height_menu, 5)
         if jetson.temperature:
             self._n_columns += 1
+            self._max_height_menu = max(self._max_height_menu, len(jetson.temperature))
         if jetson.power:
             self._n_columns += 1
-        # mini menu size
-        self._height_menu = 6
+            self._max_height_menu = max(self._max_height_menu, len(jetson.power['rail']) + 1)
+        # End corner
+        self._max_height_menu += 2
 
     def draw(self, key, mouse):
         """
@@ -128,32 +132,46 @@ class ALL(Page):
         # Status disk
         line_counter += disk_gauge(self.stdscr, line_counter, 0, width, self.jetson.disk)
         # Plot all processes
-        line_counter += self.process_table.draw(line_counter, 0, width, height, key, mouse)
+        height_free_area = height - line_counter - self._max_height_menu - 1
+        line_counter += self.process_table.draw(line_counter, 0, width, height_free_area, key, mouse)
         # If empty return
         if self._n_columns == 0:
             return
         # Plot low bar background line
-        pos_y_mini_menu = height - 1 - self._height_menu
-        self.stdscr.addch(pos_y_mini_menu, 0, curses.ACS_ULCORNER)
-        self.stdscr.addch(pos_y_mini_menu, width - 1, curses.ACS_URCORNER)
-        self.stdscr.hline(pos_y_mini_menu, 1, curses.ACS_HLINE, width - 2)
-        self.stdscr.vline(pos_y_mini_menu + 1, 0, curses.ACS_VLINE, pos_y_mini_menu - 1)
-        self.stdscr.vline(pos_y_mini_menu + 1, width - 1, curses.ACS_VLINE, pos_y_mini_menu - 1)
+        pos_y_mini_menu = line_counter + 2
+        if height_free_area > 2:
+            pos_y_mini_menu = height - self._max_height_menu - 1
+        column_height = height - pos_y_mini_menu
+        # Upper block
+        try:
+            self.stdscr.addch(pos_y_mini_menu, 0, curses.ACS_ULCORNER)
+            self.stdscr.addch(pos_y_mini_menu, width - 1, curses.ACS_URCORNER)
+            self.stdscr.hline(pos_y_mini_menu, 1, curses.ACS_HLINE, width - 2)
+        except curses.error:
+            pass
+        # Lines
+        self.stdscr.vline(pos_y_mini_menu + 1, 0, curses.ACS_VLINE, column_height - 3)
+        self.stdscr.vline(pos_y_mini_menu + 1, width - 1, curses.ACS_VLINE, column_height - 3)
+        try:
+            self.stdscr.addch(pos_y_mini_menu + self._max_height_menu - 1, 0, curses.ACS_LLCORNER)
+            self.stdscr.addch(pos_y_mini_menu + self._max_height_menu - 1, width - 1, curses.ACS_LRCORNER)
+            self.stdscr.hline(pos_y_mini_menu + self._max_height_menu - 1, 1, curses.ACS_HLINE, width - 2)
+        except curses.error:
+            pass
         # Add engines, temperature and power
         column_width = (width) // (self._n_columns)
-        column_height = height - line_counter - 3 + first
         # Plot compact info
         column = 0
         if self.jetson.engine:
             size_info = compact_engines(self.stdscr, 0, pos_y_mini_menu, column_width + 2, self.jetson)
-            if size_info > column_height:
+            if size_info >= column_height:
                 for n_arrow in range(column_width + 1):
                     self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
             column += column_width + 1
         # Plot temperatures
         if self.jetson.temperature:
             size_temperatures = plot_temperatures(self.stdscr, column + 1, pos_y_mini_menu, column_width - 4, column_height, self.jetson)
-            if size_temperatures > column_height:
+            if size_temperatures > (column_height - 3):
                 for n_arrow in range(column_width - 5):
                     self.stdscr.addch(first + height - 2, column + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
             column += column_width + 1

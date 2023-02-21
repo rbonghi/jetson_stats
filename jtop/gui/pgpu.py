@@ -147,5 +147,6 @@ class GPU(Page):
             gpu_freq['name'] = "Frq"
             freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, 1, frq_size, gpu_freq)
         # Draw all Processes
-        self.process_table.draw(first + 2 + gpu_height, 0, width, height, key, mouse)
+        height_table = height - first + 2 + gpu_height
+        self.process_table.draw(first + 2 + gpu_height, 0, width, height_table, key, mouse)
 # EOF

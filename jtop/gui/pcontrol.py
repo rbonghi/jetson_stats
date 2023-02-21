@@ -54,7 +54,7 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
         # Print temperature value
         try:
             stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=name))
-            stdscr.addstr(offset + idx + 1, start + offset // 2 + 1, ("{val:8.2f}C").format(val=value), color)
+            stdscr.addstr(offset + idx + 1, start + 12, ("{val:3.2f}C").format(val=value), color)
         except curses.error:
             pass
         counter = idx
@@ -86,6 +86,7 @@ def plot_watts(stdscr, start, offset, width, height, jetson):
     stdscr.addstr(offset + len_power + 1, start + 3, unit_power, curses.A_BOLD)
     unit_avg = unit_to_string(total['avg'], total['unit'], 'W')
     stdscr.addstr(offset + len_power + 1, start + 10, unit_avg, curses.A_BOLD)
+    return len(power) + 1
 
 
 class CTRL(Page):

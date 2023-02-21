@@ -72,4 +72,8 @@ class ProcessTable(object):
                     counter += info['clm']
                 except curses.error:
                     break
-        return len(self.processes)
+            # Stop loop if table is bigger than height
+            if nprocess > height - 2:
+                break
+        return nprocess
+# EOF

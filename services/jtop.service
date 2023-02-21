@@ -15,6 +15,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 [Unit]
 Description=jtop service
+After=multi-user.target
 
 [Service]
 # Type=exec
