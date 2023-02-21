@@ -117,7 +117,7 @@ def get_process_info(clk_tck, page_size):
 class ProcessService(object):
 
     def __init__(self):
-        self.usernames = {4294967295: "daemon"}
+        self.usernames = {4294967295: "root"}
         # board type
         self._root_path = "/sys/kernel"
         if os.getenv('JTOP_TESTING', False):
