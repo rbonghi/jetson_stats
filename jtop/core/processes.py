@@ -17,6 +17,8 @@
 
 import re
 import os
+import pwd
+from .common import cat
 # Logging
 import logging
 # Create logger
@@ -79,7 +81,7 @@ def get_process_info(clk_tck, page_size):
             stat = stat_file.read().split()
             cmdline = cmdline_file.read().replace('\0', ' ').strip()
             statm = statm_file.read().split()
-            
+
             if not cmdline:
                 continue
             # Extract the process information from the stat and statm files
@@ -115,6 +117,7 @@ def get_process_info(clk_tck, page_size):
 class ProcessService(object):
 
     def __init__(self):
+        self.usernames = {4294967295: "daemon"}
         # board type
         self._root_path = "/sys/kernel"
         if os.getenv('JTOP_TESTING', False):
@@ -127,23 +130,49 @@ class ProcessService(object):
         self._page_size = os.sysconf('SC_PAGE_SIZE')
         # Initialization memory
         logger.info("Process service started")
-        # Test
-        table = get_process_info(self._clk_tck, self._page_size)
-        threads = sum([process['TASKS'] for pid, process in table.items()]) - len(table)
-        running = sum([1 for pid, process in table.items() if process['STATE'] == 'R'])
-        print("Tasks:", len(table), "Threads:", threads, "Running:", running)
+
+    def get_process_info(self, pid, gpu_mem_usage, process_name, uptime):
+        # Check if exist folder
+        if not os.path.isdir(os.path.join('/proc', pid)):
+            return []
+        # https://man7.org/linux/man-pages/man5/proc.5.html
+        stat = cat(os.path.join('/proc', pid, 'stat')).split()
+        # Decode uid and find username
+        uid = int(cat(os.path.join('/proc', pid, 'loginuid')))
+        if uid not in self.usernames:
+            self.usernames[uid] = pwd.getpwuid(uid).pw_name
+        # CPU percent
+        # https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat
+        utime = float(stat[13])
+        stime = float(stat[14])
+        starttime = float(stat[21]) / self._clk_tck
+        total_time = (utime + stime) / self._clk_tck
+        proc_uptime = uptime - starttime
+        cpu_percent = 100 * (total_time / proc_uptime)
+
+        process = [
+            pid,                    # pid process
+            self.usernames[uid],    # uid
+            stat[17],               # Priority
+            stat[2],                # state
+            cpu_percent,            # CPU percent
+            gpu_mem_usage,          # GPU mem usage
+                                    # MEM process
+            process_name,           # Process name
+        ]
+        return process
 
     def get_status(self):
         total = {}
         table = []
-        # load all processes
-        table = get_process_info(self._clk_tck, self._page_size)
-        threads = sum([process['TASKS'] for pid, process in table.items()]) - len(table)
-        running = sum([1 for pid, process in table.items() if process['STATE'] == 'R'])
-        print("Tasks:", len(table), "Threads:", threads, "Running:", running)
         # Update table
         if self._isJetson:
             # Use the memory table to measure
             total, table = read_process_table(self._root_path + "/debug/nvmap/iovmm/maps")
+
+            uptime = float(open('/proc/uptime', 'r').readline().split()[0])
+
+            table = [self.get_process_info(prc[0], prc[3], prc[2], uptime) for prc in table]
+
         return total, table
 # EOF

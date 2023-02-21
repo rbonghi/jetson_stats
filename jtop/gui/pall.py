@@ -25,8 +25,9 @@ from .lib.common import (
 from .lib.colors import NColors
 from .lib.linear_gauge import basic_gauge
 from .lib.common import size_to_string
+from .lib.process_table import ProcessTable
 from .pcpu import compact_cpus
-from .pgpu import compact_gpu, compact_processes
+from .pgpu import compact_gpu
 from .pmem import compact_memory
 from .pengine import compact_engines
 from .pcontrol import plot_temperatures, plot_watts
@@ -94,6 +95,8 @@ class ALL(Page):
 
     def __init__(self, stdscr, jetson):
         super(ALL, self).__init__("ALL", stdscr, jetson)
+        # Add Process table
+        self.process_table = ProcessTable(self.stdscr, self.jetson.processes)
         # Number columns
         self._n_columns = 0
         if jetson.engine:
@@ -125,7 +128,7 @@ class ALL(Page):
         # Status disk
         line_counter += disk_gauge(self.stdscr, line_counter, 0, width, self.jetson.disk)
         # Plot all processes
-        line_counter += compact_processes(self.stdscr, line_counter, 0, width, height, key, mouse, self.jetson.processes)
+        line_counter += self.process_table.draw(line_counter, 0, width, height, key, mouse)
         # If empty return
         if self._n_columns == 0:
             return

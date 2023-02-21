@@ -21,7 +21,8 @@ from .jtopgui import Page
 from .lib.common import NColors
 from .lib.common import plot_name_info
 from .lib.chart import Chart
-from .lib.common import unit_to_string, size_to_string
+from .lib.process_table import ProcessTable
+from .lib.common import unit_to_string
 from .lib.linear_gauge import basic_gauge, freq_gauge
 
 
@@ -61,28 +62,6 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson):
     return line_counter
 
 
-def compact_processes(stdscr, pos_y, pos_x, width, height, key, mouse, processes):
-    column = 20
-    line_sort = 3
-    # Plot low bar background line
-    stdscr.addstr(pos_y, 0, " " * width, NColors.igreen())
-    stdscr.addstr(pos_y, 0, "PID", NColors.igreen() | curses.A_BOLD)
-    stdscr.addstr(pos_y, column, "USER", NColors.igreen() | curses.A_BOLD)
-    stdscr.addstr(pos_y, 2 * column, "Command", NColors.igreen() | curses.A_BOLD)
-    stdscr.addstr(pos_y, 3 * column, "Memory", NColors.igreen() | curses.A_BOLD)
-    # Sort table for selected line
-    sorted_processes = sorted(processes, key=lambda x: x[line_sort], reverse=True)
-    # Draw all processes
-    for nprocess, process in enumerate(sorted_processes):
-        # Skip unit size process
-        for ncolumn in range(4):
-            value = process[ncolumn]
-            # if size process, rewrite in a nice view
-            value = size_to_string(value, process[-1]) if ncolumn == 3 else value
-            stdscr.addstr(pos_y + nprocess + 1, ncolumn * column, str(value), curses.A_NORMAL)
-    return len(processes)
-
-
 class GPU(Page):
 
     def __init__(self, stdscr, jetson):
@@ -92,6 +71,8 @@ class GPU(Page):
         for idx, name in enumerate(self.jetson.gpu):
             chart = Chart(jetson, "GPU{name}".format(name=idx + 1), self.update_chart, color_text=curses.COLOR_GREEN)
             self.chart_gpus += [chart]
+        # Add Process table
+        self.process_table = ProcessTable(self.stdscr, self.jetson.processes)
 
     def update_chart(self, jetson, name):
         # Decode GPU name
@@ -166,5 +147,5 @@ class GPU(Page):
             gpu_freq['name'] = "Frq"
             freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, 1, frq_size, gpu_freq)
         # Draw all Processes
-        compact_processes(self.stdscr, first + 2 + gpu_height, 0, width, height, key, mouse, self.jetson.processes)
+        self.process_table.draw(first + 2 + gpu_height, 0, width, height, key, mouse)
 # EOF
