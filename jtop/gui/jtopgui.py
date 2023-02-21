@@ -26,9 +26,7 @@ from datetime import datetime, timedelta
 from ..core import get_var
 # Graphics elements
 from .lib.colors import NColors
-from .lib.common import (check_size,
-                         check_curses,
-                         set_xterm_title)
+from .lib.common import check_curses, set_xterm_title
 # Create logger
 logger = logging.getLogger(__name__)
 # Initialization abstract class
