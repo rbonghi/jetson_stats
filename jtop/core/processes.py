@@ -76,9 +76,13 @@ def get_process_info(clk_tck, page_size):
     processes = {}
     # Loop over all process IDs and read the stat, cmdline, and statm files
     for pid in pids:
-        with open(os.path.join('/proc', pid, 'stat')) as stat_file, open(os.path.join('/proc', pid, 'cmdline')) as cmdline_file, open(os.path.join('/proc', pid, 'statm')) as statm_file:
+        with open(os.path.join('/proc', pid, 'stat')) as stat_file:
             stat = stat_file.read().split()
+
+        with open(os.path.join('/proc', pid, 'cmdline')) as cmdline_file:
             cmdline = cmdline_file.read().replace('\0', ' ').strip()
+
+        with open(os.path.join('/proc', pid, 'statm')) as statm_file:
             statm = statm_file.read().split()
 
             if not cmdline:
