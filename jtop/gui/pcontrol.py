@@ -26,35 +26,34 @@ from .lib.smallbutton import SmallButton, ButtonList
 
 FAN_STEP = 10
 PROFILE_STR = "Profiles:"
+TEMPERATURE_MAX = 84
+TEMPERATURE_CRIT = 100
 
 
 @check_curses
 def plot_temperatures(stdscr, start, offset, width, height, jetson):
     counter = 0
     start = start + (width - 17) // 2
-    # Define color temperatures
-    color_options = {
-        60: NColors.red(),
-        40: NColors.yellow(),
-        20: curses.A_NORMAL,
-    }
     # Plot title
     stdscr.addstr(offset, start - 1, " [Sensor] ", curses.A_BOLD)
     stdscr.addstr(offset, start + 11, " [Temp] ", curses.A_BOLD)
     # Plot name and temperatures
-    for idx, name in enumerate(jetson.temperature):
+    for idx, (name, sensor) in enumerate(jetson.temperature.items()):
         # Print temperature name
-        value = jetson.temperature[name]
+        temperature = sensor['temp']
         # Set color temperature
+        max_value = sensor['max'] if 'max' in sensor else TEMPERATURE_MAX
+        crit_value = sensor['crit'] if 'crit' in sensor else TEMPERATURE_CRIT
+        # Set color
         color = curses.A_NORMAL
-        for k in color_options.keys():
-            if value >= k:
-                color = color_options[k]
-                break
+        if temperature >= crit_value:
+            color = NColors.red()
+        elif temperature >= max_value:
+            color = NColors.yellow()
         # Print temperature value
         try:
             stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=name))
-            stdscr.addstr(offset + idx + 1, start + 12, ("{val:3.2f}C").format(val=value), color)
+            stdscr.addstr(offset + idx + 1, start + 12, ("{val:3.2f}C").format(val=temperature), color)
         except curses.error:
             pass
         counter = idx

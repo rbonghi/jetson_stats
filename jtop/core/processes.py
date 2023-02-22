@@ -97,7 +97,7 @@ def get_process_info(clk_tck, page_size):
             state = stat[2]
 
             # Calculate the CPU usage
-            uptime = open('/proc/uptime', 'r').readline().split()[0]
+            uptime = float(open('/proc/uptime', 'r').readline().split()[0])
             total_time = utime + stime
             cpu_percent = 100 * ((total_time / clk_tck) / float(uptime))
 

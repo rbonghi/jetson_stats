@@ -151,7 +151,9 @@ def main():
             pages += [CPU, MEM]
             if jetson.engine:
                 pages += [ENGINE]
-            pages += [CTRL, INFO]
+            if jetson.fan or jetson.jetson_clocks is not None or jetson.nvpmodel is not None:
+                pages += [CTRL]
+            pages += [INFO]
             curses.wrapper(JTOPGUI, jetson, pages, init_page=args.page,
                            loop=args.loop, seconds=LOOP_SECONDS, color_filter=color_filter)
             # Write warnings
