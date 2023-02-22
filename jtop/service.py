@@ -355,6 +355,19 @@ class JtopServer(Process):
                         # Clear cache
                         self.memory.clear_cache()
                         logger.info("Clear cache")
+                    # Set GPU configuration
+                    if 'gpu' in control:
+                        gpu = control['gpu']
+                        if 'command' in gpu:
+                            command = gpu['command']
+                            if command == '3d_scaling':
+                                self.gpu.set_3d_scaling(name, gpu['value'])
+                            elif command == 'railgate':
+                                self.gpu.set_railgate(name, gpu['value'])
+                            else:
+                                logger.error("gpu command not detected: {command}".format(command=command))
+                        else:
+                            logger.error("no gpu command in this message {message}".format(message=fan))
                     # Speed Fan and configuration
                     if 'fan' in control:
                         fan = control['fan']

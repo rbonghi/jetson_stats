@@ -42,7 +42,7 @@ class GenericInterface(object):
         self._init = None
         self._data = {}
 
-    def _initialize(self, controller, init):
+    def _initialize(self, controller, init={}):
         self._controller = controller
         self._init = init
 

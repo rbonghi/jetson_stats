@@ -18,7 +18,8 @@
 import os
 # Logging
 import logging
-from .common import cat
+from .common import cat, GenericInterface
+from .exceptions import JtopException
 from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
@@ -133,6 +134,24 @@ def find_dgpu():
     return igpu
 
 
+class GPU(GenericInterface):
+
+    def __init__(self):
+        super(GPU, self).__init__()
+
+    def set_3d_scaling(self, name, value):
+        if name not in self._data:
+            raise JtopException("GPU \"{name}\" does not exist".format(name=name))
+        # Set new 3D scaling
+        self._controller.put({'gpu': {'command': '3d_scaling', 'name': name, 'value': value}})
+
+    def set_railgate(self, name, value):
+        if name not in self._data:
+            raise JtopException("GPU \"{name}\" does not exist".format(name=name))
+        # Set new 3D scaling
+        self._controller.put({'gpu': {'command': 'railgate', 'name': name, 'value': value}})
+
+
 class GPUService(object):
 
     def __init__(self):
@@ -147,6 +166,12 @@ class GPUService(object):
         # Check status
         if not self._gpu_list:
             logger.warning("No NVIDIA GPU available")
+
+    def set_3d_scaling(self, name, value):
+        pass
+
+    def set_railgate(self, name, value):
+        pass
 
     def get_status(self):
         gpu_list = []

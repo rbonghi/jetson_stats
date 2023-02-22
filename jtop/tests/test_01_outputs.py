@@ -22,6 +22,7 @@ from multiprocessing.pool import Pool
 from jtop import jtop
 from jtop.core.memory import Memory
 from jtop.core.fan import Fan
+from jtop.core.gpu import GPU
 from .conftest import emulate_all_devices
 NUM_PROCESSES = 20
 
@@ -33,12 +34,14 @@ def check_attributes(jetson):
     assert isinstance(jetson.uptime, timedelta)
     # CPU
     assert isinstance(jetson.cpu, dict)
+    # GPU
+    assert isinstance(jetson.gpu, GPU)
+    # Processes
+    assert isinstance(jetson.processes, list)
     # Memory
     assert isinstance(jetson.memory, Memory)
     # Fan
     assert isinstance(jetson.fan, Fan)
-    # GPU
-    assert isinstance(jetson.gpu, list)
     # Engines
     assert isinstance(jetson.engine, dict)
     # Status disk

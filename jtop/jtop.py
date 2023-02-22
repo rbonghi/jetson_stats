@@ -66,6 +66,7 @@ from .service import JtopManager
 from .core.jetson_variables import get_platform_variables
 from .core.memory import Memory
 from .core.fan import Fan
+from .core.gpu import GPU
 from .core import (
     get_var,
     get_cuda,
@@ -138,6 +139,8 @@ class jtop(Thread):
         self._thread_libraries.start()
         # Initialize cpu info
         self._cpu_info = []
+        # Initialize gpu info
+        self._gpu = GPU()
         # Initialize memory controller
         self._memory = Memory()
         # Initialize fan
@@ -752,7 +755,7 @@ class jtop(Thread):
         :rtype: dict
         """
         # Extract GPU
-        return self._stats['gpu']
+        return self._gpu
 
     @property
     def power(self):
@@ -829,6 +832,8 @@ class jtop(Thread):
         Internal decode function to decode and refactoring data
         """
         self._stats = data
+        # -- GPU --
+        self._gpu._update(self._stats['gpu'])
         # -- MEMORY --
         self._memory._update(data['mem'])
         # -- FAN --
@@ -947,6 +952,8 @@ sudo systemctl restart jtop.service""".format(
         self._board['hardware'] = init['board']['hardware']
         # Initialize cpu basic info
         self._cpu_info = init['cpu']
+        # Initialzie gpu controller
+        self._gpu._initialize(self._controller)
         # Initialize memory controller
         self._memory._initialize(self._controller, init['memory'])
         # Initialize fan
