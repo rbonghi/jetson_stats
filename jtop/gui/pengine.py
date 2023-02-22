@@ -91,19 +91,21 @@ def map_engines(jetson):
     return list_engines
 
 
-def compact_engines(stdscr, pos_x, pos_y, width, jetson):
+def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
+    center_x = pos_x + width // 2
     map_eng = map_engines(jetson)
     size_map = len(map_eng)
     # Write first line
     if size_map > 0:
-        stdscr.addstr(pos_y, pos_x + (width - 13) // 2, " [HW engines] ", curses.A_BOLD)
+        stdscr.addstr(pos_y, center_x - 7, " [HW engines] ", curses.A_BOLD)
         size_map += 1
     # Plot all engines
+    size_table = 26
     for gidx, row in enumerate(map_eng):
-        size_eng = width // len(row) - 1
+        size_eng = size_table // len(row) - 1
         for idx, (name, value) in enumerate(row):
             if name is not None:
-                plot_name_info(stdscr, pos_y + gidx + 1, pos_x + (size_eng + 1) * idx + 1, name, value)
+                plot_name_info(stdscr, pos_y + gidx + 1, center_x - size_table // 2 + (size_eng + 1) * idx + 1, name, value)
     return size_map
 
 

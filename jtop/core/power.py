@@ -79,6 +79,7 @@ def find_all_i2c_power_monitor(i2c_path):
     if not os.path.isdir(i2c_path):
         logger.error("Folder {root_dir} doesn't exist".format(root_dir=i2c_path))
         return power_sensor
+    power_i2c_sensors = {}
     items = os.listdir(i2c_path)
     for item in items:
         # Decode full path
@@ -90,13 +91,24 @@ def find_all_i2c_power_monitor(i2c_path):
             # https://www.ti.com/product/INA3221
             if 'ina3221' in raw_name:
                 # Check which type of driver is working
-                power_sensor[item] = find_driver_power_folders(path)
+                power_i2c_sensors[item] = find_driver_power_folders(path)
+    # Build list of all power folder outputs
+    # Find all voltage and current monitor
+    for name, paths in power_i2c_sensors.items():
+        for path in paths:
+            sensors = list_all_i2c_ports(path)
+            power_sensor.update(sensors)
+    if power_sensor:
+        logger.info("Found I2C power monitor")
     return power_sensor
 
 
-def read_power_status(data, power_type):
+def read_power_status(data):
     values = {}
+    power_type = data['type']
     for name, path in data.items():
+        if 'type' in name:
+            continue
         # Fix from values with "ma" in the end, like
         # warn 32760 ma
         raw_value = int(cat(path).split(" ")[0])
@@ -128,8 +140,9 @@ def list_all_i2c_ports(path):
             warnings = {
                 'crit_alarm': "{path}/curr{num}_crit_alarm".format(path=path, num=number_port),
                 'max_alarm': "{path}/curr{num}_max_alarm".format(path=path, num=number_port),
+                'type': 'I2C',
             }
-            values = read_power_status(warnings, 'I2C')
+            values = read_power_status(warnings)
             logger.info("Alarms {name} - {data}".format(name=raw_name, data=values))
             # Read Voltage, current and limits
             sensor_name[raw_name] = {
@@ -137,6 +150,7 @@ def list_all_i2c_ports(path):
                 'curr': "{path}/curr{num}_input".format(path=path, num=number_port),  # Current in mA
                 'warn': "{path}/curr{num}_max".format(path=path, num=number_port),  # in mA
                 'crit': "{path}/curr{num}_crit".format(path=path, num=number_port),  # in mA
+                'type': 'I2C',
             }
         elif item.startswith("rail_name_"):
             # Decode name for JP 4 or previous
@@ -150,7 +164,8 @@ def list_all_i2c_ports(path):
                 'curr': "{path}/in_voltage{num}_input".format(path=path, num=number_port),  # Current in mA
                 'power': "{path}/in_power{num}_input".format(path=path, num=number_port),  # Power in mW
                 'warn': "{path}/warn_current_limit_{num}".format(path=path, num=number_port),  # in mA
-                'crit': "{path}/crit_current_limit_{num}".format(path=path, num=number_port),  # in mA
+                'crit': "{path}/crit_current_limit_{num}".format(path=path, num=number_port),  # in
+                'type': 'I2C',
             }
     return sensor_name
 
@@ -179,9 +194,12 @@ def find_all_system_monitor(system_monitor):
             sensor_name[name] = {
                 'volt': voltage_path,  # Voltage in mV
                 'curr': current_path,  # Current in mA
+                'type': 'SYSTEM',
             }
             if os.path.isfile(current_max_path):
                 sensor_name[name]['warn'] = current_max_path
+    if sensor_name:
+        logger.info("Found SYSTEM power monitor")
     return sensor_name
 
 
@@ -190,7 +208,6 @@ class PowerService(object):
     def __init__(self):
         self._power_sensor = {}
         self._power_avg = {}
-        self._power_type = ''
         # Find all I2C sensors on board
         i2c_path = "/sys/bus/i2c/devices"
         system_monitor = "/sys/class/power_supply"
@@ -199,22 +216,10 @@ class PowerService(object):
             system_monitor = "/fake_sys/class/power_supply"
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=i2c_path))
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=system_monitor))
-        power_sensor = find_all_i2c_power_monitor(i2c_path)
-        sys_sensor = find_all_system_monitor(system_monitor)
-        if power_sensor:
-            self._power_type = 'I2C'
-            logger.info("Found I2C power monitor")
-            # Build list of all power folder outputs
-            # Find all voltage and current monitor
-            for name, paths in power_sensor.items():
-                for path in paths:
-                    sensors = list_all_i2c_ports(path)
-                    self._power_sensor.update(sensors)
-        elif sys_sensor:
-            self._power_type = 'SYSTEM'
-            logger.info("Found SYSTEM power monitor")
-            self._power_sensor = sys_sensor
-        else:
+        # Load all power sensors
+        self._power_sensor = find_all_i2c_power_monitor(i2c_path)
+        self._power_sensor.update(find_all_system_monitor(system_monitor))
+        if not self._power_sensor:
             logger.warning("Power sensors not found!")
         # Sort all power sensors
         self._power_sensor = dict(sorted(self._power_sensor.items(), key=lambda item: item[0]))
@@ -231,7 +236,7 @@ class PowerService(object):
         rails = {}
         for name, sensors in self._power_sensor.items():
             # Read status sensors
-            values = read_power_status(sensors, self._power_type)
+            values = read_power_status(sensors)
             # Measure power
             if 'power' not in values:
                 power = values['volt'] * (float(values['curr']) / 1000)

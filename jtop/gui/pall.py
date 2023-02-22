@@ -30,7 +30,7 @@ from .pcpu import compact_cpus
 from .pgpu import compact_gpu
 from .pmem import compact_memory
 from .pengine import compact_engines
-from .pcontrol import plot_temperatures, plot_watts
+from .pcontrol import compact_temperatures, compact_power
 
 
 def compact_status(stdscr, pos_y, pos_x, width, jetson):
@@ -100,15 +100,15 @@ class ALL(Page):
             self.process_table = ProcessTable(self.stdscr, self.jetson.processes)
         # Number columns
         self._max_height_menu = 0
-        self._n_columns = 0
+        self._columns = []
         if jetson.engine:
-            self._n_columns += 1
+            self._columns += [compact_engines]
             self._max_height_menu = max(self._max_height_menu, 5)
         if jetson.temperature:
-            self._n_columns += 1
+            self._columns += [compact_temperatures]
             self._max_height_menu = max(self._max_height_menu, len(jetson.temperature))
         if jetson.power:
-            self._n_columns += 1
+            self._columns += [compact_power]
             self._max_height_menu = max(self._max_height_menu, len(jetson.power['rail']) + 1)
         # End corner
         self._max_height_menu += 2
@@ -136,8 +136,10 @@ class ALL(Page):
         height_free_area = height - line_counter - self._max_height_menu - 1
         if self.jetson.processes:
             line_counter += self.process_table.draw(line_counter, 0, width, height_free_area, key, mouse)
+        # Evaluate number of columns
+        n_columns = len(self._columns)
         # If empty return
-        if self._n_columns == 0:
+        if n_columns == 0:
             return
         # Plot low bar background line
         pos_y_mini_menu = line_counter + 2
@@ -160,24 +162,19 @@ class ALL(Page):
             self.stdscr.hline(pos_y_mini_menu + self._max_height_menu - 1, 1, curses.ACS_HLINE, width - 2)
         except curses.error:
             pass
+        # Cancel columns depend of the width size
+        n_print = n_columns
+        if width < 75 and n_columns > 1:
+            n_print -= 1
+        if width < 49 and n_columns > 2:
+            n_print -= 1
         # Add engines, temperature and power
-        column_width = (width) // (self._n_columns)
-        # Plot compact info
-        column = 0
-        if self.jetson.engine:
-            size_info = compact_engines(self.stdscr, 0, pos_y_mini_menu, column_width + 2, self.jetson)
-            if size_info >= column_height:
-                for n_arrow in range(column_width + 1):
-                    self.stdscr.addch(first + height - 2, 1 + n_arrow, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
-            column += column_width + 1
-        # Plot temperatures
-        if self.jetson.temperature:
-            size_temperatures = plot_temperatures(self.stdscr, column + 1, pos_y_mini_menu, column_width - 4, column_height, self.jetson)
-            if size_temperatures > (column_height - 3):
-                for n_arrow in range(column_width - 5):
-                    self.stdscr.addch(first + height - 2, column + n_arrow + 3, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
-            column += column_width + 1
-        # plot watts
-        if self.jetson.power:
-            plot_watts(self.stdscr, column, pos_y_mini_menu, column_width - 4, column_height, self.jetson)
+        column_width = (width) // (n_print)
+        for nline in range(n_print):
+            func = self._columns[nline]
+            func(self.stdscr, pos_y_mini_menu, column_width * nline, column_width, column_height, self.jetson)
+            if nline < n_print - 1:
+                self.stdscr.addch(pos_y_mini_menu, column_width * (nline + 1), curses.ACS_TTEE)
+                self.stdscr.vline(pos_y_mini_menu + 1, column_width * (nline + 1), curses.ACS_VLINE, column_height - 3)
+                self.stdscr.addch(pos_y_mini_menu + column_height - 2, column_width * (nline + 1), curses.ACS_BTEE)
 # EOF

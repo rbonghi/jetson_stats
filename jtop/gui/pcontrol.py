@@ -30,13 +30,13 @@ TEMPERATURE_MAX = 84
 TEMPERATURE_CRIT = 100
 
 
-@check_curses
-def plot_temperatures(stdscr, start, offset, width, height, jetson):
+def compact_temperatures(stdscr, pos_y, pos_x, width, height, jetson):
     counter = 0
-    start = start + (width - 17) // 2
+    center_x = pos_x + width // 2 + 1
+    offset = 2
     # Plot title
-    stdscr.addstr(offset, start - 1, " [Sensor] ", curses.A_BOLD)
-    stdscr.addstr(offset, start + 11, " [Temp] ", curses.A_BOLD)
+    stdscr.addstr(pos_y, center_x - offset - 10, " [Sensor] ", curses.A_BOLD)
+    stdscr.addstr(pos_y, center_x + offset, " [Temp] ", curses.A_BOLD)
     # Plot name and temperatures
     for idx, (name, sensor) in enumerate(jetson.temperature.items()):
         # Print temperature name
@@ -52,39 +52,44 @@ def plot_temperatures(stdscr, start, offset, width, height, jetson):
             color = NColors.yellow()
         # Print temperature value
         try:
-            stdscr.addstr(offset + idx + 1, start, ("{name:<7}").format(name=name))
-            stdscr.addstr(offset + idx + 1, start + 12, ("{val:3.2f}C").format(val=temperature), color)
+            stdscr.addstr(pos_y + idx + 1, center_x - offset - 9, name)
+            stdscr.addstr(pos_y + idx + 1, center_x + offset + 1, ("{val:3.2f}C").format(val=temperature), color)
         except curses.error:
-            pass
+            break
         counter = idx
     return counter
 
 
-@check_curses
-def plot_watts(stdscr, start, offset, width, height, jetson):
-    start = start + (width - 6) // 2
+def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
+    LIMIT = 25
+    # center_x = pos_x + width // 2 if width > LIMIT else pos_x + width // 2 + 4
+    center_x = pos_x + width // 2 + 2 if width > LIMIT else pos_x + width // 2 + 6
+    column_power = 9
     # Plot title
-    stdscr.addstr(offset, start - 11, " [Power] ", curses.A_BOLD)
-    stdscr.addstr(offset, start + 2, " [Inst] ", curses.A_BOLD)
-    stdscr.addstr(offset, start + 9, " [Avg] ", curses.A_BOLD)
+    stdscr.addstr(pos_y, center_x - column_power - 5, " [Power] ", curses.A_BOLD)
+    stdscr.addstr(pos_y, center_x - 3, " [Inst] ", curses.A_BOLD)
+    if width > LIMIT:
+        stdscr.addstr(pos_y, center_x + column_power - 4, " [Avg] ", curses.A_BOLD)
     # Plot watts
     power = jetson.power['rail']
     for idx, name in enumerate(power):
         value = power[name]
         string_name = name.replace("VDDQ_", "").replace("VDD_", "").replace("_", " ")
-        stdscr.addstr(offset + idx + 1, start - 10, string_name, curses.A_NORMAL)
+        stdscr.addstr(pos_y + idx + 1, center_x - column_power - 5, string_name, curses.A_NORMAL)
         unit_power = unit_to_string(value['power'], value['unit'], 'W')
-        stdscr.addstr(offset + idx + 1, start + 3, unit_power, curses.A_NORMAL)
-        unit_avg = unit_to_string(value['avg'], value['unit'], 'W')
-        stdscr.addstr(offset + idx + 1, start + 10, unit_avg, curses.A_NORMAL)
+        stdscr.addstr(pos_y + idx + 1, center_x - 1, unit_power, curses.A_NORMAL)
+        if width > LIMIT:
+            unit_avg = unit_to_string(value['avg'], value['unit'], 'W')
+            stdscr.addstr(pos_y + idx + 1, center_x + column_power - 3, unit_avg, curses.A_NORMAL)
     # Plot totals before finishing
     total = jetson.power['tot']
     len_power = len(power)
-    stdscr.addstr(offset + len_power + 1, start - 10, 'ALL', curses.A_BOLD)
+    stdscr.addstr(pos_y + len_power + 1, center_x - column_power - 5, 'ALL', curses.A_BOLD)
     unit_power = unit_to_string(total['power'], total['unit'], 'W')
-    stdscr.addstr(offset + len_power + 1, start + 3, unit_power, curses.A_BOLD)
-    unit_avg = unit_to_string(total['avg'], total['unit'], 'W')
-    stdscr.addstr(offset + len_power + 1, start + 10, unit_avg, curses.A_BOLD)
+    stdscr.addstr(pos_y + len_power + 1, center_x - 1, unit_power, curses.A_BOLD)
+    if width > LIMIT:
+        unit_avg = unit_to_string(total['avg'], total['unit'], 'W')
+        stdscr.addstr(pos_y + len_power + 1, center_x + column_power - 3, unit_avg, curses.A_BOLD)
     return len(power) + 1
 
 

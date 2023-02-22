@@ -18,10 +18,12 @@
 
 from .common import cat
 import os
+import re
 # Logging
 import logging
 # Create logger
 logger = logging.getLogger(__name__)
+TEMPERATURE_RE = re.compile(r'^temp(?P<num>\d+)_label$')
 
 
 def read_temperature(data):
@@ -83,12 +85,15 @@ def get_hwmon_thermal_system(root_dir):
         for file in os.listdir(path):
             name_label_path = os.path.join(path, file)
             # Check if there is a label
-            if not file.endswith("_label"):
+            match = re.search(TEMPERATURE_RE, file)
+            if not match:
                 continue
+            parsed_name = match.groupdict()
+            # Build list current and average power read
+            number_port = int(parsed_name['num'])
+            # Read name
             raw_name = cat(name_label_path).strip()
             logger.info("Found temperature sensor: {name}".format(name=raw_name))
-            # Build list current and average power read
-            number_port = int(file.split("_")[0].strip("temp"))
             # Build list of path
             warnings = {
                 'crit_alarm': "{path}/temp{num}_crit_alarm".format(path=path, num=number_port),
@@ -111,7 +116,7 @@ class TemperatureService(object):
         # Find all temperature available
         sys_folder = "/sys"
         if os.getenv('JTOP_TESTING', False):
-            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=thermal_path))
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=sys_folder))
         # Build folders
         hwmon_dir = os.path.join(sys_folder, "class", "hwmon")
         thermal_path = os.path.join(sys_folder, "devices", "virtual", "thermal")

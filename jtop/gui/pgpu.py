@@ -93,7 +93,7 @@ class GPU(Page):
         self.stdscr.addstr(first + 1, 1, "Temperatures:", curses.A_NORMAL)
         for idx, temp in enumerate(self.jetson.temperature):
             if 'GPU' in temp:
-                value = self.jetson.temperature[temp]
+                value = self.jetson.temperature[temp]['temp']
                 self.stdscr.addstr(first + 1, 15, temp + " ", curses.A_BOLD)
                 self.stdscr.addstr(str(value) + "C", curses.A_NORMAL)
         # Draw all GPU
