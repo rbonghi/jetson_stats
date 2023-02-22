@@ -360,6 +360,7 @@ class JtopServer(Process):
                         gpu = control['gpu']
                         if 'command' in gpu:
                             command = gpu['command']
+                            name = gpu['name']
                             if command == '3d_scaling':
                                 self.gpu.set_3d_scaling(name, gpu['value'])
                             elif command == 'railgate':
@@ -367,7 +368,7 @@ class JtopServer(Process):
                             else:
                                 logger.error("gpu command not detected: {command}".format(command=command))
                         else:
-                            logger.error("no gpu command in this message {message}".format(message=fan))
+                            logger.error("no gpu command in this message {message}".format(message=gpu))
                     # Speed Fan and configuration
                     if 'fan' in control:
                         fan = control['fan']
