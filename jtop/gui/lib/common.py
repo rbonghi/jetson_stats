@@ -64,50 +64,6 @@ def jetson_clocks_gui(stdscr, offset, start, jetson):
     plot_name_info(stdscr, offset, start, "Jetson Clocks", jc_status_name, color)
 
 
-def check_size(height_max, width_max):
-    """ Check curses size window """
-    def check_size_window(func):
-        @wraps(func)
-        def wrapped(self, *args, **kwargs):
-            # Extract window size
-            height, width = self.stdscr.getmaxyx()
-            # Check size window
-            if width >= width_max and height >= height_max:
-                return func(self, *args, **kwargs)
-            else:
-                # First, clear the screen
-                self.stdscr.erase()
-                # Message
-                string_warning = "jtop"
-                string_warning_msg = "Change size window!"
-                size_window_width = "Width: " + str(width) + " >= " + str(width_max)
-                size_window_height = "Height: " + str(height) + " >= " + str(height_max)
-                try:
-                    height_c = int(height / 2)
-                    self.stdscr.addstr(height_c - 2, int((width - len(string_warning)) / 2), string_warning, curses.A_BOLD)
-                    self.stdscr.addstr(height_c - 1, int((width - len(string_warning_msg)) / 2), string_warning_msg, curses.A_BOLD)
-                    # Show size window
-                    if width < width_max:
-                        self.stdscr.addstr(height_c, int((width - len(size_window_width)) / 2), str(size_window_width), NColors.red())
-                    else:
-                        size_window_width = "Width OK!"
-                        self.stdscr.addstr(height_c, int((width - len(size_window_width)) / 2), size_window_width, curses.A_BOLD)
-                    if height < height_max:
-                        self.stdscr.addstr(height_c + 1, int((width - len(size_window_height)) / 2), str(size_window_height), NColors.red())
-                    else:
-                        size_window_height = "Height OK!"
-                        self.stdscr.addstr(height_c + 1, int((width - len(size_window_height)) / 2), str(size_window_height), curses.A_BOLD)
-                    # Set background for all menu line
-                    self.stdscr.addstr(height - 1, 0, ("{0:<" + str(width - 1) + "}").format(" "), curses.A_REVERSE)
-                    # Add close option menu
-                    self.stdscr.addstr(height - 1, 1, "Q", curses.A_REVERSE | curses.A_BOLD)
-                    self.stdscr.addstr(height - 1, 2, "uit ", curses.A_REVERSE)
-                except curses.error:
-                    pass
-        return wrapped
-    return check_size_window
-
-
 def check_curses(func):
     """ Check curses write """
     @wraps(func)

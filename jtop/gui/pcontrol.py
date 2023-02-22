@@ -18,7 +18,7 @@
 import curses
 from .jtopgui import Page
 # Graphics elements
-from .lib.common import check_curses, unit_to_string
+from .lib.common import unit_to_string
 # Graphic library
 from .lib.colors import NColors
 from .lib.chart import Chart
