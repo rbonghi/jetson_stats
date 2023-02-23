@@ -95,11 +95,11 @@ def get_hwmon_thermal_system(root_dir):
             raw_name = cat(name_label_path).strip()
             logger.info("Found temperature sensor: {name}".format(name=raw_name))
             # Build list of path
-            warnings = {
-                'crit_alarm': "{path}/temp{num}_crit_alarm".format(path=path, num=number_port),
-            }
-            values = read_temperature(warnings)
-            logger.info("Alarms {name} - {data}".format(name=raw_name, data=values))
+            path_crit_alarm = os.path.join(path, "temp{num}_crit_alarm".format(num=number_port))
+            if os.path.isfile(path_crit_alarm):
+                warnings = {'crit_alarm': path_crit_alarm}
+                values = read_temperature(warnings)
+                logger.info("Alarms {name} - {data}".format(name=raw_name, data=values))
             # Read Temperatures
             sensor_name[raw_name] = {
                 'temp': os.path.join(path, "temp{num}_input".format(num=number_port)),  # Temperature in deg

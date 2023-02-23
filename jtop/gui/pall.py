@@ -134,16 +134,18 @@ class ALL(Page):
         line_counter += disk_gauge(self.stdscr, line_counter, 0, width, self.jetson.disk)
         # Plot all processes
         height_free_area = height - line_counter - self._max_height_menu - 1
+        offset_process_y = 0
         if self.jetson.processes:
             line_counter += self.process_table.draw(line_counter, 0, width, height_free_area, key, mouse)
+            offset_process_y = 2
         # Evaluate number of columns
         n_columns = len(self._columns)
         # If empty return
         if n_columns == 0:
             return
         # Plot low bar background line
-        pos_y_mini_menu = line_counter + 2
-        if height_free_area > 2:
+        pos_y_mini_menu = line_counter + offset_process_y
+        if height_free_area > offset_process_y:
             pos_y_mini_menu = height - self._max_height_menu - 1
         column_height = height - pos_y_mini_menu
         # Upper block
@@ -153,9 +155,10 @@ class ALL(Page):
             self.stdscr.hline(pos_y_mini_menu, 1, curses.ACS_HLINE, width - 2)
         except curses.error:
             pass
-        # Lines
+        # vertical Lines
         self.stdscr.vline(pos_y_mini_menu + 1, 0, curses.ACS_VLINE, column_height - 3)
         self.stdscr.vline(pos_y_mini_menu + 1, width - 1, curses.ACS_VLINE, column_height - 3)
+        # Lower line
         try:
             self.stdscr.addch(pos_y_mini_menu + self._max_height_menu - 1, 0, curses.ACS_LLCORNER)
             self.stdscr.addch(pos_y_mini_menu + self._max_height_menu - 1, width - 1, curses.ACS_LRCORNER)

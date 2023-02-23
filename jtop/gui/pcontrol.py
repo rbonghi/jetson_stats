@@ -273,43 +273,54 @@ class CTRL(Page):
         for fan_idx, (fan_gui, fan_name) in enumerate(zip(self._fan_gui, self.jetson.fan)):
             gui_chart = self._fan_gui[fan_gui]
             fan = self.jetson.fan[fan_name]
-            # Split width for each pwm
-            fan_speed_width = (width - 2) // len(fan['speed'])
+            num_fans = len(fan['speed'])
             # Print all profiles
             pos_y_profiles = fan_height // 2 - gui_chart['len_profiles']
             size_profile = gui_chart['size_w']
             self.stdscr.addstr(first + 1 + fan_idx * (fan_height + 1) + pos_y_profiles - 1, 1, PROFILE_STR, curses.A_BOLD)
+            # Split width for each pwm
+            fan_speed_width = (width - size_profile - 6) // num_fans
             # Draw a button list with all profiles
             profile = self.jetson.fan.get_profile(fan_name)
             gui_chart['profile'].update(first + 1 + fan_idx * (fan_height + 1) + pos_y_profiles, 1, key, mouse, profile)
             # Print all fans
             for idx, speed in enumerate(fan['speed']):
                 # Set size chart gpu
-                size_x = [1 + idx * fan_speed_width + size_profile, 1 + (idx + 1) * (fan_speed_width - 2)]
+                size_x = [size_profile + idx * fan_speed_width, size_profile + (idx + 1) * (fan_speed_width - 1)]
                 size_y = [first + 1 + fan_idx * (fan_height + 1), first + 1 + (fan_idx + 1) * (fan_height - 1)]
                 # Print speed and RPM
                 label_fan = "PWM {speed: >3.0f}%".format(speed=speed)
                 if 'rpm' in fan:
                     label_fan += " - {rpm}RPM".format(rpm=fan['rpm'][idx])
                 # Draw GPU chart
-                gui_chart['fan'][idx]['chart'].draw(self.stdscr, size_x, size_y, label=label_fan)
+                gui_chart['fan'][idx]['chart'].draw(self.stdscr, size_x, size_y, label=label_fan, y_label=False)
                 # Draw speed buttons
-                pos_x_control_fan = fan_speed_width // 2
-                self.stdscr.addstr(first + 1 + fan_idx * (fan_height + 1), 1 + fan_speed_width - pos_x_control_fan, "Control", curses.A_BOLD)
+                pos_x_control_fan = (fan_speed_width - 6) // 2
+                if fan_speed_width > 40:
+                    self.stdscr.addstr(first + 1 + fan_idx * (fan_height + 1),
+                                       size_profile + idx * fan_speed_width + pos_x_control_fan + 4,
+                                       "Speed", curses.A_BOLD)
                 gui_chart['fan'][idx]['decrease'].update(first + 1 + fan_idx * (fan_height + 1),
-                                                         1 + fan_speed_width - pos_x_control_fan + 8, '-', key, mouse)
+                                                         size_profile + idx * fan_speed_width + pos_x_control_fan + 10,
+                                                         '-', key, mouse)
                 gui_chart['fan'][idx]['increase'].update(first + 1 + fan_idx * (fan_height + 1),
-                                                         1 + fan_speed_width - pos_x_control_fan + 12, '+', key, mouse)
+                                                         size_profile + idx * fan_speed_width + pos_x_control_fan + 14,
+                                                         '-', key, mouse)
+            # Plot y axis
+            gui_chart['fan'][0]['chart'].draw_y_axis(self.stdscr,
+                                                     first + 1 + fan_idx * (fan_height + 1),
+                                                     size_profile + num_fans * (fan_speed_width - 1) + 1,
+                                                     fan_height - 1)
         # Draw jetson clocks
         line_counter = fan_height
         if self.jetson.jetson_clocks is not None:
             self.control_jetson_clocks(first + 1 + line_counter, 1, key, mouse)
             line_counter += 1
         # Draw nvpmodels
-        width_spacing = 0
+        width_spacing = 5
         if self.jetson.nvpmodel is not None:
             self.control_nvpmodes(first + 1 + line_counter, 1, key, mouse)
-            width_spacing += width // 2 - 16
+            width_spacing = width // 2 - 16
         # Draw all power info
         self.control_power(first + 1 + line_counter, width_spacing, key, mouse)
 # EOF
