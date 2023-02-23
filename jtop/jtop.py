@@ -804,7 +804,7 @@ class jtop(Thread):
 
     @property
     def disk(self):
-        """ 
+        """
         Disk status properties, in dictionary are included
 
         * **total** - Total disk space in GB
