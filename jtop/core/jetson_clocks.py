@@ -194,21 +194,21 @@ def jetson_clocks_alive(engines, data):
                     continue
                 cpu_frqs = cpu['freq']
                 if not all([cpu_frqs['max'] == frq, cpu_frqs['min'] == frq]):
-                    print(f"FAIL CPU {cpu_frqs['max']} {cpu_frqs['min']} {frq}")
+                    # print(f"FAIL CPU {cpu_frqs['max']} {cpu_frqs['min']} {frq}")
                     return False
         elif engine == 'GPU':
             # Check minum and max frequency
             for gpu in data['gpu']:
                 gpu_freqs = gpu['freq']
                 if not all([gpu_freqs['max'] == frq // 1000, gpu_freqs['min'] == frq // 1000]):
-                    print("FAIL GPU")
+                    # print("FAIL GPU")
                     return False
         elif engine == 'EMC':
             # Check minum and max frequency
             # EMC check only if current frequency is the same of max
             emc = data['mem']['EMC']
             if not all([emc['max'] == frq // 1000, emc['cur'] == frq // 1000]):
-                print(f"FAIL EMC {emc['max']} {emc['cur']} {frq // 1000}")
+                # print(f"FAIL EMC {emc['max']} {emc['cur']} {frq // 1000}")
                 return False
         else:
             # Find enging and check frequencies
@@ -217,7 +217,7 @@ def jetson_clocks_alive(engines, data):
                     if engine == name:
                         # for all Engines check only if current frequency is the same of max
                         if not all([engine_data['max'] == frq // 1000, engine_data['cur'] == frq // 1000]):
-                            print("FAIL ENGINES")
+                            # print("FAIL ENGINES")
                             return False
     return True
 
