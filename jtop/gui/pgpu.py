@@ -72,7 +72,7 @@ class GPU(Page):
             chart = Chart(jetson, "GPU{name}".format(name=idx + 1), self.update_chart, color_text=curses.COLOR_GREEN)
             self.chart_gpus += [chart]
         # Add Process table
-        self.process_table = ProcessTable(self.stdscr, self.jetson.processes)
+        self.process_table = ProcessTable(self.stdscr, self.jetson)
 
     def update_chart(self, jetson, name):
         # Decode GPU name

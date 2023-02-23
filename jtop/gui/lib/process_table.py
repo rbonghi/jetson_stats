@@ -26,7 +26,7 @@ header = {
     "USER": {'clm': 12, 'fn': lambda x: x},
     "PRI": {'clm': 6, 'fn': lambda x: str(x)},
     "S": {'clm': 4, 'fn': lambda x: x},
-    "CPU%": {'clm': 12, 'fn': lambda x: "{:.2f}".format(x)},
+    "CPU%": {'clm': 12, 'fn': lambda x: "{:.1f}".format(x)},
     "GPU MEM": {'clm': 12, 'fn': lambda x: size_to_string(x, 'k')},
     "Command": {'clm': 20, 'fn': lambda x: x},
 }
@@ -34,13 +34,14 @@ header = {
 
 class ProcessTable(object):
 
-    def __init__(self, stdscr, processes):
+    def __init__(self, stdscr, jetson):
         self.stdscr = stdscr
-        self.processes = processes
+        self.jetson = jetson
         self.line_sort = 5
         self.type_reverse = True
 
     def draw(self, pos_y, pos_x, width, height, key, mouse):
+        processes = self.jetson.processes
         # Plot low bar background line
         self.stdscr.addstr(pos_y, 0, " " * width, NColors.igreen())
         title_counter = 0
@@ -60,7 +61,7 @@ class ProcessTable(object):
             except curses.error:
                 break
         # Sort table for selected line
-        sorted_processes = sorted(self.processes, key=lambda x: x[self.line_sort], reverse=self.type_reverse)
+        sorted_processes = sorted(processes, key=lambda x: x[self.line_sort], reverse=self.type_reverse)
         # Draw all processes
         for nprocess, process in enumerate(sorted_processes):
             # Skip unit size process

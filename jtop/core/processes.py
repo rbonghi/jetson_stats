@@ -24,7 +24,7 @@ import logging
 # Create logger
 logger = logging.getLogger(__name__)
 
-MEM_TABLE_REG = re.compile(r'(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
+MEM_TABLE_REG = re.compile(r'^(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
 TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
 
 

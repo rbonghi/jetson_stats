@@ -97,7 +97,7 @@ class ALL(Page):
         super(ALL, self).__init__("ALL", stdscr, jetson)
         # Add Process table
         if self.jetson.processes:
-            self.process_table = ProcessTable(self.stdscr, self.jetson.processes)
+            self.process_table = ProcessTable(self.stdscr, self.jetson)
         # Number columns
         self._max_height_menu = 0
         self._columns = []
