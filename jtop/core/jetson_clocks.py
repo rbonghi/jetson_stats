@@ -84,131 +84,27 @@ def decode_show_message(lines):
     return status
 
 
-def _decode_show_message(lines):
-    # Load lines
-    status = {"CPU": {}}
-    for line in lines:
-        # Search configuration CPU config
-        match = CPU_REGEXP.search(line)
-        # if match extract name and number
-        if match:
-            # Load CPU information
-            cpu = {
-                "Online": int(match.group(2)) == 1,
-                "governor": str(match.group(3)),
-                "min_freq": int(match.group(4)),
-                "max_freq": int(match.group(5)),
-                "current_freq": int(match.group(6)),
-                "IdleStates": {str(state.split("=")[0]): int(state.split("=")[1]) for state in match.group(7).strip().split()}
-            }
-            # Store in CPU list
-            idx_cpu = int(match.group(1)) + 1
-            status["CPU"][idx_cpu] = cpu
-            continue
-        # Search CPU for TX1
-        match = CPUTX1_REGEXP.search(line)
-        # if match extract name and number
-        if match:
-            # Load CPU information
-            cpu = {
-                "governor": str(match.group(2)),
-                "min_freq": int(match.group(3)),
-                "max_freq": int(match.group(4)),
-                "current_freq": int(match.group(5))}
-            # Store in CPU list
-            idx_cpu = int(match.group(1)) + 1
-            status["CPU"][idx_cpu] = cpu
-            continue
-        # Search configuration GPU config
-        match = GPU_REGEXP.search(line)
-        # Load GPU match
-        if match:
-            status["GPU"] = {
-                "min_freq": int(match.group(1)),
-                "max_freq": int(match.group(2)),
-                "current_freq": int(match.group(3))}
-            continue
-        # Search configuration EMC config
-        match = EMC_REGEXP.search(line)
-        # Load EMC match
-        if match:
-            status["EMC"] = {
-                "min_freq": int(match.group(1)),
-                "max_freq": int(match.group(2)),
-                "current_freq": int(match.group(3)),
-                "FreqOverride": int(match.group(4))}
-            continue
-        # Search configuration DLA config
-        match = DLA_REGEXP.search(line)
-        # Load DLA match
-        if match:
-            if "DLA" not in status:
-                status["DLA"] = {}
-            dla_number = int(match.group(1))
-            if dla_number not in status["DLA"]:
-                status["DLA"][dla_number] = {}
-            dla_type = str(match.group(2)).lower()
-            status["DLA"][dla_number][dla_type] = {
-                "min_freq": int(match.group(3)) // 1000000,
-                "max_freq": int(match.group(4)) // 1000000,
-                "current_freq": int(match.group(5)) // 1000000}
-        # Search configuration PVA config
-        match = PVA_REGEXP.search(line)
-        # Load PVA match
-        if match:
-            if "PVA" not in status:
-                status["PVA"] = {}
-            pva_number = int(match.group(1))
-            if pva_number not in status["PVA"]:
-                status["PVA"][pva_number] = {}
-            pva_type = str(match.group(2)).lower()
-            status["PVA"][pva_number][pva_type] = {
-                "min_freq": int(match.group(3)) // 1000000,
-                "max_freq": int(match.group(4)) // 1000000,
-                "current_freq": int(match.group(5)) // 1000000}
-        # Search configuration NV Power Model
-        match = NVP_REGEXP.search(line)
-        # Load NV Power Model
-        if match:
-            status["NVP"] = str(match.group(1))
-            continue
-        # Search configuration CPU Cluster config
-        match = CPU_CLUSTER_REGEXP.search(line)
-        # Load EMC match
-        if match:
-            status["cluster"] = str(match.group(1))
-            continue
-        # All other lines of jetson_clocks show are skipped
-        # SOC family:tegra210  Machine:NVIDIA Jetson Nano Developer Kit
-        # Online CPUs: 0-3
-        # Fan: speed=0
-    return status
-
-
 def jetson_clocks_alive(engines, data):
-    for engine, frq in engines.items():
+    for engine in engines:
         if engine == 'CPU':
             # Check minum and max frequency
             for cpu in data['cpu']['cpu']:
                 if not cpu['online']:
                     continue
                 cpu_frqs = cpu['freq']
-                if not all([cpu_frqs['max'] == frq, cpu_frqs['min'] == frq]):
-                    # print(f"FAIL CPU {cpu_frqs['max']} {cpu_frqs['min']} {frq}")
+                if cpu_frqs['max'] != cpu_frqs['min']:
                     return False
         elif engine == 'GPU':
             # Check minum and max frequency
             for gpu in data['gpu']:
                 gpu_freqs = gpu['freq']
-                if not all([gpu_freqs['max'] == frq // 1000, gpu_freqs['min'] == frq // 1000]):
-                    # print("FAIL GPU")
+                if gpu_freqs['max'] != gpu_freqs['min']:
                     return False
         elif engine == 'EMC':
             # Check minum and max frequency
             # EMC check only if current frequency is the same of max
             emc = data['mem']['EMC']
-            if not all([emc['max'] == frq // 1000, emc['cur'] == frq // 1000]):
-                # print(f"FAIL EMC {emc['max']} {emc['cur']} {frq // 1000}")
+            if emc['max'] != emc['cur']:
                 return False
         else:
             # Find enging and check frequencies
@@ -216,8 +112,7 @@ def jetson_clocks_alive(engines, data):
                 for name, engine_data in engines_group.items():
                     if engine == name:
                         # for all Engines check only if current frequency is the same of max
-                        if not all([engine_data['max'] == frq // 1000, engine_data['cur'] == frq // 1000]):
-                            # print("FAIL ENGINES")
+                        if engine_data['max'] != engine_data['cur']:
                             return False
     return True
 

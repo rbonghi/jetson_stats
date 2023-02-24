@@ -301,6 +301,7 @@ class JtopServer(Process):
         self._timer_reader = TimerReader(self.jtop_stats)
 
     def run(self):
+        logger.info("Initialization service")
         # Initialize jetson_fan
         self.fan.initialization()
         # Run setup
@@ -316,6 +317,7 @@ class JtopServer(Process):
         # Read nvp_mode
         if self.nvpmodel.exists():
             self.nvp_mode = self.nvpmodel.get()
+        logger.info("service ready")
         # Initialize variables
         timeout = None
         interval = 1
@@ -421,7 +423,7 @@ class JtopServer(Process):
                             'memory': self.memory.swap_path(),
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks.exists(),
-                            'nvpmodel': self.nvpmodel.exists(),
+                            'nvpmodel': self.nvpmodel.exists(), 
                         }
                         self.q.put({'init': init})
                     # Manage jetson_clocks
