@@ -169,8 +169,28 @@ class JTOPGUI:
         if idx <= len(self.pages) and idx > 0:
             self.n_page = idx - 1
 
+    def title_terminal(self):
+        status = []
+        # Title script
+        # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
+        # Read NVP model
+        if self.jetson.nvpmodel is not None:
+            status += [self.jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')]
+        # Load CPU status
+        idle = 100 - self.jetson.cpu['total']['idle']
+        status += ["CPU {idle:.1f}%".format(idle=idle)]
+        # Read GPU status
+        if self.jetson.gpu:
+            gpu = self.jetson.gpu[0]
+            load = gpu['status']['load']
+            status += ["GPU {idle:.1f}%".format(idle=load)]
+        str_xterm = '|'.join(status)
+        # Print jtop basic info
+        set_xterm_title("jtop {name}".format(name=str_xterm))
+
     @check_curses
     def header(self):
+        self.title_terminal()
         # Detect if jtop is running on jetson or on other platforms
         if self.jetson.board['hardware']['L4T']:
             self.header_jetson()
@@ -193,18 +213,7 @@ class JTOPGUI:
         model = self.jetson.board['hardware']["Model"]
         jetpack = self.jetson.board['hardware']["Jetpack"]
         L4T = self.jetson.board['hardware']["L4T"]
-        # Title script
-        # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
-        status = [model]
-        #if self.jetson.jetson_clocks is not None:
-        #    status_string = self.jetson.jetson_clocks.get_status()
-        #    status += ["JC: {jc}".format(jc=status_string.capitalize())]
-        #if self.jetson.nvpmodel is not None:
-        #    status += [self.jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')]
-        str_xterm = ' - '.join(status)
-        # Print jtop basic info
-        set_xterm_title("jtop {name}".format(name=str_xterm))
-        # Add extra Line if with sudo
+        # Write title
         idx = 0
         if self.jetson.interval != self.jetson.interval_user:
             self.message = True
