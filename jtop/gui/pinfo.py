@@ -103,8 +103,10 @@ class INFO(Page):
             self.stdscr.addstr(start_pos, 1 + platform_size_x + 1, "Serial Number:", curses.A_BOLD)
             self._hide_serial_number.update(start_pos, 1 + platform_size_x + 16, mouse)
             offset_y_sn = 1
-        hardware_size_y, hardware_size_x = plot_hardware(self.stdscr, start_pos + offset_y_sn, 1 +
-                                                         platform_size_x + 1, self.jetson.board['hardware'], size_hardware_x)
+        hardware_size_y, hardware_size_x = plot_hardware(self.stdscr,
+                                                         start_pos + offset_y_sn,
+                                                         1 + platform_size_x + 1,
+                                                         self.jetson.board['hardware'], size_hardware_x)
         hardware_size_y += offset_y_sn
         # Plot interfaces
         interfaces = self.jetson.local_interfaces["interfaces"]
