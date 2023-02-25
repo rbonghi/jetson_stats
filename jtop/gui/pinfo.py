@@ -24,6 +24,7 @@ from ..core.common import get_var
 from .jtopgui import Page
 # Graphics elements
 from .lib.colors import NColors
+from .lib.smallbutton import HideButton
 from .lib.common import plot_name_info, plot_dictionary
 # Regex
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
@@ -53,10 +54,26 @@ def plot_libraries(stdscr, pos_y, pos_x, libraries):
     return libraries_size_y + 1, max(libraries_size_x, len_opencv)
 
 
+def plot_hardware(stdscr, pos_y, pos_x, hardware, size_hardware_x):
+    hardware = deepcopy(hardware)
+    # Remove from list and add a button
+    if 'Serial Number' in hardware:
+        del hardware['Serial Number']
+    # Plot all hardware data
+    hardware_size_y, hardware_size_x = plot_dictionary(stdscr, pos_y, pos_x, 'Hardware', hardware, size=size_hardware_x)
+    return hardware_size_y, hardware_size_x
+
+
 class INFO(Page):
 
     def __init__(self, stdscr, jetson):
         super(INFO, self).__init__("INFO", stdscr, jetson)
+        # Store serial number
+        self._hide_serial_number = None
+        hardware = self.jetson.board['hardware']
+        if 'Serial Number' in hardware:
+            serial_number = hardware['Serial Number']
+            self._hide_serial_number = HideButton(stdscr, serial_number)
 
     def draw(self, key, mouse):
         """
@@ -80,8 +97,15 @@ class INFO(Page):
         libraries_size_y, libraries_size_x = plot_libraries(self.stdscr, start_pos + platform_size_y + 1, 1, self.jetson.board['libraries'])
         # Plot hardware
         size_hardware_x = width - platform_size_x - 2
-        hardware_size_y, hardware_size_x = plot_dictionary(self.stdscr, start_pos, 1 + platform_size_x + 1,
-                                                           'Hardware', self.jetson.board['hardware'], size=size_hardware_x)
+        # Plot serial number
+        offset_y_sn = 0
+        if 'Serial Number' in self.jetson.board['hardware']:
+            self.stdscr.addstr(start_pos, 1 + platform_size_x + 1, "Serial Number:", curses.A_BOLD)
+            self._hide_serial_number.update(start_pos, 1 + platform_size_x + 16, mouse)
+            offset_y_sn = 1
+        hardware_size_y, hardware_size_x = plot_hardware(self.stdscr, start_pos + offset_y_sn, 1 +
+                                                         platform_size_x + 1, self.jetson.board['hardware'], size_hardware_x)
+        hardware_size_y += offset_y_sn
         # Plot interfaces
         interfaces = self.jetson.local_interfaces["interfaces"]
         hostname = self.jetson.local_interfaces["hostname"]

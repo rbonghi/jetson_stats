@@ -201,7 +201,7 @@ class CTRL(Page):
         # Draw boot button
         boot = self.jetson.jetson_clocks.boot
         jetson_clocks_boot = "enable" if boot else "disable"
-        self.stdscr.addstr(pos_y, pos_x + 31, "on boot:", curses.A_BOLD)
+        self.stdscr.addstr(pos_y, pos_x + 32, "on boot:", curses.A_BOLD)
         color_boot = NColors.green() if boot else curses.A_NORMAL
         self._jetson_clocks_boot.update(pos_y, pos_x + 40, jetson_clocks_boot, key, mouse, color=color_boot)
 
@@ -308,7 +308,7 @@ class CTRL(Page):
                                                          '-', key, mouse)
                 gui_chart['fan'][idx]['increase'].update(first + 1 + fan_idx * (fan_height + 1),
                                                          size_profile + idx * fan_speed_width + pos_x_control_fan + 14,
-                                                         '-', key, mouse)
+                                                         '+', key, mouse)
             # Plot y axis
             gui_chart['fan'][0]['chart'].draw_y_axis(self.stdscr,
                                                      first + 1 + fan_idx * (fan_height + 1),

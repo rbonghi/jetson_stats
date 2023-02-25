@@ -63,6 +63,33 @@ class SmallButton:
         return self.label
 
 
+class HideButton(SmallButton):
+
+    def __init__(self, stdscr, text):
+        self._text = text
+        hide_message = "XXX CLICK TO READ XXX"
+        self._pressed = False
+        super().__init__(stdscr, self.action_on_click, hide_message, False, None, {})
+
+    def action_on_click(self, info, selected):
+        self.label = self._text
+        self._pressed = True
+
+    def update(self, y, x, mouse=None):
+        if mouse and mouse[1] == y and x <= mouse[0] <= x + len(self.label) + 1:
+            self.selected = not self.selected if self.toggle else True
+            self.on_click(self.info, selected=self.selected)
+            self.highlight_time = time.time()
+        if not self._pressed:
+            self.stdscr.addstr(y, x, '[{label}]'.format(label=self.label), curses.A_REVERSE if self.selected else curses.A_NORMAL)
+        else:
+            self.stdscr.addstr(y, x, '{label}'.format(label=self.label), curses.A_NORMAL)
+
+        if self.highlight_time and not self.toggle and time.time() - self.highlight_time > 0.1:
+            self.selected = False
+            self.highlight_time = None
+
+
 class ButtonList:
     def __init__(self, stdscr, on_click, buttons=[], info={}):
         self.buttons = []
