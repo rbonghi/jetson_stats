@@ -69,7 +69,7 @@ class HideButton(SmallButton):
         self._text = text
         hide_message = "XXX CLICK TO READ XXX"
         self._pressed = False
-        super().__init__(stdscr, self.action_on_click, hide_message, False, None, {})
+        super(HideButton, self).__init__(stdscr, self.action_on_click, hide_message, False, None, {})
 
     def action_on_click(self, info, selected):
         self.label = self._text
