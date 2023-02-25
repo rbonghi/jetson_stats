@@ -195,7 +195,7 @@ class NVPModel(object):
             return False
 
     def __repr__(self):
-        return self._nvpmodel_now['id']
+        return self._nvpmodel_now['name']
 
 
 class NVPModelService(object):

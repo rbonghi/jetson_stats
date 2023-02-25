@@ -205,9 +205,6 @@ class JTOPGUI:
                                                                                    distribution=platform['Distribution'],
                                                                                    release=release)
         self.stdscr.addstr(0, 0, message, curses.A_BOLD)
-        # Print jtop basic info
-        str_xterm = platform['Distribution']
-        set_xterm_title("jtop {name}".format(name=str_xterm))
 
     def header_jetson(self):
         model = self.jetson.board['hardware']["Model"]
