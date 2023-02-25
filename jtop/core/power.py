@@ -34,9 +34,10 @@ def total_power(power):
     # https://forums.developer.nvidia.com/t/power-consumption-monitoring/73608/8
     # https://github.com/rbonghi/jetson_stats/issues/51
     # https://forums.developer.nvidia.com/t/tegrastats-monitoring/217088/4?u=user62045
+    # https://forums.developer.nvidia.com/t/orin-nx-power-data-from-jtop/242804/5
     total_name = ""
     for val in power:
-        if "POM_5V_IN" in val:
+        if val in ["POM_5V_IN", "VDD_IN"]:
             total_name = val
             break
     # Extract the total from list
@@ -44,7 +45,8 @@ def total_power(power):
     # Example for Jetson Xavier
     # https://forums.developer.nvidia.com/t/xavier-jetson-total-power-consumption/81016
     if total_name:
-        total = {'power': power[total_name]['power'], 'avg': power[total_name]['avg'], 'unit': 'm'}
+        total = power[total_name]
+        total['name'] = total_name
         del power[total_name]
         return total, power
     # Otherwise measure all total power

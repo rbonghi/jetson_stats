@@ -84,7 +84,8 @@ def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
     # Plot totals before finishing
     total = jetson.power['tot']
     len_power = len(power)
-    stdscr.addstr(pos_y + len_power + 1, center_x - column_power - 5, 'ALL', curses.A_BOLD)
+    name_total = total['name'] if 'name' in total else 'ALL'
+    stdscr.addstr(pos_y + len_power + 1, center_x - column_power - 5, name_total, curses.A_BOLD)
     unit_power = unit_to_string(total['power'], total['unit'], 'W')
     stdscr.addstr(pos_y + len_power + 1, center_x - 1, unit_power, curses.A_BOLD)
     if width > LIMIT:
@@ -263,9 +264,22 @@ class CTRL(Page):
         # Draw total power
         total = self.jetson.power['tot']
         len_power = len(power)
-        self.stdscr.addstr(pos_y_table + len_power, pos_x, 'ALL', curses.A_BOLD)
+        name_total = total['name'] if 'name' in total else 'ALL'
+        self.stdscr.addstr(pos_y_table + len_power, pos_x, name_total, curses.A_BOLD)
         unit_power_total = unit_to_string(total['power'], total['unit'], 'W')
         self.stdscr.addstr(pos_y_table + len_power, pos_x + 18, unit_power_total, curses.A_BOLD)
+        if 'volt' in total:
+            unit_volt = unit_to_string(total['volt'], total['unit'], 'V')
+            self.stdscr.addstr(pos_y_table + len_power, pos_x + 26, unit_volt, curses.A_BOLD)
+        if 'curr' in total:
+            unit_curr = unit_to_string(total['curr'], total['unit'], 'V')
+            self.stdscr.addstr(pos_y_table + len_power, pos_x + 33, unit_curr, curses.A_BOLD)
+        if 'warn' in total:
+            unit_curr_warn = unit_to_string(total['warn'], total['unit'], 'A')
+            self.stdscr.addstr(pos_y_table + len_power, pos_x + 40, unit_curr_warn, curses.A_BOLD)
+        if 'crit' in total:
+            unit_curr_crit = unit_to_string(total['crit'], total['unit'], 'A')
+            self.stdscr.addstr(pos_y_table + len_power, pos_x + 47, unit_curr_crit, curses.A_BOLD)
 
     def draw(self, key, mouse):
         # Screen size
