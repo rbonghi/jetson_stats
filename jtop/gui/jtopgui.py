@@ -181,7 +181,7 @@ class JTOPGUI:
         status += ["CPU {idle:.1f}%".format(idle=idle)]
         # Read GPU status
         if self.jetson.gpu:
-            gpu = self.jetson.gpu[0]
+            gpu = list(self.jetson.gpu.values())[0]
             load = gpu['status']['load']
             status += ["GPU {idle:.1f}%".format(idle=load)]
         str_xterm = '|'.join(status)

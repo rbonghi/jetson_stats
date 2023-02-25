@@ -66,7 +66,7 @@ def jetson_clocks_alive(engines, data):
                     return False
         elif engine == 'GPU':
             # Check minum and max frequency
-            for gpu in data['gpu']:
+            for _, gpu in data['gpu'].items():
                 gpu_freqs = gpu['freq']
                 if gpu_freqs['max'] != gpu_freqs['min']:
                     return False

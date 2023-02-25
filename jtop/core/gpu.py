@@ -100,7 +100,7 @@ def find_igpu(igpu_path):
     # Check if exist a integrated gpu
     # if not os.path.exists("/dev/nvhost-gpu") and not os.path.exists("/dev/nvhost-power-gpu"):
     #     return []
-    igpu = []
+    igpu = {}
     if not os.path.isdir(igpu_path):
         logger.error("Folder {root_dir} doesn't exist".format(root_dir=igpu_path))
         return igpu
@@ -117,9 +117,17 @@ def find_igpu(igpu_path):
                     # Extract real path GPU device
                     path = os.path.realpath(os.path.join(item_path, "device"))
                     frq_path = os.path.realpath(item_path)
-                    igpu += [{'name': name, 'type': 'integrated', 'path': path, 'frq_path': frq_path}]
+                    igpu[name] = {'type': 'integrated', 'path': path, 'frq_path': frq_path}
                     logger.info("GPU \"{name}\" status in {path}".format(name=name, path=path))
                     logger.info("GPU \"{name}\" frq in {path}".format(name=name, path=frq_path))
+                    # Check if railgate exist
+                    path_railgate = os.path.join(path, "railgate_enable")
+                    if os.path.isfile(path_railgate):
+                        igpu[name]['railgate'] = path_railgate
+                    # Check if 3d scaling exist
+                    path_3d_scaling = os.path.join(path, "enable_3d_scaling")
+                    if os.path.isfile(path_3d_scaling):
+                        igpu[name]['3d_scaling'] = path_3d_scaling
                 else:
                     logger.debug("Skipped {name}".format(name=name))
     return igpu
@@ -127,11 +135,12 @@ def find_igpu(igpu_path):
 
 def find_dgpu():
     # Check if there are discrete gpu
-    if not os.path.exists("/dev/nvidiactl") and not os.path.isdir("/dev/nvgpu-pci"):
-        return []
-    logger.info("Discrete GPU found")
-    igpu = []
-    return igpu
+    # if not os.path.exists("/dev/nvidiactl") and not os.path.isdir("/dev/nvgpu-pci"):
+    #     return []
+    dgpu = {}
+    if dgpu:
+        logger.info("Discrete GPU found")
+    return dgpu
 
 
 class GPU(GenericInterface):
@@ -145,11 +154,21 @@ class GPU(GenericInterface):
         # Set new 3D scaling
         self._controller.put({'gpu': {'command': '3d_scaling', 'name': name, 'value': value}})
 
+    def get_3d_scaling(self, name):
+        if name not in self._data:
+            raise JtopException("GPU \"{name}\" does not exist".format(name=name))
+        return self._data[name]['status']['3d_scaling']
+
     def set_railgate(self, name, value):
         if name not in self._data:
             raise JtopException("GPU \"{name}\" does not exist".format(name=name))
         # Set new 3D scaling
         self._controller.put({'gpu': {'command': 'railgate', 'name': name, 'value': value}})
+
+    def get_railgate(self, name):
+        if name not in self._data:
+            raise JtopException("GPU \"{name}\" does not exist".format(name=name))
+        return self._data[name]['status']['railgate']
 
 
 class GPUService(object):
@@ -162,23 +181,53 @@ class GPUService(object):
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=igpu_path))
         self._gpu_list = find_igpu(igpu_path)
         # Find discrete GPU
-        self._gpu_list += find_dgpu()
+        self._gpu_list.update(find_dgpu())
         # Check status
         if not self._gpu_list:
             logger.warning("No NVIDIA GPU available")
 
     def set_3d_scaling(self, name, value):
-        pass
+        if name not in self._gpu_list:
+            logger.error("GPU \"{name}\" does not exist".format(name=name))
+            return False
+        if '3d_scaling' not in self._gpu_list[name]:
+            logger.error("GPU \"{name}\" does not have 3D scaling".format(name=name))
+            return False
+        path_3d_scaling = self._gpu_list[name]['3d_scaling']
+        string_value = "1" if value else "0"
+        # Write new status 3D scaling
+        try:
+            if os.access(path_3d_scaling, os.W_OK):
+                with open(path_3d_scaling, 'w') as f:
+                    f.write(string_value)
+            logger.info("GPU \"{name}\" set 3D scaling to {value}".format(name=name, value=value))
+        except OSError as e:
+            logger.error("I cannot set 3D scaling {}".format(e))
 
     def set_railgate(self, name, value):
-        pass
+        if name not in self._gpu_list:
+            logger.error("GPU \"{name}\" does not exist".format(name=name))
+            return False
+        if 'railgate' not in self._gpu_list[name]:
+            logger.error("GPU \"{name}\" does not have railgate".format(name=name))
+            return False
+        path_railgate = self._gpu_list[name]['railgate']
+        string_value = "1" if value else "0"
+        # Write new status railgate
+        try:
+            if os.access(path_railgate, os.W_OK):
+                with open(path_railgate, 'w') as f:
+                    f.write(string_value)
+            logger.info("GPU \"{name}\" set railgate to {value}".format(name=name, value=value))
+        except OSError as e:
+            logger.error("I cannot set Railgate {}".format(e))
 
     def get_status(self):
-        gpu_list = []
+        gpu_list = {}
         # Read iGPU frequency
-        for data in self._gpu_list:
+        for name, data in self._gpu_list.items():
             # Initialize GPU status
-            gpu = {'name': data['name'], 'type': data['type']}
+            gpu = {'type': data['type']}
             # Detect frequency and load
             if gpu['type'] == 'integrated':
                 # Read status GPU
@@ -192,6 +241,6 @@ class GPUService(object):
             elif gpu['type'] == 'discrete':
                 logger.info("TODO discrete GPU")
             # Load all status in GPU
-            gpu_list += [gpu]
+            gpu_list[name] = gpu
         return gpu_list
 # EOF

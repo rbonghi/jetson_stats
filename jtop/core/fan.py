@@ -433,9 +433,12 @@ class FanService(object):
         pwm = FAN_PWM_CAP - 1 if pwm >= FAN_PWM_CAP else pwm
         # Set for all pwm the same speed value
         pwm_path = self._fan_list[name]['pwm'][index]
-        if os.access(pwm_path, os.W_OK):
-            with open(pwm_path, 'w') as f:
-                f.write(str(pwm))
+        try:
+            if os.access(pwm_path, os.W_OK):
+                with open(pwm_path, 'w') as f:
+                    f.write(str(pwm))
+        except OSError as e:
+            logger.error("I cannot set fan speed: {speed} - error {e}".format(speed=speed, e=e))
 
     def get_status(self):
         fan_status = {}
