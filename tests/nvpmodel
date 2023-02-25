@@ -28,7 +28,7 @@ usage()
     echo "EMULATOR Nvidia Power Model Tool Version 1.1.2"
     echo "Usage:"
     echo "$0 [options]"
-
+    
 cat << EOF
     nvpmodel [-h | --help] [--verbose] [-q | --query] [-p | --parse] [-u | --udata]
         [-w | --wait <sec>] [--boot] [-m | --mode <mode>] [-f | --conf <filename>] [-o | --os <android,l4t>]
@@ -43,8 +43,8 @@ cat << EOF
 -m, --mode <mode>:
     <mode> is one of the integer POWER_MODEL ID defined in config file. Switch to the specified power mode.
 -f, --conf:
-    explicitly specify the config file.            
-    If it is the only option, then it sets the power mode as default mode configured in the file.            
+    explicitly specify the config file.
+    If it is the only option, then it sets the power mode as default mode configured in the file.
     This option can be used for developer usage to specify a config file other than the default one.
 -o, --os <android,l4t>:
     Perform OS specific operations for power model settings. Argument is case insensitive.
@@ -59,7 +59,7 @@ Examples:
     nvpmodel -m 2 -o android: switch to POWER_MODEL ID=2 and perform Android specific operations for power mode.
     nvpmodel -m 2 -f pm.conf: switch to POWER_MODEL ID=2 of which settings are defined in pm.conf.
     nvpmodel -m 2 -u /data/status: switch to POWER_MODEL ID=2 and store the active mode as user settings in /data/status.
-    nvpmodel -f pm.conf: read the active mode in user data file and set it as the power mode which is configured in pm.conf.            
+    nvpmodel -f pm.conf: read the active mode in user data file and set it as the power mode which is configured in pm.conf.
         If user data file does not exist or the active mode value is invalid, set defalut mode instead.
     nvpmodel -q: print the current power mode.
     nvpmodel -q --verbose: print the current power mode with verbose info.
@@ -90,7 +90,7 @@ NVPM VERB: MAX_FREQ /sys/devices/gpu.0/devfreq/57000000.gpu/max_freq
 NVPM VERB: MIN_FREQ /sys/devices/gpu.0/devfreq/57000000.gpu/min_freq
 NVPM VERB: PARAM TYPE=CLOCK NAME=EMC
 NVPM VERB: MAX_FREQ /sys/kernel/nvpmodel_emc_cap/emc_iso_cap
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=0 NAME=MAXN
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -103,7 +103,7 @@ NVPM VERB: GPU MIN_FREQ 0
 NVPM VERB: GPU MAX_FREQ 2147483647
 NVPM VERB: GPU_POWER_CONTROL_DISABLE GPU_PWR_CNTL_DIS auto
 NVPM VERB: EMC MAX_FREQ 0
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=1 NAME=5W
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -116,7 +116,7 @@ NVPM VERB: GPU MIN_FREQ 0
 NVPM VERB: GPU MAX_FREQ 640000000
 NVPM VERB: GPU_POWER_CONTROL_DISABLE GPU_PWR_CNTL_DIS auto
 NVPM VERB: EMC MAX_FREQ 1600000000
-NVPM VERB: 
+NVPM VERB:
 EOF
 }
 
@@ -171,7 +171,7 @@ NVPM VERB: PARAM TYPE=CLOCK NAME=PVA_CORE
 NVPM VERB: MAX_FREQ /sys/kernel/nvpmodel_emc_cap/nafll_pva_core
 NVPM VERB: PARAM TYPE=CLOCK NAME=CVNAS
 NVPM VERB: MAX_FREQ /sys/kernel/nvpmodel_emc_cap/nafll_cvnas
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=0 NAME=MAXN
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -200,7 +200,7 @@ NVPM VERB: DLA_FALCON MAX_FREQ 2147483647
 NVPM VERB: PVA_VPS MAX_FREQ 2147483647
 NVPM VERB: PVA_CORE MAX_FREQ 2147483647
 NVPM VERB: CVNAS MAX_FREQ 2147483647
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=1 NAME=MODE_10W
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -223,7 +223,7 @@ NVPM VERB: DLA_FALCON MAX_FREQ 330000000
 NVPM VERB: PVA_VPS MAX_FREQ 115200000
 NVPM VERB: PVA_CORE MAX_FREQ 115200000
 NVPM VERB: CVNAS MAX_FREQ 601600000
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=2 NAME=MODE_15W
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -248,7 +248,7 @@ NVPM VERB: DLA_FALCON MAX_FREQ 450000000
 NVPM VERB: PVA_VPS MAX_FREQ 550000000
 NVPM VERB: PVA_CORE MAX_FREQ 385000000
 NVPM VERB: CVNAS MAX_FREQ 716800000
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=3 NAME=MODE_30W_ALL
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -277,7 +277,7 @@ NVPM VERB: DLA_FALCON MAX_FREQ 630000000
 NVPM VERB: PVA_VPS MAX_FREQ 760000000
 NVPM VERB: PVA_CORE MAX_FREQ 532000000
 NVPM VERB: CVNAS MAX_FREQ 1011200000
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=4 NAME=MODE_30W_6CORE
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -304,7 +304,7 @@ NVPM VERB: DLA_FALCON MAX_FREQ 630000000
 NVPM VERB: PVA_VPS MAX_FREQ 760000000
 NVPM VERB: PVA_CORE MAX_FREQ 532000000
 NVPM VERB: CVNAS MAX_FREQ 1011200000
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=5 NAME=MODE_30W_4CORE
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -329,7 +329,7 @@ NVPM VERB: DLA_FALCON MAX_FREQ 630000000
 NVPM VERB: PVA_VPS MAX_FREQ 760000000
 NVPM VERB: PVA_CORE MAX_FREQ 532000000
 NVPM VERB: CVNAS MAX_FREQ 1011200000
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=6 NAME=MODE_30W_2CORE
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -352,25 +352,29 @@ NVPM VERB: DLA_FALCON MAX_FREQ 630000000
 NVPM VERB: PVA_VPS MAX_FREQ 760000000
 NVPM VERB: PVA_CORE MAX_FREQ 532000000
 NVPM VERB: CVNAS MAX_FREQ 1011200000
-NVPM VERB: 
+NVPM VERB:
 EOF
 }
 
 show_verbose_test()
 {
 cat << EOF
+NVPM VERB: Config file: /etc/nvpmodel.conf
+NVPM VERB: parsing done for /etc/nvpmodel.conf
+succeed to parse file /etc/nvpmodel.conf.
+NVPM VERB: PM_CONFIG: DEFAULT=MIN_MAX_TEST(3)
 NVPM VERB: PARAM TYPE=CLOCK NAME=CVNAS
 NVPM VERB: MAX_FREQ /sys/kernel/nvpmodel_emc_cap/nafll_cvnas
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=0 NAME=MAXTEST
 NVPM VERB: CPU_ONLINE CORE_0 1
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=1 NAME=TEST
 NVPM VERB: CPU_ONLINE CORE_0 1
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=2 NAME=MINTEST
 NVPM VERB: CPU_ONLINE CORE_0 1
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=3 NAME=MIN_MAX_TEST
 NVPM VERB: CPU_ONLINE CORE_0 1
 EOF
@@ -432,7 +436,7 @@ NVPM VERB: PARAM TYPE=CLOCK NAME=PVA0_VPS
 NVPM VERB: MAX_FREQ /sys/devices/platform/13e40000.host1x/16000000.pva0/acm/clk_cap/pva0_vps
 NVPM VERB: PARAM TYPE=CLOCK NAME=PVA0_AXI
 NVPM VERB: MAX_FREQ /sys/devices/platform/13e40000.host1x/16000000.pva0/acm/clk_cap/pva0_cpu_axi
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=0 NAME=MAXN
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -464,7 +468,7 @@ NVPM VERB: DLA0_FALCON MAX_FREQ 2147483647
 NVPM VERB: DLA1_FALCON MAX_FREQ 2147483647
 NVPM VERB: PVA0_VPS MAX_FREQ 2147483647
 NVPM VERB: PVA0_AXI MAX_FREQ 2147483647
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=1 NAME=MODE_15W
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -492,7 +496,7 @@ NVPM VERB: DLA0_FALCON MAX_FREQ 294400000
 NVPM VERB: DLA1_FALCON MAX_FREQ 294400000
 NVPM VERB: PVA0_VPS MAX_FREQ 307200000
 NVPM VERB: PVA0_AXI MAX_FREQ 217600000
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=2 NAME=MODE_30W
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -522,7 +526,7 @@ NVPM VERB: DLA0_FALCON MAX_FREQ 729600000
 NVPM VERB: DLA1_FALCON MAX_FREQ 729600000
 NVPM VERB: PVA0_VPS MAX_FREQ 512000000
 NVPM VERB: PVA0_AXI MAX_FREQ 358400000
-NVPM VERB: 
+NVPM VERB:
 NVPM VERB: POWER_MODEL: ID=3 NAME=MODE_50W
 NVPM VERB: CPU_ONLINE CORE_0 1
 NVPM VERB: CPU_ONLINE CORE_1 1
@@ -554,7 +558,7 @@ NVPM VERB: DLA0_FALCON MAX_FREQ 729600000
 NVPM VERB: DLA1_FALCON MAX_FREQ 729600000
 NVPM VERB: PVA0_VPS MAX_FREQ 704000000
 NVPM VERB: PVA0_AXI MAX_FREQ 486400000
-NVPM VERB: 
+NVPM VERB:
 EOF
 }
 
@@ -562,7 +566,7 @@ show_query()
 {
     local name=$1
     local number=$2
-
+    
     echo "NVPM WARN: fan mode is not set!"
     echo "NV Power Mode: $name"
     echo "$number"
@@ -572,16 +576,16 @@ set_level()
 {
     local level=$1
     if [ "$EUID" -ne 0 ] ; then
-      echo "Please run as root"
-      exit 1
+        echo "Please run as root"
+        exit 1
     fi
-
+    
     if [ "$level" -eq "2" ] ; then
         echo "NVPM ERROR: I can't set this model!"
         echo "NVPM ERROR: Need a reboot"
         read -p "NVPM WARNING: Write YES" yn
         echo $yn
-    elif [ "$level" -ge "0" ] && [ "$level" -lt "4" ] ; then
+        elif [ "$level" -ge "0" ] && [ "$level" -lt "4" ] ; then
         echo "Save"
         echo "$level" > /tmp/nvp_model_test
     else
@@ -607,32 +611,32 @@ main()
     # Decode all information from startup
     while [ -n "$1" ]; do
         case "$1" in
-            --verbose) 
+            --verbose)
                 VERBOSE=true
-                ;;
+            ;;
             -p)
                 PARSE=true
-                ;;
-            -m) 
+            ;;
+            -m)
                 level=$2
                 shift 1
                 set_level $level
                 exit 0
-                ;;
+            ;;
             -q)
                 show_query ${modes[level]} $level
                 exit 0
-                ;;
+            ;;
             -h|--help)
                 usage
                 exit 0
-                ;;
+            ;;
             *)
                 usage "[ERROR] Unknown option: $1"
                 exit 1
             ;;
         esac
-            shift 1
+        shift 1
     done
     
     if $PARSE ; then
