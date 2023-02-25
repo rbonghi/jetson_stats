@@ -120,9 +120,9 @@ class CTRL(Page):
             self._jetson_clocks_boot = SmallButton(stdscr, self.action_jetson_clocks_boot, trigger_key='e')
         # Initialize NVP Model buttons
         if self.jetson.nvpmodel is not None:
+            self._nvp_default = self.jetson.nvpmodel.get_default()
             # nvp_modes = [name.replace('MODE_', '').replace('_', ' ') for name in self.jetson.nvpmodel.modes]
-            nvp_modes = self.jetson.nvpmodel.modes
-            self._nvpmodel_profile = ButtonList(stdscr, self.action_nvpmodels, nvp_modes)
+            self._nvpmodel_profile = ButtonList(stdscr, self.action_nvpmodels, self.jetson.nvpmodel.models)
             self._nvpmodel_increase = SmallButton(stdscr, self.action_nvp_increase, trigger_key='+')
             self._nvpmodel_decrease = SmallButton(stdscr, self.action_nvp_decrease, trigger_key='-')
 
@@ -162,7 +162,7 @@ class CTRL(Page):
 
     def action_nvp_increase(self, info, selected):
         # NVPmodel controller
-        if self.jetson.nvpmodel.id >= len(self.jetson.nvpmodel.modes) - 1:
+        if self.jetson.nvpmodel.id >= len(self.jetson.nvpmodel.models) - 1:
             return
         self.jetson.nvpmodel += 1
 
@@ -210,14 +210,17 @@ class CTRL(Page):
         self.stdscr.addstr(pos_y, pos_x, "NVP modes:", curses.A_BOLD)
         # Write ID NVP model
         id = self.jetson.nvpmodel.id
-        color = NColors.yellow() if self.jetson.nvpmodel.is_running else curses.A_BOLD
+        color = NColors.yellow() if self.jetson.nvpmodel.is_running() else curses.A_BOLD
         self.stdscr.addstr(pos_y, pos_x + 16, str(id), color)
         # Add buttons -/+
         self._nvpmodel_decrease.update(pos_y, pos_x + 11, key=key, mouse=mouse)
         self._nvpmodel_increase.update(pos_y, pos_x + 18, key=key, mouse=mouse)
         # Draw all modes
         current_mode = self.jetson.nvpmodel.name
-        self._nvpmodel_profile.update(pos_y + 1, pos_x + 2, key, mouse, current_mode)
+        colors = [curses.A_NORMAL if status else NColors.red() for status in self.jetson.nvpmodel.status]
+        self._nvpmodel_profile.update(pos_y + 1, pos_x + 2, key, mouse, current_mode, colors)
+        # Write letter D for default
+        self.stdscr.addstr(pos_y + self._nvp_default['id'] + 1, pos_x, "D", curses.A_BOLD)
 
     def control_power(self, pos_y, pos_x, key, mouse):
         if not self.jetson.power:

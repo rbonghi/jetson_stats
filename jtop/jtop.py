@@ -146,9 +146,9 @@ class jtop(Thread):
         # Initialize fan
         self._fan = Fan()
         # Load jetson_clocks status
-        self._jc = None
+        self._jetson_clocks = None
         # Load NV Power Mode
-        self._nvp = None
+        self._nvpmodel = None
 
     def _load_jetson_libraries(self):
         # Load platform
@@ -445,18 +445,18 @@ class jtop(Thread):
         :rtype: NVPModel or None
         :raises JtopException: if the nvp model does not exist*
         """
-        return self._nvp
+        return self._nvpmodel
 
     @nvpmodel.setter
     def nvpmodel(self, value):
-        if self._nvp is None:
-            return
-        mode = self._nvp.set(value)
-        # Do not send messages if nvpmodel is the same
-        if mode == self._nvp.id:
-            return
-        # Send new nvpmodel
-        self._controller.put({'nvp': mode})
+        if self._nvpmodel is None:
+            raise JtopException("nvpmodel not available on this board")
+        if isinstance(value, int):
+            return self._nvpmodel.set_nvpmodel_id(value)
+        elif isinstance(value, str):
+            return self._nvpmodel.set_nvpmodel_name(value)
+        else:
+            ValueError("Data type not allowed {type}".format(type=type(value)))
 
     @property
     def jetson_clocks(self):
@@ -498,20 +498,13 @@ class jtop(Thread):
         :rtype: JetsonClocks
         :raises ValueError: Wrong jetson_clocks value
         """
-        return self._jc
+        return self._jetson_clocks
 
     @jetson_clocks.setter
     def jetson_clocks(self, value):
-        if not isinstance(value, bool):
-            raise TypeError("Use a boolean")
-        if not self._jc.is_config and not value:
-            raise JtopException("I cannot set jetson_clocks.\nPlease shutdown manually jetson_clocks")
-        # Check if service is not started otherwise skip
-        if self._jc.status in ['booting', 'activating', 'deactivating']:
-            return
-        if value != self._jc.is_alive:
-            # Send status jetson_clocks
-            self._controller.put({'jc': {'enable': value}})
+        if self._jetson_clocks is None:
+            raise JtopException("jetson_clocks not available on this board")
+        self._jetson_clocks.set_enable(value)
 
     @property
     def stats(self):
@@ -569,7 +562,7 @@ class jtop(Thread):
                 stats['Fan {name}{idx}'.format(idx=idx, name=name)] = speed
         # -- Temperature --
         for temp in self.temperature:
-            stats["Temp {name}".format(name=temp)] = self.temperature[temp]
+            stats["Temp {name}".format(name=temp)] = self.temperature[temp]['temp']
         # -- Power --
         # Load all current power from each power rail
         if self.power:
@@ -840,10 +833,10 @@ class jtop(Thread):
         self._fan._update(data['fan'])
         # -- JETSON_CLOCKS --
         if 'jc' in data:
-            self._jc._update(data['jc'])
+            self._jetson_clocks._update(data['jc'])
         # -- NVP Model --
         if 'nvp' in data:
-            self._nvp._update(data['nvp'])
+            self._nvpmodel._update(data['nvp'])
 
     def run(self):
         """ """
@@ -958,12 +951,12 @@ sudo systemctl restart jtop.service""".format(
         self._memory._initialize(self._controller, init['memory'])
         # Initialize fan
         self._fan._initialize(self._controller, init['fan'])
-        # Initialize jetson_clock
+        # Initialize jetson_clocks (if exist)
         if init['jc']:
-            self._jc = JetsonClocks(self._controller)
+            self._jetson_clocks = JetsonClocks(self._controller)
         # Init NVP model (if exist)
-        if init['nvpmodel']:
-            self._nvp = NVPModel()
+        if 'nvpmodel' in init:
+            self._nvpmodel = NVPModel(self._controller, init['nvpmodel'])
         # Wait first value
         data = self._get_data()
         # Decode and update all jtop data

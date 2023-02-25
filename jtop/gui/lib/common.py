@@ -47,7 +47,7 @@ def set_xterm_title(title):
 
 def jetson_clocks_gui(stdscr, offset, start, jetson):
     # Write status jetson_clocks
-    jc_status_name = jetson.jetson_clocks.status
+    jc_status_name = jetson.jetson_clocks.get_status()
     # Read status jetson_clocks
     if jc_status_name == "running":
         color = (curses.A_BOLD | NColors.green())  # Running (Bold)
@@ -58,7 +58,7 @@ def jetson_clocks_gui(stdscr, offset, start, jetson):
     else:
         color = NColors.red()  # Error (Red)
     # Show if JetsonClock is enabled or not
-    if jetson.jetson_clocks.boot:
+    if jetson.jetson_clocks.get_boot():
         jc_status_name = "[" + jc_status_name + "]"
     # Show status jetson_clocks
     plot_name_info(stdscr, offset, start, "Jetson Clocks", jc_status_name, color)

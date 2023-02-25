@@ -314,9 +314,6 @@ class JtopServer(Process):
             self.power.reset_avg_power()
             # Initialization jetson_clocks
             self.jetson_clocks.initialization(self.nvpmodel, data)
-        # Read nvp_mode
-        if self.nvpmodel.exists():
-            self.nvp_mode = self.nvpmodel.get()
         logger.info("service ready")
         # Initialize variables
         timeout = None
@@ -395,16 +392,18 @@ class JtopServer(Process):
                         jc = control['jc']
                         # Enable / disable jetson_clocks
                         if 'enable' in jc:
-                            self.jetson_clocks.set(jc['enable'])
+                            self.jetson_clocks.set_enable(jc['enable'])
                         # Update jetson_clocks configuration
                         if 'boot' in jc:
-                            self.jetson_clocks.boot = jc['boot']
+                            self.jetson_clocks.set_boot(jc['boot'])
                     # Decode nvp model
                     if 'nvp' in control:
-                        mode = control['nvp']
+                        nvpmodel = control['nvp']
+                        nvpmodel_id = nvpmodel['id']
+                        nvpmodel_force = nvpmodel['force']
                         # Set new NV Power Mode
-                        self.nvpmodel.set(mode)
-                        logger.info("Set new NV Power Mode {mode}".format(mode=mode))
+                        logger.info("Set new NV Power Model ID {id}".format(id=nvpmodel_id))
+                        self.nvpmodel.set_nvpmodel_id(nvpmodel_id, nvpmodel_force)
                     # Initialize tegrastats speed
                     if 'interval' in control:
                         interval = control['interval']
@@ -423,8 +422,14 @@ class JtopServer(Process):
                             'memory': self.memory.swap_path(),
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks.exists(),
-                            'nvpmodel': self.nvpmodel.exists(), 
                         }
+                        # If nvpmodel exist load all modes
+                        if self.nvpmodel.exists():
+                            init['nvpmodel'] = {
+                                'models': self.nvpmodel.get_all_nvpmodels(),
+                                'default': self.nvpmodel.get_default()
+                            }
+                        # Push initialization string
                         self.q.put({'init': init})
                     # Manage jetson_clocks
                     if 'config' in control:
@@ -587,15 +592,9 @@ class JtopServer(Process):
             # Get status jetson_clocks
             data['jc'] = self.jetson_clocks.get_status(data)
         # -- NVP MODEL --
+        # Read nvpmodel status, ID, name, and status thread
         if self.nvpmodel.exists():
-            # Read nvp_mode
-            nvp_mode = self.nvpmodel.get()
-            if not self.nvpmodel.is_running():
-                self.nvp_mode = nvp_mode
-            data['nvp'] = {
-                'modes': self.nvpmodel.modes(),
-                'thread': self.nvpmodel.is_running(),
-                'mode': self.nvp_mode}
+            data['nvp'] = self.nvpmodel.get_status()
         return data
 
     def jtop_stats(self):

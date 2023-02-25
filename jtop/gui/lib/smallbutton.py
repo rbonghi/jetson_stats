@@ -80,12 +80,15 @@ class ButtonList:
         button = SmallButton(self.stdscr, self.on_click, toggle=True, label=label, info=info_button)
         self.buttons.append(button)
 
-    def update(self, y, x, key, mouse, selected_button):
+    def update(self, y, x, key, mouse, selected_button, colors=[]):
         # Update selected button
         self._selected = selected_button
+        # read color status
+        if not colors:
+            colors = [None] * len(self.buttons)
         # Show all buttons
-        for i, button in enumerate(self.buttons):
+        for i, (button, color) in enumerate(zip(self.buttons, colors)):
             name = button.get_label()
             button.set_selected(self._selected == name)
-            button.update(y + i, x, key=key, mouse=mouse)
+            button.update(y + i, x, key=key, mouse=mouse, color=color)
 # EOF

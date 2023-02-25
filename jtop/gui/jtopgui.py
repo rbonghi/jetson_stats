@@ -196,10 +196,11 @@ class JTOPGUI:
         # Title script
         # Reference: https://stackoverflow.com/questions/25872409/set-gnome-terminal-window-title-in-python
         status = [model]
-        if self.jetson.jetson_clocks is not None:
-            status += ["JC: {jc}".format(jc=self.jetson.jetson_clocks.status.capitalize())]
-        if self.jetson.nvpmodel is not None:
-            status += [self.jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')]
+        #if self.jetson.jetson_clocks is not None:
+        #    status_string = self.jetson.jetson_clocks.get_status()
+        #    status += ["JC: {jc}".format(jc=status_string.capitalize())]
+        #if self.jetson.nvpmodel is not None:
+        #    status += [self.jetson.nvpmodel.name.replace('MODE_', '').replace('_', ' ')]
         str_xterm = ' - '.join(status)
         # Print jtop basic info
         set_xterm_title("jtop {name}".format(name=str_xterm))
