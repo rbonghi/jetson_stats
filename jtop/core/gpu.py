@@ -138,6 +138,8 @@ def find_dgpu():
     # if not os.path.exists("/dev/nvidiactl") and not os.path.isdir("/dev/nvgpu-pci"):
     #     return []
     dgpu = {}
+    if check_nvidia_smi():
+        logger.info("NVIDIA SMI exist!")
     if dgpu:
         logger.info("Discrete GPU found")
     return dgpu
