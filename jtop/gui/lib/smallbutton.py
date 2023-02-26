@@ -66,16 +66,16 @@ class SmallButton:
 class HideButton(SmallButton):
 
     def __init__(self, stdscr, text):
-        self._text = text
         hide_message = "XXX CLICK TO READ XXX"
+        super(HideButton, self).__init__(stdscr, self.action_on_click, label=hide_message)
+        self._text = text
         self._pressed = False
-        super(HideButton, self).__init__(stdscr, self.action_on_click, hide_message, False, None, {})
 
     def action_on_click(self, info, selected):
         self.label = self._text
         self._pressed = True
 
-    def update(self, y, x, mouse=None):
+    def update(self, y, x, mouse):
         if mouse and mouse[1] == y and x <= mouse[0] <= x + len(self.label) + 1:
             self.selected = not self.selected if self.toggle else True
             self.on_click(self.info, selected=self.selected)
