@@ -54,17 +54,17 @@ class Config:
         self._config = self._load()
         self._last_config = copy.deepcopy(self._config)
 
-    def set(self, instance, data):
+    def set(self, instance, default=None):
         # Update configuration
-        self._config[instance] = data
+        self._config[instance] = default
         # Store configuration
         if self._last_config != self._config:
             self._store()
             # Update last configuration
             self._last_config = copy.deepcopy(self._config)
 
-    def get(self, instance, data):
-        return self._config.get(instance, data)
+    def get(self, instance, default=None):
+        return self._config.get(instance, default)
 
     @property
     def path(self):
@@ -95,6 +95,21 @@ class Config:
             os.remove(self.config_file)
             return True
         return False
+
+    def items(self):
+        return self._config.items()
+
+    def keys(self):
+        return self._config.keys()
+
+    def values(self):
+        return self._config.values()
+
+    def __contains__(self, key):
+        return key in self._config
+
+    def __repr__(self):
+        return repr(self._config)
 
     def __str__(self):
         return str(self._config)

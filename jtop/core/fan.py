@@ -277,11 +277,28 @@ class Fan(GenericInterface):
         return None
 
 
+def check_config(config):
+    if 'fan' not in config:
+        return
+    fans = config.get('fan')
+    for fan in fans:
+        if not isinstance(fans[fan], dict):
+            logger.warning("Old fan configuration store. Cleaned")
+            config.set('fan', {})
+        else:
+            if 'speed' in fans[fan]:
+                if not isinstance(fans[fan]['speed'], list):
+                    logger.warning("Old speed configuration store. Cleaned")
+                    config.set('fan', {})
+
+
 class FanService(object):
 
     def __init__(self, config):
         # Load configuration
         self._config = config
+        # Check consistency fan
+        check_config(config)
         # Load base hwmon folder
         root_dir = "/sys/class/hwmon"
         if os.getenv('JTOP_TESTING', False):
@@ -454,7 +471,7 @@ class FanService(object):
         if self._nvfancontrol:
             nvfan_query = {}
             if nvfancontrol_is_active():
-                nvfan_query = nvfancontrol_query()               
+                nvfan_query = nvfancontrol_query()
             if nvfan_query:
                 for fan, nvfan in zip(fan_status, nvfan_query):
                     fan_status[fan].update(nvfan_query[nvfan])
