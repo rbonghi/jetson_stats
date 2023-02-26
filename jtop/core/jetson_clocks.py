@@ -74,13 +74,15 @@ def jetson_clocks_alive(engines, data):
             # Check minum and max frequency
             # EMC check only if current frequency is the same of max
             emc = data['mem']['EMC']
+            if 'max' not in emc:
+                continue
             if emc['max'] != emc['cur']:
                 return False
         else:
             # Find enging and check frequencies
             for _, engines_group in data['engines'].items():
                 for name, engine_data in engines_group.items():
-                    if engine == name:
+                    if engine == name and 'max' in engine_data:
                         # for all Engines check only if current frequency is the same of max
                         if engine_data['max'] != engine_data['cur']:
                             return False
