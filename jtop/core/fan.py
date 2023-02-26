@@ -108,7 +108,22 @@ def get_all_legacy_fan():
         return pwm_files
     # Otherwise add in list
     name = os.path.basename(root_path)
-    logger.info("Found legacy Jetson {name} in {root_path}".format(name=name, root_path=root_path))
+    # Find all commands
+    fan_device_paths = []
+    fan_rpm_path = []
+    for file in os.listdir(root_path):
+        if file == 'target_pwm':
+            fan_device_paths += [os.path.join(root_path, file)]
+        # Check if there are rpm values
+        elif file == 'rpm_measured':
+            fan_rpm_path += [os.path.join(root_path, file)]
+    # If there are pwm is added in list
+    if fan_device_paths:
+        pwm_files[name] = {'path': root_path, 'pwm': fan_device_paths}
+        logger.info("Found legacy FAN {name}({num}) found in {root_path}".format(name=name, root_path=root_path, num=len(fan_device_paths)))
+    if fan_rpm_path:
+        pwm_files[name]['rpm'] = fan_rpm_path
+        logger.info("Legacy RPM {name}({num}) found in {root_path}".format(name=name, root_path=root_path, num=len(fan_device_paths)))
     return pwm_files
 
 

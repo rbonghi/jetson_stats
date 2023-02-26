@@ -21,16 +21,16 @@ from .colors import NColors
 from .common import size_to_string
 
 
-header = {
-    "PID": {'clm': 7, 'fn': lambda x: str(x)},
-    "USER": {'clm': 12, 'fn': lambda x: x},
-    "PRI": {'clm': 6, 'fn': lambda x: str(x)},
-    "S": {'clm': 4, 'fn': lambda x: x},
-    "CPU%": {'clm': 8, 'fn': lambda x: "{:.1f}".format(x)},
-    "MEM": {'clm': 8, 'fn': lambda x: size_to_string(x, 'k')},
-    "GPU MEM": {'clm': 12, 'fn': lambda x: size_to_string(x, 'k')},
-    "Command": {'clm': 20, 'fn': lambda x: x},
-}
+header = [
+    ("PID", {'clm': 7, 'fn': lambda x: str(x)}),
+    ("USER", {'clm': 12, 'fn': lambda x: x}),
+    ("PRI", {'clm': 6, 'fn': lambda x: str(x)}),
+    ("S", {'clm': 4, 'fn': lambda x: x}),
+    ("CPU%", {'clm': 8, 'fn': lambda x: "{:.1f}".format(x)}),
+    ("MEM", {'clm': 8, 'fn': lambda x: size_to_string(x, 'k')}),
+    ("GPU MEM", {'clm': 12, 'fn': lambda x: size_to_string(x, 'k')}),
+    ("Command", {'clm': 20, 'fn': lambda x: x}),
+]
 
 
 class ProcessTable(object):
@@ -46,7 +46,7 @@ class ProcessTable(object):
         # Plot low bar background line
         self.stdscr.addstr(pos_y, 0, " " * width, NColors.igreen())
         title_counter = 0
-        for idx, (title, info) in enumerate(header.items()):
+        for idx, (title, info) in enumerate(header):
             try:
                 # Check if pressed
                 if mouse and mouse[1] == pos_y and title_counter <= mouse[0] <= title_counter + info['clm']:
@@ -67,7 +67,7 @@ class ProcessTable(object):
         for nprocess, process in enumerate(sorted_processes):
             # Skip unit size process
             counter = 0
-            for (value, info) in zip(process, header.values()):
+            for (value, (name, info)) in zip(process, header):
                 # Print all values in a nice view
                 try:
                     self.stdscr.addstr(pos_y + nprocess + 1, counter, info['fn'](value), curses.A_NORMAL)

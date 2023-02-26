@@ -162,7 +162,7 @@ class ProcessService(object):
         process = [
             int(pid),               # pid process
             self.usernames[uid],    # uid
-            stat[17],               # Priority
+            int(stat[17]),          # Priority
             stat[2],                # state
             cpu_percent,            # CPU percent
             vm_rss,                 # MEM process

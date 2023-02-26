@@ -146,10 +146,11 @@ class GPU(Page):
             plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Power ctrl", gpu_data['power_control'])
             button_idx += button_position
             # TPC PG Mask
-            tpc_pg_mask_string = "ON" if gpu_status['tpc_pg_mask'] else "OFF"
-            # tpc_pg_mask_status = NColors.green() if gpu_status['tpc_pg_mask'] else NColors.red()
-            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "TPC PG", tpc_pg_mask_string)
-            button_idx += button_position
+            if 'tpc_pg_mask' in gpu_status:
+                tpc_pg_mask_string = "ON" if gpu_status['tpc_pg_mask'] else "OFF"
+                # tpc_pg_mask_status = NColors.green() if gpu_status['tpc_pg_mask'] else NColors.red()
+                plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "TPC PG", tpc_pg_mask_string)
+                button_idx += button_position
             # Checj if GPC data is included
             frq_size = width - 3
             if 'GPC' in gpu_freq:
