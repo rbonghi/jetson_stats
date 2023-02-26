@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="jetson_swap" href="jetson_swap.html" /><link rel="prev" title="jetson_config" href="jetson_config.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="jtop" href="jtop.html" /><link rel="prev" title="🐋 Docker" href="../docker.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 -->
-        <title>jetson_release - jetson-stats 4.2.0.dev1</title>
+        <title>📖 API Reference - jetson-stats 4.2.0.dev1</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -179,16 +179,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../jtop.html">📊 jtop</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced-usage.html">👨‍💻 Advanced Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker.html">🐋 Docker</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/index.html">📖 API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../reference/jtop.html">jtop</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../reference/memory.html">Memory</a></li>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">📖 API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="jtop.html">jtop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory.html">Memory</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">🧰 Other tools</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="jetson_config.html">jetson_config</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">jetson_release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="jetson_swap.html">jetson_swap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="environment_variables.html">Environment variables</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../other-tools/index.html">🧰 Other tools</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_config.html">jetson_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_release.html">jetson_release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_swap.html">jetson_swap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/environment_variables.html">Environment variables</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">✨ Contributing</a></li>
@@ -227,7 +227,7 @@
         </a>
         <div class="content-icon-container">
           <div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/rbonghi/jetson_stats/edit/master/docs/other-tools/jetson_release.rst" title="Edit this page">
+  <a class="muted-link" href="https://github.com/rbonghi/jetson_stats/edit/master/docs/reference/index.rst" title="Edit this page">
     <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
@@ -249,25 +249,52 @@
           </label>
         </div>
         <article role="main">
-          <section id="jetson-release">
-<h1>jetson_release<a class="headerlink" href="#jetson-release" title="Permalink to this heading">#</a></h1>
-<p>The command show the status and all information about your NVIDIA Jetson</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jetson_release
-</pre></div>
-</div>
-<img alt="../_images/jetson_release.png" class="align-center" src="../_images/jetson_release.png" />
-<p>Options available</p>
-<div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@jetson-nano:~$ </span>jetson_release<span class="w"> </span>--help
-<span class="go">Software part of jetson-stats 4.1.0 - (c) 2023, Raffaello Bonghi</span>
-<span class="go">usage: jetson_release [-h] [-v]</span>
-
-<span class="go">Show detailed information about this board. Machine, Jetpack, libraries and</span>
-<span class="go">other</span>
-
-<span class="go">optional arguments:</span>
-<span class="go">-h, --help  show this help message and exit</span>
-<span class="go">-v          Show all variables (default: False)</span>
-</pre></div>
+          <section id="api-reference">
+<h1>📖 API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading">#</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="jtop.html">jtop</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="jtop.html#jtop.jtop"><code class="docutils literal notranslate"><span class="pre">jtop</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.attach"><code class="docutils literal notranslate"><span class="pre">jtop.attach()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.board"><code class="docutils literal notranslate"><span class="pre">jtop.board</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.close"><code class="docutils literal notranslate"><span class="pre">jtop.close()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.cpu"><code class="docutils literal notranslate"><span class="pre">jtop.cpu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.detach"><code class="docutils literal notranslate"><span class="pre">jtop.detach()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.disk"><code class="docutils literal notranslate"><span class="pre">jtop.disk</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.engine"><code class="docutils literal notranslate"><span class="pre">jtop.engine</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.fan"><code class="docutils literal notranslate"><span class="pre">jtop.fan</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.gpu"><code class="docutils literal notranslate"><span class="pre">jtop.gpu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.interval"><code class="docutils literal notranslate"><span class="pre">jtop.interval</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.interval_user"><code class="docutils literal notranslate"><span class="pre">jtop.interval_user</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.jetson_clocks"><code class="docutils literal notranslate"><span class="pre">jtop.jetson_clocks</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.local_interfaces"><code class="docutils literal notranslate"><span class="pre">jtop.local_interfaces</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.loop_for_ever"><code class="docutils literal notranslate"><span class="pre">jtop.loop_for_ever()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.memory"><code class="docutils literal notranslate"><span class="pre">jtop.memory</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.nvpmodel"><code class="docutils literal notranslate"><span class="pre">jtop.nvpmodel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.ok"><code class="docutils literal notranslate"><span class="pre">jtop.ok()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.power"><code class="docutils literal notranslate"><span class="pre">jtop.power</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.processes"><code class="docutils literal notranslate"><span class="pre">jtop.processes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.restore"><code class="docutils literal notranslate"><span class="pre">jtop.restore()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.start"><code class="docutils literal notranslate"><span class="pre">jtop.start()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.stats"><code class="docutils literal notranslate"><span class="pre">jtop.stats</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.temperature"><code class="docutils literal notranslate"><span class="pre">jtop.temperature</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="jtop.html#jtop.jtop.uptime"><code class="docutils literal notranslate"><span class="pre">jtop.uptime</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="memory.html">Memory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="memory.html#jtop.core.memory.Memory"><code class="docutils literal notranslate"><span class="pre">Memory</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="memory.html#jtop.core.memory.Memory.clear_cache"><code class="docutils literal notranslate"><span class="pre">Memory.clear_cache()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="memory.html#jtop.core.memory.Memory.swap_deactivate"><code class="docutils literal notranslate"><span class="pre">Memory.swap_deactivate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="memory.html#jtop.core.memory.Memory.swap_is_enable"><code class="docutils literal notranslate"><span class="pre">Memory.swap_is_enable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="memory.html#jtop.core.memory.Memory.swap_path"><code class="docutils literal notranslate"><span class="pre">Memory.swap_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="memory.html#jtop.core.memory.Memory.swap_set"><code class="docutils literal notranslate"><span class="pre">Memory.swap_set()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 </div>
 </section>
 
@@ -276,23 +303,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="jetson_swap.html">
+          <a class="next-page" href="jtop.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">jetson_swap</div>
+                <div class="title">jtop</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="jetson_config.html">
+          <a class="prev-page" href="../docker.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">jetson_config</div>
+                <div class="title">🐋 Docker</div>
                 
               </div>
             </a>
