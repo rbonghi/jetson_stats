@@ -20,7 +20,7 @@ import time
 from copy import deepcopy
 
 
-class SmallButton:
+class SmallButton(object):
     def __init__(self, stdscr, on_click, label='', toggle=False, trigger_key=None, info={}):
         self.stdscr = stdscr
         self.on_click = on_click
