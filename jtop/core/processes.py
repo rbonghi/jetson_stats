@@ -144,6 +144,12 @@ class ProcessService(object):
         uid = int(cat(os.path.join('/proc', pid, 'loginuid')))
         if uid not in self.usernames:
             self.usernames[uid] = pwd.getpwuid(uid).pw_name
+        # Read memory process
+        # Extract resident set size (VmRSS) (Second field)
+        # VmRSS is the resident set size of the process, which is the portion of the process's memory
+        # that is held in RAM and is not swapped out to disk. This is the amount of memory that the process is currently using.
+        mem_raw = cat(os.path.join('/proc', pid, 'statm')).split()
+        vm_rss = int(mem_raw[1])
         # CPU percent
         # https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat
         utime = float(stat[13])
@@ -154,13 +160,13 @@ class ProcessService(object):
         cpu_percent = 100 * (total_time / proc_uptime)
 
         process = [
-            pid,                    # pid process
+            int(pid),               # pid process
             self.usernames[uid],    # uid
             stat[17],               # Priority
             stat[2],                # state
             cpu_percent,            # CPU percent
+            vm_rss,                 # MEM process
             gpu_mem_usage,          # GPU mem usage
-                                    # MEM process
             process_name,           # Process name
         ]
         return process

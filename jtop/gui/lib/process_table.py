@@ -26,7 +26,8 @@ header = {
     "USER": {'clm': 12, 'fn': lambda x: x},
     "PRI": {'clm': 6, 'fn': lambda x: str(x)},
     "S": {'clm': 4, 'fn': lambda x: x},
-    "CPU%": {'clm': 12, 'fn': lambda x: "{:.1f}".format(x)},
+    "CPU%": {'clm': 8, 'fn': lambda x: "{:.1f}".format(x)},
+    "MEM": {'clm': 8, 'fn': lambda x: size_to_string(x, 'k')},
     "GPU MEM": {'clm': 12, 'fn': lambda x: size_to_string(x, 'k')},
     "Command": {'clm': 20, 'fn': lambda x: x},
 }
@@ -37,7 +38,7 @@ class ProcessTable(object):
     def __init__(self, stdscr, jetson):
         self.stdscr = stdscr
         self.jetson = jetson
-        self.line_sort = 5
+        self.line_sort = 6
         self.type_reverse = True
 
     def draw(self, pos_y, pos_x, width, height, key, mouse):
