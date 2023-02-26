@@ -418,7 +418,6 @@ class JtopServer(Process):
                             'version': self._version,
                             'board': self.board,
                             'interval': self.interval.value,
-                            'cpu': self.cpu.get_cpu_info(),
                             'memory': self.memory.swap_path(),
                             'fan': self.fan.get_configs(),
                             'jc': self.jetson_clocks.exists(),

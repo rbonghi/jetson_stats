@@ -132,7 +132,7 @@ class CPUService(object):
     def __init__(self):
         self._cpu_online = []
         # Load cpuinfo
-        list_cpu = cpu_info()
+        self._list_cpu = cpu_info()
         # List all CPU available
         self._proc_stat = "/proc/stat"
         path_system_cpu = "/sys/devices/system/cpu"
@@ -146,12 +146,10 @@ class CPUService(object):
         # Build a CPU list
         cpu_list = {int(item[3:]): {'path': "{path}/{item}".format(path=path_system_cpu, item=item),
                                     'last_cpu': [0.0] * len(CPU_STAT_LABEL),
-                                    'model': list_cpu.get(int(item[3:]), {}).get("model name", "")
                                     }
                     for item in os.listdir(path_system_cpu) if os.path.isdir(os.path.join(path_system_cpu, item)) and CPU_SYS_REG.search(item)}
         # Sort CPU list in a list by CPU name
         self._cpu = [cpu_list[i] for i in sorted(cpu_list)]
-        self._cpu_info = [{'model': list_cpu.get(cpu, {}).get("model name", "")} for cpu in range(len(self._cpu))]
         # Status CPU service at start
         logger.info("Found {cpu} CPU".format(cpu=len(cpu_list)))
         # Build CPU total info
@@ -170,7 +168,9 @@ class CPUService(object):
         self._cpu_total = {'last_cpu': [0.0] * len(CPU_STAT_LABEL)}
 
     def get_cpu_info(self):
-        return self._cpu_info
+        # Load cpuinfo
+        list_cpu = cpu_info()
+        return [{'model': list_cpu.get(cpu, {}).get("model name", "")} for cpu in range(len(self._cpu))]
 
     def get_utilization(self, cpu_out):
         # CPU lines
@@ -221,6 +221,9 @@ class CPUService(object):
         for cpu, data in enumerate(self._cpu):
             # store all data
             cpu_list[cpu] = read_system_cpu(data['path'], cpu_list[cpu])
+            # Add model in CPU output
+            cpu_list[cpu]['model'] = self._list_cpu.get(cpu, {}).get("model name", "")
+            # Check status CPU
             cpu_online += [cpu_list[cpu]['online']]
         # Status number CPU changed if changed reset esimators
         # Fix weird TOTAL status when the number of CPU are changed (Numbers negative)
@@ -228,6 +231,8 @@ class CPUService(object):
             if new != old:
                 logger.info("Number of CPU online changed, reset estimators")
                 self.reset_estimation()
+                # reload cpuinfo
+                self._list_cpu = cpu_info()
                 break
         self._cpu_online = cpu_online
         # Usage CPU

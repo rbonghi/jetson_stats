@@ -137,8 +137,6 @@ class jtop(Thread):
         self._thread_libraries = Thread(target=self._load_jetson_libraries, args=[])
         self._thread_libraries.daemon = True
         self._thread_libraries.start()
-        # Initialize cpu info
-        self._cpu_info = []
         # Initialize gpu info
         self._gpu = GPU()
         # Initialize memory controller
@@ -718,9 +716,6 @@ class jtop(Thread):
         :return: A dictionary with the aggregate status and a list of all CPUs, described above.
         :rtype: dict
         """
-        # Add cpu info in list
-        for idx, cpu in enumerate(self._stats['cpu']['cpu']):
-            cpu.update(self._cpu_info[idx])
         # Return CPU status
         return self._stats['cpu']
 
@@ -943,8 +938,6 @@ sudo systemctl restart jtop.service""".format(
         self._server_interval = init['interval']
         # Load board information
         self._board['hardware'] = init['board']['hardware']
-        # Initialize cpu basic info
-        self._cpu_info = init['cpu']
         # Initialzie gpu controller
         self._gpu._initialize(self._controller)
         # Initialize memory controller
