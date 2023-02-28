@@ -1,5 +1,5 @@
-jtop
-====
+📖 API Reference
+=================
 
 .. autoclass:: jtop.jtop
    :members:

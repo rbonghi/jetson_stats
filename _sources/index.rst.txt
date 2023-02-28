@@ -11,7 +11,7 @@ jetson-stats
    jtop
    advanced-usage
    docker
-   reference/index
+   reference
    other-tools/index
    contributing
    GitHub <https://github.com/rbonghi/jetson_stats>
@@ -69,7 +69,7 @@ The more in-depth :doc:`advanced-usage` guide is the place to jtop such a python
          # Read tegra stats
          print(jetson.stats)
 
-The :doc:`reference/index` documentation provides API-level documentation.
+The :doc:`reference` documentation provides API-level documentation.
 
 
 Compatibility
@@ -78,6 +78,7 @@ Compatibility
 jetson-stats is compatible with:
 
 * NVIDIA Jetson Orin Series
+   * NVIDIA Jetson Orin NX
    * NVIDIA Jetson AGX Orin
 * NVIDIA Jetson Xavier Series
    * NVIDIA Jetson AGX Xavier Industrial
