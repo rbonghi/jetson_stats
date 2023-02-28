@@ -18,113 +18,122 @@ jobs:
       # max-parallel: 1
       matrix:
         python-version: ["2.7", "3.8", "3.9", "3.10", "3.11"]
-        
+
     steps:
-    - run: echo "Branch $GITHUB_REF"
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        # Make group jtop
-        sudo groupadd jtop
-        # Upgrade pip
-        # https://github.com/actions/setup-python/issues/225
-        sudo -H env "PATH=$PATH" python -m pip install --upgrade pip
-        # Install tox
-        # https://github.com/actions/setup-python/issues/225
-        sudo -H env "PATH=$PATH" pip install tox
-    - name: Display Python version
-      run: sudo env "PATH=$PATH" python -c "import sys; print(sys.version)"
-    - name: Test with tox
-      run: |
-        # https://github.com/actions/setup-python/issues/225
-        sudo env "PATH=$PATH" tox -e py${{ matrix.python-version }}
+      - run: echo "Branch $GITHUB_REF"
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          # Make group jtop
+          sudo groupadd jtop
+          # Upgrade pip
+          # https://github.com/actions/setup-python/issues/225
+          sudo -H env "PATH=$PATH" python -m pip install --upgrade pip
+          # Install tox
+          # https://github.com/actions/setup-python/issues/225
+          sudo -H env "PATH=$PATH" pip install tox
+      - name: Display Python version
+        run: sudo env "PATH=$PATH" python -c "import sys; print(sys.version)"
+      - name: Test with tox
+        run: |
+          # https://github.com/actions/setup-python/issues/225
+          sudo env "PATH=$PATH" tox -e py${{ matrix.python-version }}
 
   docker:
     name: "Build Docker image develop"
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-    # https://github.com/docker/build-push-action/blob/master/docs/advanced/tags-labels.md
-    - name: Docker meta
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: ${{ env.docker_image_name }}
-        # generate Docker tags based on the following events/attributes
-        tags: |
-          type=ref,event=branch
-          type=semver,pattern={{version}}
-          type=ref,event=tag
-          type=ref,event=pr
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    - name: Login to DockerHub
-      if: github.actor != 'dependabot[bot]' && github.event_name != 'pull_request'
-      uses: docker/login-action@v2.1.0 
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Build and push
-      id: docker_build
-      uses: docker/build-push-action@v4.0.0
-      with:
-        push: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }}
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        platforms: linux/arm64
+      # https://github.com/docker/build-push-action/blob/master/docs/advanced/tags-labels.md
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          # https://github.com/docker/metadata-action/issues/123
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          images: ${{ env.docker_image_name }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=ref,event=tag
+            type=ref,event=pr
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        if: github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/heads/feature/')
+        uses: docker/login-action@v2.1.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v4.0.0
+        with:
+          push: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/heads/feature/') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64, linux/arm64
 
   docs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        persist-credentials: false
-    - name: Build sphinx
-      # Manual build documentation
-      # Follow https://github.com/ammaraskar/sphinx-action/issues/43#issuecomment-1218439431
-      run: |
-        # Upgrade pip
-        # https://github.com/actions/setup-python/issues/225
-        sudo -H env "PATH=$PATH" python -m pip install --upgrade pip
-        # Install jtop
-        sudo -H env "PATH=$PATH" pip install -v -e .
-        # Install sphinx requirements
-        sudo -H env "PATH=$PATH" pip install -r docs/requirements.txt
-        # Run sphinx
-        cd docs
-        sphinx-build -b html -W . _build/html
-    - name: Deploy on branch
-      if: startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/')
-      # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
-      uses: JamesIves/github-pages-deploy-action@releases/v3
-      with:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        BRANCH: gh-pages # The branch the action should deploy to.
-        FOLDER: docs/_build/html # The folder the action should deploy.
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Build sphinx
+        # Manual build documentation
+        # Follow https://github.com/ammaraskar/sphinx-action/issues/43#issuecomment-1218439431
+        run: |
+          # Upgrade pip
+          # https://github.com/actions/setup-python/issues/225
+          sudo -H env "PATH=$PATH" python -m pip install --upgrade pip
+          # Install jtop
+          sudo -H env "PATH=$PATH" pip install -v -e .
+          # Install sphinx requirements
+          sudo -H env "PATH=$PATH" pip install -r docs/requirements.txt
+          # Run sphinx
+          cd docs
+          sphinx-build -b html -W . _build/html
+      - name: Export website
+        id: export website
+        if: ${{ !startsWith(github.ref, 'refs/heads/master') && !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: html
+          path: docs/_build/html # The folder the action should deploy.
+      - name: Deploy on branch
+        if: startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/')
+        # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: docs/_build/html # The folder the action should deploy.
 
   update_docker_description:
-    name: Update docker description 
+    name: Update docker description
     if: startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Docker Hub Description # https://github.com/peter-evans/dockerhub-description
-      uses: peter-evans/dockerhub-description@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_PASSWORD }}
-        repository: rbonghi/jetson_stats
-        short-description: ${{ github.event.repository.description }}
-        readme-filepath: ./README.md
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Docker Hub Description # https://github.com/peter-evans/dockerhub-description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: rbonghi/jetson_stats
+          short-description: ${{ github.event.repository.description }}
+          readme-filepath: ./README.md
 
   deploy:
     name: Deploy on PIP
@@ -132,51 +141,51 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        sudo -H python -m pip install --upgrade pip
-        sudo -H pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        sudo python setup.py sdist
-        twine upload dist/*
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+      - name: Install dependencies
+        run: |
+          sudo -H python -m pip install --upgrade pip
+          sudo -H pip install setuptools wheel twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          sudo python setup.py sdist
+          twine upload dist/*
 
   notify:
     name: "Notify socials"
     needs: [deploy, update_docker_description, docs]
     runs-on: ubuntu-latest
     steps:
-    - name: Repository status
-      id: repo_status
-      shell: bash
-      run: |
-        if ${{ startsWith(github.ref, 'refs/tags/') }} ; then
-          TAG_RELEASE=${GITHUB_REF/refs\/tags\//}
-        else
-          TAG_RELEASE=${GITHUB_REF/refs\/heads\//}
-        fi
-        echo ::set-output name=tag::${TAG_RELEASE}
-        echo "tag=${TAG_RELEASE}"
-    - name: Discord notification
-      env:
-        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-      uses: Ilshidur/action-discord@master
-      with:
-        args: 'jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!'
-    - name: Send telegram message
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!
-          
-          See changes: https://github.com/${{ github.repository }}/releases/latest
+      - name: Repository status
+        id: repo_status
+        shell: bash
+        run: |
+          if ${{ startsWith(github.ref, 'refs/tags/') }} ; then
+            TAG_RELEASE=${GITHUB_REF/refs\/tags\//}
+          else
+            TAG_RELEASE=${GITHUB_REF/refs\/heads\//}
+          fi
+          echo ::set-output name=tag::${TAG_RELEASE}
+          echo "tag=${TAG_RELEASE}"
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!"
+      - name: Send telegram message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!
+
+            See changes: https://github.com/${{ github.repository }}/releases/latest
