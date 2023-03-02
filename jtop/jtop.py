@@ -392,7 +392,7 @@ class jtop(Thread):
         :return: Status Fan
         :rtype: Fan
         :raises JtopException: Wrong speed fan name, profile or speed
-        """ # noqa
+        """  # noqa
         return self._fan
 
     @property
@@ -441,7 +441,7 @@ class jtop(Thread):
         :return: Return the name of NV Power Mode
         :rtype: NVPModel or None
         :raises JtopException: if the nvp model does not exist
-        """ # noqa
+        """  # noqa
         return self._nvpmodel
 
     @nvpmodel.setter
@@ -482,7 +482,7 @@ class jtop(Thread):
         :return: status jetson_clocks script
         :rtype: JetsonClocks or None
         :raises ValueError: Wrong jetson_clocks value
-        """ # noqa
+        """  # noqa
         return self._jetson_clocks
 
     @jetson_clocks.setter
@@ -888,7 +888,7 @@ class jtop(Thread):
 
         :return: A dictionary with a list of power and the total
         :rtype: dict
-        """ # noqa
+        """  # noqa
         return self._stats['power']
 
     @property
@@ -924,7 +924,7 @@ class jtop(Thread):
 
         :return: Temperature dictionary
         :rtype: dict
-        """ # noqa
+        """  # noqa
         return self._stats['temperature']
 
     @property
@@ -979,26 +979,7 @@ class jtop(Thread):
                 if self._controller.empty():
                     self._controller.put({})
                 # Read stats from jtop service
-                self._stats = self._get_data()
-                # Decode and update all jtop data
-                # -- GPU --
-                self._gpu._update(self._stats['gpu'])
-                # -- MEMORY --
-                self._memory._update(self._stats['mem'])
-                # -- FAN --
-                self._fan._update(self._stats['fan'])
-                # -- JETSON_CLOCKS --
-                if 'jc' in self._stats:
-                    self._jetson_clocks._update(self._stats['jc'])
-                # -- NVP Model --
-                if 'nvp' in self._stats:
-                    self._nvpmodel._update(self._stats['nvp'])
-                # Set trigger
-                self._trigger.set()
-                # Notify all observers
-                for observer in self._observers:
-                    # Call all observer in list
-                    observer(self)
+                self._get_data()
         except Exception:
             # Store error message
             self._error = sys.exc_info()
@@ -1017,7 +998,26 @@ class jtop(Thread):
         except EOFError:
             # Raise jtop exception
             raise JtopException("Lost connection with jtop server")
-        return data
+        # Decode and update all jtop data
+        self._stats = data
+        # -- GPU --
+        self._gpu._update(self._stats['gpu'])
+        # -- MEMORY --
+        self._memory._update(self._stats['mem'])
+        # -- FAN --
+        self._fan._update(self._stats['fan'])
+        # -- JETSON_CLOCKS --
+        if 'jc' in self._stats:
+            self._jetson_clocks._update(self._stats['jc'])
+        # -- NVP Model --
+        if 'nvp' in self._stats:
+            self._nvpmodel._update(self._stats['nvp'])
+        # Set trigger
+        self._trigger.set()
+        # Notify all observers
+        for observer in self._observers:
+            # Call all observer in list
+            observer(self)
 
     def _get_configuration(self):
         while True:
@@ -1085,7 +1085,7 @@ sudo systemctl restart jtop.service""".format(
         self._server_interval = init['interval']
         # Load board information
         self._board['hardware'] = init['board']['hardware']
-        # Initialzie gpu controller
+        # Initialize gpu controller
         self._gpu._initialize(self._controller)
         # Initialize memory controller
         self._memory._initialize(self._controller, init['memory'])
@@ -1098,9 +1098,7 @@ sudo systemctl restart jtop.service""".format(
         if 'nvpmodel' in init:
             self._nvpmodel = NVPModel(self._controller, init['nvpmodel'])
         # Wait first value
-        data = self._get_data()
-        # Decode and update all jtop data
-        self._decode(data)
+        self._get_data()
         # Run thread reader
         self._running = True
         self.daemon = True
