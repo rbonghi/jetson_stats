@@ -18,6 +18,7 @@
 import logging
 import re
 import sys
+import json
 # from warnings import warn
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
@@ -55,6 +56,16 @@ logger = logging.getLogger(__name__)
 TIMEOUT_GAIN = 3
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, z):
+        if isinstance(z, datetime):
+            return (str(z))
+        elif isinstance(z, timedelta):
+            return (str(z))
+        else:
+            return super().default(z)
 
 
 class jtop(Thread):
@@ -564,6 +575,22 @@ class jtop(Thread):
         if self.nvpmodel is not None:
             stats['nvp model'] = self.nvpmodel.name
         return stats
+
+    def json(self, stats=False):
+        """
+        This method export all metrics in a :py:class:`json` readable output.
+
+        You can export all metrics or the same outpur in :py:attr:`stats` depending of the parameter input.
+
+        :param stats: json with same outout of :py:attr:`stats`, defaults to False
+        :type stats: bool, optional
+        :return: json output requested
+        :rtype: json
+        """
+        if stats:
+            return json.dumps(self.stats, cls=DateTimeEncoder)
+        # Read all variable and build a complete json
+        return json.dumps(self._stats)
 
     @property
     def memory(self):
