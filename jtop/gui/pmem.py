@@ -284,7 +284,6 @@ class MEM(Page):
                 break
 
     def draw_swap_controller(self, pos_y, pos_x, key, mouse):
-        swap_info = self.jetson.memory['SWAP']
         string_name = ''
         color = curses.A_REVERSE
         # Read swap name
