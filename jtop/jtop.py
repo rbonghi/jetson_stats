@@ -596,7 +596,7 @@ class jtop(Thread):
         """
         This method export all metrics in a `json` readable output.
 
-        You can export all metrics or the same outpur in :py:attr:`stats` depending of the parameter input.
+        You can export all metrics or the same output in :py:attr:`stats` depending of the parameter input.
 
         :param stats: json with same outout of :py:attr:`stats`, defaults to False
         :type stats: bool, optional
