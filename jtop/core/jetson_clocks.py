@@ -90,6 +90,30 @@ def jetson_clocks_alive(engines, data):
 
 
 class JetsonClocks(object):
+    """
+    jetson_clocks is a tool provided for all NVIDIA Jetson to maximize all performance, read reference for more information.
+
+    With this class you can control when activate, deactivate or enable on boot.
+    You can use in a simple way like a jtop attribute :py:attr:`~jtop.jtop.jetson_clocks`
+
+    .. code-block:: python
+
+        with jtop() as jetson:
+            if jetson.ok():
+                # Change status jetson_clocks
+                jetson.jetson_clocks = not jetson.jetson_clocks
+                # Set on board boot
+                jetson.jetson_clocks.boot = True
+                # Read status jetson_clocks service
+                print(jetson.jetson_clocks.status)
+
+    .. admonition:: Reference
+
+        #. `jetson_clocks - Jetson TX/Nano <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-283/index.html#page/Tegra%2520Linux%2520Driver%2520Package%2520Development%2520Guide%2Fpower_management_tx2.html%23>`_
+        #. `jetson_clocks - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html>`_
+        #. `jetson_clocks - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#maximizing-jetson-orin-performance>`_
+
+    """ # noqa
 
     def __init__(self, controller):
         self._controller = controller
@@ -105,6 +129,23 @@ class JetsonClocks(object):
         self._boot = jc_status['boot']
 
     def set_enable(self, enable):
+        """
+        Enable jetson_clocks on your board. This method is equivalent to:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Set a new state for jetson_clocks
+                    jetson.jetson_clocks.set_enable(True)
+                    # same of
+                    jetson.jetson_clocks = True
+
+        :param enable: Boolean status for enable and disable
+        :type enable: bool
+        :raises ValueError: if enable is not a boolean
+        :raises JtopException: if jetson_clocks is in uncontrolled status
+        """
         if not isinstance(enable, bool):
             raise ValueError("Use a boolean")
         if not self._config and not enable:
@@ -117,9 +158,40 @@ class JetsonClocks(object):
             self._controller.put({'jc': {'enable': enable}})
 
     def get_enable(self):
+        """
+        Return current jetson_clocks status. This method is equivalent to:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read jetson_clocks status
+                    print(jetson.jetson_clocks.get_enable())
+                    # same of
+                    print(jetson.jetson_clocks)
+
+        :return: Status jetson_clocks
+        :rtype: bool
+        """
         return self._enable
 
     def set_boot(self, value):
+        """
+        Enable jetson_clocks on board boot. This method is equivalent to:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Set a new state for jetson_clocks
+                    jetson.jetson_clocks.set_boot(True)
+                    # same of
+                    jetson.jetson_clocks.boot = True
+
+        :param value: Boolean status for enable and disable jetson_clocks on boot
+        :type value: bool
+        :raises ValueError: if value is not a boolean
+        """
         if not isinstance(value, bool):
             raise ValueError("Use a boolean")
         # Don't send a message if value is the same
@@ -129,10 +201,40 @@ class JetsonClocks(object):
         self._controller.put({'jc': {'boot': value}})
 
     def get_boot(self):
+        """
+        Return if jetson_clocks start of board boot. This method is equivalent to:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read jetson_clocks status
+                    print(jetson.jetson_clocks.get_boot())
+                    # same of
+                    print(jetson.jetson_clocks.boot)
+
+        :return: Status jetson_clocks on boot
+        :rtype: bool
+        """
         return self._boot
 
     @property
     def boot(self):
+        """
+        Same of :py:class:`~set_boot` and :py:class:`~get_boot` you can quickly enable and disable jetson_clocks.
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read jetson_clocks status
+                    print(jetson.jetson_clocks.boot)
+                    # Set a new state for jetson_clocks
+                    jetson.jetson_clocks.boot = True
+
+        :return: Status jetson_clocks on boot
+        :rtype: bool
+        """
         return self._boot
 
     @boot.setter
@@ -140,9 +242,34 @@ class JetsonClocks(object):
         self.set_boot(value)
 
     def is_config(self):
+        """
+        Return the jetson_clocks configuration status. If true jtop has stored a configuration file with all data
+
+        :return: configuration stored
+        :rtype: bool
+        """
         return self._config
 
     def get_status(self):
+        """
+        Return the jetson_clocks service status:
+
+        There are **six** options:
+
+        ============== =============================================
+        Status         Description
+        ============== =============================================
+        running        jetson_clocks is currently running
+        booting        jetson_clocks is booting. This status appears in the first 60s when your board is started
+        activating     jtop is running the service to activating jetson_clocks
+        deactivating   jtop is running the service to deactivating jetson_clocks
+        uncontrolled   jtop is not able to setup jetson_clocks. This message can appears if jetson_clocks was already running before jtop service started
+        inactive       jetson_clocks is inactive
+        ============== =============================================
+
+        :return: status jetson_clocks service
+        :rtype: str
+        """
         # Check if is alive jetson_clocks
         if self._enable:
             return 'running'
@@ -151,6 +278,12 @@ class JetsonClocks(object):
 
     @property
     def status(self):
+        """
+        This property return the same output of :py:class:`~get_status`
+
+        :return: status jetson_clocks service
+        :rtype: str
+        """
         return self.get_status()
 
     def __nonzero__(self):

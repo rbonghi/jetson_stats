@@ -73,25 +73,25 @@ def igpu_read_freq(path):
 
 def igpu_read_status(path):
     gpu = {}
-    # Railgate status
+    # GPU status
     if os.access(path + "/railgate_enable", os.R_OK):
         with open(path + "/railgate_enable", 'r') as f:
-            # Write status engine
+            # Read status railgate
             gpu['railgate'] = int(f.read()) == 1
     # Mask status (Useful for nvpmodel)
     if os.access(path + "/tpc_pg_mask", os.R_OK):
         with open(path + "/tpc_pg_mask", 'r') as f:
-            # Write status engine
+            # Read status TPG PG mask
             gpu['tpc_pg_mask'] = int(f.read()) == 1
     # Status 3D scaling
     if os.access(path + "/enable_3d_scaling", os.R_OK):
         with open(path + "/enable_3d_scaling", 'r') as f:
-            # Write status engine
+            # Read status 3D scaling
             gpu['3d_scaling'] = int(f.read()) == 1
     # Current load GPU
     if os.access(path + "/load", os.R_OK):
         with open(path + "/load", 'r') as f:
-            # Write status engine
+            # Read current GPU load
             gpu['load'] = float(f.read()) / 10.0
     return gpu
 
@@ -147,20 +147,97 @@ def find_dgpu():
 
 
 class GPU(GenericInterface):
+    """
+    This class get the output from your GPU, this class is readable like a dictionary,
+    please read the documentation on :py:attr:`~jtop.jtop.gpu` but is also usable to enable, disable 3d scaling on your device.
+
+    .. code-block:: python
+
+        with jtop() as jetson:
+            if jetson.ok():
+                jetson.gpu.set_scaling_3D("gpu", True)
+
+    Below all methods available using the :py:attr:`~jtop.jtop.gpu` attribute
+    """
 
     def __init__(self):
         super(GPU, self).__init__()
 
-    def set_3d_scaling(self, name, value):
+    def set_scaling_3D(self, name, value):
+        """
+        Enable disable GPU 3D scaling. this method send a command like below on your Jetson.
+
+        Set 3D scaling on your board, like the command below. To know the GPU name use :py:attr:`~jtop.jtop.gpu`
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    jetson.gpu.set_scaling_3D("ga10b", True)
+
+        is equivalent to:
+
+        .. code-block:: bash
+            :class: no-copybutton
+
+            echo 1 > /sys/devices/17000000.ga10b/enable_3d_scaling
+
+        :param name: GPU name
+        :type name: str
+        :param value: Enable/Disable 3D scaling
+        :type value: bool
+        :raises JtopException: if GPU doesn't exist
+        """
         if name not in self._data:
             raise JtopException("GPU \"{name}\" does not exist".format(name=name))
         # Set new 3D scaling
         self._controller.put({'gpu': {'command': '3d_scaling', 'name': name, 'value': value}})
 
-    def get_3d_scaling(self, name):
+    def get_scaling_3D(self, name):
+        """
+        Return status of 3D scaling, this output is also readable from :py:attr:`~jtop.jtop.gpu` attribute
+
+        :param name: GPU name
+        :type name: str
+        :raises JtopException: if GPU doesn't exist
+        :return: status 3D scaling
+        :rtype: bool
+        """
         if name not in self._data:
             raise JtopException("GPU \"{name}\" does not exist".format(name=name))
         return self._data[name]['status']['3d_scaling']
+
+    @property
+    def scaling_3D(self):
+        """
+        Return status of 3D scaling, this output is also readable from :py:attr:`~jtop.jtop.gpu` attribute
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Set new 3D scaling
+                    jetson.gpu.set_scaling_3D = True
+                    # same of
+                    jetson.gpu.set_scaling_3D("ga10b", True)
+
+        :raises JtopException: if there are no integrated GPU
+        :return: status 3D scaling
+        :rtype: bool
+        """
+        # Get first integrated gpu
+        name = self._get_first_integrated_gpu()
+        if not name:
+            raise JtopException("no Integrated GPU available")
+        return self.get_scaling_3D(name)
+
+    @scaling_3D.setter
+    def scaling_3D(self, value):
+        # Get first integrated gpu
+        name = self._get_first_integrated_gpu()
+        if not name:
+            raise JtopException("no Integrated GPU available")
+        self.set_scaling_3D(name, value)
 
     def set_railgate(self, name, value):
         if name not in self._data:
@@ -172,6 +249,12 @@ class GPU(GenericInterface):
         if name not in self._data:
             raise JtopException("GPU \"{name}\" does not exist".format(name=name))
         return self._data[name]['status']['railgate']
+
+    def _get_first_integrated_gpu(self):
+        for name in self._data:
+            if self._data[name]['type'] == 'integrated':
+                return name
+        return ''
 
 
 class GPUService(object):
@@ -189,7 +272,7 @@ class GPUService(object):
         if not self._gpu_list:
             logger.warning("No NVIDIA GPU available")
 
-    def set_3d_scaling(self, name, value):
+    def set_scaling_3D(self, name, value):
         if name not in self._gpu_list:
             logger.error("GPU \"{name}\" does not exist".format(name=name))
             return False

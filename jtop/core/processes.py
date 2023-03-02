@@ -130,7 +130,7 @@ class ProcessService(object):
         self._isJetson = os.path.isfile(self._root_path + "/debug/nvmap/iovmm/maps")
         # Get the clock ticks per second and page size
         self._clk_tck = os.sysconf('SC_CLK_TCK')
-        self._page_size = os.sysconf('SC_PAGE_SIZE')
+        # self._page_size = os.sysconf('SC_PAGE_SIZE')
         # Initialization memory
         logger.info("Process service started")
 

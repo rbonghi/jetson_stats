@@ -212,7 +212,7 @@ class Memory(GenericInterface):
 
     def swap_path(self):
         """
-        Return the default SWAP path
+        Return the default SWAP path, Default path `/`
 
         :return: Path swap
         :rtype: str
@@ -240,15 +240,15 @@ class Memory(GenericInterface):
 
     def swap_set(self, value, path='', on_boot=False):
         """
-        Create a new swap on a default path `/`
+        Create a new swap on a default path. :py:func:`~swap_path`
 
         :param value: Size in **G** of a new SWAP
         :type value: int
-        :param path: Path swap
-        :type path: str
-        :param on_boot: Set this swap on boot
-        :type on_boot: bool
-        :raises ValueError: Wrong speed number or wrong mode name
+        :param path: Path swap, defaults ''
+        :type path: str, optional
+        :param on_boot: Set this swap on boot, defaults False
+        :type on_boot: bool, optional
+        :raises ValueError: value is not an :py:class:`int` or a :py:class:`float`
         """
         if not isinstance(value, (int, float)):
             raise ValueError("Need a Number")
@@ -263,7 +263,7 @@ class Memory(GenericInterface):
         Deactivate a swap from a path or from default location `/`
 
         :param path: Path swap
-        :type path: str
+        :type path: str, optional
         """
         # if path_swap is empty load from default configuration
         if not path:

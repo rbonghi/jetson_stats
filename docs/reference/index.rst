@@ -8,3 +8,4 @@
     fan
     jetson_clocks
     nvpmodel
+    exceptions

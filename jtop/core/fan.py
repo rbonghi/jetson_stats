@@ -189,17 +189,58 @@ def nvfancontrol_is_active():
 
 
 class Fan(GenericInterface):
+    """
+    This class enable to control your fan or set of fan.
+    Please read the documentation on :py:attr:`~jtop.jtop.fan`
+
+    .. code-block:: python
+
+        with jtop() as jetson:
+            if jetson.ok():
+                jetson.fan.set_profile("tegra_fan", "manual")
+
+    Below all methods available using the :py:attr:`~jtop.jtop.fan` attribute
+    """
 
     def __init__(self):
         super(Fan, self).__init__()
         # list of all profiles in self._init (check services)
 
     def all_profiles(self, name):
+        """
+        Return a list of all profiles available for a fan.
+
+        * **Before** Jetpack 5
+            * temp_control
+            * manual
+        * **After** Jetpack 5  jtop map `nvfancontrol <https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#fan-profile-control>`_
+            * Quiet
+            * Cool
+            * Manual (Stop nvfancontrol service)
+
+        All fan are always with `Manual` profile option.
+
+        :param name: Name of Fan
+        :type name: str
+        :raises JtopException: Fan name doesn't exist
+        :return: List of all profiles available
+        :rtype: list
+        """ # noqa
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         return self._init[name]
 
     def set_profile(self, name, profile):
+        """
+        Set a new profile for a fan.
+        Check which profile is available with :py:func:`~all_profiles`.
+
+        :param name: Name of Fan
+        :type name: str
+        :param profile: Profile name
+        :type profile: str
+        :raises JtopException: Fan name doesn't exist or wrong profile
+        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         if profile not in self.all_profiles(name):
@@ -213,12 +254,51 @@ class Fan(GenericInterface):
         self._controller.put({'fan': {'command': 'profile', 'name': name, 'profile': profile}})
 
     def get_profile(self, name):
+        """
+        Return the current profile is enabled on fan. This value is also readable from :py:attr:`~jtop.jtop.fan`.
+
+        :param name: Name of Fan
+        :type name: str
+        :raises JtopException: Fan name doesn't exist
+        :return: fan profile name
+        :rtype: str
+        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         return self._data[name]['profile']
 
+    def get_profile_default(self, name):
+        """
+        Get the default profile for this fan. Usually is the first profile listed in :py:func:`~all_profiles`
+
+        :param name: Name of Fan
+        :type name: str
+        :raises JtopException: Fan name doesn't exist
+        :return: profile default name
+        :rtype: str
+        """
+        if name not in self._data:
+            raise JtopException("Fan \"{name}\" does not exist".format(name=name))
+        return self._init[name][0]
+
     @property
     def profile(self):
+        """
+        This property show the current profile selected on first fan on your board.
+        This is a simplified version of :py:func:`~set_profile` where *name* is the first fan listed.
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Print profile
+                    print(jetson.fan.profile)
+                    # Set new profile
+                    jetson.fan.profile = 'quiet'
+
+        :return: current profile in fan
+        :rtype: str
+        """
         # Return first fan name and get speed
         if len(self._data) > 0:
             # Extract first name
@@ -236,6 +316,17 @@ class Fan(GenericInterface):
             self.set_profile(name, value)
 
     def set_speed(self, name, speed, idx=0):
+        """
+        Set a new speed for a selected fan.
+
+        :param name: Name of Fan
+        :type name: str
+        :param speed: New speed value, a number between [0, 100]
+        :type speed: float
+        :param idx: Index fan, defaults to 0
+        :type idx: int, optional
+        :raises JtopException: Fan name doesn't exist or wrong index
+        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         if idx >= len(self._data[name]['speed']) or idx < 0:
@@ -247,6 +338,18 @@ class Fan(GenericInterface):
         self._controller.put({'fan': {'command': 'speed', 'name': name, 'speed': speed, 'idx': idx}})
 
     def get_speed(self, name, idx=0):
+        """
+        Return for a selected Fan and index the current speed.
+        This value is also readable from :py:attr:`~jtop.jtop.fan`.
+
+        :param name: Name of Fan
+        :type name: str
+        :param idx: Index fan, defaults to 0
+        :type idx: int, optional
+        :raises JtopException: Fan name doesn't exist or wrong index
+        :return: fan speed a number between [0, 100]
+        :rtype: int
+        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         if idx >= len(self._data[name]['speed']) or idx < 0:
@@ -255,6 +358,22 @@ class Fan(GenericInterface):
 
     @property
     def speed(self):
+        """
+        This property show the current speed between [0, 100] on first fan on your board.
+        This is a simplified version of :py:func:`~set_speed` where *name* is the first fan listed.
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read speed
+                    print(jetson.fan.speed)
+                    # Set new speed
+                    jetson.fan.speed = 90
+
+        :return: current fan speed
+        :rtype: float
+        """
         # Return first fan name and get speed
         if len(self._data) > 0:
             # Extract first name
@@ -273,6 +392,18 @@ class Fan(GenericInterface):
             self.set_speed(name, value)
 
     def get_rpm(self, name, idx=0):
+        """
+        This method return RPM fan. This output is always available on all Jetson.
+        This value is also readable from :py:attr:`~jtop.jtop.fan`.
+
+        :param name: Name of Fan
+        :type name: str
+        :param idx: Index fan, defaults to 0
+        :type idx: int, optional
+        :raises JtopException: Fan name doesn't exist, rpm doesn't exist or wrong index
+        :return: RPM value
+        :rtype: int
+        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         if 'rpm' not in self._data[name]:
@@ -283,6 +414,25 @@ class Fan(GenericInterface):
 
     @property
     def rpm(self):
+        """
+        This property show the current fan selected on first fan on your board.
+
+        .. note::
+
+            You can only read RPM, but **not** set a new speed
+
+        You cannot set a new RPM value
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read RPM
+                    print(jetson.fan.rpm)
+
+        :return: rpm first fan
+        :rtype: int
+        """
         # Return first fan name and get speed
         if len(self._data) > 0:
             # Extract first name

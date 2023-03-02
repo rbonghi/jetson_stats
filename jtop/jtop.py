@@ -14,47 +14,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-"""
-jtop is a simple package to monitoring and control your NVIDIA Jetson [Orin, Xavier, Nano, TX] series.
 
-It read the status of your board using different native processes:
- * tegrastats
- * jetson_clocks
- * NVP Model
- * Fan
- * Swap
- * Disk
- * Network
-
-Decode the board information and status
- * board name
- * Jetpack
- * L4T
- * Hardware configuration
- * Libraries installed
-
-You can initialize the jtop, look these examples:
-
-.. code-block:: python
-
-    with jtop() as jetson:
-        while jetson.ok():
-            stats = jetson.stats
-
-Or using a callback function
-
-.. code-block:: python
-
-    def read_stats(jetson):
-        stats = jetson.stats
-
-    jetson = jtop()
-    jetson.attach(read_stats)
-    jetson.loop_for_ever()
-
-Other example are available on https://github.com/rbonghi/jetson_stats/tree/master/examples
-Follow the next attributes to know in detail how you can you in your python project.
-"""
 import logging
 import re
 import sys
@@ -101,17 +61,18 @@ class jtop(Thread):
     """
     This class control the access to your board, from here you can control your
     NVIDIA Jetson board or read the jetson_clocks status or change the nvp model.
-
-    When you initialize your jtop you can setup a communication speed **interval**,
-    if there is another jtop running this speed will be not used.
-
-    When jtop is started you can read the server speed in **interval** property.
-
-    :param interval: Interval to setup the jtop speed (in seconds)
-    :type interval: float
     """
 
     def __init__(self, interval=1.0):
+        """
+        When you initialize your jtop you can setup a communication speed **interval**,
+        if there is another jtop running this speed will be not used.
+
+        When jtop is started you can read the server speed in **interval** property.
+
+        :param interval: Interval to setup the jtop speed (in seconds), defaults to 1.0
+        :type interval: float, optional
+        """
         # Initialize Thread super class
         super(jtop, self).__init__()
         # Local Event thread
@@ -217,10 +178,10 @@ class jtop(Thread):
                 else:
                     print("Fail")
 
-        :param max_counter: Counter time for each test before fail
-        :type max_counter: int
-        :return: Generator of all operations to restore your NVIDIA Jetson
-        :rtype: generator
+        :param max_counter: Counter time for each test before fail, defaults to 10
+        :type max_counter: int, optional
+        :yield: Generator of all operations to restore your NVIDIA Jetson
+        :rtype: bool, str
         :raises JtopException: if the connection with the server is lost,
             not active or your user does not have the permission to connect to *jtop.service*
         """
@@ -292,15 +253,15 @@ class jtop(Thread):
 
         For each engine the dictionary is defined like the table below:
 
-        ========== ========= ==============================================
-        Name       Type      Description
-        ========== ========= ==============================================
-        online     `boolean` Status of the engine
-        unit       `string`  The size value of the frequency, usually **k**
-        min        `int`     Minimum frequency of the core :sup:`A`
-        max        `int`     Maximum frequency of the core :sup:`A`
-        cur        `int`     Current frequency of the core
-        ========== ========= ==============================================
+        ========== ================ ==============================================
+        Name       Type             Description
+        ========== ================ ==============================================
+        online     :py:class:`bool` Status of the engine
+        unit       :py:class:`str`  The size value of the frequency, usually **k**
+        min        :py:class:`int`  Minimum frequency of the core :sup:`A`
+        max        :py:class:`int`  Maximum frequency of the core :sup:`A`
+        cur        :py:class:`int`  Current frequency of the core
+        ========== ================ ==============================================
 
         .. note::
 
@@ -315,33 +276,74 @@ class jtop(Thread):
     @property
     def board(self):
         """
-        Board status, in this property you can find:
+        Board status, in this property where are available all information about your device.
 
-        * platform (from jtop library is running)
-            * Machine
-            * System
-            * Distribution
-            * Release
-            * Python
-        * hardware (from service is running)
-            * Model
-            * 699-level Part Number
-            * P-Number
-            * Module
-            * SoC
-            * CUDA Arch BIN
-            * Codename (Optional)
-            * Serial Number
-            * L4T (Linux for Tegra)
-            * Jetpack
-        * libraries (from jtop library is running)
-            * CUDA
-            * OpenCV
-            * OpenCV-Cuda (boolean)
-            * cuDNN
-            * TensorRT
-            * VPI
-            * Vulkan
+        The output is a dictionary with 3 keys:
+
+        * **platform**
+        * **hardware**
+        * **libraries**
+
+        *platform* (If you are running in docker this output is extracted from your **container**)
+
+        ============= ====================================== ====================================================
+        Name          Type                                   Description
+        ============= ====================================== ====================================================
+        Machine       :py:func:`platform.machine`            Mapped output: machine type
+        System        :py:func:`platform.system`             Mapped output: Type system
+        Distribution  :py:func:`platform.linux_distribution` Mapped output: Linux distribution
+        Release       :py:func:`platform.release`            Mapped output: Release kernel
+        Python        :py:func:`platform.python_version`     Mapped output: Python version is running jtop
+        ============= ====================================== ====================================================
+
+        *hardware* (If you are running in docker this output is extracted from your **host**)
+
+        ===================== ====================================== ====================================================
+        Name                  Type                                   Description
+        ===================== ====================================== ====================================================
+        Model                 :py:class:`str`                        Model name from :code:`/sys/firmware/devicetree/base/model`
+        699-level Part Number :py:class:`str`                        699 part number (read reference)
+        P-Number              :py:class:`str`                        Part number (read reference)
+        BoardIDs              :py:class:`str`                        *(Optional)* Board ID in :code:`/proc/device-tree/nvidia,boardids`
+        Module                :py:class:`str`                        Conversion from P-Number to Module name
+        SoC                   :py:class:`str`                        System on Chip :code:`/proc/device-tree/compatible`
+        CUDA Arch BIN         :py:class:`str`                        Cuda Architecture
+        Codename              :py:class:`str`                        *(Optional)* Codename architecture
+        Serial Number         :py:class:`str`                        Serial Number board :code:`/sys/firmware/devicetree/base/serial-number`
+        L4T                   :py:class:`str`                        Linux 4 Tegra :sup:`A`
+        Jetpack               :py:class:`str`                        From L4T is evaluated the Jetpack running on your NVIDIA Jetson
+        ===================== ====================================== ====================================================
+
+        *libraries* (If you are running in docker this output is extracted from your **container**)
+
+        ===================== ====================================== ====================================================
+        Name                  Type                                   Description
+        ===================== ====================================== ====================================================
+        CUDA                  :py:class:`str`                        CUDA version :sup:`B`
+        OpenCV                :py:class:`str`                        OpenCV version use :code:`opencv_version`
+        OpenCV-Cuda           :py:class:`bool`                       Check running :code:`opencv_version --verbose`
+        cuDNN                 :py:class:`str`                        Check and read the version with :code:`dpkg -l`
+        TensorRT              :py:class:`str`                        Check and read the version with :code:`dpkg -l`
+        VPI                   :py:class:`str`                        Check and read the version with :code:`dpkg -l`
+        Vulkan                :py:class:`str`                        Run and read :code:`which vulkaninfo`
+        ===================== ====================================== ====================================================
+
+        .. note::
+
+            Note **A**
+                The Linux For Tegra (L4T) is extracted in two ways:
+                    1. Reading :code:`/etc/nv_tegra_release`
+                    2. Reading version in **nvidia-l4t-core** package
+
+            Note **B**
+                The CUDA version is read depend of the version in:
+                    1. On :code:`/usr/local/cuda/version.txt`
+                    2. Running :code:`nvcc --version`
+
+        .. admonition:: Reference
+
+            #. `699 Part number - Before Jetpack 5 <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3243/index.html>`_
+            #. `699 Part number - After Jetpack 5 <https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/HR/JetsonEepromLayout.html>`_
 
         :return: Status board, hardware and libraries
         :rtype: dict
@@ -354,95 +356,92 @@ class jtop(Thread):
     @property
     def fan(self):
         """
-        Fan status and control. From this property you can setup your board
+        Fan status and control. This property show speed, rpm and control every fan on your board
 
-        If your board does not support a fan, the output will be `None`
+        The :py:class:`~jtop.core.fan.Fan` class is readable such a :py:class:`dict` where for each key are colleted all metrics for each Fan.
 
-        The variable available are:
+        ============= =================== ====================================================
+        Name          Type                Description
+        ============= =================== ====================================================
+        speed         :py:class:`list`    List of speed between [0, 100]
+        rpm           :py:class:`list`    *(Optional)* List of RPM for each fan
+        profile       :py:class:`str`     Fan Profile, read :py:func:`~jtop.core.fan.Fan.all_profiles()`
+        governor      :py:class:`str`     (Jetson with JP5+) Governor fan
+        control       :py:class:`str`     (Jetson with JP5+) Type of controller
+        ============= =================== ====================================================
 
-        * **auto** - boolean with fan control.
-            * True = Automatic speed control enabled
-            * False = Automatic speed control disabled
-        * **speed** - Speed set. Value between [0, 100] (float)
-        * **measure** - Speed measured. Value between [0, 100] (float)
-        * **rpm** - Revolution Per Minute. This number can be 0 if the hardware does not implement this feature
-        * **mode** - Mode selected for your fan
+        If you are working with Jetpack 5 or higher, the fan profile map nvfancontrol `nvfancontrol <https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#fan-profile-control>`_
 
-        If you want set a new speed, change the mode or know how many configurations are available you can use:
-
-        .. code-block:: python
-
-            jetson.fan.speed = value
-
-        where *value* is a number between [0, 100] *(float)*
+        you can also control your fan with:
 
         .. code-block:: python
 
-            jetson.fan.mode = name
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Print profile
+                    print(jetson.fan.profile)
+                    # Set new profile
+                    jetson.fan.profile = 'quiet'
+                    # Read speed
+                    print(jetson.fan.speed)
+                    # Set new speed
+                    jetson.fan.speed = 90
 
-        where *name* is a **string** of the mode that you want use
-
-        .. code-block:: python
-
-            configs = jetson.fan.configs
-
-        Return a **list** of all available configurations:
-
-        * *default* - The fan is not manage, when jetson_clocks start will follow the jetson_clocks configurations
-        * *system* - The fan speed will be manage from the OS
-        * *manual* - The fan speed is the same that you have set in *jetson.fan.speed*
+        Full documentation on :py:class:`~jtop.core.fan.Fan`
 
         :return: Status Fan
         :rtype: Fan
-        :raises ValueError: Wrong speed number or wrong mode name
-        """
+        :raises JtopException: Wrong speed fan name, profile or speed
+        """ # noqa
         return self._fan
 
     @property
     def nvpmodel(self):
         """
-        From this function you set and read NV Power Mode. If your NVIDIA Jetson does not use nvpmodel will return None
+        The NVP Model control voltage regulators, and power tree to optimize power efficiency.
+        It supports three optimized power budgets, such as 10 watts, 15 watts, and 30 watts.
+        For each power budget, several configurations are possible with various CPU frequencies and number of cores online.
 
-        If you want set a new nvpmodel you can follow the NVIDIA Jetson documentation and write a string like below
+        Capping the memory, CPU, and GPU frequencies, and number of online CPU, GPU TPC, DLA and PVA cores at a prequalified level confines the module to the target mode.
 
-        .. code-block:: python
-
-            # You can write a string for a name or an integer for the ID
-            jetson.nvpmodel = name_or_id
-
-        If you need to increase or decrease the ID you can use
+        This method simplify in a set of functions and variables this controller.
 
         .. code-block:: python
 
-            jetson.nvpmodel += 1
-            # or
-            jetson.nvpmodel = jetson.nvpmodel + 1
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read current nvpmodel name
+                    print(jetson.nvpmodel)
+                    # List of all nvpmodel available
+                    models = jetson.nvpmodel.models
+                    print(models)
+                    # You can write a string for a name
+                    jetson.nvpmodel = jetson.nvpmodel[0]
+                    # or an the ID name is also allowed
+                    jetson.nvpmodel = 0
 
-        There are other properties:
-
-        * **name** - mode name
-        * **id** - ID name
-        * **modes** - A list with all mode available in your board
-        * **status** - A list of status for each NVP model (False if the nvpmodel is in failure)
-        * **is_running** - Status updating NVP model service
-
-        The access of this properties is available like below
+        You can also increase/decrease the ID 
 
         .. code-block:: python
 
-            # NVP model name
-            print(jetson.nvpmodel.name)
-            # NVP model id
-            print(jetson.nvpmodel.id)
-            # NVP model list
-            print(jetson.nvpmodel.modes)
-            # NVP model status
-            print(jetson.nvpmodel.status)
+            with jtop() as jetson:
+                if jetson.ok():
+                    jetson.nvpmodel += 1
+                    # or
+                    jetson.nvpmodel = jetson.nvpmodel + 1
+
+        Advanced features are available in :py:class:`~jtop.core.nvpmodel.NVPModel`
+
+        .. admonition:: Reference
+
+            #. `NVP Model - Jetson TX/Nano <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-283/Tegra%20Linux%20Driver%20Package%20Development%20Guide/power_management_tx2.html#wwpID0E0AM0HA>`_
+            #. `NVP Model - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html#supported-modes-and-power-efficiency>`_
+            #. `NVP Model - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#supported-modes-and-power-efficiency>`_
 
         :return: Return the name of NV Power Mode
         :rtype: NVPModel or None
-        :raises JtopException: if the nvp model does not exist*
-        """
+        :raises JtopException: if the nvp model does not exist
+        """ # noqa
         return self._nvpmodel
 
     @nvpmodel.setter
@@ -459,43 +458,31 @@ class jtop(Thread):
     @property
     def jetson_clocks(self):
         """
-        Status jetson_clocks, if you want change the jetson_clocks status you can simply write:
+        jetson_clocks is a tool provided for all NVIDIA Jetson to maximize all performance, read reference for more information.
+
+        You can use this attribute like a simple boolean or use the advanced features in :py:class:`~jtop.core.jetson_clocks.JetsonClocks`
 
         .. code-block:: python
 
-            jetson.jetson_clocks = value
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Change status jetson_clocks
+                    jetson.jetson_clocks = not jetson.jetson_clocks
+                    # Set on board boot
+                    jetson.jetson_clocks.boot = True
+                    # Read status jetson_clocks service
+                    print(jetson.jetson_clocks.status)
 
-        where *value* is a boolean value
+        .. admonition:: Reference
 
-        There are available other extra properties:
-
-        * **boot** - You can enable and disable on boot **jetson_clocks**
-        * **status** - A string with the current jetson_clocks status
-            * *running* - The service is running
-            * *booting* - jetson_clocks is in booting (When your board boot, jetson_clocks wait 60s before to start)
-            * *activating* - jetson_clocks is activating
-            * *deactivating* - jetson_clocks is deactivating
-
-        You can change and edit using this property:
-
-        .. code-block:: python
-
-            # Read jetson_clocks boot property
-            print(jetson.jetson_clocks.boot)
-            # Set a new value
-            jetson.jetson_clocks.boot = value  # True or False
-
-        Written jetson_clocks status
-
-        .. code-block:: python
-
-            # Status jetson_clocks
-            print(jetson.jetson_clocks.status)
+            #. `jetson_clocks - Jetson TX/Nano <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-283/index.html#page/Tegra%2520Linux%2520Driver%2520Package%2520Development%2520Guide%2Fpower_management_tx2.html%23>`_
+            #. `jetson_clocks - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html>`_
+            #. `jetson_clocks - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#maximizing-jetson-orin-performance>`_
 
         :return: status jetson_clocks script
-        :rtype: JetsonClocks
+        :rtype: JetsonClocks or None
         :raises ValueError: Wrong jetson_clocks value
-        """
+        """ # noqa
         return self._jetson_clocks
 
     @jetson_clocks.setter
@@ -515,21 +502,24 @@ class jtop(Thread):
 
         The field listed are:
 
-        * **time** - A `datetime` variable with the local time in your board
-        * **uptime** - A `timedelta` with the up time of your board, same from :py:attr:`~uptime`
-        * **cpu X** - The status for each cpu in your board, if disabled *OFF* :py:attr:`~cpu`
-        * **RAM** - Used ram :py:attr:`~memory`
-        * **SWAP** - used swap :py:attr:`~memory`
-        * **EMC** - If exist, the used emc :py:attr:`~memory`
-        * **IRAM** - If exist, the used iram :py:attr:`~memory`
-        * **GPU** - Status of your GPU :py:attr:`~gpu`
-        * **engine X** - Frequency for each engine, if disabled *OFF* :py:attr:`~engine`
-        * **fan** - Status fan speed :py:attr:`~fan`
-        * **Temp X** - X temperature :py:attr:`~temperature`
-        * **Power X** - Current power from rail X :py:attr:`~power`
-        * **Power TOT** - Total current power :py:attr:`~power`
-        * **jetson_clocks** - Status of jetson_clocks, human readable :py:attr:`~jetson_clocks`
-        * **nvp model** - If exist, the NV Power Model name active :py:attr:`~nvpmodel`
+        ============= ============================== ========================= ====================================================
+        Name          Type                           Reference                 Description
+        ============= ============================== ========================= ====================================================
+        time          :py:class:`datetime.datetime`                            local time in your board
+        uptime        :py:class:`datetime.timedelta` :py:attr:`~uptime`        up time on your board
+        cpu **X**     :py:class:`float`              :py:attr:`~cpu`           The status for each cpu in your board, if disabled *OFF*
+        RAM           :py:class:`float`              :py:attr:`~memory`        RAM used
+        SWAP          :py:class:`float`              :py:attr:`~memory`        SWAP used
+        EMC           :py:class:`float`              :py:attr:`~memory`        *(Optional)* EMC used
+        IRAM          :py:class:`float`              :py:attr:`~memory`        *(Optional)* IRAM used
+        GPU           :py:class:`float`              :py:attr:`~gpu`           *(Optional)* Status of your GPU
+        engine **X**  :py:class:`float`              :py:attr:`~engine`        *(Optional)* Frequency for each engine, if disabled *OFF*
+        fan           :py:class:`float`              :py:attr:`~fan`           *(Optional)* Fan speed
+        Temp **X**    :py:class:`float`              :py:attr:`~power`         *(Optional)* Current power from rail X
+        Temp **TOT**  :py:class:`float`              :py:attr:`~power`         *(Optional)* Total power
+        jetson_clocks :py:class:`str`                :py:attr:`~jetson_clocks` *(Optional)* Status of jetson_clocks, human readable
+        nvpmodel      :py:class:`str`                :py:attr:`~nvpmodel`      *(Optional)* NV Power Model name active
+        ============= ============================== ========================= ====================================================
 
         :return: Compacts jetson statistics
         :rtype: dict
@@ -589,74 +579,85 @@ class jtop(Thread):
         You can also use this property to set a new swap, deactivate or clear cache,
         read all methods available :py:class:`~jtop.core.memory.Memory`
 
+        example:
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Print memory status
+                    print(jetson.memory)
+                    # make a new 10Gb swap
+                    jetson.memory.swap_set(10, on_boot=False)
+
 
         For each dictionary there are specific outputs
 
         *RAM*
 
-        ========== ========= ====================================================
-        Name       Type      Description
-        ========== ========= ====================================================
-        tot        `int`     Total RAM
-        used       `int`     Total used RAM
-        free       `int`     Free RAM
-        buffers    `int`     Buffered RAM
-        cached     `int`     Cached RAM
-        shared     `int`     Shared RAM, for NVIDIA Jetson the RAM used from GPU
-        lfb        `int`     Large Free Block in **4MB**
-        unit       `int`     Unit for all values, always **k**
-        ========== ========= ====================================================
+        ========== =================== ====================================================
+        Name       Type                Description
+        ========== =================== ====================================================
+        tot        :py:class:`int`     Total RAM
+        used       :py:class:`int`     Total used RAM
+        free       :py:class:`int`     Free RAM
+        buffers    :py:class:`int`     Buffered RAM
+        cached     :py:class:`int`     Cached RAM
+        shared     :py:class:`int`     Shared RAM, for NVIDIA Jetson the RAM used from GPU
+        lfb        :py:class:`int`     Large Free Block in **4MB**
+        unit       :py:class:`int`     Unit for all values, always **k**
+        ========== =================== ====================================================
 
         *SWAP*
 
-        ========== ========= ====================================================
-        Name       Type      Description
-        ========== ========= ====================================================
-        tot        `int`     Total SWAP
-        used       `int`     Total used SWAP
-        cached     `int`     Cached RAM
-        unit       `int`     Unit for all values, always **k**
-        table      `dict`    Dictionary with all swap available :sup:`A`
-        ========== ========= ====================================================
+        ========== =================== ====================================================
+        Name       Type                Description
+        ========== =================== ====================================================
+        tot        :py:class:`int`     Total SWAP
+        used       :py:class:`int`     Total used SWAP
+        cached     :py:class:`int`     Cached RAM
+        unit       :py:class:`int`     Unit for all values, always **k**
+        table      :py:class:`dict`    Dictionary with all swap available :sup:`A`
+        ========== =================== ====================================================
 
         *EMC* (if available on your device)
 
-        ========== ========= ==========================================================
-        Name       Type      Description
-        ========== ========= ==========================================================
-        online     `bool`    Status EMC
-        val        `int`     Percentage of bandwidth used relative to running frequency
-        cur        `int`     Current working frequency
-        max        `int`     Max EMC frequency usable
-        min        `int`     Min EMC frequency usable
-        unit       `int`     Unit for all values, always **k**
-        ========== ========= ==========================================================
+        ========== =================== ====================================================
+        Name       Type                Description
+        ========== =================== ====================================================
+        online     :py:class:`bool`    Status EMC
+        val        :py:class:`int`     Percentage of bandwidth used relative to running frequency
+        cur        :py:class:`int`     Current working frequency
+        max        :py:class:`int`     Max EMC frequency usable
+        min        :py:class:`int`     Min EMC frequency usable
+        unit       :py:class:`int`     Unit for all values, always **k**
+        ========== =================== ====================================================
 
         *IRAM* (if available on your device)
 
-        ========== ========= ====================================================
-        Name       Type      Description
-        ========== ========= ====================================================
-        tot        `int`     Total IRAM
-        used       `int`     Total used IRAM
-        unit       `int`     Unit for all values, always **k**
-        lfb        `int`     Large Free Block in **4MB**
-        ========== ========= ====================================================
+        ========== =================== ====================================================
+        Name       Type                Description
+        ========== =================== ====================================================
+        tot        :py:class:`int`     Total IRAM
+        used       :py:class:`int`     Total used IRAM
+        unit       :py:class:`int`     Unit for all values, always **k**
+        lfb        :py:class:`int`     Large Free Block in **4MB**
+        ========== =================== ====================================================
 
         .. note::
 
             Note **A**
                 The swap table is a list of dictionary with this data
 
-                ========== ========= ==============================================
-                Name       Type      Description
-                ========== ========= ==============================================
-                type       `string`  Type of partition
-                prio       `int`     Priority partition
-                size       `int`     Size partition
-                used       `int`     Used part of this partition
-                unit       `int`     Unit for all values, always **k**
-                ========== ========= ==============================================
+                ========== =================== ==============================================
+                Name       Type                Description
+                ========== =================== ==============================================
+                type       :py:class:`str`     Type of partition
+                prio       :py:class:`int`     Priority partition
+                size       :py:class:`int`     Size partition
+                used       :py:class:`int`     Used part of this partition
+                unit       :py:class:`int`     Unit for all values, always **k**
+                ========== =================== ==============================================
 
         :return: memory status
         :rtype: Memory
@@ -675,34 +676,34 @@ class jtop(Thread):
 
         For each core the dictionary is defined:
 
-        ========== ========= =======================================
-        Name       Type      Description
-        ========== ========= =======================================
-        online     `boolean` Status core
-        governor   `string`  Type of governor running on the core
-        freq       `dict`    Frequency of the core :sup:`A`
-        info_freq  `dict`    Frequency of the core :sup:`A`
-        idle_state `dict`    All Idle state running
-        user       `int`     User percentage utilization :sup:`B`
-        nice       `int`     Nice percentage utilization :sup:`B`
-        system     `int`     System percentage utilization :sup:`B`
-        idle       `int`     Idle percentage :sup:`B`
-        model      `string`  Model core running
-        ========== ========= =======================================
+        ========== ================= =======================================
+        Name       Type              Description
+        ========== ================= =======================================
+        online     :py:class:`bool`  Status core
+        governor   :py:class:`str`   Type of governor running on the core
+        freq       :py:class:`dict`  Frequency of the core :sup:`A`
+        info_freq  :py:class:`dict`  Frequency of the core :sup:`A`
+        idle_state :py:class:`dict`  All Idle state running
+        user       :py:class:`float` User percentage utilization :sup:`B`
+        nice       :py:class:`float` Nice percentage utilization :sup:`B`
+        system     :py:class:`float` System percentage utilization :sup:`B`
+        idle       :py:class:`float` Idle percentage :sup:`B`
+        model      :py:class:`str`   Model core running
+        ========== ================= =======================================
 
         .. note::
 
             Note **A**
                 The frequency dictionary is defined like below:
 
-                ========== ========= ==============================================
-                Name       Type      Description
-                ========== ========= ==============================================
-                unit       `string`  The size value of the frequency, usually **k**
-                min        `int`     Minimum frequency of the core
-                max        `int`     Maximum frequency of the core
-                cur        `int`     Current frequency of the core
-                ========== ========= ==============================================
+                ========== =================== ==============================================
+                Name       Type                Description
+                ========== =================== ==============================================
+                unit       :py:class:`str`     The size value of the frequency, usually **k**
+                min        :py:class:`int`     Minimum frequency of the core
+                max        :py:class:`int`     Maximum frequency of the core
+                cur        :py:class:`int`     Current frequency of the core
+                ========== =================== ==============================================
 
             Note **B**
                 If a core is offline, this data is not key is not available
@@ -722,25 +723,127 @@ class jtop(Thread):
     @property
     def processes(self):
         """
-        List of all GPU processes running.
+        Return a list with all processing running in GPU.
 
-        :return: GPU processes, frequencies and speed
-        :rtype: dict
+        For each item are collected all information about the process.
+
+        ========== ================= =======================================
+        Item       Type              Description
+        ========== ================= =======================================
+        0          :py:class:`int`   PID process running
+        1          :py:class:`str`   User start the process
+        2          :py:class:`int`   Priority
+        3          :py:class:`str`   State process :sup:`A`
+        4          :py:class:`float` CPU percent utilization :sup:`B`
+        5          :py:class:`int`   Memory occupied :sup:`C`
+        6          :py:class:`int`   GPU Memory occupied :sup:`D`
+        7          :py:class:`str`   Process name
+        ========== ================= =======================================
+
+        .. note::
+
+            Note **A**
+                This field indicating the status process:
+                    * **R**  Running
+                    * **S**  Sleeping in an interruptible wait
+                    * **D**  Waiting in uninterruptible disk sleep
+                    * **Z**  Zombie
+                    * **T**  Stopped (on a signal)
+                    * **t**  Tracing stop
+                    * **X**  Dead
+
+            Note **B**
+                Measure the CPU percent utilization are read live the values from :code:`/proc/[PID]/stat`:
+                    * **#14 utime** - CPU time spent in user code, measured in *clock ticks*
+                    * **#15 stime** - CPU time spent in kernel code, measured in *clock ticks*
+                    * **#22 starttime** - Time when the process started, measured in *clock ticks*
+
+                Where *clock ticks* is `SC_CLK_TCK <http://pubs.opengroup.org/onlinepubs/009695399/utilities/getconf.html>`_
+
+                It is also used :code:`/proc/uptime` to know the system up time.
+
+                The CPU percent is:
+
+                .. code-block:: python
+                    :class: no-copybutton
+
+                        total_time = utime + stime
+                        total_time = uptime - (starttime / clock_ticks)
+                        cpu_usage = 100 * (total_time / clock_ticks)
+
+            Note **C**
+                Extract resident set size (VmRSS) (Second field) in :code:`/proc/[PID]/statm`:
+                    VmRSS is the resident set size of the process,
+                    which is the portion of the process's memory that is held in RAM and is not swapped out to disk.
+                    This is the amount of memory that the process is currently using.
+
+            Note **D**
+                This value is the GPU memory occupied from the process.
+
+        .. admonition:: Reference
+
+            #. https://man7.org/linux/man-pages/man5/proc.5.html
+
+        :return: list of all GPU processes
+        :rtype: list
         """
         return self._stats['processes']
 
     @property
     def gpu(self):
         """
-        GPU engine. The fields are:
+        This property show in a simple way all GPU available on your board.
 
-        * **min_freq** - Minimum frequency in kHz
-        * **max_freq** - Maximum frequency in kHz
-        * **frq** - Running frequency in kHz
-        * **val** - Status GPU, value between [0, 100]
+        You can also use this attribute to enable/disable 3D scaling:
 
-        :return: GPU engine, frequencies and speed
-        :rtype: dict
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # change 3D scaling status
+                    jetson.gpu.set_scaling_3D = not jetson.gpu.set_scaling_3D
+
+        The :py:class:`~jtop.core.gpu.GPU` class is readable such a :py:class:`dict` where for each key are colleted all metrics for each GPU.
+
+        ============= =================== ====================================================
+        Name          Type                Description
+        ============= =================== ====================================================
+        type          :py:class:`str`     Type of GPU (integrated, discrete)
+        status        :py:class:`dict`    Status of GPU :sup:`A`
+        freq          :py:class:`dict`    Frequency GPU :sup:`B`
+        power_control :py:class:`dict`    *(Optional)* Type of power control
+        ============= =================== ====================================================
+
+        .. note::
+
+            Note **A**
+                Status GPU, from current load to features
+
+                =========== =================== ==============================================
+                Name        Type                Description
+                =========== =================== ==============================================
+                railgate    :py:class:`bool`    Status Railgate
+                tpc_pg_mask :py:class:`bool`    Status TPC PG Mask (for NVP model)
+                3d_scaling  :py:class:`bool`    Status 3D scaling
+                load        :py:class:`float`   Current GPU load
+                =========== =================== ==============================================
+
+            Note **B**
+                The frequency dictionary is defined like below:
+
+                ========== =================== ==============================================
+                Name       Type                Description
+                ========== =================== ==============================================
+                unit       :py:class:`str`     The size value of the frequency, usually **k**
+                governor   :py:class:`str`     Name GPU governor
+                min        :py:class:`int`     Minimum GPU frequency
+                max        :py:class:`int`     Maximum GPU frequency
+                cur        :py:class:`int`     Current GPU frequency
+                GPC        :py:class:`list`    List GPC frequency (Available for Orin series)
+                ========== =================== ==============================================
+
+        :return: current status of your GPU.
+        :rtype: GPU
         """
         # Extract GPU
         return self._gpu
@@ -748,31 +851,80 @@ class jtop(Thread):
     @property
     def power(self):
         """
-        Two power dictionaries:
+        All NVIDIA Jetson have one ore more integrate three-channel `INA3221 <https://www.ti.com/product/INA3221>`_ to measure the power consumption.
 
-        * **total** - The total power estimated is not available of the NVIDIA Jetson power consumption
-        * **power** - A dictionary with all power consumption
+        This jtop attribute collect and show the output from each rail in a simple view.
 
-        For each power consumption there are two fields:
+        ============= =================== ====================================================
+        Name          Type                Description
+        ============= =================== ====================================================
+        rail          :py:class:`dict`    A dictionary with all thermal rails
+        total         :py:class:`dict`    Total estimate board power
+        ============= =================== ====================================================
 
-        * **avg** - Average power consumption in milliwatt
-        * **cur** - Current power consumption in milliwatt
+        The total power is the **sum of all rails** or
 
-        :return: Two dictionaries, total and a list of all power consumption available from the board
-        :rtype: dict, dict
-        """
+        * Jetson Xavier NX and Jetson Orin NX - `Output VDD_IN <https://forums.developer.nvidia.com/t/orin-nx-power-data-from-jtop/242804/5>`_
+        * Jetson Nano - `Output POM_5V_IN <https://forums.developer.nvidia.com/t/power-consumption-monitoring/73608/8>`_
+
+        For each rail there are different values available
+
+        ============= =================== ====================================================
+        Name          Type                Description
+        ============= =================== ====================================================
+        volt          :py:class:`int`     Gets rail voltage in millivolts
+        curr          :py:class:`int`     Gets rail current in milliamperes
+        power         :py:class:`int`     Gets rail power in milliwatt
+        avg           :py:class:`int`     Gets rail power average in milliwatt
+        warn          :py:class:`int`     (if available) Gets rail average current limit in milliamperes
+        crit          :py:class:`int`     (if available) Gets rail instantaneous current limit in milliamperes
+        ============= =================== ====================================================
+
+        .. admonition:: Reference
+
+            #. `Power Consumption - Jetson TX/Nano <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-283/Tegra%20Linux%20Driver%20Package%20Development%20Guide/power_management_tx2.html#wwpID0E0EE0HA>`_
+            #. `Power Consumption - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html#software-based-power-consumption-modeling>`_
+            #. `Power Consumption - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#software-based-power-consumption-modeling>`_
+
+        :return: A dictionary with a list of power and the total
+        :rtype: dict
+        """ # noqa
         return self._stats['power']
 
     @property
     def temperature(self):
         """
-        A dictionary with all NVIDIA Jetson temperatures.
+        BSP thermal management features are part of the firmware running on BPMP for Jetson platforms running any host operating system (host OS) on the CPU.
+
+        this attribute provide a dictionary with a list of all thermal rail available on your board.
 
         All temperatures are in Celsius
 
+        ============= =================== ====================================================
+        Name          Type                Description
+        ============= =================== ====================================================
+        temp          :py:class:`int`     Gets rail voltage in Celsius
+        max           :py:class:`int`     (if available) Gets rail average current limit in Celsius
+        crit          :py:class:`int`     (if available) Gets rail instantaneous current limit in Celsius
+        ============= =================== ====================================================
+
+        .. note::
+
+            all measures are with a 0.5 °C precision margin
+
+        Not all values are available, jtop hide some values usually not available:
+
+        * **PMIC** - For NVIDIA Jetson TX/Nano
+
+        .. admonition:: Reference
+
+            #. `Thermal specification - Jetson TX/Nano <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-283/Tegra%20Linux%20Driver%20Package%20Development%20Guide/power_management_tx2.html#wwpID0E0IH0HA>`_
+            #. `Thermal specification - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html#thermal-management-in-bpmp>`_
+            #. `Thermal specification - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#thermal-management-in-bpmp>`_
+
         :return: Temperature dictionary
         :rtype: dict
-        """
+        """ # noqa
         return self._stats['temperature']
 
     @property
@@ -808,30 +960,14 @@ class jtop(Thread):
     @property
     def uptime(self):
         """
-        Up time, The time since you turned on the NVIDIA Jetson
+        Up time, The time since the board is turned on.
+
+        This command read the value in :code:`/proc/uptime` .
 
         :return: Board up time
-        :rtype: timedelta
+        :rtype: datetime.timedelta
         """
         return timedelta(seconds=get_uptime())
-
-    def _decode(self, data):
-        """
-        Internal decode function to decode and refactoring data
-        """
-        self._stats = data
-        # -- GPU --
-        self._gpu._update(self._stats['gpu'])
-        # -- MEMORY --
-        self._memory._update(data['mem'])
-        # -- FAN --
-        self._fan._update(data['fan'])
-        # -- JETSON_CLOCKS --
-        if 'jc' in data:
-            self._jetson_clocks._update(data['jc'])
-        # -- NVP Model --
-        if 'nvp' in data:
-            self._nvpmodel._update(data['nvp'])
 
     def run(self):
         """ """
@@ -843,9 +979,20 @@ class jtop(Thread):
                 if self._controller.empty():
                     self._controller.put({})
                 # Read stats from jtop service
-                data = self._get_data()
+                self._stats = self._get_data()
                 # Decode and update all jtop data
-                self._decode(data)
+                # -- GPU --
+                self._gpu._update(self._stats['gpu'])
+                # -- MEMORY --
+                self._memory._update(self._stats['mem'])
+                # -- FAN --
+                self._fan._update(self._stats['fan'])
+                # -- JETSON_CLOCKS --
+                if 'jc' in self._stats:
+                    self._jetson_clocks._update(self._stats['jc'])
+                # -- NVP Model --
+                if 'nvp' in self._stats:
+                    self._nvpmodel._update(self._stats['nvp'])
                 # Set trigger
                 self._trigger.set()
                 # Notify all observers
@@ -1019,8 +1166,11 @@ sudo systemctl restart jtop.service""".format(
         This method is usually blocking, and is not needed to add in your script a sleep function,
         when a new data will be available the function will release and you will read a new fresh data
 
-        :param spin: If True, this function will be not blocking
-        :type spin: bool
+        :param spin: If True, this function will be not blocking, defaults to False
+        :type spin: bool, optional
+        :raises ex_value: if jtop client fail, will be raise here
+        :return: status jtop client
+        :rtype: bool
         """
         # Wait if trigger is set
         if not spin:
@@ -1044,7 +1194,7 @@ sudo systemctl restart jtop.service""".format(
 
     def close(self):
         """
-        This method will close the jtop server.
+        This method close the jtop server.
 
         This method is **not** needed to close jtop if you have open jtop using `with` like:
 

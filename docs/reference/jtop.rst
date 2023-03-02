@@ -5,3 +5,5 @@ jtop
    :members:
    :show-inheritance:
 
+   .. automethod:: __init__
+

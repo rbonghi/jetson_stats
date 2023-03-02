@@ -17,7 +17,9 @@
 
 
 class JtopException(Exception):
-    """ Jtop general exception """
+    """
+    raise when jtop fail. The message attached show the reason.
+    """
 
     def __init__(self, message, errors=""):
         super(JtopException, self).__init__(message, errors)

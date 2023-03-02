@@ -98,6 +98,47 @@ def set_nvpmodel_level(level):
 
 
 class NVPModel(object):
+    """
+    The NVP Model control voltage regulators, and power tree to optimize power efficiency.
+    It supports three optimized power budgets, such as 10 watts, 15 watts, and 30 watts.
+    For each power budget, several configurations are possible with various CPU frequencies and number of cores online.
+
+    Capping the memory, CPU, and GPU frequencies, and number of online CPU, GPU TPC, DLA and PVA cores at a prequalified level confines the module to the target mode.
+
+    This method simplify in a set of functions and variables this controller.
+
+    .. code-block:: python
+
+        with jtop() as jetson:
+            if jetson.ok():
+                # Read current nvpmodel name
+                print(jetson.nvpmodel)
+                # List of all nvpmodel available
+                models = jetson.nvpmodel.models
+                print(models)
+                # You can write a string for a name
+                jetson.nvpmodel = jetson.nvpmodel[0]
+                # or an the ID name is also allowed
+                jetson.nvpmodel = 0
+
+    You can also increase/decrease the ID
+
+    .. code-block:: python
+
+        with jtop() as jetson:
+            if jetson.ok():
+                jetson.nvpmodel += 1
+                # or
+                jetson.nvpmodel = jetson.nvpmodel + 1
+
+    Read how to use in :py:attr:`~jtop.jtop.nvpmodel`
+
+    .. admonition:: Reference
+
+        #. `NVP Model - Jetson TX/Nano <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-283/Tegra%20Linux%20Driver%20Package%20Development%20Guide/power_management_tx2.html#wwpID0E0AM0HA>`_
+        #. `NVP Model - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html#supported-modes-and-power-efficiency>`_
+        #. `NVP Model - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#supported-modes-and-power-efficiency>`_
+    """ # noqa
 
     def __init__(self, controller, nvpmodel):
         self._controller = controller
@@ -113,21 +154,95 @@ class NVPModel(object):
         self._nvpmodel_now = nvp_status['model']
 
     def is_running(self):
+        """
+        Return the status of the NVP Model service, if **True** the service is already running.
+
+        :return: status nvpmodel service
+        :rtype: bool
+        """
         return self._running
 
     @property
     def id(self):
+        """
+        Read che current nvpmodel ID status selected
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read current nvpmodel ID
+                    print(jetson.nvpmodel.id)
+
+        :return: nvpmodel ID
+        :rtype: int
+        """
         return self._nvpmodel_now['id']
 
     @property
     def name(self):
+        """
+        Read che current nvpmodel ID **name** selected
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read current nvpmodel name
+                    print(jetson.nvpmodel.name)
+                    # same of
+                    print(jetson.nvpmodel)
+
+        :return: nvpmodel ID **name**
+        :rtype: str
+        """
         return self._nvpmodel_now['name']
 
     @property
     def status(self):
+        """
+        Return a list with a NVP model status. If when you set an NVP Model, something going wrong, you will read here the output
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read current nvpmodel status
+                    print(jetson.nvpmodel.status)
+
+        Output
+
+        .. code-block:: python
+            :class: no-copybutton
+
+            # [True True True True ... True]
+
+
+        :return: Status NVP Models
+        :rtype: list
+        """
         return self._status
 
     def set_nvpmodel_id(self, nvpmodel_id, force=False):
+        """
+        Set a new NVP model by ID. The list of nvpmodel available is with :py:func:`~get_all_nvpmodels` or :py:attr:`~models`.
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Set a new NVP Model by ID
+                    jetson.nvpmodel.set_nvpmodel_id(0, force=False)
+                    # same of
+                    jetson.nvpmodel = 0
+
+        :param nvpmodel_id: nvpmodel ID
+        :type nvpmodel_id: int
+        :param force: Force set nvpmodel (can reboot your board), defaults to False
+        :type force: bool, optional
+        :raises ValueError: the variable is not an int
+        :raises JtopException: nvpmodel name doesn't' exist
+        """
         if not isinstance(nvpmodel_id, int):
             raise ValueError("Use an int")
         # Check if ID is in list
@@ -139,20 +254,82 @@ class NVPModel(object):
         self._controller.put({'nvp': {'id': nvpmodel_id, 'force': force}})
 
     def get_nvpmodel_id(self):
+        """
+        Read che current nvpmodel ID status selected
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read current nvpmodel ID
+                    print(jetson.nvpmodel.get_nvpmodel_id())
+                    # same of
+                    print(jetson.nvpmodel.id)
+
+        :return: nvpmodel ID
+        :rtype: int
+        """
         return self._nvpmodel_now['id']
 
     def get_all_nvpmodels(self):
+        """
+        All nvp models available for this board
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # list of NVP models available
+                    print(jetson.nvpmodel.get_all_nvpmodels())
+                    # same of
+                    print(jetson.nvpmodel.models)
+
+        :return: List os string with all nvpmodels name
+        :rtype: list
+        """
         return self._nvp_models
 
     @property
     def models(self):
+        """
+        All nvp models available for this board
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # list of NVP models available
+                    print(jetson.nvpmodel.models)
+
+        :return: List os string with all nvpmodels name
+        :rtype: list
+        """
         return self._nvp_models
 
     def set_nvpmodel_name(self, nvpmodel_name, force=False):
+        """
+        Set a new NVP model by name. The list of nvpmodel available is with :py:func:`~get_all_nvpmodels` or :py:attr:`~models`.
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Set a new NVP Model by name
+                    jetson.nvpmodel.set_nvpmodel_name("15W", force=False)
+                    # same of
+                    jetson.nvpmodel = "15W"
+
+        :param nvpmodel_name: name nvpmodel
+        :type nvpmodel_name: str
+        :param force: Force set nvpmodel (can reboot your board), defaults to False
+        :type force: bool, optional
+        :raises ValueError: the variable is not a string
+        :raises JtopException: nvpmodel name doesn't' exist
+        """
         if not isinstance(nvpmodel_name, str):
             raise ValueError("Use a string")
         if nvpmodel_name not in self._nvp_models:
-            raise JtopException("NV Power Model {name} does not exists! Check all NVPmode avialable".format(name=nvpmodel_name))
+            raise JtopException("NV Power Model {name} does not exists! Check all NVPmode available".format(name=nvpmodel_name))
         if nvpmodel_name == self._nvpmodel_now['name'] and not force:
             return
         # Convert in nvpmodel id and send
@@ -161,9 +338,46 @@ class NVPModel(object):
         self._controller.put({'nvp': {'id': nvpmodel_id, 'force': force}})
 
     def get_nvpmodel_name(self):
+        """
+        Read che current nvpmodel ID **name** selected
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    # Read current nvpmodel ID
+                    print(jetson.nvpmodel.get_nvpmodel_name())
+                    # same of
+                    print(jetson.nvpmodel.name)
+                    # or
+                    print(jetson.nvpmodel)
+
+        :return: nvpmodel ID **name**
+        :rtype: str
+        """
         return self._nvpmodel_now['name']
 
     def get_default(self):
+        """
+        Return a :py:class:`dict` with the default status for this board
+
+        .. code-block:: python
+
+            with jtop() as jetson:
+                if jetson.ok():
+                    default = jetson.nvpmodel.get_default()
+                    print(default)
+
+        output
+
+        .. code-block:: python
+            :class: no-copybutton
+
+            # {'name': '15W', 'id': 0}
+
+        :return: default NVP model
+        :rtype: dict
+        """
         return self._nvp_default
 
     def __add__(self, number):

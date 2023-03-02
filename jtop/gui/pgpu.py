@@ -72,7 +72,7 @@ class GPU(Page):
         for gpu_name in self.jetson.gpu:
             chart = Chart(jetson, "GPU {name}".format(name=gpu_name), self.update_chart, color_text=curses.COLOR_GREEN)
             # button_railgate = SmallButton(stdscr, self.action_railgate, info={'name': gpu_name})
-            button_3d_scaling = SmallButton(stdscr, self.action_3d_scaling, info={'name': gpu_name})
+            button_3d_scaling = SmallButton(stdscr, self.action_scaling_3D, info={'name': gpu_name})
             self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling}
         # Add Process table
         self.process_table = ProcessTable(self.stdscr, self.jetson)
@@ -83,11 +83,11 @@ class GPU(Page):
         # Set new railgate
         self.jetson.gpu.set_railgate(info['name'], status_railgate)
 
-    def action_3d_scaling(self, info, selected):
+    def action_scaling_3D(self, info, selected):
         # Read current status 3d_scaling
-        status_3d_scaling = not self.jetson.gpu.get_3d_scaling(info['name'])
+        status_3d_scaling = not self.jetson.gpu.get_scaling_3D(info['name'])
         # Set new 3d_scaling
-        self.jetson.gpu.set_3d_scaling(info['name'], status_3d_scaling)
+        self.jetson.gpu.set_scaling_3D(info['name'], status_3d_scaling)
 
     def update_chart(self, jetson, name):
         # Decode GPU name

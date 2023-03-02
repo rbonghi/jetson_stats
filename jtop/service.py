@@ -361,7 +361,7 @@ class JtopServer(Process):
                             command = gpu['command']
                             name = gpu['name']
                             if command == '3d_scaling':
-                                self.gpu.set_3d_scaling(name, gpu['value'])
+                                self.gpu.set_scaling_3D(name, gpu['value'])
                             elif command == 'railgate':
                                 self.gpu.set_railgate(name, gpu['value'])
                             else:
@@ -454,9 +454,9 @@ class JtopServer(Process):
                     timeout = None
                     self.interval.value = -1.0
         except (KeyboardInterrupt, SystemExit):
-            pass
+            logger.warning("KeyboardInterrupt, SystemExit interrupt")
         except FileNotFoundError:
-            pass
+            logger.warning("FileNotFoundError on service thread")
         except Exception as e:
             logger.error("Error subprocess {error}".format(error=e), exc_info=1)
             # Write error message
