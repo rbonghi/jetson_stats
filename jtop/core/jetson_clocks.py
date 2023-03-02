@@ -286,7 +286,7 @@ class JetsonClocks(object):
         """
         return self.get_status()
 
-    def clear_configuration(self):
+    def clear_config(self):
         """
         This method clear the jetson_clocks configuration that use jtop.
         """

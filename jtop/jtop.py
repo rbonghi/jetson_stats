@@ -173,18 +173,20 @@ class jtop(Thread):
         """
         This block method will restore all jtop configuration, in order:
 
-        * Set to default **nvpmodel** (reference :py:class:`~jtop.core.nvpmodel.NVPModel`)
-        * Switch off, disable on boot **jetson_clocks** and remove configuration file(reference :py:class:`~jtop.core.jetson_clocks.JetsonClocks`)
-        * Set all **fan** to defaulf profile and all speed to zero (reference :py:class:`~jtop.core.fan.Fan`)
-        * **clear** the configuration jtop file
+        #. Set to default **nvpmodel** (reference :py:class:`~jtop.core.nvpmodel.NVPModel`)
+        #. Switch off, disable on boot **jetson_clocks** and remove configuration file(reference :py:class:`~jtop.core.jetson_clocks.JetsonClocks`)
+        #. Set all **fan** to defaulf profile and all speed to zero (reference :py:class:`~jtop.core.fan.Fan`)
+        #. **clear** the configuration jtop file
 
         .. code-block:: python
 
-            for status, message in jetson.restore():
-                if status:
-                    print(message)
-                else:
-                    print("Fail")
+            with jtop() as jetson:
+                if jetson.ok():
+                    for status, message in jetson.restore():
+                        if status:
+                            print(message)
+                        else:
+                            print("Fail")
 
         :param max_counter: Counter time for each test before fail, defaults to 10
         :type max_counter: int, optional
@@ -232,7 +234,7 @@ class jtop(Thread):
                 counter += 1
             yield counter != max_counter, "jetson_clocks disabled on boot"
             # Clear configuration
-            self.jetson_clocks.clear_configuration()
+            self.jetson_clocks.clear_config()
             # Wait jetson_clocks clear configuration
             counter = 0
             while self.ok() and (counter < max_counter):
