@@ -323,11 +323,6 @@ class JtopServer(Process):
                 try:
                     # Decode control message
                     control = self.q.get(timeout=timeout)
-                    # Check if the configuration exist
-                    if self.jetson_clocks.exists():
-                        if not self.jetson_clocks.is_config():
-                            if not self.jetson_clocks.alive():
-                                self.jetson_clocks.store()
                     # Check if control is not empty
                     if not control:
                         continue
@@ -398,6 +393,9 @@ class JtopServer(Process):
                         # Update jetson_clocks configuration
                         if 'boot' in jc:
                             self.jetson_clocks.set_boot(jc['boot'])
+                        # Clear configuration
+                        if 'clear' in jc:
+                            self.jetson_clocks.clear()
                     # Decode nvp model
                     if 'nvp' in control:
                         nvpmodel = control['nvp']
@@ -438,9 +436,6 @@ class JtopServer(Process):
                         if command == 'reset':
                             logger.info('Reset configuration')
                             self.config.clear()
-                            if self.jetson_clocks.exists():
-                                logger.info('Remove jetson_clocks config')
-                                self.jetson_clocks.clear()
                     # Update timeout interval
                     timeout = TIMEOUT_GAIN if interval <= TIMEOUT_GAIN else interval * TIMEOUT_GAIN
                 except queue.Empty:

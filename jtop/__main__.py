@@ -122,7 +122,7 @@ def main():
                 if jetson.ok():
                     for status, name in jetson.restore():
                         status = bcolors.ok() if status else bcolors.fail()
-                        print(" [{status}] {name}".format(name=name.capitalize(), status=status))
+                        print(" [{status}] {name}".format(name=name, status=status))
         except JtopException as e:
             print(e)
         # Close service

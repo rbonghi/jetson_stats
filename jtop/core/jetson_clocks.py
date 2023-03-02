@@ -286,6 +286,13 @@ class JetsonClocks(object):
         """
         return self.get_status()
 
+    def clear_configuration(self):
+        """
+        This method clear the jetson_clocks configuration that use jtop.
+        """
+        # Clear jetson_clocks configuration
+        self._controller.put({'jc': {'clear': True}})
+
     def __nonzero__(self):
         return self._enable
 
@@ -391,6 +398,10 @@ class JetsonClocksService(object):
             logger.warning("jetson_clocks is {status}".format(status=running_status))
             return False
         if enable:
+            # Check if the configuration exist
+            if not self.is_config():
+                if not self.store():
+                    return False
             # Start thread Service client
             self._jetson_clocks_thread = Thread(target=self._th_start, args=(reset_nvpmodel, ))
             self._jetson_clocks_thread.start()
@@ -515,6 +526,13 @@ class JetsonClocksService(object):
         return list_engines
 
     def store(self):
+        if self.is_config():
+            logger.error("Configuration already stored in {file}".format(file=self._config_l4t))
+            return False
+        if self.get_enable():
+            self._thread_status = 'uncontrolled'
+            logger.error("jetson_clocks is running. I cannot store configuration")
+            return False
         # Store configuration jetson_clocks
         cmd = Command([self._jetson_clocks_bin, '--store', self._config_l4t])
         try:

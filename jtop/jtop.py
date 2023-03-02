@@ -173,13 +173,10 @@ class jtop(Thread):
         """
         This block method will restore all jtop configuration, in order:
 
-        * **switch off** jetson_clocks
-        * **Disable** jetson_clocks on boot
-        * **fan**
-            * set to **default**, please follow the fan reference :py:attr:`~fan`
-            * set fan speed to 0 (This operation can require time)
-        * If active **disable** the jtop swap
-        * **Clear** the internal jtop configuration file
+        * Set to default **nvpmodel** (reference :py:class:`~jtop.core.nvpmodel.NVPModel`)
+        * Switch off, disable on boot **jetson_clocks** and remove configuration file(reference :py:class:`~jtop.core.jetson_clocks.JetsonClocks`)
+        * Set all **fan** to defaulf profile and all speed to zero (reference :py:class:`~jtop.core.fan.Fan`)
+        * **clear** the configuration jtop file
 
         .. code-block:: python
 
@@ -196,6 +193,21 @@ class jtop(Thread):
         :raises JtopException: if the connection with the server is lost,
             not active or your user does not have the permission to connect to *jtop.service*
         """
+        # Set to default nvpmodel
+        if self.nvpmodel is not None:
+            # Read default value
+            default = self.nvpmodel.get_default()
+            try:
+                self.nvpmodel.set_nvpmodel_id(default['id'])
+            except JtopException as ex:
+                yield False, ex
+            # Wait nvpmodel is default
+            counter = 0
+            while self.ok() and (counter < max_counter):
+                if self.nvpmodel == default['name']:
+                    break
+                counter += 1
+            yield counter != max_counter, "Default nvpmodel[{id}] {name}".format(id=default['id'], name=default['name'])
         # Reset jetson_clocks
         if self.jetson_clocks is not None:
             # Disable jetson_clocks
@@ -209,7 +221,7 @@ class jtop(Thread):
                 if not self.jetson_clocks:
                     break
                 counter += 1
-            yield counter != max_counter, "jetson_clocks off"
+            yield counter != max_counter, "jetson_clocks disabled"
             # Disable jetson_clocks on boot
             self.jetson_clocks.boot = False
             # Wait jetson_clocks boot
@@ -218,38 +230,40 @@ class jtop(Thread):
                 if not self.jetson_clocks.boot:
                     break
                 counter += 1
-            yield counter != max_counter, "jetson_clocks boot off"
+            yield counter != max_counter, "jetson_clocks disabled on boot"
+            # Clear configuration
+            self.jetson_clocks.clear_configuration()
+            # Wait jetson_clocks clear configuration
+            counter = 0
+            while self.ok() and (counter < max_counter):
+                if not self.jetson_clocks.is_config():
+                    break
+                counter += 1
+            yield counter != max_counter, "clear jetson_clocks configuration file"
         # Reset fan control
         if self.fan is not None:
             # Reset mode fan
-            self.fan.mode = 'system'
-            counter = 0
-            while self.ok() and (counter < max_counter):
-                if self.fan.mode == 'system':
-                    break
-                counter += 1
-            yield counter != max_counter, "fan mode set default"
+            for name in self.fan:
+                profile_default = self.fan.get_profile_default(name)
+                self.fan.set_profile(name, profile_default)
+                counter = 0
+                while self.ok() and (counter < max_counter):
+                    if self.fan.get_profile(name) == profile_default:
+                        break
+                    counter += 1
+                yield counter != max_counter, "Fan \"{name}\" set to profile \"{profile}\"".format(name=name, profile=profile_default)
             # Reset speed to zero
-            self.fan.speed = 0
-            counter = 0
-            while self.ok() and (counter < max_counter):
-                if self.fan.speed == 0:
-                    break
-                counter += 1
-            yield counter != max_counter, "Fan speed={speed}".format(speed=self.fan.speed)
-        # Switch off swap
-        if self.swap.is_enable:
-            # Deactivate swap
-            self.swap.deactivate()
-            counter = 0
-            while self.ok() and (counter < max_counter):
-                if not self.swap.is_enable:
-                    break
-                counter += 1
-            yield counter != max_counter, "Swap disabled"
+            for idx in range(len(self.fan[name]['speed'])):
+                self.fan.set_speed(name, 0, idx)
+                counter = 0
+                while self.ok() and (counter < max_counter):
+                    if self.fan.get_speed(name, idx) == 0:
+                        break
+                    counter += 1
+                yield counter != max_counter, "Fan \"{name}[{idx}]\" set speed to 0".format(name=name, idx=idx)
         # Clear config file
         self._controller.put({'config': 'reset'})
-        yield True, "Config disabled"
+        yield True, "Clear jtop configuration file"
 
     @property
     def engine(self):
