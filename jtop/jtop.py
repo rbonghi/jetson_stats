@@ -578,14 +578,14 @@ class jtop(Thread):
 
     def json(self, stats=False):
         """
-        This method export all metrics in a :py:class:`json` readable output.
+        This method export all metrics in a `json` readable output.
 
         You can export all metrics or the same outpur in :py:attr:`stats` depending of the parameter input.
 
         :param stats: json with same outout of :py:attr:`stats`, defaults to False
         :type stats: bool, optional
         :return: json output requested
-        :rtype: json
+        :rtype: str
         """
         if stats:
             return json.dumps(self.stats, cls=DateTimeEncoder)
