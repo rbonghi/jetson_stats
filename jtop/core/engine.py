@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 def read_engine(path):
     # Read status online
     engine = {}
-    engine['unit'] = 'k'
     # Check if access to this file
     if os.access(path + "/clk_enable_count", os.R_OK):
         with open(path + "/clk_enable_count", 'r') as f:

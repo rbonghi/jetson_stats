@@ -38,7 +38,6 @@ def check_nvidia_smi():
 def igpu_read_freq(path):
     # Read status online
     gpu = {}
-    gpu['unit'] = 'k'
     # Check if access to this file
     if os.access(path + "/governor", os.R_OK):
         with open(path + "/governor", 'r') as f:

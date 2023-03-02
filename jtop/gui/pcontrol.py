@@ -76,20 +76,20 @@ def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
         value = power[name]
         string_name = name.replace("VDDQ_", "").replace("VDD_", "").replace("_", " ")
         stdscr.addstr(pos_y + idx + 1, center_x - column_power - 5, string_name, curses.A_NORMAL)
-        unit_power = unit_to_string(value['power'], value['unit'], 'W')
+        unit_power = unit_to_string(value['power'], 'm', 'W')
         stdscr.addstr(pos_y + idx + 1, center_x - 1, unit_power, curses.A_NORMAL)
         if width > LIMIT:
-            unit_avg = unit_to_string(value['avg'], value['unit'], 'W')
+            unit_avg = unit_to_string(value['avg'], 'm', 'W')
             stdscr.addstr(pos_y + idx + 1, center_x + column_power - 3, unit_avg, curses.A_NORMAL)
     # Plot totals before finishing
     total = jetson.power['tot']
     len_power = len(power)
     name_total = total['name'] if 'name' in total else 'ALL'
     stdscr.addstr(pos_y + len_power + 1, center_x - column_power - 5, name_total, curses.A_BOLD)
-    unit_power = unit_to_string(total['power'], total['unit'], 'W')
+    unit_power = unit_to_string(total['power'], 'm', 'W')
     stdscr.addstr(pos_y + len_power + 1, center_x - 1, unit_power, curses.A_BOLD)
     if width > LIMIT:
-        unit_avg = unit_to_string(total['avg'], total['unit'], 'W')
+        unit_avg = unit_to_string(total['avg'], 'm', 'W')
         stdscr.addstr(pos_y + len_power + 1, center_x + column_power - 3, unit_avg, curses.A_BOLD)
     return len(power) + 1
 
@@ -248,37 +248,37 @@ class CTRL(Page):
             value = power[name]
             self.stdscr.addstr(pos_y_table + idx, pos_x, name, curses.A_NORMAL)
             # Convert all values in readable strings
-            unit_volt = unit_to_string(value['volt'], value['unit'], 'V')
-            unit_curr = unit_to_string(value['curr'], value['unit'], 'A')
-            unit_power = unit_to_string(value['power'], value['unit'], 'W')
+            unit_volt = unit_to_string(value['volt'], 'm', 'V')
+            unit_curr = unit_to_string(value['curr'], 'm', 'A')
+            unit_power = unit_to_string(value['power'], 'm', 'W')
             # Print all values
             self.stdscr.addstr(pos_y_table + idx, pos_x + 18, unit_power, curses.A_NORMAL)
             self.stdscr.addstr(pos_y_table + idx, pos_x + 26, unit_volt, curses.A_NORMAL)
             self.stdscr.addstr(pos_y_table + idx, pos_x + 33, unit_curr, curses.A_NORMAL)
             if 'warn' in value:
-                unit_curr_warn = unit_to_string(value['warn'], value['unit'], 'A')
+                unit_curr_warn = unit_to_string(value['warn'], 'm', 'A')
                 self.stdscr.addstr(pos_y_table + idx, pos_x + 40, unit_curr_warn, curses.A_NORMAL)
             if 'crit' in value:
-                unit_curr_crit = unit_to_string(value['crit'], value['unit'], 'A')
+                unit_curr_crit = unit_to_string(value['crit'], 'm', 'A')
                 self.stdscr.addstr(pos_y_table + idx, pos_x + 47, unit_curr_crit, curses.A_NORMAL)
         # Draw total power
         total = self.jetson.power['tot']
         len_power = len(power)
         name_total = total['name'] if 'name' in total else 'ALL'
         self.stdscr.addstr(pos_y_table + len_power, pos_x, name_total, curses.A_BOLD)
-        unit_power_total = unit_to_string(total['power'], total['unit'], 'W')
+        unit_power_total = unit_to_string(total['power'], 'm', 'W')
         self.stdscr.addstr(pos_y_table + len_power, pos_x + 18, unit_power_total, curses.A_BOLD)
         if 'volt' in total:
-            unit_volt = unit_to_string(total['volt'], total['unit'], 'V')
+            unit_volt = unit_to_string(total['volt'], 'm', 'V')
             self.stdscr.addstr(pos_y_table + len_power, pos_x + 26, unit_volt, curses.A_BOLD)
         if 'curr' in total:
-            unit_curr = unit_to_string(total['curr'], total['unit'], 'V')
+            unit_curr = unit_to_string(total['curr'], 'm', 'V')
             self.stdscr.addstr(pos_y_table + len_power, pos_x + 33, unit_curr, curses.A_BOLD)
         if 'warn' in total:
-            unit_curr_warn = unit_to_string(total['warn'], total['unit'], 'A')
+            unit_curr_warn = unit_to_string(total['warn'], 'm', 'A')
             self.stdscr.addstr(pos_y_table + len_power, pos_x + 40, unit_curr_warn, curses.A_BOLD)
         if 'crit' in total:
-            unit_curr_crit = unit_to_string(total['crit'], total['unit'], 'A')
+            unit_curr_crit = unit_to_string(total['crit'], 'm', 'A')
             self.stdscr.addstr(pos_y_table + len_power, pos_x + 47, unit_curr_crit, curses.A_BOLD)
 
     def draw(self, key, mouse):

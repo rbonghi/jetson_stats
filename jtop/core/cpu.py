@@ -90,8 +90,6 @@ def read_idle(path):
 def read_freq_cpu(path, type_freq):
     # build dict freq
     freq = {}
-    # Unit Frequency
-    freq['unit'] = 'k'
     # Min frequency
     with open("{path}/cpufreq/{type_freq}_min_freq".format(path=path, type_freq=type_freq), 'r') as f:
         freq['min'] = int(f.read())

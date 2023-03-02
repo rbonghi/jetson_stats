@@ -24,7 +24,7 @@ from .lib.linear_gauge import freq_gauge
 
 
 def get_value_engine(engine):
-    return unit_to_string(engine['cur'], engine['unit'], 'Hz') if engine['online'] else '[OFF]'
+    return unit_to_string(engine['cur'], 'k', 'Hz') if engine['online'] else '[OFF]'
 
 
 def add_engine_in_list(label, engine, group, name):

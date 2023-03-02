@@ -37,7 +37,7 @@ def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
     }
     if 'freq' in gpu_data:
         # Draw current frequency
-        curr_string = unit_to_string(gpu_data['freq']['cur'], gpu_data['freq']['unit'], 'Hz')
+        curr_string = unit_to_string(gpu_data['freq']['cur'], 'k', 'Hz')
         stdscr.addstr(pos_y, pos_x + size - 8, curr_string, NColors.italic())
     # Draw gauge
     basic_gauge(stdscr, pos_y, pos_x, size - 10, data, bar=" ")
@@ -159,7 +159,7 @@ class GPU(Page):
                     freq_data = {
                         'name': 'GPC{idx}'.format(idx=gpc_idx),
                         'cur': gpc,
-                        'unit': gpu_data['freq']['unit'],
+                        'unit': 'k',
                         'online': gpc > 0,
                     }
                     freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, width // 2 + gpc_idx * (size_gpc_gauge) + 2, size_gpc_gauge - 1, freq_data)

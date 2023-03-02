@@ -53,7 +53,7 @@ def main():
                 prio=swap['prio'],
                 size=swap['size'],
                 used=swap['used'],
-                unit=swap['unit']))
+                unit='k'))
         sys.exit(0)
     # Check if running a root
     if os.getuid() != 0:

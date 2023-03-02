@@ -257,10 +257,9 @@ class jtop(Thread):
         Name       Type             Description
         ========== ================ ==============================================
         online     :py:class:`bool` Status of the engine
-        unit       :py:class:`str`  The size value of the frequency, usually **k**
-        min        :py:class:`int`  Minimum frequency of the core :sup:`A`
-        max        :py:class:`int`  Maximum frequency of the core :sup:`A`
-        cur        :py:class:`int`  Current frequency of the core
+        min        :py:class:`int`  Minimum frequency of the core in **kHz** :sup:`A`
+        max        :py:class:`int`  Maximum frequency of the core in **kHz** :sup:`A`
+        cur        :py:class:`int`  Current frequency of the core in **kHz**
         ========== ================ ==============================================
 
         .. note::
@@ -598,14 +597,13 @@ class jtop(Thread):
         ========== =================== ====================================================
         Name       Type                Description
         ========== =================== ====================================================
-        tot        :py:class:`int`     Total RAM
-        used       :py:class:`int`     Total used RAM
-        free       :py:class:`int`     Free RAM
-        buffers    :py:class:`int`     Buffered RAM
-        cached     :py:class:`int`     Cached RAM
-        shared     :py:class:`int`     Shared RAM, for NVIDIA Jetson the RAM used from GPU
+        tot        :py:class:`int`     Total RAM in **KB**
+        used       :py:class:`int`     Total used RAM in **KB**
+        free       :py:class:`int`     Free RAM in **KB**
+        buffers    :py:class:`int`     Buffered RAM in **KB**
+        cached     :py:class:`int`     Cached RAM in **KB**
+        shared     :py:class:`int`     Shared RAM in **KB**, for NVIDIA Jetson the RAM used from GPU
         lfb        :py:class:`int`     Large Free Block in **4MB**
-        unit       :py:class:`int`     Unit for all values, always **k**
         ========== =================== ====================================================
 
         *SWAP*
@@ -613,10 +611,9 @@ class jtop(Thread):
         ========== =================== ====================================================
         Name       Type                Description
         ========== =================== ====================================================
-        tot        :py:class:`int`     Total SWAP
-        used       :py:class:`int`     Total used SWAP
-        cached     :py:class:`int`     Cached RAM
-        unit       :py:class:`int`     Unit for all values, always **k**
+        tot        :py:class:`int`     Total SWAP in **KB**
+        used       :py:class:`int`     Total used SWAP in **KB**
+        cached     :py:class:`int`     Cached RAM in **KB**
         table      :py:class:`dict`    Dictionary with all swap available :sup:`A`
         ========== =================== ====================================================
 
@@ -627,10 +624,9 @@ class jtop(Thread):
         ========== =================== ====================================================
         online     :py:class:`bool`    Status EMC
         val        :py:class:`int`     Percentage of bandwidth used relative to running frequency
-        cur        :py:class:`int`     Current working frequency
-        max        :py:class:`int`     Max EMC frequency usable
-        min        :py:class:`int`     Min EMC frequency usable
-        unit       :py:class:`int`     Unit for all values, always **k**
+        cur        :py:class:`int`     Current working frequency in **kHz**
+        max        :py:class:`int`     Max EMC frequency usable in **kHz**
+        min        :py:class:`int`     Min EMC frequency usable in **kHz**
         ========== =================== ====================================================
 
         *IRAM* (if available on your device)
@@ -638,9 +634,8 @@ class jtop(Thread):
         ========== =================== ====================================================
         Name       Type                Description
         ========== =================== ====================================================
-        tot        :py:class:`int`     Total IRAM
-        used       :py:class:`int`     Total used IRAM
-        unit       :py:class:`int`     Unit for all values, always **k**
+        tot        :py:class:`int`     Total IRAM in **KB**
+        used       :py:class:`int`     Total used IRAM in **KB**
         lfb        :py:class:`int`     Large Free Block in **4MB**
         ========== =================== ====================================================
 
@@ -654,9 +649,8 @@ class jtop(Thread):
                 ========== =================== ==============================================
                 type       :py:class:`str`     Type of partition
                 prio       :py:class:`int`     Priority partition
-                size       :py:class:`int`     Size partition
-                used       :py:class:`int`     Used part of this partition
-                unit       :py:class:`int`     Unit for all values, always **k**
+                size       :py:class:`int`     Size partition in **KB**
+                used       :py:class:`int`     Used part of this partition in **KB**
                 ========== =================== ==============================================
 
         :return: memory status
@@ -699,10 +693,9 @@ class jtop(Thread):
                 ========== =================== ==============================================
                 Name       Type                Description
                 ========== =================== ==============================================
-                unit       :py:class:`str`     The size value of the frequency, usually **k**
-                min        :py:class:`int`     Minimum frequency of the core
-                max        :py:class:`int`     Maximum frequency of the core
-                cur        :py:class:`int`     Current frequency of the core
+                min        :py:class:`int`     Minimum frequency of the core in **kHz**
+                max        :py:class:`int`     Maximum frequency of the core in **kHz**
+                cur        :py:class:`int`     Current frequency of the core in **kHz**
                 ========== =================== ==============================================
 
             Note **B**
@@ -834,12 +827,11 @@ class jtop(Thread):
                 ========== =================== ==============================================
                 Name       Type                Description
                 ========== =================== ==============================================
-                unit       :py:class:`str`     The size value of the frequency, usually **k**
                 governor   :py:class:`str`     Name GPU governor
-                min        :py:class:`int`     Minimum GPU frequency
-                max        :py:class:`int`     Maximum GPU frequency
-                cur        :py:class:`int`     Current GPU frequency
-                GPC        :py:class:`list`    List GPC frequency (Available for Orin series)
+                min        :py:class:`int`     Minimum GPU frequency in **kHz**
+                max        :py:class:`int`     Maximum GPU frequency in **kHz**
+                cur        :py:class:`int`     Current GPU frequency in **kHz**
+                GPC        :py:class:`list`    List GPC frequency in **kHz** (Available for Orin series)
                 ========== =================== ==============================================
 
         :return: current status of your GPU.

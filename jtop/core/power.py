@@ -50,7 +50,7 @@ def total_power(power):
         del power[total_name]
         return total, power
     # Otherwise measure all total power
-    total = {'power': 0, 'avg': 0, 'unit': 'm'}
+    total = {'power': 0, 'avg': 0}
     for value in power.values():
         total['power'] += value['power']
         total['avg'] += value['avg']
@@ -252,8 +252,6 @@ class PowerService(object):
             else:
                 values['avg'] = values['power']
                 self._power_avg[name] = values['power']
-            # Add unit
-            values['unit'] = 'm'
             # Add on power status
             rails[name] = values
         # Measure total power

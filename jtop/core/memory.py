@@ -48,7 +48,7 @@ def meminfo():
             match = re.search(MEMINFO_REG, line.strip())
             if match:
                 parsed_line = match.groupdict()
-                status_mem[parsed_line['key']] = {'val': int(parsed_line['value']), 'unit': parsed_line['unit']}
+                status_mem[parsed_line['key']] = int(parsed_line['value'])
     return status_mem
 
 
@@ -102,7 +102,6 @@ def read_swapon():
                 'prio': int(parsed_line['prio']),
                 'size': int(parsed_line['size']) // 1024,
                 'used': int(parsed_line['used']) // 1024,
-                'unit': 'k',
             }
             table[parsed_line['name']] = data
     return table
@@ -120,8 +119,6 @@ def read_emc(root_path):
     emc = {}
     if os.path.isdir(root_path + "/debug/bpmp/debug/clk/emc"):
         path = root_path + "/debug/bpmp/debug/clk/emc"
-        # Add unit
-        emc['unit'] = 'k'
         # Check if access to this file
         if os.access(path + "/rate", os.R_OK):
             with open(path + "/rate", 'r') as f:
@@ -144,8 +141,6 @@ def read_emc(root_path):
                 emc['override'] = int(f.read()) // 1000
     elif os.path.isdir(root_path + "/debug/tegra_bwmgr"):
         path = root_path + "/debug/clk/override.emc"
-        # Add unit
-        emc['unit'] = 'k'
         # Check if access to this file
         if os.access(path + "/clk_rate", os.R_OK):
             with open(path + "/clk_rate", 'r') as f:
@@ -371,42 +366,39 @@ class MemoryService(object):
         # Read memory use
         # NvMapMemUsed: Is the shared memory between CPU and GPU
         # This key is always available on Jetson (not really always)
-        ram_shared = status_mem.get('NvMapMemUsed', {})
-        ram_shared_val = ram_shared.get('size', 0)
+        ram_shared = status_mem.get('NvMapMemUsed', 0)
         if mem_total:
             # Update shared size
-            ram_shared_val = mem_total['size'] if ram_shared_val == 0 else ram_shared_val
+            ram_shared = mem_total if ram_shared == 0 else ram_shared
         # Extract memory info
-        ram_total = status_mem.get('MemTotal', {})
-        ram_free = status_mem.get('MemFree', {})
-        # ram_available = status_mem.get('MemAvailable', {})
-        ram_buffer = status_mem.get('Buffers', {})
-        ram_cached = status_mem.get('Cached', {})
-        ram_SReclaimable = status_mem.get('SReclaimable', {})
-        ram_Shmem = status_mem.get('Shmem', {})
-        total_used_memory = ram_total.get('val', 0) - ram_free.get('val', 0)
-        cached_memory = ram_cached.get('val', 0) + ram_SReclaimable.get('val', 0)  # + ram_Shmem.get('val', 0)
+        ram_total = status_mem.get('MemTotal', 0)
+        ram_free = status_mem.get('MemFree', 0)
+        # ram_available = status_mem.get('MemAvailable', 0)
+        ram_buffer = status_mem.get('Buffers', 0)
+        ram_cached = status_mem.get('Cached', 0)
+        ram_SReclaimable = status_mem.get('SReclaimable', 0)
+        ram_Shmem = status_mem.get('Shmem', 0)
+        total_used_memory = ram_total - ram_free
+        cached_memory = ram_cached + ram_SReclaimable  # + ram_Shmem
         # Add fields for RAM
         memory['RAM'] = {
-            'tot': ram_total.get('val', 0),
-            'used': total_used_memory - (ram_buffer.get('val', 0) + cached_memory),
-            'free': ram_free.get('val', 0),
-            'buffers': ram_buffer.get('val', 0),
-            'cached': cached_memory + ram_Shmem.get('val', 0),
-            'shared': ram_shared_val,
-            'unit': ram_total.get('unit', 'k'),
+            'tot': ram_total,
+            'used': total_used_memory - (ram_buffer + cached_memory),
+            'free': ram_free,
+            'buffers': ram_buffer,
+            'cached': cached_memory + ram_Shmem,
+            'shared': ram_shared,
             'lfb': large_free_bank,  # In 4MB
         }
         # Extract swap numbers
-        swap_total = status_mem.get('SwapTotal', {})
-        swap_free = status_mem.get('SwapFree', {})
-        swap_cached = status_mem.get('SwapCached', {})
+        swap_total = status_mem.get('SwapTotal', 0)
+        swap_free = status_mem.get('SwapFree', 0)
+        swap_cached = status_mem.get('SwapCached', 0)
         # Add fields for swap
         memory['SWAP'] = {
-            'tot': swap_total.get('val', 0),
-            'used': swap_total.get('val', 0) - swap_free.get('val', 0),
-            'cached': swap_cached.get('val', 0),
-            'unit': swap_total.get('unit', 'k'),
+            'tot': swap_total,
+            'used': swap_total - swap_free,
+            'cached': swap_cached,
             'table': read_swapon(),
         }
         # Read EMC status
@@ -427,9 +419,8 @@ class MemoryService(object):
             used_total, _ = read_process_table(self._root_path + "/debug/nvmap/iram/clients")
             memory['IRAM'] = {
                 'tot': size,
-                'used': used_total.get('val', 0),
-                'unit': used_total.get('unit', 'k'),
-                'lfb': size - used_total.get('val', 0),  # TODO To check
+                'used': used_total,
+                'lfb': size - used_total,  # TODO To check
             }
         return memory
 # EOF

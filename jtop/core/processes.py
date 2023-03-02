@@ -54,7 +54,6 @@ def read_process_table(path_table):
                     parsed_line['user'],
                     parsed_line['process'],
                     int(parsed_line['size']),
-                    parsed_line['unit'].lower(),
                 ]
                 table += [data]
                 continue
@@ -62,7 +61,7 @@ def read_process_table(path_table):
             match = re.search(TOT_TABLE_REG, line)
             if match:
                 parsed_line = match.groupdict()
-                total = {'size': int(parsed_line['size']), 'unit': parsed_line['unit'].lower()}
+                total = int(parsed_line['size'])
                 continue
     # return total and table
     return total, table
