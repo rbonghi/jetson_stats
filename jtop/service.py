@@ -342,8 +342,10 @@ class JtopServer(Process):
                         if 'command' in swap:
                             command = swap['command']
                             if command == 'set':
+                                logger.info("Activating swap in {path}".format(path=swap['path']))
                                 self.memory.swap_set(swap['size'], swap['path'], swap['boot'])
                             elif command == 'unset':
+                                logger.info("Deactivating swap in {path}".format(path=swap['path']))
                                 self.memory.swap_deactivate(swap['path'])
                             else:
                                 logger.error("swap command not detected: {command}".format(command=command))

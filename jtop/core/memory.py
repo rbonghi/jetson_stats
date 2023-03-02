@@ -30,6 +30,7 @@ from .command import Command
 logger = logging.getLogger(__name__)
 # Memory regular exception
 MEMINFO_REG = re.compile(r'(?P<key>.+):\s+(?P<value>.+) (?P<unit>.)B')
+FSTAB_RE = re.compile(r'^(?P<path>[^ ]+) +(?P<mount>[^ ]+) +(?P<type>[^ ]+) +(?P<options>[^ ]+) +(?P<dump>\d+) +(?P<pass>\d+)$')
 BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(?P<nr_free>.*)')
 SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>-?\d+)')
 # Swap configuration
@@ -97,22 +98,29 @@ def read_swapon():
         match = re.search(SWAP_REG, line.strip())
         if match:
             parsed_line = match.groupdict()
+            name = parsed_line['name']
             data = {
-                'type': parsed_line['type'],
+                # Improve this detection. (Now only checking if zram is on name to saving time)
+                'type': parsed_line['type'] if 'zram' not in name else 'zram',
                 'prio': int(parsed_line['prio']),
                 'size': int(parsed_line['size']) // 1024,
                 'used': int(parsed_line['used']) // 1024,
             }
-            table[parsed_line['name']] = data
+            table[name] = data
     return table
 
 
-def check_fstab(table_line):
+def read_fstab():
+    fstab = {}
     with open(PATH_FSTAB, "r") as fp:
         for line in fp:
-            if table_line == line.strip():
-                return True
-    return False
+            match = re.search(FSTAB_RE, line.strip())
+            if match:
+                parsed_line = match.groupdict()
+                path = parsed_line['path']
+                del parsed_line['path']
+                fstab[path] = parsed_line
+    return fstab
 
 
 def read_emc(root_path):
@@ -320,7 +328,8 @@ class MemoryService(object):
             return
         # Find if is already on boot
         swap_string_boot = "{path_swap} none swap sw 0 0".format(path_swap=path_swap)
-        if check_fstab(swap_string_boot):
+        fstab = read_fstab()
+        if path_swap in fstab:
             logger.warn("{path_swap} Already on boot".format(path_swap=path_swap))
             return
         # Append swap line
@@ -338,12 +347,15 @@ class MemoryService(object):
         sp.call(shlex.split('swapoff {path_swap}'.format(path_swap=path_swap)))
         # Remove swap
         os.remove(path_swap)
+        # Run script
+        logger.info("Deactivate {path_swap}".format(path_swap=path_swap))
         # Remove if on fstab
         swap_string_boot = "{path_swap} none swap sw 0 0".format(path_swap=path_swap)
-        if not check_fstab(swap_string_boot):
+        fstab = read_fstab()
+        if path_swap not in fstab:
             return
         # Check if is on boot
-        logger.info("Remove {path_swap} from fstab".format(path_swap=path_swap))
+        logger.info("Removing {path_swap} from fstab".format(path_swap=path_swap))
         with open(PATH_FSTAB, "r") as f:
             lines = f.readlines()
         with open(PATH_FSTAB, "w") as f:
@@ -351,7 +363,7 @@ class MemoryService(object):
                 if line.strip("\n") != swap_string_boot:
                     f.write(line)
         # Run script
-        logger.info("Deactivate {path_swap}".format(path_swap=path_swap))
+        logger.info("Removed {path_swap} from boot".format(path_swap=path_swap))
 
     def get_status(self, mem_total):
         memory = {}
@@ -394,12 +406,17 @@ class MemoryService(object):
         swap_total = status_mem.get('SwapTotal', 0)
         swap_free = status_mem.get('SwapFree', 0)
         swap_cached = status_mem.get('SwapCached', 0)
+        # read all swap and check if are on boot
+        swap_table = read_swapon()
+        fstab = read_fstab()
+        for name in swap_table:
+            swap_table[name]['boot'] = name in fstab
         # Add fields for swap
         memory['SWAP'] = {
             'tot': swap_total,
             'used': swap_total - swap_free,
             'cached': swap_cached,
-            'table': read_swapon(),
+            'table': swap_table,
         }
         # Read EMC status
         if self._is_emc:

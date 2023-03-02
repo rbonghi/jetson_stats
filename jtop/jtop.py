@@ -651,6 +651,7 @@ class jtop(Thread):
                 prio       :py:class:`int`     Priority partition
                 size       :py:class:`int`     Size partition in **KB**
                 used       :py:class:`int`     Used part of this partition in **KB**
+                boot       :py:class:`bool`    Check if this swap start on boot
                 ========== =================== ==============================================
 
         :return: memory status

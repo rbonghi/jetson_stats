@@ -56,6 +56,8 @@ def cpu_gauge(stdscr, idx, cpu, pos_y, pos_x, _, size_w):
 
 def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_width=0):
     num_cpu = len(list_cpu)
+    if num_cpu == 0:
+        return size_height, size_width, 0, 0
     size_columns = 4 if num_cpu > 6 else 2
     # Measure size rows and columns
     size_rows = int(num_cpu / size_columns) + bool((num_cpu / size_columns) % 1)
