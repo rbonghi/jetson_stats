@@ -21,7 +21,7 @@ import sys
 import argparse
 from .terminal_colors import bcolors
 from .core.memory import MemoryService, read_swapon
-from .core import get_var
+from .core.common import get_var
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 COPYRIGHT_RE = re.compile(r""".*__copyright__ = ["'](.*?)['"]""", re.S)

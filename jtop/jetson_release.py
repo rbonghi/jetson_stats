@@ -17,13 +17,11 @@
 
 import re
 import argparse
+from .core.common import get_var
+from .core.nvpmodel import nvpmode_query
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
-from .core import (get_cuda,
-                   get_opencv,
-                   get_libraries,
-                   get_var,
-                   NVPModelService,
-                   JtopException)
+from .core.jetson_libraries import get_libraries, get_cuda, get_opencv
+from .core.exceptions import JtopException
 from .service import status_service
 from .terminal_colors import bcolors
 # Version match
@@ -35,13 +33,17 @@ def main():
     parser = argparse.ArgumentParser(
         description='Show detailed information about this board. Machine, Jetpack, libraries and other',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-v', dest="verbose", help='Show all variables', action="store_true", default=False)
+    parser.add_argument('-v', '--verbose', dest="verbose", help='Show all variables', action="store_true", default=False)
+    parser.add_argument('-s', '--serial', dest="serial", help='Show serial number', action="store_true", default=False)
     # Copyrights
     print("Software part of jetson-stats {version} - {copyright}".format(version=get_var(VERSION_RE), copyright=get_var(COPYRIGHT_RE)))
     # Parse arguments
     args = parser.parse_args()
     # Read all Jetson Variables
     jetson = get_jetson_variables()
+    # Extract and remove Serial Number
+    serial_number = jetson['Serial Number']
+    del jetson['Serial Number']
     # Print headline
     if jetson['Jetpack']:
         print("Model: {model} - Jetpack {jetpack} [L4T {L4T}]".format(model=bcolors.bold(jetson['Model']),
@@ -55,27 +57,38 @@ def main():
     del jetson['L4T']
     # Print NVP model status
     try:
-        nvp_number, nvp_name = NVPModelService.query()
-        print("{service}: {name} - Type: {number}".format(
-            service=bcolors.bold("NV Power Mode"),
-            name=bcolors.ok(nvp_name),
-            number=bcolors.ok(nvp_number)))
+        nvpmodel_now = nvpmode_query()
+        print("{service}[{number}]: {name}".format(
+            service=bcolors.ok(bcolors.bold("NV Power Mode")),
+            name=bcolors.bold(nvpmodel_now['name']),
+            number=bcolors.bold(nvpmodel_now['id'])))
     except JtopException:
         pass
+    # Print serial number
+    if not args.serial:
+        serial_number="[XXX Show with: jetson_release -s XXX]"
+    print("{sn_string} {serial_number}".format(sn_string=bcolors.ok(bcolors.bold("Serial Number:")), serial_number=serial_number))
     # Print jetson hardware variables
-    if args.verbose:
-        print(bcolors.ok(bcolors.bold("Hardware:")))
-        for name, variable in jetson.items():
-            if not variable:
-                variable = bcolors.fail("Not available")
-            print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
-        # Print platform variables
-        plat = get_platform_variables()
-        print(bcolors.ok(bcolors.bold("Platform:")))
-        for name, variable in plat.items():
-            if not variable:
-                variable = bcolors.fail("Not available")
-            print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
+    if not args.verbose:
+        for name in ['699-level Part Number', 'SoC', 'Codename', 'BoardIDs', 'CUDA Arch BIN']:
+            if name in jetson:
+                del jetson[name]
+    print(bcolors.ok(bcolors.bold("Hardware:")))
+    for name, variable in jetson.items():
+        if not variable:
+            variable = bcolors.fail("Not available")
+        print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
+    # Print platform variables
+    plat = get_platform_variables()
+    if not args.verbose:
+        for name in ['Machine', 'System', 'Python']:
+            if name in plat:
+                del plat[name]
+    print(bcolors.ok(bcolors.bold("Platform:")))
+    for name, variable in plat.items():
+        if not variable:
+            variable = bcolors.fail("Not available")
+        print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
     # jtop status
     print(bcolors.ok(bcolors.bold("jtop:")))
     # Print status jetson-stats service
