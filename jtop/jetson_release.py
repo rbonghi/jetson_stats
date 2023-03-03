@@ -66,7 +66,7 @@ def main():
         pass
     # Print serial number
     if not args.serial:
-        serial_number="[XXX Show with: jetson_release -s XXX]"
+        serial_number = "[XXX Show with: jetson_release -s XXX]"
     print("{sn_string} {serial_number}".format(sn_string=bcolors.ok(bcolors.bold("Serial Number:")), serial_number=serial_number))
     # Print jetson hardware variables
     if not args.verbose:
