@@ -27,7 +27,8 @@ import logging
 
 from .gui import JTOPCONFIG
 from .terminal_colors import bcolors
-from .core import get_var, Command
+from .core.common import get_var
+from .core.command import Command
 from .core.jetson_variables import status_variables, install_variables
 from .core.config import get_config_service
 from .service import status_service, status_permission, install_service, set_service_permission

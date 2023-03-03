@@ -32,7 +32,11 @@ from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 
 # jetson_stats imports
+from .core.exceptions import JtopException
+from .core.common import get_key, get_var, get_uptime
 from .core.jetson_variables import get_jetson_variables, get_platform_variables
+from .core.command import Command
+from .core.config import Config
 from .core.timer_reader import TimerReader
 from .core.cpu import CPUService
 from .core.memory import MemoryService
@@ -42,14 +46,8 @@ from .core.engine import EngineService
 from .core.temperature import TemperatureService
 from .core.power import PowerService
 from .core.fan import FanService
-from .core import (
-    Command,
-    JtopException,
-    JetsonClocksService,
-    Config,
-    NVPModelService,
-    get_key,
-    get_var)
+from .core.jetson_clocks import JetsonClocksService
+from .core.nvpmodel import NVPModelService
 # Create logger
 logger = logging.getLogger(__name__)
 # Fix connection refused for python 2.7
@@ -552,6 +550,8 @@ class JtopServer(Process):
     def jtop_decode(self):
         # Make configuration dict
         data = {}
+        # -- UPTIME --
+        data['uptime'] = get_uptime()
         # -- CPU --
         # Read CPU data
         data['cpu'] = self.cpu.get_status()

@@ -23,7 +23,7 @@ import logging
 # Timer
 from datetime import datetime, timedelta
 # Get variables
-from ..core import get_var
+from ..core.common import get_var
 # Graphics elements
 from .lib.colors import NColors
 from .lib.common import check_curses, set_xterm_title

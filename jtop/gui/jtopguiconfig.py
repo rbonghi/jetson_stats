@@ -20,7 +20,7 @@ import curses
 # Logging
 import logging
 # local modules
-from ..core import get_var
+from ..core.common import get_var
 from .lib.colors import NColors
 # Create logger
 logger = logging.getLogger(__name__)

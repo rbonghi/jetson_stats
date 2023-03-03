@@ -28,17 +28,11 @@ from .core.jetson_variables import get_platform_variables
 from .core.memory import Memory
 from .core.fan import Fan
 from .core.gpu import GPU
-from .core import (
-    get_var,
-    get_cuda,
-    get_opencv,
-    get_libraries,
-    NVPModel,
-    get_uptime,
-    status_disk,
-    get_local_interfaces,
-    JetsonClocks,
-    JtopException)
+from .core.jetson_clocks import JetsonClocks
+from .core.nvpmodel import NVPModel
+from .core.common import get_var, get_local_interfaces, status_disk
+from .core.jetson_libraries import get_libraries, get_cuda, get_opencv
+from .core.exceptions import JtopException
 # Fix connection refused for python 2.7
 try:
     FileNotFoundError
@@ -173,9 +167,9 @@ class jtop(Thread):
         """
         This block method will restore all jtop configuration, in order:
 
-        #. Set to default **nvpmodel** (reference :py:class:`~jtop.core.nvpmodel.NVPModel`)
         #. Switch off, disable on boot **jetson_clocks** and remove configuration file(reference :py:class:`~jtop.core.jetson_clocks.JetsonClocks`)
         #. Set all **fan** to defaulf profile and all speed to zero (reference :py:class:`~jtop.core.fan.Fan`)
+        #. Set to default **nvpmodel** (reference :py:class:`~jtop.core.nvpmodel.NVPModel`)
         #. **clear** the configuration jtop file
 
         .. code-block:: python
@@ -195,21 +189,6 @@ class jtop(Thread):
         :raises JtopException: if the connection with the server is lost,
             not active or your user does not have the permission to connect to *jtop.service*
         """
-        # Set to default nvpmodel
-        if self.nvpmodel is not None:
-            # Read default value
-            default = self.nvpmodel.get_default()
-            try:
-                self.nvpmodel.set_nvpmodel_id(default['id'])
-            except JtopException as ex:
-                yield False, ex
-            # Wait nvpmodel is default
-            counter = 0
-            while self.ok() and (counter < max_counter):
-                if self.nvpmodel == default['name']:
-                    break
-                counter += 1
-            yield counter != max_counter, "Default nvpmodel[{id}] {name}".format(id=default['id'], name=default['name'])
         # Reset jetson_clocks
         if self.jetson_clocks is not None:
             # Disable jetson_clocks
@@ -263,6 +242,21 @@ class jtop(Thread):
                         break
                     counter += 1
                 yield counter != max_counter, "Fan \"{name}[{idx}]\" set speed to 0".format(name=name, idx=idx)
+        # Set to default nvpmodel
+        if self.nvpmodel is not None:
+            # Read default value
+            default = self.nvpmodel.get_default()
+            try:
+                self.nvpmodel.set_nvpmodel_id(default['id'])
+            except JtopException as ex:
+                yield False, ex
+            # Wait nvpmodel is default
+            counter = 0
+            while self.ok() and (counter < max_counter):
+                if self.nvpmodel == default['name']:
+                    break
+                counter += 1
+            yield counter != max_counter, "Default nvpmodel[{id}] {name}".format(id=default['id'], name=default['name'])
         # Clear config file
         self._controller.put({'config': 'reset'})
         yield True, "Clear jtop configuration file"
@@ -1003,7 +997,7 @@ class jtop(Thread):
         :return: Board up time
         :rtype: datetime.timedelta
         """
-        return timedelta(seconds=get_uptime())
+        return timedelta(seconds=self._stats['uptime'])
 
     def run(self):
         """ """

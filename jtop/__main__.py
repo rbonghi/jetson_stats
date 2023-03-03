@@ -30,7 +30,8 @@ from .service import JtopServer
 # jtop client
 from .jtop import jtop
 # jtop exception
-from .core import JtopException, get_var
+from .core.exceptions import JtopException
+from .core.common import get_var
 # GUI jtop interface
 from .jetson_config import jtop_config
 from .gui import JTOPGUI, ALL, GPU, CPU, ENGINE, MEM, CTRL, INFO, engine_model
