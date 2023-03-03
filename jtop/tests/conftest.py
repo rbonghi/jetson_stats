@@ -20,7 +20,7 @@ import shutil
 import pytest
 import platform
 from ..service import JtopServer
-from ..core import JtopException
+from jtop import JtopException
 # pytest fixture reference
 # https://docs.pytest.org/en/stable/fixture.html
 

@@ -19,10 +19,7 @@ import pytest
 import os
 from datetime import timedelta
 from multiprocessing.pool import Pool
-from jtop import jtop
-from jtop.core.memory import Memory
-from jtop.core.fan import Fan
-from jtop.core.gpu import GPU
+from jtop import jtop, Memory, Fan, GPU
 from .conftest import emulate_all_devices
 NUM_PROCESSES = 20
 

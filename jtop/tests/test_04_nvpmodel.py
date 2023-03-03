@@ -17,8 +17,7 @@
 
 import pytest
 import warnings
-from jtop import jtop
-from jtop.core.nvpmodel import NVPModel
+from jtop import jtop, NVPModel
 from .marco_functions import set_jetson_clocks, set_nvp_mode
 from .conftest import emulate_all_devices
 # Max count to wait

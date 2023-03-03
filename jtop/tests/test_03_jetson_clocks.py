@@ -16,8 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
-from jtop import jtop
-from jtop.core.jetson_clocks import JetsonClocks
+from jtop import jtop, JetsonClocks
 from .conftest import emulate_all_devices
 from .marco_functions import set_jetson_clocks_boot
 # test functions
