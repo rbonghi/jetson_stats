@@ -25,6 +25,7 @@ from .lib.process_table import ProcessTable
 from .lib.common import unit_to_string
 from .lib.linear_gauge import basic_gauge, freq_gauge
 from .lib.smallbutton import SmallButton
+from .pcontrol import color_temperature
 
 
 def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
@@ -106,11 +107,10 @@ class GPU(Page):
         gpu_height = (height * 2 // 3 - 3) // len(self.jetson.gpu)
         # Plot all GPU temperatures
         self.stdscr.addstr(first + 1, 1, "Temperatures:", curses.A_NORMAL)
-        for idx, temp in enumerate(self.jetson.temperature):
-            if 'GPU' in temp:
-                value = self.jetson.temperature[temp]['temp']
-                self.stdscr.addstr(first + 1, 15, temp + " ", curses.A_BOLD)
-                self.stdscr.addstr(str(value) + "C", curses.A_NORMAL)
+        for idx, name in enumerate(self.jetson.temperature):
+            if 'GPU' in name:
+                sensor = self.jetson.temperature[name]
+                color_temperature(self.stdscr, first + 1, 15, name, sensor)
         # Draw all GPU
         for idx, (gpu_name, gpu_data) in enumerate(self.jetson.gpu.items()):
             chart = self.draw_gpus[gpu_name]['chart']

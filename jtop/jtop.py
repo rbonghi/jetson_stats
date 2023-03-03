@@ -436,7 +436,7 @@ class jtop(Thread):
                     models = jetson.nvpmodel.models
                     print(models)
                     # You can write a string for a name
-                    jetson.nvpmodel = jetson.nvpmodel[0]
+                    jetson.nvpmodel = models[0]
                     # or an the ID name is also allowed
                     jetson.nvpmodel = 0
 

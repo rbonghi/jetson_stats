@@ -105,7 +105,8 @@ def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
         size_eng = size_table // len(row) - 1
         for idx, (name, value) in enumerate(row):
             if name is not None:
-                plot_name_info(stdscr, pos_y + gidx + 1, center_x - size_table // 2 + (size_eng + 1) * idx + 1, name, value)
+                color = curses.A_NORMAL if '[OFF]' in value else NColors.green()
+                plot_name_info(stdscr, pos_y + gidx + 1, center_x - size_table // 2 + (size_eng + 1) * idx + 1, name, value, color=color)
     return size_map
 
 

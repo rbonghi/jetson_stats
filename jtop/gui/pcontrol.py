@@ -30,6 +30,23 @@ TEMPERATURE_MAX = 84
 TEMPERATURE_CRIT = 100
 
 
+def color_temperature(stdscr, pos_y, pos_x, name, sensor, offset=0):
+    # Print temperature name
+    temperature = sensor['temp']
+    # Set color temperature
+    max_value = sensor['max'] if 'max' in sensor else TEMPERATURE_MAX
+    crit_value = sensor['crit'] if 'crit' in sensor else TEMPERATURE_CRIT
+    # Set color
+    color = curses.A_NORMAL
+    if temperature >= crit_value:
+        color = NColors.red()
+    elif temperature >= max_value:
+        color = NColors.yellow()
+    # Print temperature value
+    stdscr.addstr(pos_y, pos_x, name)
+    stdscr.addstr(pos_y, pos_x + offset + 5, ("{val:3.2f}C").format(val=temperature), color)
+
+
 def compact_temperatures(stdscr, pos_y, pos_x, width, height, jetson):
     counter = 0
     center_x = pos_x + width // 2 + 1
@@ -39,21 +56,9 @@ def compact_temperatures(stdscr, pos_y, pos_x, width, height, jetson):
     stdscr.addstr(pos_y, center_x + offset, " [Temp] ", curses.A_BOLD)
     # Plot name and temperatures
     for idx, (name, sensor) in enumerate(jetson.temperature.items()):
-        # Print temperature name
-        temperature = sensor['temp']
-        # Set color temperature
-        max_value = sensor['max'] if 'max' in sensor else TEMPERATURE_MAX
-        crit_value = sensor['crit'] if 'crit' in sensor else TEMPERATURE_CRIT
-        # Set color
-        color = curses.A_NORMAL
-        if temperature >= crit_value:
-            color = NColors.red()
-        elif temperature >= max_value:
-            color = NColors.yellow()
-        # Print temperature value
+        # Plot temperature
         try:
-            stdscr.addstr(pos_y + idx + 1, center_x - offset - 9, name)
-            stdscr.addstr(pos_y + idx + 1, center_x + offset + 1, ("{val:3.2f}C").format(val=temperature), color)
+            color_temperature(stdscr, pos_y + idx + 1, center_x - 5 * offset, name, sensor, offset=4 * offset)
         except curses.error:
             break
         counter = idx

@@ -45,10 +45,17 @@ class SmallButton(object):
         color_normal = color if color else curses.A_NORMAL
 
         if self.trigger_key:
-            self.stdscr.addstr(y, x, '[{trigger_key}]{label}'.format(trigger_key=self.trigger_key,
-                               label=" " + label if label else ""), curses.A_REVERSE if self.selected else color_normal)
+            # self.stdscr.addstr(y, x, '[{trigger_key}]{label}'.format(trigger_key=self.trigger_key,
+            #                   label=" " + label if label else ""), curses.A_REVERSE if self.selected else color_normal)
+            self.stdscr.addstr(y, x, '[', curses.A_REVERSE if self.selected else curses.A_NORMAL)
+            self.stdscr.addstr('{trigger_key}'.format(trigger_key=self.trigger_key), curses.A_REVERSE if self.selected else color_normal)
+            self.stdscr.addstr(']', curses.A_REVERSE if self.selected else curses.A_NORMAL)
+            self.stdscr.addstr('{label}'.format(label=" " + label if label else ""), curses.A_REVERSE if self.selected else color_normal)
         else:
-            self.stdscr.addstr(y, x, '[{label}]'.format(label=label), curses.A_REVERSE if self.selected else color_normal)
+            # self.stdscr.addstr(y, x, '[{label}]'.format(label=label), curses.A_REVERSE if self.selected else color_normal)
+            self.stdscr.addstr(y, x, '[', curses.A_REVERSE if self.selected else curses.A_NORMAL)
+            self.stdscr.addstr('{label}'.format(label=label), curses.A_REVERSE if self.selected else color_normal)
+            self.stdscr.addstr(']', curses.A_REVERSE if self.selected else curses.A_NORMAL)
         if self.highlight_time and not self.toggle and time.time() - self.highlight_time > 0.1:
             self.selected = False
             self.highlight_time = None
