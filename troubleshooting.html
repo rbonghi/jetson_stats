@@ -251,18 +251,19 @@
 <p>Let’s resolve here the common issues can happening using jetson-stats (jtop).</p>
 <p>Before to start, have you updated jetson-stats to the latest release?</p>
 <p>if not, write:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo pip3 install -U jetson-stats</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>jetson-stats
 </pre></div>
 </div>
+<p>If nothing changed follow the help below.</p>
 <section id="jtop-service-inactive">
 <h2>jtop.service inactive<a class="headerlink" href="#jtop-service-inactive" title="Permalink to this heading">#</a></h2>
 <p>When the <em>jtop.service</em> (or previously <em>jetson-stats.service</em>) is inactive there are few different reasons</p>
 <p>First step, restart jtop service following the command below</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo systemctl restart jtop.service</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>jtop.service
 </pre></div>
 </div>
 <p>If the error is not fixed run:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">journalctl -u jtop.service -n 100 --no-pager</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>journalctl<span class="w"> </span>-u<span class="w"> </span>jtop.service<span class="w"> </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--no-pager
 </pre></div>
 </div>
 <p>If you read here an error, open an <a class="reference external" href="https://github.com/rbonghi/jetson_stats/issues/new?assignees=&amp;labels=bug&amp;template=bug-report.md&amp;title=">issue</a> reporting the output.</p>
@@ -280,14 +281,14 @@
 <ol class="arabic simple">
 <li><p>Run the command below and check if is all <strong>OK</strong> if you read <strong>FAIL</strong> on fix permissions, press <strong>Fix all</strong> and logout/login.</p></li>
 </ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo jtop --health</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>jtop<span class="w"> </span>--health
 </pre></div>
 </div>
 <img alt="_images/jtop-fail-user.png" class="align-center" src="_images/jtop-fail-user.png" />
 <ol class="arabic simple">
 <li><p>You can manually do writing the command below</p></li>
 </ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">usermod -a -G jtop  $USER</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usermod<span class="w"> </span>-a<span class="w"> </span>-G<span class="w"> </span>jtop<span class="w">  </span><span class="nv">$USER</span>
 </pre></div>
 </div>
 <p>remember to logout/login.</p>
@@ -295,17 +296,17 @@
 <section id="nothing-fix-my-error">
 <h2>Nothing fix my error<a class="headerlink" href="#nothing-fix-my-error" title="Permalink to this heading">#</a></h2>
 <p>Before to open an <a class="reference external" href="https://github.com/rbonghi/jetson_stats/issues/new?assignees=&amp;labels=bug&amp;template=bug-report.md&amp;title=">issue</a>, try to reinstall the latest version with this command</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo pip3 install --no-cache-dir -U jetson-stats</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>-U<span class="w"> </span>jetson-stats
 </pre></div>
 </div>
 <p>Save the output somewhere, if this command doesn’t fix can be helpful when you one an <a class="reference external" href="https://github.com/rbonghi/jetson_stats/issues/new?assignees=&amp;labels=bug&amp;template=bug-report.md&amp;title=">issue</a>.</p>
 <p>Run this command and save the output. This output help me to understand the reason of this error.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">journalctl -u jtop.service -n 100 --no-pager</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>journalctl<span class="w"> </span>-u<span class="w"> </span>jtop.service<span class="w"> </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--no-pager
 </pre></div>
 </div>
 <p>Remember also to add other information about your board</p>
 <p>You can find on:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">jetson_release -v</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jetson_release<span class="w"> </span>-v
 </pre></div>
 </div>
 <ul class="simple">
