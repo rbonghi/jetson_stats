@@ -13,6 +13,7 @@ jetson-stats
    docker
    reference
    other-tools/index
+   troubleshooting
    contributing
    GitHub <https://github.com/rbonghi/jetson_stats>
 

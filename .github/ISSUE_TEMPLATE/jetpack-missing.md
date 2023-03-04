@@ -11,8 +11,8 @@ Please update jetson-stats with new jetpack
 <!-- Complete all fields -->
 ### Linux for Tegra
 
-- L4T: 
+- L4T:
 
 ### jetson-stats
 <!-- Use jtop -v -->
-- Version: 
+- Version:
