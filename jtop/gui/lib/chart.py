@@ -16,6 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Math functions
+import itertools
 from math import ceil
 import curses
 from collections import deque
@@ -24,8 +25,8 @@ from .common import check_curses
 
 class Chart(object):
 
-    OFFSET_COLOR_CHART = 18
-    OFFSET_COLOR_TEXT = 30
+    OFFSET_COLOR_CHART = 30
+    OFFSET_COLOR_TEXT = 18
 
     """
     Chart draw object
@@ -55,8 +56,6 @@ class Chart(object):
         self.max_val = 100
         self.active = True
         self.message = "OFF"
-        # Colors set:
-        self.color_chart_new = [curses.COLOR_GREEN, curses.COLOR_CYAN]
         # Attach the chart for every update from jtop
         jetson.attach(self.update)
 
@@ -158,6 +157,21 @@ class Chart(object):
                     pass
 
     def _plot_values(self, stdscr, size_x, size_y, label=True):
+        values = list(range(len(self.color_chart)))[::-1] + [len(self.color_chart)]
+        combinations = list(itertools.combinations(values, 2))
+        list_colors = {}
+        for c in combinations:
+            if c[0] not in list_colors:
+                list_colors[c[0]] = []
+            list_colors[c[0]] = [c] + list_colors[c[0]]
+
+        for idx, list_element in enumerate(list_colors.values()):
+            list_element = sorted(list_element, key=lambda x: x[1], reverse=True)
+            for idy, color_set in enumerate(list_element):
+                idx_name = Chart.OFFSET_COLOR_CHART + (len(self.color_chart) - idx - 1) * 10 + idy
+                second_color = self.color_chart[color_set[1]] if color_set[1] < len(self.color_chart) else curses.COLOR_BLACK
+                curses.init_pair(idx_name, self.color_chart[color_set[0]], second_color)
+
         # Area Plot data
         size_plot_x = [size_x[0], size_x[1] - 6 if label else size_x[1] - 1]
         size_plot_y = [size_y[0], size_y[1] - 1]
@@ -169,14 +183,9 @@ class Chart(object):
             points += [n] * int(val)
 
         for idx, values in enumerate(reversed(points)):
-            counter = 0
-            counter_color = 0
-            for chart_idx, (value, color_chart) in enumerate(zip(values, self.color_chart)):
-                curses.init_pair(Chart.OFFSET_COLOR_CHART + counter_color, color_chart,
-                                 self.color_chart[chart_idx - 1] if chart_idx > 1 else curses.COLOR_BLACK)
-                curses.init_pair(Chart.OFFSET_COLOR_CHART + counter_color + 1, color_chart,
-                                 self.color_chart[chart_idx - 2] if chart_idx > 2 else curses.COLOR_BLACK)
-
+            for chart_idx, value in enumerate(values):
+                color_base = Chart.OFFSET_COLOR_CHART + chart_idx * 10
+                color_next = 1 if chart_idx != 0 else 0
                 cell_val = value * size_y / self.max_val
                 cell_val_int = int(cell_val)
                 cell_val_mant = cell_val - cell_val_int
@@ -187,24 +196,22 @@ class Chart(object):
                     if self.fill:
                         for n in range(cell_val_int - 1):
                             stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'),
-                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                                          curses.color_pair(color_base))
                         # Add head chart
                         if cell_val < 1.0:
                             stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581'.encode('utf-8'),
-                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                                          curses.color_pair(color_base))
                         elif cell_val_mant == 0.0:
                             stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2584'.encode('utf-8'),
-                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                                          curses.color_pair(color_base))
                         elif cell_val_mant <= 0.5:
                             stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2586'.encode('utf-8'),
-                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color + 1))
+                                          curses.color_pair(color_base + color_next))
                         elif cell_val_mant < 1.0:
                             stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581'.encode('utf-8'),
-                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color + 1))
+                                          curses.color_pair(color_base + color_next))
                             stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'),
-                                          curses.color_pair(Chart.OFFSET_COLOR_CHART + counter_color))
+                                          curses.color_pair(color_base))
                     else:
                         stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(Chart.OFFSET_COLOR_TEXT))
-                counter += 1
-                counter_color += 2
 # EOF
