@@ -319,7 +319,7 @@
 <section id="health">
 <h3>Health<a class="headerlink" href="#health" title="Permalink to this heading">#</a></h3>
 <p>If something goes wrong, you can check the <code class="docutils literal notranslate"><span class="pre">jtop</span></code> status with</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">jtop --health</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>jtop<span class="w"> </span>--health
 </pre></div>
 </div>
 <img alt="_images/jetson_config-02-jtop.png" class="align-center" src="_images/jetson_config-02-jtop.png" />
@@ -333,7 +333,7 @@
 <section id="restore">
 <h3>Restore<a class="headerlink" href="#restore" title="Permalink to this heading">#</a></h3>
 <p>If you want to restore the original board configuration you can simply write</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">jtop --restore</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--restore
 </pre></div>
 </div>
 <img alt="_images/jtop-restore.png" class="align-center" src="_images/jtop-restore.png" />
@@ -348,7 +348,7 @@
 <h3>Color filter<a class="headerlink" href="#color-filter" title="Permalink to this heading">#</a></h3>
 <p>This option change the red color for text and background to blue.</p>
 <p>To enable this feature you can add this option</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">jtop --color-filter</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--color-filter
 </pre></div>
 </div>
 <p>or you can add in your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code></p>
@@ -361,7 +361,7 @@
 <section id="error-log">
 <h3>Error-log<a class="headerlink" href="#error-log" title="Permalink to this heading">#</a></h3>
 <p>If your board is not included, jetpack missing, hardware missing, you can launch this script</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">jtop --error-log</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--error-log
 </pre></div>
 </div>
 <p>This script generate a file <code class="docutils literal notranslate"><span class="pre">jtop-error.log</span></code> ready to be attached on your issue</p>
