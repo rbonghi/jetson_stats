@@ -249,6 +249,31 @@
           <section id="contributing">
 <h1>✨ Contributing<a class="headerlink" href="#contributing" title="Permalink to this heading">#</a></h1>
 <p>jetson-stats is a community-maintained project and we happily accept contributions.</p>
+<p>If you want to add a new <strong>Jetpack</strong> release follow these quick rules or if you want make a new feature or fix a bug you are on the right page.</p>
+<section id="add-a-new-jetpack">
+<h2>Add a new Jetpack<a class="headerlink" href="#add-a-new-jetpack" title="Permalink to this heading">#</a></h2>
+<p>If you want to add a new Jetpack to fix the warning:</p>
+<div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">user@board:~$ </span>jtop
+<span class="go">[WARN] jetson-stats not supported for [L4T 35.2.1]</span>
+<span class="go">  Please, try: sudo pip3 install -U jetson-stats or</span>
+<span class="go">  open a Github issue (press CTRL + Click)</span>
+</pre></div>
+</div>
+<ol class="arabic simple">
+<li><p>Open file <strong>jtop/core/jetson_variables.py</strong> around line <em>49</em> there is a variable called <strong>NVIDIA_JETPACK</strong> add the new jetpack following the rule below:</p></li>
+</ol>
+<div class="no-copybutton highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;L4T version&quot;</span><span class="p">:</span> <span class="s2">&quot;Jetpack&quot;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Increase with a minor release jtop variable <strong>__version__</strong> in <strong>jtop/__init__.py</strong></p></li>
+<li><p>Create a pull request and append <code class="docutils literal notranslate"><span class="pre">&amp;template=jetpack-missing.md</span></code> to the URL before submitting in order to include our release checklist in the pull request description.</p></li>
+<li><p>Open a pull request with message “<strong>Jetpack Release &lt;VERSION&gt;</strong>” where <strong>&lt;VERSION&gt;</strong> is the same release in <strong>jtop/__init__.py</strong></p></li>
+<li><p>Follow the checklist!</p></li>
+</ol>
+</section>
+<section id="add-new-feature-or-fix-a-bug">
+<h2>Add new feature or fix a bug<a class="headerlink" href="#add-new-feature-or-fix-a-bug" title="Permalink to this heading">#</a></h2>
 <p>If you wish to add a new feature or fix a bug:</p>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/rbonghi/jetson_stats/issues">Check for open issues</a> or open
@@ -262,7 +287,7 @@ as expected.</p></li>
 <li><p>Send a pull request and bug the maintainer until it gets merged and published.</p></li>
 </ol>
 <section id="setting-up-your-developing-environment">
-<h2>Setting up your developing environment<a class="headerlink" href="#setting-up-your-developing-environment" title="Permalink to this heading">#</a></h2>
+<h3>Setting up your developing environment<a class="headerlink" href="#setting-up-your-developing-environment" title="Permalink to this heading">#</a></h3>
 <p>Clone and build in developer mode jetson-stats</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/rbonghi/jetson_stats.git</span>
 <span class="go">cd jetson_stats</span>
@@ -280,6 +305,7 @@ as expected.</p></li>
 <p>Do not install on Jetson! Otherwise will overwrite your files.</p>
 </div>
 </div>
+</section>
 <section id="manually-stop-and-disable-jtop-service">
 <h3>Manually stop and disable jtop service<a class="headerlink" href="#manually-stop-and-disable-jtop-service" title="Permalink to this heading">#</a></h3>
 <p>If you want to manually control the jtop service you need to disable the service and manually start one in a terminal,
@@ -418,7 +444,9 @@ following the commands below</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">✨ Contributing</a><ul>
-<li><a class="reference internal" href="#setting-up-your-developing-environment">Setting up your developing environment</a><ul>
+<li><a class="reference internal" href="#add-a-new-jetpack">Add a new Jetpack</a></li>
+<li><a class="reference internal" href="#add-new-feature-or-fix-a-bug">Add new feature or fix a bug</a><ul>
+<li><a class="reference internal" href="#setting-up-your-developing-environment">Setting up your developing environment</a></li>
 <li><a class="reference internal" href="#manually-stop-and-disable-jtop-service">Manually stop and disable jtop service</a></li>
 <li><a class="reference internal" href="#restore-jtop-service">Restore jtop service</a></li>
 </ul>
