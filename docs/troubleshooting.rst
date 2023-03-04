@@ -40,9 +40,9 @@ If jtop start only with ``sudo jtop`` and when you run without sudo you read thi
 .. code-block:: console
   :class: no-copybutton
 
-    user@board:~$ jtop
-    I can't access jtop.service.
-    Please logout or reboot this board.
+  user@board:~$ jtop
+  I can't access jtop.service.
+  Please logout or reboot this board.
 
 The reason can be your user is not allowed to have access to jtop.
 
