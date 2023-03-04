@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 🆘 Troubleshooting
+    url: https://rnext.it/jetson_stats/troubleshooting.html
+    about: Check if your bug is documented here
+  - name: 💬 Ask the Community
+    url: https://discord.gg/BFbuJNhYzS
+    about: Join jtop's Discord server
+  - name: 📚 Documentation
+    url: https://https://rnext.it/jetson_stats
+    about: Make sure you read the relevant docs

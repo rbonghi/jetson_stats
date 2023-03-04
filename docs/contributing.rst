@@ -3,6 +3,36 @@
 
 jetson-stats is a community-maintained project and we happily accept contributions.
 
+If you want to add a new **Jetpack** release follow these quick rules or if you want make a new feature or fix a bug you are on the right page.
+
+Add a new Jetpack
+-----------------
+
+If you want to add a new Jetpack to fix the warning:
+
+.. code-block:: console
+   :class: no-copybutton
+
+   user@board:~$ jtop
+   [WARN] jetson-stats not supported for [L4T 35.2.1]
+     Please, try: sudo pip3 install -U jetson-stats or
+     open a Github issue (press CTRL + Click)
+
+1. Open file **jtop/core/jetson_variables.py** around line *49* there is a variable called **NVIDIA_JETPACK** add the new jetpack following the rule below:
+
+.. code-block:: python
+   :class: no-copybutton
+
+   "L4T version": "Jetpack"
+
+2. Increase with a minor release jtop variable **__version__** in **jtop/__init__.py**
+3. Create a pull request and append ``&template=jetpack-missing.md`` to the URL before submitting in order to include our release checklist in the pull request description.
+4. Open a pull request with message "**Jetpack Release <VERSION>**" where **<VERSION>** is the same release in **jtop/__init__.py**
+5. Follow the checklist!
+
+Add new feature or fix a bug
+----------------------------
+
 If you wish to add a new feature or fix a bug:
 
 #. `Check for open issues <https://github.com/rbonghi/jetson_stats/issues>`_ or open
@@ -16,7 +46,7 @@ If you wish to add a new feature or fix a bug:
 #. Send a pull request and bug the maintainer until it gets merged and published.
 
 Setting up your developing environment
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Clone and build in developer mode jetson-stats
 

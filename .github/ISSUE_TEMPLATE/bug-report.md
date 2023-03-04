@@ -7,10 +7,12 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+## Describe the bug
+
 A clear and concise description of what the bug is.
 
-**To Reproduce**
+## To Reproduce
+
 Steps to reproduce the behavior:
 
 1. Go to '...'
@@ -18,33 +20,46 @@ Steps to reproduce the behavior:
 3. Scroll down to '....'
 4. See error
 
-**Screenshots**
+## Screenshots
+
 If applicable, add screenshots to help explain your problem.
 
-**Expected behavior**
+## Expected behavior
+
 A clear and concise description of what you expected to happen.
 
-**Additional context**
+## Additional context
+
 Add any other context about the problem here.
+
+### Board
+
+Output from `jetson_release -v`:
 <!-- Complete all fields
 
   You can find this data on:
    * jetson_release -v
    * jtop (page INFO)
 -->
-### Board
 
-- SOC: [e.g. tegraXXX]
-- ID: [e.g. 10]
-- Board(s): [e.g. P1000-1000]
-- Code Name: [e.g. test]
+* jetson-stats version: [e.g. 1.8]
+* P-Number: [e.g. pXXXX-XXXX]
+* Module: [e.g. NVIDIA Jetson XXX]
+* Jetpack: [e.g. 4.3]
+* L4T: [e.g. 5.2.1]
 
-### Jetpack
+### Log from jtop.service
 
-- Jetpack: [e.g. 4.3]
-- L4T: [e.g. 5.2.1]
+Attach here the output from: `journalctl -u jtop.service -n 100 --no-pager`
 
-<!-- Use jtop -v -->
-### Jetson-Stats
+<!-- Use:
+journalctl -u jtop.service -n 100 --no-pager
+ -->
 
-- Version: [e.g. 1.8]
+### Log from jetson-stats installation
+
+Attach here the output from: `sudo -H pip3 install --no-cache-dir -U jetson-stats`
+
+<!-- Use:
+sudo -H pip3 install --no-cache-dir -U jetson-stats
+ -->
