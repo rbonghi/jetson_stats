@@ -1,12 +1,3 @@
----
-name: Jetpack Release []
-about: Pull request to fix a Jetpack missing
-title: Jetpack Release []
-labels: Jetpack,missing
-assignees: '@rbonghi'
-
----
-
 # Add New Jetpack
 
 To add a new NVIDIA Jetpack release you can quicky do:
