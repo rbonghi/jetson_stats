@@ -48,8 +48,11 @@ def plot_libraries(stdscr, pos_y, pos_x, libraries):
     opencv_size_x = plot_name_info(stdscr, pos_y + libraries_size_y, pos_x + 1, 'OpenCV', opencv_string, color=opencv_color)
     len_opencv = opencv_size_x
     if opencv:
-        stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 1, " with CUDA:")
-        stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 13, opencv_cuda_string, color | curses.A_BOLD)
+        try:
+            stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 1, " with CUDA:")
+            stdscr.addstr(pos_y + libraries_size_y, pos_x + opencv_size_x + 13, opencv_cuda_string, color | curses.A_BOLD)
+        except curses.error:
+            pass
         len_opencv += len(opencv_cuda_string) + 15
     return libraries_size_y + 1, max(libraries_size_x, len_opencv)
 
@@ -102,7 +105,10 @@ class INFO(Page):
         offset_y_sn = 0
         if 'Serial Number' in self.jetson.board['hardware']:
             if self.jetson.board['hardware']['Serial Number']:
-                self.stdscr.addstr(start_pos, 1 + platform_size_x + 1, "Serial Number:", curses.A_BOLD)
+                try:
+                    self.stdscr.addstr(start_pos, 1 + platform_size_x + 1, "Serial Number:", curses.A_BOLD)
+                except curses.error:
+                    pass
                 self._hide_serial_number.update(start_pos, 1 + platform_size_x + 16, mouse)
                 offset_y_sn = 1
         hardware_size_y, hardware_size_x = plot_hardware(self.stdscr,

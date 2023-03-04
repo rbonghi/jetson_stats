@@ -135,11 +135,17 @@ def value_to_string(value, unit, type, func):
 def plot_dictionary(stdscr, pos_y, pos_x, name, data, size=None):
     size_y = 1
     size_x = 0
-    stdscr.addstr(pos_y, pos_x, name, curses.A_BOLD)
+    try:
+        stdscr.addstr(pos_y, pos_x, name, curses.A_BOLD)
+    except curses.error:
+        pass
     # Build table from dictionary
     for idx, (name, value) in enumerate(data.items()):
         # Plot nanme
-        stdscr.addstr(pos_y + idx + 1, pos_x + 1, str(name) + ":", curses.A_BOLD)
+        try:
+            stdscr.addstr(pos_y + idx + 1, pos_x + 1, str(name) + ":", curses.A_BOLD)
+        except curses.error:
+            pass
         # Plot value
         color = curses.A_NORMAL if value else NColors.red()
         if not value:
@@ -157,9 +163,11 @@ def plot_dictionary(stdscr, pos_y, pos_x, name, data, size=None):
     return size_y, size_x
 
 
-@check_curses
 def plot_name_info(stdscr, offset, start, name, value, color=curses.A_NORMAL, spacing=0):
-    stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
-    stdscr.addstr(offset, start + len(name) + 2 + spacing, value, color)
+    try:
+        stdscr.addstr(offset, start, name + ":", curses.A_BOLD)
+        stdscr.addstr(offset, start + len(name) + 2 + spacing, value, color)
+    except curses.error:
+        pass
     return len(name) + len(value) + 2
 # EOF

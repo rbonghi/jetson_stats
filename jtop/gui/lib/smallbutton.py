@@ -87,10 +87,13 @@ class HideButton(SmallButton):
             self.selected = not self.selected if self.toggle else True
             self.on_click(self.info, selected=self.selected)
             self.highlight_time = time.time()
-        if not self._pressed:
-            self.stdscr.addstr(y, x, '[{label}]'.format(label=self.label), curses.A_REVERSE if self.selected else curses.A_NORMAL)
-        else:
-            self.stdscr.addstr(y, x, '{label}'.format(label=self.label), curses.A_NORMAL)
+        try:
+            if not self._pressed:
+                self.stdscr.addstr(y, x, '[{label}]'.format(label=self.label), curses.A_REVERSE if self.selected else curses.A_NORMAL)
+            else:
+                self.stdscr.addstr(y, x, '{label}'.format(label=self.label), curses.A_NORMAL)
+        except curses.error:
+            pass
 
         if self.highlight_time and not self.toggle and time.time() - self.highlight_time > 0.1:
             self.selected = False
