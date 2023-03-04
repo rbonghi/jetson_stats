@@ -65,9 +65,10 @@ def main():
     except JtopException:
         pass
     # Print serial number
-    if not args.serial:
-        serial_number = "[XXX Show with: jetson_release -s XXX]"
-    print("{sn_string} {serial_number}".format(sn_string=bcolors.ok(bcolors.bold("Serial Number:")), serial_number=serial_number))
+    if serial_number:
+        if not args.serial:
+            serial_number = "[XXX Show with: jetson_release -s XXX]"
+        print("{sn_string} {serial_number}".format(sn_string=bcolors.ok(bcolors.bold("Serial Number:")), serial_number=serial_number))
     # Print jetson hardware variables
     if not args.verbose:
         for name in ['699-level Part Number', 'SoC', 'Codename', 'BoardIDs', 'CUDA Arch BIN']:
