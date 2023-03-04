@@ -14,4 +14,4 @@ Checklist:
 * [ ] Increase with a minor release jtop variable **`__version__`** in **`jtop/__init__.py`**
 * [ ] See if all tests pass
 * [ ] Merge the release pull request with message "`Jetpack Release <VERSION>`" where `<VERSION>` is the same release in **`jtop/__init__.py`**
-* [ ] Get the release Pull request approved
+* [ ] Get the release Pull request approved by a [CODEOWNER](https://github.com/rbonghi/jetson_stats/blob/main/.github/CODEOWNERS)

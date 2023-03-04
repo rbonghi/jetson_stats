@@ -61,7 +61,7 @@ There are two way to fix it:
 
 .. code-block:: bash
 
-    usermod -a -G jtop  $USER
+    sudo usermod -a -G jtop  $USER
 
 remember to logout/login.
 

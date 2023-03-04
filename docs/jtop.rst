@@ -90,9 +90,9 @@ Health
 
 If something goes wrong, you can check the ``jtop`` status with
 
-.. code-block:: console
+.. code-block:: bash
 
-  jtop --health
+  sudo jtop --health
 
 .. image:: /images/jetson_config-02-jtop.png
    :align: center
@@ -108,7 +108,7 @@ Restore
 
 If you want to restore the original board configuration you can simply write
 
-.. code-block:: console
+.. code-block:: bash
 
   jtop --restore
 
@@ -128,7 +128,7 @@ This option change the red color for text and background to blue.
 
 To enable this feature you can add this option
 
-.. code-block:: console
+.. code-block:: bash
 
   jtop --color-filter
 
@@ -148,7 +148,7 @@ Error-log
 
 If your board is not included, jetpack missing, hardware missing, you can launch this script
 
-.. code-block:: console
+.. code-block:: bash
 
   jtop --error-log
 
