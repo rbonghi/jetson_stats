@@ -20,8 +20,9 @@
 # os.environ['SHELL']
 
 from copy import deepcopy
-# jtop variables
-from .core.jetson_variables import get_raw_output, get_platform_variables
+# jtop variable
+from .core.hardware import get_platform_variables
+from .core.jetson_variables import get_raw_output
 from .terminal_colors import bcolors
 
 

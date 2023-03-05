@@ -34,7 +34,7 @@ from multiprocessing.managers import SyncManager
 # jetson_stats imports
 from .core.exceptions import JtopException
 from .core.common import get_key, get_var, get_uptime
-from .core.jetson_variables import get_jetson_variables, get_platform_variables
+from .core.hardware import get_hardware, get_platform_variables
 from .core.command import Command
 from .core.config import Config
 from .core.timer_reader import TimerReader
@@ -271,7 +271,7 @@ class JtopServer(Process):
         # Generate key and open broadcaster
         self.broadcaster = JtopManager()
         # Load board and platform variables
-        self.board = {'hardware': get_jetson_variables()}
+        self.board = {'hardware': get_hardware()}
         data_platform = get_platform_variables()
         logger.info("Running on Python: {python_version}".format(python_version=data_platform['Python']))
         # From this point are initialized or hardware services

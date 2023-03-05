@@ -118,7 +118,8 @@ def main():
         try:
             with jtop(interval=interval) as jetson:
                 # Write warnings
-                warning_messages(jetson, args.no_warnings)
+                if 'L4T' in jetson.board['hardware']:
+                    warning_messages(jetson, args.no_warnings)
                 # Restore configuration
                 if jetson.ok():
                     for status, name in jetson.restore():
@@ -158,7 +159,8 @@ def main():
             curses.wrapper(JTOPGUI, jetson, pages, init_page=args.page,
                            loop=args.loop, seconds=LOOP_SECONDS, color_filter=color_filter)
             # Write warnings
-            warning_messages(jetson, args.no_warnings)
+            if 'L4T' in jetson.board['hardware']:
+                warning_messages(jetson, args.no_warnings)
     except (KeyboardInterrupt, SystemExit):
         pass
     except JtopException as e:

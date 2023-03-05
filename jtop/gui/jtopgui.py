@@ -192,10 +192,12 @@ class JTOPGUI:
     def header(self):
         self.title_terminal()
         # Detect if jtop is running on jetson or on other platforms
-        if self.jetson.board['hardware']['L4T']:
+        if self.jetson.board['platform']['Machine'] == 'x86_64':
+            self.header_x86()
+        elif 'L4T' in self.jetson.board['hardware']:
             self.header_jetson()
         else:
-            self.header_x86()
+            self.stdscr.addstr(0, 0, "Unrecognized hardware", curses.A_BOLD)
 
     def header_x86(self):
         platform = self.jetson.board['platform']

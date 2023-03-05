@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
 from threading import Thread
 from .service import JtopManager
-from .core.jetson_variables import get_platform_variables
+from .core.hardware import get_platform_variables
 from .core.memory import Memory
 from .core.fan import Fan
 from .core.gpu import GPU

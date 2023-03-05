@@ -20,18 +20,12 @@ import os
 import re
 import sys
 import warnings
-import platform
 import logging
 from shutil import copyfile
 try:
-    from smbus2 import SMBus
+    from smbus2 import SMBus  # pyright: ignore[reportMissingImports]
 except ImportError:
     print("Skip for setup.py")
-# Load distro library from python3 or use platform
-try:
-    import distro
-except ImportError:
-    distro = platform
 
 from .common import cat
 from .command import Command
@@ -345,16 +339,6 @@ def get_jetson_variables():
     # Read Jetpack
     hardware['Jetpack'] = NVIDIA_JETPACK.get(hardware['L4T'], '')
     return hardware
-
-
-def get_platform_variables():
-    return {
-        'Machine': platform.machine(),
-        'System': platform.system(),
-        'Distribution': " ".join(distro.linux_distribution()),
-        'Release': platform.release(),
-        'Python': platform.python_version(),
-    }
 
 
 def status_variables(name=JTOP_VARIABLE_FILE):

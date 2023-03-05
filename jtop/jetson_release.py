@@ -19,7 +19,8 @@ import re
 import argparse
 from .core.common import get_var
 from .core.nvpmodel import nvpmode_query
-from .core.jetson_variables import get_jetson_variables, get_platform_variables
+from .core.hardware import get_platform_variables
+from .core.jetson_variables import get_jetson_variables
 from .core.jetson_libraries import get_libraries, get_cuda, get_opencv
 from .core.exceptions import JtopException
 from .service import status_service
