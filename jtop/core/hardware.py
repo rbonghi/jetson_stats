@@ -55,11 +55,11 @@ def get_x86_64_variables():
         output = ""
         if os.path.isfile(path):
             output = cat(path).strip()
-        if output:
-            name = item.replace("_", " ").capitalize()
-            hardware[name] = output
+        if not output or output == 'Default string':
+            continue
+        name = item.replace("_", " ").capitalize()
+        hardware[name] = output
     return hardware
-
 
 def get_hardware():
     # If hardware is ARM check if NVIDIA Jetson
