@@ -528,10 +528,10 @@ class jtop(Thread):
         time          :py:class:`datetime.datetime`                            local time in your board
         uptime        :py:class:`datetime.timedelta` :py:attr:`~uptime`        up time on your board
         cpu **X**     :py:class:`float`              :py:attr:`~cpu`           The status for each cpu in your board, if disabled *OFF*
-        RAM           :py:class:`float`              :py:attr:`~memory`        RAM used
-        SWAP          :py:class:`float`              :py:attr:`~memory`        SWAP used
-        EMC           :py:class:`float`              :py:attr:`~memory`        *(Optional)* EMC used
-        IRAM          :py:class:`float`              :py:attr:`~memory`        *(Optional)* IRAM used
+        RAM           :py:class:`float`              :py:attr:`~memory`        RAM used / total
+        SWAP          :py:class:`float`              :py:attr:`~memory`        SWAP used / total
+        EMC           :py:class:`float`              :py:attr:`~memory`        *(Optional)* EMC Percentage of bandwidth
+        IRAM          :py:class:`float`              :py:attr:`~memory`        *(Optional)* IRAM used / total
         GPU           :py:class:`float`              :py:attr:`~gpu`           *(Optional)* Status of your GPU
         engine **X**  :py:class:`float`              :py:attr:`~engine`        *(Optional)* Frequency for each engine, if disabled *OFF*
         fan           :py:class:`float`              :py:attr:`~fan`           *(Optional)* Fan speed
@@ -549,12 +549,15 @@ class jtop(Thread):
         for idx, cpu in enumerate(self.cpu['cpu']):
             stats["CPU{idx}".format(idx=idx + 1)] = 100 - int(cpu['idle']) if cpu['online'] else 'OFF'
         # -- MEMORY --
-        stats['RAM'] = self.memory['RAM']['used']
-        stats['SWAP'] = self.memory['SWAP']['used']
+        tot_ram = self.memory['RAM']['tot']
+        stats['RAM'] = self.memory['RAM']['used'] / tot_ram if tot_ram > 0 else 0
+        tot_swap = self.memory['SWAP']['tot']
+        stats['SWAP'] = self.memory['SWAP']['used'] / tot_swap if tot_swap > 0 else 0
         if 'EMC' in self.memory:
             stats['EMC'] = self.memory['EMC']['val']
         if 'IRAM' in self.memory:
-            stats['IRAM'] = self.memory['IRAM']['used']
+            tot_iram = self.memory['IRAM']['tot']
+            stats['IRAM'] = float(self.memory['IRAM']['used']) / tot_iram if tot_iram > 0 else 0
         # -- GPU --
         for idx, gpu in enumerate(self.gpu.values()):
             gpu_name = 'GPU' if idx == 0 else 'GPU{idx}'.format(idx=idx)
