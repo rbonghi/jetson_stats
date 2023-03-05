@@ -51,7 +51,7 @@ def test_fan_set_profile(setup_jtop_server):
 def test_fan_set_speed(setup_jtop_server):
     with jtop() as jetson:
         # Set a new fan speed
-        set_fan_speed(jetson, 50)
+        set_fan_speed(jetson, 100)
 
 
 test_fan = pytest.mark.parametrize("setup_jtop_server", emulate_all_devices(), indirect=True)(test_fan)
