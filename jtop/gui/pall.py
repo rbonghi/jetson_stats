@@ -164,7 +164,8 @@ class ALL(Page):
             self.stdscr.addch(pos_y_mini_menu + self._max_height_menu - 1, width - 1, curses.ACS_LRCORNER)
             self.stdscr.hline(pos_y_mini_menu + self._max_height_menu - 1, 1, curses.ACS_HLINE, width - 2)
         except curses.error:
-            pass
+            self.stdscr.addch(pos_y_mini_menu + column_height - 2, 0, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
+            self.stdscr.addch(pos_y_mini_menu + column_height - 2, width - 1, curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
         # Cancel columns depend of the width size
         n_print = n_columns
         if width < 75 and n_columns > 1:
@@ -179,5 +180,9 @@ class ALL(Page):
             if nline < n_print - 1:
                 self.stdscr.addch(pos_y_mini_menu, column_width * (nline + 1), curses.ACS_TTEE)
                 self.stdscr.vline(pos_y_mini_menu + 1, column_width * (nline + 1), curses.ACS_VLINE, column_height - 3)
-                self.stdscr.addch(pos_y_mini_menu + column_height - 2, column_width * (nline + 1), curses.ACS_BTEE)
+                if height_free_area > offset_process_y:
+                    self.stdscr.addch(pos_y_mini_menu + column_height - 2, column_width * (nline + 1), curses.ACS_BTEE)
+                else:
+                    self.stdscr.addch(pos_y_mini_menu + column_height - 2, column_width * (nline + 1),
+                                      curses.ACS_DARROW, curses.A_REVERSE | curses.A_BOLD)
 # EOF
