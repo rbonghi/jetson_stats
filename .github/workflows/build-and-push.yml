@@ -116,7 +116,7 @@ jobs:
           sphinx-build -b html -W . _build/html
       - name: Export website
         id: export_website
-        if: ${{ !startsWith(github.ref, 'refs/heads/master') && startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ !startsWith(github.ref, 'refs/heads/master') }}
         uses: actions/upload-artifact@v3
         with:
           name: html
