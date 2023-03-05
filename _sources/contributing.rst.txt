@@ -56,18 +56,6 @@ Clone and build in developer mode jetson-stats
    cd jetson_stats
    sudo pip3 install -v -e .
 
-.. note::
-   
-   You can also testing on x86 machines, installing the emulation for *tegrastats*, *nvpmodel* and *jetson_clocks*
-
-   .. code-block:: console
-
-      sudo ./tests/develop.sh
-
-   .. danger::
-
-      Do not install on Jetson! Otherwise will overwrite your files.
-
 
 Manually stop and disable jtop service
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -154,14 +142,14 @@ You can run this command from your terminal `python3 -m jtop.tests_gui.x` where 
 
    python3 -m jtop.tests_gui.gui_page 
 
-Releases
---------
+Release
+-------
 
-- Announce intent to release on Discord, see if anyone wants to include last minute changes.
+- Announce intent to release on `Discord <https://discord.gg/BFbuJNhYzS>`_, see if anyone wants to include last minute changes.
 - Update ``jtop/__init__.py`` with the proper version number
 - Commit the changes to a ``release-X.Y.Z`` branch.
-- Create a pull request
-- Release a new `tag <https://git-scm.com/book/en/v2/Git-Basics-Tagging>`_ will automatically generate a new version
+- Create a pull request with name ``Release/X.Y.Z``
+- Release a new `tag <https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme>`_ will automatically generate a new version
 
 .. code-block:: console
    :class: no-copybutton

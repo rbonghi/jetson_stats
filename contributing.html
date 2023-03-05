@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="🆘 Troubleshooting" href="troubleshooting.html" />
 
     <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 -->
-        <title>✨ Contributing - jetson-stats 4.1.5</title>
+        <title>✨ Contributing - jetson-stats 4.2.0rc0</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
@@ -141,7 +141,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">jetson-stats 4.1.5</div></a>
+      <a href="index.html"><div class="brand">jetson-stats 4.2.0rc0</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -164,7 +164,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">jetson-stats 4.1.5</span>
+  <span class="sidebar-brand-text">jetson-stats 4.2.0rc0</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -179,8 +179,17 @@
 <li class="toctree-l1"><a class="reference internal" href="jtop.html">📊 jtop</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">👨‍💻 Advanced Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="docker.html">🐋 Docker</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">📖 API Reference</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="other-tools/index.html">🧰 Other tools</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference/index.html">📖 API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/jtop.html">jtop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/gpu.html">GPU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/fan.html">Fan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/jetson_clocks.html">jetson_clocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/nvpmodel.html">NVPModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/exceptions.html">Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="other-tools/index.html">🧰 Other tools</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_config.html">jetson_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_release.html">jetson_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_swap.html">jetson_swap</a></li>
@@ -294,17 +303,6 @@ as expected.</p></li>
 <span class="go">sudo pip3 install -v -e .</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>You can also testing on x86 machines, installing the emulation for <em>tegrastats</em>, <em>nvpmodel</em> and <em>jetson_clocks</em></p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo ./tests/develop.sh</span>
-</pre></div>
-</div>
-<div class="admonition danger">
-<p class="admonition-title">Danger</p>
-<p>Do not install on Jetson! Otherwise will overwrite your files.</p>
-</div>
-</div>
 </section>
 <section id="manually-stop-and-disable-jtop-service">
 <h3>Manually stop and disable jtop service<a class="headerlink" href="#manually-stop-and-disable-jtop-service" title="Permalink to this heading">#</a></h3>
@@ -374,14 +372,14 @@ following the commands below</p>
 </div>
 </section>
 </section>
-<section id="releases">
-<h2>Releases<a class="headerlink" href="#releases" title="Permalink to this heading">#</a></h2>
+<section id="release">
+<h2>Release<a class="headerlink" href="#release" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Announce intent to release on Discord, see if anyone wants to include last minute changes.</p></li>
+<li><p>Announce intent to release on <a class="reference external" href="https://discord.gg/BFbuJNhYzS">Discord</a>, see if anyone wants to include last minute changes.</p></li>
 <li><p>Update <code class="docutils literal notranslate"><span class="pre">jtop/__init__.py</span></code> with the proper version number</p></li>
 <li><p>Commit the changes to a <code class="docutils literal notranslate"><span class="pre">release-X.Y.Z</span></code> branch.</p></li>
-<li><p>Create a pull request</p></li>
-<li><p>Release a new <a class="reference external" href="https://git-scm.com/book/en/v2/Git-Basics-Tagging">tag</a> will automatically generate a new version</p></li>
+<li><p>Create a pull request with name <code class="docutils literal notranslate"><span class="pre">Release/X.Y.Z</span></code></p></li>
+<li><p>Release a new <a class="reference external" href="https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme">tag</a> will automatically generate a new version</p></li>
 </ul>
 <div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git tag -a &lt;VERSION&gt; -m &lt;MESSAGE&gt;</span>
 </pre></div>
@@ -457,7 +455,7 @@ following the commands below</p>
 <li><a class="reference internal" href="#test-gui">Test GUI</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#releases">Releases</a></li>
+<li><a class="reference internal" href="#release">Release</a></li>
 </ul>
 </li>
 </ul>

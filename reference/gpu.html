@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="jetson_swap" href="jetson_swap.html" /><link rel="prev" title="jetson_config" href="jetson_config.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Memory" href="memory.html" /><link rel="prev" title="jtop" href="jtop.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 -->
-        <title>jetson_release - jetson-stats 4.2.0rc0</title>
+        <title>GPU - jetson-stats 4.2.0rc0</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -152,7 +152,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -179,21 +179,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../jtop.html">📊 jtop</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced-usage.html">👨‍💻 Advanced Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../docker.html">🐋 Docker</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/index.html">📖 API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../reference/jtop.html">jtop</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../reference/gpu.html">GPU</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../reference/memory.html">Memory</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../reference/fan.html">Fan</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../reference/jetson_clocks.html">jetson_clocks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../reference/nvpmodel.html">NVPModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../reference/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">📖 API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="jtop.html">jtop</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">GPU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fan.html">Fan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jetson_clocks.html">jetson_clocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nvpmodel.html">NVPModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">🧰 Other tools</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="jetson_config.html">jetson_config</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">jetson_release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="jetson_swap.html">jetson_swap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="environment_variables.html">Environment variables</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../other-tools/index.html">🧰 Other tools</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_config.html">jetson_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_release.html">jetson_release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_swap.html">jetson_swap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/environment_variables.html">Environment variables</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">🆘 Troubleshooting</a></li>
@@ -233,7 +233,7 @@
         </a>
         <div class="content-icon-container">
           <div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/rbonghi/jetson_stats/edit/master/docs/other-tools/jetson_release.rst" title="Edit this page">
+  <a class="muted-link" href="https://github.com/rbonghi/jetson_stats/edit/master/docs/reference/gpu.rst" title="Edit this page">
     <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
@@ -249,33 +249,100 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="jetson-release">
-<h1>jetson_release<a class="headerlink" href="#jetson-release" title="Permalink to this heading">#</a></h1>
-<p>The command show the status and all information about your NVIDIA Jetson</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jetson_release
+          <section id="gpu">
+<h1>GPU<a class="headerlink" href="#gpu" title="Permalink to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="jtop.core.gpu.GPU">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.gpu.</span></span><span class="sig-name descname"><span class="pre">GPU</span></span><a class="headerlink" href="#jtop.core.gpu.GPU" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">GenericInterface</span></code></p>
+<p>This class get the output from your GPU, this class is readable like a dictionary,
+please read the documentation on <a class="reference internal" href="jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a> but is also usable to enable, disable 3d scaling on your device.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">&quot;gpu&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<img alt="../_images/jetson_release.png" class="align-center" src="../_images/jetson_release.png" />
-<p>Options available</p>
-<div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@jetson-nano:~$ </span>jetson_release<span class="w"> </span>--help
-<span class="go">Software part of jetson-stats 4.2.0 - (c) 2023, Raffaello Bonghi</span>
-<span class="go">usage: jetson_release [-h] [-v] [-s]</span>
+<p>Below all methods available using the <a class="reference internal" href="jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a> attribute</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.core.gpu.GPU.get_scaling_3D">
+<span class="sig-name descname"><span class="pre">get_scaling_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.gpu.GPU.get_scaling_3D" title="Permalink to this definition">#</a></dt>
+<dd><p>Return status of 3D scaling, this output is also readable from <a class="reference internal" href="jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a> attribute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – GPU name</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#jtop.JtopException" title="jtop.JtopException"><strong>JtopException</strong></a> – if GPU doesn’t exist</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>status 3D scaling</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
 
-<span class="go">Show detailed information about this board. Machine, Jetpack, libraries and</span>
-<span class="go">other</span>
-
-<span class="go">optional arguments:</span>
-<span class="go">-h, --help     show this help message and exit</span>
-<span class="go">-v, --verbose  Show all variables (default: False)</span>
-<span class="go">-s, --serial   Show serial number (default: False)</span>
+<dl class="py property">
+<dt class="sig sig-object py" id="jtop.core.gpu.GPU.scaling_3D">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scaling_3D</span></span><a class="headerlink" href="#jtop.core.gpu.GPU.scaling_3D" title="Permalink to this definition">#</a></dt>
+<dd><p>Return status of 3D scaling, this output is also readable from <a class="reference internal" href="jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a> attribute</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
+        <span class="c1"># Set new 3D scaling</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># same of</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">&quot;ga10b&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#jtop.JtopException" title="jtop.JtopException"><strong>JtopException</strong></a> – if there are no integrated GPU</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>status 3D scaling</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="jtop.core.gpu.GPU.set_scaling_3D">
+<span class="sig-name descname"><span class="pre">set_scaling_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.gpu.GPU.set_scaling_3D" title="Permalink to this definition">#</a></dt>
+<dd><p>Enable disable GPU 3D scaling. this method send a command like below on your Jetson.</p>
+<p>Set 3D scaling on your board, like the command below. To know the GPU name use <a class="reference internal" href="jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">&quot;ga10b&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>is equivalent to:</p>
+<div class="no-copybutton highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="m">1</span><span class="w"> </span>&gt;<span class="w"> </span>/sys/devices/17000000.ga10b/enable_3d_scaling
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – GPU name</p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Enable/Disable 3D scaling</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#jtop.JtopException" title="jtop.JtopException"><strong>JtopException</strong></a> – if GPU doesn’t exist</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article>
@@ -283,23 +350,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="jetson_swap.html">
+          <a class="next-page" href="memory.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">jetson_swap</div>
+                <div class="title">Memory</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="jetson_config.html">
+          <a class="prev-page" href="jtop.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">jetson_config</div>
+                <div class="title">jtop</div>
                 
               </div>
             </a>
@@ -328,8 +395,32 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">GPU</a><ul>
+<li><a class="reference internal" href="#jtop.core.gpu.GPU"><code class="docutils literal notranslate"><span class="pre">GPU</span></code></a><ul>
+<li><a class="reference internal" href="#jtop.core.gpu.GPU.get_scaling_3D"><code class="docutils literal notranslate"><span class="pre">GPU.get_scaling_3D()</span></code></a></li>
+<li><a class="reference internal" href="#jtop.core.gpu.GPU.scaling_3D"><code class="docutils literal notranslate"><span class="pre">GPU.scaling_3D</span></code></a></li>
+<li><a class="reference internal" href="#jtop.core.gpu.GPU.set_scaling_3D"><code class="docutils literal notranslate"><span class="pre">GPU.set_scaling_3D()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

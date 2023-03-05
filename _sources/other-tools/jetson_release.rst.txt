@@ -16,12 +16,13 @@ Options available
     :class: no-copybutton
 
     nvidia@jetson-nano:~$ jetson_release --help
-    Software part of jetson-stats 4.1.0 - (c) 2023, Raffaello Bonghi
-    usage: jetson_release [-h] [-v]
+    Software part of jetson-stats 4.2.0 - (c) 2023, Raffaello Bonghi
+    usage: jetson_release [-h] [-v] [-s]
 
     Show detailed information about this board. Machine, Jetpack, libraries and
     other
 
     optional arguments:
-    -h, --help  show this help message and exit
-    -v          Show all variables (default: False)
+    -h, --help     show this help message and exit
+    -v, --verbose  Show all variables (default: False)
+    -s, --serial   Show serial number (default: False)
