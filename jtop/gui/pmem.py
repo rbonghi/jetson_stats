@@ -213,7 +213,7 @@ class MEM(Page):
         used = size_to_string(self.jetson.memory['RAM']['used'], 'k')
         plot_name_info(self.stdscr, pos_y + 1, pos_x + 1, 'Used', used, spacing=3, color=NColors.cyan())
         shared = size_to_string(self.jetson.memory['RAM']['shared'], 'k')
-        plot_name_info(self.stdscr, pos_y + 2, pos_x + 1, 'Shared', shared, spacing=1, color=NColors.green())
+        plot_name_info(self.stdscr, pos_y + 2, pos_x + 1, 'GPU Sh', shared, spacing=1, color=NColors.green())
         buffers = size_to_string(self.jetson.memory['RAM']['buffers'], 'k')
         plot_name_info(self.stdscr, pos_y + 3, pos_x + 1, 'Buffers', buffers, color=NColors.blue())
         cached = size_to_string(self.jetson.memory['RAM']['cached'], 'k')
