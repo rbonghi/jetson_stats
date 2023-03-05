@@ -37,10 +37,11 @@ class SmallButton(object):
             self.selected = not self.selected if self.toggle else True
             self.on_click(self.info, selected=self.selected)
             self.highlight_time = time.time()
-        elif key == self.trigger_key:
-            self.selected = not self.selected if self.toggle else True
-            self.on_click(self.info, selected=self.selected)
-            self.highlight_time = time.time()
+        elif self.trigger_key:
+            if key == ord(self.trigger_key):
+                self.selected = not self.selected if self.toggle else True
+                self.on_click(self.info, selected=self.selected)
+                self.highlight_time = time.time()
 
         color_normal = color if color else curses.A_NORMAL
 
@@ -49,8 +50,10 @@ class SmallButton(object):
             #                   label=" " + label if label else ""), curses.A_REVERSE if self.selected else color_normal)
             self.stdscr.addstr(y, x, '[', curses.A_REVERSE if self.selected else curses.A_NORMAL)
             self.stdscr.addstr('{trigger_key}'.format(trigger_key=self.trigger_key), curses.A_REVERSE if self.selected else color_normal)
-            self.stdscr.addstr(']', curses.A_REVERSE if self.selected else curses.A_NORMAL)
+            if label:
+                self.stdscr.addstr('|', curses.A_REVERSE if self.selected else curses.A_NORMAL)
             self.stdscr.addstr('{label}'.format(label=" " + label if label else ""), curses.A_REVERSE if self.selected else color_normal)
+            self.stdscr.addstr(']', curses.A_REVERSE if self.selected else curses.A_NORMAL)
         else:
             # self.stdscr.addstr(y, x, '[{label}]'.format(label=label), curses.A_REVERSE if self.selected else color_normal)
             self.stdscr.addstr(y, x, '[', curses.A_REVERSE if self.selected else curses.A_NORMAL)
@@ -72,9 +75,9 @@ class SmallButton(object):
 
 class HideButton(SmallButton):
 
-    def __init__(self, stdscr, text):
-        hide_message = "XXX CLICK TO READ XXX"
-        super(HideButton, self).__init__(stdscr, self.action_on_click, label=hide_message)
+    def __init__(self, stdscr, key, text):
+        hide_message = "XX CLICK TO READ XXX"
+        super(HideButton, self).__init__(stdscr, self.action_on_click, trigger_key=key, label=hide_message)
         self._text = text
         self._pressed = False
 
@@ -82,14 +85,20 @@ class HideButton(SmallButton):
         self.label = self._text
         self._pressed = True
 
-    def update(self, y, x, mouse):
+    def update(self, y, x, label='', key=None, mouse=None, color=None):
         if mouse and mouse[1] == y and x <= mouse[0] <= x + len(self.label) + 1:
             self.selected = not self.selected if self.toggle else True
             self.on_click(self.info, selected=self.selected)
             self.highlight_time = time.time()
+        if key == ord(self.trigger_key):
+            self.selected = not self.selected if self.toggle else True
+            self.on_click(self.info, selected=self.selected)
+            self.highlight_time = time.time()
+
         try:
             if not self._pressed:
-                self.stdscr.addstr(y, x, '[{label}]'.format(label=self.label), curses.A_REVERSE if self.selected else curses.A_NORMAL)
+                self.stdscr.addstr(y, x, '[{key}|{label}]'.format(key=self.trigger_key, label=self.label),
+                                   curses.A_REVERSE if self.selected else curses.A_NORMAL)
             else:
                 self.stdscr.addstr(y, x, '{label}'.format(label=self.label), curses.A_NORMAL)
         except curses.error:

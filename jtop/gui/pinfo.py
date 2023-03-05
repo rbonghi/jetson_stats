@@ -77,7 +77,7 @@ class INFO(Page):
         if 'Serial Number' in hardware:
             if self.jetson.board['hardware']['Serial Number']:
                 serial_number = hardware['Serial Number']
-                self._hide_serial_number = HideButton(stdscr, serial_number)
+                self._hide_serial_number = HideButton(stdscr, 's', serial_number)
 
     def draw(self, key, mouse):
         """
@@ -109,7 +109,7 @@ class INFO(Page):
                     self.stdscr.addstr(start_pos, 1 + platform_size_x + 1, "Serial Number:", curses.A_BOLD)
                 except curses.error:
                     pass
-                self._hide_serial_number.update(start_pos, 1 + platform_size_x + 16, mouse)
+                self._hide_serial_number.update(start_pos, 1 + platform_size_x + 16, key=key, mouse=mouse)
                 offset_y_sn = 1
         hardware_size_y, hardware_size_x = plot_hardware(self.stdscr,
                                                          start_pos + offset_y_sn,
