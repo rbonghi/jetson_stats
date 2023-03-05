@@ -64,13 +64,14 @@ def get_x86_64_variables():
 def get_hardware():
     # If hardware is ARM check if NVIDIA Jetson
     platform_board = platform.machine()
-    logger.info("Platform detected {}".format(platform_board))
+    logger.info("Hardware detected {}".format(platform_board))
     if platform_board == 'aarch64':
         # Load Jetson data
         jetson = get_jetson_variables()
         if jetson['L4T']:
             logger.info("NVIDIA Jetson detected L4T={}".format(jetson['L4T']))
             return jetson
+        return {}
     elif platform_board == 'x86_64':
         return get_x86_64_variables()
     else:
