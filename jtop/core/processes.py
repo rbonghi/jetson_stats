@@ -160,7 +160,9 @@ class ProcessService(object):
 
         process = [
             int(pid),               # pid process
-            self.usernames[uid],    # uid
+            self.usernames[uid],    # username
+            "I",                    # GPU name
+            "Graphic",              # type process
             int(stat[17]),          # Priority
             stat[2],                # state
             cpu_percent,            # CPU percent

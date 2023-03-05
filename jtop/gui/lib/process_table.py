@@ -23,10 +23,12 @@ from .common import size_to_string
 
 header = [
     ("PID", {'clm': 7, 'fn': lambda x: str(x)}),
-    ("USER", {'clm': 12, 'fn': lambda x: x}),
-    ("PRI", {'clm': 6, 'fn': lambda x: str(x)}),
+    ("USER", {'clm': 9, 'fn': lambda x: x}),
+    ("GPU", {'clm': 5, 'fn': lambda x: x}),
+    ("TYPE", {'clm': 6, 'fn': lambda x: x[0]}),
+    ("PRI", {'clm': 5, 'fn': lambda x: str(x)}),
     ("S", {'clm': 4, 'fn': lambda x: x}),
-    ("CPU%", {'clm': 8, 'fn': lambda x: "{:.1f}".format(x)}),
+    ("CPU%", {'clm': 7, 'fn': lambda x: "{:.1f}".format(x)}),
     ("MEM", {'clm': 8, 'fn': lambda x: size_to_string(x, 'k')}),
     ("GPU MEM", {'clm': 12, 'fn': lambda x: size_to_string(x, 'k')}),
     ("Command", {'clm': 20, 'fn': lambda x: x}),

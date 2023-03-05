@@ -763,12 +763,14 @@ class jtop(Thread):
         ========== ================= =======================================
         0          :py:class:`int`   PID process running
         1          :py:class:`str`   User start the process
-        2          :py:class:`int`   Priority
-        3          :py:class:`str`   State process :sup:`A`
-        4          :py:class:`float` CPU percent utilization :sup:`B`
-        5          :py:class:`int`   Memory occupied :sup:`C`
-        6          :py:class:`int`   GPU Memory occupied :sup:`D`
-        7          :py:class:`str`   Process name
+        2          :py:class:`str`   GPU used :sup:`E`
+        3          :py:class:`str`   Type of process :sup:`F`
+        4          :py:class:`int`   Priority
+        5          :py:class:`str`   State process :sup:`A`
+        6          :py:class:`float` CPU percent utilization :sup:`B`
+        7          :py:class:`int`   Memory occupied :sup:`C`
+        8          :py:class:`int`   GPU Memory occupied :sup:`D`
+        9          :py:class:`str`   Process name
         ========== ================= =======================================
 
         .. note::
@@ -810,6 +812,16 @@ class jtop(Thread):
 
             Note **D**
                 This value is the GPU memory occupied from the process.
+
+            Note **E**
+                GPU used:
+                    * **I**: Integrated GPU
+                    * **dX**: Disctrete GPU with number graphic card (next release)
+
+            Note **F**
+                Type of process:
+                    * **Graphic**: Graphic process
+                    * **System**: System process (next release)
 
         .. admonition:: Reference
 
