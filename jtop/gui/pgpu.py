@@ -18,11 +18,9 @@
 import curses
 from .jtopgui import Page
 # Graphics elements
-from .lib.common import NColors
-from .lib.common import plot_name_info
+from .lib.common import NColors, plot_name_info, size_min, unit_to_string, size_to_string
 from .lib.chart import Chart
 from .lib.process_table import ProcessTable
-from .lib.common import unit_to_string
 from .lib.linear_gauge import basic_gauge, freq_gauge
 from .lib.smallbutton import SmallButton
 from .pcontrol import color_temperature
@@ -71,10 +69,15 @@ class GPU(Page):
         # Initialize GPU chart
         self.draw_gpus = {}
         for gpu_name in self.jetson.gpu:
-            chart = Chart(jetson, "GPU {name}".format(name=gpu_name), self.update_chart, color_text=curses.COLOR_GREEN)
+            type_gpu = "i" if self.jetson.gpu[gpu_name]['type'] == 'integrated' else 'd'
+            chart = Chart(jetson, "{t}GPU {name}".format(t=type_gpu, name=gpu_name), self.update_chart, color_text=curses.COLOR_GREEN)
             # button_railgate = SmallButton(stdscr, self.action_railgate, info={'name': gpu_name})
             button_3d_scaling = SmallButton(stdscr, self.action_scaling_3D, info={'name': gpu_name})
-            self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling}
+            if type_gpu == 'i':
+                chart_ram = Chart(jetson, "GPU Shared RAM", self.update_chart_ram, type_value=float, color_text=curses.COLOR_GREEN)
+            else:
+                chart_ram = None
+            self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling, 'ram': chart_ram}
         # Add Process table
         self.process_table = ProcessTable(self.stdscr, self.jetson)
 
@@ -100,6 +103,21 @@ class GPU(Page):
             'value': [gpu_status['load']],
         }
 
+    def update_chart_ram(self, jetson, name):
+        parameter = jetson.memory['RAM']
+        # Get max value if is present
+        max_val = parameter.get("tot", 100)
+        # Get value
+        use_val = parameter.get("shared", 0)
+        szw, divider, unit = size_min(max_val, start='k')
+        # Append in list
+        gpu_out = (use_val) / divider
+        return {
+            'value': [gpu_out],
+            'max': szw,
+            'unit': unit
+        }
+
     def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
@@ -114,25 +132,35 @@ class GPU(Page):
         # Draw all GPU
         for idx, (gpu_name, gpu_data) in enumerate(self.jetson.gpu.items()):
             chart = self.draw_gpus[gpu_name]['chart']
+            chart_ram = self.draw_gpus[gpu_name]['ram']
             gpu_status = gpu_data['status']
             gpu_freq = gpu_data['freq']
             # Set size chart gpu
-            size_x = [1, width - 2]
+            size_x = [1, width // 2 - 2]
             size_y = [first + 2 + idx * (gpu_height + 1), first + 2 + (idx + 1) * (gpu_height - 3)]
             # Print status CPU
             governor = gpu_freq.get('governor', '')
             label_chart_gpu = "{percent: >3.0f}% - gov: {governor}".format(percent=gpu_status['load'], governor=governor)
             # Draw GPU chart
             chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
+            # Draw GPU RAM chart
+            size_x_ram = [1 + width // 2, width - 2]
+            mem_data = self.jetson.memory['RAM']
+            total = size_to_string(mem_data['tot'], 'k')
+            shared = size_to_string(mem_data['shared'], 'k')
+            chart_ram.draw(self.stdscr, size_x_ram, size_y, label="{used}/{total}B".format(used=shared, total=total))
             # Print all status GPU
             button_position = width // 4
             button_idx = 0
             # 3D scaling
             scaling_string = "Active" if gpu_status['3d_scaling'] else "Disable"
             scaling_status = NColors.green() if gpu_status['3d_scaling'] else curses.A_NORMAL
-            self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling:", curses.A_BOLD)
-            self.draw_gpus[gpu_name]['3d_scaling'].update(first + 1 + (idx + 1) * gpu_height - 1, 12 + button_idx,
-                                                          scaling_string, key=key, mouse=mouse, color=scaling_status)
+            try:
+                self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling:", curses.A_BOLD)
+                self.draw_gpus[gpu_name]['3d_scaling'].update(first + 1 + (idx + 1) * gpu_height - 1, 12 + button_idx,
+                                                              scaling_string, key=key, mouse=mouse, color=scaling_status)
+            except curses.error:
+                pass
             button_idx += button_position
             # railgate status
             railgate_string = "Active" if gpu_status['railgate'] else "Disable"

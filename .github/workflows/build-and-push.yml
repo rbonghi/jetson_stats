@@ -82,11 +82,12 @@ jobs:
         uses: docker/build-push-action@v4.0.0
         with:
           push: |
-            github.actor != 'dependabot[bot]' &&
-            github.event_name != 'pull_request' &&
-            !startsWith(github.ref, 'refs/heads/feature/') &&
-            !endsWith(github.ref, '.dev*') &&
-            !endsWith(github.ref, 'rc*')
+              ${{ github.actor != 'dependabot[bot]' &&
+                  github.event_name != 'pull_request' &&
+                  !startsWith(github.ref, 'refs/heads/feature/') &&
+                  !endsWith(github.ref, '.dev*') &&
+                  !endsWith(github.ref, 'rc*')
+              }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64, linux/arm64

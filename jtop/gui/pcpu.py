@@ -110,12 +110,18 @@ class CPU(Page):
         # Print model
         model = cpu['model'] if 'model' in cpu else ''
         model = model[:size_w]
-        stdscr.addstr(pos_y + size_h - 1, pos_x, model, curses.A_NORMAL)
+        try:
+            stdscr.addstr(pos_y + size_h - 1, pos_x, model, curses.A_NORMAL)
+        except curses.error:
+            pass
         # Print info
         freq = cpu['freq']
         freq['online'] = cpu['online']
         freq['name'] = "Frq"
-        freq_gauge(stdscr, pos_y + size_h, pos_x, size_w, cpu['freq'])
+        try:
+            freq_gauge(stdscr, pos_y + size_h, pos_x, size_w, cpu['freq'])
+        except curses.error:
+            pass
 
     def draw(self, key, mouse):
         # Screen size

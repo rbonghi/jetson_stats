@@ -130,12 +130,18 @@ class ENGINE(Page):
             for idx, (name, engine) in enumerate(engines.items()):
                 name_array = name.split("_")
                 # Plot block name
-                if len(engines) > 1 and len(name_array) > 1:
-                    self.stdscr.addstr(offset_y + gidx * 2, offset_x + (size_eng + 1) * idx,
-                                       "{group}".format(group=group), NColors.cyan() | curses.A_BOLD)
+                try:
+                    if len(engines) > 1 and len(name_array) > 1:
+                        self.stdscr.addstr(offset_y + gidx * 2, offset_x + (size_eng + 1) * idx,
+                                           "{group}".format(group=group), NColors.cyan() | curses.A_BOLD)
+                except curses.error:
+                    pass
                 # Plot Gauge
                 new_name = ' '.join(name_array[1:]) if len(name_array) > 1 and len(engines) > 1 else name
                 # Add name in plot string
                 engine['name'] = new_name
-                freq_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, engine)
+                try:
+                    freq_gauge(self.stdscr, offset_y + gidx * 2 + 1, offset_x + (size_eng + 1) * idx, size_eng, engine)
+                except curses.error:
+                    pass
 # EOF

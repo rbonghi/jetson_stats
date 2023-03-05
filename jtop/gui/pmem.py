@@ -235,7 +235,10 @@ class MEM(Page):
             'mleft': "P{prio}".format(prio=swap['prio']),
             'mright': "{used}/{total}".format(used=used, total=total),
         }
-        basic_gauge(stdscr, pos_y, pos_x, size_w - 2, data)
+        try:
+            basic_gauge(stdscr, pos_y, pos_x, size_w - 2, data)
+        except curses.error:
+            pass
 
     def draw_swap_table(self, pos_y, pos_x, width, height, key, mouse):
         swap_info = self.jetson.memory['SWAP']
@@ -303,27 +306,42 @@ class MEM(Page):
             # Swap name and operation
             string_name = "{operation}{name}".format(operation=operation, name=name)
         # Swap controller button
-        label = string_name if string_name else 'Select swap'
-        self._button_swap.update(pos_y, pos_x, label, key, mouse, color=color)
+        try:
+            label = string_name if string_name else 'Select swap'
+            self._button_swap.update(pos_y, pos_x, label, key, mouse, color=color)
+        except curses.error:
+            pass
         # Button create new swap
-        self._button_create.update(pos_y + 2, pos_x, key=key, mouse=mouse)
-        self._button_boot.update(pos_y + 3, pos_x, key=key, mouse=mouse)
+        try:
+            self._button_create.update(pos_y + 2, pos_x, key=key, mouse=mouse)
+            self._button_boot.update(pos_y + 3, pos_x, key=key, mouse=mouse)
+        except curses.error:
+            pass
         # Draw selected number
-        if self._swap_size > self._swap_old_size:
-            color = NColors.green()
-        elif self._swap_size < self._swap_old_size:
-            color = NColors.yellow()
-        else:
-            color = curses.A_NORMAL
-        self.stdscr.addstr(pos_y + 4, pos_x + 5, "{size: <2}".format(size=self._swap_size), color)
-        self.stdscr.addstr(pos_y + 4, pos_x + 8, "GB", curses.A_BOLD)
+        try:
+            if self._swap_size > self._swap_old_size:
+                color = NColors.green()
+            elif self._swap_size < self._swap_old_size:
+                color = NColors.yellow()
+            else:
+                color = curses.A_NORMAL
+            self.stdscr.addstr(pos_y + 4, pos_x + 5, "{size: <2}".format(size=self._swap_size), color)
+            self.stdscr.addstr(pos_y + 4, pos_x + 8, "GB", curses.A_BOLD)
+        except curses.error:
+            pass
         # Draw buttons
-        self._button_decrease.update(pos_y + 4, pos_x, key=key, mouse=mouse)
-        self._button_increase.update(pos_y + 4, pos_x + 11, key=key, mouse=mouse)
+        try:
+            self._button_decrease.update(pos_y + 4, pos_x, key=key, mouse=mouse)
+            self._button_increase.update(pos_y + 4, pos_x + 11, key=key, mouse=mouse)
+        except curses.error:
+            pass
         # Draw swap name
         self._swap_name = self.get_new_swap_name()
-        self.stdscr.addstr(pos_y + 5, pos_x, "New: ")
-        self.stdscr.addstr(self._swap_name, NColors.yellow())
+        try:
+            self.stdscr.addstr(pos_y + 5, pos_x, "New: ")
+            self.stdscr.addstr(self._swap_name, NColors.yellow())
+        except curses.error:
+            pass
 
     def draw(self, key, mouse):
         swap_info = self.jetson.memory['SWAP']

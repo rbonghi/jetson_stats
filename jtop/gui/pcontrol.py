@@ -190,43 +190,70 @@ class CTRL(Page):
 
     def control_jetson_clocks(self, pos_y, pos_x, key, mouse):
         # Show jetson_clocks
-        self.stdscr.addstr(pos_y, pos_x, "Jetson Clocks:", curses.A_BOLD)
-        # Status jetson clocks
-        jetson_clocks_status = self.jetson.jetson_clocks.status
-        # Color status
-        if jetson_clocks_status == "running":
-            color = (curses.A_BOLD | NColors.green())  # Running (Bold)
-        elif jetson_clocks_status == "inactive":
-            color = curses.A_NORMAL       # Normal (Grey)
-        elif "ing" in jetson_clocks_status:
-            color = NColors.yellow()  # Warning (Yellow)
-        else:
-            color = NColors.red()  # Error (Red)
-        # Draw status button
-        self._jetson_clocks_start.update(pos_y, pos_x + 15, jetson_clocks_status, key, mouse, color=color)
+        try:
+            self.stdscr.addstr(pos_y, pos_x, "Jetson Clocks:", curses.A_BOLD)
+        except curses.error:
+            pass
+        # Draw jetson_clocks status button
+        try:
+            # Status jetson_clocks
+            jetson_clocks_status = self.jetson.jetson_clocks.status
+            # Color status
+            if jetson_clocks_status == "running":
+                color = (curses.A_BOLD | NColors.green())  # Running (Bold)
+            elif jetson_clocks_status == "inactive":
+                color = curses.A_NORMAL       # Normal (Grey)
+            elif "ing" in jetson_clocks_status:
+                color = NColors.yellow()  # Warning (Yellow)
+            else:
+                color = NColors.red()  # Error (Red)
+            self._jetson_clocks_start.update(pos_y, pos_x + 15, jetson_clocks_status, key, mouse, color=color)
+        except curses.error:
+            pass
         # Draw boot button
-        boot = self.jetson.jetson_clocks.boot
-        jetson_clocks_boot = "enable" if boot else "disable"
-        self.stdscr.addstr(pos_y, pos_x + 32, "on boot:", curses.A_BOLD)
-        color_boot = NColors.green() if boot else curses.A_NORMAL
-        self._jetson_clocks_boot.update(pos_y, pos_x + 40, jetson_clocks_boot, key, mouse, color=color_boot)
+        try:
+            self.stdscr.addstr(pos_y, pos_x + 32, "on boot:", curses.A_BOLD)
+        except curses.error:
+            pass
+        try:
+            boot = self.jetson.jetson_clocks.boot
+            jetson_clocks_boot = "enable" if boot else "disable"
+            color_boot = NColors.green() if boot else curses.A_NORMAL
+            self._jetson_clocks_boot.update(pos_y, pos_x + 40, jetson_clocks_boot, key, mouse, color=color_boot)
+        except curses.error:
+            pass
 
     def control_nvpmodes(self, pos_y, pos_x, key, mouse):
         # Draw all profiles
-        self.stdscr.addstr(pos_y, pos_x, "NVP modes:", curses.A_BOLD)
+        try:
+            self.stdscr.addstr(pos_y, pos_x, "NVP modes:", curses.A_BOLD)
+        except curses.error:
+            pass
         # Write ID NVP model
         id = self.jetson.nvpmodel.id
         color = NColors.yellow() if self.jetson.nvpmodel.is_running() else curses.A_BOLD
-        self.stdscr.addstr(pos_y, pos_x + 16, str(id), color)
+        try:
+            self.stdscr.addstr(pos_y, pos_x + 16, str(id), color)
+        except curses.error:
+            pass
         # Add buttons -/+
-        self._nvpmodel_decrease.update(pos_y, pos_x + 11, key=key, mouse=mouse)
-        self._nvpmodel_increase.update(pos_y, pos_x + 18, key=key, mouse=mouse)
+        try:
+            self._nvpmodel_decrease.update(pos_y, pos_x + 11, key=key, mouse=mouse)
+            self._nvpmodel_increase.update(pos_y, pos_x + 18, key=key, mouse=mouse)
+        except curses.error:
+            pass
         # Draw all modes
         current_mode = self.jetson.nvpmodel.name
         colors = [curses.A_NORMAL if status else NColors.red() for status in self.jetson.nvpmodel.status]
-        self._nvpmodel_profile.update(pos_y + 1, pos_x + 2, key, mouse, current_mode, colors)
-        # Write letter D for default
-        self.stdscr.addstr(pos_y + self._nvp_default['id'] + 1, pos_x, "D", curses.A_BOLD)
+        try:
+            self._nvpmodel_profile.update(pos_y + 1, pos_x + 2, key, mouse, current_mode, colors)
+        except curses.error:
+            pass
+        try:
+            # Write letter D for default
+            self.stdscr.addstr(pos_y + self._nvp_default['id'] + 1, pos_x, "D", curses.A_BOLD)
+        except curses.error:
+            pass
 
     def control_power(self, pos_y, pos_x, key, mouse):
         if not self.jetson.power:
@@ -236,55 +263,91 @@ class CTRL(Page):
         # Draw all power
         power = self.jetson.power['rail']
         # Draw head table
-        self.stdscr.addch(pos_y, pos_x, curses.ACS_ULCORNER)
-        self.stdscr.addch(pos_y, pos_x + width - 1, curses.ACS_URCORNER)
-        self.stdscr.hline(pos_y, pos_x + 1, curses.ACS_HLINE, width - 2)
-        self.stdscr.addstr(pos_y, pos_x + 5, " Power ", curses.A_BOLD)
+        try:
+            self.stdscr.addch(pos_y, pos_x, curses.ACS_ULCORNER)
+            self.stdscr.addch(pos_y, pos_x + width - 1, curses.ACS_URCORNER)
+            self.stdscr.hline(pos_y, pos_x + 1, curses.ACS_HLINE, width - 2)
+            self.stdscr.addstr(pos_y, pos_x + 5, " Power ", curses.A_BOLD)
+        except curses.error:
+            pass
         # Draw header table
-        self.stdscr.addstr(pos_y + 1, pos_x, "[Name]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y + 1, pos_x + 18, "[Power]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y + 1, pos_x + 26, "[Volt]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y + 1, pos_x + 33, "[Curr]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y + 1, pos_x + 40, "[Warn]", curses.A_BOLD)
-        self.stdscr.addstr(pos_y + 1, pos_x + 47, "[Crit]", curses.A_BOLD)
+        try:
+            self.stdscr.addstr(pos_y + 1, pos_x, "[Name]", curses.A_BOLD)
+            self.stdscr.addstr(pos_y + 1, pos_x + 18, "[Power]", curses.A_BOLD)
+            self.stdscr.addstr(pos_y + 1, pos_x + 26, "[Volt]", curses.A_BOLD)
+            self.stdscr.addstr(pos_y + 1, pos_x + 33, "[Curr]", curses.A_BOLD)
+            self.stdscr.addstr(pos_y + 1, pos_x + 40, "[Warn]", curses.A_BOLD)
+            self.stdscr.addstr(pos_y + 1, pos_x + 47, "[Crit]", curses.A_BOLD)
+        except curses.error:
+            pass
         # Draw all values
         pos_y_table = pos_y + 2
         for idx, name in enumerate(power):
             value = power[name]
-            self.stdscr.addstr(pos_y_table + idx, pos_x, name, curses.A_NORMAL)
+            try:
+                self.stdscr.addstr(pos_y_table + idx, pos_x, name, curses.A_NORMAL)
+            except curses.error:
+                pass
             # Convert all values in readable strings
             unit_volt = unit_to_string(value['volt'], 'm', 'V')
             unit_curr = unit_to_string(value['curr'], 'm', 'A')
             unit_power = unit_to_string(value['power'], 'm', 'W')
             # Print all values
-            self.stdscr.addstr(pos_y_table + idx, pos_x + 18, unit_power, curses.A_NORMAL)
-            self.stdscr.addstr(pos_y_table + idx, pos_x + 26, unit_volt, curses.A_NORMAL)
-            self.stdscr.addstr(pos_y_table + idx, pos_x + 33, unit_curr, curses.A_NORMAL)
+            try:
+                self.stdscr.addstr(pos_y_table + idx, pos_x + 18, unit_power, curses.A_NORMAL)
+                self.stdscr.addstr(pos_y_table + idx, pos_x + 26, unit_volt, curses.A_NORMAL)
+                self.stdscr.addstr(pos_y_table + idx, pos_x + 33, unit_curr, curses.A_NORMAL)
+            except curses.error:
+                pass
             if 'warn' in value:
-                unit_curr_warn = unit_to_string(value['warn'], 'm', 'A')
-                self.stdscr.addstr(pos_y_table + idx, pos_x + 40, unit_curr_warn, curses.A_NORMAL)
+                try:
+                    unit_curr_warn = unit_to_string(value['warn'], 'm', 'A')
+                    self.stdscr.addstr(pos_y_table + idx, pos_x + 40, unit_curr_warn, curses.A_NORMAL)
+                except curses.error:
+                    pass
             if 'crit' in value:
-                unit_curr_crit = unit_to_string(value['crit'], 'm', 'A')
-                self.stdscr.addstr(pos_y_table + idx, pos_x + 47, unit_curr_crit, curses.A_NORMAL)
+                try:
+                    unit_curr_crit = unit_to_string(value['crit'], 'm', 'A')
+                    self.stdscr.addstr(pos_y_table + idx, pos_x + 47, unit_curr_crit, curses.A_NORMAL)
+                except curses.error:
+                    pass
         # Draw total power
         total = self.jetson.power['tot']
         len_power = len(power)
-        name_total = total['name'] if 'name' in total else 'ALL'
-        self.stdscr.addstr(pos_y_table + len_power, pos_x, name_total, curses.A_BOLD)
-        unit_power_total = unit_to_string(total['power'], 'm', 'W')
-        self.stdscr.addstr(pos_y_table + len_power, pos_x + 18, unit_power_total, curses.A_BOLD)
-        if 'volt' in total:
-            unit_volt = unit_to_string(total['volt'], 'm', 'V')
-            self.stdscr.addstr(pos_y_table + len_power, pos_x + 26, unit_volt, curses.A_BOLD)
-        if 'curr' in total:
-            unit_curr = unit_to_string(total['curr'], 'm', 'V')
-            self.stdscr.addstr(pos_y_table + len_power, pos_x + 33, unit_curr, curses.A_BOLD)
-        if 'warn' in total:
-            unit_curr_warn = unit_to_string(total['warn'], 'm', 'A')
-            self.stdscr.addstr(pos_y_table + len_power, pos_x + 40, unit_curr_warn, curses.A_BOLD)
-        if 'crit' in total:
-            unit_curr_crit = unit_to_string(total['crit'], 'm', 'A')
-            self.stdscr.addstr(pos_y_table + len_power, pos_x + 47, unit_curr_crit, curses.A_BOLD)
+        try:
+            name_total = total['name'] if 'name' in total else 'ALL'
+            self.stdscr.addstr(pos_y_table + len_power, pos_x, name_total, curses.A_BOLD)
+        except curses.error:
+            pass
+        try:
+            unit_power_total = unit_to_string(total['power'], 'm', 'W')
+            self.stdscr.addstr(pos_y_table + len_power, pos_x + 18, unit_power_total, curses.A_BOLD)
+        except curses.error:
+            pass
+        try:
+            if 'volt' in total:
+                unit_volt = unit_to_string(total['volt'], 'm', 'V')
+                self.stdscr.addstr(pos_y_table + len_power, pos_x + 26, unit_volt, curses.A_BOLD)
+        except curses.error:
+            pass
+        try:
+            if 'curr' in total:
+                unit_curr = unit_to_string(total['curr'], 'm', 'V')
+                self.stdscr.addstr(pos_y_table + len_power, pos_x + 33, unit_curr, curses.A_BOLD)
+        except curses.error:
+            pass
+        try:
+            if 'warn' in total:
+                unit_curr_warn = unit_to_string(total['warn'], 'm', 'A')
+                self.stdscr.addstr(pos_y_table + len_power, pos_x + 40, unit_curr_warn, curses.A_BOLD)
+        except curses.error:
+            pass
+        try:
+            if 'crit' in total:
+                unit_curr_crit = unit_to_string(total['crit'], 'm', 'A')
+                self.stdscr.addstr(pos_y_table + len_power, pos_x + 47, unit_curr_crit, curses.A_BOLD)
+        except curses.error:
+            pass
 
     def draw(self, key, mouse):
         # Screen size
@@ -297,14 +360,20 @@ class CTRL(Page):
             fan = self.jetson.fan[fan_name]
             num_fans = len(fan['speed'])
             # Print all profiles
-            pos_y_profiles = fan_height // 2 - gui_chart['len_profiles']
-            size_profile = gui_chart['size_w']
-            self.stdscr.addstr(first + 1 + fan_idx * (fan_height + 1) + pos_y_profiles - 1, 1, PROFILE_STR, curses.A_BOLD)
+            try:
+                pos_y_profiles = fan_height // 2 - gui_chart['len_profiles']
+                size_profile = gui_chart['size_w']
+                self.stdscr.addstr(first + 1 + fan_idx * (fan_height + 1) + pos_y_profiles - 1, 1, PROFILE_STR, curses.A_BOLD)
+            except curses.error:
+                pass
             # Split width for each pwm
             fan_speed_width = (width - size_profile - 6) // num_fans
             # Draw a button list with all profiles
-            profile = self.jetson.fan.get_profile(fan_name)
-            gui_chart['profile'].update(first + 1 + fan_idx * (fan_height + 1) + pos_y_profiles, 1, key, mouse, profile)
+            try:
+                profile = self.jetson.fan.get_profile(fan_name)
+                gui_chart['profile'].update(first + 1 + fan_idx * (fan_height + 1) + pos_y_profiles, 1, key, mouse, profile)
+            except curses.error:
+                pass
             # Print all fans
             for idx, speed in enumerate(fan['speed']):
                 # Set size chart gpu
