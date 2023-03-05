@@ -61,6 +61,7 @@ def get_x86_64_variables():
         hardware[name] = output
     return hardware
 
+
 def get_hardware():
     # If hardware is ARM check if NVIDIA Jetson
     platform_board = platform.machine()
