@@ -3,3 +3,4 @@ requests
 furo
 sphinx-copybutton
 sphinx-autobuild
+sphinxext-opengraph

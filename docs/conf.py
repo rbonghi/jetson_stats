@@ -33,11 +33,13 @@ release = version
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+# https://github.com/wpilibsuite/sphinxext-opengraph
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx_copybutton",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
+    "sphinxext.opengraph",
 ]
 
 source_suffix = ['.rst']
@@ -62,6 +64,11 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 autodoc_typehints = "description"
 
 copybutton_selector = "div:not(.no-copybutton) > div.highlight > pre"
+
+# opengraph configuration
+ogp_site_url = "https://rnext.it/jetson_stats/"
+ogp_image = "https://rnext.it/jetson_stats/_images/jtop.png"
+ogp_enable_meta_description = True
 
 # -- Options for HTML output -------------------------------------------------
 
