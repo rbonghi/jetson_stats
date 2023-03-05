@@ -55,7 +55,7 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson):
             'color': NColors.green() | curses.A_BOLD,
             'online': False,
             'coffline': NColors.igreen(),
-            'message': 'NOT AVAILABLE',
+            'message': 'NVIDIA GPU NOT AVAILABLE',
         }
         basic_gauge(stdscr, pos_y, pos_x, width - 2, data)
         line_counter = 1
