@@ -34,7 +34,7 @@ FAN_NVFAN_NAME_RE = re.compile(r'^<FAN (?P<num>\d+)>$')
 FAN_NVFAN_OPTIONS_RE = re.compile(r'FAN_(?P<type>\w+) (?P<value>\w+) {$')
 FAN_NVFAN_DEFAULT_RE = re.compile(r'FAN_DEFAULT_(?P<type>\w+) (?P<value>\w+)')
 # Fan configurations
-FAN_PWM_CAP = 256
+FAN_PWM_CAP = 255
 
 
 def ValueToPWM(value, pwm_cap=FAN_PWM_CAP):
@@ -225,7 +225,7 @@ class Fan(GenericInterface):
         :raises JtopException: Fan name doesn't exist
         :return: List of all profiles available
         :rtype: list
-        """ # noqa
+        """  # noqa
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         return self._init[name]
@@ -612,7 +612,6 @@ class FanService(object):
         self._config.set('fan', fan_config)
         # Convert in PWM
         pwm = ValueToPWM(speed)
-        pwm = FAN_PWM_CAP - 1 if pwm >= FAN_PWM_CAP else pwm
         # Set for all pwm the same speed value
         pwm_path = self._fan_list[name]['pwm'][index]
         try:
