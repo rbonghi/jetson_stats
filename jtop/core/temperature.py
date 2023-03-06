@@ -24,13 +24,18 @@ import logging
 # Create logger
 logger = logging.getLogger(__name__)
 TEMPERATURE_RE = re.compile(r'^temp(?P<num>\d+)_label$')
+TEMPERATURE_OFFLINE = -256
 
 
 def read_temperature(data):
     values = {}
     for name, path in data.items():
-        value = float(cat(path)) / 1000.0
-        values[name] = value
+        try:
+            value = float(cat(path)) / 1000.0
+            values[name] = value
+        except OSError:
+            # If negative sensor offline
+            values[name] = TEMPERATURE_OFFLINE
     return values
 
 
@@ -49,12 +54,6 @@ def get_virtual_thermal_temperature(thermal_path):
             # Decode name
             raw_name = cat(path_name).strip()
             name = raw_name.split("-")[0] if '-' in raw_name else raw_name.split("_")[0]
-            # Check value is not -256
-            # Remove all CV temperatures and GPU negative in (Orin family)
-            # value = float(cat(path_value)) / 1000.0
-            # if value == -256:
-            #     logger.warn("Skipped {name} temperature= -256C".format(name=name))
-            #     continue
             # Remove PMIC temperature (TX family)
             if 'PMIC' in name:
                 logger.warn("Skipped PMIC")
@@ -62,7 +61,7 @@ def get_virtual_thermal_temperature(thermal_path):
             # Store new temperature
             name = name if name not in temperature else "{name}{idx}".format(name=name, idx=idx)
             idx = idx if name not in temperature else idx + 1
-            # Check if is readable and accesible
+            # Check if is readable and accessible
             if check_file(os.path.join(thermal_path, "temp")):
                 temperature[name] = {'temp': os.path.join(thermal_path, "temp")}
                 # Message detected
@@ -141,6 +140,9 @@ class TemperatureService(object):
         # Read temperature from board
         for name, sensor in self._temperature.items():
             values = read_temperature(sensor)
+            # Status sensor
+            values['online'] = values['temp'] != TEMPERATURE_OFFLINE
+            # Add sensor in dictionary
             status[name] = values
         return status
 # EOF

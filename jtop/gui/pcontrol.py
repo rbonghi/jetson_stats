@@ -31,6 +31,10 @@ TEMPERATURE_CRIT = 100
 
 
 def color_temperature(stdscr, pos_y, pos_x, name, sensor, offset=0):
+    if not sensor['online']:
+        stdscr.addstr(pos_y, pos_x, name)
+        stdscr.addstr(pos_y, pos_x + offset + 5, "Offline", NColors.yellow())
+        return
     # Print temperature name
     temperature = sensor['temp']
     # Set color temperature
