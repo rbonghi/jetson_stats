@@ -101,6 +101,10 @@ class GenericInterface(object):
         return repr(self._data)
 
 
+def check_file(path):
+    return os.path.isfile(path) and os.access(path, os.R_OK)
+
+
 def cat(path):
     with open(path, 'r') as f:
         return f.readline().rstrip('\x00')

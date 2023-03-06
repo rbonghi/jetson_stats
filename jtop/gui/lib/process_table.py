@@ -40,7 +40,7 @@ class ProcessTable(object):
     def __init__(self, stdscr, jetson):
         self.stdscr = stdscr
         self.jetson = jetson
-        self.line_sort = 6
+        self.line_sort = 8
         self.type_reverse = True
 
     def draw(self, pos_y, pos_x, width, height, key, mouse):

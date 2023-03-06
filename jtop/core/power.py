@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from .common import cat
+from .common import cat, check_file
 import os
 # Logging
 import logging
@@ -139,21 +139,26 @@ def list_all_i2c_ports(path):
                 logger.warn("Skipped \"sum of shunt voltages\" {path}".format(path=power_label_path))
                 continue
             # Build list of path
-            warnings = {
-                'crit_alarm': "{path}/curr{num}_crit_alarm".format(path=path, num=number_port),
-                'max_alarm': "{path}/curr{num}_max_alarm".format(path=path, num=number_port),
-                'type': 'I2C',
-            }
+            warnings = {'type': 'I2C'}
+            if check_file("{path}/curr{num}_crit_alarm".format(path=path, num=number_port)):
+                warnings['crit_alarm'] = "{path}/curr{num}_crit_alarm".format(path=path, num=number_port)
+            if check_file("{path}/curr{num}_max_alarm".format(path=path, num=number_port)):
+                warnings['max_alarm'] = "{path}/curr{num}_max_alarm".format(path=path, num=number_port)
             values = read_power_status(warnings)
             logger.info("Alarms {name} - {data}".format(name=raw_name, data=values))
             # Read Voltage, current and limits
-            sensor_name[raw_name] = {
-                'volt': "{path}/in{num}_input".format(path=path, num=number_port),  # Voltage in mV
-                'curr': "{path}/curr{num}_input".format(path=path, num=number_port),  # Current in mA
-                'warn': "{path}/curr{num}_max".format(path=path, num=number_port),  # in mA
-                'crit': "{path}/curr{num}_crit".format(path=path, num=number_port),  # in mA
-                'type': 'I2C',
-            }
+            sensor = {'type': 'I2C'}
+            if check_file("{path}/in{num}_input".format(path=path, num=number_port)):
+                sensor['volt'] = "{path}/in{num}_input".format(path=path, num=number_port)  # Voltage in mV
+            if check_file("{path}/curr{num}_input".format(path=path, num=number_port)):
+                sensor['curr'] = "{path}/curr{num}_input".format(path=path, num=number_port)  # Current in mA
+            if check_file("{path}/in{num}_max".format(path=path, num=number_port)):
+                sensor['warn'] = "{path}/in{num}_max".format(path=path, num=number_port)  # in mA
+            if check_file("{path}/curr{num}_crit".format(path=path, num=number_port)):
+                sensor['crit'] = "{path}/curr{num}_crit".format(path=path, num=number_port)  # in mA
+            # If there is an file is added in list
+            if len(sensor) > 1:
+                sensor_name[raw_name] = sensor
         elif item.startswith("rail_name_"):
             # Decode name for JP 4 or previous
             raw_name = cat(power_label_path).strip()
@@ -161,14 +166,20 @@ def list_all_i2c_ports(path):
             number_port = int(item.lstrip("rail_name_"))
             # Build list of path
             # https://forums.developer.nvidia.com/t/jetson-tx1-ina226-power-monitor-with-i2c-interface/43819/5
-            sensor_name[raw_name] = {
-                'volt': "{path}/in_current{num}_input".format(path=path, num=number_port),  # Voltage in mV
-                'curr': "{path}/in_voltage{num}_input".format(path=path, num=number_port),  # Current in mA
-                'power': "{path}/in_power{num}_input".format(path=path, num=number_port),  # Power in mW
-                'warn': "{path}/warn_current_limit_{num}".format(path=path, num=number_port),  # in mA
-                'crit': "{path}/crit_current_limit_{num}".format(path=path, num=number_port),  # in
-                'type': 'I2C',
-            }
+            sensor = {'type': 'I2C'}
+            if check_file("{path}/in_voltage{num}_input".format(path=path, num=number_port)):
+                sensor['volt'] = "{path}/in_voltage{num}_input".format(path=path, num=number_port)  # Voltage in mV
+            if check_file("{path}/in_current{num}_input".format(path=path, num=number_port)):
+                sensor['curr'] = "{path}/in_current{num}_input".format(path=path, num=number_port)  # Current in mA
+            if check_file("{path}/in_power{num}_input".format(path=path, num=number_port)):
+                sensor['power'] = "{path}/in_power{num}_input".format(path=path, num=number_port)  # Current in mW
+            if check_file("{path}/warn_current_limit_{num}".format(path=path, num=number_port)):
+                sensor['warn'] = "{path}/warn_current_limit_{num}".format(path=path, num=number_port)  # in mA
+            if check_file("{path}/crit_current_limit_{num}".format(path=path, num=number_port)):
+                sensor['crit'] = "{path}/crit_current_limit_{num}".format(path=path, num=number_port)  # in mA
+            # If there is an file is added in list
+            if len(sensor) > 1:
+                sensor_name[raw_name] = sensor
     return sensor_name
 
 
@@ -186,20 +197,19 @@ def find_all_system_monitor(system_monitor):
         type_supply = cat(path_type).strip()
         # Read model name
         path_name = "{path}/model_name".format(path=local_path)
-        model_name = cat(path_name).strip() if os.path.isfile(path_name) else ""
+        model_name = cat(path_name).strip() if check_file(path_name) else ""
         logger.info("Found name={name} type={type} model={model}".format(name=name, type=type_supply, model=model_name))
         # Find power, current and voltage
-        voltage_path = "{path}/voltage_now".format(path=local_path)
-        current_path = "{path}/current_now".format(path=local_path)
-        current_max_path = "{path}/current_max".format(path=local_path)
-        if os.path.isfile(voltage_path) and os.path.isfile(current_path):
-            sensor_name[name] = {
-                'volt': voltage_path,  # Voltage in mV
-                'curr': current_path,  # Current in mA
-                'type': 'SYSTEM',
-            }
-            if os.path.isfile(current_max_path):
-                sensor_name[name]['warn'] = current_max_path
+        sensor = {'type': 'SYSTEM'}
+        if check_file("{path}/voltage_now".format(path=local_path)):
+            sensor['volt'] = "{path}/voltage_now".format(path=local_path)  # Voltage in mV
+        if check_file("{path}/current_now".format(path=local_path)):
+            sensor['curr'] = "{path}/current_now".format(path=local_path)  # Current in mA
+        if check_file("{path}/current_max".format(path=local_path)):
+            sensor['warn'] = "{path}/current_max".format(path=local_path)  # in mA
+        # If there is an file is added in list
+        if len(sensor) > 1:
+            sensor_name[name] = sensor
     if sensor_name:
         logger.info("Found SYSTEM power monitor")
     return sensor_name

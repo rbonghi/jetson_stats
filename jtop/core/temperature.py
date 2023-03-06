@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-from .common import cat
+from .common import cat, check_file
 import os
 import re
 # Logging
@@ -62,11 +62,11 @@ def get_virtual_thermal_temperature(thermal_path):
             # Store new temperature
             name = name if name not in temperature else "{name}{idx}".format(name=name, idx=idx)
             idx = idx if name not in temperature else idx + 1
-            temperature[name] = {
-                'temp': os.path.join(thermal_path, "temp")
-            }
-            # Message detected
-            logger.info("Found thermal \"{name}\" in {path}".format(name=name, path=os.path.basename(thermal_path)))
+            # Check if is readable and accesible
+            if check_file(os.path.join(thermal_path, "temp")):
+                temperature[name] = {'temp': os.path.join(thermal_path, "temp")}
+                # Message detected
+                logger.info("Found thermal \"{name}\" in {path}".format(name=name, path=os.path.basename(thermal_path)))
     # Sort all temperatures
     return temperature
 
@@ -96,16 +96,21 @@ def get_hwmon_thermal_system(root_dir):
             logger.info("Found temperature sensor: {name}".format(name=raw_name))
             # Build list of path
             path_crit_alarm = os.path.join(path, "temp{num}_crit_alarm".format(num=number_port))
-            if os.path.isfile(path_crit_alarm):
+            if check_file(path_crit_alarm):
                 warnings = {'crit_alarm': path_crit_alarm}
                 values = read_temperature(warnings)
                 logger.info("Alarms {name} - {data}".format(name=raw_name, data=values))
             # Read Temperatures
-            sensor_name[raw_name] = {
-                'temp': os.path.join(path, "temp{num}_input".format(num=number_port)),  # Temperature in deg
-                'max': os.path.join(path, "temp{num}_max".format(num=number_port)),  # Temperature in deg
-                'crit': os.path.join(path, "temp{num}_crit".format(num=number_port)),  # Temperature in deg
-            }
+            sensor = {}
+            if check_file(os.path.join(path, "temp{num}_input".format(num=number_port))):
+                sensor['temp'] = os.path.join(path, "temp{num}_input".format(num=number_port))  # Temperature in deg
+            if check_file(os.path.join(path, "temp{num}_input".format(num=number_port))):
+                sensor['max'] = os.path.join(path, "temp{num}_max".format(num=number_port))  # Temperature in deg
+            if check_file(os.path.join(path, "temp{num}_input".format(num=number_port))):
+                sensor['crit'] = os.path.join(path, "temp{num}_crit".format(num=number_port))  # Temperature in deg
+            # If there is an file is added in list
+            if sensor:
+                sensor_name[raw_name] = sensor
     return sensor_name
 
 
