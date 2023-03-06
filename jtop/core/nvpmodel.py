@@ -424,7 +424,7 @@ class NVPModelService(object):
             # Read all NVP modes
             self._default, self._nvp_models = nvpmode_decode()
             self._nvp_status = [True] * len(self._nvp_models)
-            # Read current nvpmode
+            # Read current nvpmodel
             self._nvpmodel_now = nvpmode_query()
             logger.info("nvpmodel running in [{id}]{name} - Default: {default}".format(
                 name=self._nvpmodel_now['name'],

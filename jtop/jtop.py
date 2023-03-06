@@ -168,7 +168,7 @@ class jtop(Thread):
         This block method will restore all jtop configuration, in order:
 
         #. Switch off, disable on boot **jetson_clocks** and remove configuration file(reference :py:class:`~jtop.core.jetson_clocks.JetsonClocks`)
-        #. Set all **fan** to defaulf profile and all speed to zero (reference :py:class:`~jtop.core.fan.Fan`)
+        #. Set all **fan** to default profile and all speed to zero (reference :py:class:`~jtop.core.fan.Fan`)
         #. Set to default **nvpmodel** (reference :py:class:`~jtop.core.nvpmodel.NVPModel`)
         #. **clear** the configuration jtop file
 
@@ -595,7 +595,7 @@ class jtop(Thread):
 
         You can export all metrics or the same output in :py:attr:`stats` depending of the parameter input.
 
-        :param stats: json with same outout of :py:attr:`stats`, defaults to False
+        :param stats: json with same output of :py:attr:`stats`, defaults to False
         :type stats: bool, optional
         :return: json output requested
         :rtype: str
@@ -819,7 +819,7 @@ class jtop(Thread):
             Note **E**
                 GPU used:
                     * **I**: Integrated GPU
-                    * **dX**: Disctrete GPU with number graphic card (next release)
+                    * **dX**: Discrete GPU with number graphic card (next release)
 
             Note **F**
                 Type of process:
@@ -921,8 +921,8 @@ class jtop(Thread):
         curr          :py:class:`int`     Gets rail current in milliamperes
         power         :py:class:`int`     Gets rail power in milliwatt
         avg           :py:class:`int`     Gets rail power average in milliwatt
-        warn          :py:class:`int`     (if available) Gets rail average current limit in milliamperes
-        crit          :py:class:`int`     (if available) Gets rail instantaneous current limit in milliamperes
+        warn          :py:class:`int`     *(if available)* Gets rail average current limit in milliamperes
+        crit          :py:class:`int`     *(if available)* Gets rail instantaneous current limit in milliamperes
         ============= =================== ====================================================
 
         .. admonition:: Reference
@@ -948,9 +948,10 @@ class jtop(Thread):
         ============= =================== ====================================================
         Name          Type                Description
         ============= =================== ====================================================
-        temp          :py:class:`int`     Gets rail voltage in Celsius
-        max           :py:class:`int`     (if available) Gets rail average current limit in Celsius
-        crit          :py:class:`int`     (if available) Gets rail instantaneous current limit in Celsius
+        online        :py:class:`bool`    Status sensor
+        temp          :py:class:`int`     Gets rail voltage in Celsius. *(If offline show -256)*
+        max           :py:class:`int`     *(if available)* Gets rail average current limit in Celsius
+        crit          :py:class:`int`     *(if available)* Gets rail instantaneous current limit in Celsius
         ============= =================== ====================================================
 
         .. note::

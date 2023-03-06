@@ -108,13 +108,16 @@ def find_all_i2c_power_monitor(i2c_path):
 def read_power_status(data):
     values = {}
     power_type = data['type']
-    for name, path in data.items():
-        if 'type' in name:
-            continue
-        # Fix from values with "ma" in the end, like
-        # warn 32760 ma
-        raw_value = int(cat(path).split(" ")[0])
-        values[name] = raw_value // 1000 if power_type == 'SYSTEM' else raw_value
+    try:
+        for name, path in data.items():
+            if 'type' in name:
+                continue
+            # Fix from values with "ma" in the end, like
+            # warn 32760 ma
+            raw_value = int(cat(path).split(" ")[0])
+            values[name] = raw_value // 1000 if power_type == 'SYSTEM' else raw_value
+    except OSError:
+        values = {}
     return values
 
 
@@ -249,6 +252,8 @@ class PowerService(object):
         for name, sensors in self._power_sensor.items():
             # Read status sensors
             values = read_power_status(sensors)
+            if not values:
+                continue
             # Measure power
             if 'power' not in values:
                 power = values['volt'] * (float(values['curr']) / 1000)
