@@ -35,8 +35,7 @@ class Chart(object):
     """
 
     def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.COLOR_WHITE, color_chart=[], fill=True, time=10.0, tik=2):
-        Chart.OBJECT_COUNTER += 1
-        self._id_obj = Chart.OBJECT_COUNTER
+        self._color_obj_counter = Chart.OBJECT_COUNTER
         self.jetson = jetson
         self.name = name
         self.callback = callback
@@ -60,6 +59,7 @@ class Chart(object):
         self.active = True
         self.message = "OFF"
         # Initialize all colors
+        color_step = len(self.color_chart)
         values = list(range(len(self.color_chart)))[::-1] + [len(self.color_chart)]
         combinations = list(itertools.combinations(values, 2))
         list_colors = {}
@@ -67,13 +67,14 @@ class Chart(object):
             if c[0] not in list_colors:
                 list_colors[c[0]] = []
             list_colors[c[0]] = [c] + list_colors[c[0]]
-
         for idx, list_element in enumerate(list_colors.values()):
             list_element = sorted(list_element, key=lambda x: x[1], reverse=True)
             for idy, color_set in enumerate(list_element):
-                idx_name = self._id_obj * Chart.OFFSET_COLOR_CHART + (len(self.color_chart) - idx - 1) * 10 + idy
+                idx_name = Chart.OFFSET_COLOR_CHART + self._color_obj_counter + (len(self.color_chart) - idx - 1) * color_step + idy
                 second_color = self.color_chart[color_set[1]] if color_set[1] < len(self.color_chart) else curses.COLOR_BLACK
                 curses.init_pair(idx_name, self.color_chart[color_set[0]], second_color)
+        # Update counter colors
+        Chart.OBJECT_COUNTER += len(combinations) + 1
         # Attach the chart for every update from jtop
         jetson.attach(self.update)
 
@@ -184,10 +185,11 @@ class Chart(object):
         points = []
         for n in list_values:
             points += [n] * int(val)
-
+        # Draw all chart
+        color_step = len(self.color_chart)
         for idx, values in enumerate(reversed(points)):
             for chart_idx, value in enumerate(values):
-                color_base = self._id_obj * Chart.OFFSET_COLOR_CHART + chart_idx * 10
+                color_base = Chart.OFFSET_COLOR_CHART + self._color_obj_counter + chart_idx * color_step
                 color_next = 1 if chart_idx != 0 else 0
                 cell_val = value * size_y / self.max_val
                 cell_val_int = int(cell_val)
