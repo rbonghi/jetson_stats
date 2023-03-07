@@ -401,11 +401,11 @@ class CTRL(Page):
                                        "Speed", curses.A_BOLD)
                 try:
                     gui_chart['fan'][idx]['decrease'].update(first + 1 + fan_idx * (fan_height + 1),
-                                                            size_profile + idx * fan_speed_width + pos_x_control_fan + 10,
-                                                            '-', key, mouse)
+                                                             size_profile + idx * fan_speed_width + pos_x_control_fan + 10,
+                                                             '-', key, mouse)
                     gui_chart['fan'][idx]['increase'].update(first + 1 + fan_idx * (fan_height + 1),
-                                                            size_profile + idx * fan_speed_width + pos_x_control_fan + 14,
-                                                            '+', key, mouse)
+                                                             size_profile + idx * fan_speed_width + pos_x_control_fan + 14,
+                                                             '+', key, mouse)
                 except curses.error:
                     pass
             # Plot y axis
