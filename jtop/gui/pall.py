@@ -180,7 +180,7 @@ class ALL(Page):
             if nline < n_print - 1:
                 self.stdscr.addch(pos_y_mini_menu, column_width * (nline + 1), curses.ACS_TTEE)
                 self.stdscr.vline(pos_y_mini_menu + 1, column_width * (nline + 1), curses.ACS_VLINE, column_height - 3)
-                if height_free_area > offset_process_y:
+                if height_free_area >= offset_process_y:
                     self.stdscr.addch(pos_y_mini_menu + column_height - 2, column_width * (nline + 1), curses.ACS_BTEE)
                 else:
                     self.stdscr.addch(pos_y_mini_menu + column_height - 2, column_width * (nline + 1),

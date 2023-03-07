@@ -37,12 +37,14 @@ if __name__ == "__main__":
                 jetson.nvpmodel = 0  # You can write the name of the model as well
                 # Wait nvpmodel changed
                 while jetson.ok():
+                    # deepcode ignore AttributeLoadOnPrimitive: nvpmodel is an object with different attribute. See documentation
                     if jetson.nvpmodel.id == 0:
                         break
                 # You can increase or decrease the nvpmodel using
                 jetson.nvpmodel += 1  # or jetson.nvpmodel = jetson.nvpmodel + 1
                 # Wait nvpmodel changed
                 while jetson.ok():
+                    # deepcode ignore AttributeLoadOnPrimitive: nvpmodel is an object with different attribute. See documentation
                     if jetson.nvpmodel.id == 1:
                         break
             # You can control the fan

@@ -124,7 +124,7 @@ def import_os_variables(SOURCE, PATTERN):
         try:
             proc = sp.Popen(['bash', '-c', 'source {source} && env'.format(source=SOURCE)], stdout=sp.PIPE, stderr=sp.PIPE)
             # Load variables
-            for tup in map(lambda s: s.decode("utf-8").strip().split('=', 1), proc.stdout):
+            for tup in [s.decode("utf-8").strip().split('=', 1) for s in proc.stdout]:
                 name = tup[0].strip()
                 value = tup[1].strip()
                 if PATTERN in name:

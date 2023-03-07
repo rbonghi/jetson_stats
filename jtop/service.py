@@ -536,6 +536,8 @@ class JtopServer(Process):
         self.remove_files()
         # Switch off jetson_clocks if there are threads alive
         self.jetson_clocks.close()
+        # Switch off nvpmodel if there are threads alive
+        self.nvpmodel.close()
         # Close stats server
         logger.info("Service closed")
         return True

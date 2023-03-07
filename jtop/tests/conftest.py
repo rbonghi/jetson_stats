@@ -28,11 +28,16 @@ FAKE_DIRECTORY = "/fake_sys"
 NUM_CPU = 4
 
 
+def write_on_file(path, value):
+    with open(path, 'w') as f:
+        f.write(value)
+
+
 def install_cpu(args):
     num_cpu = args[0]
     path_cpu = os.path.join(FAKE_DIRECTORY, "devices/system/cpu")
     # Set number of CPU for fake jetson_clocks
-    open('/tmp/cpu_numbers', "w").write(str(num_cpu))
+    write_on_file('/tmp/cpu_numbers', str(num_cpu))
     # Build a list of fake CPU
     file_proc_stat = "cpu  26716126 25174 7198445 948399047 900582 0 354519 0 0 0\n"
     print('Building CPU {num} in {path}'.format(num=num_cpu, path=path_cpu))
@@ -43,13 +48,13 @@ def install_cpu(args):
         if not os.path.isdir(cpu_path):
             os.makedirs(cpu_path)
         # Fake freq_cpu
-        open(os.path.join(cpu_path, "scaling_governor"), "w").write("test_cpu")
-        open(os.path.join(cpu_path, "scaling_min_freq"), "w").write("0")
-        open(os.path.join(cpu_path, "scaling_max_freq"), "w").write("2035200")
-        open(os.path.join(cpu_path, "scaling_cur_freq"), "w").write("200000")
-        open(os.path.join(cpu_path, "cpuinfo_min_freq"), "w").write("0")
-        open(os.path.join(cpu_path, "cpuinfo_max_freq"), "w").write("2035200")
-        open(os.path.join(cpu_path, "cpuinfo_cur_freq"), "w").write("200000")
+        write_on_file(os.path.join(cpu_path, "scaling_governor"), "test_cpu")
+        write_on_file(os.path.join(cpu_path, "scaling_min_freq"), "0")
+        write_on_file(os.path.join(cpu_path, "scaling_max_freq"), "2035200")
+        write_on_file(os.path.join(cpu_path, "scaling_cur_freq"), "200000")
+        write_on_file(os.path.join(cpu_path, "cpuinfo_min_freq"), "0")
+        write_on_file(os.path.join(cpu_path, "cpuinfo_max_freq"), "2035200")
+        write_on_file(os.path.join(cpu_path, "cpuinfo_cur_freq"), "200000")
     file_proc_stat += "intr 1183148227 0 158138519 160761681 0 0 0 21819776 0 0 0 0 0 0 671322431\n"
     file_proc_stat += "ctxt 1028840383\n"
     file_proc_stat += "btime 1674644431\n"
@@ -60,7 +65,7 @@ def install_cpu(args):
     # Write fake /proc/stat
     proc_stat_file = os.path.join(FAKE_DIRECTORY, "stat")
     print("Write a fake /proc/stat in {file}".format(file=proc_stat_file))
-    open(proc_stat_file, "w").write(file_proc_stat)
+    write_on_file(proc_stat_file, file_proc_stat)
 
 
 def install_igpu(args):
@@ -86,19 +91,19 @@ def install_igpu(args):
         print("Linking {path_igpu} -> {path_devfreq}".format(path_igpu=path_igpu_device_short, path_devfreq=path_devfreq))
     # Write fake name
     path_name = os.path.join(path_igpu_device, "name")
-    open(path_name, "w").write("gpu")
+    write_on_file(path_name, "gpu")
     print("Write in {path_name}".format(path_name=path_name))
     # Write fake frequencies
-    open(os.path.join(path_devfreq, "cur_freq"), "w").write("1000000")
-    open(os.path.join(path_devfreq, "max_freq"), "w").write("921600000")
-    open(os.path.join(path_devfreq, "min_freq"), "w").write("0")
-    open(os.path.join(path_devfreq, "governor"), "w").write("test_gpu")
+    write_on_file(os.path.join(path_devfreq, "cur_freq"), "1000000")
+    write_on_file(os.path.join(path_devfreq, "max_freq"), "921600000")
+    write_on_file(os.path.join(path_devfreq, "min_freq"), "0")
+    write_on_file(os.path.join(path_devfreq, "governor"), "test_gpu")
     # Write GPU status
     path_status_igpu = os.path.join(FAKE_DIRECTORY, "devices/platform", name_gpu, "devfreq", name_gpu, "device")
-    open(os.path.join(path_status_igpu, "railgate_enable"), "w").write("0")
-    open(os.path.join(path_status_igpu, "tpc_pg_mask"), "w").write("0")
-    open(os.path.join(path_status_igpu, "enable_3d_scaling"), "w").write("1")
-    open(os.path.join(path_status_igpu, "load"), "w").write("900")
+    write_on_file(os.path.join(path_status_igpu, "railgate_enable"), "0")
+    write_on_file(os.path.join(path_status_igpu, "tpc_pg_mask"), "0")
+    write_on_file(os.path.join(path_status_igpu, "enable_3d_scaling"), "1")
+    write_on_file(os.path.join(path_status_igpu, "load"), "900")
 
 
 def install_emc(args):
@@ -106,15 +111,15 @@ def install_emc(args):
     if not os.path.isdir(emc_path):
         print('The directory {path} is not present. Creating a new one..'.format(path=emc_path))
         os.makedirs(emc_path)
-    open(os.path.join(emc_path, "rate"), "w").write("4000000")
-    open(os.path.join(emc_path, "max_rate"), "w").write("204000000")
-    open(os.path.join(emc_path, "min_rate"), "w").write("0")
-    open(os.path.join(emc_path, "mrq_rate_locked"), "w").write("204000000")
+    write_on_file(os.path.join(emc_path, "rate"), "4000000")
+    write_on_file(os.path.join(emc_path, "max_rate"), "204000000")
+    write_on_file(os.path.join(emc_path, "min_rate"), "0")
+    write_on_file(os.path.join(emc_path, "mrq_rate_locked"), "204000000")
     path_activity = os.path.join(FAKE_DIRECTORY, "kernel/actmon_avg_activity")
     if not os.path.isdir(path_activity):
         print('The directory {path} is not present. Creating a new one..'.format(path=path_activity))
         os.makedirs(path_activity)
-    open(os.path.join(path_activity, "mc_all"), "w").write("0")
+    write_on_file(os.path.join(path_activity, "mc_all"), "0")
 
 
 def install_fan(args):
@@ -124,9 +129,9 @@ def install_fan(args):
         print('The directory {path} is not present. Creating a new one..'.format(path=path_fan))
         os.makedirs(path_fan)
     # Build now a fake folder
-    open(os.path.join(path_fan, "pwm1"), "w").write("0")
-    # open(os.path.join(path_fan, "pwm2"), "w").write("0")
-    open(os.path.join(path_fan, "name"), "w").write("test_fan")
+    write_on_file(os.path.join(path_fan, "pwm1"), "0")
+    # write_on_file(os.path.join(path_fan, "pwm2"), "0")
+    write_on_file(os.path.join(path_fan, "name"), "test_fan")
 
 
 def install_legacy_fan(args):
@@ -136,9 +141,9 @@ def install_legacy_fan(args):
         print('The directory {path} is not present. Creating a new one..'.format(path=path_fan))
         os.makedirs(path_fan)
     # Build now a fake folder
-    open(os.path.join(path_fan, "target_pwm"), "w").write("128")
-    open(os.path.join(path_fan, "rpm_measured"), "w").write("0")
-    open(os.path.join(path_fan, "temp_control"), "w").write("0")
+    write_on_file(os.path.join(path_fan, "target_pwm"), "128")
+    write_on_file(os.path.join(path_fan, "rpm_measured"), "0")
+    write_on_file(os.path.join(path_fan, "temp_control"), "0")
 
 
 def install_rpm_system(args):
@@ -147,8 +152,8 @@ def install_rpm_system(args):
     if not os.path.isdir(path_rpm):
         print('The directory {path} is not present. Creating a new one..'.format(path=path_rpm))
         os.makedirs(path_rpm)
-    open(os.path.join(path_rpm, "rpm"), "w").write("1000")
-    open(os.path.join(path_rpm, "name"), "w").write("test_rpm")
+    write_on_file(os.path.join(path_rpm, "rpm"), "1000")
+    write_on_file(os.path.join(path_rpm, "name"), "test_rpm")
 
 
 def install_jetson_clocks(args):

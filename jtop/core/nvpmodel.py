@@ -138,7 +138,7 @@ class NVPModel(object):
         #. `NVP Model - Jetson TX/Nano <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-283/Tegra%20Linux%20Driver%20Package%20Development%20Guide/power_management_tx2.html#wwpID0E0AM0HA>`_
         #. `NVP Model - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html#supported-modes-and-power-efficiency>`_
         #. `NVP Model - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#supported-modes-and-power-efficiency>`_
-    """ # noqa
+    """  # noqa
 
     def __init__(self, controller, nvpmodel):
         self._controller = controller
@@ -525,6 +525,19 @@ class NVPModelService(object):
         # https://github.com/fkie/multimaster_fkie/issues/149
         # https://docs.python.org/2.7/library/threading.html#threading.Thread.is_alive
         return self._nvp_mode_set_thread.is_alive()
+
+    def close(self):
+        # If jetson_clocks doesn't exist skip
+        if not self.exists():
+            return
+        # If there are no thread running skip
+        if self._nvp_mode_set_thread is None:
+            return
+        if self._nvp_mode_set_thread.is_alive():
+            logger.warning("Wait switch off nvpmodel thread")
+            self._nvp_mode_set_thread.join(COMMAND_TIMEOUT)
+
+        self._nvp_mode_set_thread.join()
 
     def get_status(self):
         running = self.is_running()

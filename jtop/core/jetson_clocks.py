@@ -512,7 +512,7 @@ class JetsonClocksService(object):
         if self._jetson_clocks_thread is None:
             return
         if self._jetson_clocks_thread.is_alive():
-            logger.warning("Wait switch off set jetson_clocks")
+            logger.warning("Wait switch off jetson_clocks thread")
             self._jetson_clocks_thread.join(COMMAND_TIMEOUT)
 
     def show(self):
