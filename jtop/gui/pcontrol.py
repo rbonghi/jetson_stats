@@ -82,6 +82,8 @@ def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
     # Plot watts
     power = jetson.power['rail']
     for idx, name in enumerate(power):
+        if idx + 1 >= height:
+            return idx
         value = power[name]
         string_name = name.replace("VDDQ_", "").replace("VDD_", "").replace("_", " ")
         stdscr.addstr(pos_y + idx + 1, center_x - column_power - 5, string_name, curses.A_NORMAL)
@@ -93,6 +95,8 @@ def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
     # Plot totals before finishing
     total = jetson.power['tot']
     len_power = len(power)
+    if len_power + 1 >= height:
+        return len(power)
     name_total = total['name'] if 'name' in total else 'ALL'
     stdscr.addstr(pos_y + len_power + 1, center_x - column_power - 5, name_total, curses.A_BOLD)
     unit_power = unit_to_string(total['power'], 'm', 'W')
@@ -395,12 +399,15 @@ class CTRL(Page):
                     self.stdscr.addstr(first + 1 + fan_idx * (fan_height + 1),
                                        size_profile + idx * fan_speed_width + pos_x_control_fan + 4,
                                        "Speed", curses.A_BOLD)
-                gui_chart['fan'][idx]['decrease'].update(first + 1 + fan_idx * (fan_height + 1),
-                                                         size_profile + idx * fan_speed_width + pos_x_control_fan + 10,
-                                                         '-', key, mouse)
-                gui_chart['fan'][idx]['increase'].update(first + 1 + fan_idx * (fan_height + 1),
-                                                         size_profile + idx * fan_speed_width + pos_x_control_fan + 14,
-                                                         '+', key, mouse)
+                try:
+                    gui_chart['fan'][idx]['decrease'].update(first + 1 + fan_idx * (fan_height + 1),
+                                                            size_profile + idx * fan_speed_width + pos_x_control_fan + 10,
+                                                            '-', key, mouse)
+                    gui_chart['fan'][idx]['increase'].update(first + 1 + fan_idx * (fan_height + 1),
+                                                            size_profile + idx * fan_speed_width + pos_x_control_fan + 14,
+                                                            '+', key, mouse)
+                except curses.error:
+                    pass
             # Plot y axis
             gui_chart['fan'][0]['chart'].draw_y_axis(self.stdscr,
                                                      first + 1 + fan_idx * (fan_height + 1),

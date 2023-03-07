@@ -117,19 +117,30 @@ def iram_gauge(stdscr, pos_y, pos_x, size, mem_data):
     stdscr.addstr(pos_y, pos_x + size - 11, label_lfb, curses.A_NORMAL)
 
 
-def compact_memory(stdscr, pos_y, pos_x, width, jetson):
+def compact_memory(stdscr, pos_y, pos_x, width, height, jetson):
     line_counter = 1
     # Draw memory gauge
-    mem_gauge(stdscr, pos_y, pos_x, width, jetson.memory['RAM'])
-    if 'SWAP' in jetson.memory:
+    try:
+        mem_gauge(stdscr, pos_y, pos_x, width, jetson.memory['RAM'])
+    except curses.error:
+        return 0
+    try:
         swap_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['SWAP'])
         line_counter += 1
+    except curses.error:
+        return line_counter
     if 'EMC' in jetson.memory:
-        emc_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['EMC'])
-        line_counter += 1
+        try:
+            emc_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['EMC'])
+            line_counter += 1
+        except curses.error:
+            return line_counter
     if 'IRAM' in jetson.memory:
-        iram_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['IRAM'])
-        line_counter += 1
+        try:
+            iram_gauge(stdscr, pos_y + line_counter, pos_x, width, jetson.memory['IRAM'])
+            line_counter += 1
+        except curses.error:
+            pass
     return line_counter
 
 

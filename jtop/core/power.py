@@ -155,8 +155,8 @@ def list_all_i2c_ports(path):
                 sensor['volt'] = "{path}/in{num}_input".format(path=path, num=number_port)  # Voltage in mV
             if check_file("{path}/curr{num}_input".format(path=path, num=number_port)):
                 sensor['curr'] = "{path}/curr{num}_input".format(path=path, num=number_port)  # Current in mA
-            if check_file("{path}/in{num}_max".format(path=path, num=number_port)):
-                sensor['warn'] = "{path}/in{num}_max".format(path=path, num=number_port)  # in mA
+            if check_file("{path}/curr{num}_max".format(path=path, num=number_port)):
+                sensor['warn'] = "{path}/curr{num}_max".format(path=path, num=number_port)  # in mA
             if check_file("{path}/curr{num}_crit".format(path=path, num=number_port)):
                 sensor['crit'] = "{path}/curr{num}_crit".format(path=path, num=number_port)  # in mA
             # If there is an file is added in list

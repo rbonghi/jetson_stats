@@ -33,35 +33,41 @@ from .pengine import compact_engines
 from .pcontrol import compact_temperatures, compact_power
 
 
-def compact_status(stdscr, pos_y, pos_x, width, jetson):
+def compact_status(stdscr, pos_y, pos_x, width, height, jetson):
     line_counter = 0
     # Fan status
     if jetson.fan:
         for name, fan in jetson.fan.items():
             for idx, speed in enumerate(fan['speed']):
-                data = {
-                    'name': 'Fan {idx}'.format(idx=idx) if len(fan['speed']) > 1 else 'FAN',
-                    'color': NColors.cyan(),
-                    'online': jetson.fan,
-                    'values': [(speed, NColors.cyan())]
-                }
-                # Show RPM if exist
-                if 'rpm' in fan:
-                    rpm = "{rpm:>4}RPM".format(rpm=fan['rpm'][idx])
-                    stdscr.addstr(pos_y + line_counter, pos_x + width - 9, rpm, curses.A_NORMAL)
-                size_fan_gauge = width - 12 if 'rpm' in fan else width - 3
-                basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, size_fan_gauge, data)
-                line_counter += 1
+                try:
+                    data = {
+                        'name': 'Fan {idx}'.format(idx=idx) if len(fan['speed']) > 1 else 'FAN',
+                        'color': NColors.cyan(),
+                        'online': jetson.fan,
+                        'values': [(speed, NColors.cyan())]
+                    }
+                    # Show RPM if exist
+                    if 'rpm' in fan:
+                        rpm = "{rpm:>4}RPM".format(rpm=fan['rpm'][idx])
+                        stdscr.addstr(pos_y + line_counter, pos_x + width - 9, rpm, curses.A_NORMAL)
+                    size_fan_gauge = width - 12 if 'rpm' in fan else width - 3
+                    basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, size_fan_gauge, data)
+                    line_counter += 1
+                except curses.error:
+                    pass
     else:
-        data = {
-            'name': 'Fan',
-            'color': NColors.cyan(),
-            'online': False,
-            'coffline': NColors.icyan(),
-            'message': 'NOT AVAILABLE',
-        }
-        basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, width - 3, data)
-        line_counter += 1
+        try:
+            data = {
+                'name': 'Fan',
+                'color': NColors.cyan(),
+                'online': False,
+                'coffline': NColors.icyan(),
+                'message': 'NOT AVAILABLE',
+            }
+            basic_gauge(stdscr, pos_y + line_counter, pos_x + 1, width - 3, data)
+            line_counter += 1
+        except curses.error:
+            pass
     # Jetson clocks status: Running (Green) or Normal (Grey)
     if jetson.jetson_clocks is not None:
         jetson_clocks_gui(stdscr, pos_y + line_counter, pos_x + 1, jetson)
@@ -123,15 +129,17 @@ class ALL(Page):
         # Plot Status CPU
         line_counter += compact_cpus(self.stdscr, line_counter, 0, width, self.jetson)
         # Plot status memory
-        size_memory = compact_memory(self.stdscr, line_counter, 0, width // 2, self.jetson)
+        size_memory = compact_memory(self.stdscr, line_counter, 0, width // 2, height, self.jetson)
         # Plot compact info
-        size_status = compact_status(self.stdscr, line_counter, width // 2, width // 2, self.jetson)
+        size_status = compact_status(self.stdscr, line_counter, width // 2, width // 2, height, self.jetson)
         # Update line counter
         line_counter += max(size_memory, size_status)
         # GPU linear gauge info
-        line_counter += compact_gpu(self.stdscr, line_counter, 0, width, self.jetson)
+        if height > line_counter:
+            line_counter += compact_gpu(self.stdscr, line_counter, 0, width, self.jetson)
         # Status disk
-        line_counter += disk_gauge(self.stdscr, line_counter, 0, width, self.jetson.disk)
+        if height > line_counter:
+            line_counter += disk_gauge(self.stdscr, line_counter, 0, width, self.jetson.disk)
         # Plot all processes
         height_free_area = height - line_counter - self._max_height_menu - 1
         offset_process_y = 0
@@ -148,6 +156,8 @@ class ALL(Page):
         if height_free_area > offset_process_y:
             pos_y_mini_menu = height - self._max_height_menu - 1
         column_height = height - pos_y_mini_menu
+        if column_height <= 1:
+            return
         # Upper block
         try:
             self.stdscr.addch(pos_y_mini_menu, 0, curses.ACS_ULCORNER)
@@ -156,8 +166,9 @@ class ALL(Page):
         except curses.error:
             pass
         # vertical Lines
-        self.stdscr.vline(pos_y_mini_menu + 1, 0, curses.ACS_VLINE, column_height - 3)
-        self.stdscr.vline(pos_y_mini_menu + 1, width - 1, curses.ACS_VLINE, column_height - 3)
+        if column_height > 3:
+            self.stdscr.vline(pos_y_mini_menu + 1, 0, curses.ACS_VLINE, column_height - 3)
+            self.stdscr.vline(pos_y_mini_menu + 1, width - 1, curses.ACS_VLINE, column_height - 3)
         # Lower line
         try:
             self.stdscr.addch(pos_y_mini_menu + self._max_height_menu - 1, 0, curses.ACS_LLCORNER)
@@ -179,7 +190,8 @@ class ALL(Page):
             func(self.stdscr, pos_y_mini_menu, column_width * nline, column_width, column_height, self.jetson)
             if nline < n_print - 1:
                 self.stdscr.addch(pos_y_mini_menu, column_width * (nline + 1), curses.ACS_TTEE)
-                self.stdscr.vline(pos_y_mini_menu + 1, column_width * (nline + 1), curses.ACS_VLINE, column_height - 3)
+                if column_height > 3:
+                    self.stdscr.vline(pos_y_mini_menu + 1, column_width * (nline + 1), curses.ACS_VLINE, column_height - 3)
                 if height_free_area >= offset_process_y:
                     self.stdscr.addch(pos_y_mini_menu + column_height - 2, column_width * (nline + 1), curses.ACS_BTEE)
                 else:

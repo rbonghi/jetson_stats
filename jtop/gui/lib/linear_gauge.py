@@ -79,7 +79,10 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
         stdscr.addstr(pos_y, pos_x + name_size + x_bar_start + 1, grey_part, curses.A_DIM)
     else:
         # Show message status
-        stdscr.addstr(pos_y, pos_x + name_size + 2, data['message'] if 'message' in data else "OFF", color_offline)
+        try:
+            stdscr.addstr(pos_y, pos_x + name_size + 2, data['message'] if 'message' in data else "OFF", color_offline)
+        except curses.error:
+            pass
 
 
 def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data, unit='k'):

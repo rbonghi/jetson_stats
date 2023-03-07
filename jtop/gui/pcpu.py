@@ -74,7 +74,11 @@ def cpu_grid(stdscr, list_cpu, print_cpu, start_y, start_x, size_height=0, size_
             idx_row = 0
             idx_column += 1
         # Get CPU in grid
-        print_cpu(stdscr, idx, cpu, start_y + idx_row * step_height, start_x + idx_column * step_width, step_height - 1, step_width - 1)
+        try:
+            print_cpu(stdscr, idx, cpu, start_y + idx_row * step_height, start_x + idx_column * step_width, step_height - 1, step_width - 1)
+            
+        except curses.error:
+            pass
         idx_row += 1
     # return matrix
     return step_height, step_width, size_columns, size_rows
