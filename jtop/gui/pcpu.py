@@ -94,7 +94,7 @@ class CPU(Page):
         super(CPU, self).__init__("CPU", stdscr, jetson)
         # List all chart CPU
         size_cpu = len(jetson.cpu['cpu'])
-        self._chart_cpus = [Chart(jetson, str(idx + 1), self.update_chart, color_text=curses.COLOR_BLUE) for idx in range(size_cpu)]
+        self._chart_cpus = [Chart(jetson, str(idx + 1), self.update_chart, color_text=curses.COLOR_BLUE, color_chart=[curses.COLOR_BLUE]) for idx in range(size_cpu)]
 
     def update_chart(self, jetson, name):
         cpu = jetson.cpu['cpu'][int(name) - 1]

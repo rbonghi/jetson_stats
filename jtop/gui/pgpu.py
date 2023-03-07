@@ -70,11 +70,15 @@ class GPU(Page):
         self.draw_gpus = {}
         for gpu_name in self.jetson.gpu:
             type_gpu = "i" if self.jetson.gpu[gpu_name]['type'] == 'integrated' else 'd'
-            chart = Chart(jetson, "{t}GPU {name}".format(t=type_gpu, name=gpu_name), self.update_chart, color_text=curses.COLOR_GREEN)
+            chart = Chart(jetson, "{t}GPU {name}".format(t=type_gpu, name=gpu_name), self.update_chart,
+                          color_text=curses.COLOR_GREEN)
             # button_railgate = SmallButton(stdscr, self.action_railgate, info={'name': gpu_name})
             button_3d_scaling = SmallButton(stdscr, self.action_scaling_3D, info={'name': gpu_name})
             if type_gpu == 'i':
-                chart_ram = Chart(jetson, "GPU Shared RAM", self.update_chart_ram, type_value=float, color_text=curses.COLOR_GREEN)
+                chart_ram = Chart(jetson, "GPU Shared RAM", self.update_chart_ram,
+                                  type_value=float,
+                                  color_text=curses.COLOR_GREEN,
+                                  color_chart=[240, curses.COLOR_GREEN])
             else:
                 chart_ram = None
             self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling, 'ram': chart_ram}
@@ -108,12 +112,14 @@ class GPU(Page):
         # Get max value if is present
         max_val = parameter.get("tot", 100)
         # Get value
+        cpu_val = parameter.get("used", 0)
         use_val = parameter.get("shared", 0)
         szw, divider, unit = size_min(max_val, start='k')
         # Append in list
+        used_out = (cpu_val) / divider
         gpu_out = (use_val) / divider
         return {
-            'value': [gpu_out],
+            'value': [used_out, gpu_out],
             'max': szw,
             'unit': unit
         }
