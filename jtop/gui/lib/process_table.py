@@ -46,7 +46,10 @@ class ProcessTable(object):
     def draw(self, pos_y, pos_x, width, height, key, mouse):
         processes = self.jetson.processes
         # Plot low bar background line
-        self.stdscr.addstr(pos_y, 0, " " * width, NColors.igreen())
+        try:
+            self.stdscr.addstr(pos_y, 0, " " * width, NColors.igreen())
+        except curses.error:
+            return 0
         title_counter = 0
         for idx, (title, info) in enumerate(header):
             try:

@@ -18,6 +18,10 @@
 import curses
 
 
+def init_colorscale_pair(num, fg, bg):
+    curses.init_pair(num, fg if curses.COLORS >= 256 else curses.COLOR_WHITE, bg if curses.COLORS >= 256 else curses.COLOR_BLACK)
+
+
 class NColors:
 
     RED = 1
@@ -49,6 +53,10 @@ class NColors:
         curses.init_pair(NColors.iBLUE, curses.COLOR_WHITE, curses.COLOR_BLUE)
         curses.init_pair(NColors.iMAGENTA, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
         curses.init_pair(NColors.iCYAN, curses.COLOR_WHITE, curses.COLOR_CYAN)
+
+    @staticmethod
+    def init_grey(num):
+        init_colorscale_pair(num, 240, curses.COLOR_BLACK)
 
     @staticmethod
     def italic():

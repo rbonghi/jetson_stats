@@ -25,7 +25,7 @@ from .common import check_curses
 
 class Chart(object):
 
-    OBJECT_COUNTER = 0
+    COLOR_COUNTER = 0
     OFFSET_COLOR_CHART = 20
     OFFSET_COLOR_TEXT = 18
 
@@ -35,7 +35,7 @@ class Chart(object):
     """
 
     def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.COLOR_WHITE, color_chart=[], fill=True, time=10.0, tik=2):
-        self._color_obj_counter = Chart.OBJECT_COUNTER
+        self._color_obj_counter = Chart.COLOR_COUNTER
         self.jetson = jetson
         self.name = name
         self.callback = callback
@@ -61,9 +61,9 @@ class Chart(object):
         # Initialize all colors
         color_step = len(self.color_chart)
         values = list(range(len(self.color_chart)))[::-1] + [len(self.color_chart)]
-        combinations = list(itertools.combinations(values, 2))
+        self._combinations = list(itertools.combinations(values, 2))
         list_colors = {}
-        for c in combinations:
+        for c in self._combinations:
             if c[0] not in list_colors:
                 list_colors[c[0]] = []
             list_colors[c[0]] = [c] + list_colors[c[0]]
@@ -74,9 +74,13 @@ class Chart(object):
                 second_color = self.color_chart[color_set[1]] if color_set[1] < len(self.color_chart) else curses.COLOR_BLACK
                 curses.init_pair(idx_name, self.color_chart[color_set[0]], second_color)
         # Update counter colors
-        Chart.OBJECT_COUNTER += len(combinations) + 1
+        Chart.COLOR_COUNTER += len(self._combinations) + 1
         # Attach the chart for every update from jtop
         jetson.attach(self.update)
+
+    def __del__(self):
+        # Remove from color counter
+        Chart.COLOR_COUNTER -= len(self._combinations) + 1
 
     def statusChart(self, active, message):
         self.active = active

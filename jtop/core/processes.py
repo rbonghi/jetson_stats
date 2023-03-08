@@ -67,55 +67,6 @@ def read_process_table(path_table):
     return total, table
 
 
-def get_process_info(clk_tck, page_size):
-    # Get the list of process IDs
-    pids = [pid for pid in os.listdir('/proc') if pid.isdigit()]
-
-    # Initialize an empty dictionary to store the process information
-    processes = {}
-    # Loop over all process IDs and read the stat, cmdline, and statm files
-    for pid in pids:
-        with open(os.path.join('/proc', pid, 'stat')) as stat_file:
-            stat = stat_file.read().split()
-
-        with open(os.path.join('/proc', pid, 'cmdline')) as cmdline_file:
-            cmdline = cmdline_file.read().replace('\0', ' ').strip()
-
-        with open(os.path.join('/proc', pid, 'statm')) as statm_file:
-            statm = statm_file.read().split()
-
-            if not cmdline:
-                continue
-            # Extract the process information from the stat and statm files
-            pid = stat[0]
-            utime = float(stat[13]) / clk_tck
-            stime = float(stat[14]) / clk_tck
-            mem = int(statm[0]) * page_size / (1024.0 ** 2)
-            priority = stat[17]
-            tasks = int(open(os.path.join('/proc', pid, 'status')).read().split('Threads:\t')[1].split('\n')[0])
-            state = stat[2]
-
-            # Calculate the CPU usage
-            uptime = float(open('/proc/uptime', 'r').readline().split()[0])
-            total_time = utime + stime
-            cpu_percent = 100 * ((total_time / clk_tck) / float(uptime))
-
-            # Store the process information in the dictionary
-            process = {
-                'CMD': cmdline,
-                'CPU': cpu_percent,
-                'MEM': mem,
-                'UTIME': utime,
-                'STIME': stime,
-                'PRIORITY': priority,
-                'TASKS': tasks,
-                'STATE': state
-            }
-            processes[pid] = process
-
-    return processes
-
-
 class ProcessService(object):
 
     def __init__(self):

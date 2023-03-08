@@ -66,6 +66,8 @@ class GPU(Page):
 
     def __init__(self, stdscr, jetson):
         super(GPU, self).__init__("GPU", stdscr, jetson)
+        # Check if grey exist otherwise use white
+        COLOR_GREY = 240 if curses.COLORS >= 256 else curses.COLOR_WHITE
         # Initialize GPU chart
         self.draw_gpus = {}
         for gpu_name in self.jetson.gpu:
@@ -78,7 +80,7 @@ class GPU(Page):
                 chart_ram = Chart(jetson, "GPU Shared RAM", self.update_chart_ram,
                                   type_value=float,
                                   color_text=curses.COLOR_GREEN,
-                                  color_chart=[240, curses.COLOR_GREEN])
+                                  color_chart=[COLOR_GREY, curses.COLOR_GREEN])
             else:
                 chart_ram = None
             self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling, 'ram': chart_ram}
@@ -185,7 +187,7 @@ class GPU(Page):
                 # tpc_pg_mask_status = NColors.green() if gpu_status['tpc_pg_mask'] else NColors.red()
                 plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "TPC PG", tpc_pg_mask_string)
                 button_idx += button_position
-            # Checj if GPC data is included
+            # Check if GPC data is included
             frq_size = width - 3
             if 'GPC' in gpu_freq:
                 size_gpc_gauge = (width - 2) // (2 + len(gpu_freq['GPC']))
