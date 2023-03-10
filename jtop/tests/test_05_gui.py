@@ -20,6 +20,7 @@ import curses
 from jtop import jtop
 from .conftest import emulate_all_devices
 # Import gui test
+from ..gui.lib.chart import Chart
 from ..gui import JTOPGUI, ALL, GPU, CPU, MEM, ENGINE, CTRL, INFO
 
 
@@ -41,6 +42,8 @@ def test_openGUI(setup_jtop_server):
     stdscr = curses.initscr()
     # Initialize colors
     curses.start_color()
+    # Reset counter charts
+    Chart.COLOR_COUNTER = 0
     # Run jtop
     with jtop() as jetson:
         if jetson.ok():

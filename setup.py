@@ -104,7 +104,7 @@ def remove_data(file_name):
         shutil.rmtree(file_name)
 
 
-def remove_depecated_data():
+def remove_deprecated_data():
     """
     This function uninstall the service
     """
@@ -136,7 +136,7 @@ def pypi_installer(installer, obj, copy):
         if is_superuser():
             # Remove all deprecated data
             # - This function should do nothing
-            remove_depecated_data()
+            remove_deprecated_data()
             # remove service jtop.service
             uninstall_service()
             # Remove service path
