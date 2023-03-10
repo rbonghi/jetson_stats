@@ -207,6 +207,8 @@ def get_local_interfaces():
     # separate variables, however they are the same address space - that's how fcntl.ioctl() works since the mutate_flag=True
     # by default.
     mutated_byte_buffer = fcntl.ioctl(sock.fileno(), SIOCGIFCONF, mutable_byte_buffer)
+    # Close socket
+    sock.close()
     # Get our max_bytes of our mutated byte buffer that points to the names variable address space.
     max_bytes_out, names_address_out = struct.unpack('iL', mutated_byte_buffer)
     # Convert names to a bytes array - keep in mind we've mutated the names array, so now our bytes out should represent
