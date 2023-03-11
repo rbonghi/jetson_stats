@@ -24,6 +24,12 @@ import logging
 from .command import Command
 # Import exceptions
 from .exceptions import JtopException
+# Fix connection refused for python 2.7
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
 # Create logger
 logger = logging.getLogger(__name__)
 # Regular expressions
@@ -36,7 +42,7 @@ NVP_TIMER_WAIT_JETSON_CLOCKS = 0.5
 NVP_COUNTER_ALIVE_JETSON_CLOCKS = 5
 
 
-def nvpmode_decode():
+def nvpmodel_decode():
     default = {}
     nvpm = {}
     nvpmodel_p = Command(['nvpmodel', '-p', '--verbose'])
@@ -61,10 +67,13 @@ def nvpmode_decode():
     return default, list(nvpm.values())
 
 
-def nvpmode_query():
+def nvpmodel_query():
     """ Read nvpmodel to know the status of the board """
-    nvpmodel_p = Command(['nvpmodel', '-q'])
-    lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+    try:
+        nvpmodel_p = Command(['nvpmodel', '-q'])
+        lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
+    except FileNotFoundError:
+        raise JtopException("nvpmodel doesn't exist")
     # Extract lines
     for idx, line in enumerate(lines):
         # Search configuration NVPmodel
@@ -422,10 +431,10 @@ class NVPModelService(object):
         self._jetson_clocks = jetson_clocks
         try:
             # Read all NVP modes
-            self._default, self._nvp_models = nvpmode_decode()
+            self._default, self._nvp_models = nvpmodel_decode()
             self._nvp_status = [True] * len(self._nvp_models)
             # Read current nvpmodel
-            self._nvpmodel_now = nvpmode_query()
+            self._nvpmodel_now = nvpmodel_query()
             logger.info("nvpmodel running in [{id}]{name} - Default: {default}".format(
                 name=self._nvpmodel_now['name'],
                 id=self._nvpmodel_now['id'],
@@ -543,7 +552,7 @@ class NVPModelService(object):
         running = self.is_running()
         # If thread is not running update status
         if not running:
-            self._nvpmodel_now = nvpmode_query()
+            self._nvpmodel_now = nvpmodel_query()
         return {
             'status': self._nvp_status,
             'thread': running,

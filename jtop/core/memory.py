@@ -389,16 +389,16 @@ class MemoryService(object):
         ram_buffer = status_mem.get('Buffers', 0)
         ram_cached = status_mem.get('Cached', 0)
         ram_SReclaimable = status_mem.get('SReclaimable', 0)
-        ram_Shmem = status_mem.get('Shmem', 0)
+        # ram_Shmem = status_mem.get('Shmem', 0)
         total_used_memory = ram_total - ram_free
         cached_memory = ram_cached + ram_SReclaimable  # + ram_Shmem
         # Add fields for RAM
         memory['RAM'] = {
             'tot': ram_total,
-            'used': total_used_memory - (ram_buffer + cached_memory),
+            'used': total_used_memory - (ram_buffer + ram_cached),
             'free': ram_free,
             'buffers': ram_buffer,
-            'cached': cached_memory + ram_Shmem,
+            'cached': cached_memory,
             'shared': ram_shared,
             'lfb': large_free_bank,  # In 4MB
         }

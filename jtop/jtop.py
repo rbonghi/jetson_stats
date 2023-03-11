@@ -610,7 +610,7 @@ class jtop(Thread):
         """
         This property show in a simple way all memories available, the main output is available in this way:
 
-        * **RAM** - It is a dictionary with all information about RAM
+        * **RAM** - It is a dictionary with all information about RAM :sup:`A`
         * **SWAP** - It is a dictionary with all information about SWAP
         * **EMC** - It is a dictionary with EMC data, not in all boards this data is available
         * **IRAM** - It is a dictionary with SWAP data, not in all boards this data is available
@@ -632,7 +632,7 @@ class jtop(Thread):
 
         For each dictionary there are specific outputs
 
-        *RAM*
+        *RAM* :sup:`A`
 
         ========== =================== ====================================================
         Name       Type                Description
@@ -654,7 +654,7 @@ class jtop(Thread):
         tot        :py:class:`int`     Total SWAP in **KB**
         used       :py:class:`int`     Total used SWAP in **KB**
         cached     :py:class:`int`     Cached RAM in **KB**
-        table      :py:class:`dict`    Dictionary with all swap available :sup:`A`
+        table      :py:class:`dict`    Dictionary with all swap available :sup:`B`
         ========== =================== ====================================================
 
         *EMC* (if available on your device)
@@ -682,6 +682,19 @@ class jtop(Thread):
         .. note::
 
             Note **A**
+                The RAM is measured reading the file :code:`/proc/meminfo` for each field is read:
+                
+                ========== ====================================================
+                Name       Description
+                ========== ====================================================
+                tot        :code:`MemTotal`
+                used       :code:`MemTotal - (Buffers + Cached)`
+                free       :code:`MemFree`
+                buffers    :code:`Buffers`
+                cached     :code:`Cached + SReclaimable`
+                ========== ====================================================
+
+            Note **B**
                 The swap table is a list of dictionary with this data
 
                 ========== =================== ==============================================
@@ -917,6 +930,9 @@ class jtop(Thread):
         ============= =================== ====================================================
         Name          Type                Description
         ============= =================== ====================================================
+        online        :py:class:`bool`    If sensor is online
+        type          :py:class:`str`     Type of sensors (For NVIDIA Jetson is INA3221)
+        status        :py:class:`str`     *(if available)* Status sensor
         volt          :py:class:`int`     Gets rail voltage in millivolts
         curr          :py:class:`int`     Gets rail current in milliamperes
         power         :py:class:`int`     Gets rail power in milliwatt
@@ -930,6 +946,7 @@ class jtop(Thread):
             #. `Power Consumption - Jetson TX/Nano <https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-283/Tegra%20Linux%20Driver%20Package%20Development%20Guide/power_management_tx2.html#wwpID0E0EE0HA>`_
             #. `Power Consumption - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html#software-based-power-consumption-modeling>`_
             #. `Power Consumption - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#software-based-power-consumption-modeling>`_
+            #. `INA3221 datasheet <https://www.ti.com/product/INA3221>`_
 
         :return: A dictionary with a list of power and the total
         :rtype: dict
@@ -948,7 +965,7 @@ class jtop(Thread):
         ============= =================== ====================================================
         Name          Type                Description
         ============= =================== ====================================================
-        online        :py:class:`bool`    Status sensor
+        online        :py:class:`bool`    If sensor is online
         temp          :py:class:`int`     Gets rail voltage in Celsius. *(If offline show -256)*
         max           :py:class:`int`     *(if available)* Gets rail average current limit in Celsius
         crit          :py:class:`int`     *(if available)* Gets rail instantaneous current limit in Celsius

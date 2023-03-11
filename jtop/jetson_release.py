@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
 import argparse
 from .core.common import get_var
-from .core.nvpmodel import nvpmode_query
+from .core.nvpmodel import nvpmodel_query
 from .core.hardware import get_platform_variables
 from .core.jetson_variables import get_jetson_variables
 from .core.jetson_libraries import get_libraries, get_cuda, get_opencv
@@ -58,7 +59,7 @@ def main():
     del jetson['L4T']
     # Print NVP model status
     try:
-        nvpmodel_now = nvpmode_query()
+        nvpmodel_now = nvpmodel_query()
         print("{service}[{number}]: {name}".format(
             service=bcolors.ok(bcolors.bold("NV Power Mode")),
             name=bcolors.bold(nvpmodel_now['name']),
@@ -79,6 +80,8 @@ def main():
     for name, variable in jetson.items():
         if not variable:
             variable = bcolors.fail("Not available")
+            if name == 'Module' and os.getuid() != 0:
+                variable = bcolors.fail("Check with sudo")
         print(" - {name}: {variable}".format(name=bcolors.bold(name), variable=variable))
     # Print platform variables
     plat = get_platform_variables()
@@ -101,9 +104,9 @@ def main():
     print(bcolors.ok(bcolors.bold("Libraries:")))
     cuda_version = get_cuda()
     if cuda_version:
-        print(" - {cuda}: {version}".format(cuda=bcolors.bold('CUDA'), version=cuda_version))
+        print(" - {name}: {value}".format(name=bcolors.bold('CUDA'), value=cuda_version))
     else:
-        print(bcolors.fail(" - CUDA not installed!"))
+        print(" - {name}: {value}".format(name=bcolors.bold('CUDA'), value=bcolors.fail("Not installed")))
     # Read all libraries
     os_variables = get_libraries()
     for name, value in os_variables.items():
@@ -117,7 +120,7 @@ def main():
         opencv_string = "{name}: {value}".format(name=bcolors.bold('OpenCV'), value=opencv_version)
         print(" - {opencv_string} - with CUDA: {opencv_cuda}".format(opencv_string=opencv_string, opencv_cuda=opencv_cuda_string))
     else:
-        print(bcolors.fail(" - OpenCV not installed!"))
+        print(" - {name}: {value}".format(name=bcolors.bold('OpenCV'), value=bcolors.fail("Not installed")))
 
 
 if __name__ == "__main__":

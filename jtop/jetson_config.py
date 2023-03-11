@@ -59,7 +59,7 @@ def update_jtop():
         cmd_update_msg = cmd_update()
         cmd_update_msg = "JTOP updated!"
     except (OSError, Command.CommandException):
-        cmd_update_msg = "Error to update jtop, please run:\n\nsudo -H pip3 install --no-cache-dir -U jetson_stats"
+        cmd_update_msg = "Error to update jtop, please run:\n\nsudo pip3 install --no-cache-dir -U jetson_stats"
     return cmd_update_msg
 
 
@@ -208,7 +208,7 @@ DISPLAY_MENU = {
 INFORMATION_MENU = {
     'title': 'jtop {version} - main page'.format(version=get_var(VERSION_RE)),
     'description': "This tool provide a set of tool to configure your NVIDIA Jetson\
-\n\nScripts: jtop, jetson_config, jetson_release, jetson_swap\nServices: jetson_stats",
+\n\nScripts: jtop, jetson_config, jetson_release, jetson_swap\nServices: jtop.service",
 }
 MAIN_PAGE = {
     'title': 'jetson-stats {version} - main page'.format(version=get_var(VERSION_RE)),

@@ -112,10 +112,16 @@ def read_power_status(data):
         for name, path in data.items():
             if 'type' in name:
                 continue
+            elif 'status' in name:
+                values[name] = cat(path).strip()
+                continue
+            elif 'online' in name:
+                values[name] = cat(path).strip() == '1'
+                continue
             # Fix from values with "ma" in the end, like
             # warn 32760 ma
             raw_value = int(cat(path).split(" ")[0])
-            values[name] = raw_value // 1000 if power_type == 'SYSTEM' else raw_value
+            values[name] = raw_value // 1000 if power_type != 'INA3221' else raw_value
     except OSError:
         values = {}
     return values
@@ -142,7 +148,7 @@ def list_all_i2c_ports(path):
                 logger.warn("Skipped \"sum of shunt voltages\" {path}".format(path=power_label_path))
                 continue
             # Build list of path
-            warnings = {'type': 'I2C'}
+            warnings = {'type': 'INA3221'}
             if check_file("{path}/curr{num}_crit_alarm".format(path=path, num=number_port)):
                 warnings['crit_alarm'] = "{path}/curr{num}_crit_alarm".format(path=path, num=number_port)
             if check_file("{path}/curr{num}_max_alarm".format(path=path, num=number_port)):
@@ -150,7 +156,7 @@ def list_all_i2c_ports(path):
             values = read_power_status(warnings)
             logger.info("Alarms {name} - {data}".format(name=raw_name, data=values))
             # Read Voltage, current and limits
-            sensor = {'type': 'I2C'}
+            sensor = {'type': 'INA3221'}
             if check_file("{path}/in{num}_input".format(path=path, num=number_port)):
                 sensor['volt'] = "{path}/in{num}_input".format(path=path, num=number_port)  # Voltage in mV
             if check_file("{path}/curr{num}_input".format(path=path, num=number_port)):
@@ -169,7 +175,7 @@ def list_all_i2c_ports(path):
             number_port = int(item.lstrip("rail_name_"))
             # Build list of path
             # https://forums.developer.nvidia.com/t/jetson-tx1-ina226-power-monitor-with-i2c-interface/43819/5
-            sensor = {'type': 'I2C'}
+            sensor = {'type': 'INA3221'}
             if check_file("{path}/in_voltage{num}_input".format(path=path, num=number_port)):
                 sensor['volt'] = "{path}/in_voltage{num}_input".format(path=path, num=number_port)  # Voltage in mV
             if check_file("{path}/in_current{num}_input".format(path=path, num=number_port)):
@@ -197,13 +203,17 @@ def find_all_system_monitor(system_monitor):
         name = folder.replace("ucsi-source-psy-", "")
         # Read type
         path_type = "{path}/type".format(path=local_path)
-        type_supply = cat(path_type).strip()
+        type_supply = cat(path_type).strip() if check_file(path_type) else "SYSTEM"
         # Read model name
         path_name = "{path}/model_name".format(path=local_path)
-        model_name = cat(path_name).strip() if check_file(path_name) else ""
-        logger.info("Found name={name} type={type} model={model}".format(name=name, type=type_supply, model=model_name))
+        model_name = cat(path_name).strip() if check_file(path_name) else "<EMPTY>"
         # Find power, current and voltage
-        sensor = {'type': 'SYSTEM'}
+        sensor = {'type': type_supply}
+        # Status power
+        if check_file("{path}/online".format(path=local_path)):
+            sensor['online'] = "{path}/online".format(path=local_path)
+        if check_file("{path}/status".format(path=local_path)):
+            sensor['status'] = "{path}/status".format(path=local_path)
         if check_file("{path}/voltage_now".format(path=local_path)):
             sensor['volt'] = "{path}/voltage_now".format(path=local_path)  # Voltage in mV
         if check_file("{path}/current_now".format(path=local_path)):
@@ -211,8 +221,12 @@ def find_all_system_monitor(system_monitor):
         if check_file("{path}/current_max".format(path=local_path)):
             sensor['warn'] = "{path}/current_max".format(path=local_path)  # in mA
         # If there is an file is added in list
-        if len(sensor) > 1:
+        if 'volt' in sensor and 'curr' in sensor:
             sensor_name[name] = sensor
+            logger.info("Found name={name} type={type} model={model} in {path}".format(
+                name=name, type=type_supply, model=model_name, path=folder))
+        else:
+            logger.warning("Skipped {name} type={type} in={path}".format(name=name, type=type_supply, path=folder))
     if sensor_name:
         logger.info("Found SYSTEM power monitor")
     return sensor_name
@@ -258,7 +272,9 @@ class PowerService(object):
             if 'power' not in values:
                 power = values['volt'] * (float(values['curr']) / 1000)
                 values['power'] = int(power)
-            # print(name, 'Power', values['power'], power)
+            # if online not in group (for I2C)
+            if 'online' not in values:
+                values['online'] = True
             # Measure average Power between first and previous interval
             if name in self._power_avg:
                 old_avg = self._power_avg[name]

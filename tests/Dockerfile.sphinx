@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-ARG PYTHON_VERSION=3.12.0a3-slim-bullseye
+ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}
 
 RUN apt-get update && \
-    apt-get install -y sudo bc make gcc && \
+    apt-get install -y sudo bc make gcc g++ make && \
     sudo -H python -m pip install --upgrade pip && \
     rm -rf /var/lib/apt/lists/*
 
