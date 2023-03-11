@@ -82,12 +82,12 @@ jobs:
         uses: docker/build-push-action@v4.0.0
         with:
           push: |
-              ${{ github.actor != 'dependabot[bot]' &&
-                  github.event_name != 'pull_request' &&
-                  !startsWith(github.ref, 'refs/heads/feature/') &&
-                  !contains(github.ref, '.dev') &&
-                  !contains(github.ref, 'rc')
-              }}
+            ${{ github.actor != 'dependabot[bot]' &&
+                github.event_name != 'pull_request' &&
+                !startsWith(github.ref, 'refs/heads/feature/') &&
+                !contains(github.ref, '.dev') &&
+                !contains(github.ref, 'rc')
+            }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64, linux/arm64
@@ -190,7 +190,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!"
+          args: "jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!\nTo install `sudo pip3 install jetson-stats==${{ steps.repo_status.outputs.tag }}`"
       - name: Send telegram message
         uses: appleboy/telegram-action@master
         with:
