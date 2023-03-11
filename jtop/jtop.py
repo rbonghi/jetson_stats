@@ -683,7 +683,7 @@ class jtop(Thread):
 
             Note **A**
                 The RAM is measured reading the file :code:`/proc/meminfo` for each field is read:
-                
+
                 ========== ====================================================
                 Name       Description
                 ========== ====================================================
