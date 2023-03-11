@@ -340,7 +340,7 @@ class CTRL(Page):
             pass
         try:
             if 'curr' in total:
-                unit_curr = unit_to_string(total['curr'], 'm', 'V')
+                unit_curr = unit_to_string(total['curr'], 'm', 'A')
                 self.stdscr.addstr(pos_y_table + len_power, pos_x + 33, unit_curr, curses.A_BOLD)
         except curses.error:
             pass
