@@ -8,7 +8,7 @@ jetson-stats
    rnext.it<https://rnext.it>
    Community Discord<https://discord.gg/BFbuJNhYzS>
    sponsors
-   jtop
+   jtop/jtop
    advanced-usage
    docker
    reference/index
@@ -53,7 +53,7 @@ Start jtop it's pretty simple just write `jtop`!
 
    jtop
 
-A simple interface will appear on your terminal, more capabilities are documented at :doc:`jtop` page.
+A simple interface will appear on your terminal, more capabilities are documented at :doc:`jtop/jtop` page.
 
 Advanced usage
 --------------
