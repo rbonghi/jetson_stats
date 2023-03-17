@@ -109,7 +109,7 @@ If your company benefits from this library, please consider [💖 sponsoring its
 
 ## Documentation
 
-jetson-stats has usage and reference documentation at <https://rnext.it/jetson_stats>.
+jetson-stats has usage and reference documentation at <https://rnext.it/jetson_stats>, there is also a [🆘 troubleshooting](https://rnext.it/jetson_stats/troubleshooting.html) page.
 
 ## Community
 

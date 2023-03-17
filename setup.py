@@ -162,7 +162,7 @@ def pypi_installer(installer, obj, copy):
     installer.run(obj)
     # Run the restart all services before to close the installer
     if not is_virtualenv() and not is_docker() and is_superuser():
-        folder, _ = os.path.split(__file__)  # This folder
+        folder, _ = os.path.split(os.path.realpath(__file__))  # This folder
         # Install variables
         install_variables(folder, copy=copy)
         # Set service permissions
