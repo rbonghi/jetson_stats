@@ -53,6 +53,81 @@ If you want to know how is ti works, check  this menu below:
 .. toctree::
     how_is_it_works
 
+Options
+-------
+
+There are different options available for jtop
+
+Health
+^^^^^^
+
+If something goes wrong, you can check the ``jtop`` status with
+
+.. code-block:: bash
+
+  sudo jtop --health
+
+.. image:: /images/jetson_config-02-jtop.png
+   :align: center
+
+This tool, will check and fix:
+
+- **jetson-stats** - Fix jetson-stats service
+- **Permissions** - Fix permissions for your user
+- **variables** - Check if are installed all variables :doc:`/other-tools/environment_variables`
+
+Restore
+^^^^^^^
+
+If you want to restore the original board configuration you can simply write
+
+.. code-block:: bash
+
+  jtop --restore
+
+.. image:: /images/jtop-restore.png
+   :align: center
+
+This command will restore the original configuration of:
+
+- ``jetson_clocks``
+- fan
+- ``nvpmodel``
+- jtop configuration
+
+Color filter
+^^^^^^^^^^^^
+
+This option change the red color for text and background to blue.
+
+To enable this feature you can add this option
+
+.. code-block:: bash
+
+  jtop --color-filter
+
+or you can add in your ``.bashrc``
+
+.. code-block:: bash
+
+  JTOP_COLOR_FILTER=True
+
+The output will be like the image below
+
+.. image:: /images/jtop-color-filter.png
+   :align: center
+
+Error-log
+^^^^^^^^^
+
+If your board is not included, jetpack missing, hardware missing, you can launch this script
+
+.. code-block:: bash
+
+  jtop --error-log
+
+This script generate a file ``jtop-error.log`` ready to be attached on your issue
+
 Pages
 -----
 
@@ -151,98 +226,81 @@ MEM
 
 Memory and Swap, From this page you can also enable/disable a new swap or clean the cache. A detailed documentation of this output is available at :py:attr:`jtop.jtop.memory`
 
+#. **Memory** It's a chart with 10-second history of the RAM status. Each color is also described in the legend on the right. On the title is also available the Large Free Block (lfb) in 4MB
+    - Cyan - Used memory
+    - Green - GPU shared memory
+    - Blue - Buffers memory
+    - Yellow - Cached memory
+#. **Emc** & **IRAM** In this area is visualized a linear gauge for EMC and IRAM
+    a. EMC (if available)
+        - Frequency EMC
+        - percentage bandwidth used at Frequency
+    b. Iram (if available)
+#. **Swap** In this section you can control your swap, enable a new one and also clear the cache. Each color describe a type of swap.
+    - Cyan - zram
+    - Yellow - swap file
+    - Magenta - swap partition
+    - Green - All other type of swap
 
+For each swap is also described the priority (P5, P-2) written on the left side of the bar
 
 Controls
-^^^^^^^^
+""""""""
 
-To control the your NVIDIA Jetson are available this keyboard commands:
-
-In page **4 MEM**:
+From this page you can click or press from your keyboard:
 
 * **c** Clear cache
-* **s** Enable/Disable extra swap
+* **s** Create new swap
+* **b** Set swap on boot
 * **+** and **-** Increase and decrease swap size
 
-In page **5 CTRL**:
+If you want to remove one, you can select one from the table and press on **disable**
 
-* **a** Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)
-* **e** Enable/Disable jetson_clocks on board boot
+ENG
+^^^
+
+.. image:: /images/pages/05-jtop.png
+   :align: center
+
+
+This page is Automatically generated from your board and is a list of all engines. All output is available also from :py:attr:`jtop.jtop.engine`
+
+You can find different linear gauges:
+
+#. This type if for engines that are not available a minimum and a maximum frequency. In this case you can read only the current frequency on right.
+#. This engine has available the minimum and maximum frequency. In this case you can read at which current frequency is running
+#. If there are engines from the same main group are all collected on the same line
+
+CTRL
+^^^^
+
+.. image:: /images/pages/06-jtop.png
+   :align: center
+
+This page allow you to control your device, starting from :py:attr:`jtop.jtop.fan`, :py:attr:`jtop.jtop.jetson_clocks` and :py:attr:`jtop.jtop.nvpmodel`.
+
+#. Show the fan name, PWM and if available the revolution per minute (RPM). You can also increase/decrease the speed pressing buttons **[-]** **[+]**
+#. You can select the fan profile available on your board, more details in :py:attr:`jtop.jtop.fan`
+#. It is a real time chart with the current fan speed
+#. You can enable/disable :py:attr:`jtop.jtop.jetson_clocks` and set on boot (Note: jetson_clocks start only after 60s from up time)
+#. You can select which NVPmodel you want to use on your board. Where you see the letter "D" means is the default configuration.
+#. A detailed table with Power, Volt and Current of your board. There is also teh Warning and Critical current before the board fail. More info :py:attr:`jtop.jtop.power`
+
+Controls
+""""""""
+
+From this page you can click or press from your keyboard:
+
+* **s** Enable/Disable jetson_clocks (Note: jetson_clocks start only after 60s from up time)
+* **e** Set/Deselect jetson_clocks on board boot
 * **+** and **-** Increase and decrease the NVPmodel
-* **f** Manual/jetson_clocks mode for your fan
-* **p** and **m** Increase and decrease the Fan speed
 
-Options
--------
+INFO
+^^^^
 
-There are different options available for jtop
-
-Health
-^^^^^^
-
-If something goes wrong, you can check the ``jtop`` status with
-
-.. code-block:: bash
-
-  sudo jtop --health
-
-.. image:: /images/jetson_config-02-jtop.png
+.. image:: /images/pages/07-jtop.png
    :align: center
 
-This tool, will check and fix:
+This page show all technical information about your board. This output is available :py:attr:`jtop.jtop.board`.
 
-- **jetson-stats** - Fix jetson-stats service
-- **Permissions** - Fix permissions for your user
-- **variables** - Check if are installed all variables :doc:`/other-tools/environment_variables`
-
-Restore
-^^^^^^^
-
-If you want to restore the original board configuration you can simply write
-
-.. code-block:: bash
-
-  jtop --restore
-
-.. image:: /images/jtop-restore.png
-   :align: center
-
-This command will restore the original configuration of:
-
-- ``jetson_clocks``
-- fan
-- ``nvpmodel``
-- jtop configuration
-
-Color filter
-^^^^^^^^^^^^
-
-This option change the red color for text and background to blue.
-
-To enable this feature you can add this option
-
-.. code-block:: bash
-
-  jtop --color-filter
-
-or you can add in your ``.bashrc``
-
-.. code-block:: bash
-
-  JTOP_COLOR_FILTER=True
-
-The output will be like the image below
-
-.. image:: /images/jtop-color-filter.png
-   :align: center
-
-Error-log
-^^^^^^^^^
-
-If your board is not included, jetpack missing, hardware missing, you can launch this script
-
-.. code-block:: bash
-
-  jtop --error-log
-
-This script generate a file ``jtop-error.log`` ready to be attached on your issue
+Compare all previous versions, now the Serial number is hidden and you can enable only clicking on the area or pressing the key **s**.
