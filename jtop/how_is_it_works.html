@@ -3,14 +3,22 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="👨‍💻 Advanced Usage" href="advanced-usage.html" /><link rel="prev" title="💖 Sponsor" href="sponsors.html" />
+<meta property="og:title" content="How is it works" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://rnext.it/jetson_stats/jtop/how_is_it_works.html" />
+<meta property="og:site_name" content="jetson-stats" />
+<meta property="og:description" content="jtop is a power monitor that use a service and a python client library. Like the image above, when jtop service start, load and decode the information on your board. Initialization: Read NVIDIA Jet..." />
+<meta property="og:image" content="https://rnext.it/jetson_stats/_images/jtop.png" />
+<meta property="og:image:alt" content="jetson-stats" />
+<meta name="description" content="jtop is a power monitor that use a service and a python client library. Like the image above, when jtop service start, load and decode the information on your board. Initialization: Read NVIDIA Jet..." />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="👨‍💻 Advanced Usage" href="../advanced-usage.html" /><link rel="prev" title="📊 jtop" href="jtop.html" />
 
-    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 -->
-        <title>📊 jtop - jetson-stats 4.1.5</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
-    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 6.1.3 and Furo 2022.12.07 -->
+        <title>How is it works - jetson-stats 4.2.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
 
@@ -141,7 +149,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">jetson-stats 4.1.5</div></a>
+      <a href="../index.html"><div class="brand">jetson-stats 4.2.0</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -161,12 +169,12 @@
   <aside class="sidebar-drawer">
     <div class="sidebar-container">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">jetson-stats 4.1.5</span>
+  <span class="sidebar-brand-text">jetson-stats 4.2.0</span>
   
-</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
@@ -175,20 +183,32 @@
   <ul class="current">
 <li class="toctree-l1"><a class="reference external" href="https://rnext.it">rnext.it</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://discord.gg/BFbuJNhYzS">Community Discord</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sponsors.html">💖 Sponsor</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">📊 jtop</a></li>
-<li class="toctree-l1"><a class="reference internal" href="advanced-usage.html">👨‍💻 Advanced Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="docker.html">🐋 Docker</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">📖 API Reference</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="other-tools/index.html">🧰 Other tools</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_config.html">jetson_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_release.html">jetson_release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="other-tools/jetson_swap.html">jetson_swap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="other-tools/environment_variables.html">Environment variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sponsors.html">💖 Sponsor</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="jtop.html">📊 jtop</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">How is it works</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">🆘 Troubleshooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">✨ Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced-usage.html">👨‍💻 Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker.html">🐋 Docker</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/index.html">📖 API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/jtop.html">jtop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/gpu.html">GPU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/fan.html">Fan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/jetson_clocks.html">jetson_clocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/nvpmodel.html">NVPModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/exceptions.html">Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../other-tools/index.html">🧰 Other tools</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_config.html">jetson_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_release.html">jetson_release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/jetson_swap.html">jetson_swap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../other-tools/environment_variables.html">Environment variables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">🆘 Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">✨ Contributing</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/rbonghi/jetson_stats">GitHub</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
@@ -224,7 +244,7 @@
         </a>
         <div class="content-icon-container">
           <div class="edit-this-page">
-  <a class="muted-link" href="https://github.com/rbonghi/jetson_stats/edit/master/docs/jtop.rst" title="Edit this page">
+  <a class="muted-link" href="https://github.com/rbonghi/jetson_stats/edit/master/docs/jtop/how_is_it_works.rst" title="Edit this page">
     <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
@@ -246,136 +266,41 @@
           </label>
         </div>
         <article role="main">
-          <section id="jtop">
-<h1>📊 jtop<a class="headerlink" href="#jtop" title="Permalink to this heading">#</a></h1>
-<p>jtop can be installed with <a class="reference external" href="https://pip.pypa.io">pip</a></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>jetson-stats
-</pre></div>
-</div>
-<p>Don’t forget to <strong>logout/login</strong> or <strong>reboot</strong> your board</p>
-<section id="run-jtop">
-<h2>Run jtop<a class="headerlink" href="#run-jtop" title="Permalink to this heading">#</a></h2>
-<p>Simple and fast! You can write on your shell <strong>jtop</strong> and that’s it!</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop
-</pre></div>
-</div>
-<img alt="_images/jtop.png" class="align-center" src="_images/jtop.png" />
-<p>Other options are available with <code class="docutils literal notranslate"><span class="pre">-h</span></code> option:</p>
-<div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">nvidia@agx-orin:~$ </span>jtop<span class="w"> </span>-h
-<span class="go">usage: jtop [-h] [--no-warnings] [--restore] [--loop] [--color-filter] [-r REFRESH] [-p PAGE] [-v]</span>
-
-<span class="go">jtop is system monitoring utility and runs on terminal</span>
-
-<span class="go">optional arguments:</span>
-<span class="go">  -h, --help            show this help message and exit</span>
-<span class="go">  --health              Status jtop and fix (default: False)</span>
-<span class="go">  --error-log           Generate a log for GitHub (default: False)</span>
-<span class="go">  --no-warnings         Do not show warnings (default: False)</span>
-<span class="go">  --restore             Reset Jetson configuration (default: False)</span>
-<span class="go">  --loop                Automatically switch page every 5s (default: False)</span>
-<span class="go">  --color-filter        Change jtop base colors, you can use also JTOP_COLOR_FILTER=True (default: False)</span>
-<span class="go">  -r REFRESH, --refresh REFRESH</span>
-<span class="go">                        refresh interval (default: 500)</span>
-<span class="go">  -p PAGE, --page PAGE  Open fix page (default: 1)</span>
-<span class="go">  -v, --version         show program\&#39;s version number and exit</span>
-</pre></div>
-</div>
-<p>You can change page using <em>left</em>, <em>right</em> arrow or <em>TAB</em> to change page.</p>
-<section id="pages">
-<h3>Pages<a class="headerlink" href="#pages" title="Permalink to this heading">#</a></h3>
-<p><strong>jtop</strong> have four different pages to control your NVIDIA Jetson:</p>
+          <section id="how-is-it-works">
+<h1>How is it works<a class="headerlink" href="#how-is-it-works" title="Permalink to this heading">#</a></h1>
+<p>jtop is a power monitor that use a service and a python client library.</p>
+<img alt="../_images/architecture.drawio.png" class="align-center" src="../_images/architecture.drawio.png" />
+<p>Like the image above, when jtop service start, load and decode the information on your board.</p>
+<section id="initialization">
+<h2>Initialization<a class="headerlink" href="#initialization" title="Permalink to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p><strong>ALL</strong> Are collected all information about your board: CPUs status, Memory, <em>GPU</em>, disk, fan and all status about jetson_clocks, NVPmodel and other</p></li>
-<li><p><strong>GPU</strong> A real time GPU history about your NVIDIA Jetson</p></li>
-<li><p><strong>CPU</strong> A real time CPU plot of NVIDIA Jetson</p></li>
-<li><p><strong>MEM</strong> A real time Memory chart and swap monitor</p></li>
-<li><p><strong>ENG</strong> A real time list with the status of all engines</p></li>
-<li><p><strong>CTRL</strong> Enable/Disable <strong>jetson_clocks</strong>, <strong>nvpmodel</strong> or <strong>fan</strong> directly from here</p></li>
-<li><p><strong>INFO</strong> All information about libraries, CUDA, Serial Number, interfaces, …</p></li>
+<li><p>Read NVIDIA Jetson EEPROM to detect which NVIDIA Jetson is running</p></li>
+<li><p>decode jetson_clocks to know if is running and which engines are involved when it start.</p></li>
+<li><p>decode the NVPmodel to know which model is selected</p></li>
+<li><p>Open the <code class="docutils literal notranslate"><span class="pre">/run/jtop.sock</span></code> socket and wait a jtop client connection</p></li>
 </ol>
 </section>
-<section id="controls">
-<h3>Controls<a class="headerlink" href="#controls" title="Permalink to this heading">#</a></h3>
-<p>To control the your NVIDIA Jetson are available this keyboard commands:</p>
-<p>In page <strong>4 MEM</strong>:</p>
-<ul class="simple">
-<li><p><strong>c</strong> Clear cache</p></li>
-<li><p><strong>s</strong> Enable/Disable extra swap</p></li>
-<li><p><strong>+</strong> and <strong>-</strong> Increase and decrease swap size</p></li>
-</ul>
-<p>In page <strong>5 CTRL</strong>:</p>
-<ul class="simple">
-<li><p><strong>a</strong> Start/Stop jetson_clocks service (Note: jetson_clocks start only after 60s from up time)</p></li>
-<li><p><strong>e</strong> Enable/Disable jetson_clocks on board boot</p></li>
-<li><p><strong>+</strong> and <strong>-</strong> Increase and decrease the NVPmodel</p></li>
-<li><p><strong>f</strong> Manual/jetson_clocks mode for your fan</p></li>
-<li><p><strong>p</strong> and <strong>m</strong> Increase and decrease the Fan speed</p></li>
-</ul>
+<section id="loop">
+<h2>Loop<a class="headerlink" href="#loop" title="Permalink to this heading">#</a></h2>
+<p>When jtop is running read all status from your current board and share all this data to all jtop python connections.</p>
+<ol class="arabic simple">
+<li><p>Read and estimate the CPU utilization from <code class="docutils literal notranslate"><span class="pre">/proc/stat</span></code></p></li>
+<li><p>Read status from all devices in <code class="docutils literal notranslate"><span class="pre">/sys/devices/system</span></code></p></li>
+<li><p>Read and decode memory status from <code class="docutils literal notranslate"><span class="pre">/proc/meminfo</span></code></p></li>
+<li><p>Decode and read status from all swap using <code class="docutils literal notranslate"><span class="pre">swapon</span></code> command</p></li>
+<li><p>Check status from jetson_clocks</p></li>
+<li><p>Check which nvpmodel is running</p></li>
+</ol>
 </section>
-</section>
-<section id="options">
-<h2>Options<a class="headerlink" href="#options" title="Permalink to this heading">#</a></h2>
-<p>There are different options available for jtop</p>
-<section id="health">
-<h3>Health<a class="headerlink" href="#health" title="Permalink to this heading">#</a></h3>
-<p>If something goes wrong, you can check the <code class="docutils literal notranslate"><span class="pre">jtop</span></code> status with</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>jtop<span class="w"> </span>--health
-</pre></div>
-</div>
-<img alt="_images/jetson_config-02-jtop.png" class="align-center" src="_images/jetson_config-02-jtop.png" />
-<p>This tool, will check and fix:</p>
-<ul class="simple">
-<li><p><strong>jetson-stats</strong> - Fix jetson-stats service</p></li>
-<li><p><strong>Permissions</strong> - Fix permissions for your user</p></li>
-<li><p><strong>variables</strong> - Check if are installed all variables <a class="reference internal" href="other-tools/environment_variables.html"><span class="doc">Environment variables</span></a></p></li>
-</ul>
-</section>
-<section id="restore">
-<h3>Restore<a class="headerlink" href="#restore" title="Permalink to this heading">#</a></h3>
-<p>If you want to restore the original board configuration you can simply write</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--restore
-</pre></div>
-</div>
-<img alt="_images/jtop-restore.png" class="align-center" src="_images/jtop-restore.png" />
-<p>This command will restore the original configuration of:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">jetson_clocks</span></code></p></li>
-<li><p>fan</p></li>
-<li><p>jtop configuration</p></li>
-</ul>
-</section>
-<section id="color-filter">
-<h3>Color filter<a class="headerlink" href="#color-filter" title="Permalink to this heading">#</a></h3>
-<p>This option change the red color for text and background to blue.</p>
-<p>To enable this feature you can add this option</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--color-filter
-</pre></div>
-</div>
-<p>or you can add in your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">JTOP_COLOR_FILTER</span><span class="o">=</span>True
-</pre></div>
-</div>
-<p>The output will be like the image below</p>
-<img alt="_images/jtop-color-filter.png" class="align-center" src="_images/jtop-color-filter.png" />
-</section>
-<section id="error-log">
-<h3>Error-log<a class="headerlink" href="#error-log" title="Permalink to this heading">#</a></h3>
-<p>If your board is not included, jetpack missing, hardware missing, you can launch this script</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--error-log
-</pre></div>
-</div>
-<p>This script generate a file <code class="docutils literal notranslate"><span class="pre">jtop-error.log</span></code> ready to be attached on your issue</p>
-</section>
-</section>
-<section id="how-it-s-works">
-<h2>How it’s works<a class="headerlink" href="#how-it-s-works" title="Permalink to this heading">#</a></h2>
+<section id="jtop-sock">
+<h2>jtop.sock<a class="headerlink" href="#jtop-sock" title="Permalink to this heading">#</a></h2>
 <p>jtop use a service to sharing the data between client (jtop gui or your python script) and a server.</p>
 <p>This service, called <code class="docutils literal notranslate"><span class="pre">jtop.service</span></code> use a socket file. It is located in:</p>
 <div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">/run/jtop.sock</span>
 </pre></div>
 </div>
 <p>This socket is protected by access mode: <strong>660</strong> equivalent to <code class="docutils literal notranslate"><span class="pre">srw-rw----</span></code> and by the group.</p>
-<p>Only other users in <code class="docutils literal notranslate"><span class="pre">jtop</span></code> have access to this socket</p>
+<p>Only other users in <code class="docutils literal notranslate"><span class="pre">jtop</span></code> <strong>group</strong> have access to this socket</p>
 </section>
 </section>
 
@@ -384,7 +309,7 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="advanced-usage.html">
+          <a class="next-page" href="../advanced-usage.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
@@ -393,14 +318,14 @@
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="sponsors.html">
+          <a class="prev-page" href="jtop.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">💖 Sponsor</div>
+                <div class="title">📊 jtop</div>
                 
               </div>
             </a>
@@ -441,20 +366,10 @@
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">📊 jtop</a><ul>
-<li><a class="reference internal" href="#run-jtop">Run jtop</a><ul>
-<li><a class="reference internal" href="#pages">Pages</a></li>
-<li><a class="reference internal" href="#controls">Controls</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#options">Options</a><ul>
-<li><a class="reference internal" href="#health">Health</a></li>
-<li><a class="reference internal" href="#restore">Restore</a></li>
-<li><a class="reference internal" href="#color-filter">Color filter</a></li>
-<li><a class="reference internal" href="#error-log">Error-log</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#how-it-s-works">How it’s works</a></li>
+<li><a class="reference internal" href="#">How is it works</a><ul>
+<li><a class="reference internal" href="#initialization">Initialization</a></li>
+<li><a class="reference internal" href="#loop">Loop</a></li>
+<li><a class="reference internal" href="#jtop-sock">jtop.sock</a></li>
 </ul>
 </li>
 </ul>
@@ -466,12 +381,12 @@
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/furo.js"></script>
-    <script src="_static/clipboard.min.js"></script>
-    <script src="_static/copybutton.js"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
     
 
 

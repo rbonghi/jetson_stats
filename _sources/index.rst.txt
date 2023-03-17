@@ -8,10 +8,10 @@ jetson-stats
    rnext.it<https://rnext.it>
    Community Discord<https://discord.gg/BFbuJNhYzS>
    sponsors
-   jtop
+   jtop/jtop
    advanced-usage
    docker
-   reference
+   reference/index
    other-tools/index
    troubleshooting
    contributing
@@ -53,7 +53,7 @@ Start jtop it's pretty simple just write `jtop`!
 
    jtop
 
-A simple interface will appear on your terminal, more capabilities are documented at :doc:`jtop` page.
+A simple interface will appear on your terminal, more capabilities are documented at :doc:`jtop/jtop` page.
 
 Advanced usage
 --------------
@@ -70,7 +70,7 @@ The more in-depth :doc:`advanced-usage` guide is the place to jtop such a python
          # Read tegra stats
          print(jetson.stats)
 
-The :doc:`reference` documentation provides API-level documentation.
+The :doc:`reference/index` documentation provides API-level documentation.
 
 
 Compatibility
