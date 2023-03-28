@@ -42,6 +42,7 @@ if not sys.warnoptions:
 # https://developer.nvidia.com/embedded/jetpack-archive
 NVIDIA_JETPACK = {
     # -------- JP5 --------
+    "35.3.0": "5.1.1 PRE",
     "35.2.1": "5.1",
     "35.1.0": "5.0.2 GA",
     "34.1.1": "5.0.1 DP",
@@ -111,6 +112,7 @@ CUDA_TABLE = {
 # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3231/index.html
 # https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/IN/QuickStart.html
 MODULE_NAME_TABLE = {
+    'p3767-0005': 'NVIDIA Jetson Orin Nano (Developer kit)',
     'p3767-0000': 'NVIDIA Jetson Orin NX',
     'p3701-0005': 'NVIDIA Jetson AGX Orin (64GB ram)',
     'p3701-0004': 'NVIDIA Jetson AGX Orin (32GB ram)',
