@@ -120,6 +120,7 @@ MODULE_NAME_TABLE = {
     'p3767-0000': 'NVIDIA Jetson Orin NX (16GB ram)',
     'p3701-0005': 'NVIDIA Jetson AGX Orin (64GB ram)',
     'p3701-0004': 'NVIDIA Jetson AGX Orin (32GB ram)',
+    'p3701-0002': 'NVIDIA Jetson IGX Orin (Developer kit)',
     'p3701-0000': 'NVIDIA Jetson AGX Orin',
     'p3668-0003': 'NVIDIA Jetson Xavier NX (16GB ram)',
     'p3668-0001': 'NVIDIA Jetson Xavier NX',
