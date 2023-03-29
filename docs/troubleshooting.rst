@@ -14,7 +14,7 @@ if not, write:
 If nothing changed follow the help below.
 
 pip3: command not found
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 When you try to install jetson-stats, you read an output like:
 
