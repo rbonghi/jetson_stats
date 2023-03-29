@@ -275,6 +275,18 @@
 </pre></div>
 </div>
 <p>If nothing changed follow the help below.</p>
+<section id="pip3-command-not-found">
+<h2>pip3: command not found<a class="headerlink" href="#pip3-command-not-found" title="Permalink to this heading">#</a></h2>
+<p>When you try to install jetson-stats, you read an output like:</p>
+<div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">user@board:~$ </span>sudo<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>jetson-stats
+<span class="go">sudo: pip3: command not found</span>
+</pre></div>
+</div>
+<p>you can simple install python3-pip</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3-pip
+</pre></div>
+</div>
+</section>
 <section id="jtop-service-inactive">
 <h2>jtop.service inactive<a class="headerlink" href="#jtop-service-inactive" title="Permalink to this heading">#</a></h2>
 <p>When the <em>jtop.service</em> (or previously <em>jetson-stats.service</em>) is inactive there are few different reasons</p>
@@ -402,6 +414,7 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">🆘 Troubleshooting</a><ul>
+<li><a class="reference internal" href="#pip3-command-not-found">pip3: command not found</a></li>
 <li><a class="reference internal" href="#jtop-service-inactive">jtop.service inactive</a></li>
 <li><a class="reference internal" href="#jtop-start-only-with-sudo">jtop start only with sudo</a></li>
 <li><a class="reference internal" href="#nothing-fix-my-error">Nothing fix my error</a></li>

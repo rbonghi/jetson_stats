@@ -13,6 +13,23 @@ if not, write:
 
 If nothing changed follow the help below.
 
+pip3: command not found
+^^^^^^^^^^^^^^^^^^^^^^^
+
+When you try to install jetson-stats, you read an output like:
+
+.. code-block:: console
+  :class: no-copybutton
+
+  user@board:~$ sudo pip3 install -U jetson-stats
+  sudo: pip3: command not found
+
+you can simple install python3-pip
+
+.. code-block:: bash
+
+  sudo apt install python3-pip
+
 jtop.service inactive
 ^^^^^^^^^^^^^^^^^^^^^
 
