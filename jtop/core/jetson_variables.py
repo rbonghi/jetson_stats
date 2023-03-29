@@ -42,6 +42,7 @@ if not sys.warnoptions:
 # https://developer.nvidia.com/embedded/jetpack-archive
 NVIDIA_JETPACK = {
     # -------- JP5 --------
+    "35.3.1": "5.1.1",
     "35.3.0": "5.1.1 PRE",
     "35.2.1": "5.1",
     "35.1.0": "5.0.2 GA",
@@ -113,7 +114,10 @@ CUDA_TABLE = {
 # https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/IN/QuickStart.html
 MODULE_NAME_TABLE = {
     'p3767-0005': 'NVIDIA Jetson Orin Nano (Developer kit)',
-    'p3767-0000': 'NVIDIA Jetson Orin NX',
+    'p3767-0004': 'NVIDIA Jetson Orin Nano (4GB ram)',
+    'p3767-0003': 'NVIDIA Jetson Orin Nano (8GB ram)',
+    'p3767-0001': 'NVIDIA Jetson Orin NX (8GB ram)',
+    'p3767-0000': 'NVIDIA Jetson Orin NX (16GB ram)',
     'p3701-0005': 'NVIDIA Jetson AGX Orin (64GB ram)',
     'p3701-0004': 'NVIDIA Jetson AGX Orin (32GB ram)',
     'p3701-0000': 'NVIDIA Jetson AGX Orin',
@@ -136,6 +140,7 @@ MODULE_NAME_TABLE = {
     'p3310-1000': 'NVIDIA Jetson TX2',
     'p2180-1000': 'NVIDIA Jetson TX1',
     'r375-0001': 'NVIDIA Jetson TK1',
+    'p3904-0000': 'NVIDIA Clara AGX',
     # Other modules
     'p2595-0000-A0': 'Nintendo Switch'
 }
