@@ -78,9 +78,12 @@ Compatibility
 
 jetson-stats is compatible with:
 
+* NVIDIA Clara AGX (experimental)
 * NVIDIA Jetson Orin Series
+   * NVIDIA Jetson Orin Nano
    * NVIDIA Jetson Orin NX
    * NVIDIA Jetson AGX Orin
+   * NVIDIA Jetson IGX Orin (experimental)
 * NVIDIA Jetson Xavier Series
    * NVIDIA Jetson AGX Xavier Industrial
    * NVIDIA Jetson AGX Xavier
