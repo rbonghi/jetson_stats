@@ -82,6 +82,14 @@ There are two way to fix it:
 
 remember to logout/login.
 
+Bad visualization on Putty
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you experiences a bad visualization working with jtop on Putty, like a sequence of "qqqqqwqqqq and xxxx" you can fix following the steps below:
+
+1. Window -> Translation
+2. Enable VT100 line drawing even in UTF-8 mode
+
 Nothing fix my error
 ^^^^^^^^^^^^^^^^^^^^
 
