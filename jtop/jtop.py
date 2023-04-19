@@ -589,7 +589,7 @@ class jtop(Thread):
             stats['nvp model'] = self.nvpmodel.name
         return stats
 
-    def json(self, stats=False):
+    def json(self, stats=False, **json_args):
         """
         This method export all metrics in a `json` readable output.
 
@@ -597,13 +597,16 @@ class jtop(Thread):
 
         :param stats: json with same output of :py:attr:`stats`, defaults to False
         :type stats: bool, optional
+        :param json_args: additional keyword arguments passed to json.dumps
+        :type json_args: Any
         :return: json output requested
         :rtype: str
         """
         if stats:
-            return json.dumps(self.stats, cls=DateTimeEncoder)
+            json_args.setdefault("cls", DateTimeEncoder)
+            return json.dumps(self.stats, **json_args)
         # Read all variable and build a complete json
-        return json.dumps(self._stats)
+        return json.dumps(self._stats, **json_args)
 
     @property
     def memory(self):
