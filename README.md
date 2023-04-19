@@ -61,7 +61,7 @@ Start jtop it's pretty simple just write `jtop`!
 jtop
 ```
 
-A simple interface will appear on your terminal, more capabilities are documented at [_jtop_](https://rnext.it/jetson_stats/jtop.html) page.
+A simple interface will appear on your terminal, more capabilities are documented at [_jtop_](https://rnext.it/jetson_stats/jtop/jtop.html) page.
 
 <div align="center">
 
