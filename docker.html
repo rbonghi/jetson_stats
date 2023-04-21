@@ -280,19 +280,16 @@
 </div>
 <section id="design-your-dockerfile">
 <h2>Design your Dockerfile<a class="headerlink" href="#design-your-dockerfile" title="Permalink to this heading">#</a></h2>
-<div class="highlight-docker notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
 <p>jetson-stats need few things to be installed on your container.</p>
 <ol class="arabic simple">
-<li><p>apt-get install -y python3</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">python3-pip</span></code> or you can install from <strong>source</strong></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">python3</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">python3-pip</span></code> _or_ you can install from <strong>source</strong></p></li>
 </ol>
 <p>Below a simple example to install jetson-stats</p>
-<blockquote>
-<div><p>FROM python:3-buster
-RUN pip install -U jetson-stats</p>
-</div></blockquote>
+<div class="highlight-docker notranslate"><div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">python:3-buster</span>
+<span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>jetson-stats
+</pre></div>
+</div>
 </section>
 <section id="tips-and-tricks">
 <h2>Tips and tricks<a class="headerlink" href="#tips-and-tricks" title="Permalink to this heading">#</a></h2>
