@@ -18,14 +18,14 @@ You can try running this command
 Design your Dockerfile
 ----------------------
 
-.. code-block:: docker
-
 jetson-stats need few things to be installed on your container.
 
-1. apt-get install -y python3
-2. ``apt-get install -y python3-pip`` or you can install from **source**
+1. ``apt-get install -y python3``
+2. ``apt-get install -y python3-pip`` _or_ you can install from **source**
 
 Below a simple example to install jetson-stats
+
+.. code-block:: docker
 
   FROM python:3-buster
   RUN pip install -U jetson-stats
