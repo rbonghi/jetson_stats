@@ -45,4 +45,4 @@ You can get the ``JTOP_GID`` by running:
 
   getent group jtop | awk -F: '{print $3}'
 
-Issue reference `#391 https://github.com/rbonghi/jetson_stats/issues/391`_
+Issue reference `391 https://github.com/rbonghi/jetson_stats/issues/391`_
