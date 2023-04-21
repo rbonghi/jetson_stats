@@ -21,7 +21,7 @@ Design your Dockerfile
 jetson-stats need few things to be installed on your container.
 
 1. ``apt-get install -y python3``
-2. ``apt-get install -y python3-pip`` _or_ you can install from **source**
+2. ``apt-get install -y python3-pip`` *or* you can install from **source**
 
 Below a simple example to install jetson-stats
 
