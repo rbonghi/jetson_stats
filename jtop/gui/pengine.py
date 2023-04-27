@@ -60,6 +60,7 @@ def map_jetson_nano(engine):
 
 
 MAP_JETSON_MODELS = {
+    'jetson orin': pass_orin,
     'orin nx': pass_orin,
     'agx orin': pass_orin,
     'xavier': map_xavier,
