@@ -2,23 +2,19 @@
 
 {%- block extrahead %}
 {{ super() }}
-<script>
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-92957365-1']);
-  _gaq.push(['_gat._anonymizeIp']);
-  _gaq.push(['_trackPageview']);
-</script>
 {% endblock %}
 
 {% block theme_scripts %}
 {{ super() }}
 
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BCVPD3DMLS"></script>
 <script>
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BCVPD3DMLS', { 'anonymize_ip': true});
 </script>
 <!-- Google Adsense -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9664117913485219" crossorigin="anonymous"></script>
