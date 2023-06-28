@@ -234,6 +234,8 @@ setup(
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         # Programming and Operative system
         "Programming Language :: Unix Shell",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.8",
@@ -243,7 +245,7 @@ setup(
         "Operating System :: POSIX :: Linux"],
     # Requisites
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-    python_requires='>=3.6',
+    python_requires='>=2.7',
     platforms=["linux", "linux2", "darwin"],
     install_requires=requirements,
     # Zip safe configuration
