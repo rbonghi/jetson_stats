@@ -41,6 +41,15 @@ def pass_orin(engine):
     ]
 
 
+def pass_orin_nano(engine):
+    return [
+        add_engine_in_list('APE', engine, 'APE', 'APE'),
+        add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
+        add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
+        add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
+    ]
+
+
 def map_xavier(engine):
     return [
         add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('CVNAS', engine, 'CVNAS', 'CVNAS'),
@@ -60,6 +69,7 @@ def map_jetson_nano(engine):
 
 
 MAP_JETSON_MODELS = {
+    'orin nano': pass_orin_nano,
     'orin nx': pass_orin,
     'agx orin': pass_orin,
     'xavier': map_xavier,
