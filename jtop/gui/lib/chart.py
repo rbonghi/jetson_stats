@@ -67,12 +67,15 @@ class Chart(object):
             if c[0] not in list_colors:
                 list_colors[c[0]] = []
             list_colors[c[0]] = [c] + list_colors[c[0]]
-        for idx, list_element in enumerate(list_colors.values()):
-            list_element = sorted(list_element, key=lambda x: x[1], reverse=True)
-            for idy, color_set in enumerate(list_element):
-                idx_name = Chart.OFFSET_COLOR_CHART + self._color_obj_counter + (len(self.color_chart) - idx - 1) * color_step + idy
-                second_color = self.color_chart[color_set[1]] if color_set[1] < len(self.color_chart) else curses.COLOR_BLACK
-                curses.init_pair(idx_name, self.color_chart[color_set[0]], second_color)
+        try:
+            for idx, list_element in enumerate(list_colors.values()):
+                list_element = sorted(list_element, key=lambda x: x[1], reverse=True)
+                for idy, color_set in enumerate(list_element):
+                    idx_name = Chart.OFFSET_COLOR_CHART + self._color_obj_counter + (len(self.color_chart) - idx - 1) * color_step + idy
+                    second_color = self.color_chart[color_set[1]] if color_set[1] < len(self.color_chart) else curses.COLOR_BLACK
+                    curses.init_pair(idx_name, self.color_chart[color_set[0]], second_color)
+        except curses.error:
+            curses.use_default_colors()
         # Update counter colors
         Chart.COLOR_COUNTER += len(self._combinations) + 1
         # Attach the chart for every update from jtop
