@@ -162,6 +162,8 @@ def status_permission_user(group=JTOP_USER):
     try:
         lines = cmd_group_user()
         for line in lines:
+            # TODO REMOVE HERE
+            print(line)
             name, info = line.split(":")
             info = info.strip().split()
             if name.strip() == user and group in info:
