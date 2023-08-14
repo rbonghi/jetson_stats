@@ -165,7 +165,9 @@ def status_permission_user(group=JTOP_USER):
         for line in lines:
             # TODO REMOVE HERE
             print("AAAAA ---- {line}".format(line=line))
-            name, info = line.split(":") if ":" in line else continue
+            if ":" not in line:
+                continue
+            name, info = line.split(":")
             info = info.strip().split()
             if name.strip() == user and group in info:
                 return True
