@@ -161,10 +161,7 @@ def status_permission_user(group=JTOP_USER):
     cmd_group_user = Command(shlex.split('groups {user}'.format(user=user)))
     try:
         lines = cmd_group_user()
-        print(lines)
         for line in lines:
-            # TODO REMOVE HERE
-            print("AAAAA ---- {line}".format(line=line))
             if ":" not in line:
                 continue
             name, info = line.split(":")
