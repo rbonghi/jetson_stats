@@ -1015,7 +1015,7 @@ class jtop(Thread):
 
         * **total** - Total disk space in GB
         * **available** - Space available in GB
-        * **use** - Disk space used in GB
+        * **used** - Disk space used in GB
         * **available_no_root**
 
         :return: Disk information
