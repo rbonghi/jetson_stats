@@ -69,6 +69,7 @@ class ProcessTable(object):
         # Sort table for selected line
         sorted_processes = sorted(processes, key=lambda x: x[self.line_sort], reverse=self.type_reverse)
         # Draw all processes
+        nprocess = 0
         for nprocess, process in enumerate(sorted_processes):
             # Skip unit size process
             counter = 0
