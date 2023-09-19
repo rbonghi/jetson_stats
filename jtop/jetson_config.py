@@ -128,7 +128,7 @@ def desktop_set_B1():
     # sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
     if os.path.isfile('/etc/systemd/system/getty.target.wants/getty@tty1.service'):
         os.remove('/etc/systemd/system/getty.target.wants/getty@tty1.service')
-    os.symlink('/lib/systemd/system/getty@.service' '/etc/systemd/system/getty.target.wants/getty@tty1.service')
+    os.symlink('/lib/systemd/system/getty@.service', '/etc/systemd/system/getty.target.wants/getty@tty1.service')
     # Remove autologin
     if os.path.isfile('/etc/systemd/system/getty@tty1.service.d/autologin.conf'):
         os.remove('/etc/systemd/system/getty@tty1.service.d/autologin.conf')
@@ -141,7 +141,7 @@ def desktop_set_B2():
     # sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
     if os.path.isfile('/etc/systemd/system/getty.target.wants/getty@tty1.service'):
         os.remove('/etc/systemd/system/getty.target.wants/getty@tty1.service')
-    os.symlink('/lib/systemd/system/getty@.service' '/etc/systemd/system/getty.target.wants/getty@tty1.service')
+    os.symlink('/lib/systemd/system/getty@.service', '/etc/systemd/system/getty.target.wants/getty@tty1.service')
     # If the file does not exist make it one
     if not os.path.isfile('/etc/systemd/system/getty@tty1.service.d/autologin.conf'):
         os.makedirs('/etc/systemd/system/getty@tty1.service.d')
@@ -160,7 +160,7 @@ def desktop_set_B3():
     # sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
     if os.path.isfile('/etc/systemd/system/getty.target.wants/getty@tty1.service'):
         os.remove('/etc/systemd/system/getty.target.wants/getty@tty1.service')
-    os.symlink('/lib/systemd/system/getty@.service' '/etc/systemd/system/getty.target.wants/getty@tty1.service')
+    os.symlink('/lib/systemd/system/getty@.service', '/etc/systemd/system/getty.target.wants/getty@tty1.service')
     # Remove autologin
     if os.path.isfile('/etc/systemd/system/getty@tty1.service.d/autologin.conf'):
         os.remove('/etc/systemd/system/getty@tty1.service.d/autologin.conf')
@@ -175,7 +175,7 @@ def desktop_set_B4():
     # sudo ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@tty1.service
     if os.path.isfile('/etc/systemd/system/getty.target.wants/getty@tty1.service'):
         os.remove('/etc/systemd/system/getty.target.wants/getty@tty1.service')
-    os.symlink('/lib/systemd/system/getty@.service' '/etc/systemd/system/getty.target.wants/getty@tty1.service')
+    os.symlink('/lib/systemd/system/getty@.service', '/etc/systemd/system/getty.target.wants/getty@tty1.service')
     # Remove autologin
     if os.path.isfile('/etc/systemd/system/getty@tty1.service.d/autologin.conf'):
         os.remove('/etc/systemd/system/getty@tty1.service.d/autologin.conf')
