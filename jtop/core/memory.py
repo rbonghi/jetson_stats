@@ -24,7 +24,7 @@ import logging
 import subprocess as sp
 from .processes import read_process_table
 from .engine import read_engine
-from .common import cat, GenericInterface
+from .common import cat, check_file, GenericInterface
 from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
@@ -425,7 +425,10 @@ class MemoryService(object):
             memory['EMC']['online'] = True
             # Percentage utilization
             # https://forums.developer.nvidia.com/t/real-time-emc-bandwidth-with-sysfs/107479/3
-            utilization = int(cat(self._root_path + "/debug/cactmon/mc_all"))
+            if check_file(self._root_path + "/debug/cactmon/mc_all"):
+                utilization = int(cat(self._root_path + "/debug/cactmon/mc_all"))
+            else:
+                utilization = int(cat(self._root_path + "/actmon_avg_activity/mc_all"))
             memory['EMC']['val'] = utilization // memory['EMC']['cur']
         # Read IRAM if available
         if os.path.isdir(self._root_path + "/debug/nvmap/iram"):
