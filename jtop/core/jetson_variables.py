@@ -41,6 +41,8 @@ if not sys.warnoptions:
 # Write version of jetpack installed
 # https://developer.nvidia.com/embedded/jetpack-archive
 NVIDIA_JETPACK = {
+    # -------- JP6 --------
+    "36.2.0": "6.0 DP",
     # -------- JP5 --------
     "35.4.1": "5.1.2",
     "35.3.1": "5.1.1",
@@ -104,6 +106,7 @@ NVIDIA_JETPACK = {
 
 
 CUDA_TABLE = {
+    'tegra234': '8.7',
     'tegra23x': '8.7',  # JETSON ORIN - tegra234
     'tegra194': '7.2',  # JETSON XAVIER
     'tegra186': '6.2',  # JETSON TX2

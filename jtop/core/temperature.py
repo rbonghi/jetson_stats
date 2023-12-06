@@ -36,6 +36,8 @@ def read_temperature(data):
         except OSError:
             # If negative sensor offline
             values[name] = TEMPERATURE_OFFLINE
+        except ValueError:
+            values[name] = TEMPERATURE_OFFLINE
     return values
 
 
