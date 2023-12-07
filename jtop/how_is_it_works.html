@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,7 +13,7 @@
 <meta name="description" content="jtop is a power monitor that use a service and a python client library. Like the image above, when jtop service start, load and decode the information on your board. Initialization: Read NVIDIA Jet..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="👨‍💻 Advanced Usage" href="../advanced-usage.html" /><link rel="prev" title="📊 jtop" href="jtop.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.1.2 and Furo 2023.07.26 -->
+    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>How is it works - jetson-stats 4.2.3</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -261,12 +261,12 @@
         </div>
         <article role="main">
           <section id="how-is-it-works">
-<h1>How is it works<a class="headerlink" href="#how-is-it-works" title="Permalink to this heading">#</a></h1>
+<h1>How is it works<a class="headerlink" href="#how-is-it-works" title="Link to this heading">#</a></h1>
 <p>jtop is a power monitor that use a service and a python client library.</p>
 <img alt="../_images/architecture.drawio.png" class="align-center" src="../_images/architecture.drawio.png" />
 <p>Like the image above, when jtop service start, load and decode the information on your board.</p>
 <section id="initialization">
-<h2>Initialization<a class="headerlink" href="#initialization" title="Permalink to this heading">#</a></h2>
+<h2>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
 <li><p>Read NVIDIA Jetson EEPROM to detect which NVIDIA Jetson is running</p></li>
 <li><p>decode jetson_clocks to know if is running and which engines are involved when it start.</p></li>
@@ -275,7 +275,7 @@
 </ol>
 </section>
 <section id="loop">
-<h2>Loop<a class="headerlink" href="#loop" title="Permalink to this heading">#</a></h2>
+<h2>Loop<a class="headerlink" href="#loop" title="Link to this heading">#</a></h2>
 <p>When jtop is running read all status from your current board and share all this data to all jtop python connections.</p>
 <ol class="arabic simple">
 <li><p>Read and estimate the CPU utilization from <code class="docutils literal notranslate"><span class="pre">/proc/stat</span></code></p></li>
@@ -287,7 +287,7 @@
 </ol>
 </section>
 <section id="jtop-sock">
-<h2>jtop.sock<a class="headerlink" href="#jtop-sock" title="Permalink to this heading">#</a></h2>
+<h2>jtop.sock<a class="headerlink" href="#jtop-sock" title="Link to this heading">#</a></h2>
 <p>jtop use a service to sharing the data between client (jtop gui or your python script) and a server.</p>
 <p>This service, called <code class="docutils literal notranslate"><span class="pre">jtop.service</span></code> use a socket file. It is located in:</p>
 <div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">/run/jtop.sock</span>
@@ -375,9 +375,9 @@
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=c52c3174"></script>
+</div><script src="../_static/documentation_options.js?v=e756e73c"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6b89569b"></script>

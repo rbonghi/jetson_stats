@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,7 +13,7 @@
 <meta name="description" content="jetson-stats is a community-maintained project and we happily accept contributions. If you want to add a new Jetpack release follow these quick rules or if you want make a new feature or fix a bug ..." />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="🆘 Troubleshooting" href="troubleshooting.html" />
 
-    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 7.1.2 and Furo 2023.07.26 -->
+    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>✨ Contributing - jetson-stats 4.2.3</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
@@ -261,11 +261,11 @@
         </div>
         <article role="main">
           <section id="contributing">
-<h1>✨ Contributing<a class="headerlink" href="#contributing" title="Permalink to this heading">#</a></h1>
+<h1>✨ Contributing<a class="headerlink" href="#contributing" title="Link to this heading">#</a></h1>
 <p>jetson-stats is a community-maintained project and we happily accept contributions.</p>
 <p>If you want to add a new <strong>Jetpack</strong> release follow these quick rules or if you want make a new feature or fix a bug you are on the right page.</p>
 <section id="add-a-new-jetpack">
-<h2>Add a new Jetpack<a class="headerlink" href="#add-a-new-jetpack" title="Permalink to this heading">#</a></h2>
+<h2>Add a new Jetpack<a class="headerlink" href="#add-a-new-jetpack" title="Link to this heading">#</a></h2>
 <p>If you want to add a new Jetpack to fix the warning:</p>
 <div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">user@board:~$ </span>jtop
 <span class="go">[WARN] jetson-stats not supported for [L4T 35.2.1]</span>
@@ -287,7 +287,7 @@
 </ol>
 </section>
 <section id="add-new-feature-or-fix-a-bug">
-<h2>Add new feature or fix a bug<a class="headerlink" href="#add-new-feature-or-fix-a-bug" title="Permalink to this heading">#</a></h2>
+<h2>Add new feature or fix a bug<a class="headerlink" href="#add-new-feature-or-fix-a-bug" title="Link to this heading">#</a></h2>
 <p>If you wish to add a new feature or fix a bug:</p>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://github.com/rbonghi/jetson_stats/issues">Check for open issues</a> or open
@@ -301,7 +301,7 @@ as expected.</p></li>
 <li><p>Send a pull request and bug the maintainer until it gets merged and published.</p></li>
 </ol>
 <section id="setting-up-your-developing-environment">
-<h3>Setting up your developing environment<a class="headerlink" href="#setting-up-your-developing-environment" title="Permalink to this heading">#</a></h3>
+<h3>Setting up your developing environment<a class="headerlink" href="#setting-up-your-developing-environment" title="Link to this heading">#</a></h3>
 <p>Clone and build in developer mode jetson-stats</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/rbonghi/jetson_stats.git</span>
 <span class="go">cd jetson_stats</span>
@@ -310,7 +310,7 @@ as expected.</p></li>
 </div>
 </section>
 <section id="manually-stop-and-disable-jtop-service">
-<h3>Manually stop and disable jtop service<a class="headerlink" href="#manually-stop-and-disable-jtop-service" title="Permalink to this heading">#</a></h3>
+<h3>Manually stop and disable jtop service<a class="headerlink" href="#manually-stop-and-disable-jtop-service" title="Link to this heading">#</a></h3>
 <p>If you want to manually control the jtop service you need to disable the service and manually start one in a terminal,
 following the commands below</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo systemctl stop jtop.service</span>
@@ -323,7 +323,7 @@ following the commands below</p>
 </div>
 </section>
 <section id="restore-jtop-service">
-<h3>Restore jtop service<a class="headerlink" href="#restore-jtop-service" title="Permalink to this heading">#</a></h3>
+<h3>Restore jtop service<a class="headerlink" href="#restore-jtop-service" title="Link to this heading">#</a></h3>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo systemctl enable jtop.service</span>
 <span class="go">sudo systemctl start jtop.service</span>
 </pre></div>
@@ -331,7 +331,7 @@ following the commands below</p>
 </section>
 </section>
 <section id="test-this-package">
-<h2>Test this package<a class="headerlink" href="#test-this-package" title="Permalink to this heading">#</a></h2>
+<h2>Test this package<a class="headerlink" href="#test-this-package" title="Link to this heading">#</a></h2>
 <p>Before commit you can test jetson-stats on multiple python version and check if the documentation is built</p>
 <p>This script works with docker, and you can quickly run it.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">bash tests/local_test.sh</span>
@@ -355,21 +355,21 @@ following the commands below</p>
 </pre></div>
 </div>
 <section id="live-docker-with-tox">
-<h3>Live docker with tox<a class="headerlink" href="#live-docker-with-tox" title="Permalink to this heading">#</a></h3>
+<h3>Live docker with tox<a class="headerlink" href="#live-docker-with-tox" title="Link to this heading">#</a></h3>
 <p>Run tox or work live from the terminal</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">bash tests/local_test.sh --debug -py 3.9</span>
 </pre></div>
 </div>
 </section>
 <section id="test-documentation">
-<h3>Test documentation<a class="headerlink" href="#test-documentation" title="Permalink to this heading">#</a></h3>
+<h3>Test documentation<a class="headerlink" href="#test-documentation" title="Link to this heading">#</a></h3>
 <p>If you want to run <strong>only</strong> the documentation:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">bash tests/local_test.sh --doc</span>
 </pre></div>
 </div>
 </section>
 <section id="test-gui">
-<h3>Test GUI<a class="headerlink" href="#test-gui" title="Permalink to this heading">#</a></h3>
+<h3>Test GUI<a class="headerlink" href="#test-gui" title="Link to this heading">#</a></h3>
 <p>If you want to test or develop the GUI library</p>
 <p>You can run this command from your terminal <cite>python3 -m jtop.tests_gui.x</cite> where <strong>x</strong> is the name of the file, example</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python3 -m jtop.tests_gui.gui_page</span>
@@ -378,7 +378,7 @@ following the commands below</p>
 </section>
 </section>
 <section id="release">
-<h2>Release<a class="headerlink" href="#release" title="Permalink to this heading">#</a></h2>
+<h2>Release<a class="headerlink" href="#release" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Announce intent to release on <a class="reference external" href="https://discord.gg/BFbuJNhYzS">Discord</a>, see if anyone wants to include last minute changes.</p></li>
 <li><p>Update <code class="docutils literal notranslate"><span class="pre">jtop/__init__.py</span></code> with the proper version number</p></li>
@@ -472,9 +472,9 @@ following the commands below</p>
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=c52c3174"></script>
+</div><script src="_static/documentation_options.js?v=e756e73c"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=32e29ea5"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=6b89569b"></script>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,7 +11,7 @@
 <meta property="og:image:alt" content="jetson-stats" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="GPU" href="gpu.html" /><link rel="prev" title="📖 API Reference" href="index.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.1.2 and Furo 2023.07.26 -->
+    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>jtop - jetson-stats 4.2.3</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -259,29 +259,29 @@
         </div>
         <article role="main">
           <section id="jtop">
-<h1>jtop<a class="headerlink" href="#jtop" title="Permalink to this heading">#</a></h1>
+<h1>jtop<a class="headerlink" href="#jtop" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="jtop.jtop">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.</span></span><span class="sig-name descname"><span class="pre">jtop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Thread" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.</span></span><span class="sig-name descname"><span class="pre">jtop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Thread" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code></a></p>
 <p>This class control the access to your board, from here you can control your
 NVIDIA Jetson board or read the jetson_clocks status or change the nvp model.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.__init__" title="Link to this definition">#</a></dt>
 <dd><p>When you initialize your jtop you can setup a communication speed <strong>interval</strong>,
 if there is another jtop running this speed will be not used.</p>
 <p>When jtop is started you can read the server speed in <strong>interval</strong> property.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – Interval to setup the jtop speed (in seconds), defaults to 1.0</p>
+<dd class="field-odd"><p><strong>interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><em>optional</em>) – Interval to setup the jtop speed (in seconds), defaults to 1.0</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.attach">
-<span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.attach" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.attach" title="Link to this definition">#</a></dt>
 <dd><p>Attach an observer to read the status of jtop. You can add more observer that you want.</p>
 <p>The function <strong>must</strong> be with this format:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">observer</span><span class="p">(</span><span class="n">jetson</span><span class="p">):</span>
@@ -299,7 +299,7 @@ if there is another jtop running this speed will be not used.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.board">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">board</span></span><a class="headerlink" href="#jtop.jtop.board" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">board</span></span><a class="headerlink" href="#jtop.jtop.board" title="Link to this definition">#</a></dt>
 <dd><p>Board status, in this property where are available all information about your device.</p>
 <p>The output is a dictionary with 3 keys:</p>
 <ul class="simple">
@@ -318,11 +318,11 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Machine</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/platform.html#platform.machine" title="(in Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">platform.machine()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/platform.html#platform.machine" title="(in Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">platform.machine()</span></code></a></p></td>
 <td><p>Mapped output: machine type</p></td>
 </tr>
 <tr class="row-odd"><td><p>System</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/platform.html#platform.system" title="(in Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">platform.system()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/platform.html#platform.system" title="(in Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">platform.system()</span></code></a></p></td>
 <td><p>Mapped output: Type system</p></td>
 </tr>
 <tr class="row-even"><td><p>Distribution</p></td>
@@ -330,11 +330,11 @@ if there is another jtop running this speed will be not used.</p>
 <td><p>Mapped output: Linux distribution</p></td>
 </tr>
 <tr class="row-odd"><td><p>Release</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/platform.html#platform.release" title="(in Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">platform.release()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/platform.html#platform.release" title="(in Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">platform.release()</span></code></a></p></td>
 <td><p>Mapped output: Release kernel</p></td>
 </tr>
 <tr class="row-even"><td><p>Python</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/platform.html#platform.python_version" title="(in Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">platform.python_version()</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/platform.html#platform.python_version" title="(in Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">platform.python_version()</span></code></a></p></td>
 <td><p>Mapped output: Python version is running jtop</p></td>
 </tr>
 </tbody>
@@ -351,47 +351,47 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Model</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Model name from <code class="code docutils literal notranslate"><span class="pre">/sys/firmware/devicetree/base/model</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>699-level Part Number</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>699 part number (read reference)</p></td>
 </tr>
 <tr class="row-even"><td><p>P-Number</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Part number (read reference)</p></td>
 </tr>
 <tr class="row-odd"><td><p>BoardIDs</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p><em>(Optional)</em> Board ID in <code class="code docutils literal notranslate"><span class="pre">/proc/device-tree/nvidia,boardids</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Module</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Conversion from P-Number to Module name</p></td>
 </tr>
 <tr class="row-odd"><td><p>SoC</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>System on Chip <code class="code docutils literal notranslate"><span class="pre">/proc/device-tree/compatible</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>CUDA Arch BIN</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Cuda Architecture</p></td>
 </tr>
 <tr class="row-odd"><td><p>Codename</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p><em>(Optional)</em> Codename architecture</p></td>
 </tr>
 <tr class="row-even"><td><p>Serial Number</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Serial Number board <code class="code docutils literal notranslate"><span class="pre">/sys/firmware/devicetree/base/serial-number</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>L4T</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Linux 4 Tegra <sup>A</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>Jetpack</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>From L4T is evaluated the Jetpack running on your NVIDIA Jetson</p></td>
 </tr>
 </tbody>
@@ -408,31 +408,31 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>CUDA</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>CUDA version <sup>B</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>OpenCV</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>OpenCV version use <code class="code docutils literal notranslate"><span class="pre">opencv_version</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>OpenCV-Cuda</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Check running <code class="code docutils literal notranslate"><span class="pre">opencv_version</span> <span class="pre">--verbose</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>cuDNN</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Check and read the version with <code class="code docutils literal notranslate"><span class="pre">dpkg</span> <span class="pre">-l</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>TensorRT</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Check and read the version with <code class="code docutils literal notranslate"><span class="pre">dpkg</span> <span class="pre">-l</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>VPI</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Check and read the version with <code class="code docutils literal notranslate"><span class="pre">dpkg</span> <span class="pre">-l</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Vulkan</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Run and read <code class="code docutils literal notranslate"><span class="pre">which</span> <span class="pre">vulkaninfo</span></code></p></td>
 </tr>
 </tbody>
@@ -471,14 +471,14 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-odd"><p>Status board, hardware and libraries</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.close">
-<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.close" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.close" title="Link to this definition">#</a></dt>
 <dd><p>This method close the jtop server.</p>
 <p>This method is <strong>not</strong> needed to close jtop if you have open jtop using <cite>with</cite> like:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
@@ -489,7 +489,7 @@ if there is another jtop running this speed will be not used.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.cpu">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cpu</span></span><a class="headerlink" href="#jtop.jtop.cpu" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cpu</span></span><a class="headerlink" href="#jtop.jtop.cpu" title="Link to this definition">#</a></dt>
 <dd><p>this property return a dictionary with all information for each core about frequency, idle, and other.</p>
 <p>This dictionary is made:</p>
 <ul class="simple">
@@ -507,43 +507,43 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>online</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Status core</p></td>
 </tr>
 <tr class="row-odd"><td><p>governor</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Type of governor running on the core</p></td>
 </tr>
 <tr class="row-even"><td><p>freq</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p>Frequency of the core <sup>A</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>info_freq</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p>Frequency of the core <sup>A</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>idle_state</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p>All Idle state running</p></td>
 </tr>
 <tr class="row-odd"><td><p>user</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p>User percentage utilization <sup>B</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>nice</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p>Nice percentage utilization <sup>B</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>system</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p>System percentage utilization <sup>B</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>idle</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p>Idle percentage <sup>B</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>model</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Model core running</p></td>
 </tr>
 </tbody>
@@ -563,15 +563,15 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>min</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Minimum frequency of the core in <strong>kHz</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>max</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Maximum frequency of the core in <strong>kHz</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>cur</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Current frequency of the core in <strong>kHz</strong></p></td>
 </tr>
 </tbody>
@@ -595,14 +595,14 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-odd"><p>A dictionary with the aggregate status and a list of all CPUs, described above.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.detach">
-<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.detach" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.detach" title="Link to this definition">#</a></dt>
 <dd><p>Detach an observer from jtop</p>
 <p>To attach a function, please look <a class="reference internal" href="#jtop.jtop.attach" title="jtop.jtop.attach"><code class="xref py py-func docutils literal notranslate"><span class="pre">attach()</span></code></a></p>
 <dl class="field-list simple">
@@ -614,7 +614,7 @@ if there is another jtop running this speed will be not used.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.disk">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disk</span></span><a class="headerlink" href="#jtop.jtop.disk" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">disk</span></span><a class="headerlink" href="#jtop.jtop.disk" title="Link to this definition">#</a></dt>
 <dd><p>Disk status properties, in dictionary are included</p>
 <ul class="simple">
 <li><p><strong>total</strong> - Total disk space in GB</p></li>
@@ -627,14 +627,14 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-odd"><p>Disk information</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.engine">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">engine</span></span><a class="headerlink" href="#jtop.jtop.engine" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">engine</span></span><a class="headerlink" href="#jtop.jtop.engine" title="Link to this definition">#</a></dt>
 <dd><p>Engine status, in this property you can find like: APE, DLA, NVDEC, NVENC, and other</p>
 <p>The output of this property is a dictionary:</p>
 <ul class="simple">
@@ -658,19 +658,19 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>online</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Status of the engine</p></td>
 </tr>
 <tr class="row-odd"><td><p>min</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Minimum frequency of the core in <strong>kHz</strong> <sup>A</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>max</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Maximum frequency of the core in <strong>kHz</strong> <sup>A</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>cur</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Current frequency of the core in <strong>kHz</strong></p></td>
 </tr>
 </tbody>
@@ -688,16 +688,16 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-odd"><p>Dictionary of all active engines</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.fan">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fan</span></span><a class="headerlink" href="#jtop.jtop.fan" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fan</span></span><a class="headerlink" href="#jtop.jtop.fan" title="Link to this definition">#</a></dt>
 <dd><p>Fan status and control. This property show speed, rpm and control every fan on your board</p>
-<p>The <a class="reference internal" href="fan.html#jtop.core.fan.Fan" title="jtop.core.fan.Fan"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fan</span></code></a> class is readable such a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> where for each key are colleted all metrics for each Fan.</p>
+<p>The <a class="reference internal" href="fan.html#jtop.core.fan.Fan" title="jtop.core.fan.Fan"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fan</span></code></a> class is readable such a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> where for each key are colleted all metrics for each Fan.</p>
 <div class="table-wrapper docutils container">
 <table class="docutils align-default">
 <thead>
@@ -708,23 +708,23 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>speed</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p></td>
 <td><p>List of speed between [0, 100]</p></td>
 </tr>
 <tr class="row-odd"><td><p>rpm</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p></td>
 <td><p><em>(Optional)</em> List of RPM for each fan</p></td>
 </tr>
 <tr class="row-even"><td><p>profile</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Fan Profile, read <a class="reference internal" href="fan.html#jtop.core.fan.Fan.all_profiles" title="jtop.core.fan.Fan.all_profiles"><code class="xref py py-func docutils literal notranslate"><span class="pre">all_profiles()</span></code></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>governor</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>(Jetson with JP5+) Governor fan</p></td>
 </tr>
 <tr class="row-even"><td><p>control</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>(Jetson with JP5+) Type of controller</p></td>
 </tr>
 </tbody>
@@ -760,7 +760,7 @@ if there is another jtop running this speed will be not used.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.gpu">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gpu</span></span><a class="headerlink" href="#jtop.jtop.gpu" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gpu</span></span><a class="headerlink" href="#jtop.jtop.gpu" title="Link to this definition">#</a></dt>
 <dd><p>This property show in a simple way all GPU available on your board.</p>
 <p>You can also use this attribute to enable/disable 3D scaling:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
@@ -769,7 +769,7 @@ if there is another jtop running this speed will be not used.</p>
         <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span>
 </pre></div>
 </div>
-<p>The <a class="reference internal" href="gpu.html#jtop.core.gpu.GPU" title="jtop.core.gpu.GPU"><code class="xref py py-class docutils literal notranslate"><span class="pre">GPU</span></code></a> class is readable such a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> where for each key are colleted all metrics for each GPU.</p>
+<p>The <a class="reference internal" href="gpu.html#jtop.core.gpu.GPU" title="jtop.core.gpu.GPU"><code class="xref py py-class docutils literal notranslate"><span class="pre">GPU</span></code></a> class is readable such a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> where for each key are colleted all metrics for each GPU.</p>
 <div class="table-wrapper docutils container">
 <table class="docutils align-default">
 <thead>
@@ -780,19 +780,19 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>type</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Type of GPU (integrated, discrete)</p></td>
 </tr>
 <tr class="row-odd"><td><p>status</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p>Status of GPU <sup>A</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>freq</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p>Frequency GPU <sup>B</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>power_control</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p><em>(Optional)</em> Type of power control</p></td>
 </tr>
 </tbody>
@@ -812,19 +812,19 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>railgate</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Status Railgate</p></td>
 </tr>
 <tr class="row-odd"><td><p>tpc_pg_mask</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Status TPC PG Mask (for NVP model)</p></td>
 </tr>
 <tr class="row-even"><td><p>3d_scaling</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Status 3D scaling</p></td>
 </tr>
 <tr class="row-odd"><td><p>load</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p>Current GPU load</p></td>
 </tr>
 </tbody>
@@ -842,23 +842,23 @@ if there is another jtop running this speed will be not used.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>governor</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Name GPU governor</p></td>
 </tr>
 <tr class="row-odd"><td><p>min</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Minimum GPU frequency in <strong>kHz</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>max</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Maximum GPU frequency in <strong>kHz</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>cur</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Current GPU frequency in <strong>kHz</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>GPC</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p></td>
 <td><p>List GPC frequency in <strong>kHz</strong> (Available for Orin series)</p></td>
 </tr>
 </tbody>
@@ -879,35 +879,35 @@ if there is another jtop running this speed will be not used.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.interval">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interval</span></span><a class="headerlink" href="#jtop.jtop.interval" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interval</span></span><a class="headerlink" href="#jtop.jtop.interval" title="Link to this definition">#</a></dt>
 <dd><p>Speed jtop service. This speed can be different compare the speed specified in <a class="reference internal" href="#jtop.jtop" title="jtop.jtop"><code class="xref py py-func docutils literal notranslate"><span class="pre">jtop()</span></code></a> constructor</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>jtop interval (in seconds)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.interval_user">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interval_user</span></span><a class="headerlink" href="#jtop.jtop.interval_user" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interval_user</span></span><a class="headerlink" href="#jtop.jtop.interval_user" title="Link to this definition">#</a></dt>
 <dd><p>This is the same speed specified in <a class="reference internal" href="#jtop.jtop" title="jtop.jtop"><code class="xref py py-func docutils literal notranslate"><span class="pre">jtop()</span></code></a> constructor</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>jtop user interval (in seconds)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.jetson_clocks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jetson_clocks</span></span><a class="headerlink" href="#jtop.jtop.jetson_clocks" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jetson_clocks</span></span><a class="headerlink" href="#jtop.jtop.jetson_clocks" title="Link to this definition">#</a></dt>
 <dd><p>jetson_clocks is a tool provided for all NVIDIA Jetson to maximize all performance, read reference for more information.</p>
 <p>You can use this attribute like a simple boolean or use the advanced features in <a class="reference internal" href="jetson_clocks.html#jtop.core.jetson_clocks.JetsonClocks" title="jtop.core.jetson_clocks.JetsonClocks"><code class="xref py py-class docutils literal notranslate"><span class="pre">JetsonClocks</span></code></a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
@@ -936,20 +936,20 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-even"><p><a class="reference internal" href="jetson_clocks.html#jtop.core.jetson_clocks.JetsonClocks" title="jtop.core.jetson_clocks.JetsonClocks">JetsonClocks</a> or None</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.11)"><strong>ValueError</strong></a> – Wrong jetson_clocks value</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – Wrong jetson_clocks value</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.json">
-<span class="sig-name descname"><span class="pre">json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">json_args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.json" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">json_args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.json" title="Link to this definition">#</a></dt>
 <dd><p>This method export all metrics in a <cite>json</cite> readable output.</p>
 <p>You can export all metrics or the same output in <a class="reference internal" href="#jtop.jtop.stats" title="jtop.jtop.stats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stats</span></code></a> depending of the parameter input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – json with same output of <a class="reference internal" href="#jtop.jtop.stats" title="jtop.jtop.stats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stats</span></code></a>, defaults to False</p></li>
+<li><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – json with same output of <a class="reference internal" href="#jtop.jtop.stats" title="jtop.jtop.stats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stats</span></code></a>, defaults to False</p></li>
 <li><p><strong>json_args</strong> (<em>Any</em>) – additional keyword arguments passed to json.dumps</p></li>
 </ul>
 </dd>
@@ -957,14 +957,14 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-even"><p>json output requested</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.local_interfaces">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">local_interfaces</span></span><a class="headerlink" href="#jtop.jtop.local_interfaces" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">local_interfaces</span></span><a class="headerlink" href="#jtop.jtop.local_interfaces" title="Link to this definition">#</a></dt>
 <dd><p>Local interfaces information and hostname</p>
 <p>This dictionary the status of your local network</p>
 <ul class="simple">
@@ -976,14 +976,14 @@ if there is another jtop running this speed will be not used.</p>
 <dd class="field-odd"><p>Local interfaces and hostname</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.loop_for_ever">
-<span class="sig-name descname"><span class="pre">loop_for_ever</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.loop_for_ever" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">loop_for_ever</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.loop_for_ever" title="Link to this definition">#</a></dt>
 <dd><p>This blocking method is needed when you design your python code to work only by callback.</p>
 <p>Before to run this method remember to attach a callback using <a class="reference internal" href="#jtop.jtop.attach" title="jtop.jtop.attach"><code class="xref py py-func docutils literal notranslate"><span class="pre">attach()</span></code></a></p>
 <p>A simple example to use this method is below</p>
@@ -1000,7 +1000,7 @@ if there is another jtop running this speed will be not used.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.memory">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">memory</span></span><a class="headerlink" href="#jtop.jtop.memory" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">memory</span></span><a class="headerlink" href="#jtop.jtop.memory" title="Link to this definition">#</a></dt>
 <dd><p>This property show in a simple way all memories available, the main output is available in this way:</p>
 <ul class="simple">
 <li><p><strong>RAM</strong> - It is a dictionary with all information about RAM <sup>A</sup></p></li>
@@ -1031,31 +1031,31 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 </thead>
 <tbody>
 <tr class="row-even"><td><p>tot</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Total RAM in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>used</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Total used RAM in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>free</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Free RAM in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>buffers</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Buffered RAM in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>cached</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Cached RAM in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>shared</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Shared RAM in <strong>KB</strong>, for NVIDIA Jetson the RAM used from GPU</p></td>
 </tr>
 <tr class="row-even"><td><p>lfb</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Large Free Block in <strong>4MB</strong></p></td>
 </tr>
 </tbody>
@@ -1072,19 +1072,19 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 </thead>
 <tbody>
 <tr class="row-even"><td><p>tot</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Total SWAP in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>used</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Total used SWAP in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>cached</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Cached RAM in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>table</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p>Dictionary with all swap available <sup>B</sup></p></td>
 </tr>
 </tbody>
@@ -1101,23 +1101,23 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 </thead>
 <tbody>
 <tr class="row-even"><td><p>online</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Status EMC</p></td>
 </tr>
 <tr class="row-odd"><td><p>val</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Percentage of bandwidth used relative to running frequency</p></td>
 </tr>
 <tr class="row-even"><td><p>cur</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Current working frequency in <strong>kHz</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>max</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Max EMC frequency usable in <strong>kHz</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>min</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Min EMC frequency usable in <strong>kHz</strong></p></td>
 </tr>
 </tbody>
@@ -1134,15 +1134,15 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 </thead>
 <tbody>
 <tr class="row-even"><td><p>tot</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Total IRAM in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>used</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Total used IRAM in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>lfb</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Large Free Block in <strong>4MB</strong></p></td>
 </tr>
 </tbody>
@@ -1190,23 +1190,23 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 </thead>
 <tbody>
 <tr class="row-even"><td><p>type</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Type of partition</p></td>
 </tr>
 <tr class="row-odd"><td><p>prio</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Priority partition</p></td>
 </tr>
 <tr class="row-even"><td><p>size</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Size partition in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-odd"><td><p>used</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Used part of this partition in <strong>KB</strong></p></td>
 </tr>
 <tr class="row-even"><td><p>boot</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>Check if this swap start on boot</p></td>
 </tr>
 </tbody>
@@ -1227,7 +1227,7 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.nvpmodel">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nvpmodel</span></span><a class="headerlink" href="#jtop.jtop.nvpmodel" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nvpmodel</span></span><a class="headerlink" href="#jtop.jtop.nvpmodel" title="Link to this definition">#</a></dt>
 <dd><p>The NVP Model control voltage regulators, and power tree to optimize power efficiency.
 It supports three optimized power budgets, such as 10 watts, 15 watts, and 30 watts.
 For each power budget, several configurations are possible with various CPU frequencies and number of cores online.</p>
@@ -1278,7 +1278,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.ok">
-<span class="sig-name descname"><span class="pre">ok</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.ok" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ok</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.ok" title="Link to this definition">#</a></dt>
 <dd><p>This method is needed when you start jtop using <cite>with</cite> like below</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">while</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -1289,7 +1289,7 @@ For each power budget, several configurations are possible with various CPU freq
 when a new data will be available the function will release and you will read a new fresh data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>spin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, this function will be not blocking, defaults to False</p>
+<dd class="field-odd"><p><strong>spin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, this function will be not blocking, defaults to False</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ex_value</strong> – if jtop client fail, will be raise here</p>
@@ -1298,14 +1298,14 @@ when a new data will be available the function will release and you will read a 
 <dd class="field-odd"><p>status jtop client</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.power">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><a class="headerlink" href="#jtop.jtop.power" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><a class="headerlink" href="#jtop.jtop.power" title="Link to this definition">#</a></dt>
 <dd><p>All NVIDIA Jetson have one ore more integrate three-channel <a class="reference external" href="https://www.ti.com/product/INA3221">INA3221</a> to measure the power consumption.</p>
 <p>This jtop attribute collect and show the output from each rail in a simple view.</p>
 <div class="table-wrapper docutils container">
@@ -1318,11 +1318,11 @@ when a new data will be available the function will release and you will read a 
 </thead>
 <tbody>
 <tr class="row-even"><td><p>rail</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p>A dictionary with all thermal rails</p></td>
 </tr>
 <tr class="row-odd"><td><p>total</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p></td>
 <td><p>Total estimate board power</p></td>
 </tr>
 </tbody>
@@ -1344,39 +1344,39 @@ when a new data will be available the function will release and you will read a 
 </thead>
 <tbody>
 <tr class="row-even"><td><p>online</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>If sensor is online</p></td>
 </tr>
 <tr class="row-odd"><td><p>type</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Type of sensors (For NVIDIA Jetson is INA3221)</p></td>
 </tr>
 <tr class="row-even"><td><p>status</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p><em>(if available)</em> Status sensor</p></td>
 </tr>
 <tr class="row-odd"><td><p>volt</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Gets rail voltage in millivolts</p></td>
 </tr>
 <tr class="row-even"><td><p>curr</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Gets rail current in milliamperes</p></td>
 </tr>
 <tr class="row-odd"><td><p>power</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Gets rail power in milliwatt</p></td>
 </tr>
 <tr class="row-even"><td><p>avg</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Gets rail power average in milliwatt</p></td>
 </tr>
 <tr class="row-odd"><td><p>warn</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p><em>(if available)</em> Gets rail average current limit in milliamperes</p></td>
 </tr>
 <tr class="row-even"><td><p>crit</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p><em>(if available)</em> Gets rail instantaneous current limit in milliamperes</p></td>
 </tr>
 </tbody>
@@ -1396,14 +1396,14 @@ when a new data will be available the function will release and you will read a 
 <dd class="field-odd"><p>A dictionary with a list of power and the total</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.processes">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">processes</span></span><a class="headerlink" href="#jtop.jtop.processes" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">processes</span></span><a class="headerlink" href="#jtop.jtop.processes" title="Link to this definition">#</a></dt>
 <dd><p>Return a list with all processing running in GPU.</p>
 <p>For each item are collected all information about the process.</p>
 <div class="table-wrapper docutils container">
@@ -1416,43 +1416,43 @@ when a new data will be available the function will release and you will read a 
 </thead>
 <tbody>
 <tr class="row-even"><td><p>0</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>PID process running</p></td>
 </tr>
 <tr class="row-odd"><td><p>1</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>User start the process</p></td>
 </tr>
 <tr class="row-even"><td><p>2</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>GPU used <sup>E</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>3</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Type of process <sup>F</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>4</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Priority</p></td>
 </tr>
 <tr class="row-odd"><td><p>5</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>State process <sup>A</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>6</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p>CPU percent utilization <sup>B</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>7</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Memory occupied <sup>C</sup></p></td>
 </tr>
 <tr class="row-even"><td><p>8</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>GPU Memory occupied <sup>D</sup></p></td>
 </tr>
 <tr class="row-odd"><td><p>9</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p>Process name</p></td>
 </tr>
 </tbody>
@@ -1529,14 +1529,14 @@ This is the amount of memory that the process is currently using.</p>
 <dd class="field-odd"><p>list of all GPU processes</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.restore">
-<span class="sig-name descname"><span class="pre">restore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_counter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.restore" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">restore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_counter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.restore" title="Link to this definition">#</a></dt>
 <dd><p>This block method will restore all jtop configuration, in order:</p>
 <ol class="arabic simple">
 <li><p>Switch off, disable on boot <strong>jetson_clocks</strong> and remove configuration file(reference <a class="reference internal" href="jetson_clocks.html#jtop.core.jetson_clocks.JetsonClocks" title="jtop.core.jetson_clocks.JetsonClocks"><code class="xref py py-class docutils literal notranslate"><span class="pre">JetsonClocks</span></code></a>)</p></li>
@@ -1555,13 +1555,13 @@ This is the amount of memory that the process is currently using.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>max_counter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – Counter time for each test before fail, defaults to 10</p>
+<dd class="field-odd"><p><strong>max_counter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – Counter time for each test before fail, defaults to 10</p>
 </dd>
 <dt class="field-even">Yield<span class="colon">:</span></dt>
 <dd class="field-even"><p>Generator of all operations to restore your NVIDIA Jetson</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)">bool</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#jtop.JtopException" title="jtop.JtopException"><strong>JtopException</strong></a> – if the connection with the server is lost,
@@ -1572,7 +1572,7 @@ not active or your user does not have the permission to connect to <em>jtop.serv
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.jtop.start">
-<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.start" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.jtop.start" title="Link to this definition">#</a></dt>
 <dd><p>The start() function start your jtop and you can start to read the NVIDIA Jetson status.</p>
 <p>This method is <strong>not</strong> needed to close jtop if you have open jtop using <cite>with</cite> like:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
@@ -1589,7 +1589,7 @@ not active or your user does not have the permission to connect to <em>jtop.serv
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.stats">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#jtop.jtop.stats" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#jtop.jtop.stats" title="Link to this definition">#</a></dt>
 <dd><p>This property return a simplified version of tegrastats,
 it is simple to use if you want log the NVIDIA Jetson status with pandas or in a csv file.</p>
 <p>This property is a simplified version of all data collected from your NVIDIA Jetson,
@@ -1606,72 +1606,72 @@ if you need more detailed information, please use the other jtop properties</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>time</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code></a></p></td>
 <td></td>
 <td><p>local time in your board</p></td>
 </tr>
 <tr class="row-odd"><td><p>uptime</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.uptime" title="jtop.jtop.uptime"><code class="xref py py-attr docutils literal notranslate"><span class="pre">uptime</span></code></a></p></td>
 <td><p>up time on your board</p></td>
 </tr>
 <tr class="row-even"><td><p>cpu <strong>X</strong></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.cpu" title="jtop.jtop.cpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cpu</span></code></a></p></td>
 <td><p>The status for each cpu in your board, if disabled <em>OFF</em></p></td>
 </tr>
 <tr class="row-odd"><td><p>RAM</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.memory" title="jtop.jtop.memory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a></p></td>
 <td><p>RAM used / total</p></td>
 </tr>
 <tr class="row-even"><td><p>SWAP</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.memory" title="jtop.jtop.memory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a></p></td>
 <td><p>SWAP used / total</p></td>
 </tr>
 <tr class="row-odd"><td><p>EMC</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.memory" title="jtop.jtop.memory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a></p></td>
 <td><p><em>(Optional)</em> EMC Percentage of bandwidth</p></td>
 </tr>
 <tr class="row-even"><td><p>IRAM</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.memory" title="jtop.jtop.memory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a></p></td>
 <td><p><em>(Optional)</em> IRAM used / total</p></td>
 </tr>
 <tr class="row-odd"><td><p>GPU</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a></p></td>
 <td><p><em>(Optional)</em> Status of your GPU</p></td>
 </tr>
 <tr class="row-even"><td><p>engine <strong>X</strong></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.engine" title="jtop.jtop.engine"><code class="xref py py-attr docutils literal notranslate"><span class="pre">engine</span></code></a></p></td>
 <td><p><em>(Optional)</em> Frequency for each engine, if disabled <em>OFF</em></p></td>
 </tr>
 <tr class="row-odd"><td><p>fan</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.fan" title="jtop.jtop.fan"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fan</span></code></a></p></td>
 <td><p><em>(Optional)</em> Fan speed</p></td>
 </tr>
 <tr class="row-even"><td><p>Temp <strong>X</strong></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.power" title="jtop.jtop.power"><code class="xref py py-attr docutils literal notranslate"><span class="pre">power</span></code></a></p></td>
 <td><p><em>(Optional)</em> Current power from rail X</p></td>
 </tr>
 <tr class="row-odd"><td><p>Temp <strong>TOT</strong></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.power" title="jtop.jtop.power"><code class="xref py py-attr docutils literal notranslate"><span class="pre">power</span></code></a></p></td>
 <td><p><em>(Optional)</em> Total power</p></td>
 </tr>
 <tr class="row-even"><td><p>jetson_clocks</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.jetson_clocks" title="jtop.jtop.jetson_clocks"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jetson_clocks</span></code></a></p></td>
 <td><p><em>(Optional)</em> Status of jetson_clocks, human readable</p></td>
 </tr>
 <tr class="row-odd"><td><p>nvpmodel</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></td>
 <td><p><a class="reference internal" href="#jtop.jtop.nvpmodel" title="jtop.jtop.nvpmodel"><code class="xref py py-attr docutils literal notranslate"><span class="pre">nvpmodel</span></code></a></p></td>
 <td><p><em>(Optional)</em> NV Power Model name active</p></td>
 </tr>
@@ -1683,14 +1683,14 @@ if you need more detailed information, please use the other jtop properties</p>
 <dd class="field-odd"><p>Compacts jetson statistics</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.temperature">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">temperature</span></span><a class="headerlink" href="#jtop.jtop.temperature" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">temperature</span></span><a class="headerlink" href="#jtop.jtop.temperature" title="Link to this definition">#</a></dt>
 <dd><p>BSP thermal management features are part of the firmware running on BPMP for Jetson platforms running any host operating system (host OS) on the CPU.</p>
 <p>this attribute provide a dictionary with a list of all thermal rail available on your board.</p>
 <p>All temperatures are in Celsius</p>
@@ -1704,19 +1704,19 @@ if you need more detailed information, please use the other jtop properties</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>online</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p></td>
 <td><p>If sensor is online</p></td>
 </tr>
 <tr class="row-odd"><td><p>temp</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Gets rail voltage in Celsius. <em>(If offline show -256)</em></p></td>
 </tr>
 <tr class="row-even"><td><p>max</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p><em>(if available)</em> Gets rail average current limit in Celsius</p></td>
 </tr>
 <tr class="row-odd"><td><p>crit</p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p><em>(if available)</em> Gets rail instantaneous current limit in Celsius</p></td>
 </tr>
 </tbody>
@@ -1743,14 +1743,14 @@ if you need more detailed information, please use the other jtop properties</p>
 <dd class="field-odd"><p>Temperature dictionary</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.jtop.uptime">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uptime</span></span><a class="headerlink" href="#jtop.jtop.uptime" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uptime</span></span><a class="headerlink" href="#jtop.jtop.uptime" title="Link to this definition">#</a></dt>
 <dd><p>Up time, The time since the board is turned on.</p>
 <p>This command read the value in <code class="code docutils literal notranslate"><span class="pre">/proc/uptime</span></code> .</p>
 <dl class="field-list simple">
@@ -1758,7 +1758,7 @@ if you need more detailed information, please use the other jtop properties</p>
 <dd class="field-odd"><p>Board up time</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.11)">datetime.timedelta</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.12)">datetime.timedelta</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1870,9 +1870,9 @@ if you need more detailed information, please use the other jtop properties</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=c52c3174"></script>
+</div><script src="../_static/documentation_options.js?v=e756e73c"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6b89569b"></script>

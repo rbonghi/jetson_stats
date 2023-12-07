@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,7 +13,7 @@
 <meta name="description" content="You can run directly in Docker jtop, you need only to: Install jetson-stats on your host, Install jetson-stats on your container as well, Pass to your container/run/jtop.sock:/run/jtop.sock. You ca..." />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="📖 API Reference" href="reference/index.html" /><link rel="prev" title="👨‍💻 Advanced Usage" href="advanced-usage.html" />
 
-    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 7.1.2 and Furo 2023.07.26 -->
+    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>🐋 Docker - jetson-stats 4.2.3</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
@@ -261,7 +261,7 @@
         </div>
         <article role="main">
           <section id="docker">
-<h1>🐋 Docker<a class="headerlink" href="#docker" title="Permalink to this heading">#</a></h1>
+<h1>🐋 Docker<a class="headerlink" href="#docker" title="Link to this heading">#</a></h1>
 <p>You can run directly in Docker jtop, you need only to:</p>
 <ol class="arabic simple">
 <li><p>Install jetson-stats on your <strong>host</strong></p></li>
@@ -273,7 +273,7 @@
 </pre></div>
 </div>
 <section id="design-your-dockerfile">
-<h2>Design your Dockerfile<a class="headerlink" href="#design-your-dockerfile" title="Permalink to this heading">#</a></h2>
+<h2>Design your Dockerfile<a class="headerlink" href="#design-your-dockerfile" title="Link to this heading">#</a></h2>
 <p>jetson-stats need few things to be installed on your container.</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">python3</span></code></p></li>
@@ -286,7 +286,7 @@
 </div>
 </section>
 <section id="tips-and-tricks">
-<h2>Tips and tricks<a class="headerlink" href="#tips-and-tricks" title="Permalink to this heading">#</a></h2>
+<h2>Tips and tricks<a class="headerlink" href="#tips-and-tricks" title="Link to this heading">#</a></h2>
 <p>If you work with different <strong>multiple users</strong> on your docker container:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--group-add<span class="w"> </span><span class="nv">$JTOP_GID</span><span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span>/run/jtop.sock:/run/jtop.sock<span class="w"> </span>rbonghi/jetson_stats:latest
 </pre></div>
@@ -375,9 +375,9 @@
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=c52c3174"></script>
+</div><script src="_static/documentation_options.js?v=e756e73c"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=32e29ea5"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=6b89569b"></script>
