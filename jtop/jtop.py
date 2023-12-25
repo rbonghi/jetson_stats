@@ -920,7 +920,7 @@ class jtop(Thread):
         Name          Type                Description
         ============= =================== ====================================================
         rail          :py:class:`dict`    A dictionary with all thermal rails
-        total         :py:class:`dict`    Total estimate board power
+        tot           :py:class:`dict`    Total estimate board power
         ============= =================== ====================================================
 
         The total power is the **sum of all rails** or
@@ -1015,7 +1015,7 @@ class jtop(Thread):
 
         * **total** - Total disk space in GB
         * **available** - Space available in GB
-        * **use** - Disk space used in GB
+        * **used** - Disk space used in GB
         * **available_no_root**
 
         :return: Disk information
