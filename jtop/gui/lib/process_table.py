@@ -69,6 +69,8 @@ class ProcessTable(object):
         # Sort table for selected line
         sorted_processes = sorted(processes, key=lambda x: x[self.line_sort], reverse=self.type_reverse)
         # Draw all processes
+        # Instantiate the number of process variable to avoid an unbound local error if the process table is empty.
+        nprocess = 0
         for nprocess, process in enumerate(sorted_processes):
             # Skip unit size process
             counter = 0
