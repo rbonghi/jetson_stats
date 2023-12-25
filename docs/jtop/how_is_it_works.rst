@@ -1,7 +1,7 @@
 How is it works
 ===============
 
-jtop is a power monitor that use a service and a python client library.
+jtop is a power monitor that uses a service and a Python client library.
 
 .. image:: /images/architecture.drawio.png
    :align: center
@@ -12,9 +12,9 @@ Initialization
 --------------
 
 #. Read NVIDIA Jetson EEPROM to detect which NVIDIA Jetson is running
-#. decode jetson_clocks to know if is running and which engines are involved when it start.
+#. decode jetson_clocks to know if is running and which engines are involved when it starts.
 #. decode the NVPmodel to know which model is selected
-#. Open the ``/run/jtop.sock`` socket and wait a jtop client connection
+#. Open the ``/run/jtop.sock`` socket and wait for a jtop client connection
 
 Loop
 ----
@@ -24,14 +24,14 @@ When jtop is running read all status from your current board and share all this 
 #. Read and estimate the CPU utilization from ``/proc/stat``
 #. Read status from all devices in ``/sys/devices/system``
 #. Read and decode memory status from ``/proc/meminfo``
-#. Decode and read status from all swap using ``swapon`` command
+#. Decode and read the status from all swaps using ``swapon`` command
 #. Check status from jetson_clocks
 #. Check which nvpmodel is running
 
 jtop.sock
 ---------
 
-jtop use a service to sharing the data between client (jtop gui or your python script) and a server.
+jtop uses a service to share the data between client (jtop gui or your Python script) and a server.
 
 This service, called ``jtop.service`` use a socket file. It is located in:
 
