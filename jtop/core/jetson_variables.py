@@ -280,7 +280,7 @@ def get_part_number():
             sku = part_number[10:14]
             jetson_part_number = "p{board_id}-{sku}".format(board_id=board_id, sku=sku)
             return part_number, jetson_part_number
-        except (IOError, OSError) as e:
+        except (IOError, OSError):
             # logger.error("I2C[{bus_number}] [Errno {errno}]: {msg}".format(errno=e.errno, bus_number=bus_number, msg=e.strerror))
             pass
     return part_number, jetson_part_number
@@ -393,7 +393,8 @@ def export_variables(hardware):
         name = name.upper().replace("-", "_").replace(" ", "_")
         print('export JETSON_{}="{}"'.format(name, value))
 
-
+# If you want to run this script:
+# sudo python3 -m jtop.core.jetson_variables
 if __name__ == "__main__":
     # Get all variables
     hardware = get_jetson_variables()
