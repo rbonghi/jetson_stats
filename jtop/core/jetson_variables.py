@@ -393,6 +393,7 @@ def export_variables(hardware):
         name = name.upper().replace("-", "_").replace(" ", "_")
         print('export JETSON_{}="{}"'.format(name, value))
 
+
 # If you want to run this script:
 # sudo python3 -m jtop.core.jetson_variables
 if __name__ == "__main__":
