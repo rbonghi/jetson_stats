@@ -280,8 +280,8 @@ def get_part_number():
             sku = part_number[10:14]
             jetson_part_number = "p{board_id}-{sku}".format(board_id=board_id, sku=sku)
             return part_number, jetson_part_number
-        except (IOError, OSError):
-            # print("Error I2C bus: {bus_number}".format(bus_number=bus_number))
+        except (IOError, OSError) as e:
+            # logger.error("I2C[{bus_number}] [Errno {errno}]: {msg}".format(errno=e.errno, bus_number=bus_number, msg=e.strerror))
             pass
     return part_number, jetson_part_number
 

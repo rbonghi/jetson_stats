@@ -27,9 +27,9 @@ from .jtop import jtop
 
 __author__ = "Raffaello Bonghi"
 __email__ = "raffaello@rnext.it"
-__cr__ = "(c) 2023, RB"
-__copyright__ = "(c) 2023, Raffaello Bonghi"
+__cr__ = "(c) 2024, RB"
+__copyright__ = "(c) 2024, Raffaello Bonghi"
 # Version package
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "4.2.3"
+__version__ = "4.2.4"
 # EOF
