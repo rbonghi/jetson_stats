@@ -106,7 +106,7 @@ NVIDIA_JETPACK = {
 
 
 CUDA_TABLE = {
-    'tegra234': '8.7',
+    'tegra234': '8.7',  # JETSON ORIN - tegra234
     'tegra23x': '8.7',  # JETSON ORIN - tegra234
     'tegra194': '7.2',  # JETSON XAVIER
     'tegra186': '6.2',  # JETSON TX2
@@ -185,7 +185,8 @@ def get_raw_output():
     # Read all output from all I2C ports
     for bus_number in I2C_EEPROM_BUS:
         try:
-            bus = SMBus(bus_number)
+            # Forcing read SMBus added from Jetpack 6.0 DP
+            bus = SMBus(bus_number, force=True)
             size_block = 16
             raw_output['I2C-{num}-0x50'.format(num=bus_number)] = read_i2c_raw_data(bus, 0x50, size_block)
             raw_output['I2C-{num}-0x56'.format(num=bus_number)] = read_i2c_raw_data(bus, 0x56, size_block)
