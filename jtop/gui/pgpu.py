@@ -134,7 +134,7 @@ class GPU(Page):
         # Plot all GPU temperatures
         self.stdscr.addstr(first + 1, 1, "Temperatures:", curses.A_NORMAL)
         for idx, name in enumerate(self.jetson.temperature):
-            if 'GPU' in name:
+            if 'gpu' in name.lower():
                 sensor = self.jetson.temperature[name]
                 color_temperature(self.stdscr, first + 1, 15, name, sensor)
         # Draw all GPU
