@@ -7,14 +7,14 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://rnext.it/jetson_stats/jtop/how_is_it_works.html" />
 <meta property="og:site_name" content="jetson-stats" />
-<meta property="og:description" content="jtop is a power monitor that use a service and a python client library. Like the image above, when jtop service start, load and decode the information on your board. Initialization: Read NVIDIA Jet..." />
+<meta property="og:description" content="jtop is a power monitor that uses a service and a Python client library. Like the image above, when jtop service start, load and decode the information on your board. Initialization: Read NVIDIA Je..." />
 <meta property="og:image" content="https://rnext.it/jetson_stats/_images/jtop.png" />
 <meta property="og:image:alt" content="jetson-stats" />
-<meta name="description" content="jtop is a power monitor that use a service and a python client library. Like the image above, when jtop service start, load and decode the information on your board. Initialization: Read NVIDIA Jet..." />
+<meta name="description" content="jtop is a power monitor that uses a service and a Python client library. Like the image above, when jtop service start, load and decode the information on your board. Initialization: Read NVIDIA Je..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="👨‍💻 Advanced Usage" href="../advanced-usage.html" /><link rel="prev" title="📊 jtop" href="jtop.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
-        <title>How is it works - jetson-stats 4.2.3</title>
+        <title>How is it works - jetson-stats 4.2.4</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -143,7 +143,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">jetson-stats 4.2.3</div></a>
+      <a href="../index.html"><div class="brand">jetson-stats 4.2.4</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -166,7 +166,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">jetson-stats 4.2.3</span>
+  <span class="sidebar-brand-text">jetson-stats 4.2.4</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -262,16 +262,16 @@
         <article role="main">
           <section id="how-is-it-works">
 <h1>How is it works<a class="headerlink" href="#how-is-it-works" title="Link to this heading">#</a></h1>
-<p>jtop is a power monitor that use a service and a python client library.</p>
+<p>jtop is a power monitor that uses a service and a Python client library.</p>
 <img alt="../_images/architecture.drawio.png" class="align-center" src="../_images/architecture.drawio.png" />
 <p>Like the image above, when jtop service start, load and decode the information on your board.</p>
 <section id="initialization">
 <h2>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
 <li><p>Read NVIDIA Jetson EEPROM to detect which NVIDIA Jetson is running</p></li>
-<li><p>decode jetson_clocks to know if is running and which engines are involved when it start.</p></li>
+<li><p>decode jetson_clocks to know if is running and which engines are involved when it starts.</p></li>
 <li><p>decode the NVPmodel to know which model is selected</p></li>
-<li><p>Open the <code class="docutils literal notranslate"><span class="pre">/run/jtop.sock</span></code> socket and wait a jtop client connection</p></li>
+<li><p>Open the <code class="docutils literal notranslate"><span class="pre">/run/jtop.sock</span></code> socket and wait for a jtop client connection</p></li>
 </ol>
 </section>
 <section id="loop">
@@ -281,14 +281,14 @@
 <li><p>Read and estimate the CPU utilization from <code class="docutils literal notranslate"><span class="pre">/proc/stat</span></code></p></li>
 <li><p>Read status from all devices in <code class="docutils literal notranslate"><span class="pre">/sys/devices/system</span></code></p></li>
 <li><p>Read and decode memory status from <code class="docutils literal notranslate"><span class="pre">/proc/meminfo</span></code></p></li>
-<li><p>Decode and read status from all swap using <code class="docutils literal notranslate"><span class="pre">swapon</span></code> command</p></li>
+<li><p>Decode and read the status from all swaps using <code class="docutils literal notranslate"><span class="pre">swapon</span></code> command</p></li>
 <li><p>Check status from jetson_clocks</p></li>
 <li><p>Check which nvpmodel is running</p></li>
 </ol>
 </section>
 <section id="jtop-sock">
 <h2>jtop.sock<a class="headerlink" href="#jtop-sock" title="Link to this heading">#</a></h2>
-<p>jtop use a service to sharing the data between client (jtop gui or your python script) and a server.</p>
+<p>jtop uses a service to share the data between client (jtop gui or your Python script) and a server.</p>
 <p>This service, called <code class="docutils literal notranslate"><span class="pre">jtop.service</span></code> use a socket file. It is located in:</p>
 <div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">/run/jtop.sock</span>
 </pre></div>
@@ -327,7 +327,7 @@
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2023, Raffaello Bonghi
+                Copyright &#169; 2024, Raffaello Bonghi
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
@@ -375,7 +375,7 @@
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=e756e73c"></script>
+</div><script src="../_static/documentation_options.js?v=2cdf77f1"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
