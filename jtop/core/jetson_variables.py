@@ -272,7 +272,8 @@ def get_part_number():
     # Find 699-level part number from EEPROM and extract P-number
     for bus_number in I2C_EEPROM_BUS:
         try:
-            bus = SMBus(bus_number)
+            # Forcing read SMBus added from Jetpack 6.0 DP
+            bus = SMBus(bus_number, force=True)
             part_number = bus.read_i2c_block_data(0x50, 20, 29)
             part_number = ''.join(chr(i) for i in part_number).rstrip('\x00')
             # print(part_number)

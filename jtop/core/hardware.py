@@ -69,10 +69,21 @@ def get_hardware():
     if platform_board == 'aarch64':
         # Load Jetson data
         jetson = get_jetson_variables()
+        # Print main jetson variables
+        if '699-level Part Number' in jetson:
+            logger.info("NVIDIA Jetson 699-level Part Number={}".format(jetson['699-level Part Number']))
+        else:
+            logger.error("NVIDIA Jetson No 699-level Part Number detected!")
+        if 'Module' in jetson:
+            logger.info("NVIDIA Jetson Module={}".format(jetson['Module']))
+        else:
+            logger.error("NVIDIA Jetson No Module detected!")
+        # Check L4T detection
         if jetson['L4T']:
             logger.info("NVIDIA Jetson detected L4T={}".format(jetson['L4T']))
-            return jetson
-        return {}
+        else:
+            logger.error("NVIDIA Jetson L4T not detected!")
+        return jetson
     elif platform_board == 'x86_64':
         return get_x86_64_variables()
     else:
