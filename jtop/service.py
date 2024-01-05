@@ -248,11 +248,11 @@ class JtopServer(Process):
         # Check if running a root
         if os.getuid() != 0:
             raise JtopException("jtop service need sudo to work")
+        # Load configuration
+        self.config = Config()
         # Save version jtop
         self._version = deepcopy(get_var(VERSION_RE))
         logger.info("jetson_stats {version} - server loaded".format(version=self._version))
-        # Load configuration
-        self.config = Config()
         # Error queue
         self._error = Queue()
         # Command queue
@@ -273,9 +273,9 @@ class JtopServer(Process):
         # Generate key and open broadcaster
         self.broadcaster = JtopManager()
         # Load board and platform variables
-        self.board = {'hardware': get_hardware()}
         data_platform = get_platform_variables()
         logger.info("Running on Python: {python_version}".format(python_version=data_platform['Python']))
+        self.board = {'hardware': get_hardware()}
         # From this point are initialized or hardware services
         # Setup cpu service
         self.cpu = CPUService()
