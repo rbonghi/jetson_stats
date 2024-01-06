@@ -111,6 +111,8 @@ def get_libraries():
     try:
         lines = cmd_vulkaninfo()
         # Extract version
+        if not lines:
+            raise Command.CommandException("Missing command", -3)
         cmd_vulkan = Command(lines)
         lines = cmd_vulkan()
         for line in lines:
