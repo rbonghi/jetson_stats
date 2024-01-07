@@ -19,7 +19,7 @@ import re
 import signal
 import os
 import sys
-import locale
+# import locale
 import argparse
 # control command line
 import curses
