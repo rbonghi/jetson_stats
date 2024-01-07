@@ -141,7 +141,8 @@ def main():
     # jtop client start
     try:
         # https://stackoverflow.com/questions/56373360/n-curses-within-python-how-to-catch-and-print-non-ascii-character
-        locale.setlocale(locale.LC_ALL, '')
+        # Commented for issues #466 #393
+        # locale.setlocale(locale.LC_ALL, '')
         # Open jtop client
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper
