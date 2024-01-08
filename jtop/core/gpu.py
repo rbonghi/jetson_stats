@@ -24,7 +24,8 @@ from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
 # default ipgu path for Jetson devices
-DEFAULT_IGPU_PATH="/sys/class/devfreq/"
+DEFAULT_IGPU_PATH = "/sys/class/devfreq/"
+
 
 def check_nvidia_smi():
     cmd = Command(['nvidia-smi'])
@@ -97,7 +98,7 @@ def igpu_read_status(path):
 
 
 def get_raw_igpu_devices():
-    igpu_path=DEFAULT_IGPU_PATH
+    igpu_path = DEFAULT_IGPU_PATH
     raw_output = {}
     for item in os.listdir(igpu_path):
         item_path = os.path.join(igpu_path, item)
@@ -110,7 +111,7 @@ def get_raw_igpu_devices():
                 # path and file
                 raw_output[name_path] = "{}".format(name)
     return raw_output
-        
+
 
 def find_igpu(igpu_path):
     # Check if exist a integrated gpu
