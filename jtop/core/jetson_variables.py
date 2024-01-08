@@ -177,7 +177,7 @@ def read_i2c_raw_data(bus, registry, size_block):
     return string_data
 
 
-def get_raw_output():
+def get_jetson_raw_output():
     raw_output = {}
     # Catch all output from all files
     for file in RAW_FILES:
