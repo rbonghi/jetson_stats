@@ -44,7 +44,6 @@ class ProcessTable(object):
         self.type_reverse = True
 
     def draw(self, pos_y, pos_x, width, height, key, mouse):
-        processes = self.jetson.processes
         # Plot low bar background line
         try:
             self.stdscr.addstr(pos_y, 0, " " * width, NColors.igreen())
@@ -67,7 +66,11 @@ class ProcessTable(object):
             except curses.error:
                 break
         # Sort table for selected line
-        sorted_processes = sorted(processes, key=lambda x: x[self.line_sort], reverse=self.type_reverse)
+        try:
+            sorted_processes = self.jetson.processes
+            sorted_processes = sorted(sorted_processes, key=lambda x: x[self.line_sort], reverse=self.type_reverse)
+        except IndexError:
+            pass
         # Draw all processes
         # Instantiate the number of process variable to avoid an unbound local error if the process table is empty.
         nprocess = 0
