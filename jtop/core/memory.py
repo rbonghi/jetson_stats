@@ -190,7 +190,7 @@ def read_emc(root_path):
         with open(root_path + "/debug/cactmon/mc_all", 'r') as f:
             utilization = int(f.read())
     elif os.access(root_path + "/actmon_avg_activity/mc_all", os.R_OK):
-        with open(root_path + "/debug/cactmon/mc_all", 'r') as f:
+        with open(root_path + "/actmon_avg_activity/mc_all", 'r') as f:
             utilization = int(f.read())
     else:
         # if utilization not accesibile return empty EMC data
