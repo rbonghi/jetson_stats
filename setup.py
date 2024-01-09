@@ -100,7 +100,7 @@ def is_docker():
         line = file.readline().strip()
         while line:
             print(line)
-            if '/docker/containers/' in line:
+            if '/docker/containers/' or '/docker/volumes/buildx_buildkit_builder' in line:
                 return True
             line = file.readline().strip()
     return False
