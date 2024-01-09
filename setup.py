@@ -93,7 +93,7 @@ def is_docker():
             if 'docker' in fields or 'buildkit' in fields:
                 return True
     with open('/proc/self/mountinfo', 'r') as file:
-        line = file.readline().strip()    
+        line = file.readline().strip()
         while line:
             if '/docker/containers/' in line:
                 return True
