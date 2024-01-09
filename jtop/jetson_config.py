@@ -37,8 +37,9 @@ logger = logging.getLogger(__name__)
 # Detect user
 user = os.environ.get('USER', '')
 # Get user from sudo
-if 'SUDO_USER' in os.environ:
-    user = os.environ['SUDO_USER']
+sudo_user = os.environ.get('SUDO_USER', '')
+# If are both empty assign 'root'
+user = sudo_user or 'root'
 # Locate folder and type of installation
 folder, _ = os.path.split(__file__)
 folder = os.path.dirname(folder)

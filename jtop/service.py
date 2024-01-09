@@ -155,8 +155,9 @@ def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
 def status_permission_user(group=JTOP_USER):
     user = os.environ.get('USER', '')
     # Get user from sudo
-    if 'SUDO_USER' in os.environ:
-        user = os.environ['SUDO_USER']
+    sudo_user = os.environ.get('SUDO_USER', '')
+    # If are both empty assign 'root'
+    user = sudo_user or 'root'
     # Check if user is in group
     cmd_group_user = Command(shlex.split('groups {user}'.format(user=user)))
     try:
@@ -191,8 +192,9 @@ def status_permission(group=JTOP_USER):
 def unset_service_permission(group=JTOP_USER):
     user = os.environ.get('USER', '')
     # Get user from sudo
-    if 'SUDO_USER' in os.environ:
-        user = os.environ['SUDO_USER']
+    sudo_user = os.environ.get('SUDO_USER', '')
+    # If are both empty assign 'root'
+    user = sudo_user or 'root'
     # Check if user is in group
     if status_permission_user(group):
         logger.info("Remove {user} from group {group}".format(group=group, user=user))
@@ -205,8 +207,9 @@ def unset_service_permission(group=JTOP_USER):
 def set_service_permission(group=JTOP_USER):
     user = os.environ.get('USER', '')
     # Get user from sudo
-    if 'SUDO_USER' in os.environ:
-        user = os.environ['SUDO_USER']
+    sudo_user = os.environ.get('SUDO_USER', '')
+    # If are both empty assign 'root'
+    user = sudo_user or 'root'
     # Make jetson_stats group
     if not status_permission_group(group):
         logger.info("Add new group {group}".format(group=group))
