@@ -58,8 +58,16 @@ journalctl -u jtop.service -n 100 --no-pager
 
 ### Log from jetson-stats installation
 
-Attach here the output from: `sudo -H pip3 install --no-cache-dir -U jetson-stats`
+Attach here the output from: `sudo -H pip3 install --no-cache-dir -v -U jetson-stats`
 
 <!-- Use:
-sudo -H pip3 install --no-cache-dir -U jetson-stats
+sudo -H pip3 install --no-cache-dir -v -U jetson-stats
  -->
+
+### RAW Data
+
+File from `jtop --error-log` attached
+
+<!-- Please attach the output from:
+jtop --error-log
+-->
