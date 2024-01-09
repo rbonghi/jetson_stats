@@ -85,16 +85,21 @@ def is_docker():
     # https://stackoverflow.com/questions/68816329/how-to-get-docker-container-id-from-within-the-container-with-cgroup-v2
     # Check on cgroup
     with open('/proc/self/cgroup', 'r') as procfile:
+        print("read /proc/self/cgroup")
         for line in procfile:
+            print(line)
             # if is the new cgroup v2 check on mountinfo
             if line.startswith("0::/"):
+                print("version cgroup v2")
                 break
             fields = line.strip().split('/')
             if 'docker' in fields or 'buildkit' in fields:
                 return True
     with open('/proc/self/mountinfo', 'r') as file:
+        print("read /proc/self/mountinfo")
         line = file.readline().strip()
         while line:
+            print(line)
             if '/docker/containers/' in line:
                 return True
             line = file.readline().strip()
