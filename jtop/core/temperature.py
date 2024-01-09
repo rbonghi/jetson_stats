@@ -33,10 +33,8 @@ def read_temperature(data):
         try:
             value = float(cat(path)) / 1000.0
             values[name] = value
-        except OSError:
+        except (OSError, ValueError):
             # If negative sensor offline
-            values[name] = TEMPERATURE_OFFLINE
-        except ValueError:
             values[name] = TEMPERATURE_OFFLINE
     return values
 
