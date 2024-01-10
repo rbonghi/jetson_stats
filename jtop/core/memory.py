@@ -303,6 +303,9 @@ class MemoryService(object):
         self._is_emc = True if read_emc(self._root_path) else False
         if self._is_emc:
             logger.info("Found EMC!")
+        self._is_iram = os.path.isdir(self._root_path + "/debug/nvmap/iram")
+        if self._is_iram:
+            logger.info("Found IRAM!")
         # Initialization memory
         logger.info("Memory service started")
 
@@ -436,7 +439,7 @@ class MemoryService(object):
         if self._is_emc:
             memory['EMC'] = read_emc(self._root_path)
         # Read IRAM if available
-        if os.path.isdir(self._root_path + "/debug/nvmap/iram"):
+        if self._is_iram:
             size = 0
             if os.path.isfile(self._root_path + "/debug/nvmap/iram/size"):
                 # Convert from Hex to decimal - Number in bytes
