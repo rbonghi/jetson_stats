@@ -23,7 +23,6 @@
 
 [project]
 name = "jetson_stats"
-version = "4.3.0"
 description = "Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series"
 readme      = "README.md"
 requires-python = ">=3.7"
@@ -70,15 +69,19 @@ classifiers = [
     "Topic :: System :: Systems Administration",
     "Topic :: Utilities"
 ]
-dynamic = ["dependencies"]
+dynamic = ["version", "dependencies"]
 
 [project.urls]
 "Homepage" = "https://rnext.it/jetson_stats"
-"Bug Reports" = "https://github.com/rbonghi/jetson_stats/issues"
+"Documentation" = "https://rnext.it/jetson_stats"
 "Funding" = "https://github.com/sponsors/rbonghi"
 "Say Thanks!" = "https://discord.gg/BFbuJNhYzS"
 "Source" = "https://github.com/rbonghi/jetson_stats"
+"Bug Reports" = "https://github.com/rbonghi/jetson_stats/issues"
 "Examples" = "https://github.com/rbonghi/jetson_stats/tree/master/examples"
+
+[tool.setuptools.packages.find]
+exclude = ["examples", "scripts", "tests", "jtop.tests", "jtop.tests_gui"]
 
 [project.scripts]
 jtop = "jtop.__main__:main"
@@ -87,5 +90,6 @@ jetson_config = "jtop.jetson_config:main"
 jetson_swap = "jtop.jetson_swap:main"
 
 [tool.setuptools.dynamic]
+version = {attr = "jtop.__init__.__version__"}
 dependencies = {file = ["requirements.txt"]}
 # EOF
