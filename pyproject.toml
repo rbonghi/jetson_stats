@@ -1,0 +1,91 @@
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# Copyright (c) 2019-2023 Raffaello Bonghi.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# Reference:
+# 1. https://packaging.python.org/tutorials/packaging-projects/ (setup.py)
+# 2. https://packaging.python.org/guides/distributing-packages-using-setuptools/ (setup.cfg)
+# 3. https://packaging.python.org/guides/single-sourcing-package-version/ (version)
+# 4. https://github.com/pypa/sampleproject (example)
+# 5. https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html (PEP 517)
+
+[project]
+name = "jetson_stats"
+version = "4.3.0"
+description = "Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series"
+readme      = "README.md"
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+keywords = ["jetson_stats", "jtop", "python", "system-monitor", "docker", "nvidia", "Jetson", "Orin", "AGXOrin", "Xavier", "AGXXavier", "XavierNX", "Nano", "TX1", "TX2", "process", "viewer"]
+authors = [
+    { name="Raffaello Bonghi", email="raffaello@rnext.it" }
+]
+maintainers = [
+    { name="Raffaello Bonghi", email="raffaello@rnext.it" }
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Unix Shell",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Terminals",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Logging",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Operating System",
+    "Topic :: System :: Operating System Kernels",
+    "Topic :: System :: Shells",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities"
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+"Homepage" = "https://rnext.it/jetson_stats"
+"Bug Reports" = "https://github.com/rbonghi/jetson_stats/issues"
+"Funding" = "https://github.com/sponsors/rbonghi"
+"Say Thanks!" = "https://discord.gg/BFbuJNhYzS"
+"Source" = "https://github.com/rbonghi/jetson_stats"
+"Examples" = "https://github.com/rbonghi/jetson_stats/tree/master/examples"
+
+[project.scripts]
+jtop = "jtop.__main__:main"
+jetson_release = "jtop.jetson_release:main"
+jetson_config = "jtop.jetson_config:main"
+jetson_swap = "jtop.jetson_swap:main"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+# EOF
