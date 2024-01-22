@@ -316,6 +316,8 @@ For a complete and *manual* uninstall of this package on your device there are f
 
 .. code-block:: bash
 
+  # Restore board configuration
+  jtop --restore
   # Stop, disable and remove jtop.service
   systemctl stop jtop.service
   systemctl disable jtop.service
