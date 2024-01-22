@@ -14,7 +14,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="How is it works" href="how_is_it_works.html" /><link rel="prev" title="💖 Sponsor" href="../sponsors.html" />
 
     <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
-        <title>📊 jtop - jetson-stats 4.2.4</title>
+        <title>📊 jtop - jetson-stats 4.2.5</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -143,7 +143,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">jetson-stats 4.2.4</div></a>
+      <a href="../index.html"><div class="brand">jetson-stats 4.2.5</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -166,7 +166,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">jetson-stats 4.2.4</span>
+  <span class="sidebar-brand-text">jetson-stats 4.2.5</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -589,6 +589,33 @@ You can sort the table clicking on each title on the page</p></li>
 <p>Compare all previous versions, now the Serial number is hidden and you can enable only clicking on the area or pressing the key <strong>s</strong>.</p>
 </section>
 </section>
+<section id="uninstall">
+<h2>Uninstall<a class="headerlink" href="#uninstall" title="Link to this heading">#</a></h2>
+<p>For a complete and <em>manual</em> uninstall of this package on your device there are few steps to do</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You need <strong>super user</strong> to execute the commands</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Restore board configuration</span>
+jtop<span class="w"> </span>--restore
+<span class="c1"># Stop, disable and remove jtop.service</span>
+systemctl<span class="w"> </span>stop<span class="w"> </span>jtop.service
+systemctl<span class="w"> </span>disable<span class="w"> </span>jtop.service
+rm<span class="w"> </span>/etc/systemd/system/jtop.service
+<span class="c1"># reload services</span>
+systemctl<span class="w"> </span>daemon-reload
+
+<span class="c1"># remove jtop pipe</span>
+rm<span class="w"> </span>/run/jtop.sock
+
+<span class="c1"># Remove enviroment variables</span>
+rm<span class="w"> </span>/etc/profile.d/jtop_env.sh
+
+<span class="c1"># Uninstall python package</span>
+pip3<span class="w"> </span>uninstall<span class="w"> </span>jetson-stats
+</pre></div>
+</div>
+</section>
 </section>
 
         </article>
@@ -678,6 +705,7 @@ You can sort the table clicking on each title on the page</p></li>
 <li><a class="reference internal" href="#info">INFO</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#uninstall">Uninstall</a></li>
 </ul>
 </li>
 </ul>
@@ -689,7 +717,7 @@ You can sort the table clicking on each title on the page</p></li>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=2cdf77f1"></script>
+</div><script src="../_static/documentation_options.js?v=88a7f3e8"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=32e29ea5"></script>

@@ -97,7 +97,7 @@ Before to open an `issue`_, try to reinstall the latest version with this comman
 
 .. code-block:: bash
 
-  sudo pip3 install --no-cache-dir -U jetson-stats
+  sudo pip3 install --no-cache-dir -v -U jetson-stats
 
 Save the output somewhere, if this command doesn't fix can be helpful when you one an `issue`_.
 
