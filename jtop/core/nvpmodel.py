@@ -74,6 +74,8 @@ def nvpmodel_query():
         lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
     except FileNotFoundError:
         raise JtopException("nvpmodel doesn't exist")
+    except Command.CommandException:
+        raise JtopException("nvpmodel command unavailable")
     # Extract lines
     for idx, line in enumerate(lines):
         # Search configuration NVPmodel

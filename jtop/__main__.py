@@ -19,7 +19,7 @@ import re
 import signal
 import os
 import sys
-import locale
+# import locale
 import argparse
 # control command line
 import curses
@@ -94,8 +94,6 @@ def main():
     # Initialize signals
     # signal.signal(signal.SIGINT, exit_signal)  # Do not needed equivalent to exception KeyboardInterrupt
     signal.signal(signal.SIGTERM, exit_signal)
-    # https://stackoverflow.com/questions/56373360/n-curses-within-python-how-to-catch-and-print-non-ascii-character
-    locale.setlocale(locale.LC_ALL, '')
     # Run jtop service
     if os.getenv('JTOP_SERVICE', False):
         # Initialize logging level
@@ -142,6 +140,9 @@ def main():
         sys.exit(0)
     # jtop client start
     try:
+        # https://stackoverflow.com/questions/56373360/n-curses-within-python-how-to-catch-and-print-non-ascii-character
+        # Commented for issues #466 #393
+        # locale.setlocale(locale.LC_ALL, '')
         # Open jtop client
         with jtop(interval=interval) as jetson:
             # Call the curses wrapper

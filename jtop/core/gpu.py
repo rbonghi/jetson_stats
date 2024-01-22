@@ -23,6 +23,8 @@ from .exceptions import JtopException
 from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
+# default ipgu path for Jetson devices
+DEFAULT_IGPU_PATH = "/sys/class/devfreq/"
 
 
 def check_nvidia_smi():
@@ -93,6 +95,22 @@ def igpu_read_status(path):
             # Read current GPU load
             gpu['load'] = float(f.read()) / 10.0
     return gpu
+
+
+def get_raw_igpu_devices():
+    igpu_path = DEFAULT_IGPU_PATH
+    raw_output = {}
+    for item in os.listdir(igpu_path):
+        item_path = os.path.join(igpu_path, item)
+        if os.path.isfile(item_path) or os.path.islink(item_path):
+            # Check name device
+            name_path = "{item}/device/of_node/name".format(item=item_path)
+            if os.path.isfile(name_path):
+                # Decode name
+                name = cat(name_path)
+                # path and file
+                raw_output[name_path] = "{}".format(name)
+    return raw_output
 
 
 def find_igpu(igpu_path):
@@ -260,7 +278,7 @@ class GPUService(object):
 
     def __init__(self):
         # Detect integrated GPU
-        igpu_path = "/sys/class/devfreq/"
+        igpu_path = DEFAULT_IGPU_PATH
         if os.getenv('JTOP_TESTING', False):
             igpu_path = "/fake_sys/class/devfreq/"
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=igpu_path))

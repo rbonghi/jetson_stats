@@ -21,8 +21,9 @@
 
 from copy import deepcopy
 # jtop variable
+from .core.gpu import get_raw_igpu_devices
 from .core.hardware import get_platform_variables
-from .core.jetson_variables import get_raw_output
+from .core.jetson_variables import get_jetson_raw_output
 from .terminal_colors import bcolors
 
 
@@ -79,12 +80,18 @@ def get_hardware_log():
     body = "--------------------- PLATFORM -------------------------\n"
     for name, value in platform.items():
         body += "{name}: {value}\n".format(name=name, value=value)
-    # Print all raw output
-    raw_output = get_raw_output()
-    body += "-------------------- RAW OUTPUT ------------------------"
+    # Print all jetson raw output
+    raw_output = get_jetson_raw_output()
+    body += "-------------------- JETSON RAW OUTPUT -----------------\n"
     for name, value in raw_output.items():
-        body += "\n------------------\n"
-        body += "{name}:\n{value}".format(name=name, value=value)
+        body += "------------------\n"
+        body += "Path: {name}\n{value}\n".format(name=name, value=value)
+    # Print device list
+    raw_output = get_raw_igpu_devices()
+    body += "\n-------------------- IGPU OUTPUT ---------------------\n"
+    for path, value in raw_output.items():
+        body += "------------------\n"
+        body += "Path: {path}\n{value}\n".format(path=path, value=value)
     return body
 
 

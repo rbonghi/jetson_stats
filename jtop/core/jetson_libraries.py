@@ -26,7 +26,7 @@ except NameError:
     FileNotFoundError = IOError
 
 
-MODULES = ['cuDNN', 'TensorRT', 'VPI']  # 'Visionworks'
+MODULES = ['cuDNN', 'TensorRT.', 'VPI']  # 'Visionworks'
 CUDA_FILE_RE = re.compile(r'CUDA Version (.*)')
 CUDA_NVCC_RE = re.compile(r'V([0-9]+.[0-9]+.[0-9]+)')
 
@@ -100,17 +100,24 @@ def get_libraries():
     # Find all modules
     modules = get_all_modules()
     for name in MODULES:
-        os_variables[name] = ''
+        # Fix TensorRT search #462
+        name_dict = name[:-1] if name.endswith('.') else name
+        os_variables[name_dict] = ''
         # Find version if installed
         for module, version in modules.items():
+            if name.endswith('.') and name.lower()[:-1] == module:
+                os_variables[name_dict] = version.split('-')[0]
+                break
             if name.lower() in module:
-                os_variables[name] = version.split('-')[0]
+                os_variables[name_dict] = version.split('-')[0]
                 break
     # Get Vulkan output
     cmd_vulkaninfo = Command(['which', 'vulkaninfo'])
     try:
         lines = cmd_vulkaninfo()
         # Extract version
+        if not lines:
+            raise Command.CommandException("Missing command", -3)
         cmd_vulkan = Command(lines)
         lines = cmd_vulkan()
         for line in lines:

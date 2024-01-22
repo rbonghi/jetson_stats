@@ -304,3 +304,30 @@ INFO
 This page show all technical information about your board. This output is available :py:attr:`jtop.jtop.board`.
 
 Compare all previous versions, now the Serial number is hidden and you can enable only clicking on the area or pressing the key **s**.
+
+Uninstall
+---------
+
+For a complete and *manual* uninstall of this package on your device there are few steps to do
+
+.. warning::
+
+  You need **super user** to execute the commands
+
+.. code-block:: bash
+
+  # Stop, disable and remove jtop.service
+  systemctl stop jtop.service
+  systemctl disable jtop.service
+  rm /etc/systemd/system/jtop.service
+  # reload services
+  systemctl daemon-reload
+
+  # remove jtop pipe
+  rm /run/jtop.sock
+
+  # Remove enviroment variables
+  rm /etc/profile.d/jtop_env.sh
+
+  # Uninstall python package
+  pip3 uninstall jetson-stats

@@ -24,7 +24,7 @@ import logging
 import subprocess as sp
 from .processes import read_process_table
 from .engine import read_engine
-from .common import cat, check_file, GenericInterface
+from .common import cat, GenericInterface
 from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
@@ -184,6 +184,20 @@ def read_emc(root_path):
     if 'max' in emc:
         if emc_cap > 0 and emc_cap < emc['max']:
             emc['max'] = emc_cap
+    # Percentage utilization
+    # https://forums.developer.nvidia.com/t/real-time-emc-bandwidth-with-sysfs/107479/3
+    if os.access(root_path + "/debug/cactmon/mc_all", os.R_OK):
+        with open(root_path + "/debug/cactmon/mc_all", 'r') as f:
+            utilization = int(f.read())
+    elif os.access(root_path + "/actmon_avg_activity/mc_all", os.R_OK):
+        with open(root_path + "/actmon_avg_activity/mc_all", 'r') as f:
+            utilization = int(f.read())
+    else:
+        # if utilization not accesibile return empty EMC data
+        return {}
+    emc['val'] = utilization // emc['cur']
+    # Set always online this engine
+    emc['online'] = True
     return emc
 
 
@@ -289,6 +303,9 @@ class MemoryService(object):
         self._is_emc = True if read_emc(self._root_path) else False
         if self._is_emc:
             logger.info("Found EMC!")
+        self._is_iram = os.path.isdir(self._root_path + "/debug/nvmap/iram")
+        if self._is_iram:
+            logger.info("Found IRAM!")
         # Initialization memory
         logger.info("Memory service started")
 
@@ -421,17 +438,8 @@ class MemoryService(object):
         # Read EMC status
         if self._is_emc:
             memory['EMC'] = read_emc(self._root_path)
-            # Set always online this engine
-            memory['EMC']['online'] = True
-            # Percentage utilization
-            # https://forums.developer.nvidia.com/t/real-time-emc-bandwidth-with-sysfs/107479/3
-            if check_file(self._root_path + "/debug/cactmon/mc_all"):
-                utilization = int(cat(self._root_path + "/debug/cactmon/mc_all"))
-            else:
-                utilization = int(cat(self._root_path + "/actmon_avg_activity/mc_all"))
-            memory['EMC']['val'] = utilization // memory['EMC']['cur']
         # Read IRAM if available
-        if os.path.isdir(self._root_path + "/debug/nvmap/iram"):
+        if self._is_iram:
             size = 0
             if os.path.isfile(self._root_path + "/debug/nvmap/iram/size"):
                 # Convert from Hex to decimal - Number in bytes

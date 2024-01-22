@@ -82,8 +82,21 @@ def is_virtualenv():
 
 def is_docker():
     # https://gist.github.com/anantkamath/623ce7f5432680749e087cf8cfba9b69
+    # https://stackoverflow.com/questions/68816329/how-to-get-docker-container-id-from-within-the-container-with-cgroup-v2
+    def check_mountinfo():
+        with open('/proc/self/mountinfo', 'r') as file:
+            line = file.readline().strip()
+            while line:
+                if '/docker/containers/' or '/docker/volumes/buildx_buildkit_builder' in line:
+                    return True
+                line = file.readline().strip()
+        return False
+    # Check on cgroup
     with open('/proc/self/cgroup', 'r') as procfile:
         for line in procfile:
+            # if is the new cgroup v2 check on mountinfo
+            if line.startswith("0::/"):
+                return check_mountinfo()
             fields = line.strip().split('/')
             if 'docker' in fields or 'buildkit' in fields:
                 return True
