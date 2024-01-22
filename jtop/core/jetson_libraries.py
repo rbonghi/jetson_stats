@@ -105,7 +105,7 @@ def get_libraries():
         os_variables[name_dict] = ''
         # Find version if installed
         for module, version in modules.items():
-            if name.endswith('.') and name.lower()[:-1] in module:
+            if name.endswith('.') and name.lower()[:-1] == module:
                 os_variables[name_dict] = version.split('-')[0]
                 break
             if name.lower() in module:
