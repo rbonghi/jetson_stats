@@ -83,6 +83,9 @@ dynamic = ["version", "dependencies"]
 [tool.setuptools.packages.find]
 exclude = ["examples", "scripts", "tests", "jtop.tests", "jtop.tests_gui"]
 
+[tool.setuptools.package-data]
+jetson_stats = ["services/jtop.service", "scripts/jtop_env.sh"]
+
 [project.scripts]
 jtop = "jtop.__main__:main"
 jetson_release = "jtop.jetson_release:main"
