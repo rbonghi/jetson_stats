@@ -11,10 +11,10 @@
 <meta property="og:image:alt" content="jetson-stats" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Fan" href="fan.html" /><link rel="prev" title="GPU" href="gpu.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.3.7 and Furo 2024.04.27 -->
         <title>Memory - jetson-stats 4.2.7</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
@@ -120,6 +120,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 <div class="announcement">
   <aside class="announcement-content">
@@ -257,12 +259,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="memory">
-<h1>Memory<a class="headerlink" href="#memory" title="Link to this heading">#</a></h1>
+<h1>Memory<a class="headerlink" href="#memory" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="jtop.core.memory.Memory">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.memory.</span></span><span class="sig-name descname"><span class="pre">Memory</span></span><a class="headerlink" href="#jtop.core.memory.Memory" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.memory.</span></span><span class="sig-name descname"><span class="pre">Memory</span></span><a class="headerlink" href="#jtop.core.memory.Memory" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">GenericInterface</span></code></p>
 <p>This class get the output from your memory, this class is readable like a dictionary,
 please read the documentation on <a class="reference internal" href="jtop.html#jtop.jtop.memory" title="jtop.jtop.memory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> but is also usable to enable, disable swap on your device</p>
@@ -280,13 +282,13 @@ please read the documentation on <a class="reference internal" href="jtop.html#j
 <p>Below all methods available using the <a class="reference internal" href="jtop.html#jtop.jtop.memory" title="jtop.jtop.memory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> attribute</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.memory.Memory.clear_cache">
-<span class="sig-name descname"><span class="pre">clear_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.clear_cache" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.clear_cache" title="Link to this definition">¶</a></dt>
 <dd><p>Clear the memory cache</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.memory.Memory.swap_deactivate">
-<span class="sig-name descname"><span class="pre">swap_deactivate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.swap_deactivate" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">swap_deactivate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.swap_deactivate" title="Link to this definition">¶</a></dt>
 <dd><p>Deactivate a swap from a path or from default location <cite>/</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -297,7 +299,7 @@ please read the documentation on <a class="reference internal" href="jtop.html#j
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.memory.Memory.swap_is_enable">
-<span class="sig-name descname"><span class="pre">swap_is_enable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.swap_is_enable" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">swap_is_enable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.swap_is_enable" title="Link to this definition">¶</a></dt>
 <dd><p>Check if a swap is on list</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -314,7 +316,7 @@ please read the documentation on <a class="reference internal" href="jtop.html#j
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.memory.Memory.swap_path">
-<span class="sig-name descname"><span class="pre">swap_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.swap_path" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">swap_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.swap_path" title="Link to this definition">¶</a></dt>
 <dd><p>Return the default SWAP path, Default path <cite>/</cite></p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -328,7 +330,7 @@ please read the documentation on <a class="reference internal" href="jtop.html#j
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.memory.Memory.swap_set">
-<span class="sig-name descname"><span class="pre">swap_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_boot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.swap_set" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">swap_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_boot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.memory.Memory.swap_set" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new swap on a default path. <a class="reference internal" href="#jtop.core.memory.Memory.swap_path" title="jtop.core.memory.Memory.swap_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">swap_path()</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -431,9 +433,9 @@ please read the documentation on <a class="reference internal" href="jtop.html#j
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=1b27fd9b"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6b89569b"></script>
     

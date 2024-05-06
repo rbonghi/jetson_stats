@@ -11,10 +11,10 @@
 <meta property="og:image:alt" content="jetson-stats" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Exceptions" href="exceptions.html" /><link rel="prev" title="jetson_clocks" href="jetson_clocks.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.3.7 and Furo 2024.04.27 -->
         <title>NVPModel - jetson-stats 4.2.7</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
@@ -120,6 +120,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 <div class="announcement">
   <aside class="announcement-content">
@@ -257,12 +259,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="nvpmodel">
-<h1>NVPModel<a class="headerlink" href="#nvpmodel" title="Link to this heading">#</a></h1>
+<h1>NVPModel<a class="headerlink" href="#nvpmodel" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.nvpmodel.</span></span><span class="sig-name descname"><span class="pre">NVPModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nvpmodel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.nvpmodel.</span></span><span class="sig-name descname"><span class="pre">NVPModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nvpmodel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The NVP Model control voltage regulators, and power tree to optimize power efficiency.
 It supports three optimized power budgets, such as 10 watts, 15 watts, and 30 watts.
@@ -301,7 +303,7 @@ For each power budget, several configurations are possible with various CPU freq
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.get_all_nvpmodels">
-<span class="sig-name descname"><span class="pre">get_all_nvpmodels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_all_nvpmodels" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_all_nvpmodels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_all_nvpmodels" title="Link to this definition">¶</a></dt>
 <dd><p>All nvp models available for this board</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -323,7 +325,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.get_default">
-<span class="sig-name descname"><span class="pre">get_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_default" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_default" title="Link to this definition">¶</a></dt>
 <dd><p>Return a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> with the default status for this board</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -347,7 +349,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.get_nvpmodel_id">
-<span class="sig-name descname"><span class="pre">get_nvpmodel_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_nvpmodel_id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_nvpmodel_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_nvpmodel_id" title="Link to this definition">¶</a></dt>
 <dd><p>Read che current nvpmodel ID status selected</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -369,7 +371,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.get_nvpmodel_name">
-<span class="sig-name descname"><span class="pre">get_nvpmodel_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_nvpmodel_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_nvpmodel_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_nvpmodel_name" title="Link to this definition">¶</a></dt>
 <dd><p>Read che current nvpmodel ID <strong>name</strong> selected</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -393,7 +395,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.id">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.id" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.id" title="Link to this definition">¶</a></dt>
 <dd><p>Read che current nvpmodel ID status selected</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -413,7 +415,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.is_running">
-<span class="sig-name descname"><span class="pre">is_running</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.is_running" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_running</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.is_running" title="Link to this definition">¶</a></dt>
 <dd><p>Return the status of the NVP Model service, if <strong>True</strong> the service is already running.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -427,7 +429,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.models">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">models</span></span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.models" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">models</span></span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.models" title="Link to this definition">¶</a></dt>
 <dd><p>All nvp models available for this board</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -447,7 +449,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.name" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.name" title="Link to this definition">¶</a></dt>
 <dd><p>Read che current nvpmodel ID <strong>name</strong> selected</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -469,7 +471,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.set_nvpmodel_id">
-<span class="sig-name descname"><span class="pre">set_nvpmodel_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nvpmodel_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.set_nvpmodel_id" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_nvpmodel_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nvpmodel_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.set_nvpmodel_id" title="Link to this definition">¶</a></dt>
 <dd><p>Set a new NVP model by ID. The list of nvpmodel available is with <a class="reference internal" href="#jtop.core.nvpmodel.NVPModel.get_all_nvpmodels" title="jtop.core.nvpmodel.NVPModel.get_all_nvpmodels"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_all_nvpmodels()</span></code></a> or <a class="reference internal" href="#jtop.core.nvpmodel.NVPModel.models" title="jtop.core.nvpmodel.NVPModel.models"><code class="xref py py-attr docutils literal notranslate"><span class="pre">models</span></code></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -497,7 +499,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.set_nvpmodel_name">
-<span class="sig-name descname"><span class="pre">set_nvpmodel_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nvpmodel_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.set_nvpmodel_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_nvpmodel_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nvpmodel_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.set_nvpmodel_name" title="Link to this definition">¶</a></dt>
 <dd><p>Set a new NVP model by name. The list of nvpmodel available is with <a class="reference internal" href="#jtop.core.nvpmodel.NVPModel.get_all_nvpmodels" title="jtop.core.nvpmodel.NVPModel.get_all_nvpmodels"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_all_nvpmodels()</span></code></a> or <a class="reference internal" href="#jtop.core.nvpmodel.NVPModel.models" title="jtop.core.nvpmodel.NVPModel.models"><code class="xref py py-attr docutils literal notranslate"><span class="pre">models</span></code></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -525,7 +527,7 @@ For each power budget, several configurations are possible with various CPU freq
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.status">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.status" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.status" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list with a NVP model status. If when you set an NVP Model, something going wrong, you will read here the output</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -640,9 +642,9 @@ For each power budget, several configurations are possible with various CPU freq
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=1b27fd9b"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6b89569b"></script>
     

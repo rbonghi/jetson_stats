@@ -13,10 +13,10 @@
 <meta name="description" content="jtop can be installed with pip Don’t forget to logout/login or reboot your board Run jtop: Simple and fast! You can write on your shell jtop and that’s it! Other options are available with-h option..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="How is it works" href="how_is_it_works.html" /><link rel="prev" title="💖 Sponsor" href="../sponsors.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.3.7 and Furo 2024.04.27 -->
         <title>📊 jtop - jetson-stats 4.2.7</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
@@ -122,6 +122,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 <div class="announcement">
   <aside class="announcement-content">
@@ -259,16 +261,16 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="jtop">
-<h1>📊 jtop<a class="headerlink" href="#jtop" title="Link to this heading">#</a></h1>
+<h1>📊 jtop<a class="headerlink" href="#jtop" title="Link to this heading">¶</a></h1>
 <p>jtop can be installed with <a class="reference external" href="https://pip.pypa.io">pip</a></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>jetson-stats
 </pre></div>
 </div>
 <p>Don’t forget to <strong>logout/login</strong> or <strong>reboot</strong> your board</p>
 <section id="run-jtop">
-<h2>Run jtop<a class="headerlink" href="#run-jtop" title="Link to this heading">#</a></h2>
+<h2>Run jtop<a class="headerlink" href="#run-jtop" title="Link to this heading">¶</a></h2>
 <p>Simple and fast! You can write on your shell <strong>jtop</strong> and that’s it!</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop
 </pre></div>
@@ -308,10 +310,10 @@
 </div>
 </section>
 <section id="options">
-<h2>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h2>
 <p>There are different options available for jtop</p>
 <section id="health">
-<h3>Health<a class="headerlink" href="#health" title="Link to this heading">#</a></h3>
+<h3>Health<a class="headerlink" href="#health" title="Link to this heading">¶</a></h3>
 <p>If something goes wrong, you can check the <code class="docutils literal notranslate"><span class="pre">jtop</span></code> status with</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>jtop<span class="w"> </span>--health
 </pre></div>
@@ -325,7 +327,7 @@
 </ul>
 </section>
 <section id="restore">
-<h3>Restore<a class="headerlink" href="#restore" title="Link to this heading">#</a></h3>
+<h3>Restore<a class="headerlink" href="#restore" title="Link to this heading">¶</a></h3>
 <p>If you want to restore the original board configuration you can simply write</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--restore
 </pre></div>
@@ -340,7 +342,7 @@
 </ul>
 </section>
 <section id="color-filter">
-<h3>Color filter<a class="headerlink" href="#color-filter" title="Link to this heading">#</a></h3>
+<h3>Color filter<a class="headerlink" href="#color-filter" title="Link to this heading">¶</a></h3>
 <p>This option change the red color for text and background to blue.</p>
 <p>To enable this feature you can add this option</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--color-filter
@@ -354,7 +356,7 @@
 <img alt="../_images/jtop-color-filter.png" class="align-center" src="../_images/jtop-color-filter.png" />
 </section>
 <section id="error-log">
-<h3>Error-log<a class="headerlink" href="#error-log" title="Link to this heading">#</a></h3>
+<h3>Error-log<a class="headerlink" href="#error-log" title="Link to this heading">¶</a></h3>
 <p>If your board is not included, jetpack missing, hardware missing, you can launch this script</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jtop<span class="w"> </span>--error-log
 </pre></div>
@@ -363,7 +365,7 @@
 </section>
 </section>
 <section id="pages">
-<h2>Pages<a class="headerlink" href="#pages" title="Link to this heading">#</a></h2>
+<h2>Pages<a class="headerlink" href="#pages" title="Link to this heading">¶</a></h2>
 <p><strong>jtop</strong> have four different pages to control your NVIDIA Jetson:</p>
 <ol class="arabic simple">
 <li><p><strong>ALL</strong> Are collected all information about your board: CPUs status, Memory, <em>GPU</em>, disk, fan and all status about jetson_clocks, NVPmodel and other</p></li>
@@ -375,7 +377,7 @@
 <li><p><strong>INFO</strong> All information about libraries, CUDA, Serial Number, interfaces, …</p></li>
 </ol>
 <section id="all">
-<h3>ALL<a class="headerlink" href="#all" title="Link to this heading">#</a></h3>
+<h3>ALL<a class="headerlink" href="#all" title="Link to this heading">¶</a></h3>
 <img alt="../_images/01-jtop.png" class="align-center" src="../_images/01-jtop.png" />
 <p>In this page are summarized all information about your board.</p>
 <ol class="arabic simple">
@@ -454,7 +456,7 @@ You can sort the table clicking on each title on the page</p></li>
 </ol>
 </section>
 <section id="gpu">
-<h3>GPU<a class="headerlink" href="#gpu" title="Link to this heading">#</a></h3>
+<h3>GPU<a class="headerlink" href="#gpu" title="Link to this heading">¶</a></h3>
 <img alt="../_images/02-jtop.png" class="align-center" src="../_images/02-jtop.png" />
 <p>In this page the GPU status. A detailed documentation of this output is available at <a class="reference internal" href="../reference/jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.gpu</span></code></a></p>
 <ol class="arabic simple">
@@ -485,7 +487,7 @@ You can sort the table clicking on each title on the page</p></li>
 </ol>
 </section>
 <section id="cpu">
-<h3>CPU<a class="headerlink" href="#cpu" title="Link to this heading">#</a></h3>
+<h3>CPU<a class="headerlink" href="#cpu" title="Link to this heading">¶</a></h3>
 <img alt="../_images/03-jtop.png" class="align-center" src="../_images/03-jtop.png" />
 <p>In this page there is the CPU status of each core. A detailed documentation of this output is available at <a class="reference internal" href="../reference/jtop.html#jtop.jtop.cpu" title="jtop.jtop.cpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.cpu</span></code></a></p>
 <ol class="arabic simple">
@@ -496,7 +498,7 @@ You can sort the table clicking on each title on the page</p></li>
 </ol>
 </section>
 <section id="mem">
-<h3>MEM<a class="headerlink" href="#mem" title="Link to this heading">#</a></h3>
+<h3>MEM<a class="headerlink" href="#mem" title="Link to this heading">¶</a></h3>
 <img alt="../_images/04-jtop.png" class="align-center" src="../_images/04-jtop.png" />
 <p>Memory and Swap, From this page you can also enable/disable a new swap or clean the cache. A detailed documentation of this output is available at <a class="reference internal" href="../reference/jtop.html#jtop.jtop.memory" title="jtop.jtop.memory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.memory</span></code></a></p>
 <ol class="arabic simple">
@@ -538,7 +540,7 @@ You can sort the table clicking on each title on the page</p></li>
 </ol>
 <p>For each swap is also described the priority (P5, P-2) written on the left side of the bar</p>
 <section id="controls">
-<h4>Controls<a class="headerlink" href="#controls" title="Link to this heading">#</a></h4>
+<h4>Controls<a class="headerlink" href="#controls" title="Link to this heading">¶</a></h4>
 <p>From this page you can click or press from your keyboard:</p>
 <ul class="simple">
 <li><p><strong>c</strong> Clear cache</p></li>
@@ -550,7 +552,7 @@ You can sort the table clicking on each title on the page</p></li>
 </section>
 </section>
 <section id="eng">
-<h3>ENG<a class="headerlink" href="#eng" title="Link to this heading">#</a></h3>
+<h3>ENG<a class="headerlink" href="#eng" title="Link to this heading">¶</a></h3>
 <img alt="../_images/05-jtop.png" class="align-center" src="../_images/05-jtop.png" />
 <p>This page is Automatically generated from your board and is a list of all engines. All output is available also from <a class="reference internal" href="../reference/jtop.html#jtop.jtop.engine" title="jtop.jtop.engine"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.engine</span></code></a></p>
 <p>You can find different linear gauges:</p>
@@ -561,7 +563,7 @@ You can sort the table clicking on each title on the page</p></li>
 </ol>
 </section>
 <section id="ctrl">
-<h3>CTRL<a class="headerlink" href="#ctrl" title="Link to this heading">#</a></h3>
+<h3>CTRL<a class="headerlink" href="#ctrl" title="Link to this heading">¶</a></h3>
 <img alt="../_images/06-jtop.png" class="align-center" src="../_images/06-jtop.png" />
 <p>This page allow you to control your device, starting from <a class="reference internal" href="../reference/jtop.html#jtop.jtop.fan" title="jtop.jtop.fan"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.fan</span></code></a>, <a class="reference internal" href="../reference/jtop.html#jtop.jtop.jetson_clocks" title="jtop.jtop.jetson_clocks"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.jetson_clocks</span></code></a> and <a class="reference internal" href="../reference/jtop.html#jtop.jtop.nvpmodel" title="jtop.jtop.nvpmodel"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.nvpmodel</span></code></a>.</p>
 <ol class="arabic simple">
@@ -573,7 +575,7 @@ You can sort the table clicking on each title on the page</p></li>
 <li><p>A detailed table with Power, Volt and Current of your board. There is also teh Warning and Critical current before the board fail. More info <a class="reference internal" href="../reference/jtop.html#jtop.jtop.power" title="jtop.jtop.power"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.power</span></code></a></p></li>
 </ol>
 <section id="id1">
-<h4>Controls<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<h4>Controls<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
 <p>From this page you can click or press from your keyboard:</p>
 <ul class="simple">
 <li><p><strong>s</strong> Enable/Disable jetson_clocks (Note: jetson_clocks start only after 60s from up time)</p></li>
@@ -583,14 +585,14 @@ You can sort the table clicking on each title on the page</p></li>
 </section>
 </section>
 <section id="info">
-<h3>INFO<a class="headerlink" href="#info" title="Link to this heading">#</a></h3>
+<h3>INFO<a class="headerlink" href="#info" title="Link to this heading">¶</a></h3>
 <img alt="../_images/07-jtop.png" class="align-center" src="../_images/07-jtop.png" />
 <p>This page show all technical information about your board. This output is available <a class="reference internal" href="../reference/jtop.html#jtop.jtop.board" title="jtop.jtop.board"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.board</span></code></a>.</p>
 <p>Compare all previous versions, now the Serial number is hidden and you can enable only clicking on the area or pressing the key <strong>s</strong>.</p>
 </section>
 </section>
 <section id="uninstall">
-<h2>Uninstall<a class="headerlink" href="#uninstall" title="Link to this heading">#</a></h2>
+<h2>Uninstall<a class="headerlink" href="#uninstall" title="Link to this heading">¶</a></h2>
 <p>For a complete and <em>manual</em> uninstall of this package on your device there are few steps to do</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -718,9 +720,9 @@ pip3<span class="w"> </span>uninstall<span class="w"> </span>jetson-stats
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=1b27fd9b"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6b89569b"></script>
     

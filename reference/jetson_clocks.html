@@ -11,10 +11,10 @@
 <meta property="og:image:alt" content="jetson-stats" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="NVPModel" href="nvpmodel.html" /><link rel="prev" title="Fan" href="fan.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.3.7 and Furo 2024.04.27 -->
         <title>jetson_clocks - jetson-stats 4.2.7</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
@@ -120,6 +120,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 <div class="announcement">
   <aside class="announcement-content">
@@ -257,12 +259,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="jetson-clocks">
-<h1>jetson_clocks<a class="headerlink" href="#jetson-clocks" title="Link to this heading">#</a></h1>
+<h1>jetson_clocks<a class="headerlink" href="#jetson-clocks" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.jetson_clocks.</span></span><span class="sig-name descname"><span class="pre">JetsonClocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.jetson_clocks.</span></span><span class="sig-name descname"><span class="pre">JetsonClocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>jetson_clocks is a tool provided for all NVIDIA Jetson to maximize all performance, read reference for more information.</p>
 <p>With this class you can control when activate, deactivate or enable on boot.
@@ -287,7 +289,7 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.boot">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">boot</span></span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.boot" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">boot</span></span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.boot" title="Link to this definition">¶</a></dt>
 <dd><p>Same of <a class="reference internal" href="#jtop.core.jetson_clocks.JetsonClocks.set_boot" title="jtop.core.jetson_clocks.JetsonClocks.set_boot"><code class="xref py py-class docutils literal notranslate"><span class="pre">set_boot</span></code></a> and <a class="reference internal" href="#jtop.core.jetson_clocks.JetsonClocks.get_boot" title="jtop.core.jetson_clocks.JetsonClocks.get_boot"><code class="xref py py-class docutils literal notranslate"><span class="pre">get_boot</span></code></a> you can quickly enable and disable jetson_clocks.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -309,13 +311,13 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.clear_config">
-<span class="sig-name descname"><span class="pre">clear_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.clear_config" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.clear_config" title="Link to this definition">¶</a></dt>
 <dd><p>This method clear the jetson_clocks configuration that use jtop.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.get_boot">
-<span class="sig-name descname"><span class="pre">get_boot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.get_boot" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_boot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.get_boot" title="Link to this definition">¶</a></dt>
 <dd><p>Return if jetson_clocks start of board boot. This method is equivalent to:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -337,7 +339,7 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.get_enable">
-<span class="sig-name descname"><span class="pre">get_enable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.get_enable" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_enable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.get_enable" title="Link to this definition">¶</a></dt>
 <dd><p>Return current jetson_clocks status. This method is equivalent to:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -359,7 +361,7 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.get_status">
-<span class="sig-name descname"><span class="pre">get_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.get_status" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.get_status" title="Link to this definition">¶</a></dt>
 <dd><p>Return the jetson_clocks service status:</p>
 <p>There are <strong>six</strong> options:</p>
 <div class="table-wrapper docutils container">
@@ -403,7 +405,7 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.is_config">
-<span class="sig-name descname"><span class="pre">is_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.is_config" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.is_config" title="Link to this definition">¶</a></dt>
 <dd><p>Return the jetson_clocks configuration status. If true jtop has stored a configuration file with all data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -417,7 +419,7 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.set_boot">
-<span class="sig-name descname"><span class="pre">set_boot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.set_boot" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_boot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.set_boot" title="Link to this definition">¶</a></dt>
 <dd><p>Enable jetson_clocks on board boot. This method is equivalent to:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -439,7 +441,7 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.set_enable">
-<span class="sig-name descname"><span class="pre">set_enable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.set_enable" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_enable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.set_enable" title="Link to this definition">¶</a></dt>
 <dd><p>Enable jetson_clocks on your board. This method is equivalent to:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
@@ -464,7 +466,7 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.jetson_clocks.JetsonClocks.status">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.status" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#jtop.core.jetson_clocks.JetsonClocks.status" title="Link to this definition">¶</a></dt>
 <dd><p>This property return the same output of <a class="reference internal" href="#jtop.core.jetson_clocks.JetsonClocks.get_status" title="jtop.core.jetson_clocks.JetsonClocks.get_status"><code class="xref py py-class docutils literal notranslate"><span class="pre">get_status</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -567,9 +569,9 @@ You can use in a simple way like a jtop attribute <a class="reference internal" 
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=1b27fd9b"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6b89569b"></script>
     

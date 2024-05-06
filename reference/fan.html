@@ -11,10 +11,10 @@
 <meta property="og:image:alt" content="jetson-stats" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="jetson_clocks" href="jetson_clocks.html" /><link rel="prev" title="Memory" href="memory.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <link rel="shortcut icon" href="../_static/favicon.png"/><!-- Generated with Sphinx 7.3.7 and Furo 2024.04.27 -->
         <title>Fan - jetson-stats 4.2.7</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
@@ -120,6 +120,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 <div class="announcement">
   <aside class="announcement-content">
@@ -257,12 +259,12 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="fan">
-<h1>Fan<a class="headerlink" href="#fan" title="Link to this heading">#</a></h1>
+<h1>Fan<a class="headerlink" href="#fan" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.fan.</span></span><span class="sig-name descname"><span class="pre">Fan</span></span><a class="headerlink" href="#jtop.core.fan.Fan" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.fan.</span></span><span class="sig-name descname"><span class="pre">Fan</span></span><a class="headerlink" href="#jtop.core.fan.Fan" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">GenericInterface</span></code></p>
 <p>This class enable to control your fan or set of fan.
 Please read the documentation on <a class="reference internal" href="jtop.html#jtop.jtop.fan" title="jtop.jtop.fan"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fan</span></code></a></p>
@@ -274,7 +276,7 @@ Please read the documentation on <a class="reference internal" href="jtop.html#j
 <p>Below all methods available using the <a class="reference internal" href="jtop.html#jtop.jtop.fan" title="jtop.jtop.fan"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fan</span></code></a> attribute</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.all_profiles">
-<span class="sig-name descname"><span class="pre">all_profiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.all_profiles" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">all_profiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.all_profiles" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of all profiles available for a fan.</p>
 <ul class="simple">
 <li><dl class="simple">
@@ -314,7 +316,7 @@ Please read the documentation on <a class="reference internal" href="jtop.html#j
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.get_profile">
-<span class="sig-name descname"><span class="pre">get_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.get_profile" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.get_profile" title="Link to this definition">¶</a></dt>
 <dd><p>Return the current profile is enabled on fan. This value is also readable from <a class="reference internal" href="jtop.html#jtop.jtop.fan" title="jtop.jtop.fan"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fan</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -334,7 +336,7 @@ Please read the documentation on <a class="reference internal" href="jtop.html#j
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.get_profile_default">
-<span class="sig-name descname"><span class="pre">get_profile_default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.get_profile_default" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_profile_default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.get_profile_default" title="Link to this definition">¶</a></dt>
 <dd><p>Get the default profile for this fan. Usually is the first profile listed in <a class="reference internal" href="#jtop.core.fan.Fan.all_profiles" title="jtop.core.fan.Fan.all_profiles"><code class="xref py py-func docutils literal notranslate"><span class="pre">all_profiles()</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -354,7 +356,7 @@ Please read the documentation on <a class="reference internal" href="jtop.html#j
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.get_rpm">
-<span class="sig-name descname"><span class="pre">get_rpm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.get_rpm" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_rpm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.get_rpm" title="Link to this definition">¶</a></dt>
 <dd><p>This method return RPM fan. This output is always available on all Jetson.
 This value is also readable from <a class="reference internal" href="jtop.html#jtop.jtop.fan" title="jtop.jtop.fan"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fan</span></code></a>.</p>
 <dl class="field-list simple">
@@ -378,7 +380,7 @@ This value is also readable from <a class="reference internal" href="jtop.html#j
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.get_speed">
-<span class="sig-name descname"><span class="pre">get_speed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.get_speed" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_speed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.get_speed" title="Link to this definition">¶</a></dt>
 <dd><p>Return for a selected Fan and index the current speed.
 This value is also readable from <a class="reference internal" href="jtop.html#jtop.jtop.fan" title="jtop.jtop.fan"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fan</span></code></a>.</p>
 <dl class="field-list simple">
@@ -402,7 +404,7 @@ This value is also readable from <a class="reference internal" href="jtop.html#j
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.profile">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">profile</span></span><a class="headerlink" href="#jtop.core.fan.Fan.profile" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">profile</span></span><a class="headerlink" href="#jtop.core.fan.Fan.profile" title="Link to this definition">¶</a></dt>
 <dd><p>This property show the current profile selected on first fan on your board.
 This is a simplified version of <a class="reference internal" href="#jtop.core.fan.Fan.set_profile" title="jtop.core.fan.Fan.set_profile"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_profile()</span></code></a> where <em>name</em> is the first fan listed.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
@@ -425,7 +427,7 @@ This is a simplified version of <a class="reference internal" href="#jtop.core.f
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.rpm">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rpm</span></span><a class="headerlink" href="#jtop.core.fan.Fan.rpm" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rpm</span></span><a class="headerlink" href="#jtop.core.fan.Fan.rpm" title="Link to this definition">¶</a></dt>
 <dd><p>This property show the current fan selected on first fan on your board.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -450,7 +452,7 @@ This is a simplified version of <a class="reference internal" href="#jtop.core.f
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.set_profile">
-<span class="sig-name descname"><span class="pre">set_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.set_profile" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.set_profile" title="Link to this definition">¶</a></dt>
 <dd><p>Set a new profile for a fan.
 Check which profile is available with <a class="reference internal" href="#jtop.core.fan.Fan.all_profiles" title="jtop.core.fan.Fan.all_profiles"><code class="xref py py-func docutils literal notranslate"><span class="pre">all_profiles()</span></code></a>.</p>
 <dl class="field-list simple">
@@ -468,7 +470,7 @@ Check which profile is available with <a class="reference internal" href="#jtop.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.set_speed">
-<span class="sig-name descname"><span class="pre">set_speed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.set_speed" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_speed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.fan.Fan.set_speed" title="Link to this definition">¶</a></dt>
 <dd><p>Set a new speed for a selected fan.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -486,7 +488,7 @@ Check which profile is available with <a class="reference internal" href="#jtop.
 
 <dl class="py property">
 <dt class="sig sig-object py" id="jtop.core.fan.Fan.speed">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">speed</span></span><a class="headerlink" href="#jtop.core.fan.Fan.speed" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">speed</span></span><a class="headerlink" href="#jtop.core.fan.Fan.speed" title="Link to this definition">¶</a></dt>
 <dd><p>This property show the current speed between [0, 100] on first fan on your board.
 This is a simplified version of <a class="reference internal" href="#jtop.core.fan.Fan.set_speed" title="jtop.core.fan.Fan.set_speed"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_speed()</span></code></a> where <em>name</em> is the first fan listed.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
@@ -599,9 +601,9 @@ This is a simplified version of <a class="reference internal" href="#jtop.core.f
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=1b27fd9b"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=6b89569b"></script>
     

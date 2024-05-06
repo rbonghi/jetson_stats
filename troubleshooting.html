@@ -13,10 +13,10 @@
 <meta name="description" content="Let’s resolve here the common issues can happening using jetson-stats (jtop). Before to start, have you updated jetson-stats to the latest release? if not, write: If nothing changed follow the help..." />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="✨ Contributing" href="contributing.html" /><link rel="prev" title="Environment variables" href="other-tools/environment_variables.html" />
 
-    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 7.2.6 and Furo 2024.01.29 -->
+    <link rel="shortcut icon" href="_static/favicon.png"/><!-- Generated with Sphinx 7.3.7 and Furo 2024.04.27 -->
         <title>🆘 Troubleshooting - jetson-stats 4.2.7</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=437aa6ec" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
     
@@ -122,6 +122,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 <div class="announcement">
   <aside class="announcement-content">
@@ -259,9 +261,9 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="troubleshooting">
-<h1>🆘 Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h1>
+<h1>🆘 Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h1>
 <p>Let’s resolve here the common issues can happening using jetson-stats (jtop).</p>
 <p>Before to start, have you updated jetson-stats to the latest release?</p>
 <p>if not, write:</p>
@@ -270,7 +272,7 @@
 </div>
 <p>If nothing changed follow the help below.</p>
 <section id="pip3-command-not-found">
-<h2>pip3: command not found<a class="headerlink" href="#pip3-command-not-found" title="Link to this heading">#</a></h2>
+<h2>pip3: command not found<a class="headerlink" href="#pip3-command-not-found" title="Link to this heading">¶</a></h2>
 <p>When you try to install jetson-stats, you read an output like:</p>
 <div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">user@board:~$ </span>sudo<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>jetson-stats
 <span class="go">sudo: pip3: command not found</span>
@@ -282,7 +284,7 @@
 </div>
 </section>
 <section id="jtop-service-inactive">
-<h2>jtop.service inactive<a class="headerlink" href="#jtop-service-inactive" title="Link to this heading">#</a></h2>
+<h2>jtop.service inactive<a class="headerlink" href="#jtop-service-inactive" title="Link to this heading">¶</a></h2>
 <p>When the <em>jtop.service</em> (or previously <em>jetson-stats.service</em>) is inactive there are few different reasons</p>
 <p>First step, restart jtop service following the command below</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>jtop.service
@@ -295,7 +297,7 @@
 <p>If you read here an error, open an <a class="reference external" href="https://github.com/rbonghi/jetson_stats/issues/new?assignees=&amp;labels=bug&amp;template=bug-report.md&amp;title=">issue</a> reporting the output.</p>
 </section>
 <section id="jtop-start-only-with-sudo">
-<h2>jtop start only with sudo<a class="headerlink" href="#jtop-start-only-with-sudo" title="Link to this heading">#</a></h2>
+<h2>jtop start only with sudo<a class="headerlink" href="#jtop-start-only-with-sudo" title="Link to this heading">¶</a></h2>
 <p>If jtop start only with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">jtop</span></code> and when you run without sudo you read this error:</p>
 <div class="no-copybutton highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">user@board:~$ </span>jtop
 <span class="go">I can&#39;t access jtop.service.</span>
@@ -320,7 +322,7 @@
 <p>remember to logout/login.</p>
 </section>
 <section id="bad-visualization-on-putty">
-<h2>Bad visualization on Putty<a class="headerlink" href="#bad-visualization-on-putty" title="Link to this heading">#</a></h2>
+<h2>Bad visualization on Putty<a class="headerlink" href="#bad-visualization-on-putty" title="Link to this heading">¶</a></h2>
 <p>If you experiences a bad visualization working with jtop on Putty, like a sequence of “qqqqqwqqqq and xxxx” you can fix following the steps below:</p>
 <ol class="arabic simple">
 <li><p>Window -&gt; Translation</p></li>
@@ -328,7 +330,7 @@
 </ol>
 </section>
 <section id="nothing-fix-my-error">
-<h2>Nothing fix my error<a class="headerlink" href="#nothing-fix-my-error" title="Link to this heading">#</a></h2>
+<h2>Nothing fix my error<a class="headerlink" href="#nothing-fix-my-error" title="Link to this heading">¶</a></h2>
 <p>Before to open an <a class="reference external" href="https://github.com/rbonghi/jetson_stats/issues/new?assignees=&amp;labels=bug&amp;template=bug-report.md&amp;title=">issue</a>, try to reinstall the latest version with this command</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>-v<span class="w"> </span>-U<span class="w"> </span>jetson-stats
 </pre></div>
@@ -433,9 +435,9 @@
     </aside>
   </div>
 </div><script src="_static/documentation_options.js?v=1b27fd9b"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=6b89569b"></script>
     
