@@ -39,7 +39,7 @@ def check_nvidia_smi():
 
 def get_gpu_info(gpu_index):
     cmd = Command(['nvidia-smi', '--query-gpu=utilization.gpu,memory.total,memory.used,memory.free,temperature.gpu,pstate,power.draw,clocks.current.graphics',
-                  f'--format=csv,noheader,nounits', f'--id={gpu_index}'])
+                  '--format=csv,noheader,nounits', '--id={gpu_index}'.format(gpu_index=gpu_index)])
     gpu = {}
     try:
         line = cmd()[0]
