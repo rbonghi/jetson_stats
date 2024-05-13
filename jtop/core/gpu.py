@@ -44,15 +44,11 @@ def get_gpu_info(gpu_index):
     try:
         line = cmd()[0]
         load, mem_total, mem_used, mem_free, temperature, pstate, power_drain, frq_cur = line.split(',')
-        # load, mem_total, mem_used, mem_free = line.split(',')
-
+        # Decode GPU status
         state = {'load': float(load)}
         mem = {'tot': int(mem_total) * 1000, 'used': int(mem_used) * 1000, 'free': int(mem_free) * 1000}
         freq = {'cur': int(frq_cur) * 1000, 'min': 0, 'max': 0}
-        # freq = {'cur': int(frq_cur), 'min': int(frq_min), 'max': int(frq_max)}
-
         gpu = {'status': state, 'mem': mem, 'freq': freq, 'power': float(power_drain), 'pstate': pstate.strip(), 'temperature': int(temperature)}
-
     except (OSError, Command.CommandException):
         pass
     return gpu

@@ -128,7 +128,7 @@ class GPU(Page):
             'max': szw,
             'unit': unit
         }
-        
+
     def update_chart_ram_discrete(self, jetson, name):
         num = name.split(" ")[1]
         gpu_data = jetson.gpu[num]
@@ -192,7 +192,7 @@ class GPU(Page):
                 try:
                     self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling:", curses.A_BOLD)
                     self.draw_gpus[gpu_name]['3d_scaling'].update(first + 1 + (idx + 1) * gpu_height - 1, 12 + button_idx,
-                                                                scaling_string, key=key, mouse=mouse, color=scaling_status)
+                                                                  scaling_string, key=key, mouse=mouse, color=scaling_status)
                 except curses.error:
                     pass
                 button_idx += button_position
