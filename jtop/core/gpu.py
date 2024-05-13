@@ -37,6 +37,27 @@ def check_nvidia_smi():
     return False
 
 
+def get_gpu_info(gpu_index):
+    cmd = Command(['nvidia-smi', '--query-gpu=utilization.gpu,memory.total,memory.used,memory.free,temperature.gpu,pstate,power.draw,clocks.current.graphics',
+                  f'--format=csv,noheader,nounits', f'--id={gpu_index}'])
+    gpu = {}
+    try:
+        line = cmd()[0]
+        load, mem_total, mem_used, mem_free, temperature, pstate, power_drain, frq_cur = line.split(',')
+        # load, mem_total, mem_used, mem_free = line.split(',')
+
+        state = {'load': float(load)}
+        mem = {'tot': int(mem_total) * 1000, 'used': int(mem_used) * 1000, 'free': int(mem_free) * 1000}
+        freq = {'cur': int(frq_cur) * 1000, 'min': 0, 'max': 0}
+        # freq = {'cur': int(frq_cur), 'min': int(frq_min), 'max': int(frq_max)}
+
+        gpu = {'status': state, 'mem': mem, 'freq': freq, 'power': float(power_drain), 'pstate': pstate.strip(), 'temperature': int(temperature)}
+
+    except (OSError, Command.CommandException):
+        pass
+    return gpu
+
+
 def igpu_read_freq(path):
     # Read status online
     gpu = {}
@@ -158,6 +179,13 @@ def find_dgpu():
     dgpu = {}
     if check_nvidia_smi():
         logger.info("NVIDIA SMI exist!")
+        cmd = Command(['nvidia-smi', '--query-gpu=name,driver_version,pci.bus_id', '--format=csv,noheader'])
+        try:
+            lines = cmd()
+            for idx, line in enumerate(lines):
+                dgpu[str(idx)] = {'type': 'discrete', 'name': line.strip(), 'driver_version': '', 'pci.bus_id': ''}
+        except (OSError, Command.CommandException):
+            pass
     if dgpu:
         logger.info("Discrete GPU found")
     return dgpu
@@ -342,7 +370,13 @@ class GPUService(object):
                     with open(data['path'] + "/power/control", 'r') as f:
                         gpu['power_control'] = f.read().strip()
             elif gpu['type'] == 'discrete':
-                logger.info("TODO discrete GPU")
+                smi = get_gpu_info(name)
+                # Read status GPU
+                gpu['status'] = smi['status']
+                # Read frequency
+                gpu['freq'] = smi['freq']
+                # Read power control status
+                gpu['RAM'] = smi['mem']
             # Load all status in GPU
             gpu_list[name] = gpu
         return gpu_list

@@ -82,7 +82,10 @@ class GPU(Page):
                                   color_text=curses.COLOR_GREEN,
                                   color_chart=[COLOR_GREY, curses.COLOR_GREEN])
             else:
-                chart_ram = None
+                chart_ram = Chart(jetson, "dGPU {name} RAM".format(name=gpu_name), self.update_chart_ram_discrete,
+                                  type_value=float,
+                                  color_text=curses.COLOR_GREEN,
+                                  color_chart=[curses.COLOR_GREEN])
             self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling, 'ram': chart_ram}
         # Add Process table
         self.process_table = ProcessTable(self.stdscr, self.jetson)
@@ -125,6 +128,23 @@ class GPU(Page):
             'max': szw,
             'unit': unit
         }
+        
+    def update_chart_ram_discrete(self, jetson, name):
+        num = name.split(" ")[1]
+        gpu_data = jetson.gpu[num]
+        parameter = gpu_data['RAM']
+        # Get max value if is present
+        max_val = parameter.get("tot", 100)
+        # Get value
+        use_val = parameter.get("used", 0)
+        szw, divider, unit = size_min(max_val, start='k')
+        # Append in list
+        gpu_out = (use_val) / divider
+        return {
+            'value': [gpu_out],
+            'max': szw,
+            'unit': unit
+        }
 
     def draw(self, key, mouse):
         # Screen size
@@ -153,40 +173,46 @@ class GPU(Page):
             chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
             # Draw GPU RAM chart
             size_x_ram = [1 + width // 2, width - 2]
-            mem_data = self.jetson.memory['RAM']
-            total = size_to_string(mem_data['tot'], 'k')
-            shared = size_to_string(mem_data['shared'], 'k')
+            if gpu_data['type'] == 'integrated':
+                mem_data = self.jetson.memory['RAM']
+                total = size_to_string(mem_data['tot'], 'k')
+                shared = size_to_string(mem_data['shared'], 'k')
+            else:
+                mem_data = gpu_data['RAM']
+                total = size_to_string(mem_data['tot'], 'k')
+                shared = size_to_string(mem_data['used'], 'k')
             chart_ram.draw(self.stdscr, size_x_ram, size_y, label="{used}/{total}B".format(used=shared, total=total))
             # Print all status GPU
-            button_position = width // 4
-            button_idx = 0
-            # 3D scaling
-            scaling_string = "Active" if gpu_status['3d_scaling'] else "Disable"
-            scaling_status = NColors.green() if gpu_status['3d_scaling'] else curses.A_NORMAL
-            try:
-                self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling:", curses.A_BOLD)
-                self.draw_gpus[gpu_name]['3d_scaling'].update(first + 1 + (idx + 1) * gpu_height - 1, 12 + button_idx,
-                                                              scaling_string, key=key, mouse=mouse, color=scaling_status)
-            except curses.error:
-                pass
-            button_idx += button_position
-            # railgate status
-            railgate_string = "Active" if gpu_status['railgate'] else "Disable"
-            railgate_status = NColors.green() if gpu_status['railgate'] else curses.A_NORMAL
-            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate", railgate_string, color=railgate_status)
-            # self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate:", curses.A_BOLD)
-            # self.draw_gpus[gpu_name]['railgate'].update(first + 1 + (idx + 1) * gpu_height - 1, 10 + button_idx, railgate_string,
-            #                                             key=key, mouse=mouse, color=railgate_status)
-            button_idx += button_position
-            # Power control
-            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Power ctrl", gpu_data['power_control'])
-            button_idx += button_position
-            # TPC PG Mask
-            if 'tpc_pg_mask' in gpu_status:
-                tpc_pg_mask_string = "ON" if gpu_status['tpc_pg_mask'] else "OFF"
-                # tpc_pg_mask_status = NColors.green() if gpu_status['tpc_pg_mask'] else NColors.red()
-                plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "TPC PG", tpc_pg_mask_string)
+            if gpu_data['type'] == 'integrated':
+                button_position = width // 4
+                button_idx = 0
+                # 3D scaling
+                scaling_string = "Active" if gpu_status['3d_scaling'] else "Disable"
+                scaling_status = NColors.green() if gpu_status['3d_scaling'] else curses.A_NORMAL
+                try:
+                    self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling:", curses.A_BOLD)
+                    self.draw_gpus[gpu_name]['3d_scaling'].update(first + 1 + (idx + 1) * gpu_height - 1, 12 + button_idx,
+                                                                scaling_string, key=key, mouse=mouse, color=scaling_status)
+                except curses.error:
+                    pass
                 button_idx += button_position
+                # railgate status
+                railgate_string = "Active" if gpu_status['railgate'] else "Disable"
+                railgate_status = NColors.green() if gpu_status['railgate'] else curses.A_NORMAL
+                plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate", railgate_string, color=railgate_status)
+                # self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate:", curses.A_BOLD)
+                # self.draw_gpus[gpu_name]['railgate'].update(first + 1 + (idx + 1) * gpu_height - 1, 10 + button_idx, railgate_string,
+                #                                             key=key, mouse=mouse, color=railgate_status)
+                button_idx += button_position
+                # Power control
+                plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Power ctrl", gpu_data['power_control'])
+                button_idx += button_position
+                # TPC PG Mask
+                if 'tpc_pg_mask' in gpu_status:
+                    tpc_pg_mask_string = "ON" if gpu_status['tpc_pg_mask'] else "OFF"
+                    # tpc_pg_mask_status = NColors.green() if gpu_status['tpc_pg_mask'] else NColors.red()
+                    plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "TPC PG", tpc_pg_mask_string)
+                    button_idx += button_position
             # Check if GPC data is included
             frq_size = width - 3
             if 'GPC' in gpu_freq:
