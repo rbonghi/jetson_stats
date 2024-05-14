@@ -44,8 +44,11 @@ def get_gpu_info(gpu_index):
     gpu = {}
     try:
         line = cmd()[0]
-        load, mem_total, mem_used, mem_free, temperature, pstate, power_drain, frq_gpu_cur, frq_gpu_max, frq_mem_cur, frq_mem_max = line.split(',')
         # Decode GPU status
+        load, *stats = line.split(',')
+        mem_total, mem_used, mem_free, temperature, pstate, power_drain, *freq = stats
+        frq_gpu_cur, frq_gpu_max, frq_mem_cur, frq_mem_max = freq
+        # Extract all information
         gpu = {'mem': {'tot': int(mem_total) * 1024, 'used': int(mem_used) * 1024, 'free': int(mem_free) * 1024},
                'freq': {'cur': int(frq_gpu_cur) * 1000, 'min': 0, 'max': int(frq_gpu_max) * 1000},
                'mem_freq': {'cur': int(frq_mem_cur) * 1000, 'min': 0, 'max': int(frq_mem_max) * 1000},
