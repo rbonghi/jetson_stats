@@ -38,17 +38,21 @@ def check_nvidia_smi():
 
 
 def get_gpu_info(gpu_index):
-    cmd = Command(['nvidia-smi', '--query-gpu=utilization.gpu,memory.total,memory.used,memory.free,temperature.gpu,pstate,power.draw,clocks.current.graphics',
+    # https://nvidia.custhelp.com/app/answers/detail/a_id/3751/~/useful-nvidia-smi-queries
+    cmd = Command(['nvidia-smi', '--query-gpu=utilization.gpu,memory.total,memory.used,memory.free,temperature.gpu,pstate,power.draw,clocks.current.graphics,clocks.max.graphics,clocks.current.memory,clocks.max.memory',
                   '--format=csv,noheader,nounits', '--id={gpu_index}'.format(gpu_index=gpu_index)])
     gpu = {}
     try:
         line = cmd()[0]
-        load, mem_total, mem_used, mem_free, temperature, pstate, power_drain, frq_cur = line.split(',')
+        load, mem_total, mem_used, mem_free, temperature, pstate, power_drain, frq_gpu_cur, frq_gpu_max, frq_mem_cur, frq_mem_max = line.split(',')
         # Decode GPU status
-        state = {'load': float(load)}
-        mem = {'tot': int(mem_total) * 1000, 'used': int(mem_used) * 1000, 'free': int(mem_free) * 1000}
-        freq = {'cur': int(frq_cur) * 1000, 'min': 0, 'max': 0}
-        gpu = {'status': state, 'mem': mem, 'freq': freq, 'power': float(power_drain), 'pstate': pstate.strip(), 'temperature': int(temperature)}
+        gpu = {'mem': {'tot': int(mem_total) * 1024, 'used': int(mem_used) * 1024, 'free': int(mem_free) * 1024},
+               'freq': {'cur': int(frq_gpu_cur) * 1000, 'min': 0, 'max': int(frq_gpu_max) * 1000},
+               'mem_freq': {'cur': int(frq_mem_cur) * 1000, 'min': 0, 'max': int(frq_mem_max) * 1000},
+               'load': float(load),
+               'power': float(power_drain),
+               'pstate': pstate.strip(),
+               'temperature': int(temperature)}
     except (OSError, Command.CommandException):
         pass
     return gpu
@@ -179,7 +183,8 @@ def find_dgpu():
         try:
             lines = cmd()
             for idx, line in enumerate(lines):
-                dgpu[str(idx)] = {'type': 'discrete', 'name': line.strip(), 'driver_version': '', 'pci.bus_id': ''}
+                name, driver_version, pci_bus_id = line.split(',')
+                dgpu[str(idx)] = {'type': 'discrete', 'name': name, 'driver_version': driver_version, 'pci.bus_id': pci_bus_id}
         except (OSError, Command.CommandException):
             pass
     if dgpu:
@@ -366,11 +371,17 @@ class GPUService(object):
                     with open(data['path'] + "/power/control", 'r') as f:
                         gpu['power_control'] = f.read().strip()
             elif gpu['type'] == 'discrete':
+                # Decode GPU status
                 smi = get_gpu_info(name)
                 # Read status GPU
-                gpu['status'] = smi['status']
+                gpu['status'] = {'load': smi['load'],
+                                 'temperature': smi['temperature'],
+                                 'power': smi['power'],
+                                 'pstate': smi['pstate'],
+                                 'name': data['name']}
                 # Read frequency
                 gpu['freq'] = smi['freq']
+                gpu['mem_freq'] = smi['mem_freq']
                 # Read power control status
                 gpu['RAM'] = smi['mem']
             # Load all status in GPU

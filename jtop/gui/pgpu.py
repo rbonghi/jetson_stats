@@ -167,8 +167,12 @@ class GPU(Page):
             size_x = [1, width // 2 - 2]
             size_y = [first + 2 + idx * (gpu_height + 1), first + 2 + (idx + 1) * (gpu_height - 3)]
             # Print status CPU
-            governor = gpu_freq.get('governor', '')
-            label_chart_gpu = "{percent: >3.0f}% - gov: {governor}".format(percent=gpu_status['load'], governor=governor)
+            if gpu_data['type'] == 'integrated':
+                governor = gpu_freq.get('governor', '')
+                label_chart_gpu = "{percent: >3.0f}% - gov: {governor}".format(percent=gpu_status['load'], governor=governor)
+            else:
+                dgpu_name = gpu_status.get('name', '')
+                label_chart_gpu = "{percent: >3.0f}% [{name}]".format(percent=gpu_status['load'], name=dgpu_name)
             # Draw GPU chart
             chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
             # Draw GPU RAM chart
@@ -213,23 +217,32 @@ class GPU(Page):
                     # tpc_pg_mask_status = NColors.green() if gpu_status['tpc_pg_mask'] else NColors.red()
                     plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "TPC PG", tpc_pg_mask_string)
                     button_idx += button_position
-            # Check if GPC data is included
-            frq_size = width - 3
-            if 'GPC' in gpu_freq:
-                size_gpc_gauge = (width - 2) // (2 + len(gpu_freq['GPC']))
-                for gpc_idx, gpc in enumerate(gpu_freq['GPC']):
-                    freq_data = {
-                        'name': 'GPC{idx}'.format(idx=gpc_idx),
-                        'cur': gpc,
-                        'unit': 'k',
-                        'online': gpc > 0,
-                    }
-                    freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, width // 2 + gpc_idx * (size_gpc_gauge) + 2, size_gpc_gauge - 1, freq_data)
-                # Change size frequency GPU
-                frq_size = width // 2
-            # Print frequency info
-            gpu_freq['name'] = "Frq"
-            freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, 1, frq_size, gpu_freq)
+                # Check if GPC data is included
+                frq_size = width - 3
+                if 'GPC' in gpu_freq:
+                    size_gpc_gauge = (width - 2) // (2 + len(gpu_freq['GPC']))
+                    for gpc_idx, gpc in enumerate(gpu_freq['GPC']):
+                        freq_data = {
+                            'name': 'GPC{idx}'.format(idx=gpc_idx),
+                            'cur': gpc,
+                            'unit': 'k',
+                            'online': gpc > 0,
+                        }
+                        freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, width // 2 + gpc_idx * (size_gpc_gauge) + 2, size_gpc_gauge - 1, freq_data)
+                    # Change size frequency GPU
+                    frq_size = width // 2
+                # Print frequency info
+                gpu_freq['name'] = "Frq"
+                freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, 1, frq_size, gpu_freq)
+            else:
+                frq_size = (width - 3) // 2
+                # Print GPU frequency info
+                gpu_freq['name'] = "Frq"
+                freq_gauge(self.stdscr, first + (idx + 1) * gpu_height, 1, frq_size - 1, gpu_freq)
+                # Print Memory GPU frequency info
+                gpu_mem_freq = gpu_data['mem_freq']
+                gpu_mem_freq['name'] = "Frq"
+                freq_gauge(self.stdscr, first + (idx + 1) * gpu_height, width // 2, frq_size - 1, gpu_mem_freq)
         # Draw all Processes
         height_table = height - first + 2 + gpu_height
         self.process_table.draw(first + 2 + gpu_height, 0, width, height_table, key, mouse)
