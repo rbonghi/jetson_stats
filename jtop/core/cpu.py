@@ -112,16 +112,17 @@ def read_system_cpu(path, cpu_status={}):
     if os.path.isfile(path + "/online"):
         with open(path + "/online", 'r') as f:
             cpu_status['online'] = f.read().strip() == '1'
-    # Read governor
-    if os.path.isdir(path + "/cpufreq"):
-        with open(path + "/cpufreq/scaling_governor", 'r') as f:
-            cpu_status['governor'] = f.read().strip()
-        # Store values
-        cpu_status['freq'] = read_freq_cpu(path, 'scaling')
-        cpu_status['info_freq'] = read_freq_cpu(path, 'cpuinfo')
-    # Read idle CPU
-    if os.path.isdir(path + "/cpuidle"):
-        cpu_status['idle_state'] = read_idle(path + "/cpuidle")
+    # Read governor only if CPU is online
+    if cpu_status['online']:
+        if os.path.isdir(path + "/cpufreq"):
+            with open(path + "/cpufreq/scaling_governor", 'r') as f:
+                cpu_status['governor'] = f.read().strip()
+            # Store values
+            cpu_status['freq'] = read_freq_cpu(path, 'scaling')
+            cpu_status['info_freq'] = read_freq_cpu(path, 'cpuinfo')
+        # Read idle CPU
+        if os.path.isdir(path + "/cpuidle"):
+            cpu_status['idle_state'] = read_idle(path + "/cpuidle")
     return cpu_status
 
 
