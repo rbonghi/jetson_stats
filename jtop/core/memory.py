@@ -125,6 +125,8 @@ def read_fstab():
 
 def read_emc(root_path):
     emc = {}
+    # intialize emc['cur'] to avoid a crash when starting this service 
+    emc['cur'] = 1
     if os.path.isdir(root_path + "/debug/bpmp/debug/clk/emc"):
         path = root_path + "/debug/bpmp/debug/clk/emc"
         # Check if access to this file
