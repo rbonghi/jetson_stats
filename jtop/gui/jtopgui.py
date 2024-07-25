@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 # Get variables
 from ..core.common import get_var
 # Graphics elements
+from .lib.chart import Chart
 from .lib.colors import NColors
 from .lib.common import check_curses, set_xterm_title
 # Create logger
@@ -98,6 +99,9 @@ class JTOPGUI:
         # Run the GUI
         if start:
             self.run(loop, seconds)
+
+    def __del__(self):
+        Chart.reset_color_counter()
 
     def run(self, loop, seconds):
         # In this program, we don't want keystrokes echoed to the console,
