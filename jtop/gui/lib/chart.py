@@ -98,7 +98,6 @@ class Chart(object):
     @classmethod
     def reset_color_counter():
         Chart.COLOR_COUNTER = 0
-        
 
     def __del__(self):
         # Remove from color counter
