@@ -25,6 +25,7 @@ import logging
 # Create logger
 logger = logging.getLogger(__name__)
 
+
 class Chart(object):
 
     COLOR_COUNTER = 0
