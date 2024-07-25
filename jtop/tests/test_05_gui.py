@@ -24,6 +24,13 @@ from ..gui.lib.chart import Chart
 from ..gui import JTOPGUI, ALL, GPU, CPU, MEM, ENGINE, CTRL, INFO
 
 
+@pytest.fixture(autouse=True)
+def reset_cube_test():
+    Chart.reset_color_counter()
+    yield
+    Chart.reset_color_counter()
+
+
 def openGUI(stdscr, jetson):
     # Initialization Menu
     pages = [ALL]
@@ -44,6 +51,7 @@ def test_openGUI(setup_jtop_server):
     curses.start_color()
     # Reset counter charts
     Chart.reset_color_counter()
+    assert Chart.COLOR_COUNTER == 0
     # Run jtop
     with jtop() as jetson:
         if jetson.ok():
@@ -51,8 +59,6 @@ def test_openGUI(setup_jtop_server):
             pages = openGUI(stdscr, jetson)
             # Start with selected page
             pages.set(0)
-    # Reset counter charts
-    Chart.reset_color_counter()
     assert True
 
 
