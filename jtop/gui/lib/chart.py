@@ -77,6 +77,9 @@ class Chart(object):
                     idx_name = Chart.OFFSET_COLOR_CHART + self._color_obj_counter + (len(self.color_chart) - idx - 1) * color_step + idy
                     second_color = self.color_chart[color_set[1]] if color_set[1] < len(self.color_chart) else curses.COLOR_BLACK
                     logger.info("-------------------------------------")
+                    logger.info(f"{self.color_chart}")
+                    logger.info(f"{values}")
+                    logger.info(f"{self._combinations}")
                     logger.info(f"{Chart.OFFSET_COLOR_CHART}")
                     logger.info(f"{self._color_obj_counter}")
                     logger.info(f"{(len(self.color_chart) - idx - 1)}")
