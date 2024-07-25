@@ -49,12 +49,12 @@ def test_openGUI(setup_jtop_server):
     stdscr = curses.initscr()
     # Initialize colors
     curses.start_color()
-    # Reset counter charts
-    Chart.reset_color_counter()
-    assert Chart.COLOR_COUNTER == 0
     # Run jtop
     with jtop() as jetson:
         if jetson.ok():
+            # Reset counter charts
+            Chart.reset_color_counter()
+            assert Chart.COLOR_COUNTER == 0
             # Open JTOPGUI
             pages = openGUI(stdscr, jetson)
             # Start with selected page
