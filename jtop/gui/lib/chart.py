@@ -21,7 +21,9 @@ from math import ceil
 import curses
 from collections import deque
 from .common import check_curses
-
+import logging
+# Create logger
+logger = logging.getLogger(__name__)
 
 class Chart(object):
 
@@ -73,6 +75,7 @@ class Chart(object):
                 for idy, color_set in enumerate(list_element):
                     idx_name = Chart.OFFSET_COLOR_CHART + self._color_obj_counter + (len(self.color_chart) - idx - 1) * color_step + idy
                     second_color = self.color_chart[color_set[1]] if color_set[1] < len(self.color_chart) else curses.COLOR_BLACK
+                    logger.info(f"Idx_name: {idx_name}")
                     curses.init_pair(idx_name, self.color_chart[color_set[0]], second_color)
         except curses.error:
             curses.use_default_colors()
