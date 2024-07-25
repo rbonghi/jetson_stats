@@ -43,7 +43,7 @@ def test_openGUI(setup_jtop_server):
     # Initialize colors
     curses.start_color()
     # Reset counter charts
-    Chart.COLOR_COUNTER = 0
+    Chart.reset_color_counter = 0
     # Run jtop
     with jtop() as jetson:
         if jetson.ok():
@@ -51,6 +51,8 @@ def test_openGUI(setup_jtop_server):
             pages = openGUI(stdscr, jetson)
             # Start with selected page
             pages.set(0)
+    # Reset counter charts
+    Chart.reset_color_counter = 0
     assert True
 
 
