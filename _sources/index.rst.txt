@@ -22,7 +22,7 @@ jetson-stats
    :caption: Project
 
    ros_jetson_stats<https://github.com/rbonghi/ros_jetson_stats>
-   isaac_ros_jetson<https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_jetson>
+   isaac_ros_jetson<https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_jetson/index.html>
    Grafana plugin<https://grafana.com/grafana/dashboards/14493-nvidia-jetson>
 
 
