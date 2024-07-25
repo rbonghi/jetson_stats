@@ -106,7 +106,7 @@ class ProcessService(object):
         stime = float(stat[14])
         starttime = float(stat[21]) / self._clk_tck
         total_time = (utime + stime) / self._clk_tck
-        proc_uptime = uptime - starttime
+        proc_uptime = max(1, uptime - starttime)
         cpu_percent = 100 * (total_time / proc_uptime)
 
         process = [
