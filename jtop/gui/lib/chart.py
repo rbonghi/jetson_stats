@@ -76,7 +76,7 @@ class Chart(object):
                 for idy, color_set in enumerate(list_element):
                     idx_name = Chart.OFFSET_COLOR_CHART + self._color_obj_counter + (len(self.color_chart) - idx - 1) * color_step + idy
                     second_color = self.color_chart[color_set[1]] if color_set[1] < len(self.color_chart) else curses.COLOR_BLACK
-                    logger.info(f"-------------------------------------")
+                    logger.info("-------------------------------------")
                     logger.info(f"{Chart.OFFSET_COLOR_CHART}")
                     logger.info(f"{self._color_obj_counter}")
                     logger.info(f"{(len(self.color_chart) - idx - 1)}")
