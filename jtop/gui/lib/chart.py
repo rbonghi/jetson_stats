@@ -38,6 +38,7 @@ class Chart(object):
     """
 
     def __init__(self, jetson, name, callback, type_value=int, line="*", color_text=curses.COLOR_WHITE, color_chart=[], fill=True, time=10.0, tik=2):
+        logger.info(f"{Chart.COLOR_COUNTER}")
         self._color_obj_counter = Chart.COLOR_COUNTER
         self.jetson = jetson
         self.name = name
