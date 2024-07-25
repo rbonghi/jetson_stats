@@ -96,7 +96,7 @@ class Chart(object):
         jetson.attach(self.update)
 
     @classmethod
-    def reset_color_counter():
+    def reset_color_counter(cls):
         Chart.COLOR_COUNTER = 0
 
     def __del__(self):
