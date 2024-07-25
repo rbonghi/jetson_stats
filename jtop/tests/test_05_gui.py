@@ -24,10 +24,8 @@ from ..gui.lib.chart import Chart
 from ..gui import JTOPGUI, ALL, GPU, CPU, MEM, ENGINE, CTRL, INFO
 
 
-@pytest.fixture(autouse=True)
-def reset_cube_test():
-    Chart.reset_color_counter()
-    yield
+@pytest.fixture
+def reset_chart():
     Chart.reset_color_counter()
 
 
@@ -44,7 +42,7 @@ def openGUI(stdscr, jetson):
     return pages
 
 
-def test_openGUI(setup_jtop_server):
+def test_openGUI(setup_jtop_server, reset_chart):
     # Load command line controller
     stdscr = curses.initscr()
     # Initialize colors
