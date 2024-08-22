@@ -578,7 +578,7 @@ class jtop(Thread):
         # Load all current power from each power rail
         if self.power:
             for name, rail in self.power['rail'].items():
-                stats["Power {name}".format(name=temp)] = rail['power']
+                stats["Power {name}".format(name=name)] = rail['power']
             # Load total current power
             stats['Power TOT'] = self.power['tot']['power']
         # -- jetson_clocks --
