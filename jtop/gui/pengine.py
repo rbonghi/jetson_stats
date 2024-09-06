@@ -32,18 +32,20 @@ def add_engine_in_list(label, engine, group, name):
 
 
 def pass_orin(engine):
+    return [
+        add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_CPU_AXI'),
+        add_engine_in_list('DLA0c', engine, 'DLA0', 'DLA0_CORE') + add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE'),
+        add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
+        add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
+        add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
+    ]
+
+
+def pass_orin_nx(engine):
     if 'DLA0' in engine:
         return [
             add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_CPU_AXI'),
             add_engine_in_list('DLA0c', engine, 'DLA0', 'DLA0_CORE') + add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE'),
-            add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
-            add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
-            add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
-        ]
-    elif 'DLA' in engine:
-        return [
-            add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_CPU_AXI'),
-            add_engine_in_list('DLAc', engine, 'DLA', 'DLA_CORE'),
             add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
             add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
             add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
@@ -55,7 +57,6 @@ def pass_orin(engine):
             add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
             add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
         ]
-
 
 def pass_orin_nano(engine):
     return [
@@ -86,7 +87,7 @@ def map_jetson_nano(engine):
 
 MAP_JETSON_MODELS = {
     'orin nano': pass_orin_nano,
-    'orin nx': pass_orin,
+    'orin nx': pass_orin_nx,
     'agx orin': pass_orin,
     'xavier': map_xavier,
     'jetson nano': map_jetson_nano,
