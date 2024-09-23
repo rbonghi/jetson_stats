@@ -119,13 +119,14 @@ class CPU(Page):
         except curses.error:
             pass
         # Print info
-        freq = cpu['freq']
-        freq['online'] = cpu['online']
-        freq['name'] = "Frq"
-        try:
-            freq_gauge(stdscr, pos_y + size_h, pos_x, size_w, cpu['freq'])
-        except curses.error:
-            pass
+        if 'freq' in cpu:
+            freq = cpu['freq']
+            freq['online'] = cpu['online']
+            freq['name'] = "Frq"
+            try:
+                freq_gauge(stdscr, pos_y + size_h, pos_x, size_w, cpu['freq'])
+            except curses.error:
+                pass
 
     def draw(self, key, mouse):
         # Screen size
