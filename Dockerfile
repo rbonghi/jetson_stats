@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-FROM python:3.12.6-slim-bullseye
+FROM python:3.12.7-slim-bullseye
 
 ADD . /jetson_stats
 
