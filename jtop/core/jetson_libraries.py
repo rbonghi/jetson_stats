@@ -17,6 +17,7 @@
 
 import os
 import re
+import subprocess
 from .common import cat
 from .command import Command
 # Fix connection refused for python 2.7
@@ -40,6 +41,17 @@ def get_cuda():
             cuda_version = match.group(1)
     elif os.path.isfile("/usr/local/cuda/bin/nvcc"):
         cmd = Command(['/usr/local/cuda/bin/nvcc', '--version'])
+        try:
+            lines = cmd()
+            for line in lines:
+                match = re.search(CUDA_NVCC_RE, line)
+                if match:
+                    cuda_version = match.group(1)
+                    break
+        except (OSError, Command.CommandException):
+            pass
+    elif subprocess.call(["which", "nvcc"], stdout=subprocess.DEVNULL) == 0:
+        cmd = Command(['nvcc', '--version'])
         try:
             lines = cmd()
             for line in lines:
