@@ -309,7 +309,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">jtop.core.nvpmodel.</span></span><span class="sig-name descname"><span class="pre">NVPModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nvpmodel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The NVP Model control voltage regulators, and power tree to optimize power efficiency.
 It supports three optimized power budgets, such as 10 watts, 15 watts, and 30 watts.
 For each power budget, several configurations are possible with various CPU frequencies and number of cores online.</p>
@@ -362,7 +362,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>List os string with all nvpmodels name</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)">list</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -370,7 +370,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dl class="py method">
 <dt class="sig sig-object py" id="jtop.core.nvpmodel.NVPModel.get_default">
 <span class="sig-name descname"><span class="pre">get_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#jtop.core.nvpmodel.NVPModel.get_default" title="Link to this definition">¶</a></dt>
-<dd><p>Return a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> with the default status for this board</p>
+<dd><p>Return a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> with the default status for this board</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
         <span class="n">default</span> <span class="o">=</span> <span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span>
@@ -386,7 +386,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>default NVP model</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)">dict</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -408,7 +408,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>nvpmodel ID</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)">int</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -432,7 +432,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>nvpmodel ID <strong>name</strong></p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -452,7 +452,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>nvpmodel ID</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)">int</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -466,7 +466,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>status nvpmodel service</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)">bool</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -486,7 +486,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>List os string with all nvpmodels name</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)">list</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -508,7 +508,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>nvpmodel ID <strong>name</strong></p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)">str</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -528,13 +528,13 @@ For each power budget, several configurations are possible with various CPU freq
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>nvpmodel_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – nvpmodel ID</p></li>
-<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Force set nvpmodel (can reboot your board), defaults to False</p></li>
+<li><p><strong>nvpmodel_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – nvpmodel ID</p></li>
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Force set nvpmodel (can reboot your board), defaults to False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – the variable is not an int</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – the variable is not an int</p></li>
 <li><p><a class="reference internal" href="exceptions.html#jtop.JtopException" title="jtop.JtopException"><strong>JtopException</strong></a> – nvpmodel name doesn’t’ exist</p></li>
 </ul>
 </dd>
@@ -556,13 +556,13 @@ For each power budget, several configurations are possible with various CPU freq
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>nvpmodel_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – name nvpmodel</p></li>
-<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Force set nvpmodel (can reboot your board), defaults to False</p></li>
+<li><p><strong>nvpmodel_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – name nvpmodel</p></li>
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Force set nvpmodel (can reboot your board), defaults to False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – the variable is not a string</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – the variable is not a string</p></li>
 <li><p><a class="reference internal" href="exceptions.html#jtop.JtopException" title="jtop.JtopException"><strong>JtopException</strong></a> – nvpmodel name doesn’t’ exist</p></li>
 </ul>
 </dd>
@@ -588,7 +588,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd class="field-odd"><p>Status NVP Models</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)">list</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
