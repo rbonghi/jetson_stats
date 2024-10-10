@@ -50,7 +50,7 @@ def get_cuda():
                     break
         except (OSError, Command.CommandException):
             pass
-    elif subprocess.call(["which", "nvcc"]) == 0:
+    elif subprocess.call(["which", "nvcc"], stdout=subprocess.DEVNULL) == 0:
         cmd = Command(['nvcc', '--version'])
         try:
             lines = cmd()
