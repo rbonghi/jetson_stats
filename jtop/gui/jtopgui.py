@@ -132,6 +132,28 @@ class JTOPGUI:
                 self.increase(loop=True)
                 old = datetime.now()
 
+    def dialog_window(self):
+        height, width = self.stdscr.getmaxyx()
+        
+        dialog_height, dialog_width = 10, 46
+        dialog_y, dialog_x = (height - dialog_height) // 2, (width - dialog_width) // 2
+        dialog_win = curses.newwin(dialog_height, dialog_width, dialog_y, dialog_x)
+        # Add a border around the window
+        dialog_win.border()
+        
+        # Add text to the dialog window
+        dialog_win.addstr(1, 2, "System reboot is required to apply changes", curses.A_BOLD)
+        dialog_win.addstr(3, 1, "1. Option 1")
+        dialog_win.addstr(4, 1, "2. Option 2")
+        dialog_win.addstr(5, 1, "3. Option 3")
+        dialog_win.addstr(7, 1, "Press 'q' to exit")
+        
+        # Refresh the window to show the changes
+        
+        dialog_win.refresh()
+        
+        dialog_win.timeout(GUI_REFRESH * 2)
+
     def draw(self):
         # First, clear the screen
         self.stdscr.erase()
@@ -147,6 +169,8 @@ class JTOPGUI:
         self.stdscr.refresh()
         # Set a timeout and read keystroke
         self.stdscr.timeout(GUI_REFRESH)
+        
+        self.dialog_window()
 
     def increase(self, loop=False):
         # check reset

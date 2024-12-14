@@ -34,6 +34,7 @@ except NameError:
 logger = logging.getLogger(__name__)
 # Regular expressions
 POWER_MODEL_DEFAULT_RE = re.compile(r'PM_CONFIG: DEFAULT=(?P<name>\w+)\((?P<id>\d+)\)')
+TPC_POWER_GATING_RE = re.compile(r'TPC_POWER_GATING TPC_PG_MASK (?P<mask>\w+)')
 POWER_MODEL_RE = re.compile(r'POWER_MODEL: ID=(?P<id>\d+) NAME=(?P<name>\w+)')
 NV_POWER_MODE_RE = re.compile(r'NV Power Mode: (?P<name>\w+)')
 
@@ -45,6 +46,7 @@ NVP_COUNTER_ALIVE_JETSON_CLOCKS = 5
 def nvpmodel_decode():
     default = {}
     nvpm = {}
+    nvpm_masks = {}
     nvpmodel_p = Command(['nvpmodel', '-p', '--verbose'])
     lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
     # Decode lines
@@ -63,8 +65,14 @@ def nvpmodel_decode():
             mode_id = int(parsed_line['id'])
             # Save in nvpm list
             nvpm[mode_id] = parsed_line['name']
+        # Search TPC Power Gating
+        match = re.search(TPC_POWER_GATING_RE, line)
+        if match:
+            parsed_line = match.groupdict()
+            # Extract save mask in nvpm_masks list with the same id
+            nvpm_masks[mode_id] = parsed_line['mask']
     # Make a list
-    return default, list(nvpm.values())
+    return default, list(nvpm.values()), list(nvpm_masks.values())
 
 
 def nvpmodel_query():
@@ -432,15 +440,18 @@ class NVPModelService(object):
         # Initialize jetson_clocks config
         self._jetson_clocks = jetson_clocks
         try:
-            # Read all NVP modes
-            self._default, self._nvp_models = nvpmodel_decode()
-            self._nvp_status = [True] * len(self._nvp_models)
+            # Read all NVP modes and masks available for this board
+            self._default, self._nvp_models, self._nvp_masks = nvpmodel_decode()
             # Read current nvpmodel
             self._nvpmodel_now = nvpmodel_query()
             logger.info("nvpmodel running in [{id}]{name} - Default: {default}".format(
                 name=self._nvpmodel_now['name'],
                 id=self._nvpmodel_now['id'],
                 default=self._default['id']))
+            # Decode current mask
+            current_mask = self._nvp_masks[self._nvpmodel_now['id']]
+            # list of all nvpmodel status that can be changed from the current
+            self._nvp_status = [current_mask == mask for idx, mask in enumerate(self._nvp_masks)]
         except (OSError, Command.CommandException):
             self._is_nvpmodel = False
             logger.warning("nvpmodel not available")
@@ -508,6 +519,12 @@ class NVPModelService(object):
 
     def set_nvpmodel_id(self, nvpmodel_id, force):
         if self.is_running():
+            return False
+        # Get current NV Power Mode
+        old_nvp_mask = self._nvp_masks[self.get_nvpmodel_id()]
+        nvp_mask = self._nvp_masks[nvpmodel_id]
+        if nvp_mask != old_nvp_mask:
+            logger.error("The new nvpmodel {nvpmodel_id} has a different mask {nvp_mask}, is not compatible".format(nvpmodel_id=nvpmodel_id, nvp_mask=nvp_mask))
             return False
         # Start thread Service client
         self._nvp_mode_set_thread = Thread(target=self._thread_set_nvp_model, args=(nvpmodel_id, ))
