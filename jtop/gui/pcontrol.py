@@ -144,7 +144,7 @@ class CTRL(Page):
             self._dialog_window = DialogWindow("NVP Model",
                                             "Required a reboot to apply this change",
                                             self.dialog_window_nvpmodel,
-                                            ["Force and reboot", "Force", "Skip"])
+                                            ["Force and reboot", "Skip"])
             self.register_dialog_window(self._dialog_window)
 
     def action_fan_profile(self, info, selected):
@@ -187,8 +187,6 @@ class CTRL(Page):
 
     def dialog_window_nvpmodel(self, info, selected):
         if info['label'] == "Force and reboot":
-            self.jetson.nvpmodel.set_nvpmodel_name(info['name'], force=True, reboot=True)
-        elif info['label'] == "Force":
             self.jetson.nvpmodel.set_nvpmodel_name(info['name'], force=True)
 
     def action_nvp_increase(self, info, selected):

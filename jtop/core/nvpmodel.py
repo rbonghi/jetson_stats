@@ -95,12 +95,15 @@ def nvpmodel_query():
             return {'name': parsed_line['name'], 'id': int(lines[idx + 1])}
 
 
-def set_nvpmodel_level(level):
+def set_nvpmodel_level(level, force):
     """ Set nvpmodel to a new status """
     # Set the new nvpmodel status
     try:
         # If there are no errors return the NV Power mode
-        lines = Command.run_command(['nvpmodel', '-m', str(level)], repeat=5, timeout=COMMAND_TIMEOUT)
+        if force:
+            lines = Command.run_command(['nvpmodel', '-m', str(level)], repeat=5, timeout=COMMAND_TIMEOUT, input='YES')
+        else:
+            lines = Command.run_command(['nvpmodel', '-m', str(level)], repeat=5, timeout=COMMAND_TIMEOUT)
         # Check if error is in vector
         for line in lines:
             if "NVPM ERROR" in line:
@@ -462,16 +465,16 @@ class NVPModelService(object):
     def get_all_nvpmodels(self):
         return self._nvp_models
 
-    def _thread_set_nvp_model(self, nvpmodel_id):
+    def _thread_set_nvp_model(self, nvpmodel_id, force):
         if not self._jetson_clocks.exists():
             # Set NV Power Mode
-            status = set_nvpmodel_level(nvpmodel_id)
+            status = set_nvpmodel_level(nvpmodel_id, force)
             # Update status
             self._nvp_status[nvpmodel_id] = status
             return
         if not self._jetson_clocks.is_config():
             # Set NV Power Mode
-            status = set_nvpmodel_level(nvpmodel_id)
+            status = set_nvpmodel_level(nvpmodel_id, force)
             # Update status
             self._nvp_status[nvpmodel_id] = status
             return
@@ -493,7 +496,7 @@ class NVPModelService(object):
             if counter <= NVP_COUNTER_ALIVE_JETSON_CLOCKS:
                 logger.info("NVPmodel has switched off jetson_clocks")
         # Set NV Power Mode
-        status = set_nvpmodel_level(nvpmodel_id)
+        status = set_nvpmodel_level(nvpmodel_id, force)
         # Update status
         self._nvp_status[nvpmodel_id] = status
         # Status message
@@ -523,11 +526,14 @@ class NVPModelService(object):
         # Get current NV Power Mode
         old_nvp_mask = self._nvp_masks[self.get_nvpmodel_id()]
         nvp_mask = self._nvp_masks[nvpmodel_id]
-        if nvp_mask != old_nvp_mask:
-            logger.error("The new nvpmodel {nvpmodel_id} has a different mask {nvp_mask}, is not compatible".format(nvpmodel_id=nvpmodel_id, nvp_mask=nvp_mask))
-            return False
+        if force:
+            logger.warning("Force set nvpmodel {nvpmodel_id}".format(nvpmodel_id=nvpmodel_id))
+        else:
+            if nvp_mask != old_nvp_mask:
+                logger.error("The new nvpmodel {nvpmodel_id} has a different mask {nvp_mask}, is not compatible".format(nvpmodel_id=nvpmodel_id, nvp_mask=nvp_mask))
+                return False
         # Start thread Service client
-        self._nvp_mode_set_thread = Thread(target=self._thread_set_nvp_model, args=(nvpmodel_id, ))
+        self._nvp_mode_set_thread = Thread(target=self._thread_set_nvp_model, args=(nvpmodel_id, force))
         # self._thread.daemon = True
         self._nvp_mode_set_thread.start()
 
