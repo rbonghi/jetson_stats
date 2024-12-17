@@ -110,12 +110,13 @@ class HideButton(SmallButton):
 
 
 class ButtonList:
-    def __init__(self, stdscr, on_click, buttons=[], info={}):
+    def __init__(self, stdscr, on_click, buttons=[], info={}, linear=False):
         self.buttons = []
         self.on_click = on_click
         self.stdscr = stdscr
         self.info = info
         self._selected = ''
+        self.linear = linear
         # Load all buttons
         for button in buttons:
             self.add_button(button)
@@ -133,8 +134,13 @@ class ButtonList:
         if not colors:
             colors = [None] * len(self.buttons)
         # Show all buttons
+        counter_space = 0
         for i, (button, color) in enumerate(zip(self.buttons, colors)):
             name = button.get_label()
             button.set_selected(self._selected == name)
-            button.update(y + i, x, key=key, mouse=mouse, color=color)
+            if self.linear:
+                button.update(y, x + counter_space, key=key, mouse=mouse, color=color)
+                counter_space += len(name) + 3
+            else:
+                button.update(y + i, x, key=key, mouse=mouse, color=color)
 # EOF

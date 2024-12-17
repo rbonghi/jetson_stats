@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 # In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
 ABC = abc.ABCMeta('ABC', (object,), {})
 # Gui refresh rate
-GUI_REFRESH = 1000 // 20
+GUI_REFRESH = 20 # 1000 // 20
 # Copyright small
 COPYRIGHT_SMALL_RE = re.compile(r""".*__cr__ = ["'](.*?)['"]""", re.S)
 
@@ -44,6 +44,7 @@ class Page(ABC):
         self.name = name
         self.stdscr = stdscr
         self.jetson = jetson
+        self.dialog_window = None
 
     def setcontroller(self, controller):
         self.controller = controller
@@ -56,6 +57,9 @@ class Page(ABC):
             height -= 1
             first = 1
         return height, width, first
+
+    def register_dialog_window(self, dialog_window_object):
+        self.dialog_window = dialog_window_object
 
     @abc.abstractmethod
     @check_curses
@@ -125,42 +129,28 @@ class JTOPGUI:
         old = datetime.now()
         # Here is the loop of our program, we keep clearing and redrawing in this loop
         while not self.events() and self.jetson.ok(spin=True):
+            # Get page selected
+            page = self.pages[self.n_page]
+            # Check if dialog window is open and disable mouse event on main pages
+            record_mouse = self.mouse
+            if page.dialog_window and page.dialog_window.enable_dialog_window:
+                self.mouse = ()
             # Draw pages
-            self.draw()
+            self.draw(page)
+            self.mouse = record_mouse
+            # Draw dialog window if it exists
+            if page.dialog_window:
+                page.dialog_window.show(self.stdscr, self.key, self.mouse)
             # Increase page automatically if loop enabled
             if loop and datetime.now() - old >= timedelta(seconds=seconds):
                 self.increase(loop=True)
                 old = datetime.now()
 
-    def dialog_window(self):
-        height, width = self.stdscr.getmaxyx()
-        
-        dialog_height, dialog_width = 10, 46
-        dialog_y, dialog_x = (height - dialog_height) // 2, (width - dialog_width) // 2
-        dialog_win = curses.newwin(dialog_height, dialog_width, dialog_y, dialog_x)
-        # Add a border around the window
-        dialog_win.border()
-        
-        # Add text to the dialog window
-        dialog_win.addstr(1, 2, "System reboot is required to apply changes", curses.A_BOLD)
-        dialog_win.addstr(3, 1, "1. Option 1")
-        dialog_win.addstr(4, 1, "2. Option 2")
-        dialog_win.addstr(5, 1, "3. Option 3")
-        dialog_win.addstr(7, 1, "Press 'q' to exit")
-        
-        # Refresh the window to show the changes
-        
-        dialog_win.refresh()
-        
-        dialog_win.timeout(GUI_REFRESH * 2)
-
-    def draw(self):
+    def draw(self, page):
         # First, clear the screen
         self.stdscr.erase()
         # Write head of the jtop
         self.header()
-        # Get page selected
-        page = self.pages[self.n_page]
         # Draw the page
         page.draw(self.key, self.mouse)
         # Draw menu
@@ -169,8 +159,6 @@ class JTOPGUI:
         self.stdscr.refresh()
         # Set a timeout and read keystroke
         self.stdscr.timeout(GUI_REFRESH)
-        
-        self.dialog_window()
 
     def increase(self, loop=False):
         # check reset
