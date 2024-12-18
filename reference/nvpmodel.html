@@ -519,7 +519,7 @@ For each power budget, several configurations are possible with various CPU freq
 <dd><p>Set a new NVP model by ID. The list of nvpmodel available is with <a class="reference internal" href="#jtop.core.nvpmodel.NVPModel.get_all_nvpmodels" title="jtop.core.nvpmodel.NVPModel.get_all_nvpmodels"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_all_nvpmodels()</span></code></a> or <a class="reference internal" href="#jtop.core.nvpmodel.NVPModel.models" title="jtop.core.nvpmodel.NVPModel.models"><code class="xref py py-attr docutils literal notranslate"><span class="pre">models</span></code></a>.</p>
 <div class="admonition danger">
 <p class="admonition-title">Danger</p>
-<p>If you set force=True the board will be rebooted immediately without any warning.</p>
+<p>If you set <strong>force=True</strong> the board will be rebooted immediately without any warning.</p>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
