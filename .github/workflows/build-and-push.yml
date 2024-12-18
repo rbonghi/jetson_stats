@@ -159,7 +159,7 @@ jobs:
           python-version: "3.x"
       - name: Install dependencies
         run: |
-          sudo -H python -m pip install --upgrade pip
+          # sudo -H python -m pip install --upgrade pip
           sudo -H pip install setuptools wheel twine
       - name: Build and publish
         env:
