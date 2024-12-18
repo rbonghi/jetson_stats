@@ -252,7 +252,7 @@ class NVPModel(object):
 
         .. danger::
 
-            If you set force=True the board will be rebooted immediately without any warning.
+            If you set **force=True** the board will be rebooted immediately without any warning.
 
         .. code-block:: python
 
