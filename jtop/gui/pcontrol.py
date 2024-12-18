@@ -212,7 +212,7 @@ class CTRL(Page):
         return {
             'value': [speed],
         }
-    
+
     def control_jetson_clocks(self, pos_y, pos_x, key, mouse):
         # Show jetson_clocks
         try:
