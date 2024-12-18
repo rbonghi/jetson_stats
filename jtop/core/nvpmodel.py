@@ -72,7 +72,6 @@ def nvpmodel_decode():
             # Extract save mask in nvpm_masks list with the same id
             nvpm_masks[mode_id] = parsed_line['mask']
     # Make a list
-    nvpm_masks = {}
     nvpm_masks_list = list(nvpm_masks.values()) if nvpm_masks else [True] * len(nvpm)
     return default, list(nvpm.values()), nvpm_masks_list
 
