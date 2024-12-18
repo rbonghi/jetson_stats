@@ -514,7 +514,7 @@ You can sort the table clicking on each title on the page</p></li>
 </dd>
 </dl>
 </li>
-<li><p><strong>GPU Shared RAM</strong> Status Shared GPU. (In grey the used memory)</p></li>
+<li><p><strong>GPU Shared RAM</strong> Status Shared GPU. (In grey the total used memory)</p></li>
 <li><dl class="simple">
 <dt><strong>Flags</strong> GPU Flags</dt><dd><ul class="simple">
 <li><p><strong>3D Scaling</strong> You can enable and disable the 3D scaling on your board</p></li>
@@ -615,9 +615,18 @@ You can sort the table clicking on each title on the page</p></li>
 <li><p>You can select the fan profile available on your board, more details in <a class="reference internal" href="../reference/jtop.html#jtop.jtop.fan" title="jtop.jtop.fan"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.fan</span></code></a></p></li>
 <li><p>It is a real time chart with the current fan speed</p></li>
 <li><p>You can enable/disable <a class="reference internal" href="../reference/jtop.html#jtop.jtop.jetson_clocks" title="jtop.jtop.jetson_clocks"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.jetson_clocks</span></code></a> and set on boot (Note: jetson_clocks start only after 60s from up time)</p></li>
-<li><p>You can select which NVPmodel you want to use on your board. Where you see the letter “D” means is the default configuration.</p></li>
+<li><p>You can select which NVPmodel you want to use on your board. Where you see the letter “D” means is the default configuration. If the mode is colored in Amber, it means that to apply need to reboot the board.</p></li>
 <li><p>A detailed table with Power, Volt and Current of your board. There is also teh Warning and Critical current before the board fail. More info <a class="reference internal" href="../reference/jtop.html#jtop.jtop.power" title="jtop.jtop.power"><code class="xref py py-attr docutils literal notranslate"><span class="pre">jtop.jtop.power</span></code></a></p></li>
 </ol>
+<img alt="../_images/06B-jtop.png" class="align-center" src="../_images/06B-jtop.png" />
+<p>If you press a mode that need a reboot you will see a dialog message like this</p>
+<ol class="arabic simple">
+<li><p>You can chosse between <strong>[Force and reboot]</strong> or <strong>[Skip]</strong> the operation</p></li>
+</ol>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>If you click on <strong>[Force and reboot]</strong> the board will be rebooted immediately without any warning.</p>
+</div>
 <section id="id1">
 <h4>Controls<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
 <p>From this page you can click or press from your keyboard:</p>
