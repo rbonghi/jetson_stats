@@ -269,7 +269,7 @@ class CTRL(Page):
             pass
         # Draw all modes
         current_mode = self.jetson.nvpmodel.name
-        colors = [curses.A_NORMAL if status else NColors.red() for status in self.jetson.nvpmodel.status]
+        colors = [curses.A_NORMAL if status else NColors.yellow() for status in self.jetson.nvpmodel.status]
         try:
             self._nvpmodel_profile.update(pos_y + 1, pos_x + 2, key, mouse, current_mode, colors)
         except curses.error:
