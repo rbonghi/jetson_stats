@@ -106,7 +106,7 @@ jobs:
         run: |
           # Upgrade pip
           # https://github.com/actions/setup-python/issues/225
-          sudo -H env "PATH=$PATH" python -m pip install --upgrade pip --break-system-packages
+          # sudo -H env "PATH=$PATH" python -m pip install --upgrade pip --break-system-packages
           # Install jtop
           sudo -H env "PATH=$PATH" pip install -v -e .
           # Install sphinx requirements
