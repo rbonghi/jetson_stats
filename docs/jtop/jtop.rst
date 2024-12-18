@@ -195,7 +195,7 @@ In this page the GPU status. A detailed documentation of this output is availabl
     - name GPU
     - Load percentage
     - Governor GPU
-#. **GPU Shared RAM** Status Shared GPU. (In grey the used memory)
+#. **GPU Shared RAM** Status Shared GPU. (In grey the total used memory)
 #. **Flags** GPU Flags
     - **3D Scaling** You can enable and disable the 3D scaling on your board
     - **Railgate**
@@ -283,8 +283,19 @@ This page allow you to control your device, starting from :py:attr:`jtop.jtop.fa
 #. You can select the fan profile available on your board, more details in :py:attr:`jtop.jtop.fan`
 #. It is a real time chart with the current fan speed
 #. You can enable/disable :py:attr:`jtop.jtop.jetson_clocks` and set on boot (Note: jetson_clocks start only after 60s from up time)
-#. You can select which NVPmodel you want to use on your board. Where you see the letter "D" means is the default configuration.
+#. You can select which NVPmodel you want to use on your board. Where you see the letter "D" means is the default configuration. If the mode is colored in Amber, it means that to apply need to reboot the board.
 #. A detailed table with Power, Volt and Current of your board. There is also teh Warning and Critical current before the board fail. More info :py:attr:`jtop.jtop.power`
+
+.. image:: /images/pages/06B-jtop.png
+   :align: center
+
+If you press a mode that need a reboot you will see a dialog message like this
+
+#. You can chosse between **[Force and reboot]** or **[Skip]** the operation
+
+.. danger::
+
+  If you click on **[Force and reboot]** the board will be rebooted immediately without any warning.
 
 Controls
 """"""""

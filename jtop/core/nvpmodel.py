@@ -250,6 +250,10 @@ class NVPModel(object):
         """
         Set a new NVP model by ID. The list of nvpmodel available is with :py:func:`~get_all_nvpmodels` or :py:attr:`~models`.
 
+        .. danger::
+
+            If you set force=True the board will be rebooted immediately without any warning.
+
         .. code-block:: python
 
             with jtop() as jetson:
