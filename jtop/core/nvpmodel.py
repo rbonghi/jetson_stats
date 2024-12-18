@@ -530,7 +530,9 @@ class NVPModelService(object):
             logger.warning("Force set nvpmodel {nvpmodel_id}".format(nvpmodel_id=nvpmodel_id))
         else:
             if nvp_mask != old_nvp_mask:
-                logger.error("The new nvpmodel {nvpmodel_id} has a different mask {nvp_mask}, is not compatible".format(nvpmodel_id=nvpmodel_id, nvp_mask=nvp_mask))
+                logger.error(
+                    "The new nvpmodel {nvpmodel_id} has a different mask {nvp_mask}, is not compatible".format(
+                        nvpmodel_id=nvpmodel_id, nvp_mask=nvp_mask))
                 return False
         # Start thread Service client
         self._nvp_mode_set_thread = Thread(target=self._thread_set_nvp_model, args=(nvpmodel_id, force))

@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import curses
-from .smallbutton import SmallButton, ButtonList
+from .smallbutton import ButtonList
 # Gui refresh rate
 GUI_REFRESH = 1000 // 20
 
@@ -38,7 +38,7 @@ class DialogWindow(object):
             self.title = title
         self.info = info
         self.enable_dialog_window = True
-        
+
     def disable(self):
         self.enable_dialog_window = False
 

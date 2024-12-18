@@ -141,10 +141,12 @@ class CTRL(Page):
             self._nvpmodel_increase = SmallButton(stdscr, self.action_nvp_increase, trigger_key='+')
             self._nvpmodel_decrease = SmallButton(stdscr, self.action_nvp_decrease, trigger_key='-')
             # Initialize dialog window
-            self._dialog_window = DialogWindow("NVP Model",
-                                            "Required a reboot to apply this change",
-                                            self.dialog_window_nvpmodel,
-                                            ["Force and reboot", "Skip"])
+            self._dialog_window = DialogWindow(
+                "NVP Model",
+                "Required a reboot to apply this change",
+                self.dialog_window_nvpmodel,
+                ["Force and reboot", "Skip"]
+            )
             self.register_dialog_window(self._dialog_window)
 
     def action_fan_profile(self, info, selected):

@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 # In according with: https://gist.github.com/alanjcastonguay/25e4db0edd3534ab732d6ff615ca9fc1
 ABC = abc.ABCMeta('ABC', (object,), {})
 # Gui refresh rate
-GUI_REFRESH = 20 # 1000 // 20
+GUI_REFRESH = 1000 // 20
 # Copyright small
 COPYRIGHT_SMALL_RE = re.compile(r""".*__cr__ = ["'](.*?)['"]""", re.S)
 
