@@ -55,8 +55,8 @@ class Command(object):
             super(Command.TimeoutException, self).__init__("Process does not replied in time", -1)
 
     @staticmethod
-    def run_command(command, repeat=5, timeout=2):
-        cmd = Command(command)
+    def run_command(command, repeat=5, timeout=2, input=None):
+        cmd = Command(command, input=input)
         for idx in range(repeat):
             try:
                 return cmd(timeout=timeout)
@@ -64,27 +64,43 @@ class Command(object):
                 logger.error("[{idx}] {error}".format(idx=idx, error=error))
         raise Command.CommandException("Error to start {command}".format(command=command), -2)
 
-    def __init__(self, command):
+    def __init__(self, command, input=None):
         self.process = None
         self.command = command
+        self.input = input
 
     def __call__(self, timeout=None):
         def target(out_queue, err_queue):
             # Run process
             try:
                 # https://stackoverflow.com/questions/33277452/prevent-unexpected-stdin-reads-and-lock-in-subprocess
-                self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE, stdin=open(os.devnull), preexec_fn=os.setsid)
-                # Read lines output
-                for line in iter(self.process.stdout.readline, b''):
-                    try:
-                        line = line.decode('utf-8')
-                        line = str(line.strip())
-                    except UnicodeEncodeError:
-                        line = line.encode('ascii', 'ignore').decode('ascii')
-                    out_queue.put(line)
-                # Close and terminate
-                self.process.stdout.close()
-                self.process.wait()
+                if self.input is not None:
+                    self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE, preexec_fn=os.setsid)
+                    # Write input
+                    stdout, _ = self.process.communicate(bytes(self.input, 'utf-8'))
+                    self.process.stdin.close()
+                    self.process.wait()
+                    # Read lines output
+                    for line in stdout.splitlines():
+                        try:
+                            line = line.decode('utf-8')
+                            line = str(line.strip())
+                        except UnicodeEncodeError:
+                            line = line.encode('ascii', 'ignore').decode('ascii')
+                        out_queue.put(line)
+                else:
+                    self.process = sp.Popen(self.command, stdout=sp.PIPE, stderr=sp.PIPE, stdin=open(os.devnull), preexec_fn=os.setsid)
+                    # Read lines output
+                    for line in iter(self.process.stdout.readline, b''):
+                        try:
+                            line = line.decode('utf-8')
+                            line = str(line.strip())
+                        except UnicodeEncodeError:
+                            line = line.encode('ascii', 'ignore').decode('ascii')
+                        out_queue.put(line)
+                    # Close and terminate
+                    self.process.stdout.close()
+                    self.process.wait()
             except Exception:
                 # Store error message
                 err_queue.put(sys.exc_info())

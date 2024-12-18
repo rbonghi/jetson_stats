@@ -30,7 +30,7 @@ from .core.fan import Fan
 from .core.gpu import GPU
 from .core.jetson_clocks import JetsonClocks
 from .core.nvpmodel import NVPModel
-from .core.common import get_var, get_local_interfaces, status_disk
+from .core.common import compare_versions, get_var, get_local_interfaces, status_disk
 from .core.jetson_libraries import get_libraries, get_cuda, get_opencv
 from .core.exceptions import JtopException
 # Fix connection refused for python 2.7
@@ -1142,7 +1142,8 @@ class jtop(Thread):
         init = self._get_configuration()
         # Get jtop service version
         service_version = init.get('version', 'unknown')
-        if service_version != get_var(VERSION_RE):
+        # Check version compatibility between client and server raise exception only if minor version is different
+        if not compare_versions(service_version, get_var(VERSION_RE)):
             raise JtopException("""Mismatch version jtop service: [{service_version}] and client: [{client_version}]. Please run:\n
 sudo systemctl restart jtop.service""".format(
                 service_version=service_version,

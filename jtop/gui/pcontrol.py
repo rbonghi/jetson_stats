@@ -23,6 +23,7 @@ from .lib.common import unit_to_string
 from .lib.colors import NColors
 from .lib.chart import Chart
 from .lib.smallbutton import SmallButton, ButtonList
+from .lib.dialog_window import DialogWindow
 
 FAN_STEP = 10
 PROFILE_STR = "Profiles:"
@@ -139,6 +140,14 @@ class CTRL(Page):
             self._nvpmodel_profile = ButtonList(stdscr, self.action_nvpmodels, self.jetson.nvpmodel.models)
             self._nvpmodel_increase = SmallButton(stdscr, self.action_nvp_increase, trigger_key='+')
             self._nvpmodel_decrease = SmallButton(stdscr, self.action_nvp_decrease, trigger_key='-')
+            # Initialize dialog window
+            self._dialog_window = DialogWindow(
+                "NVP Model",
+                "Required a reboot to apply this change",
+                self.dialog_window_nvpmodel,
+                ["Force and reboot", "Skip"]
+            )
+            self.register_dialog_window(self._dialog_window)
 
     def action_fan_profile(self, info, selected):
         # Set new fan profile
@@ -172,7 +181,15 @@ class CTRL(Page):
 
     def action_nvpmodels(self, info, selected):
         # Set new nvpmodel
-        self.jetson.nvpmodel = info['label']
+        model_index = self.jetson.nvpmodel.models.index(info['label'])
+        if not self.jetson.nvpmodel.status[model_index]:
+            self._dialog_window.enable("NVP model {model_name}".format(model_name=info['label']), info={'name': info['label']})
+        else:
+            self.jetson.nvpmodel = info['label']
+
+    def dialog_window_nvpmodel(self, info, selected):
+        if info['label'] == "Force and reboot":
+            self.jetson.nvpmodel.set_nvpmodel_name(info['name'], force=True)
 
     def action_nvp_increase(self, info, selected):
         # NVPmodel controller

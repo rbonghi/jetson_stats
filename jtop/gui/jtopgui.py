@@ -44,6 +44,7 @@ class Page(ABC):
         self.name = name
         self.stdscr = stdscr
         self.jetson = jetson
+        self.dialog_window = None
 
     def setcontroller(self, controller):
         self.controller = controller
@@ -56,6 +57,9 @@ class Page(ABC):
             height -= 1
             first = 1
         return height, width, first
+
+    def register_dialog_window(self, dialog_window_object):
+        self.dialog_window = dialog_window_object
 
     @abc.abstractmethod
     @check_curses
@@ -125,20 +129,28 @@ class JTOPGUI:
         old = datetime.now()
         # Here is the loop of our program, we keep clearing and redrawing in this loop
         while not self.events() and self.jetson.ok(spin=True):
+            # Get page selected
+            page = self.pages[self.n_page]
+            # Check if dialog window is open and disable mouse event on main pages
+            record_mouse = self.mouse
+            if page.dialog_window and page.dialog_window.enable_dialog_window:
+                self.mouse = ()
             # Draw pages
-            self.draw()
+            self.draw(page)
+            self.mouse = record_mouse
+            # Draw dialog window if it exists
+            if page.dialog_window:
+                page.dialog_window.show(self.stdscr, self.key, self.mouse)
             # Increase page automatically if loop enabled
             if loop and datetime.now() - old >= timedelta(seconds=seconds):
                 self.increase(loop=True)
                 old = datetime.now()
 
-    def draw(self):
+    def draw(self, page):
         # First, clear the screen
         self.stdscr.erase()
         # Write head of the jtop
         self.header()
-        # Get page selected
-        page = self.pages[self.n_page]
         # Draw the page
         page.draw(self.key, self.mouse)
         # Draw menu

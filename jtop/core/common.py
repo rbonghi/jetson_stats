@@ -101,6 +101,12 @@ class GenericInterface(object):
         return repr(self._data)
 
 
+def compare_versions(source_version, get_version):
+    source_major_minor = '.'.join(source_version.split('.')[:2])
+    get_major_minor = '.'.join(get_version.split('.')[:2])
+    return source_major_minor == get_major_minor
+
+
 def check_file(path):
     return os.path.isfile(path) and os.access(path, os.R_OK)
 
