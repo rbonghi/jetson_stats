@@ -105,7 +105,19 @@ def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
     if width > LIMIT:
         unit_avg = unit_to_string(total['avg'], 'm', 'W')
         stdscr.addstr(pos_y + len_power + 1, center_x + column_power - 3, unit_avg, curses.A_BOLD)
-    return len(power) + 1
+
+    # If there is room, plot OC_EVENT_CNT
+    if len_power + 3 >= height:
+        return len(power) + 1
+    oc_event_cnt = jetson.power['oc_events']['count']
+    is_throttling = jetson.power['oc_events']['is_throttling']
+    # blank line
+    stdscr.addstr(pos_y + len_power + 2, center_x - column_power - 5, "", curses.A_NORMAL)
+    # Plot OC_EVENT_CNT with color based on throttling status
+    color =  NColors.ired() if is_throttling else (NColors.iyellow() if oc_event_cnt > 0 else NColors.igreen())
+    stdscr.addstr(pos_y + len_power + 3, center_x - column_power - 5, "OC_EVENT_CNT ", curses.A_BOLD | color)
+    stdscr.addstr(pos_y + len_power + 3, center_x - 1, str(oc_event_cnt), curses.A_BOLD | color)
+    return len(power) + 3
 
 
 class CTRL(Page):
