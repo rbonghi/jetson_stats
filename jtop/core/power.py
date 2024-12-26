@@ -140,7 +140,7 @@ def update_oc_event_counts(event_counts):
                     throttling = True
         except Exception as e:
             logger.error(f"Error reading OC event counter from {filename}: {e}".format(filename=filename, e=e))
-
+            return throttling
     return throttling
 
 def read_power_status(data):
@@ -330,11 +330,12 @@ class PowerService(object):
 
         # If there are OC counters, update those as well
         oc_events = {}
-        oc_events['is_throttling'] = update_oc_event_counts(self._oc_event_counts)
-        oc_events['count'] = 0
-        # Sum up all the events:
-        for filename, count in self._oc_event_counts.items():
-            oc_events['count'] += count
+        if self._oc_event_counts:
+            oc_events['is_throttling'] = update_oc_event_counts(self._oc_event_counts)
+            oc_events['count'] = 0
+            # Sum up all the events:
+            for filename, count in self._oc_event_counts.items():
+                oc_events['count'] += count
 
         return {'rail': rails, 'tot': total, 'oc_events': oc_events}
 # EOF
