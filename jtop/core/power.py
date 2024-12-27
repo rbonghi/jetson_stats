@@ -105,6 +105,7 @@ def find_all_i2c_power_monitor(i2c_path):
         logger.info("Found I2C power monitor")
     return power_sensor
 
+
 def find_all_oc_event_counters():
     """Find all the overcurrent event counters on the system"""
     event_cnt_files = glob.glob('/sys/class/hwmon/hwmon*/oc*_event_cnt')
@@ -117,6 +118,7 @@ def find_all_oc_event_counters():
     update_oc_event_counts(event_counts)
 
     return event_counts
+
 
 def update_oc_event_counts(event_counts):
     """
@@ -139,9 +141,10 @@ def update_oc_event_counts(event_counts):
                     event_counts[filename] = count
                     throttling = True
         except Exception as e:
-            logger.error(f"Error reading OC event counter from {filename}: {e}".format(filename=filename, e=e))
+            logger.error("Error reading OC event counter from {filename}: {e}".format(filename=filename, e=e))
             return throttling
     return throttling
+
 
 def read_power_status(data):
     values = {}
