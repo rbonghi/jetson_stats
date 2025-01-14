@@ -88,7 +88,7 @@ html_static_path = []
 
 html_theme_options = {
     "announcement": """
-        <a style=\"text-decoration: none; color: white;\" 
+        <a style=\"text-decoration: none; color: white;\"
            href=\"https://github.com/sponsors/rbonghi\">
            💖 Support jetson-stats on GitHub Sponsors
         </a>

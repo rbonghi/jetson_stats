@@ -113,7 +113,7 @@ class JetsonClocks(object):
         #. `jetson_clocks - Jetson Xavier <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonXavierNxSeriesAndJetsonAgxXavierSeries.html>`_
         #. `jetson_clocks - Jetson Orin <https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#maximizing-jetson-orin-performance>`_
 
-    """ # noqa
+    """  # noqa
 
     def __init__(self, controller):
         self._controller = controller
