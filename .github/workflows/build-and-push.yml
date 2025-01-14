@@ -37,6 +37,7 @@ jobs:
             git push
           else
             echo "No changes detected."
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
