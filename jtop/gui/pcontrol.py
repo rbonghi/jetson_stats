@@ -123,13 +123,6 @@ def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
     if not jetson.power['oc_events']:
         return len(power) + 1
 
-    # Plot OC_EVENT_CNT
-    # oc_event_cnt = jetson.power['oc_events']['count']
-    # is_throttling = jetson.power['oc_events']['is_throttling']
-    # # Plot OC_EVENT_CNT with color based on throttling status
-    # color = NColors.red() if is_throttling else (NColors.yellow() if oc_event_cnt > 0 else NColors.green())
-    # stdscr.addstr(pos_y + len_power + 3, center_x - column_power - 5, "OC EVENT COUNT: ", curses.A_BOLD)
-    # stdscr.addstr(pos_y + len_power + 3, center_x + 2, str(oc_event_cnt), curses.A_BOLD | color)
     display_oc_event(stdscr,
                      jetson.power['oc_events'],
                      pos_y=pos_y + len_power + 3,
