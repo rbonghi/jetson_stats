@@ -408,12 +408,6 @@ class CTRL(Page):
             return
 
         # Plot OC_EVENT_CNT
-        # oc_event_cnt = self.jetson.power['oc_events']['count']
-        # is_throttling = self.jetson.power['oc_events']['is_throttling']
-        # # Plot OC_EVENT_CNT with color based on throttling status
-        # color = NColors.red() if is_throttling else (NColors.yellow() if oc_event_cnt > 0 else NColors.green())
-        # self.stdscr.addstr(pos_y_table + len_power + 2, pos_x, "OC EVENT COUNT: ", curses.A_BOLD)
-        # self.stdscr.addstr(pos_y_table + len_power + 2, pos_x + 16, str(oc_event_cnt), curses.A_BOLD | color)
         display_oc_event(
             self.stdscr,
             self.jetson.power['oc_events'],
