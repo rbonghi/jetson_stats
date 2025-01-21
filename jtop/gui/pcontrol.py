@@ -70,6 +70,15 @@ def compact_temperatures(stdscr, pos_y, pos_x, width, height, jetson):
     return counter
 
 
+def display_oc_event(stdscr, oc_events, pos_y, pos_x):
+    oc_event_cnt = oc_events['count']
+    is_throttling = oc_events['is_throttling']
+    # Plot OC_EVENT_CNT with color based on throttling status
+    color = NColors.red() if is_throttling else (NColors.yellow() if oc_event_cnt > 0 else NColors.green())
+    stdscr.addstr(pos_y, pos_x, "OC EVENT COUNT: ", curses.A_BOLD)
+    stdscr.addstr(pos_y, pos_x + 16, str(oc_event_cnt), curses.A_BOLD | color)
+
+
 def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
     LIMIT = 25
     # center_x = pos_x + width // 2 if width > LIMIT else pos_x + width // 2 + 4
@@ -115,12 +124,16 @@ def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
         return len(power) + 1
 
     # Plot OC_EVENT_CNT
-    oc_event_cnt = jetson.power['oc_events']['count']
-    is_throttling = jetson.power['oc_events']['is_throttling']
-    # Plot OC_EVENT_CNT with color based on throttling status
-    color = NColors.red() if is_throttling else (NColors.yellow() if oc_event_cnt > 0 else NColors.green())
-    stdscr.addstr(pos_y + len_power + 3, center_x - column_power - 5, "OC EVENT COUNT: ", curses.A_BOLD)
-    stdscr.addstr(pos_y + len_power + 3, center_x + 2, str(oc_event_cnt), curses.A_BOLD | color)
+    # oc_event_cnt = jetson.power['oc_events']['count']
+    # is_throttling = jetson.power['oc_events']['is_throttling']
+    # # Plot OC_EVENT_CNT with color based on throttling status
+    # color = NColors.red() if is_throttling else (NColors.yellow() if oc_event_cnt > 0 else NColors.green())
+    # stdscr.addstr(pos_y + len_power + 3, center_x - column_power - 5, "OC EVENT COUNT: ", curses.A_BOLD)
+    # stdscr.addstr(pos_y + len_power + 3, center_x + 2, str(oc_event_cnt), curses.A_BOLD | color)
+    display_oc_event(stdscr,
+                     jetson.power['oc_events'],
+                     pos_y=pos_y + len_power + 3,
+                     pos_x=center_x - column_power - 5)
     return len(power) + 3
 
 
@@ -395,12 +408,17 @@ class CTRL(Page):
             return
 
         # Plot OC_EVENT_CNT
-        oc_event_cnt = self.jetson.power['oc_events']['count']
-        is_throttling = self.jetson.power['oc_events']['is_throttling']
-        # Plot OC_EVENT_CNT with color based on throttling status
-        color = NColors.red() if is_throttling else (NColors.yellow() if oc_event_cnt > 0 else NColors.green())
-        self.stdscr.addstr(pos_y_table + len_power + 2, pos_x, "OC EVENT COUNT: ", curses.A_BOLD)
-        self.stdscr.addstr(pos_y_table + len_power + 2, pos_x + 16, str(oc_event_cnt), curses.A_BOLD | color)
+        # oc_event_cnt = self.jetson.power['oc_events']['count']
+        # is_throttling = self.jetson.power['oc_events']['is_throttling']
+        # # Plot OC_EVENT_CNT with color based on throttling status
+        # color = NColors.red() if is_throttling else (NColors.yellow() if oc_event_cnt > 0 else NColors.green())
+        # self.stdscr.addstr(pos_y_table + len_power + 2, pos_x, "OC EVENT COUNT: ", curses.A_BOLD)
+        # self.stdscr.addstr(pos_y_table + len_power + 2, pos_x + 16, str(oc_event_cnt), curses.A_BOLD | color)
+        display_oc_event(
+            self.stdscr,
+            self.jetson.power['oc_events'],
+            pos_y=pos_y_table + len_power + 2,
+            pos_x=pos_x)
 
     def draw(self, key, mouse):
         # Screen size

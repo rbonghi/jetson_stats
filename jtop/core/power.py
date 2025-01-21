@@ -330,15 +330,15 @@ class PowerService(object):
             rails[name] = values
         # Measure total power
         total, rails = total_power(rails)
+        ret_dict = {'rail': rails, 'tot': total}
 
-        # If there are OC counters, update those as well
-        oc_events = {}
+        # Only include OC events if counters exist
         if self._oc_event_counts:
-            oc_events['is_throttling'] = update_oc_event_counts(self._oc_event_counts)
-            oc_events['count'] = 0
-            # Sum up all the events:
-            for filename, count in self._oc_event_counts.items():
-                oc_events['count'] += count
+            oc_events = {
+                'is_throttling': update_oc_event_counts(self._oc_event_counts),
+                'count': sum(self._oc_event_counts.values())
+            }
+            ret_dict['oc_events'] = oc_events
 
-        return {'rail': rails, 'tot': total, 'oc_events': oc_events}
-# EOF
+        return ret_dict
+    # EOF
