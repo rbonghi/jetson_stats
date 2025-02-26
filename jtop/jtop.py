@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# sourcery skip: avoid-builtin-shadow
 import logging
 import re
 import sys
@@ -54,12 +55,7 @@ VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, z):
-        if isinstance(z, datetime):
-            return (str(z))
-        elif isinstance(z, timedelta):
-            return (str(z))
-        else:
-            return super().default(z)
+        return (str(z)) if isinstance(z, (datetime, timedelta)) else super().default(z)
 
 
 class jtop(Thread):
@@ -126,7 +122,7 @@ class jtop(Thread):
             'OpenCV': opencv_version,
             'OpenCV-Cuda': opencv_cuda,
         }
-        libraries.update(os_variables)
+        libraries |= os_variables
         # Make dictionaries
         self._board['libraries'] = libraries
         # Loaded from script
@@ -198,27 +194,21 @@ class jtop(Thread):
                 yield False, ex
             # Wait jetson_clocks boot
             counter = 0
-            while self.ok() and (counter < max_counter):
-                if not self.jetson_clocks:
-                    break
+            while self.ok() and counter < max_counter and self.jetson_clocks:
                 counter += 1
             yield counter != max_counter, "jetson_clocks disabled"
             # Disable jetson_clocks on boot
             self.jetson_clocks.boot = False
             # Wait jetson_clocks boot
             counter = 0
-            while self.ok() and (counter < max_counter):
-                if not self.jetson_clocks.boot:
-                    break
+            while self.ok() and counter < max_counter and self.jetson_clocks.boot:
                 counter += 1
             yield counter != max_counter, "jetson_clocks disabled on boot"
             # Clear configuration
             self.jetson_clocks.clear_config()
             # Wait jetson_clocks clear configuration
             counter = 0
-            while self.ok() and (counter < max_counter):
-                if not self.jetson_clocks.is_config():
-                    break
+            while self.ok() and counter < max_counter and self.jetson_clocks.is_config():
                 counter += 1
             yield counter != max_counter, "clear jetson_clocks configuration file"
         # Reset fan control
@@ -228,18 +218,14 @@ class jtop(Thread):
                 profile_default = self.fan.get_profile_default(name)
                 self.fan.set_profile(name, profile_default)
                 counter = 0
-                while self.ok() and (counter < max_counter):
-                    if self.fan.get_profile(name) == profile_default:
-                        break
+                while self.ok() and (counter < max_counter) and self.fan.get_profile(name) != profile_default:
                     counter += 1
                 yield counter != max_counter, "Fan \"{name}\" set to profile \"{profile}\"".format(name=name, profile=profile_default)
             # Reset speed to zero
             for idx in range(len(self.fan[name]['speed'])):
                 self.fan.set_speed(name, 0, idx)
                 counter = 0
-                while self.ok() and (counter < max_counter):
-                    if self.fan.get_speed(name, idx) == 0:
-                        break
+                while self.ok() and counter < max_counter and self.fan.get_speed(name, idx) != 0:
                     counter += 1
                 yield counter != max_counter, "Fan \"{name}[{idx}]\" set speed to 0".format(name=name, idx=idx)
         # Set to default nvpmodel
@@ -252,9 +238,7 @@ class jtop(Thread):
                 yield False, ex
             # Wait nvpmodel is default
             counter = 0
-            while self.ok() and (counter < max_counter):
-                if self.nvpmodel == default['name']:
-                    break
+            while self.ok() and counter < max_counter and self.nvpmodel != default['name']:
                 counter += 1
             yield counter != max_counter, "Default nvpmodel[{id}] {name}".format(id=default['id'], name=default['name'])
         # Clear config file
@@ -1061,9 +1045,9 @@ class jtop(Thread):
                 raise JtopException("Error connection")
             # Clear event
             self._sync_event.clear()
-        except EOFError:
+        except EOFError as e:
             # Raise jtop exception
-            raise JtopException("Lost connection with jtop server")
+            raise JtopException("Lost connection with jtop server") from e
         # Decode and update all jtop data
         self._stats = data
         # -- GPU --
@@ -1112,28 +1096,38 @@ class jtop(Thread):
         try:
             self._broadcaster.connect()
         except FileNotFoundError as e:
-            if e.errno == 2 or e.errno == 111:  # Message error: 'No such file or directory' or 'Connection refused'
-                raise JtopException("The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service")
+            if e.errno in [2, 111]:  # Message error: 'No such file or directory' or 'Connection refused'
+                raise JtopException(
+                    "The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service"
+                ) from e
             elif e.errno == 13:  # Message error: 'Permission denied'
-                raise JtopException("I can't access jtop.service.\nPlease logout or reboot this board.")
+                raise JtopException(
+                    "I can't access jtop.service.\nPlease logout or reboot this board."
+                ) from e
             else:
-                raise FileNotFoundError(e)
+                raise FileNotFoundError(e) from e
         except ConnectionRefusedError as e:
             if e.errno == 111:  # Connection refused
                 # When server is off but socket files exists in /run
-                raise JtopException("The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service")
+                raise JtopException(
+                    "The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service"
+                ) from e
             else:
-                raise ConnectionRefusedError(e)
+                raise ConnectionRefusedError(e) from e
         except PermissionError as e:
             if e.errno == 13:  # Permission denied
-                raise JtopException("I can't access jtop.service.\nPlease logout or reboot this board.")
+                raise JtopException(
+                    "I can't access jtop.service.\nPlease logout or reboot this board."
+                ) from e
             else:
-                raise PermissionError(e)
-        except ValueError:
+                raise PermissionError(e) from e
+        except ValueError as e:
             # https://stackoverflow.com/questions/54277946/queue-between-python2-and-python3
-            raise JtopException("Mismatch of Python versions between library and service")
-        except AuthenticationError:
-            raise JtopException("Authentication with jetson-stats server failed")
+            raise JtopException(
+                "Mismatch of Python versions between library and service"
+            ) from e
+        except AuthenticationError as e:
+            raise JtopException("Authentication with jetson-stats server failed") from e
         # Initialize synchronized data and condition
         self._controller = self._broadcaster.get_queue()
         self._sync_data = self._broadcaster.sync_data()
@@ -1240,9 +1234,8 @@ sudo systemctl restart jtop.service""".format(
         # Wait if trigger is set
         if not spin:
             try:
-                if not self._trigger.is_set():
-                    if not self._trigger.wait(self._interval * TIMEOUT_GAIN):
-                        self._running = False
+                if not self._trigger.is_set() and not self._trigger.wait(self._interval * TIMEOUT_GAIN):
+                    self._running = False
             except (KeyboardInterrupt, SystemExit):
                 self._running = False
         # Catch exception if exist
@@ -1280,7 +1273,5 @@ sudo systemctl restart jtop.service""".format(
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """ Exit function for 'with' statement """
-        if exc_tb is not None:
-            return False
-        return True
+        return exc_tb is None
 # EOF

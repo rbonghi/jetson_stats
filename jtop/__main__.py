@@ -55,11 +55,12 @@ def warning_messages(jetson, no_warnings=False):
     hardware = jetson.board['hardware']
     version = get_var(VERSION_RE)
     # Check is well stored the default jetson_clocks configuration
-    if jetson.jetson_clocks:
-        if not jetson.jetson_clocks.is_config:
-            print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
+    if jetson.jetson_clocks and not jetson.jetson_clocks.is_config:
+        print("[{status}] Please stop manually jetson_clocks or reboot this board".format(status=bcolors.warning()))
     # Check if an hardware value is missing
-    if not all([data for name, data in hardware.items() if name not in ['Jetpack']]):
+    if not all(
+        data for name, data in hardware.items() if name not in ['Jetpack']
+    ):
         hardware_missing(REPOSITORY, hardware, version)
     # Check if jetpack is missing
     if not hardware['Jetpack'] and hardware['L4T']:
@@ -143,29 +144,32 @@ def main():
         # https://stackoverflow.com/questions/56373360/n-curses-within-python-how-to-catch-and-print-non-ascii-character
         # Commented for issues #466 #393
         # locale.setlocale(locale.LC_ALL, '')
-        # Open jtop client
         with jtop(interval=interval) as jetson:
-            # Call the curses wrapper
-            color_filter = bool(os.getenv('JTOP_COLOR_FILTER', args.color_filter))
-            # Build list pages available
-            pages = [ALL]
-            if jetson.gpu:
-                pages += [GPU]
-            pages += [CPU, MEM]
-            if jetson.engine:
-                pages += [ENGINE]
-            if jetson.fan or jetson.jetson_clocks is not None or jetson.nvpmodel is not None:
-                pages += [CTRL]
-            pages += [INFO]
-            curses.wrapper(JTOPGUI, jetson, pages, init_page=args.page,
-                           loop=args.loop, seconds=LOOP_SECONDS, color_filter=color_filter)
-            # Write warnings
-            if 'L4T' in jetson.board['hardware']:
-                warning_messages(jetson, args.no_warnings)
+            jtop_client(args, jetson)
     except (KeyboardInterrupt, SystemExit):
         pass
     except JtopException as e:
         print(e)
+
+
+def jtop_client(args, jetson):
+    # Call the curses wrapper
+    color_filter = bool(os.getenv('JTOP_COLOR_FILTER', args.color_filter))
+    # Build list pages available
+    pages = [ALL]
+    if jetson.gpu:
+        pages += [GPU]
+    pages += [CPU, MEM]
+    if jetson.engine:
+        pages += [ENGINE]
+    if jetson.fan or jetson.jetson_clocks is not None or jetson.nvpmodel is not None:
+        pages += [CTRL]
+    pages += [INFO]
+    curses.wrapper(JTOPGUI, jetson, pages, init_page=args.page,
+                   loop=args.loop, seconds=LOOP_SECONDS, color_filter=color_filter)
+    # Write warnings
+    if 'L4T' in jetson.board['hardware']:
+        warning_messages(jetson, args.no_warnings)
 
 
 if __name__ == "__main__":
