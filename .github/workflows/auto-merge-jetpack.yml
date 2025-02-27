@@ -1,0 +1,89 @@
+name: Check Jetpack Release Version
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from PR title
+        id: extract_version
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if [[ "$PR_TITLE" =~ ^Jetpack\ Release\ ([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> $GITHUB_ENV
+          else
+            echo "::notice::Skipping workflow as PR title does not match 'Jetpack Release <VERSION>'."
+            exit 0
+          fi
+
+      - name: Check version in jtop/__init__.py
+        id: check_version
+        run: |
+          FILE_VERSION=$(grep -oP "__version__\s*=\s*\"\K[0-9]+\.[0-9]+\.[0-9]+(?=\")" jtop/__init__.py)
+          if [[ "$FILE_VERSION" == "${{ env.version }}" ]]; then
+            echo "Version match confirmed."
+          else
+            echo "Version mismatch: Expected $FILE_VERSION but found ${{ env.version }} in PR title." >&2
+            echo "::error::Version mismatch: Expected $FILE_VERSION but found ${{ env.version }} in PR title." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Check version upgrade step
+        id: check_version_step
+        run: |
+          OLD_VERSION=$(grep -oP "__version__\s*=\s*\"\K[0-9]+\.[0-9]+\.[0-9]+(?=\")" jtop/__init__.py)
+          IFS='.' read -r old_major old_minor old_patch <<< "$OLD_VERSION"
+          IFS='.' read -r new_major new_minor new_patch <<< "${{ env.version }}"
+          if [[ "$new_major" -ne "$old_major" || "$new_minor" -ne "$old_minor" || "$new_patch" -ne $((old_patch + 1)) ]]; then
+            echo "::error::Version upgrade is not a minor step upgrade. Expected $old_major.$old_minor.$((old_patch + 1)) but found $new_major.$new_minor.$new_patch." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Check if jtop/core/jetson_variables.py is modified
+        id: check_file_modified
+        run: |
+          if git diff --name-only origin/${{ github.event.pull_request.base.ref }} | grep -q "jtop/core/jetson_variables.py"; then
+            echo "File jtop/core/jetson_variables.py is modified."
+          else
+            echo "File jtop/core/jetson_variables.py is not modified." >&2
+            echo "::error::File jtop/core/jetson_variables.py is not modified but is required." >> $GITHUB_STEP_SUMMARY
+            exit 1
+
+      - name: Add comment on PR if check fails
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue_number = context.payload.pull_request.number;
+            const message = `🚨 The PR is missing required changes:
+            - Ensure the PR title follows 'Jetpack Release <VERSION>'.
+            - Ensure the version in jtop/__init__.py matches the PR title.
+            - Ensure the version upgrade is a minor step (y.x.z → y.x.z+1).
+            - Ensure jtop/core/jetson_variables.py is modified with the new Jetpack.`;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: message
+            });
+
+      - name: Create Release Branch
+        if: success()
+        run: |
+          git checkout -b release/${{ env.version }}
+          git push origin release/${{ env.version }}
+
+      - name: Request Maintainer Approval
+        if: success()
+        uses: hmarr/auto-approve-action@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
