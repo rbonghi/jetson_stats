@@ -13,14 +13,15 @@ from jtop import jtop, JtopException
 
 TOTAL_TIME = 20  # Total time to run the server and clients
 NUM_CLIENTS = 1  # Number of clients to spawn
-RECONNECT = 0 # Reconnect time for the client
+RECONNECT = 0  # Reconnect time for the client
 INTERVAL = 0.2  # Duration for the server to run
+
 
 def profile_function(func, filename):
     """Profiles a function execution for a limited duration and saves the stats."""
     profiler = cProfile.Profile()
     profiler.enable()
-    
+
     func()
 
     profiler.disable()
@@ -32,7 +33,6 @@ if __name__ == "__main__":
     profile_folder = os.path.join(os.path.dirname(__file__), "profile")
     if not os.path.exists(profile_folder):
         os.makedirs(profile_folder)
-
 
     def start_server():
         # Initialize stats server
@@ -59,13 +59,12 @@ if __name__ == "__main__":
     )
 
     client_processes = []
-    
+
     for i in range(NUM_CLIENTS):
         client_profiler = multiprocessing.Process(
             target=profile_function, args=(lambda: start_client(i), os.path.join(profile_folder, f"client_{i}_profile.prof"))
         )
         client_processes.append(client_profiler)
-    
 
     server_profiler.start()
 
