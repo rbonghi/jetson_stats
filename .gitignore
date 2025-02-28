@@ -1,3 +1,5 @@
+profile/
+*.prof
 # Compiled python modules.
 *.pyc
 

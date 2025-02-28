@@ -500,7 +500,7 @@ class JtopServer(Process):
         # Run the Control server
         super(JtopServer, self).start()
 
-    def loop_for_ever(self):
+    def loop_for_ever(self, run_time=None):
         try:
             self.start()
         except JtopException as e:
@@ -508,12 +508,18 @@ class JtopServer(Process):
             return
         # Join main subprocess
         try:
-            self.join()
+            if run_time:
+                print("Run for {run_time} seconds".format(run_time=run_time))
+                self.join(timeout=run_time)
+                self.close()
+            else:
+                self.join()
         except (KeyboardInterrupt, SystemExit):
             pass
         finally:
-            # Close communication
-            self.close()
+            if not run_time:
+                # Close communication
+                self.close()
 
     def close(self):
         self.q.close()
