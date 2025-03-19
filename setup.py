@@ -211,6 +211,8 @@ setup(
     author_email="raffaello@rnext.it",
     description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series",
     license='AGPL-3.0',
+    # Specify license files
+    license_files=['LICENSE'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=documentation_homepage,
