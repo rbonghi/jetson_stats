@@ -49,6 +49,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
       - name: Build sphinx
         # Manual build documentation
         # Follow https://github.com/ammaraskar/sphinx-action/issues/43#issuecomment-1218439431
@@ -56,7 +62,6 @@ jobs:
           # Upgrade pip
           # https://github.com/actions/setup-python/issues/225
           # sudo -H env "PATH=$PATH" python -m pip install --upgrade pip --break-system-packages
-          sudo -H env "PATH=$PATH" python -m pip install --break-system-packages -U pip setuptools
           # Install jtop
           sudo -H env "PATH=$PATH" pip install -v -e .
           # Install sphinx requirements
