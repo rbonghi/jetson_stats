@@ -183,51 +183,42 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: '3.x'
       - name: Install dependencies
         run: |
           # sudo -H python -m pip install --upgrade pip
           sudo -H pip install setuptools wheel twine
-      - name: Build and publish
+      - name: Publish package to PyPI
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          sudo python setup.py sdist
-          twine upload dist/*
+          sudo -H python -m twine upload dist/*
+      - name: Determine if this is a prerelease
+        id: check_prerelease
+        run: |
+          TAG=${{ github.ref_name }}
+          if [[ "$TAG" =~ -[a-zA-Z]+[0-9]*$ ]]; then
+            echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
+          else
+            echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
+          fi
 
   notify:
     name: "Notify socials"
     needs: [deploy, docs]
     runs-on: ubuntu-latest
     steps:
-      - name: Repository status
-        id: repo_status
-        shell: bash
-        run: |
-          if ${{ startsWith(github.ref, 'refs/tags/') }} ; then
-            TAG_RELEASE=${GITHUB_REF/refs\/tags\//}
-          else
-            TAG_RELEASE=${GITHUB_REF/refs\/heads\//}
-          fi
-          echo ::set-output name=tag::${TAG_RELEASE}
-          echo "tag=${TAG_RELEASE}"
+
       - name: Discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!\nTo install `sudo pip3 install jetson-stats==${{ steps.repo_status.outputs.tag }}`"
-      - name: Send telegram message
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-            jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!
-
-            See changes: https://github.com/${{ github.repository }}/releases/latest
+          args: "**jetson-stats ${{ github.ref_name }}** has been deployed!\nTo install follow `sudo pip3 install jetson-stats==${{ github.ref_name }}`"
