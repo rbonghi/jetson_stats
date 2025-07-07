@@ -40,88 +40,6 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-  build:
-    name: Test on python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-    needs: [auto_style]
-    strategy:
-      # max-parallel: 1
-      matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-
-    steps:
-      - run: echo "Branch $GITHUB_REF"
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          # Make group jtop
-          sudo groupadd jtop
-          # Upgrade pip
-          # https://github.com/actions/setup-python/issues/225
-          sudo -H env "PATH=$PATH" python -m pip install --upgrade pip
-          # Install tox
-          # https://github.com/actions/setup-python/issues/225
-          sudo -H env "PATH=$PATH" pip install tox
-      - name: Display Python version
-        run: sudo env "PATH=$PATH" python -c "import sys; print(sys.version)"
-      - name: Test with tox
-        run: |
-          # https://github.com/actions/setup-python/issues/225
-          sudo env "PATH=$PATH" tox -e py${{ matrix.python-version }}
-
-  docker:
-    name: "Build Docker image develop"
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      # https://github.com/docker/build-push-action/blob/master/docs/advanced/tags-labels.md
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          # https://github.com/docker/metadata-action/issues/123
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          images: ${{ env.docker_image_name }}
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=ref,event=tag
-            type=ref,event=pr
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to DockerHub
-        if: |
-          github.actor != 'dependabot[bot]' &&
-          github.event_name != 'pull_request' &&
-          !startsWith(github.ref, 'refs/heads/feature/') &&
-          !contains(github.ref, '.dev') &&
-          !contains(github.ref, 'rc')
-        uses: docker/login-action@v3.4.0
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v6.18.0
-        with:
-          push: |
-            ${{ github.actor != 'dependabot[bot]' &&
-                github.event_name != 'pull_request' &&
-                !startsWith(github.ref, 'refs/heads/feature/') &&
-                !contains(github.ref, '.dev') &&
-                !contains(github.ref, 'rc')
-            }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64, linux/arm64
 
   docs:
     name: Documentation
@@ -161,25 +79,9 @@ jobs:
           BRANCH: gh-pages # The branch the action should deploy to.
           FOLDER: docs/_build/html # The folder the action should deploy.
 
-  update_docker_description:
-    name: Update docker description
-    if: startsWith(github.ref, 'refs/heads/master') || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '.dev') && !contains(github.ref, 'rc'))
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Docker Hub Description # https://github.com/peter-evans/dockerhub-description
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          repository: rbonghi/jetson_stats
-          short-description: ${{ github.event.repository.description }}
-          readme-filepath: ./README.md
-
   deploy:
     name: Deploy on PIP
-    needs: [build, docker]
+    needs: [auto_style]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
