@@ -243,8 +243,6 @@ setup(
         "Topic :: System :: Shells",
         "Topic :: System :: Systems Administration",
         "Topic :: Terminals",
-        # License
-        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         # Programming and Operative system
         "Programming Language :: Unix Shell",
         "Programming Language :: Python :: 2",
