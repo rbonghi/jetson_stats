@@ -27,6 +27,7 @@ import os
 import sys
 import shutil
 
+
 def is_virtualenv():
     # https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
     if os.path.exists(os.path.join(sys.prefix, 'conda-meta')):
