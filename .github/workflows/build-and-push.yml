@@ -95,10 +95,10 @@ jobs:
       - name: Install dependencies
         run: |
           # sudo -H python -m pip install --upgrade pip
-          sudo -H pip install setuptools wheel twine
+          sudo -H pip install setuptools wheel build twine
 
       - name: Build package
-        run: sudo python -m build
+        run: sudo -H python -m build
 
       - name: Publish package to PyPI
         env:
