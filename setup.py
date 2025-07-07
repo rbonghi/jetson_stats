@@ -19,9 +19,6 @@
 from setuptools import setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from jtop.service import status_service, remove_service_pipe, uninstall_service, set_service_permission, unset_service_permission, install_service
-from jtop.core.jetson_variables import uninstall_variables, install_variables
-from jtop.terminal_colors import bcolors
 # Launch command
 import os
 import sys
@@ -81,6 +78,8 @@ def remove_deprecated_data():
     """
     This function uninstall the service
     """
+    from jtop.service import uninstall_service, unset_service_permission
+    from jtop.core.jetson_variables import uninstall_variables
     # If exist, remove old services names if they exists
     uninstall_service('jetson_performance.service')
     uninstall_service('jetson_stats_boot.service')
@@ -100,6 +99,9 @@ def remove_deprecated_data():
 
 
 def pypi_installer(installer, obj, copy):
+    from jtop.service import status_service, remove_service_pipe, uninstall_service, set_service_permission, install_service
+    from jtop.core.jetson_variables import uninstall_variables, install_variables
+    from jtop.terminal_colors import bcolors
     print("Install status:")
     print(" - [{status}] super_user".format(status="X" if is_superuser() else " "))
     print(" - [{status}] virtualenv".format(status="X" if is_virtualenv() else " "))
