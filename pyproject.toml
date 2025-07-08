@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jetson-stats"
+description = "Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series"
+authors = [
+    {name = "Raffaello Bonghi", email = "raffaello@rnext.it"},
+]
+license = {text = "AGPL-3.0"}
+requires-python = ">=2.7"
+readme = {file = "README.md", content-type = "text/markdown"}
+keywords = [
+    "jetson_stats", "jtop", "python", "system-monitor", "docker", "nvidia",
+    "Jetson", "Orin", "AGXOrin", "Xavier", "AGXXavier", "XavierNX",
+    "Nano", "TX1", "TX2", "process viewer"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Logging",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Operating System",
+    "Topic :: System :: Operating System Kernels",
+    "Topic :: System :: Shells",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Terminals",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Unix Shell",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: POSIX :: Linux"
+]
+
+[project.urls]
+Documentation = "https://rnext.it/jetson_stats"
+Funding = "https://github.com/sponsors/rbonghi"
+"Say Thanks!" = "https://discord.gg/BFbuJNhYzS"
+Source = "https://github.com/rbonghi/jetson_stats"
+Tracker = "https://github.com/rbonghi/jetson_stats/issues"
+Examples = "https://github.com/rbonghi/jetson_stats/tree/master/examples"
+
+[project.scripts]
+jtop = "jtop.__main__:main"
+jetson_release = "jtop.jetson_release:main"
+jetson_config = "jtop.jetson_config:main"
+jetson_swap = "jtop.jetson_swap:main"
+
+[tool.setuptools]
+packages = {find = {exclude = ["examples", "scripts", "tests", "jtop.tests", "jtop.tests_gui"]}}
+zip-safe = false
+
+[tool.setuptools.data-files]
+"jetson_stats" = ["services/jtop.service", "scripts/jtop_env.sh"]
+
+[tool.setuptools.dynamic]
+version = {attr = "jtop.__version__"}
+dependencies = {file = "requirements.txt"}
