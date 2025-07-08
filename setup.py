@@ -15,57 +15,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Reference:
-# 1. https://packaging.python.org
-# 2. https://julien.danjou.info/starting-your-first-python-project/
-# 3. https://medium.com/@trstringer/the-easy-and-nice-way-to-do-cli-apps-in-python-5d9964dc950d
-# 4. https://chriswarrick.com/blog/2014/09/15/python-apps-the-right-way-entry_points-and-scripts/
-# 5. https://python-packaging.readthedocs.io
-# 6. https://github.com/pypa/sampleproject
-# 7. https://pypi.org/classifiers/
-# 8. https://stackoverflow.com/questions/20288711/post-install-script-with-python-setuptools
+# This file is kept for its custom installation logic, which is not supported
+# by pyproject.toml declaratively. All package metadata has been moved to
+# pyproject.toml. Note that this custom logic relies on installing from a
+# source distribution (sdist) and will likely fail if installing from a wheel.
 
-# Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from jtop.service import status_service, remove_service_pipe, uninstall_service, set_service_permission, unset_service_permission, install_service
 from jtop.core.jetson_variables import uninstall_variables, install_variables
 from jtop.terminal_colors import bcolors
-# io.open is needed for projects that support Python 2.7
-# It ensures open() defaults to text mode with universal newlines,
-# and accepts an argument to specify the text encoding
-# Python 3 only projects can skip this import
-from io import open
-# Launch command
 import os
 import sys
-import re
 import logging
 import shutil
+
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 log = logging.getLogger()
-
-
-here = os.path.abspath(os.path.dirname(__file__))
-project_homepage = "https://github.com/rbonghi/jetson_stats"
-documentation_homepage = "https://rnext.it/jetson_stats"
-
-# Load requirements
-with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:
-    requirements = f.read().splitlines()
-
-# Get the long description from the README file
-with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
-
-# Load version package
-with open(os.path.join(here, "jtop", "__init__.py")) as fp:
-    VERSION = (
-        re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S).match(fp.read()).group(1)
-    )
-# Store version package
-version = VERSION
 
 
 def is_virtualenv():
@@ -203,79 +170,11 @@ class JTOPDevelopCommand(develop):
         pypi_installer(develop, self, False)
 
 
-# Configuration setup module
+# All metadata is in pyproject.toml.
+# This setup.py is only for the custom installation commands.
 setup(
-    name="jetson-stats",
-    version=version,
-    author="Raffaello Bonghi",
-    author_email="raffaello@rnext.it",
-    description="Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series",
-    license='AGPL-3.0',
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url=documentation_homepage,
-    project_urls={
-        'Documentation': documentation_homepage,
-        'Funding': 'https://github.com/sponsors/rbonghi',
-        'Say Thanks!': 'https://discord.gg/BFbuJNhYzS',
-        'Source': project_homepage,
-        'Tracker': (project_homepage + "/issues"),
-        'Examples': (project_homepage + "/tree/master/examples"),
-    },
-    packages=find_packages(exclude=['examples', 'scripts', 'tests', 'jtop.tests', 'jtop.tests_gui']),  # Required
-    # Define research keywords
-    keywords=("jetson_stats jtop python system-monitor docker \
-               nvidia Jetson Orin AGXOrin Xavier AGXXavier XavierNX Nano TX1 TX2 process viewer"
-              ),
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        # Audience and topics
-        "Intended Audience :: Developers",
-        "Topic :: Software Development :: Embedded Systems",
-        "Topic :: Software Development :: Debuggers",
-        "Topic :: Software Development :: Libraries",
-        "Topic :: Software Development :: User Interfaces",
-        "Topic :: System :: Hardware",
-        "Topic :: System :: Logging",
-        "Topic :: System :: Monitoring",
-        "Topic :: System :: Operating System",
-        "Topic :: System :: Operating System Kernels",
-        "Topic :: System :: Shells",
-        "Topic :: System :: Systems Administration",
-        "Topic :: Terminals",
-        # License
-        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
-        # Programming and Operative system
-        "Programming Language :: Unix Shell",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Operating System :: POSIX :: Linux"],
-    # Requisites
-    # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-    python_requires='>=2.7',
-    platforms=["linux", "linux2", "darwin"],
-    install_requires=requirements,
-    # Zip safe configuration
-    # https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag
-    zip_safe=False,
-    # Add jetson_variables in /opt/jetson_stats
-    # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
-    data_files=[('jetson_stats', ['services/jtop.service', 'scripts/jtop_env.sh'])],
-    # Install extra scripts
-    cmdclass={'develop': JTOPDevelopCommand,
-              'install': JTOPInstallCommand},
-    # The following provide a command called `jtop`
-    entry_points={'console_scripts': [
-        'jtop=jtop.__main__:main',
-        'jetson_release = jtop.jetson_release:main',
-        'jetson_config = jtop.jetson_config:main',
-        'jetson_swap = jtop.jetson_swap:main',
-    ]},
+    cmdclass={
+        'develop': JTOPDevelopCommand,
+        'install': JTOPInstallCommand,
+    }
 )
-# EOF
