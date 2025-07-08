@@ -1,22 +1,18 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "jetson-stats"
-description = "Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series"
+# Version is read dynamically from jtop/__init__.py
+dynamic = ["version"]
 authors = [
-    {name = "Raffaello Bonghi", email = "raffaello@rnext.it"},
+  { name="Raffaello Bonghi", email="raffaello@rnext.it" },
 ]
-license = {text = "AGPL-3.0"}
+description = "Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series"
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=2.7"
-dynamic = ["version", "dependencies"]
-readme = {file = "README.md", content-type = "text/markdown"}
-keywords = [
-    "jetson_stats", "jtop", "python", "system-monitor", "docker", "nvidia",
-    "Jetson", "Orin", "AGXOrin", "Xavier", "AGXXavier", "XavierNX",
-    "Nano", "TX1", "TX2", "process viewer"
-]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -45,7 +41,17 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "Operating System :: POSIX :: Linux"
+    "Operating System :: POSIX :: Linux",
+]
+keywords = [
+    "jetson_stats", "jtop", "python", "system-monitor", "docker",
+    "nvidia", "Jetson", "Orin", "AGXOrin", "Xavier", "AGXXavier", "XavierNX",
+    "Nano", "TX1", "TX2", "process", "viewer",
+]
+# Dependencies from requirements.txt
+dependencies = [
+    "smbus2",
+    "distro",
 ]
 
 [project.urls]
@@ -62,13 +68,30 @@ jetson_release = "jtop.jetson_release:main"
 jetson_config = "jtop.jetson_config:main"
 jetson_swap = "jtop.jetson_swap:main"
 
-[tool.setuptools]
-packages = {find = {exclude = ["examples", "scripts", "tests", "jtop.tests", "jtop.tests_gui"]}}
-zip-safe = false
+[project.optional-dependencies]
+docs = [
+    "sphinx>3.0.0",
+    "requests",
+    "furo",
+    "sphinx-copybutton",
+    "sphinx-autobuild",
+    "sphinxext-opengraph",
+    "numpy>=1.22.2",
+    "tornado>=6.4.2",
+    "pillow>=10.3.0",
+    "fonttools>=4.43.0",
+    "zipp>=3.19.1",
+]
+test = [
+    "check-manifest==0.41",
+    "flake8",
+    "pytest",
+]
 
-[tool.setuptools.data-files]
-"jetson_stats" = ["services/jtop.service", "scripts/jtop_env.sh"]
+[tool.setuptools]
+packages = {find = {exclude = ["examples*", "scripts*", "tests*", "jtop.tests*", "jtop.tests_gui*"]}}
+include-package-data = true
+zip-safe = false
 
 [tool.setuptools.dynamic]
 version = {attr = "jtop.__version__"}
-dependencies = {file = "requirements.txt"}
