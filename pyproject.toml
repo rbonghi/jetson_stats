@@ -10,6 +10,7 @@ authors = [
 ]
 license = {text = "AGPL-3.0"}
 requires-python = ">=2.7"
+dynamic = ["version", "dependencies"]
 readme = {file = "README.md", content-type = "text/markdown"}
 keywords = [
     "jetson_stats", "jtop", "python", "system-monitor", "docker", "nvidia",
