@@ -104,7 +104,7 @@ jobs:
           !startsWith(github.ref, 'refs/heads/feature/') &&
           !contains(github.ref, '.dev') &&
           !contains(github.ref, 'rc')
-        uses: docker/login-action@v3.4.0
+        uses: docker/login-action@v3.5.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
