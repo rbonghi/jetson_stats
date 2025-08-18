@@ -116,6 +116,11 @@ def cat(path):
         return f.readline().rstrip('\x00')
 
 
+def cat_multiline(path, max_length=16384):
+    with open(path, 'r') as f:
+        return f.read(max_length)
+
+
 def locate_commands(name, commands):
     for cmd in commands:
         if os.path.exists(cmd):
