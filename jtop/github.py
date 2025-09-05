@@ -134,7 +134,7 @@ def hyperlink(message, url, text):
     # 5. https://stackoverflow.com/questions/44078888/clickable-html-links-in-python-3-6-shell
     # Print starting message
     print("[{status}] {message}".format(status=bcolors.warning(), message=message))
-    print("  For now, ignore the next 3 lines or it will rollback jtop to not functioning on Thor".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
+    print("  For now, ignore the next 3 lines or it will rollback jtop to not functioning on Thor")
     print("  Please, try: {bold}sudo pip3 install -U jetson-stats{reset} or".format(bold=bcolors.BOLD, reset=bcolors.ENDC))
     # Generate hyperlink for shell
     # Check type of shell
