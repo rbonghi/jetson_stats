@@ -21,7 +21,6 @@ After=multi-user.target
 # Type=exec
 Environment="JTOP_SERVICE=True"
 ExecStart=/opt/jtop/venv/bin/jtop --force
-ExecStart=/usr/local/bin/jtop --force
 Restart=on-failure
 RestartSec=10s
 TimeoutStartSec=30s
