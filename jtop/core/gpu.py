@@ -18,10 +18,13 @@
 import os
 # Logging
 import logging
+from typing import Any, Callable, Dict, Optional, TypeVar
 from .common import cat, GenericInterface
 from .exceptions import JtopException
 from .command import Command
 from .jetson_variables import get_jetson_variables, NVIDIA_JETPACK
+
+T = TypeVar('T')
 
 # Try to import NVML for newer Jetpack versions
 try:
@@ -35,6 +38,13 @@ except ImportError:
 logger = logging.getLogger(__name__)
 # default ipgu path for Jetson devices
 DEFAULT_IGPU_PATH = "/sys/class/devfreq/"
+
+# Constants for NVML
+WATTS_TO_MILLIWATTS = 1000.0
+DEFAULT_FREQUENCY = 0
+DEFAULT_LOAD = 0.0
+NVML_GOVERNOR = 'nvml'
+NVIDIA_PREFIX = "NVIDIA "
 
 
 def check_nvidia_smi():
@@ -160,8 +170,12 @@ def find_igpu(igpu_path):
     return igpu
 
 
-def check_jetpack_version():
-    """Check if current Jetpack version is 7.0 or newer"""
+def check_jetpack_version() -> bool:
+    """Check if current JetPack version is 7.0 or newer.
+    
+    Returns:
+        True if JetPack 7.0+ is detected, False otherwise
+    """
     try:
         jetson_vars = get_jetson_variables()
         l4t_version = jetson_vars.get('L4T', '')
@@ -177,14 +191,25 @@ def check_jetpack_version():
                 minor_version = int(version_parts[1]) if len(version_parts) > 1 else 0
                 # Check if version is 7.0 or newer
                 return major_version > 7 or (major_version == 7 and minor_version >= 0)
+        return False
     except (ValueError, IndexError) as e:
         logger.debug(f"Error parsing Jetpack version: {e}")
         return False
     except Exception as e:
         logger.debug(f"Could not determine Jetpack version: {e}")
         return False
-def _safe_nvml_call(func, *args, default=None):
-    """Safely call NVML function and return default on error"""
+
+def _safe_nvml_call(func: Callable[..., T], *args: Any, default: Optional[T] = None) -> Optional[T]:
+    """Safely call NVML function and return default on error.
+    
+    Args:
+        func: NVML function to call
+        *args: Arguments to pass to the function
+        default: Default value to return on error
+        
+    Returns:
+        Function result or default value if error occurs
+    """
     try:
         return func(*args)
     except Exception as e:
@@ -192,9 +217,17 @@ def _safe_nvml_call(func, *args, default=None):
         return default
 
 
-def nvml_read_gpu_status():
-    """Read GPU status using NVML library"""
-    gpu_data = {}
+def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
+    """Read GPU status using NVML library.
+    
+    Returns:
+        Dictionary mapping GPU names to their status information including:
+        - type: GPU type (integrated/discrete)
+        - status: Current GPU status (load, memory, temperature, etc.)
+        - freq: Frequency information (current, max, min)
+        - power_control: Power control method ('nvml')
+    """
+    gpu_data: Dict[str, Dict[str, Any]] = {}
     
     try:
         import pynvml
@@ -213,8 +246,8 @@ def nvml_read_gpu_status():
             
             # Extract just the GPU model name (e.g., "NVIDIA Thor" -> "Thor")
             # This matches the naming convention expected by the GUI
-            if name.startswith("NVIDIA "):
-                name = name.replace("NVIDIA ", "")
+            if name.startswith(NVIDIA_PREFIX):
+                name = name.replace(NVIDIA_PREFIX, "")
             
             # Get utilization - this seems to be supported
             utilization = _safe_nvml_call(pynvml.nvmlDeviceGetUtilizationRates, handle)
@@ -228,17 +261,17 @@ def nvml_read_gpu_status():
             else:
                 memory_used = memory_total = memory_free = None
             
-            # Get temperature - may not be supported
-            temperature = _safe_nvml_call(pynvml.nvmlDeviceGetTemperature, handle, pynvml.NVML_TEMPERATURE_GPU)
+            # Get temperature - use the new API (nvmlDeviceGetTemperature is deprecated in NVML 13+)
+            temperature = _safe_nvml_call(pynvml.nvmlDeviceGetTemperatureV, handle, pynvml.NVML_TEMPERATURE_GPU)
             
             # Get power info - may not be supported on Jetson
             power_draw = _safe_nvml_call(pynvml.nvmlDeviceGetPowerUsage, handle)
             if power_draw is not None:
-                power_draw = power_draw / 1000.0  # Convert to Watts
+                power_draw = power_draw / WATTS_TO_MILLIWATTS  # Convert mW to W
                 
             power_limit = _safe_nvml_call(pynvml.nvmlDeviceGetPowerManagementLimit, handle)
             if power_limit is not None:
-                power_limit = power_limit / 1000.0
+                power_limit = power_limit / WATTS_TO_MILLIWATTS  # Convert mW to W
             # Get clock speeds - may not be supported on Jetson
             sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_SM)
             mem_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_MEM)
@@ -250,17 +283,17 @@ def nvml_read_gpu_status():
             # Build frequency data with expected structure
             # GUI expects these keys to be present, even if values are None
             freq_data = {
-                'governor': 'nvml',  # Indicate NVML control
-                'cur': sm_clock if sm_clock is not None else 0,  # Default to 0 if not available
-                'max': max_sm_clock if max_sm_clock is not None else 0,
-                'min': min_sm_clock if min_sm_clock is not None else 0,
+                'governor': NVML_GOVERNOR,
+                'cur': sm_clock if sm_clock is not None else DEFAULT_FREQUENCY,
+                'max': max_sm_clock if max_sm_clock is not None else DEFAULT_FREQUENCY,
+                'min': min_sm_clock if min_sm_clock is not None else DEFAULT_FREQUENCY,
             }
             if mem_clock is not None:
                 freq_data['mem'] = mem_clock
                 
             # Build status dict with available data
             status = {
-                'load': float(utilization.gpu) if utilization else 0.0,
+                'load': float(utilization.gpu) if utilization else DEFAULT_LOAD,
                 '3d_scaling': False,  # Not available via NVML
                 'railgate': False,  # Not available via NVML
                 'tpc_pg_mask': False  # Not available via NVML
