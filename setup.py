@@ -32,15 +32,12 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 log = logging.getLogger()
 
 
-# Function aliases for compatibility
-print = log.info
-
-
 def is_virtualenv():
-    # Check if in virtual environment  
-    if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
-        return True
-    return False
+    # Check if in virtual environment
+    return bool(
+        hasattr(sys, 'real_prefix')
+        or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+    )
 
 
 def is_docker():
@@ -73,10 +70,10 @@ def pypi_installer(installer, obj, copy):
         installer.run(obj)
         return
     
-    print("Install status:")
-    print(f" - [{'X' if is_superuser() else ' '}] super_user")
-    print(f" - [{'X' if is_virtualenv() else ' '}] virtualenv")
-    print(f" - [{'X' if is_docker() else ' '}] docker")
+    log.info("Install status:")
+    log.info(f" - [{'X' if is_superuser() else ' '}] super_user")
+    log.info(f" - [{'X' if is_virtualenv() else ' '}] virtualenv")
+    log.info(f" - [{'X' if is_docker() else ' '}] docker")
     
     # Run the uninstaller before to copy all scripts
     if not is_virtualenv() and not is_docker():
@@ -88,19 +85,19 @@ def pypi_installer(installer, obj, copy):
             # Uninstall variables
             uninstall_variables()
         else:
-            print("----------------------------------------")
-            print("Install on your host using superuser permission, like:")
-            print(bcolors.bold("sudo pip3 install -U jetson-stats"))
+            log.info("----------------------------------------")
+            log.info("Install on your host using superuser permission, like:")
+            log.info(bcolors.bold("sudo pip3 install -U jetson-stats"))
             sys.exit(1)
     elif is_docker():
-        print("Skip uninstall in docker")
+        log.info("Skip uninstall in docker")
     else:
         if is_superuser():
-            print("Skip uninstall on virtual environment")
+            log.info("Skip uninstall on virtual environment")
         elif not status_service():
-            print("----------------------------------------")
-            print("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
-            print(bcolors.bold("sudo pip3 install -U jetson-stats"))
+            log.info("----------------------------------------")
+            log.info("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
+            log.info(bcolors.bold("sudo pip3 install -U jetson-stats"))
             sys.exit(1)
             
     # Run the default installation script
@@ -116,7 +113,7 @@ def pypi_installer(installer, obj, copy):
         # Install service (linking only for develop)
         install_service(folder, copy=copy)
     else:
-        print("Skip install service")
+        log.info("Skip install service")
 
 
 class JTOPInstallCommand(install):

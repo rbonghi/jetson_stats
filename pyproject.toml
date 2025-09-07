@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "jetson-stats"
 dynamic = ["version"]
-description = "Interactive system-monitor and process viewer for all NVIDIA Jetson [Orin, Xavier, Nano, TX] series"
+description = "Interactive system-monitor and process viewer for all NVIDIA Jetson [Thor, Orin, Xavier, Nano, TX] series"
 readme = "README.md"
 authors = [
     {name = "Raffaello Bonghi", email = "raffaello@rnext.it"},
@@ -16,16 +16,18 @@ maintainers = [
 license = {text = "AGPL-3.0"}
 keywords = [
     "jetson_stats",
-    "jtop", 
+    "jtop",
     "python",
     "system-monitor",
     "docker",
     "nvidia",
     "Jetson",
+    "Thor",
+    "AGXThor",
     "Orin",
     "AGXOrin",
     "Xavier",
-    "AGXXavier", 
+    "AGXXavier",
     "XavierNX",
     "Nano",
     "TX1",
@@ -62,7 +64,7 @@ classifiers = [
 requires-python = ">=3.7"
 dependencies = [
     "smbus2",
-    "distro", 
+    "distro",
     "nvidia-ml-py>=13.0",
 ]
 
