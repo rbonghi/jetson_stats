@@ -169,7 +169,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Docker Hub Description # https://github.com/peter-evans/dockerhub-description
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v5
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
