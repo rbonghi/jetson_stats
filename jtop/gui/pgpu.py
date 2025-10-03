@@ -160,20 +160,30 @@ class GPU(Page):
             # Print all status GPU
             button_position = width // 4
             button_idx = 0
-            # 3D scaling
-            scaling_string = "Active" if gpu_status['3d_scaling'] else "Disable"
-            scaling_status = NColors.green() if gpu_status['3d_scaling'] else curses.A_NORMAL
-            try:
-                self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling:", curses.A_BOLD)
-                self.draw_gpus[gpu_name]['3d_scaling'].update(first + 1 + (idx + 1) * gpu_height - 1, 12 + button_idx,
-                                                              scaling_string, key=key, mouse=mouse, color=scaling_status)
-            except curses.error:
-                pass
+            # 3D scaling - Check if NVML is being used
+            if gpu_data.get('power_control') == 'nvml':
+                # NVML mode - show as unavailable
+                plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling", "N/A (NVML)")
+            else:
+                # Traditional mode - show button
+                scaling_string = "Active" if gpu_status['3d_scaling'] else "Disable"
+                scaling_status = NColors.green() if gpu_status['3d_scaling'] else curses.A_NORMAL
+                try:
+                    self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "3D scaling:", curses.A_BOLD)
+                    self.draw_gpus[gpu_name]['3d_scaling'].update(first + 1 + (idx + 1) * gpu_height - 1, 12 + button_idx,
+                                                                  scaling_string, key=key, mouse=mouse, color=scaling_status)
+                except curses.error:
+                    pass
             button_idx += button_position
-            # railgate status
-            railgate_string = "Active" if gpu_status['railgate'] else "Disable"
-            railgate_status = NColors.green() if gpu_status['railgate'] else curses.A_NORMAL
-            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate", railgate_string, color=railgate_status)
+            # railgate status - Check if NVML is being used
+            if gpu_data.get('power_control') == 'nvml':
+                # NVML mode - show as unavailable
+                plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate", "N/A (NVML)")
+            else:
+                # Traditional mode - show status
+                railgate_string = "Active" if gpu_status['railgate'] else "Disable"
+                railgate_status = NColors.green() if gpu_status['railgate'] else curses.A_NORMAL
+                plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate", railgate_string, color=railgate_status)
             # self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate:", curses.A_BOLD)
             # self.draw_gpus[gpu_name]['railgate'].update(first + 1 + (idx + 1) * gpu_height - 1, 10 + button_idx, railgate_string,
             #                                             key=key, mouse=mouse, color=railgate_status)
