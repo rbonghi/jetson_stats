@@ -16,7 +16,7 @@ Options available
     :class: no-copybutton
 
     nvidia@jetson-nano:~$ jetson_release --help
-    Software part of jetson-stats 4.2.0 - (c) 2023, Raffaello Bonghi
+    Software part of jetson-stats 4.2.0 - (c) 2026, Raffaello Bonghi
     usage: jetson_release [-h] [-v] [-s]
 
     Show detailed information about this board. Machine, Jetpack, libraries and
