@@ -38,7 +38,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 # default ipgu path for Jetson devices
 DEFAULT_IGPU_PATH = "/sys/class/devfreq/"
-KNOWN_GPU_DEVICE_NAMES = {'gv11b', 'gp10b', 'ga10b', 'gpu'}
+KNOWN_GPU_DEVICE_NAMES = {'gv11b', 'gp10b', 'ga10b', 'gb10b', 'gpu'}
 
 # Constants for NVML
 WATTS_TO_MILLIWATTS = 1000.0
