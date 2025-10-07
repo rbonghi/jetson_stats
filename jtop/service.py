@@ -30,6 +30,8 @@ from grp import getgrnam
 from shutil import copyfile, rmtree
 from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
+from pathlib import Path
+from importlib import metadata
 
 # jetson_stats imports
 from .core.exceptions import JtopException
@@ -110,21 +112,82 @@ def uninstall_service(name=JTOP_SERVICE_NAME):
     return False
 
 
-def install_service(package_root, copy, name=JTOP_SERVICE_NAME):
+def _resolve_distribution_path(*relative_paths):
+    try:
+        dist = metadata.distribution('jetson-stats')
+    except metadata.PackageNotFoundError:
+        return None
+    for relative in relative_paths:
+        located = Path(dist.locate_file(Path(relative)))
+        if located.exists():
+            return located
+    return None
+
+
+def _service_template_path(package_root, name):
+    candidates = []
+    if package_root:
+        base = Path(package_root)
+        candidates.append(base / 'services' / name)
+        candidates.append(base / name)
+    distribution_path = _resolve_distribution_path(
+        Path('services') / name,
+        Path('share/jetson_stats') / name,
+        Path(name),
+    )
+    if distribution_path:
+        candidates.append(distribution_path)
+
+    shared_roots = {
+        Path(prefix)
+        for prefix in (
+            sys.prefix,
+            getattr(sys, 'base_prefix', None),
+            sys.exec_prefix,
+            getattr(sys, 'base_exec_prefix', None),
+            os.environ.get('VIRTUAL_ENV'),
+        )
+        if prefix
+    }
+    try:
+        import sysconfig
+    except ImportError:
+        sysconfig = None
+    if sysconfig:
+        data_path = sysconfig.get_paths().get('data')
+        if data_path:
+            shared_roots.add(Path(data_path))
+    try:
+        import site
+    except ImportError:
+        site = None
+    if site:
+        user_base = site.getuserbase()
+        if user_base:
+            shared_roots.add(Path(user_base))
+    for root in shared_roots:
+        candidates.append(root / 'share' / 'jetson_stats' / name)
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    raise JtopException('Unable to locate {name} template file'.format(name=name))
+
+
+def install_service(package_root=None, copy=True, name=JTOP_SERVICE_NAME):
     logger.info("Install {name}".format(name=name))
     # Copy or link file
     service_install_path = '/etc/systemd/system/{name}'.format(name=name)
-    service_package_path = '{package_root}/services/{name}'.format(package_root=package_root, name=name)
+    service_template = _service_template_path(package_root, name)
     # remove if exist file
     if os.path.isfile(service_install_path) or os.path.islink(service_install_path):
         logger.info(" - Remove old {path}".format(path=service_install_path))
         os.remove(service_install_path)
     if copy:
         type_service = "Copying"
-        copyfile(service_package_path, service_install_path)
+        copyfile(str(service_template), service_install_path)
     else:
         type_service = "Linking"
-        os.symlink(service_package_path, service_install_path)
+        os.symlink(str(service_template), service_install_path)
     # Prompt message
     logger.info(" - {type} {file} -> {path}".format(type=type_service.upper(), file=name, path=service_install_path))
     # Update service list
