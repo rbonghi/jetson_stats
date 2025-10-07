@@ -172,7 +172,7 @@ def find_igpu(igpu_path):
 
 def check_jetpack_version() -> bool:
     """Check if current JetPack version is 7.0 or newer.
-    
+
     Returns:
         True if JetPack 7.0+ is detected, False otherwise
     """
@@ -180,7 +180,7 @@ def check_jetpack_version() -> bool:
         jetson_vars = get_jetson_variables()
         l4t_version = jetson_vars.get('L4T', '')
         jetpack_version = NVIDIA_JETPACK.get(l4t_version, '')
-        
+
         # Parse version string properly
         if jetpack_version:
             # Handle formats like "7.0", "6.2", "6.1 (rev1)", etc.
@@ -199,14 +199,15 @@ def check_jetpack_version() -> bool:
         logger.debug(f"Could not determine Jetpack version: {e}")
         return False
 
+
 def _safe_nvml_call(func: Callable[..., T], *args: Any, default: Optional[T] = None) -> Optional[T]:
     """Safely call NVML function and return default on error.
-    
+
     Args:
         func: NVML function to call
         *args: Arguments to pass to the function
         default: Default value to return on error
-        
+
     Returns:
         Function result or default value if error occurs
     """
@@ -219,7 +220,7 @@ def _safe_nvml_call(func: Callable[..., T], *args: Any, default: Optional[T] = N
 
 def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
     """Read GPU status using NVML library.
-    
+
     Returns:
         Dictionary mapping GPU names to their status information including:
         - type: GPU type (integrated/discrete)
@@ -228,30 +229,30 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
         - power_control: Power control method ('nvml')
     """
     gpu_data: Dict[str, Dict[str, Any]] = {}
-    
+
     try:
         import pynvml
         pynvml.nvmlInit()
-        
+
         device_count = pynvml.nvmlDeviceGetCount()
         logger.info(f"NVML device count: {device_count}")
-        
+
         for idx in range(device_count):
             handle = pynvml.nvmlDeviceGetHandleByIndex(idx)
-            
+
             # Get GPU name
             name = pynvml.nvmlDeviceGetName(handle)
             if isinstance(name, bytes):
                 name = name.decode('utf-8')
-            
+
             # Extract just the GPU model name (e.g., "NVIDIA Thor" -> "Thor")
             # This matches the naming convention expected by the GUI
             if name.startswith(NVIDIA_PREFIX):
                 name = name.replace(NVIDIA_PREFIX, "")
-            
+
             # Get utilization - this seems to be supported
             utilization = _safe_nvml_call(pynvml.nvmlDeviceGetUtilizationRates, handle)
-            
+
             # Get memory info - may not be supported on Jetson
             mem_info = _safe_nvml_call(pynvml.nvmlDeviceGetMemoryInfo, handle)
             if mem_info:
@@ -260,26 +261,26 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                 memory_free = mem_info.free
             else:
                 memory_used = memory_total = memory_free = None
-            
+
             # Get temperature - use the new API (nvmlDeviceGetTemperature is deprecated in NVML 13+)
             temperature = _safe_nvml_call(pynvml.nvmlDeviceGetTemperatureV, handle, pynvml.NVML_TEMPERATURE_GPU)
-            
+
             # Get power info - may not be supported on Jetson
             power_draw = _safe_nvml_call(pynvml.nvmlDeviceGetPowerUsage, handle)
             if power_draw is not None:
                 power_draw = power_draw / WATTS_TO_MILLIWATTS  # Convert mW to W
-                
+
             power_limit = _safe_nvml_call(pynvml.nvmlDeviceGetPowerManagementLimit, handle)
             if power_limit is not None:
                 power_limit = power_limit / WATTS_TO_MILLIWATTS  # Convert mW to W
             # Get clock speeds - may not be supported on Jetson
             sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_SM)
             mem_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_MEM)
-            
+
             # Try to get max clocks
             max_sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetMaxClockInfo, handle, pynvml.NVML_CLOCK_SM)
             min_sm_clock = None  # NVML doesn't provide min clocks
-                
+
             # Build frequency data with expected structure
             # GUI expects these keys to be present, even if values are None
             freq_data = {
@@ -290,7 +291,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             }
             if mem_clock is not None:
                 freq_data['mem'] = mem_clock
-                
+
             # Build status dict with available data
             status = {
                 'load': float(utilization.gpu) if utilization else DEFAULT_LOAD,
@@ -298,7 +299,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                 'railgate': False,  # Not available via NVML
                 'tpc_pg_mask': False  # Not available via NVML
             }
-            
+
             # Add optional fields only if available
             if memory_used is not None:
                 status['memory_used'] = memory_used
@@ -312,19 +313,19 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                 status['power_draw'] = power_draw
             if power_limit is not None:
                 status['power_limit'] = power_limit
-            
+
             gpu_data[name] = {
                 'type': 'integrated',  # For Jetson devices
                 'status': status,
                 'freq': freq_data,  # Always include freq, even if empty or partial
                 'power_control': 'nvml'
             }
-            
+
         pynvml.nvmlShutdown()
-        
+
     except Exception as e:
         logger.debug(f"NVML error: {e}")
-        
+
     return gpu_data
 
 
@@ -457,25 +458,25 @@ class GPUService(object):
     def __init__(self):
         self._gpu_list = {}
         self._use_nvml = self._initialize_gpu_method()
-        
+
         if not self._gpu_list:
             logger.warning("No NVIDIA GPU available")
-            
+
     def _initialize_gpu_method(self):
         """Initialize GPU monitoring method and return True if using NVML"""
         # Check if we should use NVML (Jetpack 7.0+)
         use_nvml = check_jetpack_version() and NVML_AVAILABLE
-        
+
         if use_nvml:
             if self._try_nvml_init():
                 return True
             else:
                 logger.info("NVML initialization failed, falling back to traditional method")
-                
+
         # Use traditional method
         self._initialize_traditional_gpus()
         return False
-        
+
     def _try_nvml_init(self):
         """Try to initialize NVML and check for devices"""
         logger.info("Jetpack 7.0+ detected with NVML available, checking device support...")
@@ -484,18 +485,18 @@ class GPUService(object):
             pynvml.nvmlInit()
             device_count = pynvml.nvmlDeviceGetCount()
             pynvml.nvmlShutdown()
-            
+
             if device_count == 0:
                 logger.info("NVML detected 0 devices")
                 return False
-                
+
             logger.info(f"NVML detected {device_count} device(s), using NVML for monitoring")
             self._gpu_list = {}  # Will be populated dynamically by NVML
             return True
         except Exception as e:
             logger.warning(f"NVML check failed: {e}")
             return False
-            
+
     def _initialize_traditional_gpus(self):
         """Initialize GPU list using traditional sysfs method"""
         # Detect integrated GPU using traditional method
@@ -511,7 +512,7 @@ class GPUService(object):
         if name not in self._gpu_list:
             logger.error(f"GPU \"{name}\" does not exist")
             return False
-            
+
         if self._use_nvml:
             logger.warning("3D scaling control not available via NVML (Jetpack 7.0+)")
             return False
@@ -534,15 +535,15 @@ class GPUService(object):
         if name not in self._gpu_list:
             logger.error(f"GPU \"{name}\" does not exist")
             return False
-            
+
         if self._use_nvml:
             logger.warning("Railgate control not available via NVML (Jetpack 7.0+)")
             return False
-            
+
         if 'railgate' not in self._gpu_list[name]:
             logger.error(f"GPU \"{name}\" does not have railgate")
             return False
-            
+
         path_railgate = self._gpu_list[name]['railgate']
         string_value = "1" if value else "0"
         # Write new status railgate
@@ -558,26 +559,26 @@ class GPUService(object):
         if self._use_nvml:
             # Use NVML for Jetpack 7.0+
             return nvml_read_gpu_status()
-            
+
         # Use traditional method for older Jetpack versions
         gpu_list = {}
         # Read iGPU frequency
         for name, data in self._gpu_list.items():
-                # Initialize GPU status
-                gpu = {'type': data['type']}
-                # Detect frequency and load
-                if gpu['type'] == 'integrated':
-                    # Read status GPU
-                    gpu['status'] = igpu_read_status(data['path'])
-                    # Read frequency
-                    gpu['freq'] = igpu_read_freq(data['frq_path'])
-                    # Read power control status
-                    if os.access(data['path'] + "/power/control", os.R_OK):
-                        with open(data['path'] + "/power/control", 'r') as f:
-                            gpu['power_control'] = f.read().strip()
-                elif gpu['type'] == 'discrete':
-                    logger.info("TODO discrete GPU")
-                # Load all status in GPU
-                gpu_list[name] = gpu
+            # Initialize GPU status
+            gpu = {'type': data['type']}
+            # Detect frequency and load
+            if gpu['type'] == 'integrated':
+                # Read status GPU
+                gpu['status'] = igpu_read_status(data['path'])
+                # Read frequency
+                gpu['freq'] = igpu_read_freq(data['frq_path'])
+                # Read power control status
+                if os.access(data['path'] + "/power/control", os.R_OK):
+                    with open(data['path'] + "/power/control", 'r') as f:
+                        gpu['power_control'] = f.read().strip()
+            elif gpu['type'] == 'discrete':
+                logger.info("TODO discrete GPU")
+            # Load all status in GPU
+            gpu_list[name] = gpu
         return gpu_list
 # EOF
