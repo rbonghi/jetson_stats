@@ -1,0 +1,45 @@
+name: Auto-approve and merge Dependabot PRs
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step to auto-approve Dependabot PRs
+      - name: Auto-approve Dependabot PR
+        if: github.actor == 'dependabot[bot]'
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  auto-merge:
+    needs: auto-approve
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step to checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step to find the PR number of the open Dependabot PR
+      - name: Find PR number
+        id: find_pr
+        run: |
+          PR_NUMBER=$(gh pr list --state open --author "dependabot[bot]" --json number --jq '.[0].number')
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step to enable auto-merge for the found PR number
+      - name: Enable auto-merge
+        if: ${{ steps.find_pr.outputs.PR_NUMBER != '' }}
+        run: gh pr merge --auto --squash "${{ steps.find_pr.outputs.PR_NUMBER }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
