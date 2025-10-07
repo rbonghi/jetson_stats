@@ -93,8 +93,11 @@ class ProcessService(object):
         # https://man7.org/linux/man-pages/man5/proc.5.html
         stat = cat(os.path.join('/proc', pid, 'stat')).split()
         # Decode uid and find username
+        import logging
         proc_status = cat_multiline(os.path.join('/proc', pid, 'status'))
         uid_matches = PROCESS_UID_REG.findall(proc_status)
+        if not uid_matches:
+            logging.warning(f"No UID found in /proc/{pid}/status. Falling back to -1.")
         uid = int(uid_matches[0]) if uid_matches else int(-1)
         if uid not in self.usernames:
             self.usernames[uid] = pwd.getpwuid(uid).pw_name
