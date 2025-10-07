@@ -41,8 +41,9 @@ if not sys.warnoptions:
 # Write version of jetpack installed
 # https://developer.nvidia.com/embedded/jetpack-archive
 NVIDIA_JETPACK = {
-    # -------- JP6 --------
+    # -------- JP7 --------
     "38.2.0": "7.0",
+    # -------- JP6 --------
     "36.4.4": "6.2.1",
     "36.4.3": "6.2",
     "36.4.2": "6.1 (rev1)",
