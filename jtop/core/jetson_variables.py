@@ -42,6 +42,8 @@ if not sys.warnoptions:
 # https://developer.nvidia.com/embedded/jetpack-archive
 NVIDIA_JETPACK = {
     # -------- JP7 --------
+    "38.3.0": "7.1",
+    "38.2.1": "7.0",
     "38.2.0": "7.0",
     # -------- JP6 --------
     "36.4.4": "6.2.1",
