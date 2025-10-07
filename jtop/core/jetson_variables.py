@@ -41,6 +41,8 @@ if not sys.warnoptions:
 # Write version of jetpack installed
 # https://developer.nvidia.com/embedded/jetpack-archive
 NVIDIA_JETPACK = {
+    # -------- JP7 --------
+    "38.2.0": "7.0",
     # -------- JP6 --------
     "36.4.4": "6.2.1",
     "36.4.3": "6.2",
@@ -118,6 +120,7 @@ NVIDIA_JETPACK = {
 
 
 CUDA_TABLE = {
+    'tegra264': '13.0', # JETSON THOR - tegra264
     'tegra234': '8.7',  # JETSON ORIN - tegra234
     'tegra23x': '8.7',  # JETSON ORIN - tegra234
     'tegra194': '7.2',  # JETSON XAVIER
@@ -130,6 +133,7 @@ CUDA_TABLE = {
 # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3231/index.html
 # https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/IN/QuickStart.html
 MODULE_NAME_TABLE = {
+    'p3834-0008': 'NVIDIA Jetson AGX Thor  (Developer kit)',
     'p3767-0005': 'NVIDIA Jetson Orin Nano (Developer kit)',
     'p3767-0004': 'NVIDIA Jetson Orin Nano (4GB ram)',
     'p3767-0003': 'NVIDIA Jetson Orin Nano (8GB ram)',
