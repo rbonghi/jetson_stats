@@ -80,6 +80,8 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--force', dest='force', help=argparse.SUPPRESS, action="store_true", default=False)
     parser.add_argument('--health', dest="health", help='Status jtop and fix', action="store_true", default=False)
+    parser.add_argument('--install-service', dest="install_service", help='Install and enable the jtop systemd service',
+                        action="store_true", default=False)
     parser.add_argument('--error-log', dest="log", help='Generate a log for GitHub', action="store_true", default=False)
     parser.add_argument('--no-warnings', dest="no_warnings", help='Do not show warnings', action="store_true", default=False)
     parser.add_argument('--restore', dest="restore", help='Reset Jetson configuration', action="store_true", default=False)
@@ -91,6 +93,28 @@ def main():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {version}'.format(version=get_var(VERSION_RE)))
     # Parse arguments
     args = parser.parse_args()
+    # Install jtop service if requested
+    if args.install_service:
+        if os.geteuid() != 0:
+            print("Install requires superuser privileges. Please run:\nsudo jtop --install-service")
+            sys.exit(1)
+        logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(name)s - %(message)s')
+        package_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        is_developer = os.path.isdir(os.path.join(package_root, 'tests'))
+        copy = not is_developer
+        if not is_developer:
+            package_root = None
+        try:
+            from .core.jetson_variables import install_variables
+            from .service import set_service_permission, install_service
+            install_variables(package_root, copy=copy)
+            set_service_permission()
+            install_service(package_root, copy=copy)
+        except JtopException as e:
+            print(e)
+            sys.exit(1)
+        print("jtop.service installed and enabled")
+        sys.exit(0)
     # Initialize signals
     # signal.signal(signal.SIGINT, exit_signal)  # Do not needed equivalent to exception KeyboardInterrupt
     signal.signal(signal.SIGTERM, exit_signal)
