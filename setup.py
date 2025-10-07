@@ -35,8 +35,8 @@ log = logging.getLogger()
 def is_virtualenv():
     # Check if in virtual environment
     return bool(
-        hasattr(sys, 'real_prefix')
-        or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+        hasattr(sys, 'real_prefix') or
+        (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
     )
 
 
@@ -69,12 +69,12 @@ def pypi_installer(installer, obj, copy):
         # If imports fail, we're likely in build phase, so skip custom installation
         installer.run(obj)
         return
-    
+
     log.info("Install status:")
     log.info(f" - [{'X' if is_superuser() else ' '}] super_user")
     log.info(f" - [{'X' if is_virtualenv() else ' '}] virtualenv")
     log.info(f" - [{'X' if is_docker() else ' '}] docker")
-    
+
     # Run the uninstaller before to copy all scripts
     if not is_virtualenv() and not is_docker():
         if is_superuser():
@@ -99,10 +99,10 @@ def pypi_installer(installer, obj, copy):
             log.info("Please, before install in your virtual environment, install jetson-stats on your host with superuser permission, like:")
             log.info(bcolors.bold("sudo pip3 install -U jetson-stats"))
             sys.exit(1)
-            
+
     # Run the default installation script
     installer.run(obj)
-    
+
     # Run the restart all services before to close the installer
     if not is_virtualenv() and not is_docker() and is_superuser():
         folder, _ = os.path.split(os.path.realpath(__file__))  # This folder
@@ -118,7 +118,7 @@ def pypi_installer(installer, obj, copy):
 
 class JTOPInstallCommand(install):
     """Custom installation command for production install."""
-    
+
     def run(self):
         # Run the custom installer
         pypi_installer(install, self, True)
@@ -126,7 +126,7 @@ class JTOPInstallCommand(install):
 
 class JTOPDevelopCommand(develop):
     """Custom installation command for development mode."""
-    
+
     def run(self):
         # Run the custom installer with linking
         pypi_installer(develop, self, False)
