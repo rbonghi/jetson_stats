@@ -38,6 +38,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 # default ipgu path for Jetson devices
 DEFAULT_IGPU_PATH = "/sys/class/devfreq/"
+KNOWN_GPU_DEVICE_NAMES = {'gv11b', 'gp10b', 'ga10b', 'gb10b', 'gpu'}
 
 # Constants for NVML
 WATTS_TO_MILLIWATTS = 1000.0
@@ -143,30 +144,36 @@ def find_igpu(igpu_path):
         return igpu
     for item in os.listdir(igpu_path):
         item_path = os.path.join(igpu_path, item)
-        if os.path.isfile(item_path) or os.path.islink(item_path):
-            # Check name device
-            name_path = f"{item_path}/device/of_node/name"
-            if os.path.isfile(name_path):
-                # Decode name
-                name = cat(name_path)
-                # Check if gpu
-                if name in ['gv11b', 'gp10b', 'ga10b', 'gb10b', 'gpu']:
-                    # Extract real path GPU device
-                    path = os.path.realpath(os.path.join(item_path, "device"))
-                    frq_path = os.path.realpath(item_path)
-                    igpu[name] = {'type': 'integrated', 'path': path, 'frq_path': frq_path}
-                    logger.info(f"GPU \"{name}\" status in {path}")
-                    logger.info(f"GPU \"{name}\" frq in {frq_path}")
-                    # Check if railgate exist
-                    path_railgate = os.path.join(path, "railgate_enable")
-                    if os.path.isfile(path_railgate):
-                        igpu[name]['railgate'] = path_railgate
-                    # Check if 3d scaling exist
-                    path_3d_scaling = os.path.join(path, "enable_3d_scaling")
-                    if os.path.isfile(path_3d_scaling):
-                        igpu[name]['3d_scaling'] = path_3d_scaling
-                else:
-                    logger.debug(f"Skipped {name}")
+        if not (os.path.isdir(item_path) or os.path.islink(item_path)):
+            logger.debug(f"Skipped non-device entry {item_path}")
+            continue
+
+        name_path = os.path.join(item_path, "device", "of_node", "name")
+        if not os.path.isfile(name_path):
+            logger.debug(f"Missing of_node name for {item_path}")
+            continue
+
+        name = cat(name_path).strip()
+        normalized_name = name.lower()
+
+        if normalized_name not in KNOWN_GPU_DEVICE_NAMES and 'gpu' not in normalized_name:
+            logger.debug(f"Skipped {name}")
+            continue
+
+        # Extract real path GPU device
+        path = os.path.realpath(os.path.join(item_path, "device"))
+        frq_path = os.path.realpath(item_path)
+        igpu[name] = {'type': 'integrated', 'path': path, 'frq_path': frq_path}
+        logger.info(f"GPU \"{name}\" status in {path}")
+        logger.info(f"GPU \"{name}\" frq in {frq_path}")
+        # Check if railgate exist
+        path_railgate = os.path.join(path, "railgate_enable")
+        if os.path.isfile(path_railgate):
+            igpu[name]['railgate'] = path_railgate
+        # Check if 3d scaling exist
+        path_3d_scaling = os.path.join(path, "enable_3d_scaling")
+        if os.path.isfile(path_3d_scaling):
+            igpu[name]['3d_scaling'] = path_3d_scaling
     return igpu
 
 
@@ -457,9 +464,10 @@ class GPUService(object):
 
     def __init__(self):
         self._gpu_list = {}
+        self._nvml_device_count = 0
         self._use_nvml = self._initialize_gpu_method()
 
-        if not self._gpu_list:
+        if not self._use_nvml and not self._gpu_list:
             logger.warning("No NVIDIA GPU available")
 
     def _initialize_gpu_method(self):
@@ -491,6 +499,7 @@ class GPUService(object):
                 return False
 
             logger.info(f"NVML detected {device_count} device(s), using NVML for monitoring")
+            self._nvml_device_count = int(device_count)
             self._gpu_list = {}  # Will be populated dynamically by NVML
             return True
         except Exception as e:

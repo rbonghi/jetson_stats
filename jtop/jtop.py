@@ -1113,7 +1113,7 @@ class jtop(Thread):
             self._broadcaster.connect()
         except FileNotFoundError as e:
             if e.errno == 2 or e.errno == 111:  # Message error: 'No such file or directory' or 'Connection refused'
-                raise JtopException("The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service")
+                raise JtopException("The jtop.service is not active. Please run:\nsudo jtop --install-service")
             elif e.errno == 13:  # Message error: 'Permission denied'
                 raise JtopException("I can't access jtop.service.\nPlease logout or reboot this board.")
             else:
@@ -1121,7 +1121,7 @@ class jtop(Thread):
         except ConnectionRefusedError as e:
             if e.errno == 111:  # Connection refused
                 # When server is off but socket files exists in /run
-                raise JtopException("The jtop.service is not active. Please run:\nsudo systemctl restart jtop.service")
+                raise JtopException("The jtop.service is not active. Please run:\nsudo jtop --install-service")
             else:
                 raise ConnectionRefusedError(e)
         except PermissionError as e:
@@ -1145,7 +1145,7 @@ class jtop(Thread):
         # Check version compatibility between client and server raise exception only if minor version is different
         if not compare_versions(service_version, get_var(VERSION_RE)):
             raise JtopException("""Mismatch version jtop service: [{service_version}] and client: [{client_version}]. Please run:\n
-sudo systemctl restart jtop.service""".format(
+sudo jtop --install-service""".format(
                 service_version=service_version,
                 client_version=get_var(VERSION_RE)))
         # Load server speed
