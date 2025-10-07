@@ -150,7 +150,7 @@ def find_igpu(igpu_path):
                 # Decode name
                 name = cat(name_path)
                 # Check if gpu
-                if name in ['gv11b', 'gp10b', 'ga10b', 'gpu']:
+                if name in ['gv11b', 'gp10b', 'ga10b', 'gb10b', 'gpu']:
                     # Extract real path GPU device
                     path = os.path.realpath(os.path.join(item_path, "device"))
                     frq_path = os.path.realpath(item_path)
