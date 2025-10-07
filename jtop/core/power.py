@@ -16,6 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .common import cat, check_file
+import glob
 import os
 # Logging
 import logging
@@ -103,6 +104,46 @@ def find_all_i2c_power_monitor(i2c_path):
     if power_sensor:
         logger.info("Found I2C power monitor")
     return power_sensor
+
+
+def find_all_oc_event_counters():
+    """Find all the overcurrent event counters on the system"""
+    event_cnt_files = glob.glob('/sys/class/hwmon/hwmon*/oc*_event_cnt')
+    if (len(event_cnt_files) == 0):
+        logger.warning("No OC event counters found")
+        return {}
+
+    event_counts = {filename: -1 for filename in event_cnt_files}
+
+    update_oc_event_counts(event_counts)
+
+    return event_counts
+
+
+def update_oc_event_counts(event_counts):
+    """
+    Function to update overcurrent event counts.
+
+    Update the event counts in the event_counts dictionary, and return True if any of the counts have increased
+    """
+    # We can report more granular information about the throttling events if we really want to, but there
+    # is no direct mapping from oc*_event_cnt to which power rail/system is being measured, we
+    # would need to hard code a mapping from board type to oc*_event_cnt->power rail mappings,
+    # this is fragile, and most users will probably only care about throttling or not throttling,
+    # and can use the existing power panel to see currents and current limits if they want to dig deeper.
+    # https://docs.nvidia.com/jetson/archives/r36.4/DeveloperGuide/SD/PlatformPowerAndPerformance/JetsonOrinNanoSeriesJetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#jetson-agx-orin-series
+    throttling = False
+    for filename in event_counts:
+        try:
+            with open(filename, 'r') as f:
+                count = int(f.read())
+                if count > event_counts[filename]:
+                    event_counts[filename] = count
+                    throttling = True
+        except Exception as e:
+            logger.error("Error reading OC event counter from {filename}: {e}".format(filename=filename, e=e))
+            return throttling
+    return throttling
 
 
 def read_power_status(data):
@@ -237,6 +278,7 @@ class PowerService(object):
     def __init__(self):
         self._power_sensor = {}
         self._power_avg = {}
+        self._oc_event_counts = {}
         # Find all I2C sensors on board
         i2c_path = "/sys/bus/i2c/devices"
         system_monitor = "/sys/class/power_supply"
@@ -248,6 +290,7 @@ class PowerService(object):
         # Load all power sensors
         self._power_sensor = find_all_i2c_power_monitor(i2c_path)
         self._power_sensor.update(find_all_system_monitor(system_monitor))
+        self._oc_event_counts = find_all_oc_event_counters()
         if not self._power_sensor:
             logger.warning("Power sensors not found!")
         # Sort all power sensors
@@ -287,5 +330,15 @@ class PowerService(object):
             rails[name] = values
         # Measure total power
         total, rails = total_power(rails)
-        return {'rail': rails, 'tot': total}
-# EOF
+        ret_dict = {'rail': rails, 'tot': total}
+
+        # Only include OC events if counters exist
+        if self._oc_event_counts:
+            oc_events = {
+                'is_throttling': update_oc_event_counts(self._oc_event_counts),
+                'count': sum(self._oc_event_counts.values())
+            }
+            ret_dict['oc_events'] = oc_events
+
+        return ret_dict
+    # EOF
