@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jetson-stats"
+dynamic = ["version"]
+description = "Interactive system-monitor and process viewer for all NVIDIA Jetson [Thor, Orin, Xavier, Nano, TX] series"
+readme = "README.md"
+authors = [
+    {name = "Raffaello Bonghi", email = "raffaello@rnext.it"},
+]
+maintainers = [
+    {name = "Raffaello Bonghi", email = "raffaello@rnext.it"},
+]
+license = {text = "AGPL-3.0"}
+keywords = [
+    "jetson_stats",
+    "jtop",
+    "python",
+    "system-monitor",
+    "docker",
+    "nvidia",
+    "Jetson",
+    "Thor",
+    "AGXThor",
+    "Orin",
+    "AGXOrin",
+    "Xavier",
+    "AGXXavier",
+    "XavierNX",
+    "Nano",
+    "TX1",
+    "TX2",
+    "process",
+    "viewer"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Logging",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Operating System",
+    "Topic :: System :: Operating System Kernels",
+    "Topic :: System :: Shells",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Terminals",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Unix Shell",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: POSIX :: Linux",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "smbus2",
+    "distro",
+    "nvidia-ml-py>=13.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/rbonghi/jetson_stats"
+Documentation = "https://rnext.it/jetson_stats"
+Repository = "https://github.com/rbonghi/jetson_stats"
+Issues = "https://github.com/rbonghi/jetson_stats/issues"
+Funding = "https://github.com/sponsors/rbonghi"
+Discord = "https://discord.gg/BFbuJNhYzS"
+Examples = "https://github.com/rbonghi/jetson_stats/tree/master/examples"
+
+[project.scripts]
+jtop = "jtop.__main__:main"
+jetson_release = "jtop.jetson_release:main"
+jetson_config = "jtop.jetson_config:main"
+jetson_swap = "jtop.jetson_swap:main"
+
+[tool.setuptools]
+packages = ["jtop", "jtop.core", "jtop.gui", "jtop.gui.lib"]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = {attr = "jtop.__version__"}
+
+[tool.setuptools.data-files]
+"share/jetson_stats" = ["services/jtop.service", "scripts/jtop_env.sh"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["tests*", "*.tests*", "examples*"]
