@@ -29,6 +29,10 @@ recursive-include scripts *
 # Include services files
 recursive-include services *.service
 
+# Include package tests
+recursive-include jtop/tests *.py
+recursive-include jtop/tests_gui *.py
+
 # Remove test docs and examples and tox.ini
 exclude tox.ini
 exclude Dockerfile
