@@ -103,7 +103,7 @@ class ProcessService(object):
         # VmRSS is the resident set size of the process, which is the portion of the process's memory
         # that is held in RAM and is not swapped out to disk. This is the amount of memory that the process is currently using.
         mem_raw = cat(os.path.join('/proc', pid, 'statm')).split()
-        vm_rss = int(mem_raw[1])
+        vm_rss = int(mem_raw[1]) * 4
         # CPU percent
         # https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat
         utime = float(stat[13])
