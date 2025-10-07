@@ -120,7 +120,8 @@ NVIDIA_JETPACK = {
 
 
 CUDA_TABLE = {
-    'tegra264': '13.0',  # JETSON THOR - tegra264
+    'tegra26x': '11.0',  # JETSON THOR - tegra264
+    'tegra264': '11.0',  # JETSON THOR - tegra264
     'tegra234': '8.7',  # JETSON ORIN - tegra234
     'tegra23x': '8.7',  # JETSON ORIN - tegra234
     'tegra194': '7.2',  # JETSON XAVIER
