@@ -39,10 +39,30 @@ jetson-stats is a powerful tool to analyze your board, you can use with a stand 
 
 ## Install
 
-jetson-stats can be installed with [pip](https://pip.pypa.io), but need **superuser**:
+```console
+sudo apt update
+sudo apt install python3-pip python3-setuptools -y
+```
+
+### Option 1: jetson-stats can be installed with [pip](https://pip.pypa.io), but need **superuser**:
 
 ```console
 sudo pip3 install -U jetson-stats
+```
+
+### Option 2: Install directly from GitHub
+```console
+sudo pip3 install git+https://github.com/rbonghi/jetson_stats.git
+```
+
+### Option 3: Ubuntu 24.04
+```console
+sudo pip3 install --break-system-packages -U jetson-stats
+```
+or
+
+```console
+sudo pip3 install --break-system-packages git+https://github.com/rbonghi/jetson_stats.git
 ```
 
 _Don't forget to **logout/login** or **reboot** your board_
