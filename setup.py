@@ -34,10 +34,11 @@ log = logging.getLogger()
 
 def is_virtualenv():
     # Check if in virtual environment
-    return bool(
-        hasattr(sys, 'real_prefix') or
-        (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+    has_real_prefix = hasattr(sys, 'real_prefix')
+    has_base_prefix = (
+        hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix
     )
+    return bool(has_real_prefix or has_base_prefix)
 
 
 def is_docker():
