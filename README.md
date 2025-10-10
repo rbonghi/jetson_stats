@@ -70,7 +70,7 @@ sudo pip3 install --break-system-packages git+https://github.com/rbonghi/jetson_
 First run "sudo -v"
     -v, --validate does not run any command, but does allow the use of sudo in the bash script.
 Then "download install_jtop_torun_without_sudo.sh"
-Make it executible:
+Make it executable:
 chmod +x install_jtop_torun_without_sudo.sh
 Then run it:
 ./install_jtop_torun_without_sudo.sh
