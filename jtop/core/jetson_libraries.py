@@ -18,6 +18,8 @@
 import os
 import re
 import subprocess
+from ctypes import CDLL
+from ctypes.util import find_library
 from .common import cat
 from .command import Command
 # Fix connection refused for python 2.7
@@ -30,6 +32,46 @@ except NameError:
 MODULES = ['cuDNN', 'TensorRT.', 'VPI']  # 'Visionworks'
 CUDA_FILE_RE = re.compile(r'CUDA Version (.*)')
 CUDA_NVCC_RE = re.compile(r'V([0-9]+.[0-9]+.[0-9]+)')
+
+
+def get_cudnn():
+    if dnn := CDLL(find_library('cudnn')):
+        try:
+            dnn_vers = dnn.cudnnGetVersion()
+            return f"{dnn_vers // 10000}.{(dnn_vers % 10000) // 100}.{dnn_vers % 100}"
+        except BaseException:
+            pass
+    return None
+
+
+def get_tensorrt():
+    if trt := CDLL(find_library('nvinfer')):
+        try:
+            major = trt.getInferLibMajorVersion()
+            minor = trt.getInferLibMinorVersion()
+            patch = trt.getInferLibPatchVersion()
+            build = trt.getInferLibBuildVersion()
+            return f"{major}.{minor}.{patch}.{build}"
+        except BaseException:
+            pass
+    return None
+
+
+def get_vpi():
+    if vpi := CDLL(find_library('nvvpi')):
+        try:
+            vpi_vers = vpi.vpiGetVersion()
+            return f"{vpi_vers // 1000000}.{(vpi_vers % 1000000) // 10000}.{(vpi_vers % 10000) // 100}.{vpi_vers % 100}"
+        except BaseException:
+            pass
+    return None
+
+
+MODULES_VERS_FUNC = {
+    'cuDNN': get_cudnn,
+    'TensorRT': get_tensorrt,
+    'VPI': get_vpi
+}
 
 
 def get_cuda():
@@ -115,7 +157,12 @@ def get_libraries():
         # Fix TensorRT search #462
         name_dict = name[:-1] if name.endswith('.') else name
         os_variables[name_dict] = ''
-        # Find version if installed
+        # Try direct check version functions if available
+        if name_dict in MODULES_VERS_FUNC:
+            if vers := MODULES_VERS_FUNC[name_dict]():
+                os_variables[name_dict] = vers
+                continue
+        # Fallback: Find version if installed
         for module, version in modules.items():
             if name.endswith('.') and name.lower()[:-1] == module:
                 os_variables[name_dict] = version.split('-')[0]
