@@ -110,6 +110,9 @@ def igpu_read_status(path):
         with open(path + "/enable_3d_scaling", 'r') as f:
             # Read status 3D scaling
             gpu['3d_scaling'] = int(f.read()) == 1
+    else:
+        # Set 3d scaling as disabled to avoid GUI error
+        gpu['3d_scaling'] = False
     # Current load GPU
     if os.access(path + "/load", os.R_OK):
         with open(path + "/load", 'r') as f:
