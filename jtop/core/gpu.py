@@ -289,7 +289,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             # mem_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_MEM)
             # max_sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetMaxClockInfo, handle, pynvml.NVML_CLOCK_SM)
             # min_sm_clock = None  # NVML doesn't provide min clocks
-            
+
             # Use tegrastats for frequency detection instead
             sm_clock = None
             mem_clock = None
@@ -298,7 +298,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
 
             # Use tegrastats for frequency detection since NVML doesn't work on Jetson
             logger.info("Using tegrastats for frequency detection (NVML disabled)")
-            
+
             # Get frequency from tegrastats
             tegrastats_freq = _get_tegrastats_gpu_frequency()
             if tegrastats_freq:
@@ -365,8 +365,8 @@ def _get_tegrastats_gpu_frequency():
         import subprocess
         import re
         # Run tegrastats once to get current data
-        result = subprocess.run(['tegrastats', '--interval', '1000', '--logfile', '/dev/stdout'], 
-                              capture_output=True, text=True, timeout=2)
+        result = subprocess.run(['tegrastats', '--interval', '1000', '--logfile', '/dev/stdout'],
+                                capture_output=True, text=True, timeout=2)
         if result.returncode == 0:
             # Parse the tegrastats output using regex
             # Pattern for GR3D_FREQ @[944,944,944] format
@@ -377,8 +377,8 @@ def _get_tegrastats_gpu_frequency():
                 # Use first frequency value (all three are usually the same)
                 frequency_hz = int(freq1)
                 frequency_mhz = frequency_hz // 1000
-                logger.info("Got GPU frequency from tegrastats: %d MHz (values: %s, %s, %s)", 
-                          frequency_mhz, freq1, freq2, freq3)
+                logger.info("Got GPU frequency from tegrastats: %d MHz (values: %s, %s, %s)",
+                            frequency_mhz, freq1, freq2, freq3)
                 return frequency_mhz
             else:
                 logger.debug("No GR3D_FREQ pattern found in tegrastats output")
@@ -529,12 +529,12 @@ class GPUService(object):
         jetson_vars = get_jetson_variables()
         soc = jetson_vars.get('SoC', '')
         is_thor = 'tegra264' in soc or 'tegra26x' in soc
-        
+
         if is_thor:
             logger.info("Jetson Thor detected, using traditional method (NVML disabled for Thor)")
             self._initialize_traditional_gpus()
             return False
-        
+
         # Check if we should use NVML (Jetpack 7.0+) for other Jetson models
         use_nvml = check_jetpack_version() and NVML_AVAILABLE
 
@@ -632,7 +632,7 @@ class GPUService(object):
             # Use NVML for Jetpack 7.0+
             gpu_data = nvml_read_gpu_status()
             logger.info("NVML method returned gpu_data: %s", gpu_data)
-            
+
             # If tegrastats data is available, use it to override frequency information
             if tegrastats_data and 'GR3D' in tegrastats_data:
                 gr3d_data = tegrastats_data['GR3D']
@@ -667,17 +667,17 @@ class GPUService(object):
                             logger.info("GPU %s frequency is valid (%s), no fallback needed", gpu_name, current_freq)
                     else:
                         logger.warning("GPU %s has no freq data", gpu_name)
-            
+
             return gpu_data
 
         # Use traditional method for older Jetpack versions
         gpu_list = {}
-        
+
         # Check if this is Jetson Thor - use tegrastats for frequency
         jetson_vars = get_jetson_variables()
         soc = jetson_vars.get('SoC', '')
         is_thor = 'tegra264' in soc or 'tegra26x' in soc
-        
+
         # Read iGPU frequency
         for name, data in self._gpu_list.items():
             # Initialize GPU status
@@ -686,7 +686,7 @@ class GPUService(object):
             if gpu['type'] == 'integrated':
                 # Read status GPU
                 gpu['status'] = igpu_read_status(data['path'])
-                
+
                 if is_thor:
                     # For Jetson Thor, use tegrastats for frequency detection
                     logger.info("Jetson Thor detected, using tegrastats for frequency detection")
@@ -706,7 +706,7 @@ class GPUService(object):
                 else:
                     # For other Jetson models, use traditional method
                     gpu['freq'] = igpu_read_freq(data['frq_path'])
-                
+
                 # If tegrastats data is available, use it to override frequency information
                 if tegrastats_data and 'GR3D' in tegrastats_data:
                     gr3d_data = tegrastats_data['GR3D']
@@ -729,7 +729,7 @@ class GPUService(object):
                             logger.info("Updated GPU frequency from tegrastats fallback: %d MHz", tegrastats_freq)
                         else:
                             logger.warning("Tegrastats fallback also failed")
-                
+
                 # Read power control status
                 if os.access(data['path'] + "/power/control", os.R_OK):
                     with open(data['path'] + "/power/control", 'r') as f:
