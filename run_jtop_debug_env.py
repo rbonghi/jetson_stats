@@ -60,5 +60,5 @@ finally:
     # Clean up
     if os.path.exists(script_file):
         os.remove(script_file)
-    
+
     print(f"\nCheck the log file: {log_file}")

@@ -31,16 +31,16 @@ if __name__ == "__main__":
         # Use subprocess to run jtop with our logging configuration
         import subprocess
         import signal
-        
+
         def signal_handler(sig, frame):
             print(f"\nStopped. Check the log file: {log_file}")
             sys.exit(0)
-        
+
         signal.signal(signal.SIGINT, signal_handler)
-        
+
         # Run jtop
         subprocess.run(['jtop'], check=True)
-        
+
     except KeyboardInterrupt:
         print(f"\nStopped. Check the log file: {log_file}")
     except Exception as e:
