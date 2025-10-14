@@ -4,11 +4,11 @@ Test script to show Jetson Thor engine layout and compare with other Jetson devi
 This demonstrates the difference between Thor (no DLA) and Orin (with DLA).
 """
 
+from jtop.gui.pengine import pass_thor, pass_orin, pass_orin_nano, map_xavier, map_jetson_nano
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'jtop'))
 
-from jtop.gui.pengine import pass_thor, pass_orin, pass_orin_nano, map_xavier, map_jetson_nano
 
 def simulate_engine_data():
     """Simulate engine data structure for testing"""
@@ -24,14 +24,15 @@ def simulate_engine_data():
         'PVA0': {'PVA0_CPU_AXI': {'val': 0}},  # This won't be shown for Thor
     }
 
+
 def test_engine_mappings():
     """Test and compare different engine mappings"""
     print("Testing Jetson Engine Mappings")
     print("=" * 50)
-    
+
     # Simulate engine data
     engine_data = simulate_engine_data()
-    
+
     # Test Thor mapping
     print("\n🔹 Jetson Thor Engine Layout (pass_thor):")
     print("   Architecture: Blackwell GPU with 2560 cores, 96 Tensor Cores")
@@ -44,7 +45,7 @@ def test_engine_mappings():
                 print(f"     - {engine_name}")
     except Exception as e:
         print(f"     Error: {e}")
-    
+
     # Test Orin mapping for comparison
     print("\n🔹 Jetson Orin Engine Layout (pass_orin):")
     print("   Architecture: Ampere GPU with DLA support")
@@ -57,7 +58,7 @@ def test_engine_mappings():
                 print(f"     - {engine_name}")
     except Exception as e:
         print(f"     Error: {e}")
-    
+
     # Test Xavier mapping for comparison
     print("\n🔹 Jetson Xavier Engine Layout (map_xavier):")
     print("   Architecture: Volta GPU with DLA support")
@@ -70,7 +71,7 @@ def test_engine_mappings():
                 print(f"     - {engine_name}")
     except Exception as e:
         print(f"     Error: {e}")
-    
+
     # Test Nano mapping for comparison
     print("\n🔹 Jetson Nano Engine Layout (map_jetson_nano):")
     print("   Architecture: Maxwell GPU")
@@ -83,13 +84,14 @@ def test_engine_mappings():
                 print(f"     - {engine_name}")
     except Exception as e:
         print(f"     Error: {e}")
-    
+
     print("\n" + "=" * 50)
     print("Key Differences:")
     print("✅ Thor: No DLA, no PVA - focuses on GPU compute and video")
     print("✅ Orin: Has DLA, PVA - full AI acceleration suite")
     print("✅ Xavier: Has DLA, CVNAS - older AI acceleration")
     print("✅ Nano: Basic engines - minimal AI acceleration")
+
 
 if __name__ == "__main__":
     test_engine_mappings()
