@@ -4,6 +4,7 @@ Run jtop with debug logging enabled.
 This script sets the logging level to DEBUG before starting jtop.
 """
 
+from jtop.__main__ import main
 import logging
 import sys
 import os
@@ -15,7 +16,6 @@ logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s] %(name)s - %(me
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'jtop'))
 
 # Import and run jtop
-from jtop.__main__ import main
 
 if __name__ == "__main__":
     main()
