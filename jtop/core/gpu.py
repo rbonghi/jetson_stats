@@ -50,6 +50,7 @@ NVIDIA_PREFIX = "NVIDIA "
 # ---------- Detect & read Thor GPU devfreq (GPC) ----------
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
 
+
 def _thor_gpc_freq():
     """
     Return {cur,min,max,governor} in MHz for Thor GPC domain, or {} if not present.
@@ -57,24 +58,28 @@ def _thor_gpc_freq():
     base = THOR_GPC
     if not os.path.isdir(base):
         return {}
+
     def _rint(p):
         try:
-            with open(p) as f: return int(f.read().strip())
+            with open(p) as f:
+                return int(f.read().strip())
         except Exception:
             return None
+
     def _rstr(p):
         try:
-            with open(p) as f: return f.read().strip()
+            with open(p) as f:
+                return f.read().strip()
         except Exception:
             return None
     cur = _rint(os.path.join(base, "cur_freq"))
-    mn  = _rint(os.path.join(base, "min_freq"))
-    mx  = _rint(os.path.join(base, "max_freq"))
+    mn = _rint(os.path.join(base, "min_freq"))
+    mx = _rint(os.path.join(base, "max_freq"))
     gov = _rstr(os.path.join(base, "governor")) or "nvhost_podgov"
     return {
-        "cur": (cur or 0)//1000,
-        "min": (mn  or 0)//1000,
-        "max": (mx  or 0)//1000,
+        "cur": (cur or 0) // 1000,
+        "min": (mn or 0) // 1000,
+        "max": (mx or 0) // 1000,
         "governor": gov,
     }
 
