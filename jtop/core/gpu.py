@@ -291,14 +291,39 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             max_sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetMaxClockInfo, handle, pynvml.NVML_CLOCK_SM)
             min_sm_clock = None  # NVML doesn't provide min clocks
 
-            # Build frequency data with expected structure
-            # GUI expects these keys to be present, even if values are None
+            # Check if this is Jetson Thor and NVML frequency queries failed
+            # Fall back to traditional sysfs method for frequency detection
+            jetson_vars = get_jetson_variables()
+            soc = jetson_vars.get('SoC', '')
+            is_thor = 'tegra264' in soc or 'tegra26x' in soc
+            
             freq_data = {
                 'governor': NVML_GOVERNOR,
                 'cur': sm_clock if sm_clock is not None else DEFAULT_FREQUENCY,
                 'max': max_sm_clock if max_sm_clock is not None else DEFAULT_FREQUENCY,
                 'min': min_sm_clock if min_sm_clock is not None else DEFAULT_FREQUENCY,
             }
+            
+            # If NVML frequency queries failed and this is Jetson Thor, try traditional method
+            if is_thor and (sm_clock is None or max_sm_clock is None):
+                logger.debug("NVML frequency queries failed on Jetson Thor, trying traditional method")
+                # Try to find GPU device in sysfs
+                gpu_devices = find_igpu(DEFAULT_IGPU_PATH)
+                for _, gpu_data in gpu_devices.items():
+                    if gpu_data.get('type') == 'integrated':
+                        # Read frequency using traditional method
+                        freq_info = igpu_read_freq(gpu_data.get('frq_path', ''))
+                        if freq_info:
+                            freq_data.update({
+                                'governor': freq_info.get('governor', NVML_GOVERNOR),
+                                'cur': freq_info.get('cur', DEFAULT_FREQUENCY),
+                                'max': freq_info.get('max', DEFAULT_FREQUENCY),
+                                'min': freq_info.get('min', DEFAULT_FREQUENCY),
+                            })
+                            if 'GPC' in freq_info:
+                                freq_data['GPC'] = freq_info['GPC']
+                            break
+            
             if mem_clock is not None:
                 freq_data['mem'] = mem_clock
 
@@ -527,7 +552,6 @@ class GPUService(object):
 
         if self._use_nvml:
             logger.warning("3D scaling control not available via NVML (Jetpack 7.0+)")
-            return False
             return False
         if '3d_scaling' not in self._gpu_list[name]:
             logger.error(f"GPU \"{name}\" does not have 3D scaling")
