@@ -38,7 +38,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 # default ipgu path for Jetson devices
 DEFAULT_IGPU_PATH = "/sys/class/devfreq/"
-KNOWN_GPU_DEVICE_NAMES = {'gv11b', 'gp10b', 'ga10b', 'gb10b', 'gpu'}
+KNOWN_GPU_DEVICE_NAMES = {'gv11b', 'gp10b', 'ga10b', 'gb10b', 'gpu', 'tegra264', 'thor', 'gpu'}
 
 # Constants for NVML
 WATTS_TO_MILLIWATTS = 1000.0
@@ -305,15 +305,19 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             }
 
             # If NVML frequency queries failed and this is Jetson Thor, try traditional method
-            if is_thor and (sm_clock is None or max_sm_clock is None):
-                logger.debug("NVML frequency queries failed on Jetson Thor, trying traditional method")
+            # Check for both None and 0 values (NVML might return 0 instead of None)
+            if is_thor and (sm_clock is None or sm_clock == 0 or max_sm_clock is None or max_sm_clock == 0):
+                logger.info("NVML frequency queries failed on Jetson Thor (sm_clock=%s, max_sm_clock=%s), trying traditional method", sm_clock, max_sm_clock)
                 # Try to find GPU device in sysfs
                 gpu_devices = find_igpu(DEFAULT_IGPU_PATH)
-                for _, gpu_data in gpu_devices.items():
+                logger.info("Found %d GPU devices in traditional method", len(gpu_devices))
+                for gpu_name, gpu_data in gpu_devices.items():
+                    logger.info("Checking GPU device: %s (type: %s, path: %s)", gpu_name, gpu_data.get('type'), gpu_data.get('frq_path'))
                     if gpu_data.get('type') == 'integrated':
                         # Read frequency using traditional method
                         freq_info = igpu_read_freq(gpu_data.get('frq_path', ''))
-                        if freq_info:
+                        logger.info("Traditional method freq_info: %s", freq_info)
+                        if freq_info and freq_info.get('cur', 0) > 0:
                             freq_data.update({
                                 'governor': freq_info.get('governor', NVML_GOVERNOR),
                                 'cur': freq_info.get('cur', DEFAULT_FREQUENCY),
@@ -322,6 +326,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                             })
                             if 'GPC' in freq_info:
                                 freq_data['GPC'] = freq_info['GPC']
+                            logger.info("Updated freq_data with traditional method: %s", freq_data)
                             break
 
             if mem_clock is not None:
