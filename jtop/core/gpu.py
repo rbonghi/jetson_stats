@@ -625,7 +625,7 @@ class GPUService(object):
             # Use NVML for Jetpack 7.0+
             gpu_data = nvml_read_gpu_status()
             logger.info("NVML method returned gpu_data: %s", gpu_data)
-            
+
             # If tegrastats data is available, use it to override frequency information
             if tegrastats_data and 'GR3D' in tegrastats_data:
                 gr3d_data = tegrastats_data['GR3D']
@@ -653,7 +653,7 @@ class GPUService(object):
                                 logger.info("Updated GPU frequency from tegrastats fallback: %d MHz", tegrastats_freq)
                             else:
                                 logger.warning("Tegrastats fallback also failed")
-            
+
             return gpu_data
 
         # Use traditional method for older Jetpack versions
@@ -668,7 +668,7 @@ class GPUService(object):
                 gpu['status'] = igpu_read_status(data['path'])
                 # Read frequency
                 gpu['freq'] = igpu_read_freq(data['frq_path'])
-                
+
                 # If tegrastats data is available, use it to override frequency information
                 if tegrastats_data and 'GR3D' in tegrastats_data:
                     gr3d_data = tegrastats_data['GR3D']
@@ -691,7 +691,7 @@ class GPUService(object):
                             logger.info("Updated GPU frequency from tegrastats fallback: %d MHz", tegrastats_freq)
                         else:
                             logger.warning("Tegrastats fallback also failed")
-                
+
                 # Read power control status
                 if os.access(data['path'] + "/power/control", os.R_OK):
                     with open(data['path'] + "/power/control", 'r') as f:
@@ -707,8 +707,8 @@ class GPUService(object):
         try:
             import subprocess
             # Run tegrastats once to get current data
-            result = subprocess.run(['tegrastats', '--interval', '1000', '--logfile', '/dev/stdout'], 
-                                  capture_output=True, text=True, timeout=2)
+            result = subprocess.run(['tegrastats', '--interval', '1000', '--logfile', '/dev/stdout'],
+                                    capture_output=True, text=True, timeout=2)
             if result.returncode == 0:
                 # Parse the tegrastats output
                 from .tegra_parse import VALS
