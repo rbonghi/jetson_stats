@@ -96,11 +96,10 @@ def map_jetson_nano(engine):
 
 
 MAP_JETSON_MODELS = {
-    'thor': pass_thor,
-    'orin nx': pass_orin_nx,
     'orin nano': pass_orin_nano,
     'orin nx': pass_orin_nx,
     'agx orin': pass_orin,
+    'thor': pass_thor,      # Alternative name for Thor
     'xavier': map_xavier,
     'jetson nano': map_jetson_nano,
     'nintendo': map_jetson_nano,
@@ -141,6 +140,8 @@ def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
     # Plot all engines
     size_table = 26
     for gidx, row in enumerate(map_eng):
+        if len(row) == 0:  # Skip empty rows to avoid division by zero
+            continue
         size_eng = size_table // len(row) - 1
         for idx, (name, value) in enumerate(row):
             if name is not None:
