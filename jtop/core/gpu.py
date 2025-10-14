@@ -296,14 +296,14 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             jetson_vars = get_jetson_variables()
             soc = jetson_vars.get('SoC', '')
             is_thor = 'tegra264' in soc or 'tegra26x' in soc
-            
+
             freq_data = {
                 'governor': NVML_GOVERNOR,
                 'cur': sm_clock if sm_clock is not None else DEFAULT_FREQUENCY,
                 'max': max_sm_clock if max_sm_clock is not None else DEFAULT_FREQUENCY,
                 'min': min_sm_clock if min_sm_clock is not None else DEFAULT_FREQUENCY,
             }
-            
+
             # If NVML frequency queries failed and this is Jetson Thor, try traditional method
             if is_thor and (sm_clock is None or max_sm_clock is None):
                 logger.debug("NVML frequency queries failed on Jetson Thor, trying traditional method")
@@ -323,7 +323,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                             if 'GPC' in freq_info:
                                 freq_data['GPC'] = freq_info['GPC']
                             break
-            
+
             if mem_clock is not None:
                 freq_data['mem'] = mem_clock
 

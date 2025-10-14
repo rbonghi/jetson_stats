@@ -30,6 +30,7 @@ def get_value_engine(engine):
 def add_engine_in_list(label, engine, group, name):
     return [(label, get_value_engine(engine[group][name]))] if group in engine else []
 
+
 def pass_thor(engine):
     """Jetson Thor engine mapping - no DLA, powerful Blackwell GPU with Tensor Cores"""
     return [
@@ -38,8 +39,8 @@ def pass_thor(engine):
         add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
         add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
     ]
-    
-    
+
+
 def pass_orin(engine):
     return [
         add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_CPU_AXI'),
