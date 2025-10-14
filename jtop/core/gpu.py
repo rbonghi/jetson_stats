@@ -620,9 +620,11 @@ class GPUService(object):
             logger.error(f"I cannot set Railgate {e}")
 
     def get_status(self, tegrastats_data=None):
+        logger.info("GPU get_status called - use_nvml=%s, tegrastats_data=%s", self._use_nvml, tegrastats_data is not None)
         if self._use_nvml:
             # Use NVML for Jetpack 7.0+
             gpu_data = nvml_read_gpu_status()
+            logger.info("NVML method returned gpu_data: %s", gpu_data)
             
             # If tegrastats data is available, use it to override frequency information
             if tegrastats_data and 'GR3D' in tegrastats_data:
@@ -638,14 +640,19 @@ class GPUService(object):
             else:
                 # If NVML frequency detection failed and no tegrastats data provided, try tegrastats fallback
                 for gpu_name, gpu_info in gpu_data.items():
-                    if 'freq' in gpu_info and gpu_info['freq'].get('cur', 0) == 0:
-                        logger.info("NVML GPU frequency detection failed, trying tegrastats fallback")
-                        tegrastats_freq = self._get_tegrastats_gpu_frequency()
-                        if tegrastats_freq:
-                            gpu_info['freq']['cur'] = tegrastats_freq
-                            gpu_info['freq']['max'] = tegrastats_freq
-                            gpu_info['freq']['min'] = tegrastats_freq
-                            logger.info("Updated GPU frequency from tegrastats fallback: %d MHz", tegrastats_freq)
+                    if 'freq' in gpu_info:
+                        current_freq = gpu_info['freq'].get('cur', 0)
+                        # Check if frequency is 0, None, or invalid
+                        if current_freq == 0 or current_freq is None or current_freq == DEFAULT_FREQUENCY:
+                            logger.info("NVML GPU frequency detection failed (cur=%s), trying tegrastats fallback", current_freq)
+                            tegrastats_freq = self._get_tegrastats_gpu_frequency()
+                            if tegrastats_freq:
+                                gpu_info['freq']['cur'] = tegrastats_freq
+                                gpu_info['freq']['max'] = tegrastats_freq
+                                gpu_info['freq']['min'] = tegrastats_freq
+                                logger.info("Updated GPU frequency from tegrastats fallback: %d MHz", tegrastats_freq)
+                            else:
+                                logger.warning("Tegrastats fallback also failed")
             
             return gpu_data
 
@@ -672,14 +679,18 @@ class GPUService(object):
                         logger.info("Updated GPU frequency from tegrastats: %d MHz", gr3d_data['frq'] // 1000)
                 else:
                     # If traditional method failed and no tegrastats data provided, try tegrastats fallback
-                    if gpu['freq'].get('cur', 0) == 0:
-                        logger.info("Traditional GPU frequency detection failed, trying tegrastats fallback")
+                    current_freq = gpu['freq'].get('cur', 0)
+                    # Check if frequency is 0, None, or invalid
+                    if current_freq == 0 or current_freq is None or current_freq == DEFAULT_FREQUENCY:
+                        logger.info("Traditional GPU frequency detection failed (cur=%s), trying tegrastats fallback", current_freq)
                         tegrastats_freq = self._get_tegrastats_gpu_frequency()
                         if tegrastats_freq:
                             gpu['freq']['cur'] = tegrastats_freq
                             gpu['freq']['max'] = tegrastats_freq
                             gpu['freq']['min'] = tegrastats_freq
                             logger.info("Updated GPU frequency from tegrastats fallback: %d MHz", tegrastats_freq)
+                        else:
+                            logger.warning("Tegrastats fallback also failed")
                 
                 # Read power control status
                 if os.access(data['path'] + "/power/control", os.R_OK):
