@@ -284,73 +284,40 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             if power_limit is not None:
                 power_limit = power_limit / WATTS_TO_MILLIWATTS  # Convert mW to W
             # Get clock speeds - may not be supported on Jetson
-            sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_SM)
-            mem_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_MEM)
+            # DISABLED: NVML frequency queries don't work on Jetson Thor
+            # sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_SM)
+            # mem_clock = _safe_nvml_call(pynvml.nvmlDeviceGetClockInfo, handle, pynvml.NVML_CLOCK_MEM)
+            # max_sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetMaxClockInfo, handle, pynvml.NVML_CLOCK_SM)
+            # min_sm_clock = None  # NVML doesn't provide min clocks
+            
+            # Use tegrastats for frequency detection instead
+            sm_clock = None
+            mem_clock = None
+            max_sm_clock = None
+            min_sm_clock = None
 
-            # Try to get max clocks
-            max_sm_clock = _safe_nvml_call(pynvml.nvmlDeviceGetMaxClockInfo, handle, pynvml.NVML_CLOCK_SM)
-            min_sm_clock = None  # NVML doesn't provide min clocks
-
-            # Check if this is Jetson Thor and NVML frequency queries failed
-            # Fall back to traditional sysfs method for frequency detection
-            jetson_vars = get_jetson_variables()
-            soc = jetson_vars.get('SoC', '')
-            is_thor = 'tegra264' in soc or 'tegra26x' in soc
-
-            # Debug logging
-            logger.info("NVML frequency detection - sm_clock=%s, max_sm_clock=%s, is_thor=%s", sm_clock, max_sm_clock, is_thor)
-
-            freq_data = {
-                'governor': NVML_GOVERNOR,
-                'cur': sm_clock if sm_clock is not None else DEFAULT_FREQUENCY,
-                'max': max_sm_clock if max_sm_clock is not None else DEFAULT_FREQUENCY,
-                'min': min_sm_clock if min_sm_clock is not None else DEFAULT_FREQUENCY,
-            }
-
-            # For Jetson Thor, always try traditional method as fallback since NVML frequency queries don't work
-            if is_thor:
-                logger.info("Jetson Thor detected, trying traditional method for frequency detection")
-                # Try to find GPU device in sysfs
-                gpu_devices = find_igpu(DEFAULT_IGPU_PATH)
-                logger.info("Found %d GPU devices in traditional method", len(gpu_devices))
-
-                # If no devices found in devfreq, try alternative paths
-                if not gpu_devices:
-                    logger.info("No devices found in devfreq, trying alternative paths")
-                    alt_paths = ["/sys/devices/platform/17000000.gpu", "/sys/devices/platform/17000000.gv11b", "/sys/devices/platform/17000000.tegra264"]
-                    for alt_path in alt_paths:
-                        if os.path.exists(alt_path):
-                            logger.info("Found alternative GPU path: %s", alt_path)
-                            # Try to find devfreq subdirectory
-                            devfreq_subdir = os.path.join(alt_path, "devfreq")
-                            if os.path.exists(devfreq_subdir):
-                                logger.info("Found devfreq subdirectory: %s", devfreq_subdir)
-                                gpu_devices = find_igpu(devfreq_subdir)
-                                if gpu_devices:
-                                    logger.info("Found %d GPU devices in alternative path", len(gpu_devices))
-                                    break
-
-                for gpu_name, gpu_data in gpu_devices.items():
-                    logger.info("Checking GPU device: %s (type: %s, path: %s)", gpu_name, gpu_data.get('type'), gpu_data.get('frq_path'))
-                    if gpu_data.get('type') == 'integrated':
-                        # Read frequency using traditional method
-                        freq_info = igpu_read_freq(gpu_data.get('frq_path', ''))
-                        logger.info("Traditional method freq_info: %s", freq_info)
-                        if freq_info and freq_info.get('cur', 0) > 0:
-                            freq_data.update({
-                                'governor': freq_info.get('governor', NVML_GOVERNOR),
-                                'cur': freq_info.get('cur', DEFAULT_FREQUENCY),
-                                'max': freq_info.get('max', DEFAULT_FREQUENCY),
-                                'min': freq_info.get('min', DEFAULT_FREQUENCY),
-                            })
-                            if 'GPC' in freq_info:
-                                freq_data['GPC'] = freq_info['GPC']
-                            logger.info("Updated freq_data with traditional method: %s", freq_data)
-                            break
-                        else:
-                            logger.warning("Traditional method returned no valid frequency data")
-                else:
-                    logger.warning("No integrated GPU devices found in traditional method")
+            # Use tegrastats for frequency detection since NVML doesn't work on Jetson
+            logger.info("Using tegrastats for frequency detection (NVML disabled)")
+            
+            # Get frequency from tegrastats
+            tegrastats_freq = _get_tegrastats_gpu_frequency()
+            if tegrastats_freq:
+                freq_data = {
+                    'governor': NVML_GOVERNOR,
+                    'cur': tegrastats_freq,
+                    'max': tegrastats_freq,
+                    'min': tegrastats_freq,
+                }
+                logger.info("Updated freq_data with tegrastats: %s", freq_data)
+            else:
+                # Fallback to default if tegrastats fails
+                freq_data = {
+                    'governor': NVML_GOVERNOR,
+                    'cur': DEFAULT_FREQUENCY,
+                    'max': DEFAULT_FREQUENCY,
+                    'min': DEFAULT_FREQUENCY,
+                }
+                logger.warning("Tegrastats frequency detection failed, using default")
 
             if mem_clock is not None:
                 freq_data['mem'] = mem_clock
@@ -390,6 +357,36 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
         logger.debug(f"NVML error: {e}")
 
     return gpu_data
+
+
+def _get_tegrastats_gpu_frequency():
+    """Get GPU frequency from tegrastats as fallback"""
+    try:
+        import subprocess
+        import re
+        # Run tegrastats once to get current data
+        result = subprocess.run(['tegrastats', '--interval', '1000', '--logfile', '/dev/stdout'], 
+                              capture_output=True, text=True, timeout=2)
+        if result.returncode == 0:
+            # Parse the tegrastats output using regex
+            # Pattern for GR3D_FREQ @[944,944,944] format
+            gr3d_pattern = r'GR3D_FREQ @\[(\d+),(\d+),(\d+)\]'
+            match = re.search(gr3d_pattern, result.stdout)
+            if match:
+                freq1, freq2, freq3 = match.groups()
+                # Use first frequency value (all three are usually the same)
+                frequency_hz = int(freq1)
+                frequency_mhz = frequency_hz // 1000
+                logger.info("Got GPU frequency from tegrastats: %d MHz (values: %s, %s, %s)", 
+                          frequency_mhz, freq1, freq2, freq3)
+                return frequency_mhz
+            else:
+                logger.debug("No GR3D_FREQ pattern found in tegrastats output")
+        else:
+            logger.debug("tegrastats returned error code %d", result.returncode)
+    except Exception as e:
+        logger.debug("Failed to get GPU frequency from tegrastats: %s", e)
+    return None
 
 
 def find_dgpu():
@@ -625,7 +622,7 @@ class GPUService(object):
             # Use NVML for Jetpack 7.0+
             gpu_data = nvml_read_gpu_status()
             logger.info("NVML method returned gpu_data: %s", gpu_data)
-
+            
             # If tegrastats data is available, use it to override frequency information
             if tegrastats_data and 'GR3D' in tegrastats_data:
                 gr3d_data = tegrastats_data['GR3D']
@@ -639,13 +636,16 @@ class GPUService(object):
                             logger.info("Updated GPU frequency from tegrastats: %d MHz", gr3d_data['frq'] // 1000)
             else:
                 # If NVML frequency detection failed and no tegrastats data provided, try tegrastats fallback
+                logger.info("No tegrastats data provided, checking if fallback is needed")
                 for gpu_name, gpu_info in gpu_data.items():
+                    logger.info("Checking GPU %s: %s", gpu_name, gpu_info)
                     if 'freq' in gpu_info:
                         current_freq = gpu_info['freq'].get('cur', 0)
+                        logger.info("GPU %s current frequency: %s", gpu_name, current_freq)
                         # Check if frequency is 0, None, or invalid
                         if current_freq == 0 or current_freq is None or current_freq == DEFAULT_FREQUENCY:
                             logger.info("NVML GPU frequency detection failed (cur=%s), trying tegrastats fallback", current_freq)
-                            tegrastats_freq = self._get_tegrastats_gpu_frequency()
+                            tegrastats_freq = _get_tegrastats_gpu_frequency()
                             if tegrastats_freq:
                                 gpu_info['freq']['cur'] = tegrastats_freq
                                 gpu_info['freq']['max'] = tegrastats_freq
@@ -653,7 +653,11 @@ class GPUService(object):
                                 logger.info("Updated GPU frequency from tegrastats fallback: %d MHz", tegrastats_freq)
                             else:
                                 logger.warning("Tegrastats fallback also failed")
-
+                        else:
+                            logger.info("GPU %s frequency is valid (%s), no fallback needed", gpu_name, current_freq)
+                    else:
+                        logger.warning("GPU %s has no freq data", gpu_name)
+            
             return gpu_data
 
         # Use traditional method for older Jetpack versions
@@ -668,7 +672,7 @@ class GPUService(object):
                 gpu['status'] = igpu_read_status(data['path'])
                 # Read frequency
                 gpu['freq'] = igpu_read_freq(data['frq_path'])
-
+                
                 # If tegrastats data is available, use it to override frequency information
                 if tegrastats_data and 'GR3D' in tegrastats_data:
                     gr3d_data = tegrastats_data['GR3D']
@@ -683,7 +687,7 @@ class GPUService(object):
                     # Check if frequency is 0, None, or invalid
                     if current_freq == 0 or current_freq is None or current_freq == DEFAULT_FREQUENCY:
                         logger.info("Traditional GPU frequency detection failed (cur=%s), trying tegrastats fallback", current_freq)
-                        tegrastats_freq = self._get_tegrastats_gpu_frequency()
+                        tegrastats_freq = _get_tegrastats_gpu_frequency()
                         if tegrastats_freq:
                             gpu['freq']['cur'] = tegrastats_freq
                             gpu['freq']['max'] = tegrastats_freq
@@ -691,7 +695,7 @@ class GPUService(object):
                             logger.info("Updated GPU frequency from tegrastats fallback: %d MHz", tegrastats_freq)
                         else:
                             logger.warning("Tegrastats fallback also failed")
-
+                
                 # Read power control status
                 if os.access(data['path'] + "/power/control", os.R_OK):
                     with open(data['path'] + "/power/control", 'r') as f:
@@ -702,23 +706,4 @@ class GPUService(object):
             gpu_list[name] = gpu
         return gpu_list
 
-    def _get_tegrastats_gpu_frequency(self):
-        """Get GPU frequency from tegrastats as fallback"""
-        try:
-            import subprocess
-            # Run tegrastats once to get current data
-            result = subprocess.run(['tegrastats', '--interval', '1000', '--logfile', '/dev/stdout'],
-                                    capture_output=True, text=True, timeout=2)
-            if result.returncode == 0:
-                # Parse the tegrastats output
-                from .tegra_parse import VALS
-                stats = VALS(result.stdout)
-                if 'GR3D' in stats and 'frq' in stats['GR3D']:
-                    frequency_hz = stats['GR3D']['frq']
-                    frequency_mhz = frequency_hz // 1000
-                    logger.info("Got GPU frequency from tegrastats: %d MHz", frequency_mhz)
-                    return frequency_mhz
-        except Exception as e:
-            logger.debug("Failed to get GPU frequency from tegrastats: %s", e)
-        return None
 # EOF
