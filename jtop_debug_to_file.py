@@ -4,6 +4,7 @@ Run jtop with debug logging enabled and save logs to a file.
 This script sets the logging level to DEBUG and saves logs to jtop_debug.log
 """
 
+from jtop.__main__ import main
 import logging
 import sys
 import os
@@ -30,7 +31,6 @@ print("Press Ctrl+C to stop and check the log file")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'jtop'))
 
 # Import and run jtop
-from jtop.__main__ import main
 
 if __name__ == "__main__":
     try:
