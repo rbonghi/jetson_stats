@@ -296,7 +296,10 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             jetson_vars = get_jetson_variables()
             soc = jetson_vars.get('SoC', '')
             is_thor = 'tegra264' in soc or 'tegra26x' in soc
-
+            
+            # Debug logging
+            logger.info("NVML frequency detection - sm_clock=%s, max_sm_clock=%s, is_thor=%s", sm_clock, max_sm_clock, is_thor)
+            
             freq_data = {
                 'governor': NVML_GOVERNOR,
                 'cur': sm_clock if sm_clock is not None else DEFAULT_FREQUENCY,
@@ -304,13 +307,29 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                 'min': min_sm_clock if min_sm_clock is not None else DEFAULT_FREQUENCY,
             }
 
-            # If NVML frequency queries failed and this is Jetson Thor, try traditional method
-            # Check for both None and 0 values (NVML might return 0 instead of None)
-            if is_thor and (sm_clock is None or sm_clock == 0 or max_sm_clock is None or max_sm_clock == 0):
-                logger.info("NVML frequency queries failed on Jetson Thor (sm_clock=%s, max_sm_clock=%s), trying traditional method", sm_clock, max_sm_clock)
+            # For Jetson Thor, always try traditional method as fallback since NVML frequency queries don't work
+            if is_thor:
+                logger.info("Jetson Thor detected, trying traditional method for frequency detection")
                 # Try to find GPU device in sysfs
                 gpu_devices = find_igpu(DEFAULT_IGPU_PATH)
                 logger.info("Found %d GPU devices in traditional method", len(gpu_devices))
+                
+                # If no devices found in devfreq, try alternative paths
+                if not gpu_devices:
+                    logger.info("No devices found in devfreq, trying alternative paths")
+                    alt_paths = ["/sys/devices/platform/17000000.gpu", "/sys/devices/platform/17000000.gv11b", "/sys/devices/platform/17000000.tegra264"]
+                    for alt_path in alt_paths:
+                        if os.path.exists(alt_path):
+                            logger.info("Found alternative GPU path: %s", alt_path)
+                            # Try to find devfreq subdirectory
+                            devfreq_subdir = os.path.join(alt_path, "devfreq")
+                            if os.path.exists(devfreq_subdir):
+                                logger.info("Found devfreq subdirectory: %s", devfreq_subdir)
+                                gpu_devices = find_igpu(devfreq_subdir)
+                                if gpu_devices:
+                                    logger.info("Found %d GPU devices in alternative path", len(gpu_devices))
+                                    break
+                
                 for gpu_name, gpu_data in gpu_devices.items():
                     logger.info("Checking GPU device: %s (type: %s, path: %s)", gpu_name, gpu_data.get('type'), gpu_data.get('frq_path'))
                     if gpu_data.get('type') == 'integrated':
@@ -328,6 +347,10 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                                 freq_data['GPC'] = freq_info['GPC']
                             logger.info("Updated freq_data with traditional method: %s", freq_data)
                             break
+                        else:
+                            logger.warning("Traditional method returned no valid frequency data")
+                else:
+                    logger.warning("No integrated GPU devices found in traditional method")
 
             if mem_clock is not None:
                 freq_data['mem'] = mem_clock
