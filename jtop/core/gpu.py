@@ -296,10 +296,10 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             jetson_vars = get_jetson_variables()
             soc = jetson_vars.get('SoC', '')
             is_thor = 'tegra264' in soc or 'tegra26x' in soc
-            
+
             # Debug logging
             logger.info("NVML frequency detection - sm_clock=%s, max_sm_clock=%s, is_thor=%s", sm_clock, max_sm_clock, is_thor)
-            
+
             freq_data = {
                 'governor': NVML_GOVERNOR,
                 'cur': sm_clock if sm_clock is not None else DEFAULT_FREQUENCY,
@@ -313,7 +313,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                 # Try to find GPU device in sysfs
                 gpu_devices = find_igpu(DEFAULT_IGPU_PATH)
                 logger.info("Found %d GPU devices in traditional method", len(gpu_devices))
-                
+
                 # If no devices found in devfreq, try alternative paths
                 if not gpu_devices:
                     logger.info("No devices found in devfreq, trying alternative paths")
@@ -329,7 +329,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                                 if gpu_devices:
                                     logger.info("Found %d GPU devices in alternative path", len(gpu_devices))
                                     break
-                
+
                 for gpu_name, gpu_data in gpu_devices.items():
                     logger.info("Checking GPU device: %s (type: %s, path: %s)", gpu_name, gpu_data.get('type'), gpu_data.get('frq_path'))
                     if gpu_data.get('type') == 'integrated':
