@@ -30,6 +30,7 @@ def get_value_engine(engine):
 def add_engine_in_list(label, engine, group, name):
     return [(label, get_value_engine(engine[group][name]))] if group in engine else []
 
+
 def pass_thor(engine):
     """Jetson Thor engine mapping - no DLA, powerful Blackwell GPU with Tensor Cores"""
     return [
