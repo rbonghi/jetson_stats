@@ -21,9 +21,19 @@ from .jtopguiconfig import JTOPCONFIG
 from .jtopgui import JTOPGUI, Page
 from .pall import ALL
 from .pcpu import CPU
-from .pgpu import GPU
 from .pengine import ENGINE, engine_model
 from .pmem import MEM
 from .pcontrol import CTRL
 from .pinfo import INFO
+
+try:
+    from jtop.core.thor_power import devfreq_nodes
+    _is_thor = bool(devfreq_nodes())
+except Exception:
+    _is_thor = False
+
+if _is_thor:
+    from .pgpu_thor import GPU
+else:
+    from .pgpu import GPU
 # EOF

@@ -18,12 +18,21 @@
 # flake8: noqa
 
 from .core.exceptions import JtopException
-from .core.gpu import GPU
 from .core.memory import Memory
 from .core.fan import Fan
 from .core.jetson_clocks import JetsonClocks
 from .core.nvpmodel import NVPModel
 from .jtop import jtop
+
+try:
+    from .core.thor_gpu import is_thor
+    if is_thor():
+        from .core.thor_gpu import GPU, GPUService
+    else:
+        from .core.gpu import GPU
+except Exception:
+    from .gpu import GPU
+
 
 __author__ = "Raffaello Bonghi"
 __email__ = "raffaello@rnext.it"
