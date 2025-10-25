@@ -19,6 +19,9 @@
 from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
 import glob, os
+import logging
+logger = logging.getLogger(__name__)
+
 
 _DEVFREQ_NODES = ("/sys/class/devfreq/gpu-gpc-0", "/sys/class/devfreq/gpu-nvd-0")
 
@@ -75,8 +78,7 @@ def rail_status() -> Dict:
 
 def set_rail(allow_idle: bool) -> Tuple[bool, Optional[str]]:
     """allow_idle=True -> 'auto'; False -> 'on'."""
-    ctrl = _pm_control_path()
-    if not ctrl:
+    if not (ctrl := _pm_control_path()):
         return False, "GPU runtime PM control node not found"
     return _write(ctrl, "auto" if allow_idle else "on")
 
@@ -103,8 +105,7 @@ def available_governors() -> List[str]:
 
 def current_governor() -> Optional[str]:
     for n in devfreq_nodes():
-        g = _read(os.path.join(n, "governor"))
-        if g:
+        if g := _read(os.path.join(n, "governor")):
             return g
     return None
 
@@ -133,16 +134,16 @@ def podgov_path(node: str) -> Optional[str]:
     p = os.path.join(node, "nvhost_podgov")
     return p if _exists(p) else None
 
+
 def read_podgov(node: str) -> Dict[str, Optional[str]]:
     p = podgov_path(node)
     params = ["load_max","load_target","load_margin","k","up_freq_margin","down_freq_margin"]
-    out = {}
-    for k in params:
-        out[k] = _read(os.path.join(p, k)) if p else None
-    return out
+    return {k: (_read(os.path.join(p, k)) if p else None) for k in params}
+
 
 def write_podgov(node: str, name: str, value: str) -> Tuple[bool, Optional[str]]:
-    p = podgov_path(node)
-    if not p:
+    if not (p := podgov_path(node)):
         return False, f"nvhost_podgov not present on {node}"
     return _write(os.path.join(p, name), value)
+
+# EOF

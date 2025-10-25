@@ -25,15 +25,28 @@ from .pengine import ENGINE, engine_model
 from .pmem import MEM
 from .pcontrol import CTRL
 from .pinfo import INFO
+from jtop.core.hw_detect import is_thor
 
 try:
-    from jtop.core.thor_power import devfreq_nodes
-    _is_thor = bool(devfreq_nodes())
+    from jtop.core.hw_detect import is_thor
+    _is_thor = is_thor()
 except Exception:
-    _is_thor = False
+    try:
+        from jtop.core.thor_power import devfreq_nodes
+        _is_thor = bool(devfreq_nodes())
+    except Exception:
+        _is_thor = False
+try:
+    if _is_thor:
+        from .pgpu_thor import GPU
+    else:
+        from .pgpu import GPU
 
-if _is_thor:
-    from .pgpu_thor import GPU
-else:
+except Exception:
     from .pgpu import GPU
+
+if 'GPU' not in globals():
+    from .pgpu import GPU
+
+
 # EOF

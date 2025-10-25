@@ -23,15 +23,9 @@ from typing import Any, Dict, Optional
 
 from .common import GenericInterface
 from .exceptions import JtopException
-from .thor_power import (
-    rail_status,
-    set_rail,
-    toggle_rail,      # not used directly here, but kept for parity/extension
-    devfreq_nodes,
-    current_governor,
-    set_governor,
-    toggle_governor,  # not used directly here, but kept for parity/extension
-)
+from .hw_detect import devfreq_nodes, is_thor
+from .thor_power import ( rail_status, set_rail, toggle_rail,
+                          current_governor, set_governor, toggle_governor )
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +131,7 @@ class GPU(GenericInterface):
     def set_railgate(self, name: str, value: bool):
         if name not in self._data:
             raise JtopException(f'GPU "{name}" does not exist')
-        ok, err = set_rail(bool(value))
+        ok, err = set_rail(value)
         if not ok:
             raise JtopException(err or "Failed to set rail-gating")
 
@@ -187,7 +181,7 @@ class GPUService(object):
         if name not in self._gpu_list:
             logger.error(f'GPU "{name}" does not exist')
             return False
-        ok, err = set_rail(bool(value))
+        ok, err = set_rail(value)
         if not ok:
             logger.error(err or "Failed to set rail-gating")
             return False

@@ -20,7 +20,6 @@
 
 import curses
 from .jtopgui import Page
-# Graphics elements
 from .lib.common import NColors, plot_name_info, size_min, unit_to_string, size_to_string
 from .lib.chart import Chart
 from .lib.process_table import ProcessTable
@@ -38,7 +37,7 @@ from jtop.core.thor_power import (
 def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
     gpu_status = gpu_data['status']
     data = {
-        'name': 'GPU' if idx == 0 else 'GPU{idx}'.format(idx=idx),
+        'name': 'GPU' if idx == 0 else f'GPU{idx}',
         'color': NColors.green() | curses.A_BOLD,
         'values': [(gpu_status['load'], NColors.igreen())],
     }
@@ -47,9 +46,9 @@ def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
         stdscr.addstr(pos_y, pos_x + size - 8, curr_string, NColors.italic())
     basic_gauge(stdscr, pos_y, pos_x, size - 10, data, bar=" ")
 
-# MODIFIED FUNCTION
-# Now accepts 'mouse=None' and draws/handles clicks for the clickable labels.
+
 def compact_gpu(stdscr, pos_y, pos_x, width, jetson, mouse=None):
+    """Compact GPU display for summary view."""
     line_counter = 0
     if not jetson.gpu:
         data = {
@@ -62,17 +61,18 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson, mouse=None):
         basic_gauge(stdscr, pos_y, pos_x, width - 2, data)
         return 1
 
-    # Draw GPU Gauge (original)
+    # Draw gauge
     for idx, gpu in enumerate(jetson.gpu.values()):
         gpu_gauge(stdscr, pos_y + line_counter, pos_x, width, gpu, idx)
         line_counter += 1
 
-    # Get current states
+    # Read Thor runtime states
     try:
-        val3d = current_governor() or "N/A"
+        gov = (current_governor() or "").strip()
+        val3d = "Enabled" if gov != "performance" else "Disabled"
     except Exception:
-        val3d = "N/A"
-    
+        val3d = "Unknown"
+
     try:
         rs = rail_status()
         cv = rs.get("control_value")
@@ -80,7 +80,7 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson, mouse=None):
     except Exception:
         valrg = "Unknown"
 
-    # Define layout
+    # Layout
     y = pos_y + line_counter
     label1_x = pos_x + 1
     label1 = "3D scaling: "
@@ -88,42 +88,36 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson, mouse=None):
     field1_x = label1_x + len(label1)
     field1_x_end = field1_x + len(field1) - 1
 
-    # Position the second label relative to the middle
-    label2_x = pos_x + max(width // 2, field1_x_end + 3) # ensure no overlap
+    label2_x = pos_x + max(width // 2, field1_x_end + 3)
     label2 = "Railgate: "
     field2 = "{" + valrg + "}"
     field2_x = label2_x + len(label2)
     field2_x_end = field2_x + len(field2) - 1
 
-    # Handle clicks
+    # Mouse interaction
     if mouse:
         mx, my = mouse
         if my == y:
-            # Check click on 3D scaling
             if label1_x <= mx <= field1_x_end:
-                try:
-                    toggle_governor()
-                except Exception:
-                    pass
-            # Check click on Railgate
+                toggle_governor()
             elif label2_x <= mx <= field2_x_end:
-                try:
-                    toggle_rail()
-                except Exception:
-                    pass
-    
-    # Draw labels
+                toggle_rail()
+
+    # Draw labels with color highlighting
     try:
         stdscr.addstr(y, label1_x, label1, curses.A_BOLD)
-        stdscr.addstr(y, field1_x, field1)
-        # Only draw second label if it fits
+        color_3d = NColors.green() if val3d == "Enabled" else curses.A_NORMAL
+        stdscr.addstr(y, field1_x, field1, color_3d)
+
         if field2_x_end < pos_x + width:
             stdscr.addstr(y, label2_x, label2, curses.A_BOLD)
-            stdscr.addstr(y, field2_x, field2)
+            color_rail = NColors.green() if valrg == "Enabled" else curses.A_NORMAL
+            stdscr.addstr(y, field2_x, field2, color_rail)
     except curses.error:
         pass
 
-    return line_counter + 1 # Add one more line for the labels
+    return line_counter + 1
+
 
 class GPU(Page):
     """Thor-specific GPU page (clickable 3D scaling & Railgate)."""
@@ -134,38 +128,26 @@ class GPU(Page):
         self.draw_gpus = {}
         for gpu_name in self.jetson.gpu:
             type_gpu = "i" if self.jetson.gpu[gpu_name]['type'] == 'integrated' else 'd'
-            chart = Chart(jetson, "{t}GPU {name}".format(t=type_gpu, name=gpu_name), self.update_chart,
+            chart = Chart(jetson, f"{type_gpu}GPU {gpu_name}", self.update_chart,
                           color_text=curses.COLOR_GREEN)
             button_3d_scaling = SmallButton(stdscr, self.action_scaling_3D, info={'name': gpu_name})
-            if type_gpu == 'i':
-                chart_ram = Chart(jetson, "GPU Shared RAM", self.update_chart_ram,
-                                  type_value=float,
-                                  color_text=curses.COLOR_GREEN,
-                                  color_chart=[COLOR_GREY, curses.COLOR_GREEN])
-            else:
-                chart_ram = None
+            chart_ram = Chart(jetson, "GPU Shared RAM", self.update_chart_ram,
+                              type_value=float,
+                              color_text=curses.COLOR_GREEN,
+                              color_chart=[COLOR_GREY, curses.COLOR_GREEN]) if type_gpu == 'i' else None
             self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling, 'ram': chart_ram}
         self.process_table = ProcessTable(self.stdscr, self.jetson)
-        # clickable regions for braces {…}
         self._click_regions = {"scaling": [], "railgate": []}
 
-    # keep same API used by smallbutton in case it’s still referenced
     def action_railgate(self, info, selected):
-        try:
-            toggle_rail()
-        except Exception:
-            pass
+        toggle_rail()
 
     def action_scaling_3D(self, info, selected):
-        try:
-            toggle_governor()
-        except Exception:
-            pass
+        toggle_governor()
 
     def update_chart(self, jetson, name):
         gpu_name = name.split(" ")[1]
-        gpu_data = jetson.gpu[gpu_name]
-        gpu_status = gpu_data['status']
+        gpu_status = jetson.gpu[gpu_name]['status']
         return {'value': [gpu_status['load']]}
 
     def update_chart_ram(self, jetson, name):
@@ -174,61 +156,45 @@ class GPU(Page):
         cpu_val = parameter.get("used", 0)
         use_val = parameter.get("shared", 0)
         szw, divider, unit = size_min(max_val, start='k')
-        used_out = (cpu_val) / divider
-        gpu_out = (use_val) / divider
-        return {'value': [used_out, gpu_out], 'max': szw, 'unit': unit}
+        return {'value': [cpu_val / divider, use_val / divider], 'max': szw, 'unit': unit}
 
-    # Renamed from _handle_clicks and now accepts 'mouse' tuple
     def _handle_mouse(self, mouse):
-        if mouse:  # Check if the mouse tuple is not empty
-            try:
-                mx, my = mouse  # Unpack coordinates
-                # Original click-checking logic
-                for which, regions in (("scaling", self._click_regions.get("scaling", [])),
-                                        ("railgate", self._click_regions.get("railgate", []))):
-                    for (ry, rx1, rx2) in regions:
-                        if my == ry and rx1 <= mx <= rx2:
-                            try:
-                                toggle_governor() if which == "scaling" else toggle_rail()
-                            except Exception:
-                                pass
-                            return True  # Click was handled
-            except Exception:
-                pass
+        if not mouse:
+            return False
+        try:
+            mx, my = mouse
+            for which, regions in (("scaling", self._click_regions["scaling"]),
+                                   ("railgate", self._click_regions["railgate"])):
+                for (ry, rx1, rx2) in regions:
+                    if my == ry and rx1 <= mx <= rx2:
+                        toggle_governor() if which == "scaling" else toggle_rail()
+                        return True
+        except Exception:
+            pass
         return False
 
-    # Extracted hotkey logic from old _handle_clicks
     def _handle_hotkeys(self, key):
         if isinstance(key, int):
             if key in (ord('g'), ord('G')):
-                try: toggle_governor()
-                except Exception: pass
-                return True
+                toggle_governor(); return True
             if key in (ord('r'), ord('R')):
-                try: toggle_rail()
-                except Exception: pass
-                return True
+                toggle_rail(); return True
         return False
 
     def draw(self, key, mouse):
-        # Pass 'mouse' to mouse handler, 'key' to hotkey handler
         if self._handle_mouse(mouse) or self._handle_hotkeys(key):
-            # UI will redraw with new values
             pass
 
         height, width, first = self.size_page()
         gpu_height = (height * 2 // 3 - 3) // max(1, len(self.jetson.gpu))
-
         self.stdscr.addstr(first + 1, 1, "Temperatures:", curses.A_NORMAL)
-        for idx, name in enumerate(self.jetson.temperature):
-            if 'gpu' in name.lower():
-                sensor = self.jetson.temperature[name]
-                color_temperature(self.stdscr, first + 1, 15, name, sensor)
 
-        # reset regions each frame
+        for name in self.jetson.temperature:
+            if 'gpu' in name.lower():
+                color_temperature(self.stdscr, first + 1, 15, name, self.jetson.temperature[name])
+
         self._click_regions = {"scaling": [], "railgate": []}
 
-        # Draw GPUs
         for idx, (gpu_name, gpu_data) in enumerate(self.jetson.gpu.items()):
             chart = self.draw_gpus[gpu_name]['chart']
             chart_ram = self.draw_gpus[gpu_name]['ram']
@@ -238,24 +204,19 @@ class GPU(Page):
             size_x = [1, width // 2 - 2]
             size_y = [first + 2 + idx * (gpu_height + 1), first + 2 + (idx + 1) * (gpu_height - 3)]
 
-            governor = gpu_freq.get('governor', '')
-            label_chart_gpu = "{percent: >3.0f}% - gov: {governor}".format(percent=gpu_status['load'], governor=governor)
+            label_chart_gpu = f"{gpu_status['load']:>3.0f}% - gov: {gpu_freq.get('governor', '')}"
             chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
 
-            size_x_ram = [1 + width // 2, width - 2]
-            mem_data = self.jetson.memory['RAM']
-            total = size_to_string(mem_data['tot'], 'k')
-            shared = size_to_string(mem_data['shared'], 'k')
-            if chart_ram is not None:
-                chart_ram.draw(self.stdscr, size_x_ram, size_y, label="{used}/{total}B".format(used=shared, total=total))
+            if chart_ram:
+                chart_ram.draw(self.stdscr, [1 + width // 2, width - 2], size_y,
+                               label="{used}/{total}B".format(
+                                   used=size_to_string(self.jetson.memory['RAM']['shared'], 'k'),
+                                   total=size_to_string(self.jetson.memory['RAM']['tot'], 'k')
+                               ))
 
-            button_position = width // 4
-            button_idx = 0
-
-
-            # 3D scaling — clickable { … }
+            # Clickable toggles
             y = first + 1 + (idx + 1) * gpu_height - 1
-            x = 1 + button_idx
+            x = 1
             try:
                 gov = (current_governor() or "").strip()
                 val3d = "Enabled" if gov != "performance" else "Disabled"
@@ -263,19 +224,12 @@ class GPU(Page):
                 val3d = "Unknown"
             label = "3D scaling: "
             field = "{" + val3d + "}"
-            try:
-                self.stdscr.addstr(y, x, label, curses.A_BOLD)
-                color = NColors.green() if val3d == "Enabled" else curses.A_NORMAL
-                self.stdscr.addstr(y, x + len(label), field, color)
-            except curses.error:
-                pass
+            color_3d = NColors.green() if val3d == "Enabled" else curses.A_NORMAL
+            self.stdscr.addstr(y, x, label, curses.A_BOLD)
+            self.stdscr.addstr(y, x + len(label), field, color_3d)
             self._click_regions["scaling"].append((y, x + len(label), x + len(label) + len(field) - 1))
-            button_idx += button_position
 
-
-            # Railgate — clickable { … }
-            y = first + 1 + (idx + 1) * gpu_height - 1
-            x = 1 + button_idx
+            x += width // 4
             try:
                 rs = rail_status()
                 cv = rs.get("control_value")
@@ -284,34 +238,37 @@ class GPU(Page):
                 valrg = "Unknown"
             label = "Railgate: "
             field = "{" + valrg + "}"
-            try:
-                color = NColors.green() if valrg == "Enabled" else curses.A_NORMAL
-                self.stdscr.addstr(y, x, label, curses.A_BOLD)
-                self.stdscr.addstr(y, x + len(label), field, color)
-            except curses.error:
-                pass
+            color_rail = NColors.green() if valrg == "Enabled" else curses.A_NORMAL
+            self.stdscr.addstr(y, x, label, curses.A_BOLD)
+            self.stdscr.addstr(y, x + len(label), field, color_rail)
             self._click_regions["railgate"].append((y, x + len(label), x + len(label) + len(field) - 1))
-            button_idx += button_position
+            label_y = first + 1 + (idx + 1) * gpu_height - 1
+            meter_y = label_y - 1
 
-            # Power control (informational)
-            plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx,
-                           "Power ctrl", gpu_data.get('power_control', 'runtime_pm'))
-            button_idx += button_position
-
-            # Optional: GPC lanes frequency gauge remains unchanged if present
+            # Frequency meters (live row above the 3D/Railgate line)
             frq_size = width - 3
             if 'GPC' in gpu_freq:
+                # allocate right half for GPC lane meters
                 size_gpc_gauge = (width - 2) // (2 + len(gpu_freq['GPC']))
                 for gpc_idx, gpc in enumerate(gpu_freq['GPC']):
-                    freq_data = {'name': 'GPC{idx}'.format(idx=gpc_idx), 'cur': gpc, 'unit': 'k', 'online': gpc > 0}
-                    freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height,
-                               width // 2 + gpc_idx * (size_gpc_gauge) + 2, size_gpc_gauge - 1, freq_data)
+                    freq_data = {
+                        'name': f'GPC{gpc_idx}',
+                        'cur': gpc,
+                        'unit': 'k',
+                        'online': gpc > 0,
+                    }
+                    freq_gauge(
+                        self.stdscr,
+                        meter_y,
+                        width // 2 + gpc_idx * size_gpc_gauge + 2,
+                        size_gpc_gauge - 1,
+                        freq_data,
+                    )
                 frq_size = width // 2
-
+            # Overall frequency meter on the left
             gpu_freq['name'] = "Frq"
-            freq_gauge(self.stdscr, first + 1 + (idx + 1) * gpu_height, 1, frq_size, gpu_freq)
-
+            freq_gauge(self.stdscr, meter_y, 1, frq_size, gpu_freq)
         height_table = height - first + 2 + gpu_height
         self.process_table.draw(first + 2 + gpu_height, 0, width, height_table, key, mouse)
-# EOF
 
+# EOF
