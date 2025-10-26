@@ -34,6 +34,7 @@ from jtop.core.thor_power import (
     toggle_rail,
 )
 
+
 def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
     gpu_status = gpu_data['status']
     data = {
@@ -176,9 +177,11 @@ class GPU(Page):
     def _handle_hotkeys(self, key):
         if isinstance(key, int):
             if key in (ord('g'), ord('G')):
-                toggle_governor(); return True
+                toggle_governor()
+                return True
             if key in (ord('r'), ord('R')):
-                toggle_rail(); return True
+                toggle_rail()
+                return True
         return False
 
     def draw(self, key, mouse):
@@ -212,7 +215,7 @@ class GPU(Page):
                                label="{used}/{total}B".format(
                                    used=size_to_string(self.jetson.memory['RAM']['shared'], 'k'),
                                    total=size_to_string(self.jetson.memory['RAM']['tot'], 'k')
-                               ))
+                ))
 
             # Clickable toggles
             y = first + 1 + (idx + 1) * gpu_height - 1

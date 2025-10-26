@@ -21,10 +21,11 @@ import os
 
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
 
+
 def is_thor() -> bool:
     return os.path.isdir(THOR_GPC)
+
 
 def devfreq_nodes():
     roots = ["/sys/class/devfreq/gpu-gpc-0", "/sys/class/devfreq/gpu-nvd-0"]
     return [p for p in roots if os.path.isdir(p)]
-

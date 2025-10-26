@@ -24,8 +24,8 @@ from typing import Any, Dict, Optional
 from .common import GenericInterface
 from .exceptions import JtopException
 from .hw_detect import devfreq_nodes, is_thor
-from .thor_power import ( rail_status, set_rail, toggle_rail,
-                          current_governor, set_governor, toggle_governor )
+from .thor_power import (rail_status, set_rail, toggle_rail,
+                         current_governor, set_governor, toggle_governor)
 
 logger = logging.getLogger(__name__)
 

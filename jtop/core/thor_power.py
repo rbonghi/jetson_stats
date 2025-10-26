@@ -18,12 +18,14 @@
 # Minimal, dependency-free helpers for rail-gating (runtime PM) and devfreq governors (3D-scaling)
 from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
-import glob, os
+import glob
+import os
 import logging
 logger = logging.getLogger(__name__)
 
 
 _DEVFREQ_NODES = ("/sys/class/devfreq/gpu-gpc-0", "/sys/class/devfreq/gpu-nvd-0")
+
 
 def _read(path: str) -> Optional[str]:
     try:
@@ -31,6 +33,7 @@ def _read(path: str) -> Optional[str]:
             return f.read().strip()
     except Exception:
         return None
+
 
 def _write(path: str, data: str) -> Tuple[bool, Optional[str]]:
     try:
@@ -40,10 +43,13 @@ def _write(path: str, data: str) -> Tuple[bool, Optional[str]]:
     except Exception as e:
         return False, str(e)
 
+
 def _exists(p: str) -> bool:
     return os.path.exists(p)
 
 # Rail-gating (runtime PM)
+
+
 def _pm_control_path() -> Optional[str]:
     # Prefer BDF derived from /proc (robust on Jetson/Thor)
     for p in glob.glob("/proc/driver/nvidia/gpus/*/power"):
@@ -54,6 +60,7 @@ def _pm_control_path() -> Optional[str]:
     # Fallback
     cand = "/sys/bus/pci/devices/0000:01:00.0/power/control"
     return cand if _exists(cand) else None
+
 
 def rail_status() -> Dict:
     """Return presence, readable status, and control info."""
@@ -72,15 +79,17 @@ def rail_status() -> Dict:
         "present": present,
         "enabled": enabled,     # from /proc (read-only text)
         "control_path": ctrl,   # /sys/bus/pci/devices/.../power/control
-        "control_value": value, # "on" (kept on) or "auto" (idle gating allowed)
+        "control_value": value,  # "on" (kept on) or "auto" (idle gating allowed)
         "control_writable": _exists(ctrl) and os.access(ctrl, os.W_OK) if ctrl else False,
     }
+
 
 def set_rail(allow_idle: bool) -> Tuple[bool, Optional[str]]:
     """allow_idle=True -> 'auto'; False -> 'on'."""
     if not (ctrl := _pm_control_path()):
         return False, "GPU runtime PM control node not found"
     return _write(ctrl, "auto" if allow_idle else "on")
+
 
 def toggle_rail() -> Tuple[bool, Optional[str]]:
     ctrl = _pm_control_path()
@@ -91,8 +100,11 @@ def toggle_rail() -> Tuple[bool, Optional[str]]:
     return _write(ctrl, nxt)
 
 # Devfreq (3D-scaling)
+
+
 def devfreq_nodes() -> List[str]:
     return [p for p in _DEVFREQ_NODES if _exists(p)]
+
 
 def available_governors() -> List[str]:
     out: List[str] = []
@@ -103,11 +115,13 @@ def available_governors() -> List[str]:
                 out.append(g)
     return out
 
+
 def current_governor() -> Optional[str]:
     for n in devfreq_nodes():
         if g := _read(os.path.join(n, "governor")):
             return g
     return None
+
 
 def set_governor(gov: str) -> Tuple[bool, Optional[str]]:
     ok_all, last_err = True, None
@@ -117,6 +131,7 @@ def set_governor(gov: str) -> Tuple[bool, Optional[str]]:
         if not ok:
             ok_all, last_err = False, err
     return ok_all, last_err
+
 
 def toggle_governor() -> Tuple[bool, Optional[str]]:
     """Prefer explicit flip between performance <-> nvhost_podgov; else cycle whatever exists."""
@@ -130,6 +145,8 @@ def toggle_governor() -> Tuple[bool, Optional[str]]:
     return set_governor(target)
 
 # nvhost_podgov tunables
+
+
 def podgov_path(node: str) -> Optional[str]:
     p = os.path.join(node, "nvhost_podgov")
     return p if _exists(p) else None
@@ -137,7 +154,7 @@ def podgov_path(node: str) -> Optional[str]:
 
 def read_podgov(node: str) -> Dict[str, Optional[str]]:
     p = podgov_path(node)
-    params = ["load_max","load_target","load_margin","k","up_freq_margin","down_freq_margin"]
+    params = ["load_max", "load_target", "load_margin", "k", "up_freq_margin", "down_freq_margin"]
     return {k: (_read(os.path.join(p, k)) if p else None) for k in params}
 
 

@@ -33,4 +33,3 @@ __copyright__ = "(c) 2026, Raffaello Bonghi"
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
 __version__ = "4.5.0"
 # EOF
-
