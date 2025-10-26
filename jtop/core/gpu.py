@@ -47,6 +47,42 @@ DEFAULT_LOAD = 0.0
 NVML_GOVERNOR = 'nvml'
 NVIDIA_PREFIX = "NVIDIA "
 
+# ---------- Detect & read Thor GPU devfreq (GPC) ----------
+THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
+
+
+def _thor_gpc_freq():
+    """
+    Return {cur,min,max,governor} in MHz for Thor GPC domain, or {} if not present.
+    """
+    base = THOR_GPC
+    if not os.path.isdir(base):
+        return {}
+
+    def _rint(p):
+        try:
+            with open(p) as f:
+                return int(f.read().strip())
+        except Exception:
+            return None
+
+    def _rstr(p):
+        try:
+            with open(p) as f:
+                return f.read().strip()
+        except Exception:
+            return None
+    cur = _rint(os.path.join(base, "cur_freq"))
+    mn = _rint(os.path.join(base, "min_freq"))
+    mx = _rint(os.path.join(base, "max_freq"))
+    gov = _rstr(os.path.join(base, "governor")) or "nvhost_podgov"
+    return {
+        "cur": (cur or 0) // 1000,
+        "min": (mn or 0) // 1000,
+        "max": (mx or 0) // 1000,
+        "governor": gov,
+    }
+
 
 def check_nvidia_smi():
     cmd = Command(['nvidia-smi'])
@@ -305,10 +341,24 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
             # Build status dict with available data
             status = {
                 'load': float(utilization.gpu) if utilization else DEFAULT_LOAD,
-                '3d_scaling': False,  # Not available via NVML
-                'railgate': False,  # Not available via NVML
-                'tpc_pg_mask': False  # Not available via NVML
+                '3d_scaling': None,   # N/A via NVML on Jetson
+                'railgate': None,     # N/A via NVML on Jetson
+                'tpc_pg_mask': None   # N/A via NVML on Jetson
             }
+
+            # ---------- Thor frequency fallback (keep structure identical to Orin) ----------
+            # If we're on Thor (JetPack 7) NVML may not provide clocks. Use devfreq/gpu-gpc-0.
+            thor_freq = _thor_gpc_freq() if os.path.isdir(THOR_GPC) else {}
+            if thor_freq:
+                # Only overwrite missing/zero NVML values to preserve behavior elsewhere
+                if not freq_data['cur']:
+                    freq_data['cur'] = thor_freq['cur']
+                if not freq_data['min']:
+                    freq_data['min'] = thor_freq['min']
+                if not freq_data['max']:
+                    freq_data['max'] = thor_freq['max']
+                # Optionally reflect the real governor; comment the next line to force 'nvml'
+                freq_data['governor'] = thor_freq['governor']
 
             # Add optional fields only if available
             if memory_used is not None:
@@ -527,7 +577,6 @@ class GPUService(object):
 
         if self._use_nvml:
             logger.warning("3D scaling control not available via NVML (Jetpack 7.0+)")
-            return False
             return False
         if '3d_scaling' not in self._gpu_list[name]:
             logger.error(f"GPU \"{name}\" does not have 3D scaling")
