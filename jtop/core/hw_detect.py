@@ -15,22 +15,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# flake8: noqa
+# jtop/core/hw_detect.py
 
-from .core.exceptions import JtopException
-from .core.gpu import GPU
-from .core.memory import Memory
-from .core.fan import Fan
-from .core.jetson_clocks import JetsonClocks
-from .core.nvpmodel import NVPModel
-from .jtop import jtop
+import os
 
-__author__ = "Raffaello Bonghi"
-__email__ = "raffaello@rnext.it"
-__cr__ = "(c) 2026, RB"
-__copyright__ = "(c) 2026, Raffaello Bonghi"
-# Version package
-# https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "4.5.0"
-# EOF
+THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
+
+def is_thor() -> bool:
+    return os.path.isdir(THOR_GPC)
+
+def devfreq_nodes():
+    roots = ["/sys/class/devfreq/gpu-gpc-0", "/sys/class/devfreq/gpu-nvd-0"]
+    return [p for p in roots if os.path.isdir(p)]
 
