@@ -16,6 +16,7 @@ jetson-stats
    troubleshooting
    contributing
    GitHub <https://github.com/rbonghi/jetson_stats>
+   nosudo
 
 .. toctree::
    :hidden:
