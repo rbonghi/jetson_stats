@@ -45,7 +45,6 @@ sudo apt install python3-pip python3-setuptools -y
 ```
 
 ### Option 1: jetson-stats can be installed with [pip](https://pip.pypa.io), but need **superuser**:
-
 ```console
 sudo pip3 install -U jetson-stats
 ```
@@ -67,24 +66,14 @@ sudo pip3 install --break-system-packages git+https://github.com/rbonghi/jetson_
 
 ### Option 4: Ubuntu 24.04 run jtop without sudo and without "--break-system-packages"
 ```console
-First run "sudo -v"
-    -v, --validate does not run any command, but does allow the use of sudo in the bash script.
-Then "download install_jtop_torun_without_sudo.sh"
-Make it executable:
-chmod +x install_jtop_torun_without_sudo.sh
-Then run it:
-./install_jtop_torun_without_sudo.sh
+Download "install_jtop_torun_without_sudo.sh"
+Make it executable: chmod +x install_jtop_torun_without_sudo.sh
+Run "sudo -v"    -v, --validate does not run any command, but allows the use of sudo in the bash script.
+Then install with   ./install_jtop_torun_without_sudo.sh
 ```
-See the full guide: [How it works & why](docs/nosudo.rst)
+See the guide: [How it "without sudo" works & why](docs/nosudo.rst)
 
-```
-_Don't forget to **logout/login** or **reboot** your board_
-
-<div align="center">
-
-**🚀 That's it! 🚀**
-
-</div>
+---
 
 ## Run
 
