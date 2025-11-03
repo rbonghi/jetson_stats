@@ -27,3 +27,5 @@ jtop_test.*
 
 .vscode/
 .venv*/
+.idea/
+__pycache__/
