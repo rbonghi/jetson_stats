@@ -31,5 +31,5 @@ __cr__ = "(c) 2026, RB"
 __copyright__ = "(c) 2026, Raffaello Bonghi"
 # Version package
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/#choosing-a-versioning-scheme
-__version__ = "4.5.1"
+__version__ = "4.5.2"
 # EOF
