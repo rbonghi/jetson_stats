@@ -20,7 +20,7 @@
 
 import curses
 from .jtopgui import Page
-from .lib.common import NColors, plot_name_info, size_min, unit_to_string, size_to_string
+from .lib.common import NColors, size_min, unit_to_string, size_to_string
 from .lib.chart import Chart
 from .lib.process_table import ProcessTable
 from .lib.linear_gauge import basic_gauge, freq_gauge
