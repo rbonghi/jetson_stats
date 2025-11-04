@@ -19,7 +19,7 @@ user-friendly installation of **jtop** that allows you to run it without
 3. **Install uv. Then install jtop with uv**
 
    - Uses uv pip install --python ""$HOME/.local/share/jtop/bin/python" --upgrade "git+https://github.com/rbonghi/jetson_stats.git"
-   - to install the latest jtop version in the users environment.
+   - to install the latest jtop version in the user's environment.
 
 
 4. **Systemd service setup**
