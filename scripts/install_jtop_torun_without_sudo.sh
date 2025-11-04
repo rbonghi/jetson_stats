@@ -1,157 +1,74 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# This script installs jtop into a user's uv venv but sets up
+# a system-wide symlink and a root-level systemd service.
+set -Eeuo pipefail
 
-PKG_NAME="jetson_stats"
+# Configuration
 APP_NAME="jtop"
-SYSTEMD_UNIT="jtop.service"
+PKG_NAME="jetson_stats"
+VENV_DIR="$HOME/.local/share/$APP_NAME"
+JTOP_BIN="$VENV_DIR/bin/$APP_NAME"
+SYMLINK_PATH="/usr/local/bin/$APP_NAME"
+SYSTEMD_UNIT="/etc/systemd/system/${APP_NAME}.service"
+JTOP_REF="${JTOP_REF:-git+https://github.com/rbonghi/jetson_stats.git}"
 
-usage() {
-  cat <<USAGE
-Usage: $(basename "$0") [--pipx|--uv|--help]
-  --pipx   Install using pipx (default if no argument)
-  --uv     Install using uv (uv must already be installed; this script will not install it)
-  --help   Show this help
-USAGE
+# Error Handling
+cleanup() {
+  echo "Error on line $BASH_LINENO. Exit code: $?" >&2
 }
-
-if [[ ${1:-} == "--help" || ${1:-} == "-h" ]]; then
-  usage
-  exit 0
-fi
-
-MODE="pipx"
-if [[ ${1:-} == "--uv" ]]; then
-  MODE="uv"
-elif [[ ${1:-} == "--pipx" || -z ${1:-} ]]; then
-  MODE="pipx"
-elif [[ $# -gt 0 ]]; then
-  echo "Unknown option: $1"
-  echo
-  usage
-  exit 2
-fi
+trap cleanup ERR
 
 if [[ $EUID -eq 0 ]]; then
   echo "Please first run 'sudo -v'"
-  echo "Then run this script by itself, NOT with sudo"
+  echo "This script must be run as a regular user.  NOT with sudo."
   exit 1
 fi
 
-if [[ "$MODE" == "pipx" ]]; then
-  echo "Ensuring pip3 & pipx exist"
+# Installation 
+echo "Installing prerequisites (curl, ca-certificates)..."
+sudo apt update -y
+sudo apt install -y --no-install-recommends curl ca-certificates python3-pip
 
-  need_update=0
-  to_install=()
-
-  if ! command -v pip3 >/dev/null 2>&1; then
-    to_install+=("python3-pip")
-    need_update=1
-  fi
-
-  if ! command -v pipx >/dev/null 2>&1; then
-    to_install+=("pipx")
-    need_update=1
-  fi
-
-  if (( need_update )); then
-    echo "Missing: ${to_install[*]} → installing via apt"
-    sudo apt-get update
-    sudo apt-get install -y "${to_install[@]}"
-  else
-    echo "pip3 and pipx already installed."
-  fi
-
-  # Make sure future shells have ~/.local/bin in PATH (no-op if already set)
-  pipx ensurepath || true
-
-  echo "Installing ${APP_NAME} with pipx"
-  pipx install "git+https://github.com/rbonghi/jetson_stats.git"
-
-  JTOP_BIN="$HOME/.local/bin/${APP_NAME}"
-  [ -x "$JTOP_BIN" ] || JTOP_BIN="$HOME/.local/share/pipx/venvs/${PKG_NAME}/bin/${APP_NAME}"
+# Ensure uv is installed
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Installing 'uv' (an exceptionally fast Python package installer)"
+  curl -fsSL https://astral.sh/uv/install.sh | sh
 else
-  echo "Using uv to install ${APP_NAME}"
-
-  # Do NOT auto-install uv; require it to be present
-  if ! command -v uv >/dev/null 2>&1; then
-    echo "Error: 'uv' is not installed or not on PATH."
-    echo "Please install uv first, for example:"
-    echo "  curl -LsSf https://astral.sh/uv/install.sh | sh"
-    echo "Then re-run: $0 --uv"
-    exit 1
-  fi
-
-  # Ensure required packages are available
-  need_update=0
-  to_install=()
-
-  if ! command -v git >/dev/null 2>&1; then
-    to_install+=("git")
-    need_update=1
-  fi
-  if ! command -v python3 >/dev/null 2>&1; then
-    to_install+=("python3")
-    need_update=1
-  fi
-
-  if (( need_update )); then
-    echo "Missing: ${to_install[*]} → installing via apt"
-    sudo apt-get update
-    sudo apt-get install -y "${to_install[@]}"
-  fi
-
-  # If ~/.local/bin is not in PATH, add a hint (comment) to existing rc files only
-  add_path_hint_if_needed() {
-    if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
-      return
-    fi
-    local marker="### jtop PATH hint (uv)"
-    local export_line='export PATH="$HOME/.local/bin:$PATH"'
-    local files=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile")
-    local updated_any=0
-    for f in "${files[@]}"; do
-      if [ -f "$f" ] && ! grep -Fq "$marker" "$f"; then
-        {
-          echo
-          echo "$marker"
-          echo "# jtop was installed with uv; to make it available in new shells add this line:"
-          echo "# $export_line"
-        } >> "$f"
-        updated_any=1
-        echo "Added PATH hint to $f"
-      fi
-    done
-    if (( ! updated_any )); then
-      echo "Note: ~/.local/bin is not in PATH. To use jtop in new shells, add:"
-      echo "  $export_line"
-    fi
-  }
-  add_path_hint_if_needed
-
-  # Install jtop with uv (force overwrite if already present)
-  uv tool install --force "git+https://github.com/rbonghi/jetson_stats.git"
-
-  JTOP_BIN="$HOME/.local/bin/${APP_NAME}"
-  if [ ! -x "$JTOP_BIN" ]; then
-    echo "Error: expected ${JTOP_BIN} to exist after 'uv tool install', but it was not found."
-    echo "Check your uv installation and PATH, then re-run: $0 --uv"
-    exit 1
-  fi
+  echo "'uv' is already installed."
 fi
 
-echo "Ensuring a systemd unit exists and points to ${JTOP_BIN}"
-UNIT_FILE="/etc/systemd/system/${SYSTEMD_UNIT}"
-if [ ! -f "${UNIT_FILE}" ]; then
-  # Create a minimal unit if repo didn't install one
-  echo "Creating ${UNIT_FILE}…"
-  sudo tee "${UNIT_FILE}" >/dev/null <<EOF
+export PATH="$HOME/.local/bin:$PATH"
+
+echo "Creating Python virtual environment in $VENV_DIR..."
+uv venv "$VENV_DIR" -p python3.12 --seed
+
+echo "Installing/upgrading $PKG_NAME from: $JTOP_REF"
+uv pip install --python "$VENV_DIR/bin/python" --upgrade "$JTOP_REF"
+
+
+# Verify binary exists (run as user)
+if ! test -x "$JTOP_BIN"; then
+  echo " Installation failed: '$JTOP_BIN' binary not found."
+  exit 1
+fi
+
+# This makes 'jtop' (user) and 'sudo jtop' (root) work correctly
+sudo ln -sf "$JTOP_BIN" "$SYMLINK_PATH"
+echo "Symlink created: $SYMLINK_PATH"
+
+if [ -f "$SYSTEMD_UNIT" ]; then
+  echo "Found existing jtop service. It will be overwritten."
+fi
+
+echo "Creating systemd service: $SYSTEMD_UNIT"
+sudo tee "$SYSTEMD_UNIT" >/dev/null <<EOF
 [Unit]
-Description=Jetson Stats (jtop)
+Description=Jetson Stats (jtop service)
 After=network.target
 
 [Service]
 Environment="JTOP_SERVICE=True"
-ExecStart=${JTOP_BIN} --force
+ExecStart=${SYMLINK_PATH} --force
 Restart=on-failure
 RestartSec=10s
 TimeoutStartSec=30s
@@ -160,12 +77,15 @@ TimeoutStopSec=30s
 [Install]
 WantedBy=multi-user.target
 EOF
-fi
 
-echo "Enabling and starting ${SYSTEMD_UNIT}…"
+echo "Enabling and starting $APP_NAME system service"
 sudo systemctl daemon-reload
-sudo systemctl enable "${SYSTEMD_UNIT}"
-sudo systemctl restart "${SYSTEMD_UNIT}"
+sudo systemctl enable "${APP_NAME}.service"
+sudo systemctl restart "${APP_NAME}.service"
+sudo systemctl status "${APP_NAME}.service" --no-pager
 
 echo
-echo "You can now run '${APP_NAME}' (sudo NOT needed)."
+echo "Installation Complete! "
+echo
+echo "You can now run '$APP_NAME' or 'sudo $APP_NAME' (privileged)."
+

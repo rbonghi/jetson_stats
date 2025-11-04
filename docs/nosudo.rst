@@ -13,17 +13,19 @@ user-friendly installation of **jtop** that allows you to run it without
 
 2. **Prepare environment**
 
-   - Verifies whether ``pip3`` and ``pipx`` are installed; if either is missing, installs them via ``apt``.
-   - Ensures ``~/.local/bin`` is on your ``PATH`` so that ``pipx`` applications are available in future shells.
+   - Verifies whether ``pip3`` and ``uv`` are installed; if either is missing, installs them via ``apt``.
+   - Ensures ``~/.local/bin`` is on your ``PATH`` so that ``uv`` applications are available in future shells.
 
-3. **Install jtop via pipx**
+3. **Install uv. Then install jtop with uv**
 
-   - Uses ``pipx install "git+https://github.com/rbonghi/jetson_stats.git"`` to install the latest version in an isolated user environment.
-   - Determines the correct executable path (usually ``~/.local/bin/jtop`` or inside the pipx venv).
+   - Uses uv pip install --python ""$HOME/.local/share/jtop/bin/python" --upgrade "git+https://github.com/rbonghi/jetson_stats.git"
+   - to install the latest jtop version in the users environment.
+
 
 4. **Systemd service setup**
 
-   - Creates or updates ``/etc/systemd/system/jtop.service`` to point to your user’s jtop binary.
+   - Creates or updates ``/etc/systemd/system/jtop.service`` to point to /usr/local/bin/jtop.
+   - Can now be run with or without sudo.
    - Sets safe defaults (``Restart=on-failure``, ``RestartSec=10s``, etc.) to make the service robust.
 
 5. **Enable and start the service**
@@ -47,7 +49,7 @@ Why use this method
 .. code-block:: text
 
    • Keeps the system (root) Python environment clean and untouched
-   • Uses pipx’s isolation, making upgrades and uninstalls clean and safe
+   • Uses uv’s isolation, making upgrades and uninstalls clean and safe
    • Fully compatible with Ubuntu 24.04+ and later Debian-based systems
    • Ensures jtop runs under your user account (avoids root-owned processes)
    • Provides systemd integration for automatic startup and recovery
