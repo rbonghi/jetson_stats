@@ -313,19 +313,20 @@ commands (<code class="docutils literal notranslate"><span class="pre">apt</span
 </li>
 <li><p><strong>Prepare environment</strong></p>
 <ul class="simple">
-<li><p>Verifies whether <code class="docutils literal notranslate"><span class="pre">pip3</span></code> and <code class="docutils literal notranslate"><span class="pre">pipx</span></code> are installed; if either is missing, installs them via <code class="docutils literal notranslate"><span class="pre">apt</span></code>.</p></li>
-<li><p>Ensures <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code> is on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> so that <code class="docutils literal notranslate"><span class="pre">pipx</span></code> applications are available in future shells.</p></li>
+<li><p>Verifies whether <code class="docutils literal notranslate"><span class="pre">pip3</span></code> and <code class="docutils literal notranslate"><span class="pre">uv</span></code> are installed; if either is missing, installs them via <code class="docutils literal notranslate"><span class="pre">apt</span></code>.</p></li>
+<li><p>Ensures <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code> is on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> so that <code class="docutils literal notranslate"><span class="pre">uv</span></code> applications are available in future shells.</p></li>
 </ul>
 </li>
-<li><p><strong>Install jtop via pipx</strong></p>
+<li><p><strong>Install uv. Then install jtop with uv</strong></p>
 <ul class="simple">
-<li><p>Uses <code class="docutils literal notranslate"><span class="pre">pipx</span> <span class="pre">install</span> <span class="pre">&quot;git+https://github.com/rbonghi/jetson_stats.git&quot;</span></code> to install the latest version in an isolated user environment.</p></li>
-<li><p>Determines the correct executable path (usually <code class="docutils literal notranslate"><span class="pre">~/.local/bin/jtop</span></code> or inside the pipx venv).</p></li>
+<li><p>Uses uv pip install –python “”$HOME/.local/share/jtop/bin/python” –upgrade “git+https://github.com/rbonghi/jetson_stats.git”</p></li>
+<li><p>to install the latest jtop version in the user’s environment.</p></li>
 </ul>
 </li>
 <li><p><strong>Systemd service setup</strong></p>
 <ul class="simple">
-<li><p>Creates or updates <code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/jtop.service</span></code> to point to your user’s jtop binary.</p></li>
+<li><p>Creates or updates <code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/jtop.service</span></code> to point to /usr/local/bin/jtop.</p></li>
+<li><p>Can now be run with or without sudo.</p></li>
 <li><p>Sets safe defaults (<code class="docutils literal notranslate"><span class="pre">Restart=on-failure</span></code>, <code class="docutils literal notranslate"><span class="pre">RestartSec=10s</span></code>, etc.) to make the service robust.</p></li>
 </ul>
 </li>
@@ -347,7 +348,7 @@ as a normal user (no <code class="docutils literal notranslate"><span class="pre
 <section id="why-use-this-method">
 <h1>Why use this method<a class="headerlink" href="#why-use-this-method" title="Link to this heading">¶</a></h1>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>• Keeps the system (root) Python environment clean and untouched
-• Uses pipx’s isolation, making upgrades and uninstalls clean and safe
+• Uses uv’s isolation, making upgrades and uninstalls clean and safe
 • Fully compatible with Ubuntu 24.04+ and later Debian-based systems
 • Ensures jtop runs under your user account (avoids root-owned processes)
 • Provides systemd integration for automatic startup and recovery
