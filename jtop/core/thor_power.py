@@ -255,8 +255,7 @@ def available_governors() -> List[str]:
 
 def current_governor() -> Optional[str]:
     for n in devfreq_nodes():
-        g = _read(os.path.join(n, "governor"))
-        if g:
+        if g := _read(os.path.join(n, "governor")):
             return g
     return None
 
