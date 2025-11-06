@@ -89,7 +89,7 @@ def _scan_ina238() -> Optional[Tuple[str, str]]:
                     nm = f.read().strip().lower()
             except Exception:
                 nm = ""
-            if "ina238" in nm or nm.startswith("ina2") or nm == "":
+            if "ina238" in nm or nm.startswith("ina2") or not nm:
                 return (hdir, p_path)
     return None
 
