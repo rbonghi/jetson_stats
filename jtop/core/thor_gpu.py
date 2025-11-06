@@ -169,9 +169,7 @@ def get_memory_bytes() -> Tuple[int, int]:
     2) Fallback to (0, 0) to avoid NameError on undefined helpers.
     """
     res = cuda_gpu_mem_bytes(0)
-    if res is not None:
-        return res
-    return (0, 0)
+    return res if res is not None else (0, 0)
 
 #  classes 
 
