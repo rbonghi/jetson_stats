@@ -228,10 +228,15 @@ class GPU(GenericInterface):
         return rs.get("control_value") == "auto"
 
     def _get_first_integrated_gpu(self) -> str:
-        for name in self._data:
-            if self._data[name].get("type") == "integrated":
-                return name
-        return ""
+        return next(
+            (
+                name
+                for name in self._data
+                if self._data[name].get("type") == "integrated"
+            ),
+            "",
+        )
+
 
 class GPUService(object):
     """
