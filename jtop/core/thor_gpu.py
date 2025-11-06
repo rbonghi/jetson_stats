@@ -16,27 +16,32 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 # Thor GPU backend for jtop — uses sysfs + thor_power helpers
-
 import os
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from .common import GenericInterface
 from .exceptions import JtopException
-from .hw_detect import devfreq_nodes
-from .thor_power import (rail_status, set_rail,
-                         current_governor, set_governor)
+from .hw_detect import devfreq_nodes, is_thor
+from .thor_power import (
+    rail_status,
+    set_rail,
+    read_vdd_gpu_mw,
+    current_governor,
+    set_governor,
+)
+from .thor_cuda_mem import cuda_gpu_mem_bytes
 
 logger = logging.getLogger(__name__)
 
 # Thor detection: present if the devfreq GPC domain exists
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
 
+# Power→util proxy calibration (use your measured values) ---
+_GPU_IDLE_MW = 5525.0    # steady idle VDD_GPU power (≈ 5.525 W)
+_GPU_FULL_MW = 22050.0   # typical sustained vLLM plateau (≈ 22.05 W)
 
-def is_thor() -> bool:
-    """Return True if Thor devfreq nodes are present."""
-    return os.path.isdir(THOR_GPC)
-
+# tiny utils
 
 def _r_int(path: str) -> Optional[int]:
     try:
@@ -45,6 +50,25 @@ def _r_int(path: str) -> Optional[int]:
     except Exception:
         return None
 
+def _read_file(path: str) -> Optional[str]:
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            return f.read().strip()
+    except Exception:
+        return None
+
+def _mhz(khz: int) -> int:
+    return (khz or 0) // 1000
+
+def _parse_percent(txt: str) -> Optional[float]:
+    try:
+        v = float(txt)
+    except Exception:
+        return None
+    # Jetson kernels sometimes report tenths of a percent (e.g., 345 == 34.5%)
+    return v / 10.0 if v > 100.0 else v
+
+# freq / governor
 
 def _gpc_freq_block() -> Dict[str, int]:
     """
@@ -55,34 +79,99 @@ def _gpc_freq_block() -> Dict[str, int]:
     if not os.path.isdir(base):
         return {"cur": 0, "min": 0, "max": 0}
     cur = _r_int(os.path.join(base, "cur_freq")) or 0
-    mn = _r_int(os.path.join(base, "min_freq")) or 0
-    mx = _r_int(os.path.join(base, "max_freq")) or 0
+    mn  = _r_int(os.path.join(base, "min_freq")) or 0
+    mx  = _r_int(os.path.join(base, "max_freq")) or 0
     return {"cur": cur, "min": mn, "max": mx}
 
+def _read_podgov_params() -> Optional[Dict[str, int]]:
+    """Read nvhost_podgov parameters k / load_target / load_margin if present."""
+    base = os.path.join(THOR_GPC, "nvhost_podgov")
+    if not os.path.isdir(base):
+        return None
+    def rint(name: str) -> Optional[int]:
+        p = os.path.join(base, name)
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                return int(f.read().strip())
+        except Exception:
+            return None
+    k  = rint("k")
+    lt = rint("load_target")
+    lm = rint("load_margin")
+    if k is None and lt is None and lm is None:
+        return None
+    out: Dict[str, int] = {}
+    if k  is not None:
+        out["k"] = k
+    if lt is not None:
+        out["load_target"] = lt
+    if lm is not None:
+        out["load_margin"] = lm
+    return out
 
-def _mhz(khz: int) -> int:
-    return (khz or 0) // 1000
-
+# utilization
 
 def _read_utilization() -> Optional[float]:
     """
-    Try to read a utilization value for Thor. If not available, return None.
-    (You can extend this with NVML if desired; keeping sysfs-only here.)
+    Best-effort GPU utilization (%) from sysfs.
+    Order:
+      1) devfreq busy_time/total_time
+      2) nvhost_podgov/load
+      3) legacy devfreq load
+    Returns None if not available.
     """
-    # Some Jetson kernels expose a 'load' in the devfreq device; Thor may not.
-    candidates = [os.path.join(n, "load") for n in devfreq_nodes()]
-    for p in candidates:
-        if os.path.isfile(p) and os.access(p, os.R_OK):
+    base = THOR_GPC
+    if os.path.isdir(base):
+        busy  = _read_file(os.path.join(base, "busy_time"))
+        total = _read_file(os.path.join(base, "total_time"))
+        if busy is not None and total is not None:
             try:
-                with open(p, "r", encoding="utf-8", errors="ignore") as f:
-                    txt = f.read().strip()
-                # Many Jetson loads are in tenths of percent (e.g., 345 -> 34.5%)
-                val = float(txt)
-                return val / 10.0 if val > 100.0 else val
+                b = float(busy)
+                t = float(total)
+                if t > 0.0:
+                    util = 100.0 * b / t
+                    return max(0.0, min(100.0, util))
             except Exception:
                 pass
+        # nvhost_podgov/load (if exported on this kernel)
+        podgov_load = _read_file(os.path.join(base, "nvhost_podgov", "load"))
+        if podgov_load is not None:
+            val = _parse_percent(podgov_load)
+            if val is not None:
+                return max(0.0, min(100.0, val))
+
+    # Legacy: .../devfreq/*/load
+    for node in devfreq_nodes():
+        txt = _read_file(os.path.join(node, "load"))
+        if not txt:
+            continue
+        val = _parse_percent(txt)
+        if val is not None:
+            return max(0.0, min(100.0, val))
+
     return None
 
+def _util_from_power_fallback() -> Optional[float]:
+    """Map VDD_GPU rail power to a rough utilization proxy (0..100%) when no counters exist."""
+    p_mw = read_vdd_gpu_mw()
+    if p_mw is None:
+        return None
+    num = max(0.0, p_mw - _GPU_IDLE_MW)
+    den = max(1.0, _GPU_FULL_MW - _GPU_IDLE_MW)
+    return max(0.0, min(100.0, 100.0 * (num / den)))
+
+# memory
+
+def get_memory_bytes() -> Tuple[int, int]:
+    """
+    Return (used_bytes, total_bytes) for GPU memory.
+    1) Prefer CUDA driver via thor_cuda_mem.
+    2) Fallback to (0, 0) to avoid NameError on undefined helpers.
+    """
+    res = cuda_gpu_mem_bytes(0)
+    return res if res is not None else (0, 0)
+
+#  classes 
 
 class GPU(GenericInterface):
     """
@@ -94,11 +183,9 @@ class GPU(GenericInterface):
       - get_railgate(name)          -> True if control=='auto'
       - scaling_3D property         -> first integrated GPU convenience
     """
-
     def __init__(self):
         super(GPU, self).__init__()
 
-    # 3D scaling as governor mapping
     def set_scaling_3D(self, name: str, value: bool):
         if name not in self._data:
             raise JtopException(f'GPU "{name}" does not exist')
@@ -127,7 +214,6 @@ class GPU(GenericInterface):
             raise JtopException("no Integrated GPU available")
         self.set_scaling_3D(name, value)
 
-    # rail-gating via runtime PM control
     def set_railgate(self, name: str, value: bool):
         if name not in self._data:
             raise JtopException(f'GPU "{name}" does not exist')
@@ -142,10 +228,14 @@ class GPU(GenericInterface):
         return rs.get("control_value") == "auto"
 
     def _get_first_integrated_gpu(self) -> str:
-        for name in self._data:
-            if self._data[name]["type"] == "integrated":
-                return name
-        return ""
+        return next(
+            (
+                name
+                for name in self._data
+                if self._data[name].get("type") == "integrated"
+            ),
+            "",
+        )
 
 
 class GPUService(object):
@@ -153,19 +243,15 @@ class GPUService(object):
     Thor-only GPU service. Builds a single integrated GPU entry and
     returns status using thor_power + devfreq.
     """
-
     def __init__(self):
         if not is_thor():
-            # Intentionally strict: this module should only be imported/used on Thor.
             raise JtopException("thor_gpu.GPUService used on non-Thor system")
         self._gpu_list: Dict[str, Dict[str, Any]] = self._initialize_thor()
 
     def _initialize_thor(self) -> Dict[str, Dict[str, Any]]:
-        # Give the device a stable friendly name; UI will display the key
         name = "thor"
         return {name: {"type": "integrated", "path": THOR_GPC, "frq_path": THOR_GPC}}
 
-    # API parity with legacy service:
     def set_scaling_3D(self, name: str, value: bool):
         if name not in self._gpu_list:
             logger.error(f'GPU "{name}" does not exist')
@@ -188,39 +274,54 @@ class GPUService(object):
         return True
 
     def get_status(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Return a dict of GPU status keyed by GPU name.
+        Some fields may be Optional if data could not be read.
+        """
         gpu_list: Dict[str, Dict[str, Any]] = {}
+
         for name, data in self._gpu_list.items():
             # Frequency & governor
-            f = _gpc_freq_block()
-            gov = current_governor() or "nvhost_podgov"
+            f: Dict[str, int] = _gpc_freq_block()
+            gov: Optional[str] = current_governor() or "nvhost_podgov"
+
+            # Governor parameters (only when nvhost_podgov active)
+            gov_params: Optional[Dict[str, int]] = _read_podgov_params() if gov == "nvhost_podgov" else None
 
             # Rail-gating (runtime PM)
-            rs = rail_status()
-            rail_bool = (rs.get("control_value") == "auto")
+            rs: Dict[str, Any] = rail_status()
+            rail_bool: bool = (rs.get("control_value") == "auto")
 
-            # Load (best-effort)
-            load = _read_utilization()
-            load = float(load) if load is not None else 0.0
+            # Load (best-effort): sysfs first, then power proxy fallback
+            load: Optional[float] = _read_utilization()
+            if load is None:
+                load = _util_from_power_fallback()
+            if load is not None:
+                load = float(max(0.0, min(100.0, load)))
 
             # Assemble structures compatible with the UI
-            freq = {
+            freq: Dict[str, Optional[Any]] = {
                 "governor": gov,
-                "cur": _mhz(f["cur"]),
-                "max": _mhz(f["max"]),
-                "min": _mhz(f["min"]),
+                "cur": _mhz(f.get("cur", 0)) if f else None,
+                "max": _mhz(f.get("max", 0)) if f else None,
+                "min": _mhz(f.get("min", 0)) if f else None,
             }
-            status = {
+            status: Dict[str, Optional[Any]] = {
                 "load": load,
-                "3d_scaling": (gov != "performance"),
+                "3d_scaling": (gov != "performance") if gov else None,
                 "railgate": rail_bool,
                 "tpc_pg_mask": None,
+                "gov_params": gov_params,  # <-- surfaced for GUI
             }
 
             gpu_list[name] = {
-                "type": data["type"],
+                "type": data.get("type", "unknown"),
                 "status": status,
                 "freq": freq,
-                # Reflect the control source; helpful for the “Power ctrl” UI line
                 "power_control": "runtime_pm",
             }
+
         return gpu_list
+
+# EOF
+
