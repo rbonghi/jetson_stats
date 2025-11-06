@@ -175,8 +175,17 @@ def _thor_nvml_graphics_process_rows():
 
 
 def _dbg(msg: str):
+    """
+    Optional debug logger for GPU memory sampling.
+    Logging is DISABLED by default.
+    To enable, set:
+        export JTOP_THOR_MEM_LOG_PATH=/tmp/jtop_thor_mem.log
+    """
+    log_path = os.environ.get("JTOP_THOR_MEM_LOG_PATH")
+    if not log_path or log_path.upper() == "DISABLED":
+        return
     try:
-        with open("/tmp/jtop_thor_mem.log", "a") as f:
+        with open(log_path, "a", encoding="utf-8", errors="ignore") as f:
             f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
     except Exception:
         pass
