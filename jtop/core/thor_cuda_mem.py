@@ -6,6 +6,7 @@ from contextlib import contextmanager
 # Lazy-loaded CUDA driver
 _libcuda = None
 
+
 def _cuda():
     global _libcuda
     if _libcuda is None:
@@ -21,11 +22,12 @@ def _cuda():
         _libcuda.cuDevicePrimaryCtxRelease.restype = c_int
         _libcuda.cuCtxPushCurrent_v2.argtypes = [c_void_p]
         _libcuda.cuCtxPushCurrent_v2.restype = c_int
-        _libcuda.cuCtxPopCurrent_v2.argtypes  = [ctypes.POINTER(c_void_p)]
+        _libcuda.cuCtxPopCurrent_v2.argtypes = [ctypes.POINTER(c_void_p)]
         _libcuda.cuCtxPopCurrent_v2.restype = c_int
         _libcuda.cuMemGetInfo_v2.argtypes = [ctypes.POINTER(c_size_t), ctypes.POINTER(c_size_t)]
         _libcuda.cuMemGetInfo_v2.restype = c_int
     return _libcuda
+
 
 @contextmanager
 def _pushed_primary_ctx(device_index: int = 0):
@@ -56,6 +58,7 @@ def _pushed_primary_ctx(device_index: int = 0):
     finally:
         lib.cuDevicePrimaryCtxRelease(dev.value)
 
+
 def cuda_gpu_mem_bytes(device_index: int = 0, verbose: bool = False):
     """
     Returns (used_bytes, total_bytes) via CUDA Driver API.
@@ -70,7 +73,7 @@ def cuda_gpu_mem_bytes(device_index: int = 0, verbose: bool = False):
 
     try:
         with _pushed_primary_ctx(device_index):
-            free_b  = c_size_t(0)
+            free_b = c_size_t(0)
             total_b = c_size_t(0)
             rc = lib.cuMemGetInfo_v2(byref(free_b), byref(total_b))
             if rc != 0:

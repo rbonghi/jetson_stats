@@ -85,6 +85,7 @@ def _read_podgov_params_gui():
     try:
         if not os.path.isdir(base):
             return None
+
         def rint(name):
             p = os.path.join(base, name)
             try:
@@ -92,7 +93,7 @@ def _read_podgov_params_gui():
                     return int(f.read().strip())
             except Exception:
                 return None
-        k  = rint("k")
+        k = rint("k")
         lt = rint("load_target")
         lm = rint("load_margin")
         d = {}
@@ -486,7 +487,6 @@ class GPU(Page):
             label_chart_gpu = f"{gpu_status['load']:>3.0f}% - gov: {gpu_freq.get('governor', '')}"
             chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
 
-
             # GPU Shared RAM chart + label (per GPU)
             if chart_ram:
                 label = ""
@@ -589,4 +589,3 @@ class GPU(Page):
         self.process_table.draw(first + 2 + gpu_height, 0, width, height_table, key, mouse)
 
 # EOF
-

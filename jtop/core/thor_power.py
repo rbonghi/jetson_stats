@@ -34,12 +34,14 @@ _HW_CACHE = {
     "ts": 0.0,
 }
 
+
 def _read(path: str) -> Optional[str]:
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             return f.read().strip()
     except Exception:
         return None
+
 
 def _write(path: str, data: str) -> Tuple[bool, Optional[str]]:
     try:
@@ -49,8 +51,10 @@ def _write(path: str, data: str) -> Tuple[bool, Optional[str]]:
     except Exception as e:
         return False, str(e)
 
+
 def _exists(p: str) -> bool:
     return os.path.exists(p)
+
 
 def _scan_ina3221() -> Optional[Tuple[str, Dict[str, Tuple[str, str]]]]:
     """Find an INA3221 and map labels -> (mV_path, mA_path)."""
@@ -77,6 +81,7 @@ def _scan_ina3221() -> Optional[Tuple[str, Dict[str, Tuple[str, str]]]]:
             return (hdir, label_map)
     return None
 
+
 def _scan_ina238() -> Optional[Tuple[str, str]]:
     """Find an INA238 and return (base_dir, power1_input_uW)."""
     for hdir in glob.glob("/sys/class/hwmon/hwmon*"):
@@ -93,6 +98,7 @@ def _scan_ina238() -> Optional[Tuple[str, str]]:
                 return (hdir, p_path)
     return None
 
+
 def _refresh_hwmon_cache(max_age_s: float = 2.0) -> None:
     now = time.time()
     if now - _HW_CACHE["ts"] < max_age_s:
@@ -101,12 +107,14 @@ def _refresh_hwmon_cache(max_age_s: float = 2.0) -> None:
     _HW_CACHE["ina238"] = _scan_ina238()
     _HW_CACHE["ts"] = now
 
+
 def _read_number(path: str) -> Optional[float]:
     try:
         with open(path, "r", encoding="utf-8") as f:
             return float(f.read().strip())
     except Exception:
         return None
+
 
 def read_vdd_gpu_mw() -> Optional[float]:
     """
@@ -129,6 +137,7 @@ def read_vdd_gpu_mw() -> Optional[float]:
     # If label differs, just fall through
     return None
 
+
 def read_cpu_soc_mss_mw() -> Optional[float]:
     """INA3221 channel often labeled VDD_CPU_SOC_MSS."""
     _refresh_hwmon_cache()
@@ -143,6 +152,7 @@ def read_cpu_soc_mss_mw() -> Optional[float]:
             if mv is not None and ma is not None:
                 return (mv * ma) / 1000.0
     return None
+
 
 def read_vin_sys_5v0_mw() -> Optional[float]:
     """INA3221 channel often labeled VIN_SYS_5V0."""
@@ -159,6 +169,7 @@ def read_vin_sys_5v0_mw() -> Optional[float]:
                 return (mv * ma) / 1000.0
     return None
 
+
 def read_system_total_mw() -> Optional[float]:
     """
     INA238: power1_input is total system power in uW (module + carrier).
@@ -170,6 +181,7 @@ def read_system_total_mw() -> Optional[float]:
     _, p_uW = ina
     uw = _read_number(p_uW)
     return uw / 1000.0 if uw is not None else None
+
 
 def get_power_snapshot() -> Dict[str, Optional[float]]:
     """
@@ -227,6 +239,7 @@ def set_rail(allow_idle: bool) -> Tuple[bool, Optional[str]]:
     if not ctrl:
         return False, "GPU runtime PM control node not found"
     return _write(ctrl, "auto" if allow_idle else "on")
+
 
 def toggle_rail() -> Tuple[bool, Optional[str]]:
     ctrl = _pm_control_path()

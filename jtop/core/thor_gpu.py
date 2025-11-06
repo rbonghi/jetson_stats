@@ -43,12 +43,14 @@ _GPU_FULL_MW = 22050.0   # typical sustained vLLM plateau (≈ 22.05 W)
 
 # tiny utils
 
+
 def _r_int(path: str) -> Optional[int]:
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             return int((f.read() or "0").strip())
     except Exception:
         return None
+
 
 def _read_file(path: str) -> Optional[str]:
     try:
@@ -57,8 +59,10 @@ def _read_file(path: str) -> Optional[str]:
     except Exception:
         return None
 
+
 def _mhz(khz: int) -> int:
     return (khz or 0) // 1000
+
 
 def _parse_percent(txt: str) -> Optional[float]:
     try:
@@ -70,6 +74,7 @@ def _parse_percent(txt: str) -> Optional[float]:
 
 # freq / governor
 
+
 def _gpc_freq_block() -> Dict[str, int]:
     """
     Return {cur,min,max} in kHz from the Thor GPC devfreq (converted to MHz in caller).
@@ -79,15 +84,17 @@ def _gpc_freq_block() -> Dict[str, int]:
     if not os.path.isdir(base):
         return {"cur": 0, "min": 0, "max": 0}
     cur = _r_int(os.path.join(base, "cur_freq")) or 0
-    mn  = _r_int(os.path.join(base, "min_freq")) or 0
-    mx  = _r_int(os.path.join(base, "max_freq")) or 0
+    mn = _r_int(os.path.join(base, "min_freq")) or 0
+    mx = _r_int(os.path.join(base, "max_freq")) or 0
     return {"cur": cur, "min": mn, "max": mx}
+
 
 def _read_podgov_params() -> Optional[Dict[str, int]]:
     """Read nvhost_podgov parameters k / load_target / load_margin if present."""
     base = os.path.join(THOR_GPC, "nvhost_podgov")
     if not os.path.isdir(base):
         return None
+
     def rint(name: str) -> Optional[int]:
         p = os.path.join(base, name)
         try:
@@ -95,13 +102,13 @@ def _read_podgov_params() -> Optional[Dict[str, int]]:
                 return int(f.read().strip())
         except Exception:
             return None
-    k  = rint("k")
+    k = rint("k")
     lt = rint("load_target")
     lm = rint("load_margin")
     if k is None and lt is None and lm is None:
         return None
     out: Dict[str, int] = {}
-    if k  is not None:
+    if k is not None:
         out["k"] = k
     if lt is not None:
         out["load_target"] = lt
@@ -110,6 +117,7 @@ def _read_podgov_params() -> Optional[Dict[str, int]]:
     return out
 
 # utilization
+
 
 def _read_utilization() -> Optional[float]:
     """
@@ -122,7 +130,7 @@ def _read_utilization() -> Optional[float]:
     """
     base = THOR_GPC
     if os.path.isdir(base):
-        busy  = _read_file(os.path.join(base, "busy_time"))
+        busy = _read_file(os.path.join(base, "busy_time"))
         total = _read_file(os.path.join(base, "total_time"))
         if busy is not None and total is not None:
             try:
@@ -151,6 +159,7 @@ def _read_utilization() -> Optional[float]:
 
     return None
 
+
 def _util_from_power_fallback() -> Optional[float]:
     """Map VDD_GPU rail power to a rough utilization proxy (0..100%) when no counters exist."""
     p_mw = read_vdd_gpu_mw()
@@ -162,6 +171,7 @@ def _util_from_power_fallback() -> Optional[float]:
 
 # memory
 
+
 def get_memory_bytes() -> Tuple[int, int]:
     """
     Return (used_bytes, total_bytes) for GPU memory.
@@ -171,7 +181,8 @@ def get_memory_bytes() -> Tuple[int, int]:
     res = cuda_gpu_mem_bytes(0)
     return res if res is not None else (0, 0)
 
-#  classes 
+#  classes
+
 
 class GPU(GenericInterface):
     """
@@ -183,6 +194,7 @@ class GPU(GenericInterface):
       - get_railgate(name)          -> True if control=='auto'
       - scaling_3D property         -> first integrated GPU convenience
     """
+
     def __init__(self):
         super(GPU, self).__init__()
 
@@ -243,6 +255,7 @@ class GPUService(object):
     Thor-only GPU service. Builds a single integrated GPU entry and
     returns status using thor_power + devfreq.
     """
+
     def __init__(self):
         if not is_thor():
             raise JtopException("thor_gpu.GPUService used on non-Thor system")
@@ -324,4 +337,3 @@ class GPUService(object):
         return gpu_list
 
 # EOF
-
