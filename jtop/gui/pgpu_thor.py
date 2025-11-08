@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext>
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it)
 # Copyright (c) 2019-2026 Raffaello Bonghi.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -15,103 +15,116 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Thor GPU UI page
-# Requires: jtop/core/thor_power.py
+"""Thor GPU UI page (jtop). Requires jtop/core/thor_power.py."""
+
+from __future__ import annotations
+
 import curses
 import os
 import time
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from .jtopgui import Page
-from .lib.common import NColors, size_to_string
 from .lib.chart import Chart
-from .lib.process_table import ProcessTable
+from .lib.common import NColors, size_to_string
 from .lib.linear_gauge import basic_gauge, freq_gauge
+from .lib.process_table import ProcessTable
 from .lib.smallbutton import SmallButton
 from .pcontrol import color_temperature
 
 from jtop.core.thor_power import (
     current_governor,
-    toggle_governor,
     rail_status,
+    toggle_governor,
     toggle_rail,
 )
 
-# ---------------------------
-# NVML: present in code but DISABLED by default.
-# Enable by exporting: JTOP_THOR_ENABLE_NVML=1
-# ---------------------------
-_ENABLE_NVML = os.environ.get("JTOP_THOR_ENABLE_NVML") == "1"
-_HAS_NVML = False
+# NVML: present but default disabled. Enable with "export JTOP_THOR_ENABLE_NVML=1"
+# Debug logging. Enable with "export JTOP_THOR_MEM_LOG_PATH=/tmp/jtop_thor_mem.log"
+_ENV_ENABLE_NVML = "JTOP_THOR_ENABLE_NVML"
+_ENV_MEM_LOG_PATH = "JTOP_THOR_MEM_LOG_PATH"
+
+_ENABLE_NVML: bool = os.environ.get(_ENV_ENABLE_NVML) == "1"
+_HAS_NVML: bool = False
 if _ENABLE_NVML:
     try:
-        from pynvml import (
-            nvmlInit, nvmlShutdown, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex,
-            nvmlDeviceGetMemoryInfo, nvmlDeviceGetBAR1MemoryInfo,
-            nvmlDeviceGetGraphicsRunningProcesses
+        from pynvml import (  # type: ignore
+            nvmlDeviceGetBAR1MemoryInfo,
+            nvmlDeviceGetCount,
+            nvmlDeviceGetGraphicsRunningProcesses,
+            nvmlDeviceGetHandleByIndex,
+            nvmlDeviceGetMemoryInfo,
+            nvmlInit,
+            nvmlShutdown,
         )
+
         _HAS_NVML = True
     except Exception:
         _HAS_NVML = False
 
-# CUDA for GPU memory on Thor
+# CUDA probe for GPU memory on Thor (optional)
 try:
-    from jtop.core.thor_cuda_mem import cuda_gpu_mem_bytes
+    from jtop.core.thor_cuda_mem import cuda_gpu_mem_bytes  # type: ignore
 except Exception:
-    cuda_gpu_mem_bytes = None
+    cuda_gpu_mem_bytes = None  # type: ignore[assignment]
 
 
-def _size_human(nbytes: int):
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _size_human(nbytes: int) -> Tuple[float, str, int]:
+    """Return (value, unit, divisor) using binary units."""
     units = ["B", "KiB", "MiB", "GiB", "TiB"]
-    f = float(nbytes)
-    i = 0
-    while f >= 1024.0 and i < len(units) - 1:
-        f /= 1024.0
-        i += 1
-    return f, units[i], (1024 ** i)
+    value = float(nbytes)
+    idx = 0
+    while value >= 1024.0 and idx < len(units) - 1:
+        value /= 1024.0
+        idx += 1
+    return value, units[idx], 1024**idx
 
 
-def _to_gib_series(used_b: int, shared_b: int, total_b: int):
-    """Return a Chart series dict always scaled in GiB to avoid iB/B tick spam."""
-    G = 1024 ** 3
-    return {
-        "value": [used_b / G, shared_b / G],
-        "max": total_b / G,
-        "unit": "",
-    }
+def _to_gib_series(used_b: int, shared_b: int, total_b: int) -> Dict[str, object]:
+    """Return a Chart series dict scaled in GiB to avoid iB/B tick spam."""
+    gib = 1024**3
+    return {"value": [used_b / gib, shared_b / gib], "max": total_b / gib, "unit": ""}
 
 
-def _read_podgov_params_gui():
+def _read_podgov_params_gui() -> Optional[Dict[str, int]]:
+    """Read nvhost_podgov params from sysfs if present; return minimal dict or None."""
     base = "/sys/class/devfreq/gpu-gpc-0/nvhost_podgov"
-    try:
-        if not os.path.isdir(base):
+    if not os.path.isdir(base):
+        return None
+
+    def _rint(name: str) -> Optional[int]:
+        path = os.path.join(base, name)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return int(f.read().strip())
+        except Exception:
             return None
 
-        def rint(name):
-            p = os.path.join(base, name)
-            try:
-                with open(p, "r", encoding="utf-8") as f:
-                    return int(f.read().strip())
-            except Exception:
-                return None
-        k = rint("k")
-        lt = rint("load_target")
-        lm = rint("load_margin")
-        d = {}
+    try:
+        k = _rint("k")
+        load_target = _rint("load_target")
+        load_margin = _rint("load_margin")
+        out: Dict[str, int] = {}
         if k is not None:
-            d["k"] = k
-        if lt is not None:
-            d["load_target"] = lt
-        if lm is not None:
-            d["load_margin"] = lm
-        return d or None
+            out["k"] = k
+        if load_target is not None:
+            out["load_target"] = load_target
+        if load_margin is not None:
+            out["load_margin"] = load_margin
+        return out or None
     except Exception:
         return None
 
 
-def _thor_nvml_mem_summary():
+def _thor_nvml_mem_summary() -> Optional[Dict[str, int]]:
     """
-    Returns dict with fb_total, fb_used, bar1_total, bar1_used (bytes),
-    or None if NVML not enabled/available.
+    Return dict with {fb_total, fb_used, bar1_total, bar1_used} (bytes),
+    or None if NVML is disabled/unavailable.
     """
     if not (_ENABLE_NVML and _HAS_NVML):
         return None
@@ -120,13 +133,13 @@ def _thor_nvml_mem_summary():
         try:
             if nvmlDeviceGetCount() < 1:
                 return None
-            h = nvmlDeviceGetHandleByIndex(0)
-            fb = nvmlDeviceGetMemoryInfo(h)
+            handle = nvmlDeviceGetHandleByIndex(0)
+            fb = nvmlDeviceGetMemoryInfo(handle)
             fb_total, fb_used = int(fb.total), int(fb.used)
             try:
-                b = nvmlDeviceGetBAR1MemoryInfo(h)
-                bar1_total = int(getattr(b, "bar1Total", 0))
-                bar1_used = int(getattr(b, "bar1Used", 0))
+                bar = nvmlDeviceGetBAR1MemoryInfo(handle)
+                bar1_total = int(getattr(bar, "bar1Total", 0))
+                bar1_used = int(getattr(bar, "bar1Used", 0))
             except Exception:
                 bar1_total, bar1_used = 0, 0
             return {
@@ -144,10 +157,10 @@ def _thor_nvml_mem_summary():
         return None
 
 
-def _thor_nvml_graphics_process_rows():
+def _thor_nvml_graphics_process_rows() -> List[Dict[str, Optional[int]]]:
     """
-    Returns a list of dicts for graphics processes from NVML v3, or [] if unsupported/disabled.
-    Each row: {pid, name (maybe None), used_bytes (or None)}
+    Return a list of dicts for graphics processes from NVML v3, or [] if unsupported/disabled.
+    Each row: {pid, name (maybe None), used_bytes (or None)}.
     """
     if not (_ENABLE_NVML and _HAS_NVML):
         return []
@@ -156,15 +169,21 @@ def _thor_nvml_graphics_process_rows():
         try:
             if nvmlDeviceGetCount() < 1:
                 return []
-            h = nvmlDeviceGetHandleByIndex(0)
-            procs = nvmlDeviceGetGraphicsRunningProcesses(h)
+            handle = nvmlDeviceGetHandleByIndex(0)
+            procs = nvmlDeviceGetGraphicsRunningProcesses(handle)
             rows = []
             for p in procs:
-                rows.append({
-                    "pid": int(p.pid),
-                    "name": getattr(p, "name", None),
-                    "used_bytes": None if getattr(p, "usedGpuMemory", None) is None else int(p.usedGpuMemory),
-                })
+                rows.append(
+                    {
+                        "pid": int(p.pid),
+                        "name": getattr(p, "name", None),
+                        "used_bytes": (
+                            None
+                            if getattr(p, "usedGpuMemory", None) is None
+                            else int(p.usedGpuMemory)
+                        ),
+                    }
+                )
             return rows
         finally:
             try:
@@ -175,14 +194,13 @@ def _thor_nvml_graphics_process_rows():
         return []
 
 
-def _dbg(msg: str):
+def _dbg(msg: str) -> None:
     """
     Optional debug logger for GPU memory sampling.
-    Logging is DISABLED by default.
-    To enable, set:
+    Logging is DISABLED by default; enable with:
         export JTOP_THOR_MEM_LOG_PATH=/tmp/jtop_thor_mem.log
     """
-    log_path = os.environ.get("JTOP_THOR_MEM_LOG_PATH")
+    log_path = os.environ.get(_ENV_MEM_LOG_PATH)
     if not log_path or log_path.upper() == "DISABLED":
         return
     try:
@@ -192,39 +210,48 @@ def _dbg(msg: str):
         pass
 
 
-def _fmt_bytes_mib(n):
+def _fmt_bytes_mib(n: Optional[int]) -> str:
     return "—" if n is None else f"{n / (1024**2):.1f} MiB"
 
 
-def gpu_gauge(stdscr, pos_y, pos_x, size, gpu_data, idx):
-    gpu_status = gpu_data['status']
+def gpu_gauge(
+    stdscr, pos_y: int, pos_x: int, size: int, gpu_data: dict, idx: int
+) -> None:
+    """Draw a single compact GPU usage gauge."""
+    gpu_status = gpu_data["status"]
     data = {
-        'name': 'GPU' if idx == 0 else f'GPU{idx}',
-        'color': NColors.green() | curses.A_BOLD,
-        'values': [(gpu_status['load'], NColors.igreen())],
+        "name": "GPU" if idx == 0 else f"GPU{idx}",
+        "color": NColors.green() | curses.A_BOLD,
+        "values": [(gpu_status["load"], NColors.igreen())],
     }
-    # Disable static Hz text at top (often stale on Thor)
-    # if 'freq' in gpu_data:
-    #     curr_string = unit_to_string(gpu_data['freq']['cur'], 'k', 'Hz')
-    #     stdscr.addstr(pos_y, pos_x + size - 8, curr_string, NColors.italic())
+    # Static Hz text intentionally disabled on Thor (often stale)
     basic_gauge(stdscr, pos_y, pos_x, size - 10, data, bar=" ")
 
 
-def compact_gpu(stdscr, pos_y, pos_x, width, jetson, mouse=None):
-    """Compact GPU display for summary view."""
-    line_counter = 0
+def compact_gpu(
+    stdscr,
+    pos_y: int,
+    pos_x: int,
+    width: int,
+    jetson,
+    mouse: Optional[Tuple[int, int]] = None,
+) -> int:
+    """
+    Compact GPU display for the summary view.
+    Returns number of terminal lines consumed.
+    """
     if not jetson.gpu:
         data = {
-            'name': 'GPU',
-            'color': NColors.green() | curses.A_BOLD,
-            'online': False,
-            'coffline': NColors.igreen(),
-            'message': 'NVIDIA GPU NOT DETECTED/AVAILABLE',
+            "name": "GPU",
+            "color": NColors.green() | curses.A_BOLD,
+            "online": False,
+            "coffline": NColors.igreen(),
+            "message": "NVIDIA GPU NOT DETECTED/AVAILABLE",
         }
         basic_gauge(stdscr, pos_y, pos_x, width - 2, data)
         return 1
 
-    # Draw gauge
+    line_counter = 0
     for idx, gpu in enumerate(jetson.gpu.values()):
         gpu_gauge(stdscr, pos_y + line_counter, pos_x, width, gpu, idx)
         line_counter += 1
@@ -238,12 +265,15 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson, mouse=None):
 
     try:
         rs = rail_status()
-        cv = rs.get("control_value")
-        valrg = "Enabled" if cv == "auto" else ("Disabled" if cv == "on" else "Unknown")
+        control = rs.get("control_value")
+        valrg = (
+            "Enabled"
+            if control == "auto"
+            else ("Disabled" if control == "on" else "Unknown")
+        )
     except Exception:
         valrg = "Unknown"
 
-    # Layout
     y = pos_y + line_counter
     label1_x = pos_x + 1
     label1 = "3D scaling: "
@@ -282,39 +312,69 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson, mouse=None):
     return line_counter + 1
 
 
+# ---------------------------------------------------------------------------
+# Page
+# ---------------------------------------------------------------------------
+
+
 class GPU(Page):
     """Thor-specific GPU page (clickable 3D scaling & Railgate)."""
 
     def __init__(self, stdscr, jetson):
         super(GPU, self).__init__("GPU", stdscr, jetson)
-        COLOR_GREY = 240 if curses.COLORS >= 256 else curses.COLOR_WHITE
-        self.draw_gpus = {}
+
+        color_grey = 240 if curses.COLORS >= 256 else curses.COLOR_WHITE
+        self.draw_gpus: Dict[str, Dict[str, object]] = {}
+
         for gpu_name in self.jetson.gpu:
-            type_gpu = "i" if self.jetson.gpu[gpu_name]['type'] == 'integrated' else 'd'
-            chart = Chart(jetson, f"{type_gpu}GPU {gpu_name}", self.update_chart,
-                          color_text=curses.COLOR_GREEN)
-            button_3d_scaling = SmallButton(stdscr, self.action_scaling_3D, info={'name': gpu_name})
-            chart_ram = Chart(jetson, "GPU Shared RAM", self.update_chart_ram,
-                              type_value=float,
-                              color_text=curses.COLOR_GREEN,
-                              color_chart=[COLOR_GREY, curses.COLOR_GREEN]) if type_gpu == 'i' else None
-            self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling, 'ram': chart_ram}
+            type_gpu = "i" if self.jetson.gpu[gpu_name]["type"] == "integrated" else "d"
+
+            chart = Chart(
+                jetson,
+                f"{type_gpu}GPU {gpu_name}",
+                self.update_chart,
+                color_text=curses.COLOR_GREEN,
+            )
+            button_3d_scaling = SmallButton(
+                stdscr, self.action_scaling_3D, info={"name": gpu_name}
+            )
+
+            chart_ram = (
+                Chart(
+                    jetson,
+                    "GPU Shared RAM",
+                    self.update_chart_ram,
+                    type_value=float,
+                    color_text=curses.COLOR_GREEN,
+                    color_chart=[color_grey, curses.COLOR_GREEN],
+                )
+                if type_gpu == "i"
+                else None
+            )
+
+            self.draw_gpus[gpu_name] = {
+                "chart": chart,
+                "3d_scaling": button_3d_scaling,
+                "ram": chart_ram,
+            }
+
         self.process_table = ProcessTable(self.stdscr, self.jetson)
         self._click_regions = {"scaling": [], "railgate": []}
 
         # CUDA reading cache to avoid flicker when probe momentarily fails
-        self._cuda_mem_last = None          # (used_b, total_b)
-        self._cuda_mem_last_ts = 0.0        # time.time()
+        self._cuda_mem_last: Optional[Tuple[int, int]] = None  # (used_b, total_b)
+        self._cuda_mem_last_ts: float = 0.0
 
-    # ---------- small helpers (class) ----------
-
-    def _get_cuda_mem_cached(self, ttl=3.0, stale_ok=10.0):
+    def _get_cuda_mem_cached(
+        self, ttl: float = 3.0, stale_ok: float = 10.0
+    ) -> Optional[Tuple[int, int]]:
         """
         Try CUDA probe. If it succeeds, cache & return.
         If it fails, return cached value if it's not older than `stale_ok`.
-        ttl: recency window to avoid spamming the driver every frame.
+        `ttl` is a recency window to avoid spamming the driver every frame.
         """
         now = time.time()
+
         # reuse fresh cache
         if self._cuda_mem_last and (now - self._cuda_mem_last_ts) < ttl:
             return self._cuda_mem_last
@@ -339,25 +399,25 @@ class GPU(Page):
 
     # ---------- actions ----------
 
-    def action_railgate(self, info, selected):
+    def action_railgate(self, info, selected) -> None:
         toggle_rail()
 
-    def action_scaling_3D(self, info, selected):
+    def action_scaling_3D(self, info, selected) -> None:
         toggle_governor()
 
     # ---------- charts data providers ----------
 
-    def update_chart(self, jetson, name):
+    def update_chart(self, jetson, name: str) -> Dict[str, List[float]]:
         gpu_name = name.split(" ")[1]
-        gpu_status = jetson.gpu[gpu_name]['status']
-        return {'value': [gpu_status['load']]}
+        gpu_status = jetson.gpu[gpu_name]["status"]
+        return {"value": [gpu_status["load"]]}
 
-    def update_chart_ram(self, jetson, name):
+    def update_chart_ram(self, jetson, name: str) -> Dict[str, object]:
         """
         GPU Shared RAM chart values.
 
         Order of preference:
-          1) CUDA driver (thor_cuda_mem): FB total/used, shared=0 (no BAR1 visibility)
+          1) CUDA (thor_cuda_mem): FB total/used, shared=0 (no BAR1 visibility)
           2) NVML (if enabled): prefer BAR1 when available and show FB used as reference
           3) Legacy jetson.memory['RAM'] as last resort
         """
@@ -371,10 +431,10 @@ class GPU(Page):
         # --- 2) NVML BAR1/FB path (only if enabled) ---
         nv = _thor_nvml_mem_summary()
         if nv:
-            fb_total = nv["fb_total"]    # bytes
-            fb_used = nv["fb_used"]      # bytes
-            bar1_total = nv["bar1_total"]  # bytes
-            bar1_used = nv["bar1_used"]    # bytes
+            fb_total = nv["fb_total"]
+            fb_used = nv["fb_used"]
+            bar1_total = nv["bar1_total"]
+            bar1_used = nv["bar1_used"]
 
             if bar1_total and bar1_total > 0:
                 total_bytes = bar1_total
@@ -385,7 +445,10 @@ class GPU(Page):
                 shared_bytes = 0
                 ref_bytes = fb_used
 
-            _dbg(f"RAM via NVML: fb_used={fb_used} fb_total={fb_total} bar1_used={bar1_used} bar1_total={bar1_total}")
+            _dbg(
+                "RAM via NVML: "
+                f"fb_used={fb_used} fb_total={fb_total} bar1_used={bar1_used} bar1_total={bar1_total}"
+            )
             return _to_gib_series(ref_bytes, shared_bytes, total_bytes)
 
         # --- 3) Legacy absolute fallback (system RAM) ---
@@ -403,14 +466,16 @@ class GPU(Page):
 
     # ---------- input handling ----------
 
-    def _handle_mouse(self, mouse):
+    def _handle_mouse(self, mouse: Optional[Tuple[int, int]]) -> bool:
         if not mouse:
             return False
         try:
             mx, my = mouse
-            for which, regions in (("scaling", self._click_regions["scaling"]),
-                                   ("railgate", self._click_regions["railgate"])):
-                for (ry, rx1, rx2) in regions:
+            for which, regions in (
+                ("scaling", self._click_regions["scaling"]),
+                ("railgate", self._click_regions["railgate"]),
+            ):
+                for ry, rx1, rx2 in regions:
                     if my == ry and rx1 <= mx <= rx2:
                         toggle_governor() if which == "scaling" else toggle_rail()
                         return True
@@ -418,41 +483,47 @@ class GPU(Page):
             pass
         return False
 
-    def _handle_hotkeys(self, key):
+    def _handle_hotkeys(self, key) -> bool:
         if isinstance(key, int):
-            if key in (ord('g'), ord('G')):
+            if key in (ord("g"), ord("G")):
                 toggle_governor()
                 return True
-            if key in (ord('r'), ord('R')):
+            if key in (ord("r"), ord("R")):
                 toggle_rail()
                 return True
         return False
 
     # ---------- main draw ----------
 
-    def draw(self, key, mouse):
+    def draw(self, key, mouse) -> None:
         if self._handle_mouse(mouse) or self._handle_hotkeys(key):
             pass
 
         height, width, first = self.size_page()
         gpu_height = (height * 2 // 3 - 3) // max(1, len(self.jetson.gpu))
-        self.stdscr.addstr(first + 1, 1, "Temperatures:", curses.A_NORMAL)
 
+        # Temperatures header
+        self.stdscr.addstr(first + 1, 1, "Temperatures:", curses.A_NORMAL)
         for name in self.jetson.temperature:
-            if 'gpu' in name.lower():
-                color_temperature(self.stdscr, first + 1, 15, name, self.jetson.temperature[name])
+            if "gpu" in name.lower():
+                color_temperature(
+                    self.stdscr, first + 1, 15, name, self.jetson.temperature[name]
+                )
 
         self._click_regions = {"scaling": [], "railgate": []}
 
-        # Draw per-GPU blocks
+        # Per-GPU blocks
         for idx, (gpu_name, gpu_data) in enumerate(self.jetson.gpu.items()):
-            chart = self.draw_gpus[gpu_name]['chart']
-            chart_ram = self.draw_gpus[gpu_name]['ram']
-            gpu_status = gpu_data['status']
-            gpu_freq = gpu_data.get('freq', {})
+            chart = self.draw_gpus[gpu_name]["chart"]
+            chart_ram = self.draw_gpus[gpu_name]["ram"]
+            gpu_status = gpu_data["status"]
+            gpu_freq = gpu_data.get("freq", {})
 
             size_x = [1, width // 2 - 2]
-            size_y = [first + 2 + idx * (gpu_height + 1), first + 2 + (idx + 1) * (gpu_height - 3)]
+            size_y = [
+                first + 2 + idx * (gpu_height + 1),
+                first + 2 + (idx + 1) * (gpu_height - 3),
+            ]
 
             # --- draw podgov params directly under the gov line ---
             gp = gpu_status.get("gov_params")
@@ -483,8 +554,10 @@ class GPU(Page):
                     except curses.error:
                         pass
 
-            # Draw main GPU load chart (title + governor label)
-            label_chart_gpu = f"{gpu_status['load']:>3.0f}% - gov: {gpu_freq.get('governor', '')}"
+            # Main GPU load chart (title + governor label)
+            label_chart_gpu = (
+                f"{gpu_status['load']:>3.0f}% - gov: {gpu_freq.get('governor', '')}"
+            )
             chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
 
             # GPU Shared RAM chart + label (per GPU)
@@ -520,58 +593,71 @@ class GPU(Page):
                 # Last resort: legacy system RAM label (host)
                 if not label:
                     try:
-                        ram = self.jetson.memory.get('RAM', {})
-                        used_k = int(ram.get('used', 0))     # use 'used' not 'shared'
-                        tot_k = int(ram.get('tot', 0))
+                        ram = self.jetson.memory.get("RAM", {})
+                        used_k = int(ram.get("used", 0))  # use 'used' not 'shared'
+                        tot_k = int(ram.get("tot", 0))
                         label = f"{size_to_string(used_k, 'k')}/{size_to_string(tot_k, 'k')} (host)"
                     except Exception:
                         label = "N/A"
 
-                chart_ram.draw(self.stdscr, [1 + width // 2, width - 2], size_y, label=label)
+                chart_ram.draw(
+                    self.stdscr, [1 + width // 2, width - 2], size_y, label=label
+                )
 
             # Clickable toggles row (per GPU area)
             y = first + 1 + (idx + 1) * gpu_height - 1
             x = 1
+
             try:
                 gov = (current_governor() or "").strip()
                 val3d = "Enabled" if gov != "performance" else "Disabled"
             except Exception:
                 val3d = "Unknown"
+
             label = "3D scaling: "
             field = "{" + val3d + "}"
             color_3d = NColors.green() if val3d == "Enabled" else curses.A_NORMAL
             self.stdscr.addstr(y, x, label, curses.A_BOLD)
             self.stdscr.addstr(y, x + len(label), field, color_3d)
-            self._click_regions["scaling"].append((y, x + len(label), x + len(label) + len(field) - 1))
+            self._click_regions["scaling"].append(
+                (y, x + len(label), x + len(label) + len(field) - 1)
+            )
 
             x += width // 4
             try:
                 rs = rail_status()
-                cv = rs.get("control_value")
-                valrg = "Enabled" if cv == "auto" else ("Disabled" if cv == "on" else "Unknown")
+                control = rs.get("control_value")
+                valrg = (
+                    "Enabled"
+                    if control == "auto"
+                    else ("Disabled" if control == "on" else "Unknown")
+                )
             except Exception:
                 valrg = "Unknown"
+
             label = "Railgate: "
             field = "{" + valrg + "}"
             color_rail = NColors.green() if valrg == "Enabled" else curses.A_NORMAL
             self.stdscr.addstr(y, x, label, curses.A_BOLD)
             self.stdscr.addstr(y, x + len(label), field, color_rail)
-            self._click_regions["railgate"].append((y, x + len(label), x + len(label) + len(field) - 1))
+            self._click_regions["railgate"].append(
+                (y, x + len(label), x + len(label) + len(field) - 1)
+            )
 
             # Frequency meters (live row above the 3D/Railgate line)
             label_y = first + 1 + (idx + 1) * gpu_height - 1
             meter_y = label_y - 1
 
             frq_size = width - 3
-            if 'GPC' in gpu_freq:
+            if "GPC" in gpu_freq:
                 # allocate right half for GPC lane meters
-                size_gpc_gauge = (width - 2) // (2 + len(gpu_freq['GPC']))
-                for gpc_idx, gpc in enumerate(gpu_freq['GPC']):
+                size_gpc_gauge = (width - 2) // (2 + len(gpu_freq["GPC"]))
+                for gpc_idx, gpc in enumerate(gpu_freq["GPC"]):
                     freq_data = {
-                        'name': f'GPC{gpc_idx}',
-                        'cur': gpc,
-                        'unit': 'k',
-                        'online': gpc > 0,
+                        "name": f"GPC{gpc_idx}",
+                        "cur": gpc,
+                        "unit": "k",
+                        "online": gpc > 0,
                     }
                     freq_gauge(
                         self.stdscr,
@@ -581,11 +667,15 @@ class GPU(Page):
                         freq_data,
                     )
                 frq_size = width // 2
+
             # Overall frequency meter on the left — shift right 1 col and shrink 1 to avoid overlaps
-            gpu_freq['name'] = "Frq"
+            gpu_freq["name"] = "Frq"
             freq_gauge(self.stdscr, meter_y, 2, frq_size - 1, gpu_freq)
 
         height_table = height - first + 2 + gpu_height
-        self.process_table.draw(first + 2 + gpu_height, 0, width, height_table, key, mouse)
+        self.process_table.draw(
+            first + 2 + gpu_height, 0, width, height_table, key, mouse
+        )
+
 
 # EOF
