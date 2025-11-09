@@ -78,10 +78,14 @@ def add_engine_in_list(label, engine, group, name):
     if group not in engine:
         return []
     names = name if isinstance(name, (list, tuple)) else [name]
-    for n in names:
-        if n in engine[group]:
-            return [(label, get_value_engine(engine[group][n]))]
-    return []
+    return next(
+        (
+            [(label, get_value_engine(engine[group][n]))]
+            for n in names
+            if n in engine[group]
+        ),
+        [],
+    )
 
 
 # Convenience: directly add a label/value pair (used for VIC BPMP fallback)
