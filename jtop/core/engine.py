@@ -110,10 +110,11 @@ def _bpmp_pick_clock(idx, token):
     Prefer explicit names in _BPMP_TOKEN_MAP; otherwise substring search.
     """
     prefs = _BPMP_TOKEN_MAP.get(token, [])
-    # Try preferred names first
+    # Try preferred names first (case-insensitive)
     for n in prefs:
-        if n in idx:
-            return n
+        for key in idx.keys():
+            if n.lower() == key.lower():
+                return key
     # Fallback: substring search (stable ordering)
     lowtok = token.lower()
     return next((name for name in idx.keys() if lowtok in name.lower()), None)
