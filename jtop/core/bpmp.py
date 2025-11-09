@@ -3,6 +3,7 @@ import re
 _CLK_TREE = "/sys/kernel/debug/bpmp/debug/clk/clk_tree"
 _LINE_RX = re.compile(r"^\s*([A-Za-z0-9_\.]+)\s+(\d+)\s+(\d+)\b", re.MULTILINE)
 
+
 class BpmpSnapshot:
     """Parses clk_tree once and serves lookups without re-reading the file each time."""
 

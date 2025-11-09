@@ -32,6 +32,7 @@ except Exception:
 
 # Thor helpers
 
+
 def _read_bpmp_clk_rate(clk_name: str):
     """Use shared BPMP snapshot to avoid re-reading clk_tree on each call."""
     if not BpmpSnapshot:
@@ -67,10 +68,14 @@ def add_engine_in_list(label, engine, group, name):
     )
 
 # Convenience: directly add a label/value pair (used for VIC BPMP fallback)
+
+
 def _add_label_value(label, value):
     return [] if value is None else [(label, value)]
 
 # Jetson mappings
+
+
 def pass_thor(engine):
     """Jetson Thor engine mapping – adds aliases + live VIC via BPMP fallback."""
     rows = [
@@ -78,13 +83,13 @@ def pass_thor(engine):
         add_engine_in_list("APE", engine, "APE", "APE"),
         # Codecs – try common aliases (MSENC sometimes backs NVENC)
         (
-            add_engine_in_list("NVENC", engine, "NVENC", ["NVENC", "MSENC"])
-            + add_engine_in_list("NVDEC", engine, "NVDEC", ["NVDEC"])
+            add_engine_in_list("NVENC", engine, "NVENC", ["NVENC", "MSENC"]) +
+            add_engine_in_list("NVDEC", engine, "NVDEC", ["NVDEC"])
         ),
         # JPEG – some SKUs expose NVJPG1 as a second block
         (
-            add_engine_in_list("NVJPG", engine, "NVJPG", ["NVJPG", "NVJPG0"])
-            + add_engine_in_list("NVJPG1", engine, "NVJPG", ["NVJPG1"])
+            add_engine_in_list("NVJPG", engine, "NVJPG", ["NVJPG", "NVJPG0"]) +
+            add_engine_in_list("NVJPG1", engine, "NVJPG", ["NVJPG1"])
         ),
         # Security + (we’ll append VIC below with a BPMP fallback if needed)
         add_engine_in_list("SE", engine, "SE", ["SE", "SE0", "SE1"]),
@@ -109,24 +114,24 @@ def pass_thor(engine):
 def pass_orin(engine):
     return [
         (
-            add_engine_in_list("APE", engine, "APE", "APE")
-            + add_engine_in_list("PVA0a", engine, "PVA0", "PVA0_CPU_AXI")
+            add_engine_in_list("APE", engine, "APE", "APE") +
+            add_engine_in_list("PVA0a", engine, "PVA0", "PVA0_CPU_AXI")
         ),
         (
-            add_engine_in_list("DLA0c", engine, "DLA0", "DLA0_CORE")
-            + add_engine_in_list("DLA1c", engine, "DLA1", "DLA1_CORE")
+            add_engine_in_list("DLA0c", engine, "DLA0", "DLA0_CORE") +
+            add_engine_in_list("DLA1c", engine, "DLA1", "DLA1_CORE")
         ),
         (
-            add_engine_in_list("NVENC", engine, "NVENC", "NVENC")
-            + add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
+            add_engine_in_list("NVENC", engine, "NVENC", "NVENC") +
+            add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
         ),
         (
-            add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG")
-            + add_engine_in_list("NVJPG1", engine, "NVJPG", "NVJPG1")
+            add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG") +
+            add_engine_in_list("NVJPG1", engine, "NVJPG", "NVJPG1")
         ),
         (
-            add_engine_in_list("SE", engine, "SE", "SE")
-            + add_engine_in_list("VIC", engine, "VIC", "VIC")
+            add_engine_in_list("SE", engine, "SE", "SE") +
+            add_engine_in_list("VIC", engine, "VIC", "VIC")
         ),
     ]
 
@@ -135,43 +140,43 @@ def pass_orin_nx(engine):
     if "DLA0" in engine:
         return [
             (
-                add_engine_in_list("APE", engine, "APE", "APE")
-                + add_engine_in_list("PVA0a", engine, "PVA0", "PVA0_CPU_AXI")
+                add_engine_in_list("APE", engine, "APE", "APE") +
+                add_engine_in_list("PVA0a", engine, "PVA0", "PVA0_CPU_AXI")
             ),
             (
-                add_engine_in_list("DLA0c", engine, "DLA0", "DLA0_CORE")
-                + add_engine_in_list("DLA1c", engine, "DLA1", "DLA1_CORE")
+                add_engine_in_list("DLA0c", engine, "DLA0", "DLA0_CORE") +
+                add_engine_in_list("DLA1c", engine, "DLA1", "DLA1_CORE")
             ),
             (
-                add_engine_in_list("NVENC", engine, "NVENC", "NVENC")
-                + add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
+                add_engine_in_list("NVENC", engine, "NVENC", "NVENC") +
+                add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
             ),
             (
-                add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG")
-                + add_engine_in_list("NVJPG1", engine, "NVJPG", "NVJPG1")
+                add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG") +
+                add_engine_in_list("NVJPG1", engine, "NVJPG", "NVJPG1")
             ),
             (
-                add_engine_in_list("SE", engine, "SE", "SE")
-                + add_engine_in_list("VIC", engine, "VIC", "VIC")
+                add_engine_in_list("SE", engine, "SE", "SE") +
+                add_engine_in_list("VIC", engine, "VIC", "VIC")
             ),
         ]
     else:
         return [
             (
-                add_engine_in_list("APE", engine, "APE", "APE")
-                + add_engine_in_list("PVA0a", engine, "PVA0", "PVA0_CPU_AXI")
+                add_engine_in_list("APE", engine, "APE", "APE") +
+                add_engine_in_list("PVA0a", engine, "PVA0", "PVA0_CPU_AXI")
             ),
             (
-                add_engine_in_list("NVENC", engine, "NVENC", "NVENC")
-                + add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
+                add_engine_in_list("NVENC", engine, "NVENC", "NVENC") +
+                add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
             ),
             (
-                add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG")
-                + add_engine_in_list("NVJPG1", engine, "NVJPG", "NVJPG1")
+                add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG") +
+                add_engine_in_list("NVJPG1", engine, "NVJPG", "NVJPG1")
             ),
             (
-                add_engine_in_list("SE", engine, "SE", "SE")
-                + add_engine_in_list("VIC", engine, "VIC", "VIC")
+                add_engine_in_list("SE", engine, "SE", "SE") +
+                add_engine_in_list("VIC", engine, "VIC", "VIC")
             ),
         ]
 
@@ -180,16 +185,16 @@ def pass_orin_nano(engine):
     return [
         add_engine_in_list("APE", engine, "APE", "APE"),
         (
-            add_engine_in_list("NVENC", engine, "NVENC", "NVENC")
-            + add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
+            add_engine_in_list("NVENC", engine, "NVENC", "NVENC") +
+            add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
         ),
         (
-            add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG")
-            + add_engine_in_list("NVJPG1", engine, "NVJPG", "NVJPG1")
+            add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG") +
+            add_engine_in_list("NVJPG1", engine, "NVJPG", "NVJPG1")
         ),
         (
-            add_engine_in_list("SE", engine, "SE", "SE")
-            + add_engine_in_list("VIC", engine, "VIC", "VIC")
+            add_engine_in_list("SE", engine, "SE", "SE") +
+            add_engine_in_list("VIC", engine, "VIC", "VIC")
         ),
     ]
 
@@ -197,24 +202,24 @@ def pass_orin_nano(engine):
 def map_xavier(engine):
     return [
         (
-            add_engine_in_list("APE", engine, "APE", "APE")
-            + add_engine_in_list("CVNAS", engine, "CVNAS", "CVNAS")
+            add_engine_in_list("APE", engine, "APE", "APE") +
+            add_engine_in_list("CVNAS", engine, "CVNAS", "CVNAS")
         ),
         (
-            add_engine_in_list("DLA0c", engine, "DLA0", "DLA0_CORE")
-            + add_engine_in_list("DLA1c", engine, "DLA1", "DLA1_CORE")
+            add_engine_in_list("DLA0c", engine, "DLA0", "DLA0_CORE") +
+            add_engine_in_list("DLA1c", engine, "DLA1", "DLA1_CORE")
         ),
         (
-            add_engine_in_list("NVENC", engine, "NVENC", "NVENC")
-            + add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
+            add_engine_in_list("NVENC", engine, "NVENC", "NVENC") +
+            add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
         ),
         (
-            add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG")
-            + add_engine_in_list("PVA0a", engine, "PVA0", "PVA0_AXI")
+            add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG") +
+            add_engine_in_list("PVA0a", engine, "PVA0", "PVA0_AXI")
         ),
         (
-            add_engine_in_list("SE", engine, "SE", "SE")
-            + add_engine_in_list("VIC", engine, "VIC", "VIC")
+            add_engine_in_list("SE", engine, "SE", "SE") +
+            add_engine_in_list("VIC", engine, "VIC", "VIC")
         ),
     ]
 
@@ -223,12 +228,12 @@ def map_jetson_nano(engine):
     return [
         add_engine_in_list("APE", engine, "APE", "APE"),
         (
-            add_engine_in_list("NVENC", engine, "NVENC", "NVENC")
-            + add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
+            add_engine_in_list("NVENC", engine, "NVENC", "NVENC") +
+            add_engine_in_list("NVDEC", engine, "NVDEC", "NVDEC")
         ),
         (
-            add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG")
-            + add_engine_in_list("SE", engine, "SE", "SE")
+            add_engine_in_list("NVJPG", engine, "NVJPG", "NVJPG") +
+            add_engine_in_list("SE", engine, "SE", "SE")
         ),
     ]
 

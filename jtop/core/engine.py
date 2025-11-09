@@ -29,6 +29,8 @@ except Exception:
     pick_clock = None
 
 # Common helpers (legacy per-engine debugfs layout)
+
+
 def read_engine(path: str):
     # Read status online
     engine = {}
@@ -100,19 +102,19 @@ class EngineService(object):
 
         # Preferred BPMP clock name preferences per logical engine (used by pick_clock)
         self._BPMP_TOKEN_MAP = {
-            "APE":   ["ape"],
-            "VIC":   ["vic", "nafll_vic"],
+            "APE": ["ape"],
+            "VIC": ["vic", "nafll_vic"],
             "NVENC": ["nvenc", "msenc", "nafll_nvenc", "nafll_msenc"],
             "MSENC": ["msenc", "nvenc", "nafll_msenc", "nafll_nvenc"],
             "NVDEC": ["nvdec", "nafll_nvdec"],
             "NVJPG": ["nvjpg", "nvjpg0", "nafll_nvjpg"],
             "NVJPG1": ["nvjpg1"],
-            "PVA":   ["pva", "pva0"],
-            "PVA0":  ["pva0", "pva"],
-            "OFA":   ["ofa"],
-            "SE":    ["se", "se0", "se1"],
+            "PVA": ["pva", "pva0"],
+            "PVA0": ["pva0", "pva"],
+            "OFA": ["ofa"],
+            "SE": ["se", "se0", "se1"],
             "CVNAS": ["cvnas"],
-            "DLA":   ["dla", "dla0", "dla1"],  # not present on Thor, but harmless
+            "DLA": ["dla", "dla0", "dla1"],  # not present on Thor, but harmless
         }
 
         # Thor path: use BPMP snapshot index for discovery
