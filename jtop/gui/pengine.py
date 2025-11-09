@@ -24,30 +24,20 @@ from .lib.colors import NColors
 from .lib.common import unit_to_string, plot_name_info
 from .lib.linear_gauge import freq_gauge
 
+# Use shared BPMP helper (cached per call)
+try:
+    from ..core.bpmp import BpmpSnapshot
+except Exception:
+    BpmpSnapshot = None
+
 # Thor helpers
 
-_BPMP_CLK_TREE = "/sys/kernel/debug/bpmp/debug/clk/clk_tree"
-
-
 def _read_bpmp_clk_rate(clk_name: str):
-    """
-    Return rate in Hz for `clk_name` from BPMP debugfs, or None if not available.
-    Lines look like: "vic  0 1107000000  0  0"
-    """
-    try:
-        with open(_BPMP_CLK_TREE, "r", encoding="utf-8", errors="ignore") as f:
-            data = f.read()
-    except Exception:
+    """Use shared BPMP snapshot to avoid re-reading clk_tree on each call."""
+    if not BpmpSnapshot:
         return None
-
-    base = re.escape(clk_name)
-    if m := re.search(rf"^\s*{base}\s+\d+\s+(\d+)\b", data, re.MULTILINE):
-        return int(m[1])
-
-    if not clk_name.startswith("nafll_"):
-        if mp := re.search(rf"^\s*nafll_{base}\s+\d+\s+(\d+)\b", data, re.MULTILINE):
-            return int(mp[1])
-    return None
+    snap = BpmpSnapshot()
+    return snap.rate_hz(clk_name)
 
 
 def _hz_to_mhz_str(hz):
@@ -58,7 +48,6 @@ def _hz_to_mhz_str(hz):
 
 
 # existing core helpers
-
 
 def get_value_engine(engine):
     return unit_to_string(engine["cur"], "k", "Hz") if engine["online"] else "[OFF]"
@@ -73,23 +62,15 @@ def add_engine_in_list(label, engine, group, name):
         return []
     names = name if isinstance(name, (list, tuple)) else [name]
     return next(
-        (
-            [(label, get_value_engine(engine[group][n]))]
-            for n in names
-            if n in engine[group]
-        ),
+        ([(label, get_value_engine(engine[group][n]))] for n in names if n in engine[group]),
         [],
     )
-
 
 # Convenience: directly add a label/value pair (used for VIC BPMP fallback)
 def _add_label_value(label, value):
     return [] if value is None else [(label, value)]
 
-
 # Jetson mappings
-
-
 def pass_thor(engine):
     """Jetson Thor engine mapping – adds aliases + live VIC via BPMP fallback."""
     rows = [
@@ -121,7 +102,8 @@ def pass_thor(engine):
         vic = _add_label_value("VIC", mhz_str) if mhz_str else []
     rows.append(vic)
 
-    return rows
+    # Filter out any empty sublists to keep UI rendering robust
+    return [row for row in rows if row]
 
 
 def pass_orin(engine):
@@ -279,10 +261,14 @@ def map_engines(jetson):
     except KeyError:
         pass
 
-    # Otherwise, if not mapped, show all engines
+    # Otherwise, if not mapped, show all engines (skip empty groups)
     return [
-        [(name, get_value_engine(engine)) for name, engine in group.items()]
-        for group in jetson.engine.values()
+        row
+        for row in (
+            [(name, get_value_engine(engine)) for name, engine in group.items()]
+            for group in jetson.engine.values()
+        )
+        if row
     ]
 
 
@@ -302,11 +288,7 @@ def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
         size_eng = size_table // len(row) - 1
         for idx, (name, value) in enumerate(row):
             if name is not None:
-                color = (
-                    curses.A_NORMAL
-                    if "[OFF]" in value
-                    else NColors.green() | curses.A_BOLD
-                )
+                color = curses.A_NORMAL if "[OFF]" in value else NColors.green() | curses.A_BOLD
                 plot_name_info(
                     stdscr,
                     pos_y + gidx + 1,
@@ -348,11 +330,7 @@ class ENGINE(Page):
                 except curses.error:
                     pass
                 # Plot Gauge
-                new_name = (
-                    " ".join(name_array[1:])
-                    if len(name_array) > 1 and len(engines) > 1
-                    else name
-                )
+                new_name = " ".join(name_array[1:]) if len(name_array) > 1 and len(engines) > 1 else name
                 # Add name in plot string
                 engine["name"] = new_name
                 try:
