@@ -282,7 +282,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
 
         device_count = pynvml.nvmlDeviceGetCount()
         # comment out next line which writes every second to journalctl. Enable locally if needed.
-        #logger.info(f"NVML device count: {device_count}")
+        # logger.info(f"NVML device count: {device_count}")
 
         for idx in range(device_count):
             handle = pynvml.nvmlDeviceGetHandleByIndex(idx)
