@@ -116,10 +116,7 @@ def _bpmp_pick_clock(idx, token):
             return n
     # Fallback: substring search (stable ordering)
     lowtok = token.lower()
-    for name in idx.keys():
-        if lowtok in name.lower():
-            return name
-    return None
+    return next((name for name in idx.keys() if lowtok in name.lower()), None)
 
 
 def _bpmp_engine_status_for(token, idx):
