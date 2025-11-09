@@ -45,10 +45,9 @@ class BpmpSnapshot:
         for k, v in self._idx.items():
             if k.lower() == low:
                 return v["rate"]
-        for k, v in self._idx.items():
-            if low in k.lower():
-                return v["rate"]
-        return None
+        return next(
+            (v["rate"] for k, v in self._idx.items() if low in k.lower()), None
+        )
 
 
 def pick_clock(idx: dict[str, dict[str, int]], token: str, preferences: list[str]) -> str | None:
