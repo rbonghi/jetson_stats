@@ -90,9 +90,7 @@ def add_engine_in_list(label, engine, group, name):
 
 # Convenience: directly add a label/value pair (used for VIC BPMP fallback)
 def _add_label_value(label, value):
-    if value is None:
-        return []
-    return [(label, value)]
+    return [] if value is None else [(label, value)]
 
 
 # Jetson mappings
