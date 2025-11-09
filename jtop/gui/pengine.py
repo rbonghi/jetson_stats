@@ -40,19 +40,13 @@ def _read_bpmp_clk_rate(clk_name: str):
     except Exception:
         return None
 
-    rx = re.compile(rf"^\s*{re.escape(clk_name)}\s+\d+\s+(\d+)\b", re.MULTILINE)
-    m = rx.search(data)
-    if m:
-        return int(m.group(1))
+    base = re.escape(clk_name)
+    if m := re.search(rf"^\s*{base}\s+\d+\s+(\d+)\b", data, re.MULTILINE):
+        return int(m[1])
 
-    # try parent nafll_* if direct clock name is absent
     if not clk_name.startswith("nafll_"):
-        rxp = re.compile(
-            rf"^\s*nafll_{re.escape(clk_name)}\s+\d+\s+(\d+)\b", re.MULTILINE
-        )
-        mp = rxp.search(data)
-        if mp:
-            return int(mp.group(1))
+        if mp := re.search(rf"^\s*nafll_{base}\s+\d+\s+(\d+)\b", data, re.MULTILINE):
+            return int(mp[1])
     return None
 
 
@@ -277,23 +271,19 @@ def engine_model(model):
 
 
 def map_engines(jetson):
-    # Check if there is a map for each engine
+    """Map the hardware engines for the detected Jetson model."""
     func_list_engines = engine_model(jetson.board["hardware"]["Module"])
     try:
         if func_list_engines:
             return func_list_engines(jetson.engine)
     except KeyError:
         pass
-    # Otherwise if not mapped show all engines
-    list_engines = []
-    for group in jetson.engine:
-        list_engines += [
-            [
-                (name, get_value_engine(engine))
-                for name, engine in jetson.engine[group].items()
-            ]
-        ]
-    return list_engines
+
+    # Otherwise, if not mapped, show all engines
+    return [
+        [(name, get_value_engine(engine)) for name, engine in group.items()]
+        for group in jetson.engine.values()
+    ]
 
 
 def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
