@@ -21,18 +21,10 @@ from typing import Dict, List, Optional, Tuple
 import glob
 import os
 import logging
-import time
-
 logger = logging.getLogger(__name__)
 
-_DEVFREQ_NODES = ("/sys/class/devfreq/gpu-gpc-0", "/sys/class/devfreq/gpu-nvd-0")
 
-# Cache discovered hwmon paths so we don't rescan every read
-_HW_CACHE = {
-    "ina3221": None,   # (base_dir, {label -> (inX_input, currX_input)})
-    "ina238": None,    # (base_dir, power1_input)
-    "ts": 0.0,
-}
+_DEVFREQ_NODES = ("/sys/class/devfreq/gpu-gpc-0", "/sys/class/devfreq/gpu-nvd-0")
 
 
 def _read(path: str) -> Optional[str]:
@@ -55,149 +47,8 @@ def _write(path: str, data: str) -> Tuple[bool, Optional[str]]:
 def _exists(p: str) -> bool:
     return os.path.exists(p)
 
-
-def _scan_ina3221() -> Optional[Tuple[str, Dict[str, Tuple[str, str]]]]:
-    """Find an INA3221 and map labels -> (mV_path, mA_path)."""
-    for hdir in glob.glob("/sys/class/hwmon/hwmon*"):
-        # heuristic: has in1_label and curr1_input
-        lbls = glob.glob(os.path.join(hdir, "in*_label"))
-        if not lbls:
-            continue
-        label_map: Dict[str, Tuple[str, str]] = {}
-        ok = False
-        for lbl in lbls:
-            try:
-                with open(lbl, "r", encoding="utf-8", errors="ignore") as f:
-                    name = f.read().strip()
-            except Exception:
-                continue
-            chan = os.path.basename(lbl)[2:].split("_", 1)[0]  # X in inX_label
-            v_path = os.path.join(hdir, f"in{chan}_input")     # mV
-            i_path = os.path.join(hdir, f"curr{chan}_input")   # mA
-            if os.path.isfile(v_path) and os.path.isfile(i_path):
-                label_map[name] = (v_path, i_path)
-                ok = True
-        if ok:
-            return (hdir, label_map)
-    return None
-
-
-def _scan_ina238() -> Optional[Tuple[str, str]]:
-    """Find an INA238 and return (base_dir, power1_input_uW)."""
-    for hdir in glob.glob("/sys/class/hwmon/hwmon*"):
-        p_path = os.path.join(hdir, "power1_input")
-        if os.path.isfile(p_path):
-            # optional: verify device name looks like ina238
-            name_path = os.path.join(hdir, "name")
-            try:
-                with open(name_path, "r", encoding="utf-8", errors="ignore") as f:
-                    nm = f.read().strip().lower()
-            except Exception:
-                nm = ""
-            if "ina238" in nm or nm.startswith("ina2") or not nm:
-                return (hdir, p_path)
-    return None
-
-
-def _refresh_hwmon_cache(max_age_s: float = 2.0) -> None:
-    now = time.time()
-    if now - _HW_CACHE["ts"] < max_age_s:
-        return
-    _HW_CACHE["ina3221"] = _scan_ina3221()
-    _HW_CACHE["ina238"] = _scan_ina238()
-    _HW_CACHE["ts"] = now
-
-
-def _read_number(path: str) -> Optional[float]:
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return float(f.read().strip())
-    except Exception:
-        return None
-
-
-def read_vdd_gpu_mw() -> Optional[float]:
-    """
-    Return instantaneous GPU rail power in mW.
-    Prefers INA3221 VDD_GPU (mV * mA), else None.
-    """
-    _refresh_hwmon_cache()
-    ina = _HW_CACHE["ina3221"]
-    if not ina:
-        return None
-    _, label_map = ina
-    # Common label on Thor
-    for key in ("VDD_GPU", "vdd_gpu", "GPU", "gpu"):
-        if key in label_map:
-            v_path, i_path = label_map[key]
-            mv = _read_number(v_path)
-            ma = _read_number(i_path)
-            if mv is not None and ma is not None:
-                return (mv * ma) / 1000.0  # mW
-    # If label differs, just fall through
-    return None
-
-
-def read_cpu_soc_mss_mw() -> Optional[float]:
-    """INA3221 channel often labeled VDD_CPU_SOC_MSS."""
-    _refresh_hwmon_cache()
-    ina = _HW_CACHE["ina3221"]
-    if not ina:
-        return None
-    _, label_map = ina
-    for key in ("VDD_CPU_SOC_MSS", "vdd_cpu_soc_mss"):
-        if key in label_map:
-            mv = _read_number(label_map[key][0])
-            ma = _read_number(label_map[key][1])
-            if mv is not None and ma is not None:
-                return (mv * ma) / 1000.0
-    return None
-
-
-def read_vin_sys_5v0_mw() -> Optional[float]:
-    """INA3221 channel often labeled VIN_SYS_5V0."""
-    _refresh_hwmon_cache()
-    ina = _HW_CACHE["ina3221"]
-    if not ina:
-        return None
-    _, label_map = ina
-    for key in ("VIN_SYS_5V0", "vin_sys_5v0"):
-        if key in label_map:
-            mv = _read_number(label_map[key][0])
-            ma = _read_number(label_map[key][1])
-            if mv is not None and ma is not None:
-                return (mv * ma) / 1000.0
-    return None
-
-
-def read_system_total_mw() -> Optional[float]:
-    """
-    INA238: power1_input is total system power in uW (module + carrier).
-    """
-    _refresh_hwmon_cache()
-    ina = _HW_CACHE["ina238"]
-    if not ina:
-        return None
-    _, p_uW = ina
-    uw = _read_number(p_uW)
-    return uw / 1000.0 if uw is not None else None
-
-
-def get_power_snapshot() -> Dict[str, Optional[float]]:
-    """
-    Convenient one-shot read for callers (GUI/service).
-    Keys are mW values where available.
-    """
-    return {
-        "gpu_mw": read_vdd_gpu_mw(),
-        "cpu_soc_mss_mw": read_cpu_soc_mss_mw(),
-        "vin_sys_5v0_mw": read_vin_sys_5v0_mw(),
-        "system_total_mw": read_system_total_mw(),
-        "ts": time.time(),
-    }
-
-
 # Rail-gating (runtime PM)
+
 
 def _pm_control_path() -> Optional[str]:
     # Prefer BDF derived from /proc (robust on Jetson/Thor)
@@ -235,8 +86,7 @@ def rail_status() -> Dict:
 
 def set_rail(allow_idle: bool) -> Tuple[bool, Optional[str]]:
     """allow_idle=True -> 'auto'; False -> 'on'."""
-    ctrl = _pm_control_path()
-    if not ctrl:
+    if not (ctrl := _pm_control_path()):
         return False, "GPU runtime PM control node not found"
     return _write(ctrl, "auto" if allow_idle else "on")
 
@@ -309,10 +159,8 @@ def read_podgov(node: str) -> Dict[str, Optional[str]]:
 
 
 def write_podgov(node: str, name: str, value: str) -> Tuple[bool, Optional[str]]:
-    p = podgov_path(node)
-    if not p:
+    if not (p := podgov_path(node)):
         return False, f"nvhost_podgov not present on {node}"
     return _write(os.path.join(p, name), value)
-
 
 # EOF

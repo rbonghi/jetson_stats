@@ -47,7 +47,7 @@ DEFAULT_LOAD = 0.0
 NVML_GOVERNOR = 'nvml'
 NVIDIA_PREFIX = "NVIDIA "
 
-# ---------- Detect & read Thor GPU devfreq (GPC) ----------
+# Detect & read Thor GPU devfreq (GPC)
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
 
 
@@ -347,7 +347,7 @@ def nvml_read_gpu_status() -> Dict[str, Dict[str, Any]]:
                 'tpc_pg_mask': None   # N/A via NVML on Jetson
             }
 
-            # ---------- Thor frequency fallback (keep structure identical to Orin) ----------
+            # Thor frequency fallback (keep structure identical to Orin)
             # If we're on Thor (JetPack 7) NVML may not provide clocks. Use devfreq/gpu-gpc-0.
             thor_freq = _thor_gpc_freq() if os.path.isdir(THOR_GPC) else {}
             if thor_freq:
@@ -643,4 +643,6 @@ class GPUService(object):
             # Load all status in GPU
             gpu_list[name] = gpu
         return gpu_list
+
+
 # EOF
