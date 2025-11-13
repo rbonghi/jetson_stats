@@ -27,7 +27,7 @@ jetson-stats
    Grafana plugin<https://grafana.com/grafana/dashboards/14493-nvidia-jetson>
 
 
-jetson-stats is a package for monitoring and control your NVIDIA Jetson [Orin, Xavier, Nano, TX] series. Works with all NVIDIA Jetson ecosystem.
+jetson-stats is a package for monitoring and control your NVIDIA Jetson [Thor, Orin, Xavier, Nano, TX] series. Works with all NVIDIA Jetson ecosystem.
 
 .. image:: images/jtop.gif
    :align: center
@@ -80,6 +80,7 @@ Compatibility
 jetson-stats is compatible with:
 
 * NVIDIA Clara AGX (experimental)
+* NVIDIA Jetson AGX Thor
 * NVIDIA Jetson Orin Series
    * NVIDIA Jetson Orin Nano
    * NVIDIA Jetson Orin NX
