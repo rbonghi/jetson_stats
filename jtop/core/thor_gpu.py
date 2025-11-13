@@ -17,6 +17,7 @@
 
 # Thor GPU backend for jtop — uses sysfs + thor_power helpers
 
+import logging
 import os
 from typing import Any, Dict, Optional
 
@@ -29,6 +30,8 @@ from .thor_power import (
     current_governor,
     set_governor,
 )
+
+logger = logging.getLogger(__name__)
 
 # Thor detection: present if the devfreq GPC domain exists
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
