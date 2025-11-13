@@ -23,6 +23,7 @@ from contextlib import contextmanager
 # Lazy-loaded CUDA driver
 _libcuda = None
 
+
 def _cuda():
     global _libcuda
     if _libcuda is None:
@@ -51,6 +52,7 @@ def _cuda():
     _libcuda.cuMemGetInfo_v2.restype = c_int
 
     return _libcuda
+
 
 @contextmanager
 def _pushed_primary_ctx(device_index: int = 0):
@@ -85,6 +87,7 @@ def _pushed_primary_ctx(device_index: int = 0):
     finally:
         lib.cuDevicePrimaryCtxRelease(dev.value)
 
+
 def cuda_gpu_mem_bytes(device_index: int = 0, verbose: bool = False):
     """
     Returns (used_bytes, total_bytes) via CUDA Driver API.
@@ -114,4 +117,3 @@ def cuda_gpu_mem_bytes(device_index: int = 0, verbose: bool = False):
         return None
 
 # EOF
-
