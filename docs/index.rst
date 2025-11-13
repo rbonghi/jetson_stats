@@ -17,7 +17,6 @@ jetson-stats
    contributing
    GitHub <https://github.com/rbonghi/jetson_stats>
    nosudo
-   thor_podgov_tuning
 
 .. toctree::
    :hidden:

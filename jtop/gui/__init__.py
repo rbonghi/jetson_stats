@@ -25,7 +25,6 @@ from .pengine import ENGINE, engine_model
 from .pmem import MEM
 from .pcontrol import CTRL
 from .pinfo import INFO
-from jtop.core.hw_detect import is_thor
 
 try:
     from jtop.core.hw_detect import is_thor

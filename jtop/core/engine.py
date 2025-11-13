@@ -16,147 +16,78 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+# Logging
 import logging
-
+# from .exceptions import JtopException
+# Create logger
 logger = logging.getLogger(__name__)
 
-# Shared BPMP helpers
-try:
-    from .bpmp import BpmpSnapshot, pick_clock
-except Exception:
-    # If bpmp.py is not present (non-Thor or dev tree), we still keep legacy code paths alive.
-    BpmpSnapshot = None
-    pick_clock = None
 
-# Common helpers (legacy per-engine debugfs layout)
-
-
-def read_engine(path: str):
+def read_engine(path):
     # Read status online
     engine = {}
-    ce = f"{path}/clk_enable_count"
-    if os.access(ce, os.R_OK):
-        with open(ce, "r") as f:
-            engine["online"] = int(f.read()) == 1
-
-    cr = f"{path}/clk_rate"
-    if os.access(cr, os.R_OK):
-        with open(cr, "r") as f:
-            engine["cur"] = int(f.read()) // 1000  # Hz -> kHz
-
+    # Check if access to this file
+    if os.access(path + "/clk_enable_count", os.R_OK):
+        with open(path + "/clk_enable_count", 'r') as f:
+            # Write online engine
+            engine['online'] = int(f.read()) == 1
+    # Check if access to this file
+    if os.access(path + "/clk_rate", os.R_OK):
+        with open(path + "/clk_rate", 'r') as f:
+            # Write current engine
+            engine['cur'] = int(f.read()) // 1000
     # Decode clock rate
     max_value = False
-    cmax = f"{path}/clk_max_rate"
-    if os.access(cmax, os.R_OK):
-        with open(cmax, "r") as f:
+    if os.access(path + "/clk_max_rate", os.R_OK):
+        with open(path + "/clk_max_rate", 'r') as f:
+            # Write status engine
             value = int(f.read())
-            # 18446744073709551615 = FFFF FFFF FFFF FFFF
+            # 18446744073709551615 = FFFF FFFF FFFF FFFF = 2 ^ 16
             if value != 18446744073709551615:
-                engine["max"] = value // 1000
+                engine['max'] = value // 1000
                 max_value = True
-
-    cmin = f"{path}/clk_min_rate"
-    if os.access(cmin, os.R_OK) and max_value:
-        with open(cmin, "r") as f:
-            engine["min"] = int(f.read()) // 1000
+    if os.access(path + "/clk_min_rate", os.R_OK) and max_value:
+        with open(path + "/clk_min_rate", 'r') as f:
+            # Write status engine
+            engine['min'] = int(f.read()) // 1000
     return engine
 
 
-def _is_thor() -> bool:
-    # Detect tegra264 via DT compatible (works on JP7)
-    paths = (
-        "/proc/device-tree/compatible",
-        "/sys/firmware/devicetree/base/compatible",
-    )
-    for p in paths:
-        try:
-            with open(p, "rb") as f:
-                data = f.read().lower()
-            if b"nvidia,tegra264" in data or b"thor" in data:
-                return True
-        except Exception:
-            pass
-    return False
-
-
 class EngineService(object):
-    ENGINES = [
-        "ape",
-        "dla",
-        "pva",
-        "vic",
-        "nvjpg",
-        "nvenc",
-        "nvdec",
-        "se.",
-        "cvnas",
-        "msenc",
-        "ofa",
-        "nvjpg1",
-    ]
+
+    ENGINES = ['ape', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc', 'ofa']
 
     def __init__(self):
+        # Sort list before start
         EngineService.ENGINES.sort()
         self.engines_path = {}
-        self._thor_mode = _is_thor()
-
-        # Preferred BPMP clock name preferences per logical engine (used by pick_clock)
-        self._BPMP_TOKEN_MAP = {
-            "APE": ["ape"],
-            "VIC": ["vic", "nafll_vic"],
-            "NVENC": ["nvenc", "msenc", "nafll_nvenc", "nafll_msenc"],
-            "MSENC": ["msenc", "nvenc", "nafll_msenc", "nafll_nvenc"],
-            "NVDEC": ["nvdec", "nafll_nvdec"],
-            "NVJPG": ["nvjpg", "nvjpg0", "nafll_nvjpg"],
-            "NVJPG1": ["nvjpg1"],
-            "PVA": ["pva", "pva0"],
-            "PVA0": ["pva0", "pva"],
-            "OFA": ["ofa"],
-            "SE": ["se", "se0", "se1"],
-            "CVNAS": ["cvnas"],
-            "DLA": ["dla", "dla0", "dla1"],  # not present on Thor, but harmless
-        }
-
-        # Thor path: use BPMP snapshot index for discovery
-        if self._thor_mode and BpmpSnapshot and pick_clock:
-            logger.info("EngineService: Thor mode (BPMP clk_tree)")
-            snap = BpmpSnapshot()
-            if not snap.index:
-                logger.warning(
-                    "BPMP clk_tree not readable; mount debugfs?  sudo mount -t debugfs debugfs /sys/kernel/debug"
-                )
-            else:
-                for token in EngineService.ENGINES:
-                    key = token.rstrip(".").upper()
-                    prefs = self._BPMP_TOKEN_MAP.get(key, [])
-                    picked = pick_clock(snap.index, key, prefs)
-                    if picked:
-                        self.engines_path[key] = [picked]  # store exact clock name
-                if self.engines_path:
-                    logger.info("Engines (BPMP) found: [" + " ".join(self.engines_path.keys()) + "]")
-                    return
-                logger.warning("No engines resolved from BPMP clk_tree.")
-
-        # Legacy layout (/sys/kernel/debug/clk/<engine>[/sub])
+        # List all engines available
         engine_path = "/sys/kernel/debug/clk"
-        if os.getenv("JTOP_TESTING", False):
+        if os.getenv('JTOP_TESTING', False):
             engine_path = "/fake_sys/kernel/debug/clk"
-            logger.warning(f"Running in JTOP_TESTING folder={engine_path}")
+            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=engine_path))
         list_all_engines = [x[0] for x in os.walk(engine_path)]
+        # Search all available engines
         for name in EngineService.ENGINES:
-            if name.endswith("."):
+            if name.endswith('.'):
                 name = name[:-1]
-                local_path = f"{engine_path}/{name}"
+                local_path = "{path}/{name}".format(path=engine_path, name=name)
                 if os.path.isdir(local_path):
                     self.engines_path[name.upper()] = [local_path]
             else:
-                local_path = f"{engine_path}/{name}"
-                matching = [s for s in list_all_engines if local_path in s and "." not in s]
+                # https://stackoverflow.com/questions/4843158/how-to-check-if-a-string-is-a-substring-of-items-in-a-list-of-strings
+                local_path = "{path}/{name}".format(path=engine_path, name=name)
+                # In this search are removed all engines that have a '.' on their name
+                # like ape.buffer or nvdec.buf
+                matching = [s for s in list_all_engines if local_path in s and '.' not in s]
+                # Add in list all engines
                 if matching:
-                    if os.path.basename(matching[0]).split("_")[0] == f"{name}0":
-                        logger.info(f"Special Engine group found: [{name}X]")
+                    # Check if name end with a number, if true collect by number
+                    # dla0 dla1 ...
+                    if os.path.basename(matching[0]).split('_')[0] == "{name}0".format(name=name):
+                        logger.info("Special Engine group found: [{name}X]".format(name=name))
                         for num in range(10):
-                            name_engine = f"{name}{num}"
+                            name_engine = "{name}{counter}".format(name=name, counter=num)
                             new_match = [match for match in matching if name_engine in match]
                             if new_match:
                                 self.engines_path[name_engine.upper()] = sorted(new_match)
@@ -164,37 +95,21 @@ class EngineService(object):
                                 break
                     else:
                         self.engines_path[name.upper()] = sorted(matching)
+        # Print all engines found
         if self.engines_path:
-            engines_string = " ".join(self.engines_path)
-            logger.info(f"Engines found: [{engines_string}]")
+            engines_string = ' '.join(name for name in self.engines_path)
+            logger.info("Engines found: [{engines}]".format(engines=engines_string))
         else:
-            logger.warning("Not engines found!")
+            logger.warn("Not engines found!")
 
     def get_status(self):
         status = {}
-
-        # Thor mode: re-snapshot once per refresh and serve all engines from cache
-        if self._thor_mode and BpmpSnapshot:
-            snap = BpmpSnapshot()
-            for token, names in self.engines_path.items():
-                status[token] = {}
-                if not names:
-                    continue
-                clk = names[0]  # exact key from pick_clock
-                hz = snap.rate_hz(clk) if snap.index else None
-                if hz is None:
-                    continue
-                status[token][clk.upper()] = {"online": hz > 0, "cur": hz // 1000}
-            return status
-
-        # Legacy
+        # Read status from all engines
         for engine in self.engines_path:
             status[engine] = {}
             for local_path in self.engines_path[engine]:
                 name_engine = os.path.basename(local_path).upper()
-                logger.debug(f"Status [{name_engine}] in {local_path}")
+                logger.debug("Status [{engine}] in {path}".format(engine=name_engine, path=local_path))
                 status[engine][name_engine] = read_engine(local_path)
         return status
-
-
 # EOF
