@@ -23,15 +23,12 @@ from typing import Any, Dict, Optional
 from .common import GenericInterface
 from .exceptions import JtopException
 from .hw_detect import devfreq_nodes
-from .thor_power import (rail_status, set_rail,
-                         current_governor, set_governor)
-try:
-    from .thor_cuda_mem import cuda_gpu_mem_bytes
-except Exception:
-    cuda_gpu_mem_bytes = None
-
-_DISABLE_CUDA_MEM = os.getenv("JTOP_THOR_NO_CUDA", "") != ""
-_CUDA_MEM_TRIPPED = False
+from .thor_power import (
+    rail_status,
+    set_rail,
+    current_governor,
+    set_governor,
+)
 
 # Thor detection: present if the devfreq GPC domain exists
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
@@ -60,20 +57,17 @@ def _read_memavailable_bytes() -> int:
 
 
 def read_gpu_mem_rows_for_gui(device_index: int = 0):
-    global _CUDA_MEM_TRIPPED
+    """
+    Return a GPU memory summary suitable for the Thor GPU page.
 
-    # Keep VRAM path, present but harmless (we’ll ignore it in the UI)
+    NOTE: On Thor we intentionally do not call CUDA or NVML from jtop.
+    Any VRAM probing would require creating a CUDA context, which can
+    trigger host1x/DRM activity and syncpoint allocations. We therefore
+    always return VRAM as 0 and only expose Shared System RAM.
+    """
+    # VRAM is intentionally not probed on Thor
     vram_used_b = 0
     vram_total_b = 0
-    if not _DISABLE_CUDA_MEM and not _CUDA_MEM_TRIPPED and cuda_gpu_mem_bytes:
-        try:
-            res = cuda_gpu_mem_bytes(device_index=device_index, verbose=False)
-            if res and all(isinstance(v, int) and v >= 0 for v in res):
-                vram_used_b, vram_total_b = res
-            else:
-                _CUDA_MEM_TRIPPED = True
-        except Exception:
-            _CUDA_MEM_TRIPPED = True
 
     total_b = _read_memtotal_bytes()
     avail_b = _read_memavailable_bytes()
@@ -91,7 +85,6 @@ def read_gpu_mem_rows_for_gui(device_index: int = 0):
 def is_thor() -> bool:
     """Return True if Thor devfreq nodes are present."""
     return os.path.isdir(THOR_GPC)
-
 
 
 def _r_int(path: str) -> Optional[int]:
@@ -123,7 +116,7 @@ def _mhz(khz: int) -> int:
 def _read_utilization() -> Optional[float]:
     """
     Try to read a utilization value for Thor. If not available, return None.
-    (You can extend this with NVML if desired; keeping sysfs-only here.)
+    (Sysfs-only, no NVML / CUDA.)
     """
     candidates = [os.path.join(n, "load") for n in devfreq_nodes()]
     for p in candidates:
@@ -197,10 +190,14 @@ class GPU(GenericInterface):
         return rs.get("control_value") == "auto"
 
     def _get_first_integrated_gpu(self) -> str:
-        for name in self._data:
-            if self._data[name]["type"] == "integrated":
-                return name
-        return ""
+        return next(
+            (
+                name
+                for name in self._data
+                if self._data[name].get("type") == "integrated"
+            ),
+            "",
+        )
 
 
 class GPUService(object):
@@ -251,7 +248,7 @@ class GPUService(object):
 
             # Rail-gating (runtime PM)
             rs = rail_status()
-            rail_bool = (rs.get("control_value") == "auto")
+            rail_bool = rs.get("control_value") == "auto"
 
             # Load (best-effort)
             load = _read_utilization()
@@ -266,7 +263,7 @@ class GPUService(object):
             }
             status = {
                 "load": load,
-                "3d_scaling": (gov != "performance"),
+                "3d_scaling": gov != "performance",
                 "railgate": rail_bool,
                 "tpc_pg_mask": None,
             }
@@ -279,5 +276,6 @@ class GPUService(object):
                 "power_control": "runtime_pm",
             }
         return gpu_list
+
 
 # EOF
