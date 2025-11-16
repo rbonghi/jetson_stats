@@ -18,12 +18,14 @@
 import re
 import os
 import pwd
-from .common import cat
+from .common import cat, cat_multiline
 # Logging
 import logging
 # Create logger
 logger = logging.getLogger(__name__)
 
+
+PROCESS_UID_REG = re.compile(r'^Uid:\s+(\d+)', re.MULTILINE)
 MEM_TABLE_REG = re.compile(r'^(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
 TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
 
@@ -70,7 +72,7 @@ def read_process_table(path_table):
 class ProcessService(object):
 
     def __init__(self):
-        self.usernames = {4294967295: "root"}
+        self.usernames = {4294967295: "root", -1: "<unknown>"}
         # board type
         self._root_path = "/sys/kernel"
         if os.getenv('JTOP_TESTING', False):
@@ -91,7 +93,12 @@ class ProcessService(object):
         # https://man7.org/linux/man-pages/man5/proc.5.html
         stat = cat(os.path.join('/proc', pid, 'stat')).split()
         # Decode uid and find username
-        uid = int(cat(os.path.join('/proc', pid, 'loginuid')))
+        import logging
+        proc_status = cat_multiline(os.path.join('/proc', pid, 'status'))
+        uid_matches = PROCESS_UID_REG.findall(proc_status)
+        if not uid_matches:
+            logging.warning(f"No UID found in /proc/{pid}/status. Falling back to -1.")
+        uid = int(uid_matches[0]) if uid_matches else int(-1)
         if uid not in self.usernames:
             self.usernames[uid] = pwd.getpwuid(uid).pw_name
         # Read memory process
