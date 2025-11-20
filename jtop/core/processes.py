@@ -89,9 +89,15 @@ class ProcessService(object):
         if not os.path.isdir(os.path.join('/proc', pid)):
             return []
         # https://man7.org/linux/man-pages/man5/proc.5.html
-        stat = cat(os.path.join('/proc', pid, 'stat')).split()
+        stat = cat(os.path.join('/proc', pid, 'stat'))
+        if stat is None:
+            return []
+        stat.split()
         # Decode uid and find username
-        uid = int(cat(os.path.join('/proc', pid, 'loginuid')))
+        uid = cat(os.path.join('/proc', pid, 'loginuid'))
+        if uid is None:
+            return []
+        uid = int(uid)
         if uid not in self.usernames:
             self.usernames[uid] = pwd.getpwuid(uid).pw_name
         # Read memory process
@@ -99,6 +105,8 @@ class ProcessService(object):
         # VmRSS is the resident set size of the process, which is the portion of the process's memory
         # that is held in RAM and is not swapped out to disk. This is the amount of memory that the process is currently using.
         mem_raw = cat(os.path.join('/proc', pid, 'statm')).split()
+        if mem_raw is None:
+            return []
         vm_rss = int(mem_raw[1]) * 4
         # CPU percent
         # https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat
