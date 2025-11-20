@@ -112,8 +112,11 @@ def check_file(path):
 
 
 def cat(path):
-    with open(path, 'r') as f:
-        return f.readline().rstrip('\x00')
+    try:
+        with open(path, 'r') as f:
+            return f.readline().rstrip('\x00')
+    except OSError:
+        return None
 
 
 def locate_commands(name, commands):
