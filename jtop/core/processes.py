@@ -92,7 +92,7 @@ class ProcessService(object):
         stat = cat(os.path.join('/proc', pid, 'stat'))
         if stat is None:
             return []
-        stat.split()
+        stat = stat.split()
         # Decode uid and find username
         uid = cat(os.path.join('/proc', pid, 'loginuid'))
         if uid is None:
