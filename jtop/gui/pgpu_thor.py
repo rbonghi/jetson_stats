@@ -106,13 +106,13 @@ def compact_gpu(stdscr, pos_y, pos_x, width, jetson, mouse=None):
     y = pos_y + line_counter
     label1_x = pos_x + 1
     label1 = "3D scaling: "
-    field1 = "{" + val3d + "}"
+    field1 = "[" + val3d + "]"
     field1_x = label1_x + len(label1)
     field1_x_end = field1_x + len(field1) - 1
 
     label2_x = pos_x + max(width // 2, field1_x_end + 3)
     label2 = "Railgate: "
-    field2 = "{" + valrg + "}"
+    field2 = "[" + valrg + "]"
     field2_x = label2_x + len(label2)
     field2_x_end = field2_x + len(field2) - 1
 
@@ -304,7 +304,7 @@ class GPU(Page):
 
                 chart_ram.draw(
                     self.stdscr,
-                    [1 + width // 2, width - 2],
+                    [width // 2, width - 3],
                     size_y,
                     label=label_mem,
                 )
