@@ -114,25 +114,54 @@ def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data, unit='k'):
 
 
 def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
-    # Name gauge
-    name = freq_data['name'] if 'name' in freq_data else ""
-    # Current value in string
-    curr_string = unit_to_string(freq_data['cur'], 'k', 'Hz')
-    # If there is a min and a max
-    if 'max' in freq_data:
-        value = ((freq_data['cur'] - freq_data['min']) / (freq_data['max'] - freq_data['min'])) * 100 if freq_data['min'] != freq_data['max'] else 100
-        # Convert values data
-        data = {
-            'name': name,
-            'color': NColors.cyan(),
-            'online': freq_data['online'] if 'online' in freq_data else True,
-            'values': [(value, NColors.green())],
-            'mleft': unit_to_string(freq_data['min'], 'k', 'Hz') if 'min' in freq_data else "",
-            'mright': unit_to_string(freq_data['max'], 'k', 'Hz') if 'max' in freq_data else "",
-        }
-        basic_gauge(stdscr, pos_y, pos_x, size - 8, data, bar=":")
-        # Draw current frequency
-        stdscr.addstr(pos_y, pos_x + size - 6, curr_string, NColors.italic())
-    else:
+    """
+    Draw a frequency gauge.
+
+    - If freq_data has valid numeric cur/min/max -> draw ranged gauge.
+    - Otherwise (missing min/max, or max=None, or parse errors) -> fall back
+      to basic_gauge_simple() so the GUI never crashes across Jetson variants.
+    """
+    # Name
+    name = freq_data.get('name', "")
+
+    # Render current frequency string (works even if cur is missing/None)
+    curr_string = unit_to_string(freq_data.get('cur'), 'k', 'Hz')
+
+    # Pull values
+    cur = freq_data.get('cur', None)
+    mn  = freq_data.get('min', None)
+    mx  = freq_data.get('max', None)
+
+    # Try to normalize to integers
+    try:
+        cur_i = int(cur) if cur is not None else None
+        mn_i  = int(mn)  if mn  is not None else None
+        mx_i  = int(mx)  if mx  is not None else None
+    except (TypeError, ValueError):
+        cur_i = mn_i = mx_i = None
+
+    # If any are missing/invalid, fall back to simple gauge
+    if cur_i is None or mn_i is None or mx_i is None:
         basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data)
+        return
+
+    # Compute percentage safely
+    if mx_i == mn_i:
+        value = 100
+    else:
+        value = ((cur_i - mn_i) / (mx_i - mn_i)) * 100
+
+    data = {
+        'name': name,
+        'color': NColors.cyan(),
+        'online': freq_data['online'] if 'online' in freq_data else True,
+        'values': [(value, NColors.green())],
+        'mleft': unit_to_string(mn_i, 'k', 'Hz'),
+        'mright': unit_to_string(mx_i, 'k', 'Hz'),
+    }
+    basic_gauge(stdscr, pos_y, pos_x, size - 8, data, bar=":")
+    stdscr.addstr(pos_y, pos_x + size - 6, curr_string, NColors.italic())
+
+
 # EOF
+

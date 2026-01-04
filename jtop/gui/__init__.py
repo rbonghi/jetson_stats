@@ -27,20 +27,16 @@ from .pcontrol import CTRL
 from .pinfo import INFO
 
 try:
-    from jtop.core.hw_detect import is_thor
-    _is_thor = is_thor()
+    from jtop.core.hw_detect import is_thor as _is_thor_fn
+    _is_thor = bool(_is_thor_fn())
 except Exception:
-    try:
-        from jtop.core.thor_power import devfreq_nodes
-        _is_thor = bool(devfreq_nodes())
-    except Exception:
-        _is_thor = False
+    _is_thor = False
+
 try:
     if _is_thor:
         from .pgpu_thor import GPU
     else:
         from .pgpu import GPU
-
 except Exception:
     from .pgpu import GPU
 

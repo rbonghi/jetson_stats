@@ -44,7 +44,34 @@ uv venv "$VENV_DIR" -p python3.12 --seed
 
 echo "Installing/upgrading $PKG_NAME from: $JTOP_REF"
 uv pip install --python "$VENV_DIR/bin/python" --upgrade "$JTOP_REF"
+# Optional: make proprietary pylibjetsonpower visible inside the venv (Thor).
+# This is NOT required for upstream jetson_stats; it is a local convenience so
+# the service (running from this venv) can import pylibjetsonpower if present.
+echo "Checking for NVIDIA pylibjetsonpower (optional)..."
+SYS_PYLIBJETSONPOWER=""
+for p in \
+  /usr/lib/python3/dist-packages/pylibjetsonpower \
+  /usr/local/lib/python*/dist-packages/pylibjetsonpower \
+  /usr/lib/python*/dist-packages/pylibjetsonpower
+do
+  if [[ -d "$p" ]]; then
+    SYS_PYLIBJETSONPOWER="$p"
+    break
+  fi
+done
 
+if [ -f /usr/lib/python3/dist-packages/pylibjetsonpower/__init__.py ]; then
+  VENV_SITE="$("$VENV_DIR/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+  PTH_FILE="$VENV_SITE/nvidia-system.pth"
+
+  mkdir -p "$VENV_SITE"
+
+  if [ ! -f "$PTH_FILE" ] || ! grep -qx '/usr/lib/python3/dist-packages' "$PTH_FILE"; then
+    cat > "$PTH_FILE" <<'EOF'
+/usr/lib/python3/dist-packages
+EOF
+  fi
+fi
 
 # Verify binary exists (run as user)
 if ! test -x "$JTOP_BIN"; then

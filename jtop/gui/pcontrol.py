@@ -31,6 +31,93 @@ TEMPERATURE_MAX = 84
 TEMPERATURE_CRIT = 100
 
 
+def _get_flat_stats(stats: dict) -> dict:
+    """Return namespaced flat stats dict; fall back to empty dict."""
+    flat = stats.get("flat")
+    return flat if isinstance(flat, dict) else {}
+
+
+def _collect_temps_for_ctrl(jetson) -> list:
+    """
+    Collect (name, temp_c) tuples.
+
+    Precedence:
+      1) Thor overlay: jetson.stats['flat']['Temp <name>'] = float(C)
+      2) Legacy: jetson.temperature sensors dict
+    """
+    # Prefer flat stats (Thor overlay)
+    try:
+        stats = getattr(jetson, "stats", {}) or {}
+        flat = _get_flat_stats(stats)
+        temps = []
+        for k, v in flat.items():
+            if isinstance(k, str) and k.startswith("Temp "):
+                name = k[5:]
+                if isinstance(v, (int, float)):
+                    temps.append((name, float(v)))
+        if temps:
+            return sorted(temps, key=lambda t: t[0].lower())
+    except Exception:
+        pass
+
+    # Fallback: legacy temperature schema
+    temps = []
+    try:
+        t = getattr(jetson, "temperature", None)
+        if isinstance(t, dict):
+            for name, sensor in t.items():
+                if not isinstance(sensor, dict):
+                    continue
+                if not sensor.get("online", True):
+                    continue
+                val = sensor.get("temp")
+                if isinstance(val, (int, float)):
+                    temps.append((str(name), float(val)))
+    except Exception:
+        pass
+    return sorted(temps, key=lambda t: t[0].lower())
+
+
+def draw_sensor_block_ctrl(stdscr, pos_y: int, pos_x: int, width: int, height: int, jetson) -> int:
+    """Draw a compact Sensors block similar to Jetson Power GUI."""
+    temps = _collect_temps_for_ctrl(jetson)
+    if not temps:
+        return 0
+
+    # Keep inside available height
+    max_rows = max(0, height - 3)
+    temps = temps[:max_rows] if max_rows else temps[:8]
+
+    try:
+        stdscr.addstr(pos_y, pos_x + width // 2 - 6, " [Sensor] ", curses.A_BOLD)
+    except curses.error:
+        pass
+    pos_y += 1
+
+    # Header
+    try:
+        stdscr.addstr(pos_y, pos_x, f"{'Name':<18} {'Temp (C)':>10}", curses.A_BOLD)
+    except curses.error:
+        pass
+    pos_y += 1
+
+    for name, c in temps:
+        # Color by thresholds (reuse existing constants)
+        color = curses.A_NORMAL
+        if c >= TEMPERATURE_CRIT:
+            color = NColors.red()
+        elif c >= TEMPERATURE_MAX:
+            color = NColors.yellow()
+        try:
+            stdscr.addstr(pos_y, pos_x, f"{name:<18}", curses.A_NORMAL)
+            stdscr.addstr(pos_y, pos_x + 18, f"{c:>9.1f}C", color)
+        except curses.error:
+            pass
+        pos_y += 1
+
+    return 2 + len(temps)
+
+
 def color_temperature(stdscr, pos_y, pos_x, name, sensor, offset=0):
     if not sensor['online']:
         stdscr.addstr(pos_y, pos_x, name)
@@ -72,7 +159,6 @@ def compact_temperatures(stdscr, pos_y, pos_x, width, height, jetson):
 
 def compact_power(stdscr, pos_y, pos_x, width, height, jetson):
     LIMIT = 25
-    # center_x = pos_x + width // 2 if width > LIMIT else pos_x + width // 2 + 4
     center_x = pos_x + width // 2 + 2 if width > LIMIT else pos_x + width // 2 + 6
     column_power = 9
     # Plot title
@@ -442,4 +528,19 @@ class CTRL(Page):
             width_spacing = width // 2 - 16
         # Draw all power info
         self.control_power(first + 1 + line_counter, width_spacing, key, mouse)
+
+        # Draw Sensors block (Thor: uses stats['flat'] Temp keys; fallback to legacy jetson.temperature)
+        try:
+            power = self.jetson.power['rail'] if self.jetson.power and 'rail' in self.jetson.power else {}
+            power_rows = len(power) + 3 if isinstance(power, dict) else 6
+        except Exception:
+            power_rows = 6
+
+        sensors_y = first + 1 + line_counter + power_rows + 1
+        sensors_x = width_spacing
+        sensors_w = 30 if sensors_x + 30 < width - 1 else max(20, width - sensors_x - 2)
+        sensors_h = max(6, height - sensors_y - 1)
+
+        draw_sensor_block_ctrl(self.stdscr, sensors_y, sensors_x, sensors_w, sensors_h, self.jetson)
+
 # EOF
