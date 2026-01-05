@@ -144,7 +144,7 @@ CUDA_TABLE = {
 # https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3231/index.html
 # https://docs.nvidia.com/jetson/archives/r35.2.1/DeveloperGuide/text/IN/QuickStart.html
 MODULE_NAME_TABLE = {
-    'p3834-0008': 'NVIDIA Jetson AGX Thor  (Developer kit)',
+    'p3834-0008': 'NVIDIA Jetson AGX Thor (Developer kit)',
     'p3767-0005': 'NVIDIA Jetson Orin Nano (Developer kit)',
     'p3767-0004': 'NVIDIA Jetson Orin Nano (4GB ram)',
     'p3767-0003': 'NVIDIA Jetson Orin Nano (8GB ram)',
