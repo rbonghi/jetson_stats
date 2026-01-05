@@ -34,11 +34,11 @@ except Exception:
 THOR_ENGINE_GROUPS = {
     "MEDIA": {
         "rail": "VDD_GPU",
-        "engines": ["NVDEC0", "NVDEC1", "NVENC0", "NVENC1", "NVJPG0", "NVJPG1"],
+        "engines": ["NVDEC0", "NVDEC1", "NVENC0", "NVENC1", "NVJPG0", "NVJPG1", "OFA"],
     },
     "VISION / SECURITY": {
         "rail": "VDD_CPU_SOC_MSS",
-        "engines": ["PVA", "SE"],
+        "engines": ["PVA", "PVA0_CPU_AXI", "PVA0_VPS", "SE", "VIC"],
     },
     "AUDIO": {
         "rail": "VIN_SYS_5V0",
@@ -124,20 +124,6 @@ def _get_flat_stats(stats: dict) -> dict:
     """Return namespaced flat stats dict; fall back to stats for older builds."""
     flat = stats.get("flat")
     return flat if isinstance(flat, dict) else stats
-def _parse_float(x):
-    try:
-        return float(x)
-    except Exception:
-        return None
-
-def _thor_engine_value_str(stats, key):
-    v = stats.get(key)
-    try:
-        vi = int(v)
-    except (TypeError, ValueError):
-        return "IDLE"
-    return unit_to_string(vi, 'k', 'Hz') if vi > 0 else "IDLE"
-
 def draw_thor_engines_from_stats(stdscr, pos_y, pos_x, width, jetson, stats: dict) -> int:
     """
     Thor Engine Page renderer.
@@ -147,7 +133,7 @@ def draw_thor_engines_from_stats(stdscr, pos_y, pos_x, width, jetson, stats: dic
       - Right: RAILS panel (uses horizontal space without consuming vertical space)
 
     Uses flat overlay stats keys (e.g. NVDEC0/NVENC1/NVJPG0/PVA/SE/APE/VIC) and shows:
-      - "IDLE" when value is 0/None/non-numeric
+      - "Idle" when value is 0/None/non-numeric
       - "<freq>" (e.g. 315MHz) when value is numeric and > 0
     """
     y = pos_y
@@ -231,26 +217,17 @@ def draw_thor_engines_from_stats(stdscr, pos_y, pos_x, width, jetson, stats: dic
     left_w = max(18, left_w)
 
     # Engine groups (single column, fixed order)
-    media_keys  = ["NVDEC0", "NVDEC1", "NVENC0", "NVENC1", "NVJPG0", "NVJPG1", "OFA"]
-    vision_keys = ["PVA", "PVA0_CPU_AXI", "PVA0_VPS", "SE", "VIC"]
-    audio_keys  = ["APE"]
-
     def _present_in_order(keys):
         if not isinstance(flat, dict):
             return []
         return [k for k in keys if k in flat]
 
-    media  = _present_in_order(media_keys)
-    vision = _present_in_order(vision_keys)
-    audio  = _present_in_order(audio_keys)
-
     def _rail_label_for_group(group_name: str) -> str:
-        mapping = {
-            "MEDIA": "VDD_GPU",
-            "VISION / SECURITY": "VDD_CPU_SOC_MSS",
-            "AUDIO": "VIN_SYS_5V0",
-        }
-        rail = mapping.get(group_name)
+        rail = None
+        try:
+            rail = THOR_ENGINE_GROUPS.get(group_name, {}).get("rail")
+        except Exception:
+            rail = None
         if rail and rail in rails_w:
             return f"({rail}) {rails_w[rail]:.1f}W"
         return ""
@@ -279,12 +256,11 @@ def draw_thor_engines_from_stats(stdscr, pos_y, pos_x, width, jetson, stats: dic
 
         return yy + 2
 
-    if media:
-        y = _draw_group("MEDIA", media, y)
-    if vision:
-        y = _draw_group("VISION / SECURITY", vision, y)
-    if audio:
-        y = _draw_group("AUDIO", audio, y)
+    # Draw groups in THOR_ENGINE_GROUPS order when engines are present
+    for group_name, spec in THOR_ENGINE_GROUPS.items():
+        keys = _present_in_order(spec.get("engines", []))
+        if keys:
+            y = _draw_group(group_name, keys, y)
 
     return y - pos_y
 
@@ -379,11 +355,18 @@ def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
     stats = _get_stats_dict(jetson)
     jp_active = isinstance(stats, dict) and _overlay_present(jetson, stats)
 
-    # Thor overlay path: stats is a flat dict with keys like NVDEC0/NVENC1/ etc...
+    # Thor overlay path: stats is a flat dict with keys like NVDEC0/NVENC1/etc
+    # Thor overlay path: prefer the namespaced flat overlay for Thor engine keys
     if is_thor(jetson) and jp_active and isinstance(stats, dict):
+        flat = _get_flat_stats(stats)
+        if not isinstance(flat, dict):
+            flat = {}
+
         # Keep only real HW engine keys; exclude APE_SOUNDWIRE_* noise
         engine_keys = []
-        for k in stats.keys():
+        for k in flat.keys():
+            if not isinstance(k, str):
+                continue
             if k.startswith("APE_SOUNDWIRE_"):
                 continue
             if k in ("APE", "SE", "VIC", "PVA", "OFA"):
@@ -407,7 +390,7 @@ def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
         # Build (name, value) pairs
         pairs = []
         for k in engine_keys:
-            v = stats.get(k)
+            v = flat.get(k)
             # Treat missing/0/non-numeric as OFF
             try:
                 vi = int(v)
@@ -460,7 +443,7 @@ def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
 
         return size_map
 
-    # Legacy path (Orin and earlier Jetson): use existing engine mapping
+    # Legacy path (Orin / non-overlay): use existing engine mapping
     map_eng = map_engines(jetson)
     size_map = len(map_eng)
     if size_map > 0:
@@ -497,14 +480,14 @@ class ENGINE(Page):
         stats = _get_stats_dict(self.jetson)
         jp_active = isinstance(stats, dict) and _overlay_present(self.jetson, stats)
 
-        # 1. Specialized Thor View
+        # 1. Thor View
         if is_thor(self.jetson) and jp_active:
             draw_thor_engines_from_stats(
                 self.stdscr, offset_y, offset_x, width - 2, self.jetson, stats
             )
             return
 
-        # 2. Standard View (all other Jetsons)
+        # 2. Standard View (fallback and earlier Jetsons)
         engine_data = stats.get('engines', self.jetson.engine) if isinstance(stats, dict) else self.jetson.engine
 
         for gidx, group in enumerate(engine_data):
