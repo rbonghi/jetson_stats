@@ -60,17 +60,15 @@ do
   fi
 done
 
-if [ -f /usr/lib/python3/dist-packages/pylibjetsonpower/__init__.py ]; then
+if [[ -n "$SYS_PYLIBJETSONPOWER" && -f "$SYS_PYLIBJETSONPOWER/__init__.py" ]]; then
   VENV_SITE="$("$VENV_DIR/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
-  PTH_FILE="$VENV_SITE/nvidia-system.pth"
-
-  mkdir -p "$VENV_SITE"
-
-  if [ ! -f "$PTH_FILE" ] || ! grep -qx '/usr/lib/python3/dist-packages' "$PTH_FILE"; then
-    cat > "$PTH_FILE" <<'EOF'
-/usr/lib/python3/dist-packages
-EOF
-  fi
+  echo "  Found: $SYS_PYLIBJETSONPOWER"
+  echo "  Linking into venv: $VENV_SITE/pylibjetsonpower"
+  # Remove any previous link/dir so the link is deterministic
+  rm -rf "$VENV_SITE/pylibjetsonpower" 2>/dev/null || true
+  ln -s "$SYS_PYLIBJETSONPOWER" "$VENV_SITE/pylibjetsonpower"
+else
+  echo "  pylibjetsonpower not found (skipping)."
 fi
 
 # Verify binary exists (run as user)
