@@ -19,6 +19,7 @@
 from .common import cat, check_file
 import os
 import re
+import subprocess
 # Logging
 import logging
 # Create logger
@@ -29,10 +30,16 @@ TEMPERATURE_OFFLINE = -256
 
 def read_temperature(data):
     values = {}
-    for name, path in data.items():
+    for name, value in data.items():
         try:
-            value = float(cat(path)) / 1000.0
-            values[name] = value
+            # Check if value is already a number (from Mellanox) or a path
+            if isinstance(value, (int, float)):
+                # Direct numeric value (already in millidegrees)
+                values[name] = value / 1000.0
+            else:
+                # Path to temperature file
+                temp_value = float(cat(value)) / 1000.0
+                values[name] = temp_value
         except (OSError, ValueError):
             # If negative sensor offline
             values[name] = TEMPERATURE_OFFLINE
@@ -112,6 +119,62 @@ def get_hwmon_thermal_system(root_dir):
                 sensor_name[raw_name] = sensor
     return sensor_name
 
+def get_mellanox_temperature():
+    """Detect and read temperature from Mellanox NICs with MLNX_OFED support"""
+    temperature = {}
+    # Check if mget_temp is available (part of MLNX_OFED)
+    try:
+        result = subprocess.run(['which', 'mget_temp'], capture_output=True, text=True)
+        if result.returncode == 0:
+            # mget_temp is available, use it to read temperatures
+            logger.info("MLNX_OFED detected, using mget_temp for Mellanox NIC temperatures")
+            # Find all Mellanox devices
+            try:
+                # Get list of Mellanox devices
+                devices_result = subprocess.run(['lspci', '-d', '15b3:', '-D'], capture_output=True, text=True)
+                if devices_result.returncode == 0 and devices_result.stdout.strip():
+                    device_lines = devices_result.stdout.strip().split('\n')
+                    for device_line in device_lines:
+                        if device_line.strip():
+                            # Extract device name and bus address
+                            parts = device_line.strip().split()
+                            if len(parts) >= 2:
+                                bus_addr = parts[0]
+                                device_name = ' '.join(parts[1:])
+                                # Check if it's a ConnectX device
+                                if 'ConnectX' in device_name or 'MT' in device_name:
+                                    # Try to read temperature using mget_temp
+                                    try:
+                                        temp_result = subprocess.run(
+                                            ['sudo', 'mget_temp', '-d', bus_addr],
+                                            capture_output=True,
+                                            text=True,
+                                            timeout=2
+                                        )
+                                        if temp_result.returncode == 0 and temp_result.stdout.strip():
+                                            temp_value = temp_result.stdout.strip()
+                                            try:
+                                                temp_celsius = float(temp_value)
+                                                # Create a virtual temperature file path for compatibility
+                                                sensor_key = f"mlx_{bus_addr.replace(':', '_').replace('.', '_')}"
+                                                temperature[sensor_key] = {
+                                                    'temp': temp_celsius * 1000.0  # Store in millidegrees for consistency
+                                                }
+                                                logger.info(f"Found Mellanox NIC temperature: {device_name} = {temp_celsius}°C")
+                                            except ValueError:
+                                                logger.warning(f"Could not parse temperature from mget_temp for {bus_addr}")
+                                        elif temp_result.returncode != 0:
+                                            logger.warning(f"mget_temp failed for {bus_addr}: {temp_result.stderr}")
+                                    except subprocess.TimeoutExpired:
+                                        logger.warning(f"mget_temp timed out for {bus_addr}")
+                                    except Exception as e:
+                                        logger.warning(f"Error reading temperature for {bus_addr}: {str(e)}")
+            except Exception as e:
+                logger.warning(f"Error detecting Mellanox devices: {str(e)}")
+    except Exception as e:
+        logger.debug(f"mget_temp not available, Mellanox temperature detection skipped: {str(e)}")
+    return temperature
+
 
 class TemperatureService(object):
 
@@ -130,6 +193,9 @@ class TemperatureService(object):
         if os.path.isdir(hwmon_dir):
             hwmon_temperatures = get_hwmon_thermal_system(hwmon_dir)
             self._temperature.update(hwmon_temperatures)
+        # Check for Mellanox NICs with MLNX_OFED
+        mellanox_temperatures = get_mellanox_temperature()
+        self._temperature.update(mellanox_temperatures)
         if not self._temperature:
             logger.warning("Temperature not folder found!")
         # Sort all sensors
@@ -139,7 +205,13 @@ class TemperatureService(object):
         status = {}
         # Read temperature from board
         for name, sensor in self._temperature.items():
-            values = read_temperature(sensor)
+            # Check if sensor value is already a number (from Mellanox) or a path
+            if isinstance(sensor.get('temp'), (int, float)):
+                # Direct value from Mellanox
+                values = {'temp': sensor['temp']}
+            else:
+                # Path-based sensor
+                values = read_temperature(sensor)
             # Status sensor
             values['online'] = values['temp'] != TEMPERATURE_OFFLINE
             # Add sensor in dictionary
