@@ -701,15 +701,20 @@ class JtopServer(Process):
         """
         Service-side overlay for JetsonPowerProvider.
 
-        Adds:
+        Adds (only when JetsonPowerProvider is available):
           - data["flat"][...]        (Power / Temp / Fan flat keys)
           - data["engines"]["JP"]   (Thor engine status)
 
         IMPORTANT:
           - Never writes flat keys at the top-level of `data`
           - Never clobbers the canonical structured schema
+          - Does not mutate `data` at all when JetsonPowerProvider is unavailable
         """
-        # Ensure containers exist
+        # Avoid behavior changes for consumers: do nothing unless JetsonPowerProvider is usable
+        if not (self.jetsonpower and self.jetsonpower.available()):
+            return
+
+        # Ensure containers exist (only after availability is confirmed)
         if "engines" not in data or not isinstance(data.get("engines"), dict):
             data["engines"] = {}
 
@@ -717,9 +722,6 @@ class JtopServer(Process):
         if not isinstance(flat, dict):
             data["flat"] = {}
             flat = data["flat"]
-
-        if not (self.jetsonpower and self.jetsonpower.available()):
-            return
 
         try:
             jp_p = self.jetsonpower.read_power()
@@ -754,57 +756,42 @@ class JtopServer(Process):
         except Exception as e:
             logger.warning("JetsonPowerProvider overlay failed: %s", e)
 
-
     def jtop_decode(self):
         # Make configuration dict
         data = {}
         # -- UPTIME --
         data['uptime'] = get_uptime()
         # -- CPU --
-        # Read CPU data
         data['cpu'] = self.cpu.get_status()
         # -- GPU ---
-        # Read GPU status
         data['gpu'] = self.gpu.get_status()
         # -- All processes
         total, table = self.processes.get_status()
         data['processes'] = table
         # -- RAM --
-        # Read memory data
-        # In this dictionary are collected
-        # - RAM
-        # - SWAP
-        # - EMC (If available)
-        # - IRAM (If available)
         data['mem'] = self.memory.get_status(total)
         # -- Engines --
-        # Read all engines available
-        # Can be empty for x86 architecture
         data['engines'] = self.engine.get_status()
         # -- Temperature --
         data['temperature'] = self.temperature.get_status()
         # -- Power --
         data['power'] = self.power.get_status()
         # -- FAN --
-        # Update status fan speed
         data['fan'] = self.fan.get_status()
+
         # -- JETSON_CLOCKS --
-        # Jetson Clock to check if is running need to read the status from:
-        # CPU, EMC, GPU, ENGINES
-        # If not empty return status
         if self.jetson_clocks.exists():
-            # Get status jetson_clocks
             data['jc'] = self.jetson_clocks.get_status(data)
+
         # -- NVP MODEL --
-        # Read nvpmodel status, ID, name, and status thread
         if self.nvpmodel.exists():
             data['nvp'] = self.nvpmodel.get_status()
+
         # JetsonPowerProvider overlay + engine injection (Thor)
         self.apply_jetsonpower_overlay(data)
 
         self.data = data
         return data
-
 
     def jtop_stats(self):
         # logger.info("jtop read")
@@ -817,3 +804,4 @@ class JtopServer(Process):
             self.sync_event.set()
 
 # EOF
+
