@@ -32,6 +32,7 @@ from multiprocessing import Process, Queue, Event, Value
 from multiprocessing.managers import SyncManager
 from pathlib import Path
 from importlib import metadata
+from typing import Optional, Dict, Any
 
 # jetson_stats imports
 from .core.exceptions import JtopException
@@ -50,6 +51,16 @@ from .core.power import PowerService
 from .core.fan import FanService
 from .core.jetson_clocks import JetsonClocksService
 from .core.nvpmodel import NVPModelService
+
+# Optional JetsonPower integration
+try:
+    from .core.jetsonpower_provider import JetsonPowerProvider
+except ImportError:
+    try:
+        from .jetsonpower_provider import JetsonPowerProvider
+    except ImportError:
+        JetsonPowerProvider = None
+
 # Create logger
 logger = logging.getLogger(__name__)
 # Fix connection refused for python 2.7
@@ -74,6 +85,65 @@ JTOP_SERVICE_NAME = 'jtop.service'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
 TIMEOUT_SWITCHOFF = 3.0
+
+def overlay_jetsonpower_flat(
+    data: Dict[str, Any],
+    jp_power: Optional[Dict[str, Any]],
+    jp_therm: Optional[Dict[str, Any]],
+    jp_fans: Optional[Dict[str, Any]],
+) -> None:
+    """
+    Merge JetsonPowerProvider outputs into a *namespaced* flat dict.
+
+    IMPORTANT:
+    - Do NOT write flat keys at the top-level of `data` (it breaks the structured schema
+      consumed by 1ALL/2GPU/3CPU/4MEM/6CTRL).
+    - All flat keys go under `data["flat"]`.
+    """
+    flat = data.setdefault("flat", {})
+    if not isinstance(flat, dict):
+        # If something corrupted it, recover without killing the service
+        data["flat"] = {}
+        flat = data["flat"]
+
+    # ----- Power -----
+    rails = (jp_power or {}).get("rails", {})
+    if isinstance(rails, dict):
+        for rail, info in rails.items():
+            if not isinstance(info, dict):
+                continue
+            mw = info.get("mw")
+            mw_avg = info.get("mw_avg")
+            if isinstance(mw, int) and mw >= 0:
+                flat[f"Power {rail}"] = mw
+            if isinstance(mw_avg, int) and mw_avg >= 0:
+                flat[f"Power {rail} AVG"] = mw_avg
+
+    # ----- Thermals -----
+    sensors = (jp_therm or {}).get("sensors", {})
+    if isinstance(sensors, dict):
+        for name, info in sensors.items():
+            if not isinstance(info, dict):
+                continue
+            mc = info.get("temp_mc")
+            if isinstance(mc, int) and mc >= 0:
+                # store a plain float
+                flat[f"Temp {name}"] = mc / 1000.0
+
+    # ----- Fans -----
+    fans = (jp_fans or {}).get("fans", {})
+    if isinstance(fans, dict):
+        for fan_name, info in fans.items():
+            if not isinstance(info, dict):
+                continue
+            pwm = info.get("pwm")
+            rpm = info.get("rpm")
+
+            # Keep your existing label style, but in flat namespace
+            if isinstance(pwm, int) and 0 <= pwm <= 255:
+                flat[f"Fan pwm{fan_name}"] = pwm
+            if isinstance(rpm, int) and rpm >= 0:
+                flat[f"Fan {fan_name}"] = rpm
 
 
 def status_service(service=JTOP_SERVICE_NAME):
@@ -363,6 +433,15 @@ class JtopServer(Process):
         self.jetson_clocks = JetsonClocksService(self.config, self.fan)
         # Initialize nvpmodel controller
         self.nvpmodel = NVPModelService(self.jetson_clocks)
+        # Initialize JetsonPower provider
+        if JetsonPowerProvider is not None:
+            try:
+                self.jetsonpower = JetsonPowerProvider(lazy_init=True)
+            except Exception as e:
+                self.jetsonpower = None
+                logger.debug("JetsonPowerProvider init failed: %s", e)
+        else:
+            self.jetsonpower = None
         # Initialize timer reader
         self._timer_reader = TimerReader(self.jtop_stats)
 
@@ -617,50 +696,101 @@ class JtopServer(Process):
     def config_clear(self):
         self.config.clear()
 
+
+    def apply_jetsonpower_overlay(self, data: Dict[str, Any]) -> None:
+        """
+        Service-side overlay for JetsonPowerProvider.
+
+        Adds (only when JetsonPowerProvider is available):
+          - data["flat"][...]        (Power / Temp / Fan flat keys)
+          - data["engines"]["JP"]   (Thor engine status)
+
+        IMPORTANT:
+          - Never writes flat keys at the top-level of `data`
+          - Never clobbers the canonical structured schema
+          - Does not mutate `data` at all when JetsonPowerProvider is unavailable
+        """
+        # Avoid behavior changes for consumers: do nothing unless JetsonPowerProvider is usable
+        if not (self.jetsonpower and self.jetsonpower.available()):
+            return
+
+        # Ensure containers exist (only after availability is confirmed)
+        if "engines" not in data or not isinstance(data.get("engines"), dict):
+            data["engines"] = {}
+
+        flat = data.setdefault("flat", {})
+        if not isinstance(flat, dict):
+            data["flat"] = {}
+            flat = data["flat"]
+
+        try:
+            jp_p = self.jetsonpower.read_power()
+            jp_t = self.jetsonpower.read_thermal()
+            jp_f = self.jetsonpower.read_fans()
+
+            overlay_jetsonpower_flat(data, jp_p, jp_t, jp_f)
+
+            # Prefer bulk engine read if available
+            try:
+                jp_engines = self.jetsonpower.read_engines()
+            except Exception:
+                jp_engines = None
+
+            if jp_engines and isinstance(jp_engines, dict):
+                data["engines"]["JP"] = jp_engines
+            else:
+                # Fallback: per-engine polling
+                names = self.jetsonpower.get_engine_names()
+                if isinstance(names, (list, tuple)) and names:
+                    jp_group: Dict[str, Any] = {}
+                    for name in names:
+                        if not isinstance(name, str) or not name:
+                            continue
+                        status = self.jetsonpower.read_engine_status(name)
+                        jp_group[name.upper()] = status
+                    data["engines"]["JP"] = jp_group
+
+            # Canary marker (namespaced; never top-level)
+            flat["JP_OVERLAY"] = 1
+
+        except Exception as e:
+            logger.warning("JetsonPowerProvider overlay failed: %s", e)
+
     def jtop_decode(self):
         # Make configuration dict
         data = {}
         # -- UPTIME --
         data['uptime'] = get_uptime()
         # -- CPU --
-        # Read CPU data
         data['cpu'] = self.cpu.get_status()
         # -- GPU ---
-        # Read GPU status
         data['gpu'] = self.gpu.get_status()
         # -- All processes
         total, table = self.processes.get_status()
         data['processes'] = table
         # -- RAM --
-        # Read memory data
-        # In this dictionary are collected
-        # - RAM
-        # - SWAP
-        # - EMC (If available)
-        # - IRAM (If available)
         data['mem'] = self.memory.get_status(total)
         # -- Engines --
-        # Read all engines available
-        # Can be empty for x86 architecture
         data['engines'] = self.engine.get_status()
         # -- Temperature --
         data['temperature'] = self.temperature.get_status()
         # -- Power --
         data['power'] = self.power.get_status()
         # -- FAN --
-        # Update status fan speed
         data['fan'] = self.fan.get_status()
+
         # -- JETSON_CLOCKS --
-        # Jetson Clock to check if is running need to read the status from:
-        # CPU, EMC, GPU, ENGINES
-        # If not empty return status
         if self.jetson_clocks.exists():
-            # Get status jetson_clocks
             data['jc'] = self.jetson_clocks.get_status(data)
+
         # -- NVP MODEL --
-        # Read nvpmodel status, ID, name, and status thread
         if self.nvpmodel.exists():
             data['nvp'] = self.nvpmodel.get_status()
+
+        # JetsonPowerProvider overlay + engine injection (Thor)
+        self.apply_jetsonpower_overlay(data)
+
+        self.data = data
         return data
 
     def jtop_stats(self):
@@ -672,4 +802,6 @@ class JtopServer(Process):
         # Set event for all clients
         if not self.sync_event.is_set():
             self.sync_event.set()
+
 # EOF
+

@@ -28,4 +28,4 @@ jtop_test.*
 .vscode/
 .venv*/
 .idea/
-__pycache__/
+__pycache__/scripts/install_jtop_from_sdist.sh

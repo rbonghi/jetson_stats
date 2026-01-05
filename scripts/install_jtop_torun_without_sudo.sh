@@ -44,7 +44,32 @@ uv venv "$VENV_DIR" -p python3.12 --seed
 
 echo "Installing/upgrading $PKG_NAME from: $JTOP_REF"
 uv pip install --python "$VENV_DIR/bin/python" --upgrade "$JTOP_REF"
+# Optional: make proprietary pylibjetsonpower visible inside the venv (Thor).
+# This is NOT required for upstream jetson_stats; it is a local convenience so
+# the service (running from this venv) can import pylibjetsonpower if present.
+echo "Checking for NVIDIA pylibjetsonpower (optional)..."
+SYS_PYLIBJETSONPOWER=""
+for p in \
+  /usr/lib/python3/dist-packages/pylibjetsonpower \
+  /usr/local/lib/python*/dist-packages/pylibjetsonpower \
+  /usr/lib/python*/dist-packages/pylibjetsonpower
+do
+  if [[ -d "$p" ]]; then
+    SYS_PYLIBJETSONPOWER="$p"
+    break
+  fi
+done
 
+if [[ -n "$SYS_PYLIBJETSONPOWER" && -f "$SYS_PYLIBJETSONPOWER/__init__.py" ]]; then
+  VENV_SITE="$("$VENV_DIR/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+  echo "  Found: $SYS_PYLIBJETSONPOWER"
+  echo "  Linking into venv: $VENV_SITE/pylibjetsonpower"
+  # Remove any previous link/dir so the link is deterministic
+  rm -rf "$VENV_SITE/pylibjetsonpower" 2>/dev/null || true
+  ln -s "$SYS_PYLIBJETSONPOWER" "$VENV_SITE/pylibjetsonpower"
+else
+  echo "  pylibjetsonpower not found (skipping)."
+fi
 
 # Verify binary exists (run as user)
 if ! test -x "$JTOP_BIN"; then
