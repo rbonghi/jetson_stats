@@ -129,16 +129,49 @@ The implementation includes comprehensive error handling:
 
 ### Permission issues?
 
-Ensure the jtop user has permission to run `mget_temp`:
+The implementation now tries to run `mget_temp` without sudo first, and only falls back to sudo if needed.
+
+To avoid sudo prompts, ensure the jtop user has permission to run `mget_temp`:
+
+**Option 1: Add jtop user to mlnx group**
 ```bash
 sudo usermod -a -G mlnx jtop
 sudo systemctl restart jtop.service
 ```
 
+**Option 2: Configure sudo to not require password**
+```bash
+# Edit sudoers file
+sudo visudo
+
+# Add this line (replace 'jtop' with the actual user if different)
+jtop ALL=(ALL) NOPASSWD: /opt/mellanox/mft/bin/mget_temp
+```
+
+**Option 3: Run jtop with appropriate permissions**
+```bash
+# Run jtop as root (not recommended for production)
+sudo jtop
+```
+
+## Known Issues and Fixes
+
+### Issue: Temperature not displaying correctly after MLNX_OFED installation
+
+**Problem:** After installing MLNX_OFED, Mellanox NIC temperatures would not display in jtop, even though `mget_temp` returned valid values.
+
+**Root Cause:** The temperature values were being stored in millidegrees (e.g., 44000.0 for 44°C) but were not being converted to Celsius when retrieved via the `get_status()` method.
+
+**Fix:** Updated the `get_status()` method in `jtop/core/temperature.py` to:
+1. Convert millidegree values to Celsius for Mellanox sensors
+2. Add default max (84°C) and crit (100°C) thresholds for proper color coding
+
+**Status:** Fixed in current version
+
 ## Future Enhancements
 
 Potential improvements for future versions:
 - Support for multiple temperature sensors per NIC
-- Reading max/crit thresholds from Mellanox
+- Reading max/crit thresholds from Mellanox (instead of using defaults)
 - Automatic detection of MLNX_OFED version
 - Support for other Mellanox tools (mstflint, etc.)
