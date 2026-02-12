@@ -110,7 +110,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v6.19.1
+        uses: docker/build-push-action@v6.19.2
         with:
           push: |
             ${{ github.actor != 'dependabot[bot]' &&
