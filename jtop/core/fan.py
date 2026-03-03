@@ -595,6 +595,10 @@ class FanService(object):
             logger.error("Wrong index %s for %s", index, name)
             return
 
+        # Stop nvfancontrol so it does not override a manual speed
+        if self._nvfancontrol and nvfancontrol_is_active():
+            os.system('systemctl stop nvfancontrol')
+
         fan_config = self._config.get('fan', {})
         if name not in fan_config:
             fan_config[name] = {}
