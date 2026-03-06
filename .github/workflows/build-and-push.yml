@@ -82,7 +82,7 @@ jobs:
       # https://github.com/docker/build-push-action/blob/master/docs/advanced/tags-labels.md
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           # https://github.com/docker/metadata-action/issues/123
           github-token: ${{ secrets.GITHUB_TOKEN }}
