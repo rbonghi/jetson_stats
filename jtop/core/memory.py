@@ -29,7 +29,7 @@ from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
 # Memory regular exception
-MEMINFO_REG = re.compile(r'(?P<key>[^:]+):\s+(?P<value>\d+)\s+(?P<unit>.)B')
+MEMINFO_REG = re.compile(r'(?P<key>[^:]+):\s+(?P<value>.+)\s+(?P<unit>.)B')
 FSTAB_RE = re.compile(r'^(?P<path>[^ ]+) +(?P<mount>[^ ]+) +(?P<type>[^ ]+) +(?P<options>[^ ]+) +(?P<dump>\d+) +(?P<pass>\d+)$')
 BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(?P<nr_free>.*)')
 SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>-?\d+)')
@@ -154,17 +154,14 @@ def read_emc(root_path):
         # Check if access to this file
         if os.access(path + "/cur_freq", os.R_OK):
             with open(path + "/cur_freq", 'r') as f:
-                # Write current EMC rate
                 emc['cur'] = int(f.read()) // 1000
         # Check if access to this file
         if os.access(path + "/max_freq", os.R_OK):
             with open(path + "/max_freq", 'r') as f:
-                # Write max EMC cap
                 emc['max'] = int(f.read()) // 1000
         # Check if access to this file
         if os.access(path + "/min_freq", os.R_OK):
             with open(path + "/min_freq", 'r') as f:
-                # Write min EMC floor
                 emc['min'] = int(f.read()) // 1000
         # Optional metadata
         if os.access(path + "/governor", os.R_OK):
@@ -194,16 +191,15 @@ def read_emc(root_path):
 
     elif os.path.isdir(root_path + "/clk/emc"):
         emc = read_engine(root_path + "/clk/emc")
-        # Fix max frequency
-        emc_cap = 0
-        # Check if access to this file
-        if os.access(root_path + "/nvpmodel_emc_cap/emc_iso_cap", os.R_OK):
-            with open(root_path + "/nvpmodel_emc_cap/emc_iso_cap", 'r') as f:
-                emc_cap = int(f.read()) // 1000
-        # Fix max EMC
-        if 'max' in emc:
-            if emc_cap > 0 and emc_cap < emc['max']:
-                emc['max'] = emc_cap
+
+    # Apply nvpmodel EMC cap regardless of which EMC source populated emc['max']
+    emc_cap = 0
+    if os.access(root_path + "/nvpmodel_emc_cap/emc_iso_cap", os.R_OK):
+        with open(root_path + "/nvpmodel_emc_cap/emc_iso_cap", 'r') as f:
+            emc_cap = int(f.read()) // 1000
+    if 'max' in emc:
+        if emc_cap > 0 and emc_cap < emc['max']:
+            emc['max'] = emc_cap
 
     # Percentage utilization
     # https://forums.developer.nvidia.com/t/real-time-emc-bandwidth-with-sysfs/107479/3
@@ -221,6 +217,11 @@ def read_emc(root_path):
         return {}
 
     if emc['cur'] <= 0:
+        logger.warning(
+            "EMC current frequency value is non-positive (emc['cur']=%s). "
+            "Dropping EMC data to avoid division by zero.",
+            emc['cur'],
+        )
         return {}
 
     emc['val'] = utilization // emc['cur']
