@@ -29,7 +29,7 @@ from .command import Command
 # Create logger
 logger = logging.getLogger(__name__)
 # Memory regular exception
-MEMINFO_REG = re.compile(r'(?P<key>.+):\s+(?P<value>.+) (?P<unit>.)B')
+MEMINFO_REG = re.compile(r'(?P<key>[^:]+):\s+(?P<value>\d+)\s+(?P<unit>.)B')
 FSTAB_RE = re.compile(r'^(?P<path>[^ ]+) +(?P<mount>[^ ]+) +(?P<type>[^ ]+) +(?P<options>[^ ]+) +(?P<dump>\d+) +(?P<pass>\d+)$')
 BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(?P<nr_free>.*)')
 SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>-?\d+)')
@@ -127,76 +127,102 @@ def read_emc(root_path):
     emc = {}
     # Initialize emc['cur'] to avoid a crash when starting this service
     emc['cur'] = 1
+
     if os.path.isdir(root_path + "/debug/bpmp/debug/clk/emc"):
         path = root_path + "/debug/bpmp/debug/clk/emc"
         # Check if access to this file
         if os.access(path + "/rate", os.R_OK):
             with open(path + "/rate", 'r') as f:
-                # Write min
                 emc['cur'] = int(f.read()) // 1000
         # Check if access to this file
         if os.access(path + "/max_rate", os.R_OK):
             with open(path + "/max_rate", 'r') as f:
-                # Write min
                 emc['max'] = int(f.read()) // 1000
         # Check if access to this file
         if os.access(path + "/min_rate", os.R_OK):
             with open(path + "/min_rate", 'r') as f:
-                # Write min
                 emc['min'] = int(f.read()) // 1000
         # Check if access to this file
         if os.access(path + "/mrq_rate_locked", os.R_OK):
             with open(path + "/mrq_rate_locked", 'r') as f:
-                # Write min
                 emc['override'] = int(f.read()) // 1000
+
+    elif os.path.isdir(root_path + "/../class/devfreq/bwmgr"):
+        # Jetson Thor exposes EMC/BWMGR through devfreq instead of the
+        # older tegra_bwmgr debugfs interface used on earlier platforms.
+        path = root_path + "/../class/devfreq/bwmgr"
+        # Check if access to this file
+        if os.access(path + "/cur_freq", os.R_OK):
+            with open(path + "/cur_freq", 'r') as f:
+                # Write current EMC rate
+                emc['cur'] = int(f.read()) // 1000
+        # Check if access to this file
+        if os.access(path + "/max_freq", os.R_OK):
+            with open(path + "/max_freq", 'r') as f:
+                # Write max EMC cap
+                emc['max'] = int(f.read()) // 1000
+        # Check if access to this file
+        if os.access(path + "/min_freq", os.R_OK):
+            with open(path + "/min_freq", 'r') as f:
+                # Write min EMC floor
+                emc['min'] = int(f.read()) // 1000
+        # Optional metadata
+        if os.access(path + "/governor", os.R_OK):
+            with open(path + "/governor", 'r') as f:
+                emc['governor'] = f.read().strip()
+
     elif os.path.isdir(root_path + "/debug/tegra_bwmgr"):
         path = root_path + "/debug/clk/override.emc"
         # Check if access to this file
         if os.access(path + "/clk_rate", os.R_OK):
             with open(path + "/clk_rate", 'r') as f:
-                # Write min
                 emc['cur'] = int(f.read()) // 1000
         # Check if access to this file
         if os.access(path + "/clk_state", os.R_OK):
             with open(path + "/clk_state", 'r') as f:
-                # Write min
                 emc['override'] = int(f.read()) // 1000
         # Decode from tegra_bwmgr
         path = root_path + "/tegra_bwmgr"
         # Check if access to this file
         if os.access(path + "/emc_max_rate", os.R_OK):
             with open(path + "/emc_max_rate", 'r') as f:
-                # Write min
                 emc['max'] = int(f.read()) // 1000
         # Check if access to this file
         if os.access(path + "/emc_min_rate", os.R_OK):
             with open(path + "/emc_min_rate", 'r') as f:
-                # Write min
                 emc['min'] = int(f.read()) // 1000
+
     elif os.path.isdir(root_path + "/clk/emc"):
         emc = read_engine(root_path + "/clk/emc")
-    # Fix max frequency
-    emc_cap = 0
-    # Check if access to this file
-    if os.access(root_path + "/nvpmodel_emc_cap/emc_iso_cap", os.R_OK):
-        with open(root_path + "/nvpmodel_emc_cap/emc_iso_cap", 'r') as f:
-            # Write min
-            emc_cap = int(f.read()) // 1000
-    # Fix max EMC
-    if 'max' in emc:
-        if emc_cap > 0 and emc_cap < emc['max']:
-            emc['max'] = emc_cap
+        # Fix max frequency
+        emc_cap = 0
+        # Check if access to this file
+        if os.access(root_path + "/nvpmodel_emc_cap/emc_iso_cap", os.R_OK):
+            with open(root_path + "/nvpmodel_emc_cap/emc_iso_cap", 'r') as f:
+                emc_cap = int(f.read()) // 1000
+        # Fix max EMC
+        if 'max' in emc:
+            if emc_cap > 0 and emc_cap < emc['max']:
+                emc['max'] = emc_cap
+
     # Percentage utilization
     # https://forums.developer.nvidia.com/t/real-time-emc-bandwidth-with-sysfs/107479/3
     if os.access(root_path + "/debug/cactmon/mc_all", os.R_OK):
         with open(root_path + "/debug/cactmon/mc_all", 'r') as f:
             utilization = int(f.read())
+    elif os.access(root_path + "/debug/bpmp/debug/actmon/mc_all_avg_activity", os.R_OK):
+        with open(root_path + "/debug/bpmp/debug/actmon/mc_all_avg_activity", 'r') as f:
+            utilization = int(f.read())
     elif os.access(root_path + "/actmon_avg_activity/mc_all", os.R_OK):
         with open(root_path + "/actmon_avg_activity/mc_all", 'r') as f:
             utilization = int(f.read())
     else:
-        # if utilization not accesibile return empty EMC data
+        # if utilization not accessible return empty EMC data
         return {}
+
+    if emc['cur'] <= 0:
+        return {}
+
     emc['val'] = utilization // emc['cur']
     # Set always online this engine
     emc['online'] = True
