@@ -30,6 +30,18 @@ from .pcpu import cpu_grid
 SWAP_MAX_SIZE = 100
 SWAP_MIN_SIZE = 1
 
+# EMC gauge layout breakpoints
+# < 12: too narrow to render safely
+# < 24: compact gauge + percent only
+# < 30: medium layout, no min/max labels
+# < 38: show max only
+# < 40: reserve less room for current frequency text
+EMC_GAUGE_MIN_WIDTH = 12
+EMC_GAUGE_COMPACT_WIDTH = 24
+EMC_GAUGE_SHOW_MAX_WIDTH = 30
+EMC_GAUGE_SHOW_MIN_WIDTH = 38
+EMC_GAUGE_FULL_WIDTH = 40
+
 
 def mem_gauge(stdscr, pos_y, pos_x, size, mem_data):
     # Plot values
@@ -72,25 +84,34 @@ def swap_gauge(stdscr, pos_y, pos_x, size, mem_data):
     basic_gauge(stdscr, pos_y, pos_x, size - 1, data)
 
 
+def _emc_rate_values(mem_data, online):
+    if 'max' not in mem_data:
+        return []
+    return [
+        (mem_data['cur'] / mem_data['max'] * 100.0, NColors.green()),
+    ] if online else []
+
+
+def _emc_data(mem_data, online, size):
+    return {
+        'name': 'Emc',
+        'color': NColors.cyan(),
+        'values': _emc_rate_values(mem_data, online),
+        'mleft': unit_to_string(mem_data['min'], 'k', 'Hz')
+        if ('min' in mem_data and size >= EMC_GAUGE_SHOW_MIN_WIDTH) else '',
+        'mright': unit_to_string(mem_data['max'], 'k', 'Hz')
+        if size >= EMC_GAUGE_SHOW_MAX_WIDTH else '',
+    }
 def emc_gauge(stdscr, pos_y, pos_x, size, mem_data):
-    if size < 12:
+    if size < EMC_GAUGE_MIN_WIDTH:
         return
     # online status
     online = mem_data['online'] if 'online' in mem_data else True
     curr_string = "{val:3.0f}%".format(val=mem_data['val'])
-    # Very small layouts: show only a compact gauge and percentage
-    if size < 24:
+    # Compact layout: gauge + percentage only
+    if size < EMC_GAUGE_COMPACT_WIDTH:
         if 'max' in mem_data:
-            values = [
-                (mem_data['cur'] / mem_data['max'] * 100.0, NColors.green()),
-            ] if online else []
-            data = {
-                'name': 'Emc',
-                'color': NColors.cyan(),
-                'values': values,
-                'mleft': '',
-                'mright': '',
-            }
+            data = _emc_data(mem_data, online, 0)
             basic_gauge(stdscr, pos_y, pos_x, size - 5, data, bar=':')
         else:
             data = dict(mem_data)
@@ -99,22 +120,13 @@ def emc_gauge(stdscr, pos_y, pos_x, size, mem_data):
         stdscr.addstr(pos_y, pos_x + size - 4, curr_string, curses.A_BOLD)
         return
 
-    # Medium layouts: show gauge, optional max, and percentage
+    # Medium/full layouts: progressively add min/max/current-rate details
     if 'max' in mem_data:
-        values = [
-            (mem_data['cur'] / mem_data['max'] * 100.0, NColors.green()),
-        ] if online else []
-        data = {
-            'name': 'Emc',
-            'color': NColors.cyan(),
-            'values': values,
-            'mleft': unit_to_string(mem_data['min'], 'k', 'Hz') if ('min' in mem_data and size >= 38) else '',
-            'mright': unit_to_string(mem_data['max'], 'k', 'Hz') if size >= 30 else '',
-        }
-        gauge_width = size - 13 if size >= 40 else size - 5
+        data = _emc_data(mem_data, online, size)
+        gauge_width = size - 13 if size >= EMC_GAUGE_FULL_WIDTH else size - 5
         basic_gauge(stdscr, pos_y, pos_x, gauge_width, data, bar=':')
-        # Draw info EMC only on wider layouts
-        if size >= 40:
+        # Draw current EMC rate only on widest layout
+        if size >= EMC_GAUGE_FULL_WIDTH:
             curr_rate_string = unit_to_string(mem_data['cur'], 'k', 'Hz')
             stdscr.addstr(pos_y, pos_x + size - 11, curr_rate_string, NColors.italic())
     else:
@@ -247,17 +259,18 @@ class MEM(Page):
         self.stdscr.addstr(pos_y, pos_x + 1, "     RAM     ", curses.A_REVERSE)
         # Plot all RAM values
         used = size_to_string(self.jetson.memory['RAM']['used'], 'k')
-        plot_name_info(self.stdscr, pos_y + 1, pos_x + 1, ' Used', used, spacing=3, color=NColors.cyan())
+        plot_name_info(self.stdscr, pos_y + 1, pos_x + 2, 'Used', used, spacing=3, color=NColors.cyan())
         shared = size_to_string(self.jetson.memory['RAM']['shared'], 'k')
-        plot_name_info(self.stdscr, pos_y + 2, pos_x + 1, ' Shared', shared, spacing=1, color=NColors.green())
+        plot_name_info(self.stdscr, pos_y + 2, pos_x + 2, 'Shared', shared, spacing=1, color=NColors.green())
         buffers = size_to_string(self.jetson.memory['RAM']['buffers'], 'k')
-        plot_name_info(self.stdscr, pos_y + 3, pos_x + 1, ' Buffers', buffers, color=NColors.blue())
+        plot_name_info(self.stdscr, pos_y + 3, pos_x + 2, 'Buffers', buffers, color=NColors.blue())
         cached = size_to_string(self.jetson.memory['RAM']['cached'], 'k')
-        plot_name_info(self.stdscr, pos_y + 4, pos_x + 1, ' Cached', cached, spacing=1, color=NColors.yellow())
+        plot_name_info(self.stdscr, pos_y + 4, pos_x + 2, 'Cached', cached, spacing=1, color=NColors.yellow())
         free = size_to_string(self.jetson.memory['RAM']['free'], 'k')
-        plot_name_info(self.stdscr, pos_y + 5, pos_x + 1, ' Free', free, spacing=3)
+        plot_name_info(self.stdscr, pos_y + 5, pos_x + 2, 'Free', free, spacing=3)
         total = size_to_string(self.jetson.memory['RAM']['tot'], 'k')
-        plot_name_info(self.stdscr, pos_y + 6, pos_x + 1, ' TOT', total, spacing=4, color=curses.A_BOLD)
+        plot_name_info(self.stdscr, pos_y + 6, pos_x + 2, 'TOT', total, spacing=4, color=curses.A_BOLD)
+
 
     def print_zram(self, stdscr, idx, swap, pos_y, pos_x, size_h, size_w):
         name, swap = swap
