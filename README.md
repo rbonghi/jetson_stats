@@ -64,17 +64,19 @@ or
 sudo pip3 install --break-system-packages git+https://github.com/rbonghi/jetson_stats.git
 ```
 
-### Option 4: Run jtop with or without sudo and install without "--break-system-packages". This installation method works on all Jetson Developer Kits.
+### Option 4: Run `jtop` with or without `sudo`, and install without `--break-system-packages`
+This installation method works on all Jetson Developer Kits.
 ```console
-Run "sudo -v"   Note: "-v, --validate does not run any command, but allows the use of sudo in the following script."
+sudo -v
 curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash
-
-Or, Run "sudo -v"
-Download "scripts/install_jtop_torun_without_sudo.sh"
-Make it executable: chmod +x install_jtop_torun_without_sudo.sh
-Then install with   ./install_jtop_torun_without_sudo.sh
 ```
-
+Or:
+```console
+# Download scripts/install_jtop_torun_without_sudo.sh
+sudo -v
+chmod +x install_jtop_torun_without_sudo.sh
+./install_jtop_torun_without_sudo.sh
+```
 ---
 
 ## Run
