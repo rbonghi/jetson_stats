@@ -23,19 +23,25 @@ SWAP_RE = re.compile(r'SWAP (\d+)\/(\d+)(\w)B( ?)\(cached (\d+)(\w)B\)')
 IRAM_RE = re.compile(r'IRAM (\d+)\/(\d+)(\w)B( ?)\(lfb (\d+)(\w)B\)')
 RAM_RE = re.compile(r'RAM (\d+)\/(\d+)(\w)B( ?)\(lfb (\d+)x(\d+)(\w)B\)')
 MTS_RE = re.compile(r'MTS fg (\d+)% bg (\d+)%')
-VALS_RE = re.compile(r'\b([A-Z0-9_]+) ([0-9%@]+)(?=[^/])\b')
-VAL_FRE_RE = re.compile(r'\b(\d+)%@(\d+)')
+VALS_PLAIN_RE = re.compile(r'\b([A-Z0-9_]+) ([0-9%@]+)(?=[^/])\b')
+VALS_ARRAY_RE = re.compile(r'\b([A-Z0-9_]+) @\[([0-9,]+)\]')
+VAL_FRE_ONLY_RE = re.compile(r'@(\d+)$')
+VAL_FRE_UTIL_RE = re.compile(r'\b(\d+)%@(\d+)')
 CPU_RE = re.compile(r'CPU \[(.*?)\]')
 WATT_RE = re.compile(r'\b(\w+) ([0-9.]+)(\w?)W?\/([0-9.]+)(\w?)W?\b')
 TEMP_RE = re.compile(r'\b(\w+)@(-?[0-9.]+)C\b')
 
 
 def val_freq(val):
+    # Frequency with utilization (Orin: 10%@1000)
+    if '%' in val and '@' in val:
+        match = VAL_FRE_UTIL_RE.search(val)
+        return {'val': int(match.group(1)), 'frq': int(match.group(2)) * 1000} if match else {}
+    # Frequency only (Thor: @1000)
     if '@' in val:
-        match = VAL_FRE_RE.search(val)
-        return {'val': int(match.group(1)), 'frq': int(match.group(2)) * 1000}
-    else:
-        return {'val': int(val)}
+        match = VAL_FRE_ONLY_RE.search(val)
+        return {'frq': int(match.group(1)) * 1000} if match else {}
+    return {'val': int(val)}
 
 
 def DATE(text):
@@ -147,6 +153,10 @@ def VALS(text):
           GR3D is the GPU engine.
           X = Percent of the GR3D that is being used, relative to the current running frequency.
           Y = GR3D frequency in megahertz
+        - GR3D @[Y,Y,Y]
+          GR3D is the GPU engine.
+          On Thor and Orin, GR3D reports per-GPC frequencies as an array without utilization.
+          Y = GR3D frequency in megahertz
         - MSENC Y
           Y = MSENC frequency in megahertz.
           MSENC is the video hardware encoding engine.
@@ -159,11 +169,17 @@ def VALS(text):
           It is shown only when hardware decoder/encoder engine is used.
     """
     vals = {}
-    for name, val in re.findall(VALS_RE, text):
-        # Remove from name "FREQ" name
+    # Parse array values (Thor: GR3D_FREQ @[1000,1000,1000])
+    for name, val in re.findall(VALS_ARRAY_RE, text):
+        # Remove "FREQ" from name and export max if unset
         name = name.split('_')[0] if "FREQ" in name else name
-        # Export value
-        vals[name] = val_freq(val)
+        freqs = [int(v) * 1000 for v in val.split(',')]
+        vals.setdefault(name, {'frq': max(freqs)})
+    # Parse plain values (Orin: GR3D_FREQ 10%@1000)
+    for name, val in re.findall(VALS_PLAIN_RE, text):
+        # Remove "FREQ" from name and export if unset
+        name = name.split('_')[0] if "FREQ" in name else name
+        vals.setdefault(name, val_freq(val))
     return vals
 
 
