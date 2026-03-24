@@ -79,6 +79,9 @@ jobs:
     needs: [build]
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      created: ${{ steps.push_tag.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -98,6 +101,7 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
       - name: Create and push tag
+        id: push_tag
         if: steps.check_tag.outputs.exists == 'false'
         run: |
           git config user.name "github-actions[bot]"
@@ -210,8 +214,12 @@ jobs:
 
   deploy:
     name: Deploy on PIP
-    needs: [build, docker]
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build, docker, create_tag]
+    if: |
+      always() &&
+      needs.build.result == 'success' &&
+      needs.docker.result == 'success' &&
+      (startsWith(github.ref, 'refs/tags/') || needs.create_tag.outputs.created == 'true')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -233,7 +241,8 @@ jobs:
 
   notify:
     name: "Notify socials"
-    needs: [deploy, docs]
+    needs: [deploy, create_tag, docs]
+    if: always() && needs.deploy.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Repository status
@@ -243,10 +252,9 @@ jobs:
           if ${{ startsWith(github.ref, 'refs/tags/') }} ; then
             TAG_RELEASE=${GITHUB_REF/refs\/tags\//}
           else
-            TAG_RELEASE=${GITHUB_REF/refs\/heads\//}
+            TAG_RELEASE="${{ needs.create_tag.outputs.version }}"
           fi
-          echo ::set-output name=tag::${TAG_RELEASE}
-          echo "tag=${TAG_RELEASE}"
+          echo "tag=${TAG_RELEASE}" >> $GITHUB_OUTPUT
       - name: Discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
