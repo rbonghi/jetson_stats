@@ -141,7 +141,7 @@ jobs:
           # Install jtop
           sudo -H env "PATH=$PATH" pip install -v -e .
           # Install sphinx requirements
-          sudo -H env "PATH=$PATH" pip install -r docs/requirements.txt
+          sudo -H env "PATH=$PATH" pip install --ignore-installed -r docs/requirements.txt
           # Run sphinx
           cd docs
           sphinx-build -b html -W . _build/html
