@@ -52,6 +52,11 @@ from .core.fan import FanService
 from .core.jetson_clocks import JetsonClocksService
 from .core.nvpmodel import NVPModelService
 
+# Python 3.14 changed the default start method to "forkserver" which requires
+# all objects to be picklable. Force "fork" to avoid pickle errors with lambdas.
+import multiprocessing
+multiprocessing.set_start_method("fork", force=True)
+
 # Optional JetsonPower integration
 try:
     from .core.jetsonpower_provider import JetsonPowerProvider
