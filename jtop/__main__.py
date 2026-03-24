@@ -50,8 +50,8 @@ JTOP_LOG_NAME = 'jtop-error.log'
 
 def _is_virtualenv():
     return bool(
-        hasattr(sys, 'real_prefix')
-        or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+        hasattr(sys, 'real_prefix') or
+        (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
     )
 
 
