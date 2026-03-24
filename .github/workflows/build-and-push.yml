@@ -74,6 +74,37 @@ jobs:
           # https://github.com/actions/setup-python/issues/225
           sudo env "PATH=$PATH" tox -e py${{ matrix.python-version }}
 
+  create_tag:
+    name: Create version tag
+    needs: [build]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.ACCESS_TOKEN }}
+      - name: Get version from __init__.py
+        id: get_version
+        run: |
+          VERSION=$(python3 -c "import re; print(re.search(r'__version__\s*=\s*\"(.+?)\"', open('jtop/__init__.py').read()).group(1))")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "refs/tags/${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Create and push tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.get_version.outputs.version }}" -m "Release ${{ steps.get_version.outputs.version }}"
+          git push origin "${{ steps.get_version.outputs.version }}"
+
   docker:
     name: "Build Docker image develop"
     runs-on: ubuntu-latest
