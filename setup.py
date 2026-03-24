@@ -45,21 +45,44 @@ def is_virtualenv():
 
 
 def is_docker():
-    # Check if running in Docker container
+    # Check common container marker files
     if os.path.exists('/.dockerenv'):
         return True
-    # Check cgroup
+    if os.path.exists('/run/.containerenv'):
+        return True
+    # Check container environment variable (set by various runtimes)
+    if os.environ.get('container'):
+        return True
+    # Check cgroup v1: look for docker/buildkit/containerd in cgroup paths
     path = '/proc/self/cgroup'
     if os.path.isfile(path):
         with open(path) as f:
             for line in f:
-                if 'docker' in line or 'buildkit' in line:
+                if 'docker' in line or 'buildkit' in line or 'containerd' in line:
                     return True
+    # Check cgroup v2 + overlay/BuildKit: inspect mountinfo for container signals
+    mountinfo = '/proc/self/mountinfo'
+    if os.path.isfile(mountinfo):
+        with open(mountinfo) as f:
+            for line in f:
+                if '/docker/' in line or '/buildkit/' in line or '/containerd/' in line:
+                    return True
+    # Fallback: if systemctl is not available, treat as container-like environment
+    if not shutil.which('systemctl'):
+        return True
     return False
 
 
 def is_superuser():
     return os.getuid() == 0
+
+
+def _systemctl(*args):
+    """Run systemctl if available, otherwise log and skip."""
+    if shutil.which('systemctl'):
+        return sp_mod.call(['systemctl'] + list(args))
+    log.warning("systemctl not found, skipping: systemctl %s", ' '.join(args))
+    return 1
 
 
 def _run_service_install(source_folder):
@@ -77,10 +100,10 @@ def _run_service_install(source_folder):
 
     # --- Uninstall previous service ---
     if os.path.isfile(service_dst) or os.path.islink(service_dst):
-        sp_mod.call(['systemctl', 'stop', 'jtop.service'])
-        sp_mod.call(['systemctl', 'disable', 'jtop.service'])
+        _systemctl('stop', 'jtop.service')
+        _systemctl('disable', 'jtop.service')
         os.remove(service_dst)
-        sp_mod.call(['systemctl', 'daemon-reload'])
+        _systemctl('daemon-reload')
     if os.path.isdir(pipe_path):
         shutil.rmtree(pipe_path)
     elif os.path.exists(pipe_path):
@@ -92,10 +115,9 @@ def _run_service_install(source_folder):
     if os.path.isfile(service_src):
         shutil.copy2(service_src, service_dst)
         log.info("Installed %s -> %s", service_src, service_dst)
-        sp_mod.call(['systemctl', 'daemon-reload'])
-        sp_mod.call(['systemctl', 'enable', 'jtop.service'])
-        # start may fail during wheel-build (jtop binary not yet installed)
-        sp_mod.call(['systemctl', 'start', 'jtop.service'])
+        _systemctl('daemon-reload')
+        _systemctl('enable', 'jtop.service')
+        _systemctl('start', 'jtop.service')
 
     # --- Install env script ---
     if os.path.isfile(env_src):
