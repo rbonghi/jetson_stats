@@ -64,16 +64,20 @@ or
 sudo pip3 install --break-system-packages git+https://github.com/rbonghi/jetson_stats.git
 ```
 
-### Option 4: Ubuntu 24.04 run jtop without sudo and without "--break-system-packages"
+### Option 4: Run `jtop` with or without `sudo`, and install without `--break-system-packages`
+This installation method works on all Jetson Developer Kits.
 _NOTE: For Jetson AGX Thor Dev Kit follow this_
 ```console
-Download "scripts/install_jtop_torun_without_sudo.sh"
-Make it executable: chmod +x install_jtop_torun_without_sudo.sh
-Run "sudo -v"    -v, --validate does not run any command, but allows the use of sudo in the bash script.
-Then install with   ./install_jtop_torun_without_sudo.sh
+sudo -v
+curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash
 ```
-See the guide: [How it "without sudo" works & why](docs/nosudo.rst)
-
+Or:
+```console
+# Download scripts/install_jtop_torun_without_sudo.sh
+sudo -v
+chmod +x install_jtop_torun_without_sudo.sh
+./install_jtop_torun_without_sudo.sh
+```
 ---
 
 ## Run
