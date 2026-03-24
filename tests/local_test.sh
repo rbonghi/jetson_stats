@@ -44,7 +44,7 @@ main()
 {
     local DOCKER_BUILD=true
     local DOCUMENTATION_BUILD=true
-    local PYTHON_LIST="2.7 3.6 3.8 3.9 3.10 3.11"
+    local PYTHON_LIST="3.8 3.9 3.10 3.11 3.12 3.13 3.14"
     local PYTHON_DEBUG=false
     local DOCUMENTATION=false
     
