@@ -49,10 +49,9 @@ JTOP_LOG_NAME = 'jtop-error.log'
 
 
 def _is_virtualenv():
-    return bool(
-        hasattr(sys, 'real_prefix')
-        or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
-    )
+    has_real_prefix = hasattr(sys, 'real_prefix')
+    has_base_prefix = hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix
+    return bool(has_real_prefix or has_base_prefix)
 
 
 def _is_docker():
