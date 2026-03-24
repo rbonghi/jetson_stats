@@ -115,11 +115,16 @@ class JTOPBuildPy(build_py):
     ``install`` cmdclass never fires.  By hooking into ``build_py`` (which
     *is* executed during ``bdist_wheel``), we can install the systemd
     service, env script, and group as part of ``sudo pip install``.
+
+    Note: we intentionally do NOT check ``is_virtualenv()`` here because
+    pip's PEP 517 isolated build environment is itself a temporary venv.
+    The ``is_superuser()`` gate is sufficient — if the user ran ``sudo``,
+    they want a system-level install.
     """
 
     def run(self):
         build_py.run(self)
-        if is_superuser() and not is_virtualenv() and not is_docker():
+        if is_superuser() and not is_docker():
             folder = os.path.dirname(os.path.realpath(__file__))
             log.info("Installing jtop system service …")
             _run_service_install(folder)
