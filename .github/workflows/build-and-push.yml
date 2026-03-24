@@ -2,15 +2,7 @@ name: CI & CD
 
 # Reference:
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
-    inputs:
-      deploy_version:
-        description: 'Version to deploy (e.g. 7.1.0). Leave empty to skip deploy.'
-        required: false
-        default: ''
+on: [push, pull_request]
 
 env:
   docker_image_name: rbonghi/jetson_stats
@@ -220,60 +212,24 @@ jobs:
           short-description: ${{ github.event.repository.description }}
           readme-filepath: ./README.md
 
-  deploy:
-    name: Deploy on PIP
-    needs: [build, docker, create_tag]
-    if: |
-      always() &&
-      needs.build.result == 'success' &&
-      needs.docker.result == 'success' &&
-      (startsWith(github.ref, 'refs/tags/') || needs.create_tag.outputs.created == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_version != ''))
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
-      - name: Install build tools
-        run: python -m pip install --upgrade pip build
-      - name: Build package
-        run: python -m build --sdist --wheel
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-
   notify:
     name: "Notify socials"
-    needs: [deploy, create_tag, docs]
-    if: always() && needs.deploy.result == 'success'
+    needs: [create_tag]
+    if: needs.create_tag.outputs.created == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Repository status
-        id: repo_status
-        shell: bash
-        run: |
-          if ${{ startsWith(github.ref, 'refs/tags/') }} ; then
-            TAG_RELEASE=${GITHUB_REF/refs\/tags\//}
-          elif [ -n "${{ needs.create_tag.outputs.version }}" ]; then
-            TAG_RELEASE="${{ needs.create_tag.outputs.version }}"
-          else
-            TAG_RELEASE="${{ github.event.inputs.deploy_version }}"
-          fi
-          echo "tag=${TAG_RELEASE}" >> $GITHUB_OUTPUT
       - name: Discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!\nTo install `sudo pip3 install jetson-stats==${{ steps.repo_status.outputs.tag }}`"
+          args: "jetson-stats **${{ needs.create_tag.outputs.version }}** has been deployed!\nTo install `sudo pip3 install jetson-stats==${{ needs.create_tag.outputs.version }}`"
       - name: Send telegram message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            jetson-stats **${{ steps.repo_status.outputs.tag }}** has been deployed!
+            jetson-stats **${{ needs.create_tag.outputs.version }}** has been deployed!
 
             See changes: https://github.com/${{ github.repository }}/releases/latest
