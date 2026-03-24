@@ -2,7 +2,15 @@ name: CI & CD
 
 # Reference:
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      deploy_version:
+        description: 'Version to deploy (e.g. 7.1.0). Leave empty to skip deploy.'
+        required: false
+        default: ''
 
 env:
   docker_image_name: rbonghi/jetson_stats
@@ -219,25 +227,22 @@ jobs:
       always() &&
       needs.build.result == 'success' &&
       needs.docker.result == 'success' &&
-      (startsWith(github.ref, 'refs/tags/') || needs.create_tag.outputs.created == 'true')
+      (startsWith(github.ref, 'refs/tags/') || needs.create_tag.outputs.created == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_version != ''))
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.x"
-      - name: Install dependencies
-        run: |
-          # sudo -H python -m pip install --upgrade pip
-          sudo -H pip install setuptools wheel twine
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          sudo python setup.py sdist
-          twine upload dist/*
+      - name: Install build tools
+        run: python -m pip install --upgrade pip build
+      - name: Build package
+        run: python -m build --sdist --wheel
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
   notify:
     name: "Notify socials"
@@ -251,8 +256,10 @@ jobs:
         run: |
           if ${{ startsWith(github.ref, 'refs/tags/') }} ; then
             TAG_RELEASE=${GITHUB_REF/refs\/tags\//}
-          else
+          elif [ -n "${{ needs.create_tag.outputs.version }}" ]; then
             TAG_RELEASE="${{ needs.create_tag.outputs.version }}"
+          else
+            TAG_RELEASE="${{ github.event.inputs.deploy_version }}"
           fi
           echo "tag=${TAG_RELEASE}" >> $GITHUB_OUTPUT
       - name: Discord notification
