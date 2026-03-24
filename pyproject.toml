@@ -67,7 +67,7 @@ requires-python = ">=3.7"
 dependencies = [
     "smbus2",
     "distro",
-    "nvidia-ml-py>=13.590.48",
+    "nvidia-ml-py>=13.595.45",
 ]
 
 [project.urls]
