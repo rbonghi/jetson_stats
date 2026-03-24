@@ -155,7 +155,7 @@ jobs:
       - name: Deploy on branch
         if: startsWith(github.ref, 'refs/heads/master') || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '.dev') && !contains(github.ref, 'rc'))
         # Follow: https://github.com/marketplace/actions/deploy-to-github-pages
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+        uses: JamesIves/github-pages-deploy-action@releases/v4
         with:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
