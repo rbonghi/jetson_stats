@@ -32,24 +32,9 @@ jobs:
           name: dist
           path: dist/
 
-  publish-pypi:
-    name: Publish to PyPI
-    needs: [build]
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-
   github-release:
     name: Create GitHub Release
-    needs: [build, publish-pypi]
+    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -58,7 +43,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
@@ -69,3 +54,18 @@ jobs:
           gh release create "${{ github.ref_name }}" dist/* \
             --title "${{ github.ref_name }}" \
             --generate-notes
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build, github-release]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
