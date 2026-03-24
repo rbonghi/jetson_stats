@@ -24,8 +24,11 @@ Main configuration is in pyproject.toml (PEP 517/518/621 compliant).
 from setuptools import setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
+from setuptools.command.build_py import build_py
 import os
 import sys
+import shutil
+import subprocess as sp_mod
 import logging
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
@@ -57,6 +60,69 @@ def is_docker():
 
 def is_superuser():
     return os.getuid() == 0
+
+
+def _run_service_install(source_folder):
+    """Install jtop system service and config files using only stdlib.
+
+    This is used by the build_py override so it works inside isolated
+    PEP 517 build environments where jtop's runtime dependencies
+    (smbus2, distro, …) are *not* available.
+    """
+    service_src = os.path.join(source_folder, 'services', 'jtop.service')
+    service_dst = '/etc/systemd/system/jtop.service'
+    env_src = os.path.join(source_folder, 'scripts', 'jtop_env.sh')
+    env_dst = '/etc/profile.d/jtop_env.sh'
+    pipe_path = '/run/jtop.sock'
+
+    # --- Uninstall previous service ---
+    if os.path.isfile(service_dst) or os.path.islink(service_dst):
+        sp_mod.call(['systemctl', 'stop', 'jtop.service'])
+        sp_mod.call(['systemctl', 'disable', 'jtop.service'])
+        os.remove(service_dst)
+        sp_mod.call(['systemctl', 'daemon-reload'])
+    if os.path.isdir(pipe_path):
+        shutil.rmtree(pipe_path)
+    elif os.path.exists(pipe_path):
+        os.remove(pipe_path)
+    if os.path.isfile(env_dst):
+        os.remove(env_dst)
+
+    # --- Install service file ---
+    if os.path.isfile(service_src):
+        shutil.copy2(service_src, service_dst)
+        log.info("Installed %s -> %s", service_src, service_dst)
+        sp_mod.call(['systemctl', 'daemon-reload'])
+        sp_mod.call(['systemctl', 'enable', 'jtop.service'])
+        # start may fail during wheel-build (jtop binary not yet installed)
+        sp_mod.call(['systemctl', 'start', 'jtop.service'])
+
+    # --- Install env script ---
+    if os.path.isfile(env_src):
+        shutil.copy2(env_src, env_dst)
+        log.info("Installed %s -> %s", env_src, env_dst)
+
+    # --- Set permissions ---
+    user = os.environ.get('SUDO_USER', '') or 'root'
+    sp_mod.call(['groupadd', 'jtop'])
+    sp_mod.call(['usermod', '-a', '-G', 'jtop', user])
+
+
+class JTOPBuildPy(build_py):
+    """Extend build_py to install system service during PEP 517 builds.
+
+    Modern pip always builds a wheel and then installs it, so the legacy
+    ``install`` cmdclass never fires.  By hooking into ``build_py`` (which
+    *is* executed during ``bdist_wheel``), we can install the systemd
+    service, env script, and group as part of ``sudo pip install``.
+    """
+
+    def run(self):
+        build_py.run(self)
+        if is_superuser() and not is_virtualenv() and not is_docker():
+            folder = os.path.dirname(os.path.realpath(__file__))
+            log.info("Installing jtop system service …")
+            _run_service_install(folder)
 
 
 def pypi_installer(installer, obj, copy):
@@ -138,6 +204,7 @@ if __name__ == '__main__':
     setup(
         # Custom commands for backward compatibility
         cmdclass={
+            'build_py': JTOPBuildPy,
             'develop': JTOPDevelopCommand,
             'install': JTOPInstallCommand,
         },

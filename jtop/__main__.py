@@ -50,8 +50,8 @@ JTOP_LOG_NAME = 'jtop-error.log'
 
 def _is_virtualenv():
     return bool(
-        hasattr(sys, 'real_prefix') or
-        (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+        hasattr(sys, 'real_prefix')
+        or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
     )
 
 
@@ -68,20 +68,32 @@ def _is_docker():
 
 
 def _auto_install_if_needed():
-    """Auto-install jtop system service when running as root and service is missing.
+    """Ensure the jtop system service is installed and running.
 
-    On modern pip (PEP 517), setup.py's custom install command is never invoked,
-    so service installation must happen outside the pip install flow.  This
-    function bridges that gap: the very first ``sudo jtop`` call detects the
-    missing service and sets everything up automatically.
+    Handles two scenarios that arise with modern pip (PEP 517):
+
+    1. Service file was installed during ``build_py`` but could not be
+       *started* because the ``jtop`` console-script didn't exist yet
+       at build time.  → just start it now.
+    2. Service file is missing entirely (e.g. installed from a pre-built
+       wheel, or build didn't run as root).  → full install.
     """
     service_path = '/etc/systemd/system/jtop.service'
-    if os.path.isfile(service_path) or os.path.islink(service_path):
+    service_file_exists = os.path.isfile(service_path) or os.path.islink(service_path)
+
+    if service_file_exists:
+        # Service was installed (likely during build_py); start it if needed.
+        if os.geteuid() == 0 and not _is_virtualenv() and not _is_docker():
+            if os.system('systemctl is-active --quiet jtop.service') != 0:
+                os.system('systemctl start jtop.service')
         return
+
     if os.geteuid() != 0:
         return
     if _is_virtualenv() or _is_docker():
         return
+
+    # Full install — service file is missing
     print("jtop service not found — auto-installing …")
     install_handler = logging.StreamHandler(sys.stderr)
     install_handler.setFormatter(logging.Formatter('[%(levelname)s] %(name)s - %(message)s'))
