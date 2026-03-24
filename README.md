@@ -66,6 +66,7 @@ sudo pip3 install --break-system-packages git+https://github.com/rbonghi/jetson_
 
 ### Option 4: Run `jtop` with or without `sudo`, and install without `--break-system-packages`
 This installation method works on all Jetson Developer Kits.
+_NOTE: For Jetson AGX Thor Dev Kit follow this_
 ```console
 sudo -v
 curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash
