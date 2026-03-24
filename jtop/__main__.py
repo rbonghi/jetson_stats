@@ -48,6 +48,72 @@ LOOP_SECONDS = 5
 JTOP_LOG_NAME = 'jtop-error.log'
 
 
+def _is_virtualenv():
+    return bool(
+        hasattr(sys, 'real_prefix') or
+        (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+    )
+
+
+def _is_docker():
+    if os.path.exists('/.dockerenv'):
+        return True
+    cgroup = '/proc/self/cgroup'
+    if os.path.isfile(cgroup):
+        with open(cgroup) as f:
+            for line in f:
+                if 'docker' in line or 'buildkit' in line:
+                    return True
+    return False
+
+
+def _auto_install_if_needed():
+    """Auto-install jtop system service when running as root and service is missing.
+
+    On modern pip (PEP 517), setup.py's custom install command is never invoked,
+    so service installation must happen outside the pip install flow.  This
+    function bridges that gap: the very first ``sudo jtop`` call detects the
+    missing service and sets everything up automatically.
+    """
+    service_path = '/etc/systemd/system/jtop.service'
+    if os.path.isfile(service_path) or os.path.islink(service_path):
+        return
+    if os.geteuid() != 0:
+        return
+    if _is_virtualenv() or _is_docker():
+        return
+    print("jtop service not found — auto-installing …")
+    install_handler = logging.StreamHandler(sys.stderr)
+    install_handler.setFormatter(logging.Formatter('[%(levelname)s] %(name)s - %(message)s'))
+    root_logger = logging.getLogger()
+    root_logger.addHandler(install_handler)
+    prev_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    package_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    is_developer = os.path.isdir(os.path.join(package_root, 'tests'))
+    copy = not is_developer
+    if not is_developer:
+        package_root = None
+    try:
+        from .core.jetson_variables import install_variables
+        from .service import set_service_permission, install_service
+        install_variables(package_root, copy=copy)
+        set_service_permission()
+        install_service(package_root, copy=copy)
+        print("jtop.service installed and enabled")
+    except JtopException as e:
+        print("Auto-install failed: {}".format(e))
+        print("Please run: sudo jtop --install-service")
+        sys.exit(1)
+    except Exception as e:
+        print("Auto-install failed: {}".format(e))
+        print("Please run: sudo jtop --install-service")
+        sys.exit(1)
+    finally:
+        root_logger.removeHandler(install_handler)
+        root_logger.setLevel(prev_level)
+
+
 def warning_messages(jetson, no_warnings=False):
     if no_warnings:
         return
@@ -131,6 +197,8 @@ def main():
             print(e)
         # Close service
         sys.exit(0)
+    # Auto-install service when running as root on a bare host
+    _auto_install_if_needed()
     # Initialize logging level
     logging.basicConfig()
     # Convert refresh to second
@@ -190,6 +258,11 @@ def main():
         pass
     except JtopException as e:
         print(e)
+        if not os.path.isfile('/etc/systemd/system/jtop.service'):
+            print("\nThe jtop service is not installed. To set it up, run:")
+            print("  sudo jtop --install-service")
+            print("or simply:")
+            print("  sudo jtop")
 
 
 if __name__ == "__main__":
