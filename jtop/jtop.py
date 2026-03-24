@@ -1280,7 +1280,14 @@ sudo jtop --install-service""".format(
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """ Exit function for 'with' statement """
-        if exc_tb is not None:
-            return False
-        return True
+        try:
+            try:
+                self.close()
+            except Exception:
+                pass
+
+        finally:
+            if exc_tb is not None:
+                return False
+            return True
 # EOF
