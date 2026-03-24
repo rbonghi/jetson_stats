@@ -102,6 +102,8 @@ def _emc_data(mem_data, online, size):
         'mright': unit_to_string(mem_data['max'], 'k', 'Hz')
         if size >= EMC_GAUGE_SHOW_MAX_WIDTH else '',
     }
+
+
 def emc_gauge(stdscr, pos_y, pos_x, size, mem_data):
     if size < EMC_GAUGE_MIN_WIDTH:
         return
@@ -270,7 +272,6 @@ class MEM(Page):
         plot_name_info(self.stdscr, pos_y + 5, pos_x + 2, 'Free', free, spacing=3)
         total = size_to_string(self.jetson.memory['RAM']['tot'], 'k')
         plot_name_info(self.stdscr, pos_y + 6, pos_x + 2, 'TOT', total, spacing=4, color=curses.A_BOLD)
-
 
     def print_zram(self, stdscr, idx, swap, pos_y, pos_x, size_h, size_w):
         name, swap = swap
