@@ -186,6 +186,7 @@ def _merge_split_fans(pwm_files, rpm_only):
             pwm_files[fan_name]['rpm'] = unmatched_rpm[rpm_name]['rpm']
             pwm_files[fan_name]['rpm_path'] = unmatched_rpm[rpm_name]['path']
 
+
 def _merge_split_fans(pwm_files, rpm_only):
     if not pwm_files or not rpm_only:
         return pwm_files
