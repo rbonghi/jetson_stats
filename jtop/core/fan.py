@@ -73,14 +73,21 @@ def _collect_hwmon_fans(root_dir):
     pwm_files = {}
     rpm_only = {}
 
-    for entry in sorted(os.listdir(root_dir)):
+    try:
+        entries = sorted(os.listdir(root_dir))
+    except OSError as e:
+        logger.warning("Unable to read hwmon root %s: %s", root_dir, e)
+        return {}, {}
+
+    for entry in entries:
         full_path = os.path.join(root_dir, entry)
         if not os.path.isdir(full_path):
             continue
 
         try:
             files = sorted(os.listdir(full_path))
-        except OSError:
+        except OSError as e:
+            logger.warning("Unable to read hwmon node %s: %s", full_path, e)
             continue
 
         name = _read_name(full_path, entry)
@@ -111,6 +118,7 @@ def _collect_hwmon_fans(root_dir):
                 pwm_files[name]['pwm_enable'] = fan_enable_paths
             if fan_rpm_path:
                 pwm_files[name]['rpm'] = fan_rpm_path
+
             logger.info("Fan %s(%d) found in %s", name, len(fan_device_paths), full_path)
             if fan_rpm_path:
                 logger.info("RPM %s(%d) found in %s", name, len(fan_rpm_path), full_path)
@@ -128,25 +136,55 @@ def _collect_hwmon_fans(root_dir):
     return pwm_files, rpm_only
 
 
-def read_nvfancontrol_status():
-    status = {}
-    path = "/var/lib/nvfancontrol/status"
-    if not os.path.isfile(path):
-        return status
+def _merge_split_fans(pwm_files, rpm_only):
+    if not pwm_files or not rpm_only:
+        return pwm_files
 
-    with open(path, "r") as f:
-        for line in f:
-            parts = [p.strip() for p in line.strip().split(":")]
-            if len(parts) != 3:
-                continue
-            fan_name, key, value = parts
-            fan_name = fan_name.lower()
-            key = key.replace("FAN_", "").lower()
-            if fan_name not in status:
-                status[fan_name] = {}
-            status[fan_name][key] = value
-    return status
+    unmatched_rpm = dict(rpm_only)
 
+    # First try to match by shared of_node or device path.
+    for fan_name, fan_data in pwm_files.items():
+        if 'rpm' in fan_data:
+            continue
+
+        best_match = None
+        fan_of_node = fan_data.get('of_node', '')
+        fan_device = fan_data.get('device', '')
+
+        for rpm_name, rpm_data in unmatched_rpm.items():
+            rpm_of_node = rpm_data.get('of_node', '')
+            rpm_device = rpm_data.get('device', '')
+
+            if fan_of_node and rpm_of_node and fan_of_node == rpm_of_node:
+                best_match = rpm_name
+                break
+            if fan_device and rpm_device and fan_device == rpm_device:
+                best_match = rpm_name
+                break
+
+        if best_match is not None:
+            fan_data['rpm'] = unmatched_rpm[best_match]['rpm']
+            fan_data['rpm_path'] = unmatched_rpm[best_match]['path']
+            logger.info("Matched split RPM node %s -> fan %s by topology", best_match, fan_name)
+            del unmatched_rpm[best_match]
+
+    # Thor fallback: one PWM fan and one standalone RPM node.
+    if is_thor() and len(pwm_files) == 1 and len(unmatched_rpm) == 1:
+        fan_name = next(iter(pwm_files))
+        rpm_name = next(iter(unmatched_rpm))
+        if 'rpm' not in pwm_files[fan_name]:
+            pwm_files[fan_name]['rpm'] = unmatched_rpm[rpm_name]['rpm']
+            pwm_files[fan_name]['rpm_path'] = unmatched_rpm[rpm_name]['path']
+            logger.info("Matched Thor split RPM node %s -> fan %s", rpm_name, fan_name)
+            del unmatched_rpm[rpm_name]
+
+    # Generic fallback: if still exactly one of each, merge them.
+    if len(pwm_files) == 1 and len(unmatched_rpm) == 1:
+        fan_name = next(iter(pwm_files))
+        rpm_name = next(iter(unmatched_rpm))
+        if 'rpm' not in pwm_files[fan_name]:
+            pwm_files[fan_name]['rpm'] = unmatched_rpm[rpm_name]['rpm']
+            pwm_files[fan_name]['rpm_path'] = unmatched_rpm[rpm_name]['path']
 
 def _merge_split_fans(pwm_files, rpm_only):
     if not pwm_files or not rpm_only:
@@ -199,6 +237,13 @@ def _merge_split_fans(pwm_files, rpm_only):
             pwm_files[fan_name]['rpm_path'] = unmatched_rpm[rpm_name]['path']
             logger.info("Matched split RPM node %s -> fan %s by single-device fallback", rpm_name, fan_name)
             del unmatched_rpm[rpm_name]
+
+    for rpm_name, rpm_data in unmatched_rpm.items():
+        logger.warning(
+            "Unmatched RPM-only hwmon node %s at %s",
+            rpm_name,
+            rpm_data.get('path', '<unknown>'),
+        )
 
     return pwm_files
 
