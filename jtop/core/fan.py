@@ -15,6 +15,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# Jetson Thor note:
+# The fan is split across multiple hwmon nodes rather than exposed
+# entirely under one directory. For example, one hwmon node (often "pwmfan")
+# can provide pwm1 / pwm1_enable, while a separate node (often "pwm_tach")
+# provides the RPM tachometer. We treat these as one logical fan when pairing
+# PWM control with RPM reporting.
+
 import re
 import os
 # Logging
@@ -23,6 +30,7 @@ import logging
 from .command import Command
 from .common import cat, GenericInterface
 from .exceptions import JtopException
+from .hw_detect import is_thor
 # Create logger
 logger = logging.getLogger(__name__)
 
@@ -30,9 +38,11 @@ COMMAND_TIMEOUT = 4.0
 FAN_MANUAL_NAME = 'manual'
 FAN_TEMP_CONTROL_NAME = 'temp_control'
 FAN_PWM_RE = re.compile(r'^pwm\d+$')
+FAN_PWM_ENABLE_RE = re.compile(r'^pwm\d+_enable$')
 FAN_NVFAN_NAME_RE = re.compile(r'^<FAN (?P<num>\d+)>$')
 FAN_NVFAN_OPTIONS_RE = re.compile(r'FAN_(?P<type>\w+) (?P<value>\w+) {$')
 FAN_NVFAN_DEFAULT_RE = re.compile(r'FAN_DEFAULT_(?P<type>\w+) (?P<value>\w+)')
+FAN_KICKSTART_RE = re.compile(r'^KICKSTART_PWM (?P<value>\d+)$')
 # Fan configurations
 FAN_PWM_CAP = 255
 
@@ -45,52 +55,207 @@ def PWMtoValue(value, pwm_cap=FAN_PWM_CAP):
     return float(value * 100 / pwm_cap)
 
 
-def get_all_rpm_system(root_dir):
+def _read_name(full_path, fallback):
+    name_file = os.path.join(full_path, 'name')
+    return cat(name_file).strip() if os.path.isfile(name_file) else fallback
+
+
+def _readlink_safe(path):
+    try:
+        if os.path.islink(path):
+            return os.path.realpath(path)
+    except OSError:
+        pass
+    return ''
+
+
+def _collect_hwmon_fans(root_dir):
     pwm_files = {}
-    for dir in os.listdir(root_dir):
-        full_path = os.path.join(root_dir, dir)
-        if os.path.isdir(full_path):
-            # Find all pwm in folder
-            for file in os.listdir(full_path):
-                if 'rpm' == file:
-                    name_file = os.path.join(full_path, 'name')
-                    name = cat(name_file).strip() if os.path.isfile(name_file) else dir
-                    pwm_files[name] = os.path.join(full_path, file)
-                    logger.info("RPM {name} found in {root_path}".format(name=name, root_path=full_path))
+    rpm_only = {}
+
+    try:
+        entries = sorted(os.listdir(root_dir))
+    except OSError as e:
+        logger.warning("Unable to read hwmon root %s: %s", root_dir, e)
+        return {}, {}
+
+    for entry in entries:
+        full_path = os.path.join(root_dir, entry)
+        if not os.path.isdir(full_path):
+            continue
+
+        try:
+            files = sorted(os.listdir(full_path))
+        except OSError as e:
+            logger.warning("Unable to read hwmon node %s: %s", full_path, e)
+            continue
+
+        name = _read_name(full_path, entry)
+
+        fan_device_paths = []
+        fan_enable_paths = []
+        fan_rpm_path = []
+
+        for file in files:
+            file_path = os.path.join(full_path, file)
+
+            if FAN_PWM_RE.match(file) or file == 'target_pwm':
+                fan_device_paths.append(file_path)
+            elif FAN_PWM_ENABLE_RE.match(file):
+                fan_enable_paths.append(file_path)
+            elif file in ('rpm', 'rpm_measured', 'fan1_input'):
+                fan_rpm_path.append(file_path)
+
+        if fan_device_paths:
+            pwm_files[name] = {
+                'path': full_path,
+                'pwm': fan_device_paths,
+                'hwmon_name': name,
+                'of_node': _readlink_safe(os.path.join(full_path, 'of_node')),
+                'device': _readlink_safe(os.path.join(full_path, 'device')),
+            }
+            if fan_enable_paths:
+                pwm_files[name]['pwm_enable'] = fan_enable_paths
+            if fan_rpm_path:
+                pwm_files[name]['rpm'] = fan_rpm_path
+
+            logger.info("Fan %s(%d) found in %s", name, len(fan_device_paths), full_path)
+            if fan_rpm_path:
+                logger.info("RPM %s(%d) found in %s", name, len(fan_rpm_path), full_path)
+
+        elif fan_rpm_path:
+            rpm_only[name] = {
+                'path': full_path,
+                'rpm': fan_rpm_path,
+                'hwmon_name': name,
+                'of_node': _readlink_safe(os.path.join(full_path, 'of_node')),
+                'device': _readlink_safe(os.path.join(full_path, 'device')),
+            }
+            logger.info("Standalone RPM %s(%d) found in %s", name, len(fan_rpm_path), full_path)
+
+    return pwm_files, rpm_only
+
+
+def _merge_split_fans(pwm_files, rpm_only):
+    if not pwm_files or not rpm_only:
+        return pwm_files
+
+    unmatched_rpm = dict(rpm_only)
+
+    # First try to match by shared of_node or device path.
+    for fan_name, fan_data in pwm_files.items():
+        if 'rpm' in fan_data:
+            continue
+
+        best_match = None
+        fan_of_node = fan_data.get('of_node', '')
+        fan_device = fan_data.get('device', '')
+
+        for rpm_name, rpm_data in unmatched_rpm.items():
+            rpm_of_node = rpm_data.get('of_node', '')
+            rpm_device = rpm_data.get('device', '')
+
+            if fan_of_node and rpm_of_node and fan_of_node == rpm_of_node:
+                best_match = rpm_name
+                break
+            if fan_device and rpm_device and fan_device == rpm_device:
+                best_match = rpm_name
+                break
+
+        if best_match is not None:
+            fan_data['rpm'] = unmatched_rpm[best_match]['rpm']
+            fan_data['rpm_path'] = unmatched_rpm[best_match]['path']
+            logger.info("Matched split RPM node %s -> fan %s by topology", best_match, fan_name)
+            del unmatched_rpm[best_match]
+
+    # Thor fallback: one PWM fan and one standalone RPM node.
+    if is_thor() and len(pwm_files) == 1 and len(unmatched_rpm) == 1:
+        fan_name = next(iter(pwm_files))
+        rpm_name = next(iter(unmatched_rpm))
+        if 'rpm' not in pwm_files[fan_name]:
+            pwm_files[fan_name]['rpm'] = unmatched_rpm[rpm_name]['rpm']
+            pwm_files[fan_name]['rpm_path'] = unmatched_rpm[rpm_name]['path']
+            logger.info("Matched Thor split RPM node %s -> fan %s", rpm_name, fan_name)
+            del unmatched_rpm[rpm_name]
+
+    # Generic fallback: if still exactly one of each, merge them.
+    if len(pwm_files) == 1 and len(unmatched_rpm) == 1:
+        fan_name = next(iter(pwm_files))
+        rpm_name = next(iter(unmatched_rpm))
+        if 'rpm' not in pwm_files[fan_name]:
+            pwm_files[fan_name]['rpm'] = unmatched_rpm[rpm_name]['rpm']
+            pwm_files[fan_name]['rpm_path'] = unmatched_rpm[rpm_name]['path']
+
+
+def _merge_split_fans(pwm_files, rpm_only):
+    if not pwm_files or not rpm_only:
+        return pwm_files
+
+    unmatched_rpm = dict(rpm_only)
+
+    # First try to match by shared of_node or device path.
+    for fan_name, fan_data in pwm_files.items():
+        if 'rpm' in fan_data:
+            continue
+
+        best_match = None
+        fan_of_node = fan_data.get('of_node', '')
+        fan_device = fan_data.get('device', '')
+
+        for rpm_name, rpm_data in unmatched_rpm.items():
+            rpm_of_node = rpm_data.get('of_node', '')
+            rpm_device = rpm_data.get('device', '')
+
+            if fan_of_node and rpm_of_node and fan_of_node == rpm_of_node:
+                best_match = rpm_name
+                break
+            if fan_device and rpm_device and fan_device == rpm_device:
+                best_match = rpm_name
+                break
+
+        if best_match is not None:
+            fan_data['rpm'] = unmatched_rpm[best_match]['rpm']
+            fan_data['rpm_path'] = unmatched_rpm[best_match]['path']
+            logger.info("Matched split RPM node %s -> fan %s by topology", best_match, fan_name)
+            del unmatched_rpm[best_match]
+
+    # Thor fallback: one PWM fan and one standalone RPM node.
+    if is_thor() and len(pwm_files) == 1 and len(unmatched_rpm) == 1:
+        fan_name = next(iter(pwm_files))
+        rpm_name = next(iter(unmatched_rpm))
+        if 'rpm' not in pwm_files[fan_name]:
+            pwm_files[fan_name]['rpm'] = unmatched_rpm[rpm_name]['rpm']
+            pwm_files[fan_name]['rpm_path'] = unmatched_rpm[rpm_name]['path']
+            logger.info("Matched Thor split RPM node %s -> fan %s", rpm_name, fan_name)
+            del unmatched_rpm[rpm_name]
+
+    # Generic fallback: if still exactly one of each, merge them.
+    if len(pwm_files) == 1 and len(unmatched_rpm) == 1:
+        fan_name = next(iter(pwm_files))
+        rpm_name = next(iter(unmatched_rpm))
+        if 'rpm' not in pwm_files[fan_name]:
+            pwm_files[fan_name]['rpm'] = unmatched_rpm[rpm_name]['rpm']
+            pwm_files[fan_name]['rpm_path'] = unmatched_rpm[rpm_name]['path']
+            logger.info("Matched split RPM node %s -> fan %s by single-device fallback", rpm_name, fan_name)
+            del unmatched_rpm[rpm_name]
+
+    for rpm_name, rpm_data in unmatched_rpm.items():
+        logger.warning(
+            "Unmatched RPM-only hwmon node %s at %s",
+            rpm_name,
+            rpm_data.get('path', '<unknown>'),
+        )
+
     return pwm_files
 
 
 def get_all_cooling_system(root_dir):
-    pwm_files = {}
     if not os.path.isdir(root_dir):
-        logger.error("Folder {root_dir} doesn't exist".format(root_dir=root_dir))
-        return pwm_files
-    # Fin all fans
-    for dir in os.listdir(root_dir):
-        full_path = os.path.join(root_dir, dir)
-        if os.path.isdir(full_path):
-            fan_device_paths = []
-            fan_rpm_path = []
-            # Find all pwm in folder
-            for file in os.listdir(full_path):
-                if FAN_PWM_RE.match(file) or file == 'target_pwm':
-                    fan_device_paths += [os.path.join(full_path, file)]
-                # Check if there are rpm values
-                if file == 'rpm_measured':
-                    fan_rpm_path += [os.path.join(full_path, file)]
-            # If there are pwm is added in list
-            if fan_device_paths:
-                name_file = os.path.join(full_path, 'name')
-                name = cat(name_file).strip() if os.path.isfile(name_file) else dir
-                pwm_files[name] = {'path': full_path, 'pwm': fan_device_paths}
-                logger.info("Fan {name}({num}) found in {root_path}".format(name=name, root_path=full_path, num=len(fan_device_paths)))
-            if fan_rpm_path:
-                pwm_files[name]['rpm'] = fan_rpm_path
-                logger.info("RPM {name}({num}) found in {root_path}".format(name=name, root_path=full_path, num=len(fan_device_paths)))
-    # Find all rpm systems
-    rpm_list = get_all_rpm_system(root_dir)
-    for fan, rpm in zip(pwm_files, rpm_list):
-        pwm_files[fan]['rpm'] = [rpm_list[rpm]]
+        logger.error("Folder %s doesn't exist", root_dir)
+        return {}
+
+    pwm_files, rpm_only = _collect_hwmon_fans(root_dir)
+    pwm_files = _merge_split_fans(pwm_files, rpm_only)
     return pwm_files
 
 
@@ -114,16 +279,14 @@ def get_all_legacy_fan():
     for file in os.listdir(root_path):
         if file == 'target_pwm':
             fan_device_paths += [os.path.join(root_path, file)]
-        # Check if there are rpm values
-        elif file == 'rpm_measured':
+        elif file in ('rpm', 'rpm_measured', 'fan1_input'):
             fan_rpm_path += [os.path.join(root_path, file)]
-    # If there are pwm is added in list
     if fan_device_paths:
         pwm_files[name] = {'path': root_path, 'pwm': fan_device_paths}
-        logger.info("Found legacy FAN {name}({num}) found in {root_path}".format(name=name, root_path=root_path, num=len(fan_device_paths)))
-    if fan_rpm_path:
+        logger.info("Found legacy FAN %s(%d) found in %s", name, len(fan_device_paths), root_path)
+    if fan_rpm_path and name in pwm_files:
         pwm_files[name]['rpm'] = fan_rpm_path
-        logger.info("Legacy RPM {name}({num}) found in {root_path}".format(name=name, root_path=root_path, num=len(fan_device_paths)))
+        logger.info("Legacy RPM %s(%d) found in %s", name, len(fan_rpm_path), root_path)
     return pwm_files
 
 
@@ -133,7 +296,9 @@ def nvfancontrol_query():
         nvpmodel_p = Command(['nvfancontrol', '-q'])
         lines = nvpmodel_p(timeout=COMMAND_TIMEOUT)
         for line in lines:
-            values = line.split(':')
+            values = [v.strip() for v in line.split(':')]
+            if len(values) < 3:
+                continue
             fan_name = values[0].lower()
             query = values[1].replace("FAN_", "").lower()
             if fan_name not in status:
@@ -144,39 +309,51 @@ def nvfancontrol_query():
     return status
 
 
+def _nvfancontrol_paths():
+    path = "/etc/nvfancontrol.conf"
+    return path if os.path.isfile(path) else ""
+
+
 def decode_nvfancontrol():
     nvfan = {}
     current_fan = ''
-    if os.path.isfile("/etc/nvfancontrol.conf"):
-        with open("/etc/nvfancontrol.conf", 'r') as fp:
+    conf_path = _nvfancontrol_paths()
+    if conf_path:
+        with open(conf_path, 'r') as fp:
             for line in fp:
-                match_name = re.search(FAN_NVFAN_NAME_RE, line.strip())
-                match_values = re.search(FAN_NVFAN_OPTIONS_RE, line.strip())
+                stripped = line.strip()
+                match_name = re.search(FAN_NVFAN_NAME_RE, stripped)
+                match_values = re.search(FAN_NVFAN_OPTIONS_RE, stripped)
+                match_kickstart = re.search(FAN_KICKSTART_RE, stripped)
+
                 if match_name:
                     parsed_line = match_name.groupdict()
                     current_fan = 'fan{num}'.format(num=parsed_line['num'])
                     nvfan[current_fan] = {}
-                elif match_values:
+                elif current_fan and match_values:
                     parsed_line = match_values.groupdict()
                     type_name = parsed_line['type'].lower()
                     if type_name not in nvfan[current_fan]:
                         nvfan[current_fan][type_name] = []
                     nvfan[current_fan][type_name] += [parsed_line['value']]
+                elif current_fan and match_kickstart:
+                    nvfan[current_fan]['kickstart_pwm'] = int(match_kickstart.group('value'))
     return nvfan
 
 
 def change_nvfancontrol_default(name, value):
-    with open("/etc/nvfancontrol.conf", "r") as f:
+    conf_path = _nvfancontrol_paths()
+    if not conf_path:
+        return
+    with open(conf_path, "r") as f:
         lines = f.readlines()
-    with open("/etc/nvfancontrol.conf", "w") as f:
+    with open(conf_path, "w") as f:
         for line in lines:
             match_defaults = re.search(FAN_NVFAN_DEFAULT_RE, line.strip())
             if match_defaults:
                 parsed_line = match_defaults.groupdict()
                 if name.upper() == parsed_line['type']:
-                    # Override line with new value
                     line = line.replace(parsed_line['value'], value)
-            # Print line
             f.write(line)
 
 
@@ -188,168 +365,93 @@ def nvfancontrol_is_active():
         return False
 
 
+def _merge_nvfan_metadata(fan_list, nv_fan_modes):
+    if not fan_list or not nv_fan_modes:
+        return
+
+    # If there is only one discovered fan and one nvfancontrol fan, pair directly.
+    if len(fan_list) == 1 and len(nv_fan_modes) == 1:
+        fan_name = next(iter(fan_list))
+        nv_name = next(iter(nv_fan_modes))
+        fan_list[fan_name].update(nv_fan_modes[nv_name])
+        if 'profile' in fan_list[fan_name] and FAN_MANUAL_NAME not in fan_list[fan_name]['profile']:
+            fan_list[fan_name]['profile'] += [FAN_MANUAL_NAME]
+        return
+
+    # Prefer exact key matches if names line up.
+    for fan_name in fan_list:
+        if fan_name in nv_fan_modes:
+            fan_list[fan_name].update(nv_fan_modes[fan_name])
+            if 'profile' in fan_list[fan_name] and FAN_MANUAL_NAME not in fan_list[fan_name]['profile']:
+                fan_list[fan_name]['profile'] += [FAN_MANUAL_NAME]
+
+    # Fallback to positional pairing only for any still-unmatched fans.
+    remaining_fans = [f for f in fan_list if 'profile' not in fan_list[f]]
+    remaining_nv = [n for n in nv_fan_modes if n not in fan_list]
+    for fan_name, nv_name in zip(remaining_fans, remaining_nv):
+        fan_list[fan_name].update(nv_fan_modes[nv_name])
+        if 'profile' in fan_list[fan_name] and FAN_MANUAL_NAME not in fan_list[fan_name]['profile']:
+            fan_list[fan_name]['profile'] += [FAN_MANUAL_NAME]
+
+
 class Fan(GenericInterface):
     """
     This class enable to control your fan or set of fan.
     Please read the documentation on :py:attr:`~jtop.jtop.fan`
-
-    .. code-block:: python
-
-        with jtop() as jetson:
-            if jetson.ok():
-                jetson.fan.set_profile("tegra_fan", "manual")
-
-    Below all methods available using the :py:attr:`~jtop.jtop.fan` attribute
     """
 
     def __init__(self):
         super(Fan, self).__init__()
-        # list of all profiles in self._init (check services)
 
     def all_profiles(self, name):
-        """
-        Return a list of all profiles available for a fan.
-
-        * **Before** Jetpack 5
-            * temp_control
-            * manual
-        * **After** Jetpack 5  jtop map `nvfancontrol <https://docs.nvidia.com/jetson/archives/r34.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html#fan-profile-control>`_
-            * Quiet
-            * Cool
-            * Manual (Stop nvfancontrol service)
-
-        All fan are always with `Manual` profile option.
-
-        :param name: Name of Fan
-        :type name: str
-        :raises JtopException: Fan name doesn't exist
-        :return: List of all profiles available
-        :rtype: list
-        """  # noqa
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         return self._init[name]
 
     def set_profile(self, name, profile):
-        """
-        Set a new profile for a fan.
-        Check which profile is available with :py:func:`~all_profiles`.
-
-        :param name: Name of Fan
-        :type name: str
-        :param profile: Profile name
-        :type profile: str
-        :raises JtopException: Fan name doesn't exist or wrong profile
-        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         if profile not in self.all_profiles(name):
             all_profiles = ' '.join(self.all_profiles(name))
             raise JtopException("Profile \"{profile}\" does not exist for Fan \"{name}\". Available: {all_profiles}".format(
                 profile=profile, name=name, all_profiles=all_profiles))
-        # Skip if the new profile is the same of the previous
         if profile == self._data[name]['profile']:
             return
-        # Set new fan profile
         self._controller.put({'fan': {'command': 'profile', 'name': name, 'profile': profile}})
 
     def get_profile(self, name):
-        """
-        Return the current profile is enabled on fan. This value is also readable from :py:attr:`~jtop.jtop.fan`.
-
-        :param name: Name of Fan
-        :type name: str
-        :raises JtopException: Fan name doesn't exist
-        :return: fan profile name
-        :rtype: str
-        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         return self._data[name]['profile']
 
     def get_profile_default(self, name):
-        """
-        Get the default profile for this fan. Usually is the first profile listed in :py:func:`~all_profiles`
-
-        :param name: Name of Fan
-        :type name: str
-        :raises JtopException: Fan name doesn't exist
-        :return: profile default name
-        :rtype: str
-        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         return self._init[name][0]
 
     @property
     def profile(self):
-        """
-        This property show the current profile selected on first fan on your board.
-        This is a simplified version of :py:func:`~set_profile` where *name* is the first fan listed.
-
-        .. code-block:: python
-
-            with jtop() as jetson:
-                if jetson.ok():
-                    # Print profile
-                    print(jetson.fan.profile)
-                    # Set new profile
-                    jetson.fan.profile = 'quiet'
-
-        :return: current profile in fan
-        :rtype: str
-        """
-        # Return first fan name and get speed
         if len(self._data) > 0:
-            # Extract first name
             name = list(self._data.keys())[0]
-            # Get profile
             return self.get_profile(name)
         return None
 
     @profile.setter
     def profile(self, value):
         if len(self._data) > 0:
-            # Extract first name
             name = list(self._data.keys())[0]
-            # Set speed for first fan
             self.set_profile(name, value)
 
     def set_speed(self, name, speed, idx=0):
-        """
-        Set a new speed for a selected fan.
-
-        :param name: Name of Fan
-        :type name: str
-        :param speed: New speed value, a number between [0, 100]
-        :type speed: float
-        :param idx: Index fan, defaults to 0
-        :type idx: int, optional
-        :raises JtopException: Fan name doesn't exist or wrong index
-        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         if idx >= len(self._data[name]['speed']) or idx < 0:
             raise JtopException("Fan \"{name}\" have only {len} fans".format(name=name, len=len(self._data[name]['speed'])))
-        # Skip if the new profile is the same of the previous
         if speed == self._data[name]['speed'][idx]:
             return
-        # Set new fan speed
         self._controller.put({'fan': {'command': 'speed', 'name': name, 'speed': speed, 'idx': idx}})
 
     def get_speed(self, name, idx=0):
-        """
-        Return for a selected Fan and index the current speed.
-        This value is also readable from :py:attr:`~jtop.jtop.fan`.
-
-        :param name: Name of Fan
-        :type name: str
-        :param idx: Index fan, defaults to 0
-        :type idx: int, optional
-        :raises JtopException: Fan name doesn't exist or wrong index
-        :return: fan speed a number between [0, 100]
-        :rtype: int
-        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         if idx >= len(self._data[name]['speed']) or idx < 0:
@@ -358,52 +460,19 @@ class Fan(GenericInterface):
 
     @property
     def speed(self):
-        """
-        This property show the current speed between [0, 100] on first fan on your board.
-        This is a simplified version of :py:func:`~set_speed` where *name* is the first fan listed.
-
-        .. code-block:: python
-
-            with jtop() as jetson:
-                if jetson.ok():
-                    # Read speed
-                    print(jetson.fan.speed)
-                    # Set new speed
-                    jetson.fan.speed = 90
-
-        :return: current fan speed
-        :rtype: float
-        """
-        # Return first fan name and get speed
         if len(self._data) > 0:
-            # Extract first name
             name = list(self._data.keys())[0]
             return_value = self.get_speed(name)
-            # Return first speed
             return return_value
         return None
 
     @speed.setter
     def speed(self, value):
         if len(self._data) > 0:
-            # Extract first name
             name = list(self._data.keys())[0]
-            # Set speed for first fan
             self.set_speed(name, value)
 
     def get_rpm(self, name, idx=0):
-        """
-        This method return RPM fan. This output is always available on all Jetson.
-        This value is also readable from :py:attr:`~jtop.jtop.fan`.
-
-        :param name: Name of Fan
-        :type name: str
-        :param idx: Index fan, defaults to 0
-        :type idx: int, optional
-        :raises JtopException: Fan name doesn't exist, rpm doesn't exist or wrong index
-        :return: RPM value
-        :rtype: int
-        """
         if name not in self._data:
             raise JtopException("Fan \"{name}\" does not exist".format(name=name))
         if 'rpm' not in self._data[name]:
@@ -414,30 +483,8 @@ class Fan(GenericInterface):
 
     @property
     def rpm(self):
-        """
-        This property show the current fan selected on first fan on your board.
-
-        .. note::
-
-            You can only read RPM, but **not** set a new speed
-
-        You cannot set a new RPM value
-
-        .. code-block:: python
-
-            with jtop() as jetson:
-                if jetson.ok():
-                    # Read RPM
-                    print(jetson.fan.rpm)
-
-        :return: rpm first fan
-        :rtype: int
-        """
-        # Return first fan name and get speed
         if len(self._data) > 0:
-            # Extract first name
             name = list(self._data.keys())[0]
-            # Return first speed
             return self.get_rpm(name)
         return None
 
@@ -460,59 +507,47 @@ def check_config(config):
 class FanService(object):
 
     def __init__(self, config):
-        # Load configuration
         self._config = config
-        # Check consistency fan
         check_config(config)
-        # Load base hwmon folder
+
         root_dir = "/sys/class/hwmon"
         if os.getenv('JTOP_TESTING', False):
             root_dir = "/fake_sys/class/hwmon"
-            logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=root_dir))
-        # Find all fan available
+            logger.warning("Running in JTOP_TESTING folder=%s", root_dir)
+
         self._fan_list = get_all_cooling_system(root_dir)
         self._fan_list.update(get_all_legacy_fan())
-        # Check if there is nvfan control
+
         self._nvfancontrol = os.path.isfile('/etc/systemd/system/nvfancontrol.service') or os.path.islink('/etc/systemd/system/nvfancontrol.service')
-        # Initialize controller
+
         if self._nvfancontrol:
             logger.info("Found nvfancontrol.service")
             nv_fan_modes = decode_nvfancontrol()
-            # Add all nvfan profiles
-            for fan, nvfan in zip(self._fan_list, nv_fan_modes):
-                self._fan_list[fan].update(nv_fan_modes[nvfan])
-                # Add extra profile for disabled service
-                if 'profile' in self._fan_list[fan]:
-                    self._fan_list[fan]['profile'] += [FAN_MANUAL_NAME]
+            _merge_nvfan_metadata(self._fan_list, nv_fan_modes)
         else:
             for name, fan in self._fan_list.items():
-                # Initialize profile list
                 self._fan_list[name]['profile'] = []
-                # Find temp controller
                 control = os.path.join(fan['path'], FAN_TEMP_CONTROL_NAME)
                 if os.path.isfile(control):
-                    # Add control path
                     self._fan_list[name]['control'] = control
-                    # Add profiles
                     self._fan_list[name]['profile'] += [FAN_TEMP_CONTROL_NAME]
-                    logger.info("Fan temp controller {name} found in {root_path}".format(name=name, root_path=control))
-                # Add default profile
+                    logger.info("Fan temp controller %s found in %s", name, control)
                 self._fan_list[name]['profile'] += [FAN_MANUAL_NAME]
+
         if not self._fan_list:
             logger.warning("No fan found")
 
     def initialization(self):
-        # Load configuration
         fan_config = self._config.get('fan', {})
         for name, fan in fan_config.items():
             if 'profile' in fan:
                 profile = fan['profile']
-                logger.info("Initialization {name}".format(name=name))
+                logger.info("Initialization %s", name)
                 self.set_profile(name, profile)
                 if profile == FAN_MANUAL_NAME and 'speed' in fan:
                     speed, index = fan['speed']
                     self.set_speed(name, speed, index)
-                    logger.info("Initialization {name} {index} speed {speed}%".format(name=name, index=index, speed=speed))
+                    logger.info("Initialization %s %s speed %s%%", name, index, speed)
 
     def get_configs(self):
         governors = {}
@@ -522,15 +557,17 @@ class FanService(object):
 
     def get_profile(self, name):
         if name not in self._fan_list:
-            logger.error("Fan \"{name}\" does not exist".format(name=name))
+            logger.error("Fan \"%s\" does not exist", name)
             return ""
         profile = FAN_MANUAL_NAME
         if self._nvfancontrol:
             if nvfancontrol_is_active():
                 nvfan_query = nvfancontrol_query()
-                for fan_list_name, nvfan in zip(self._fan_list, nvfan_query):
-                    if fan_list_name == name:
-                        return nvfan_query[nvfan]['profile']
+                if len(self._fan_list) == 1 and len(nvfan_query) == 1:
+                    only = next(iter(nvfan_query))
+                    return nvfan_query[only].get('profile', FAN_MANUAL_NAME)
+                if name in nvfan_query:
+                    return nvfan_query[name].get('profile', FAN_MANUAL_NAME)
         else:
             if 'control' in self._fan_list[name]:
                 control_value = int(cat(self._fan_list[name]['control'])) == 1
@@ -539,106 +576,107 @@ class FanService(object):
 
     def set_profile(self, name, profile):
         if name not in self._fan_list:
-            logger.error("Fan \"{name}\" does not exist".format(name=name))
+            logger.error("Fan \"%s\" does not exist", name)
             return False
-        # Check current status before change
         if profile == self.get_profile(name):
-            logger.warning("Fan {name} profile {profile} already active".format(name=name, profile=profile))
+            logger.warning("Fan %s profile %s already active", name, profile)
             return True
         if self._nvfancontrol:
             is_active = nvfancontrol_is_active()
-            # Check first if the fan control is active and after enable the service
             if profile in self._fan_list[name]['profile']:
                 if profile == FAN_MANUAL_NAME:
                     if is_active:
                         os.system('systemctl stop nvfancontrol')
-                        logger.info("Profile set {profile}".format(profile=profile))
+                        logger.info("Profile set %s", profile)
                 else:
-                    # Check if active and stop
                     if is_active:
                         os.system('systemctl stop nvfancontrol')
                         logger.info("Stop nvfancontrol service")
-                    # Update nvfile
                     change_nvfancontrol_default('profile', profile)
-                    logger.info("Change /etc/nvfancontrol.conf profile in {profile}".format(profile=profile))
-                    # Remove nvfancontrol status file
+                    logger.info("Change nvfancontrol profile to %s", profile)
                     if os.path.isfile("/var/lib/nvfancontrol/status"):
                         os.remove("/var/lib/nvfancontrol/status")
                         logger.info("Removed /var/lib/nvfancontrol/status")
-                    # Restart service
                     os.system('systemctl start nvfancontrol')
-                    logger.info("Restart nvfancontrol With profile: \"{profile}\"".format(profile=profile))
+                    logger.info("Restart nvfancontrol with profile \"%s\"", profile)
             else:
-                logger.error("Profile {profile} doesn't exist".format(profile=profile))
+                logger.error("Profile %s doesn't exist", profile)
                 return False
         else:
             if profile in self._fan_list[name]['profile']:
                 control_value = "0" if profile == FAN_MANUAL_NAME else "1"
-                # Write control if exist
                 if 'control' in self._fan_list[name]:
                     control = self._fan_list[name]['control']
-                    # Set for all pwm the same speed value
                     if os.access(control, os.W_OK):
                         with open(control, 'w') as f:
                             f.write(control_value)
-                    logger.info("Profile set {profile}".format(profile=profile))
+                    logger.info("Profile set %s", profile)
             else:
-                logger.error("Profile {profile} doesn't exist".format(profile=profile))
+                logger.error("Profile %s doesn't exist", profile)
                 return False
-        # Update configuration on board
+
         fan_config = self._config.get('fan', {})
-        # Set new profile
         if name not in fan_config:
             fan_config[name] = {}
         fan_config[name]['profile'] = profile
-        # Set new jetson_clocks configuration
         self._config.set('fan', fan_config)
         return True
 
     def set_speed(self, name, speed, index):
         if name not in self._fan_list:
-            logger.error("This fan {name} doesn't exist".format(name=name))
+            logger.error("This fan %s doesn't exist", name)
             return
         if index >= len(self._fan_list[name]['pwm']):
-            logger.error("Wrong index {index} for {name}".format(index=index, name=name))
+            logger.error("Wrong index %s for %s", index, name)
             return
-        # Update configuration on board
+
         fan_config = self._config.get('fan', {})
-        # Set new profile
         if name not in fan_config:
             fan_config[name] = {}
         fan_config[name]['speed'] = (speed, index)
-        # Set new jetson_clocks configuration
         self._config.set('fan', fan_config)
-        # Convert in PWM
+
         pwm = ValueToPWM(speed)
-        # Set for all pwm the same speed value
         pwm_path = self._fan_list[name]['pwm'][index]
         try:
             if os.access(pwm_path, os.W_OK):
                 with open(pwm_path, 'w') as f:
                     f.write(str(pwm))
         except OSError as e:
-            logger.error("I cannot set fan speed: {speed} - error {e}".format(speed=speed, e=e))
+            logger.error("I cannot set fan speed: %s - error %s", speed, e)
 
     def get_status(self):
         fan_status = {}
-        # Read all fan status
         for name, data in self._fan_list.items():
-            # Read pwm from all fan
             fan_status[name] = {
                 'speed': [PWMtoValue(float(cat(pwm))) for pwm in data['pwm']],
             }
             if 'rpm' in data:
                 fan_status[name]['rpm'] = [int(cat(rpm)) for rpm in data['rpm']]
-        # Check status fan control
+            if 'pwm_enable' in data:
+                try:
+                    fan_status[name]['pwm_enable'] = [int(cat(p)) for p in data['pwm_enable']]
+                except (TypeError, ValueError):
+                    pass
+            if 'kickstart_pwm' in data:
+                fan_status[name]['kickstart_pwm'] = data['kickstart_pwm']
+
         if self._nvfancontrol:
             nvfan_query = {}
             if nvfancontrol_is_active():
                 nvfan_query = nvfancontrol_query()
+
             if nvfan_query:
-                for fan, nvfan in zip(fan_status, nvfan_query):
-                    fan_status[fan].update(nvfan_query[nvfan])
+                if len(fan_status) == 1 and len(nvfan_query) == 1:
+                    fan_name = next(iter(fan_status))
+                    nv_name = next(iter(nvfan_query))
+                    fan_status[fan_name].update(nvfan_query[nv_name])
+                else:
+                    for fan_name in fan_status:
+                        if fan_name in nvfan_query:
+                            fan_status[fan_name].update(nvfan_query[fan_name])
+                        else:
+                            fan_status[fan_name]['profile'] = FAN_MANUAL_NAME
             else:
                 for fan in fan_status:
                     fan_status[fan]['profile'] = FAN_MANUAL_NAME
@@ -650,4 +688,3 @@ class FanService(object):
                 else:
                     fan_status[name]['profile'] = FAN_MANUAL_NAME
         return fan_status
-# EOF
