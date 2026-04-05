@@ -191,7 +191,7 @@ class GPU(Page):
     # Chart callbacks
 
     def update_chart(self, jetson, name):
-        gpu_name = name.split(" ")[1]
+        gpu_name = name.split(" ", 1)[1]
         gpu_status = jetson.gpu[gpu_name]["status"]
         return {"value": [gpu_status["load"]]}
 

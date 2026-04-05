@@ -100,8 +100,8 @@ class GPU(Page):
         self.jetson.gpu.set_scaling_3D(info['name'], status_3d_scaling)
 
     def update_chart(self, jetson, name):
-        # Decode GPU name
-        gpu_name = name.split(" ")[1]
+        # Decode GPU name (may contain spaces, e.g. "Orin Nano")
+        gpu_name = name.split(" ", 1)[1]
         gpu_data = jetson.gpu[gpu_name]
         gpu_status = gpu_data['status']
         # Append in list
