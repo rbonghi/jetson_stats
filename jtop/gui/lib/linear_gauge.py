@@ -124,9 +124,6 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
     # Name
     name = freq_data.get('name', "")
 
-    # Render current frequency string (works even if cur is missing/None)
-    curr_string = unit_to_string(freq_data.get('cur'), 'k', 'Hz')
-
     # Pull values
     cur = freq_data.get('cur', None)
     mn = freq_data.get('min', None)
@@ -144,6 +141,9 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
     if cur_i is None or mn_i is None or mx_i is None:
         basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data)
         return
+
+    # Render current frequency string (only after confirming cur is valid)
+    curr_string = unit_to_string(cur_i, 'k', 'Hz')
 
     # Compute percentage safely
     if mx_i == mn_i:
