@@ -19,7 +19,9 @@
 
 import logging
 import os
-from typing import Any, Dict, Optional
+import subprocess
+import time
+from typing import Any, Dict, Optional, Tuple
 
 from .common import GenericInterface
 from .exceptions import JtopException
@@ -59,23 +61,64 @@ def _read_memavailable_bytes() -> int:
     return 0
 
 
-def read_gpu_mem_rows_for_gui(device_index: int = 0):
-    """
-    Return a GPU memory summary suitable for the Thor GPU page.
+_GPU_MEM_CACHE_TTL = 1.0  # seconds
+_gpu_mem_cache: Dict[str, Any] = {"ts": 0.0, "result": None}
 
-    NOTE: On Thor we intentionally do not call CUDA or NVML from jtop.
-    Any VRAM probing would require creating a CUDA context, which can
-    trigger host1x/DRM activity and syncpoint allocations. We therefore
-    always return VRAM as 0 and only expose Shared System RAM.
+
+def _nvsmi_gpu_used_mib() -> Optional[int]:
+    """Sum per-process GPU allocations via nvidia-smi --query-compute-apps."""
+    try:
+        out = subprocess.run(
+            ["nvidia-smi", "--query-compute-apps=used_memory",
+             "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if out.returncode != 0:
+            return None
+        return sum(
+            int(line.strip())
+            for line in out.stdout.splitlines()
+            if line.strip().isdigit()
+        )
+    except Exception:
+        return None
+
+
+def _gpu_vram_bytes() -> Optional[Tuple[int, int]]:
     """
-    # VRAM is intentionally not probed on Thor
+    Return (used_bytes, total_bytes) for GPU VRAM with a 1-second cache.
+
+    On Thor BSPs, nvidia-smi --query-gpu=memory.used returns null, but
+    --query-compute-apps gives reliable per-process allocations.  We sum
+    those for 'used' and use MemTotal as 'total' (Thor unified DRAM ==
+    full GPU-accessible pool).  Result is cached for _GPU_MEM_CACHE_TTL
+    so nvidia-smi is not spawned on every UI frame.
+    """
+    global _gpu_mem_cache
+    now = time.monotonic()
+    if now - _gpu_mem_cache["ts"] < _GPU_MEM_CACHE_TTL:
+        return _gpu_mem_cache["result"]
+    used_mib = _nvsmi_gpu_used_mib()
+    if used_mib is None:
+        _gpu_mem_cache = {"ts": now, "result": None}
+        return None
+    result: Tuple[int, int] = (used_mib * 1024 * 1024, _read_memtotal_bytes())
+    _gpu_mem_cache = {"ts": now, "result": result}
+    return result
+
+
+def read_gpu_mem_rows_for_gui(device_index: int = 0):
+    """Return a GPU memory summary suitable for the Thor GPU page."""
     vram_used_b = 0
     vram_total_b = 0
+    result = _gpu_vram_bytes()
+    if result is not None:
+        vram_used_b, vram_total_b = result
 
     total_b = _read_memtotal_bytes()
     avail_b = _read_memavailable_bytes()
-    shared_used_b = max(0, total_b - avail_b)  # variable over time
-    shared_total_b = total_b                    # e.g., ~128 GB
+    shared_used_b = max(0, total_b - avail_b)
+    shared_total_b = total_b
 
     return {
         "vram_used_b": vram_used_b,

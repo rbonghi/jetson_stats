@@ -421,13 +421,24 @@ class MemoryService(object):
             large_free_bank += sum([zone['nr_free'][-1] for zone in data])
         # Status Memory
         status_mem = meminfo()
-        # Read memory use
-        # NvMapMemUsed: Is the shared memory between CPU and GPU
-        # This key is always available on Jetson (not really always)
-        ram_shared = status_mem.get('NvMapMemUsed', 0)
-        if mem_total:
-            # Update shared size
-            ram_shared = mem_total if ram_shared == 0 else ram_shared
+        # NvMapMemUsed: GPU-mapped portion of system RAM (nvgpu stack, e.g. Orin).
+        # Absent on the unified nvidia.ko stack (e.g. Thor); use nvidia-smi
+        # compute-apps instead so the MEM tab shows GPU VRAM usage there too.
+        shared_label = 'Shared'
+        if 'NvMapMemUsed' in status_mem:
+            ram_shared = status_mem['NvMapMemUsed']
+            if mem_total:
+                ram_shared = mem_total if ram_shared == 0 else ram_shared
+        else:
+            ram_shared = 0
+            try:
+                from .thor_gpu import _nvsmi_gpu_used_mib
+                mib = _nvsmi_gpu_used_mib()
+                if mib:
+                    ram_shared = mib * 1024  # MiB -> kB
+                    shared_label = 'VRAM'
+            except Exception:
+                pass
         # Extract memory info
         ram_total = status_mem.get('MemTotal', 0)
         ram_free = status_mem.get('MemFree', 0)
@@ -446,6 +457,7 @@ class MemoryService(object):
             'buffers': ram_buffer,
             'cached': cached_memory,
             'shared': ram_shared,
+            'shared_label': shared_label,
             'lfb': large_free_bank,  # In 4MB
         }
         # Extract swap numbers
