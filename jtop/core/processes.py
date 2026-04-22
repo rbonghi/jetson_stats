@@ -18,11 +18,55 @@
 import re
 import os
 import pwd
+import subprocess
 from .common import cat
 # Logging
 import logging
 # Create logger
 logger = logging.getLogger(__name__)
+
+
+def _nvsmi_useful():
+    """True if nvidia-smi reports real compute data (unified nvidia.ko stack, e.g. Thor)."""
+    try:
+        out = subprocess.run(
+            ['nvidia-smi', '--query-gpu=name', '--format=csv,noheader'],
+            capture_output=True, text=True, timeout=5,
+        )
+        name = (out.stdout.strip().splitlines() or [''])[0]
+        return bool(name) and '(nvgpu)' not in name
+    except Exception:
+        return False
+
+
+def read_nvsmi_compute_table():
+    """
+    Read per-process GPU memory from nvidia-smi --query-compute-apps.
+    Returns (total_kb, rows) where each row is [pid_str, 'user', name, gpu_mem_kb].
+    Used on the unified nvidia.ko stack (Thor) where nvmap shows 0K for CUDA.
+    """
+    try:
+        out = subprocess.run(
+            ['nvidia-smi', '--query-compute-apps=pid,process_name,used_memory',
+             '--format=csv,noheader,nounits'],
+            capture_output=True, text=True, timeout=5,
+        )
+        if out.returncode != 0:
+            return 0, []
+        table = []
+        total_kb = 0
+        for line in out.stdout.splitlines():
+            parts = [p.strip() for p in line.split(',')]
+            if len(parts) < 3 or not parts[2].isdigit():
+                continue
+            pid_str = parts[0]
+            name = parts[1].split('/')[-1]  # basename only, matches nvmap style
+            gpu_mem_kb = int(parts[2]) * 1024  # MiB -> kB
+            total_kb += gpu_mem_kb
+            table.append([pid_str, 'user', name, gpu_mem_kb])
+        return total_kb, table
+    except Exception:
+        return 0, []
 
 MEM_TABLE_REG = re.compile(r'^(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
 TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
@@ -76,11 +120,12 @@ class ProcessService(object):
         if os.getenv('JTOP_TESTING', False):
             self._root_path = "/fake_sys/kernel"
             logger.warning("Running in JTOP_TESTING folder={root_dir}".format(root_dir=self._root_path))
-        # Check if jetson board
+        # nvmap path: authoritative on nvgpu stack (Orin); absent or shows 0K on nvidia.ko (Thor)
         self._isJetson = os.path.isfile(self._root_path + "/debug/nvmap/iovmm/maps")
+        # nvidia-smi compute-apps: authoritative on nvidia.ko stack (Thor)
+        self._isNvidiaSmi = _nvsmi_useful()
         # Get the clock ticks per second and page size
         self._clk_tck = os.sysconf('SC_CLK_TCK')
-        # self._page_size = os.sysconf('SC_PAGE_SIZE')
         # Initialization memory
         logger.info("Process service started")
 
@@ -134,14 +179,14 @@ class ProcessService(object):
     def get_status(self):
         total = {}
         table = []
-        # Update table
-        if self._isJetson:
-            # Use the memory table to measure
-            total, table = read_process_table(self._root_path + "/debug/nvmap/iovmm/maps")
-
-            uptime = float(open('/proc/uptime', 'r').readline().split()[0])
-
-            table = [self.get_process_info(prc[0], prc[3], prc[2], uptime) for prc in table]
-
+        uptime = float(open('/proc/uptime', 'r').readline().split()[0])
+        if self._isNvidiaSmi:
+            # nvidia.ko stack (Thor): nvmap shows 0K for CUDA — use compute-apps instead
+            total, raw = read_nvsmi_compute_table()
+            table = [self.get_process_info(prc[0], prc[3], prc[2], uptime) for prc in raw]
+        elif self._isJetson:
+            # nvgpu stack (Orin): nvmap is the authoritative per-process GPU memory source
+            total, raw = read_process_table(self._root_path + "/debug/nvmap/iovmm/maps")
+            table = [self.get_process_info(prc[0], prc[3], prc[2], uptime) for prc in raw]
         return total, table
 # EOF
