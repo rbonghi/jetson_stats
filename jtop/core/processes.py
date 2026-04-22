@@ -68,6 +68,7 @@ def read_nvsmi_compute_table():
     except Exception:
         return 0, []
 
+
 MEM_TABLE_REG = re.compile(r'^(?P<user>\w+)\s+(?P<process>[^ ]+)\s+(?P<PID>\d+)\s+(?P<size>\d+)(?P<unit>\w)\n')
 TOT_TABLE_REG = re.compile(r'total\s+(?P<size>\d+)(?P<unit>\w)')
 
