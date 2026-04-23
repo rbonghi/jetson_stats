@@ -159,7 +159,6 @@ class GPU(Page):
             button_3d_scaling = SmallButton(
                 stdscr, self.action_scaling_3D, info={"name": gpu_name}
             )
-            # Shared-only RAM chart (no VRAM)
             chart_ram = (
                 Chart(
                     jetson,
@@ -172,10 +171,23 @@ class GPU(Page):
                 if type_gpu == "i"
                 else None
             )
+            chart_vram = (
+                Chart(
+                    jetson,
+                    "GPU VRAM",
+                    self.update_chart_vram,
+                    type_value=float,
+                    color_text=curses.COLOR_GREEN,
+                    color_chart=[curses.COLOR_GREEN],
+                )
+                if type_gpu == "i"
+                else None
+            )
             self.draw_gpus[gpu_name] = {
                 "chart": chart,
                 "3d_scaling": button_3d_scaling,
                 "ram": chart_ram,
+                "vram": chart_vram,
             }
         self.process_table = ProcessTable(self.stdscr, self.jetson)
         self._click_regions = {"scaling": [], "railgate": []}
@@ -196,23 +208,29 @@ class GPU(Page):
         return {"value": [gpu_status["load"]]}
 
     def update_chart_ram(self, jetson, name):
-        """
-        Shared-only series from system memory (no VRAM line).
-        Assumes read_gpu_mem_rows_for_gui returns bytes.
-        """
         rows = read_gpu_mem_rows_for_gui(device_index=0)
         s_used_b = rows.get("shared_used_b", 0)
         s_total_b = rows.get("shared_total_b", 0)
-
-        # Chart expects start='k' (kB), so convert bytes -> kB for scaling.
         max_val_kb = max(s_total_b // 1024, 1)
         szw, divider_kb, unit = size_min(max_val_kb, start="k")
-
-        # Convert divider (kB) back to bytes for the value division
         divider_bytes = max(divider_kb * 1024, 1)
-
         return {
-            "value": [s_used_b / divider_bytes],  # single-series: Shared only
+            "value": [s_used_b / divider_bytes],
+            "max": szw,
+            "unit": unit,
+        }
+
+    def update_chart_vram(self, jetson, name):
+        rows = read_gpu_mem_rows_for_gui(device_index=0)
+        v_used_b = rows.get("vram_used_b", 0)
+        v_total_b = rows.get("vram_total_b", 0)
+        if v_total_b == 0:
+            return {"value": [0], "max": 1, "unit": "B"}
+        max_val_kb = max(v_total_b // 1024, 1)
+        szw, divider_kb, unit = size_min(max_val_kb, start="k")
+        divider_bytes = max(divider_kb * 1024, 1)
+        return {
+            "value": [v_used_b / divider_bytes],
             "max": szw,
             "unit": unit,
         }
@@ -275,6 +293,7 @@ class GPU(Page):
         for idx, (gpu_name, gpu_data) in enumerate(self.jetson.gpu.items()):
             chart = self.draw_gpus[gpu_name]["chart"]
             chart_ram = self.draw_gpus[gpu_name]["ram"]
+            chart_vram = self.draw_gpus[gpu_name]["vram"]
             gpu_status = gpu_data["status"]
             gpu_freq = gpu_data["freq"]
 
@@ -287,21 +306,31 @@ class GPU(Page):
             label_chart_gpu = f"{gpu_status['load']:>3.0f}% - gov: {gpu_freq.get('governor', '')}"
             chart.draw(self.stdscr, size_x, size_y, label=label_chart_gpu)
 
-            if chart_ram:
-                # Compose a clear Shared-only label using kB as base (API expects 'k')
-                rows = read_gpu_mem_rows_for_gui(device_index=0)
+            rows = read_gpu_mem_rows_for_gui(device_index=0)
+            v_total_b = rows.get("vram_total_b", 0)
+            if chart_vram and v_total_b > 0:
+                v_used_b = rows.get("vram_used_b", 0)
+                v_used_k = max(1, v_used_b // 1024)
+                v_total_k = max(1, v_total_b // 1024)
+                label_vram = "VRAM {used}/{tot}".format(
+                    used=size_to_string(v_used_k, "k"),
+                    tot=size_to_string(v_total_k, "k"),
+                )
+                chart_vram.draw(
+                    self.stdscr,
+                    [width // 2, width - 3],
+                    size_y,
+                    label=label_vram,
+                )
+            elif chart_ram:
                 s_used_b = rows.get("shared_used_b", 0)
                 s_total_b = rows.get("shared_total_b", 0)
-
-                # Convert bytes -> kB for size_to_string/start='k'
                 s_used_k = max(1, s_used_b // 1024)
                 s_total_k = max(1, s_total_b // 1024)
-
                 label_mem = "Shared {s_used}/{s_tot}".format(
                     s_used=size_to_string(s_used_k, "k"),
                     s_tot=size_to_string(s_total_k, "k"),
                 )
-
                 chart_ram.draw(
                     self.stdscr,
                     [width // 2, width - 3],
