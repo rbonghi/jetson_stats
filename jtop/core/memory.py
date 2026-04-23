@@ -439,6 +439,11 @@ class MemoryService(object):
                     shared_label = 'VRAM'
             except Exception:
                 pass
+            # Fallback: if neither NvMapMemUsed nor nvidia-smi provided data (e.g. Orin
+            # on r38 kernels where NvMapMemUsed is absent), use the nvmap process total
+            # passed in from processes.get_status() — restores pre-branch behavior.
+            if ram_shared == 0 and mem_total:
+                ram_shared = mem_total
         # Extract memory info
         ram_total = status_mem.get('MemTotal', 0)
         ram_free = status_mem.get('MemFree', 0)
