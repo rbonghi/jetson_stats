@@ -38,7 +38,7 @@ TPC_POWER_GATING_RE = re.compile(r'TPC_POWER_GATING TPC_PG_MASK (?P<mask>\w+)')
 POWER_MODEL_RE = re.compile(r'POWER_MODEL: ID=(?P<id>\d+) NAME=(?P<name>\w+)')
 NV_POWER_MODE_RE = re.compile(r'NV Power Mode: (?P<name>\w+)')
 
-COMMAND_TIMEOUT = 4.0
+COMMAND_TIMEOUT = 10.0
 NVP_TIMER_WAIT_JETSON_CLOCKS = 0.5
 NVP_COUNTER_ALIVE_JETSON_CLOCKS = 5
 
@@ -460,7 +460,7 @@ class NVPModelService(object):
             current_mask = self._nvp_masks[self._nvpmodel_now['id']]
             # list of all nvpmodel status that can be changed from the current
             self._nvp_status = [current_mask == mask for idx, mask in enumerate(self._nvp_masks)]
-        except (OSError, Command.CommandException):
+        except (OSError, Command.CommandException, JtopException):
             self._is_nvpmodel = False
             logger.warning("nvpmodel not available")
 
