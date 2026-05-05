@@ -71,13 +71,13 @@ _NOTE: For Jetson AGX Thor Dev Kit follow this_
 sudo -v
 curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash
 ```
-Or:
+
+### Upgrade `jtop` 
 ```console
-# Download scripts/install_jtop_torun_without_sudo.sh
 sudo -v
-chmod +x install_jtop_torun_without_sudo.sh
-./install_jtop_torun_without_sudo.sh
+curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/upgrade-jtop.sh | bash
 ```
+
 ---
 
 ## Run
