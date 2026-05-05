@@ -65,7 +65,10 @@ remove_legacy_jtop() {
             /usr/local/bin/python3 /usr/local/bin/python3.[0-9]*; do
     if [[ -x "$py" ]]; then
       echo "Trying: sudo $py -m pip uninstall -y jetson-stats jetson_stats"
-      sudo "$py" -m pip uninstall -y jetson-stats jetson_stats || true
+      if ! sudo "$py" -m pip uninstall -y jetson-stats jetson_stats; then
+        echo "Retrying with --break-system-packages for externally managed Python..."
+        sudo "$py" -m pip uninstall -y --break-system-packages jetson-stats jetson_stats || true
+      fi
     fi
   done
 
@@ -91,6 +94,25 @@ remove_legacy_jtop() {
     sudo rm -rf "${leftover_dirs[@]}"
   else
     echo "All legacy jtop directories removed."
+  fi
+
+  # Remove any old jetson_stats*dist-info/ directories pip may have left behind.
+  local dist_info_dirs=()
+  while IFS= read -r path; do
+    dist_info_dirs+=("$path")
+  done < <(
+    sudo find /usr/lib /usr/local/lib \
+      -type d \
+      -name 'jetson_stats-*.dist-info' \
+      -path '*/python3*/*-packages/*' \
+      -prune \
+      -print
+  )
+
+  if (( ${#dist_info_dirs[@]} > 0 )); then
+    echo "Removing leftover dist-info directories:"
+    printf '  %s\n' "${dist_info_dirs[@]}"
+    sudo rm -rf "${dist_info_dirs[@]}"
   fi
 }
 
