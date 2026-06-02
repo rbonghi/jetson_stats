@@ -755,6 +755,17 @@ class JtopServer(Process):
                         jp_group[name.upper()] = status
                     data["engines"]["JP"] = jp_group
 
+            # Flatten engine cur frequencies into data["flat"] so the Thor GUI
+            # renderer (draw_thor_engines_from_stats / compact_engines) can find
+            # them via flat.get("NVDEC0") etc.
+            jp_group = data["engines"].get("JP")
+            if isinstance(jp_group, dict):
+                for eng_name, eng_data in jp_group.items():
+                    if isinstance(eng_data, dict):
+                        cur = eng_data.get("cur")
+                        if cur is not None:
+                            flat[eng_name] = cur
+
             # Canary marker (namespaced; never top-level)
             flat["JP_OVERLAY"] = 1
 
