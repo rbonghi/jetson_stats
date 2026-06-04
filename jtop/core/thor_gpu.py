@@ -48,6 +48,9 @@ from .thor_power import (
 
 logger = logging.getLogger(__name__)
 
+PROCESS_TYPE_COMPUTE = "Compute"
+PROCESS_TYPE_GRAPHIC = "Graphic"
+
 # Thor detection: present if the devfreq GPC domain exists
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
 
@@ -111,8 +114,8 @@ def nvml_process_table() -> Tuple[int, List]:
             logger.debug("nvmlDeviceGetHandleByIndex(%d) failed: %s", idx, e)
             continue
         for getter, type_str in (
-            (_pynvml.nvmlDeviceGetComputeRunningProcesses, "Compute"),
-            (_pynvml.nvmlDeviceGetGraphicsRunningProcesses, "Graphic"),
+            (_pynvml.nvmlDeviceGetComputeRunningProcesses, PROCESS_TYPE_COMPUTE),
+            (_pynvml.nvmlDeviceGetGraphicsRunningProcesses, PROCESS_TYPE_GRAPHIC),
         ):
             try:
                 procs = getter(h)

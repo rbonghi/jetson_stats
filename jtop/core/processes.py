@@ -20,6 +20,7 @@ import os
 import pwd
 from .common import cat
 from .hw_detect import is_thor
+from .thor_gpu import PROCESS_TYPE_GRAPHIC
 # Logging
 import logging
 # Create logger
@@ -92,7 +93,7 @@ class ProcessService(object):
         # Initialization memory
         logger.info("Process service started")
 
-    def get_process_info(self, pid, gpu_mem_usage, process_name, uptime, process_type="Graphic"):
+    def get_process_info(self, pid, gpu_mem_usage, process_name, uptime, process_type=PROCESS_TYPE_GRAPHIC):
         # Check if exist folder
         if not os.path.isdir(os.path.join('/proc', pid)):
             return []
