@@ -92,7 +92,7 @@ class ProcessService(object):
         # Initialization memory
         logger.info("Process service started")
 
-    def get_process_info(self, pid, gpu_mem_usage, process_name, uptime):
+    def get_process_info(self, pid, gpu_mem_usage, process_name, uptime, process_type="Graphic"):
         # Check if exist folder
         if not os.path.isdir(os.path.join('/proc', pid)):
             return []
@@ -129,7 +129,7 @@ class ProcessService(object):
             int(pid),               # pid process
             self.usernames[uid],    # username
             "I",                    # GPU name
-            "Graphic",              # type process
+            process_type,           # type process
             int(stat[17]),          # Priority
             stat[2],                # state
             cpu_percent,            # CPU percent
@@ -147,7 +147,7 @@ class ProcessService(object):
         if self._isThor and self._nvml_process_table is not None:
             # nvidia.ko stack (Thor): nvmap absent, NVML gives compute+graphics
             total, raw = self._nvml_process_table()
-            table = [self.get_process_info(prc[0], prc[3], prc[2], uptime) for prc in raw if prc]
+            table = [self.get_process_info(prc[0], prc[3], prc[2], uptime, prc[4]) for prc in raw if prc]
         elif self._isJetson:
             # nvgpu stack (Orin): nvmap debugfs is the authoritative source
             total, raw = read_process_table(self._root_path + "/debug/nvmap/iovmm/maps")
