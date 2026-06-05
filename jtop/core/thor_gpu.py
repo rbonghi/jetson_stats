@@ -48,8 +48,7 @@ from .thor_power import (
 
 logger = logging.getLogger(__name__)
 
-PROCESS_TYPE_COMPUTE = "Compute"
-PROCESS_TYPE_GRAPHIC = "Graphic"
+from .process_types import PROCESS_TYPE_COMPUTE, PROCESS_TYPE_GRAPHIC
 
 # Thor detection: present if the devfreq GPC domain exists
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"

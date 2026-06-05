@@ -20,7 +20,7 @@ import os
 import pwd
 from .common import cat
 from .hw_detect import is_thor
-from .thor_gpu import PROCESS_TYPE_GRAPHIC
+from .process_types import PROCESS_TYPE_GRAPHIC
 # Logging
 import logging
 # Create logger
