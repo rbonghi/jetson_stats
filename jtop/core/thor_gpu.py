@@ -17,6 +17,7 @@
 
 # Thor GPU backend for jtop — uses sysfs + thor_power helpers
 
+from .process_types import PROCESS_TYPE_COMPUTE, PROCESS_TYPE_GRAPHIC
 import logging
 import os
 import time
@@ -48,7 +49,6 @@ from .thor_power import (
 
 logger = logging.getLogger(__name__)
 
-from .process_types import PROCESS_TYPE_COMPUTE, PROCESS_TYPE_GRAPHIC
 
 # Thor detection: present if the devfreq GPC domain exists
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
