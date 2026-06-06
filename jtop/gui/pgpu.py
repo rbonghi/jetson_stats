@@ -74,7 +74,7 @@ class GPU(Page):
             type_gpu = "i" if self.jetson.gpu[gpu_name]['type'] == 'integrated' else 'd'
             chart = Chart(jetson, "{t}GPU {name}".format(t=type_gpu, name=gpu_name), self.update_chart,
                           color_text=curses.COLOR_GREEN)
-            # button_railgate = SmallButton(stdscr, self.action_railgate, info={'name': gpu_name})
+            button_railgate = SmallButton(stdscr, self.action_railgate, info={'name': gpu_name})
             button_3d_scaling = SmallButton(stdscr, self.action_scaling_3D, info={'name': gpu_name})
             if type_gpu == 'i':
                 chart_ram = Chart(jetson, "GPU Shared RAM", self.update_chart_ram,
@@ -83,7 +83,7 @@ class GPU(Page):
                                   color_chart=[COLOR_GREY, curses.COLOR_GREEN])
             else:
                 chart_ram = None
-            self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling, 'ram': chart_ram}
+            self.draw_gpus[gpu_name] = {'chart': chart, '3d_scaling': button_3d_scaling, 'railgate': button_railgate, 'ram': chart_ram}
         # Add Process table
         self.process_table = ProcessTable(self.stdscr, self.jetson)
 
@@ -180,13 +180,15 @@ class GPU(Page):
                 # NVML mode - show as unavailable
                 plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate", "N/A (NVML)")
             else:
-                # Traditional mode - show status
-                railgate_string = "Active" if gpu_status['railgate'] else "Disable"
-                railgate_status = NColors.green() if gpu_status['railgate'] else curses.A_NORMAL
-                plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate", railgate_string, color=railgate_status)
-            # self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate:", curses.A_BOLD)
-            # self.draw_gpus[gpu_name]['railgate'].update(first + 1 + (idx + 1) * gpu_height - 1, 10 + button_idx, railgate_string,
-            #                                             key=key, mouse=mouse, color=railgate_status)
+                # Traditional mode - clickable toggle
+                railgate_string = "Active" if gpu_status.get('railgate') else "Disable"
+                railgate_status = NColors.green() if gpu_status.get('railgate') else curses.A_NORMAL
+                try:
+                    self.stdscr.addstr(first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Railgate:", curses.A_BOLD)
+                    self.draw_gpus[gpu_name]['railgate'].update(first + 1 + (idx + 1) * gpu_height - 1, 10 + button_idx,
+                                                                railgate_string, key=key, mouse=mouse, color=railgate_status)
+                except curses.error:
+                    pass
             button_idx += button_position
             # Power control
             plot_name_info(self.stdscr, first + 1 + (idx + 1) * gpu_height - 1, 1 + button_idx, "Power ctrl", gpu_data['power_control'])

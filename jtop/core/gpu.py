@@ -22,6 +22,7 @@ from typing import Any, Callable, Dict, Optional, TypeVar
 from .common import cat, GenericInterface
 from .exceptions import JtopException
 from .command import Command
+from .hw_detect import is_thor, is_jetpack7
 from .jetson_variables import get_jetson_variables, NVIDIA_JETPACK
 
 T = TypeVar('T')
@@ -213,6 +214,16 @@ def find_igpu(igpu_path):
         path_3d_scaling = os.path.join(path, "enable_3d_scaling")
         if os.path.isfile(path_3d_scaling):
             igpu[name]['3d_scaling'] = path_3d_scaling
+        elif is_jetpack7():
+            # JetPack 7 (Thor-class kernel) drops enable_3d_scaling on Orin.
+            # There 3D scaling is the devfreq governor (performance <->
+            # nvhost_podgov) — the same mechanism Thor uses. Record the
+            # governor node so the service can read/toggle it.
+            gov_path = os.path.join(frq_path, "governor")
+            avail_path = os.path.join(frq_path, "available_governors")
+            if os.path.isfile(gov_path) and 'nvhost_podgov' in (cat(avail_path) if os.path.isfile(avail_path) else ''):
+                igpu[name]['3d_scaling_governor'] = gov_path
+                logger.info(f"GPU \"{name}\" 3D scaling via devfreq governor {gov_path}")
     return igpu
 
 
@@ -528,17 +539,26 @@ class GPUService(object):
 
     def _initialize_gpu_method(self):
         """Initialize GPU monitoring method and return True if using NVML"""
-        # Check if we should use NVML (Jetpack 7.0+)
-        use_nvml = check_jetpack_version() and NVML_AVAILABLE
+        # The real Thor PCIe GPU stack (gpu-gpc-0) exposes no usable nvgpu
+        # sysfs interface and is driven through NVML + the dedicated Thor UI
+        # page. Every other board -- including JetPack 7.x Orin, whose nvgpu
+        # sysfs interface is fully present even though NVML reports almost
+        # nothing (NVMLError_NotSupported for load, clocks, memory, processes)
+        # -- is better served by the traditional sysfs path.
+        if not is_thor():
+            self._initialize_traditional_gpus()
+            if self._gpu_list:
+                logger.info("Using sysfs (devfreq) GPU monitoring")
+                return False
 
-        if use_nvml:
-            if self._try_nvml_init():
-                return True
-            else:
-                logger.info("NVML initialization failed, falling back to traditional method")
+        # Fall back to NVML on JetPack 7.0+ (Thor, or boards without a sysfs iGPU)
+        if check_jetpack_version() and NVML_AVAILABLE and self._try_nvml_init():
+            return True
+        logger.info("NVML unavailable, falling back to traditional method")
 
-        # Use traditional method
-        self._initialize_traditional_gpus()
+        # Last resort: traditional sysfs (covers any board not handled above)
+        if not self._gpu_list:
+            self._initialize_traditional_gpus()
         return False
 
     def _try_nvml_init(self):
@@ -581,6 +601,20 @@ class GPUService(object):
         if self._use_nvml:
             logger.warning("3D scaling control not available via NVML (Jetpack 7.0+)")
             return False
+        # JetPack 7 Orin: 3D scaling is the devfreq governor (no enable_3d_scaling node)
+        if '3d_scaling_governor' in self._gpu_list[name]:
+            gov_path = self._gpu_list[name]['3d_scaling_governor']
+            target = "nvhost_podgov" if value else "performance"
+            try:
+                if os.access(gov_path, os.W_OK):
+                    with open(gov_path, 'w') as f:
+                        f.write(target)
+                    logger.info(f"GPU \"{name}\" set 3D scaling to {value} (governor={target})")
+                else:
+                    logger.error(f"GPU \"{name}\" governor {gov_path} is not writable")
+            except OSError as e:
+                logger.error(f"I cannot set 3D scaling governor {e}")
+            return
         if '3d_scaling' not in self._gpu_list[name]:
             logger.error(f"GPU \"{name}\" does not have 3D scaling")
             return False
@@ -640,6 +674,10 @@ class GPUService(object):
                 if os.access(data['path'] + "/power/control", os.R_OK):
                     with open(data['path'] + "/power/control", 'r') as f:
                         gpu['power_control'] = f.read().strip()
+                # JetPack 7 Orin: 3D scaling state is the devfreq governor
+                if '3d_scaling_governor' in data:
+                    gov = gpu['freq'].get('governor', '')
+                    gpu['status']['3d_scaling'] = bool(gov) and gov != 'performance'
             elif gpu['type'] == 'discrete':
                 logger.info("TODO discrete GPU")
             # Load all status in GPU
