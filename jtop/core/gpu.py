@@ -552,9 +552,12 @@ class GPUService(object):
                 return False
 
         # Fall back to NVML on JetPack 7.0+ (Thor, or boards without a sysfs iGPU)
-        if check_jetpack_version() and NVML_AVAILABLE and self._try_nvml_init():
-            return True
-        logger.info("NVML unavailable, falling back to traditional method")
+        if check_jetpack_version() and NVML_AVAILABLE:
+            if self._try_nvml_init():
+                return True
+            logger.info("NVML initialization failed, falling back to traditional method")
+        else:
+            logger.info("NVML not available, using traditional method")
 
         # Last resort: traditional sysfs (covers any board not handled above)
         if not self._gpu_list:
@@ -605,16 +608,17 @@ class GPUService(object):
         if '3d_scaling_governor' in self._gpu_list[name]:
             gov_path = self._gpu_list[name]['3d_scaling_governor']
             target = "nvhost_podgov" if value else "performance"
+            if not os.access(gov_path, os.W_OK):
+                logger.error(f"GPU \"{name}\" governor {gov_path} is not writable")
+                return False
             try:
-                if os.access(gov_path, os.W_OK):
-                    with open(gov_path, 'w') as f:
-                        f.write(target)
-                    logger.info(f"GPU \"{name}\" set 3D scaling to {value} (governor={target})")
-                else:
-                    logger.error(f"GPU \"{name}\" governor {gov_path} is not writable")
+                with open(gov_path, 'w') as f:
+                    f.write(target)
             except OSError as e:
                 logger.error(f"I cannot set 3D scaling governor {e}")
-            return
+                return False
+            logger.info(f"GPU \"{name}\" set 3D scaling to {value} (governor={target})")
+            return True
         if '3d_scaling' not in self._gpu_list[name]:
             logger.error(f"GPU \"{name}\" does not have 3D scaling")
             return False
