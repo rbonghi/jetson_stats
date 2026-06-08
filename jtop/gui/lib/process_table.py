@@ -25,7 +25,7 @@ header = [
     ("PID", {'clm': 7, 'fn': lambda x: str(x)}),
     ("USER", {'clm': 9, 'fn': lambda x: x}),
     ("GPU", {'clm': 5, 'fn': lambda x: x}),
-    ("TYPE", {'clm': 6, 'fn': lambda x: x[0]}),
+    ("TYPE", {'clm': 9, 'fn': lambda x: x}),
     ("PRI", {'clm': 5, 'fn': lambda x: str(x)}),
     ("S", {'clm': 4, 'fn': lambda x: x}),
     ("CPU%", {'clm': 7, 'fn': lambda x: "{:.1f}".format(x)}),
