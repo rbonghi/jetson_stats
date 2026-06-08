@@ -17,6 +17,7 @@
 
 # Thor GPU backend for jtop — uses sysfs + thor_power helpers
 
+from .process_types import PROCESS_TYPE_COMPUTE, PROCESS_TYPE_GRAPHIC
 import logging
 import os
 import time
@@ -47,6 +48,7 @@ from .thor_power import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 # Thor detection: present if the devfreq GPC domain exists
 THOR_GPC = "/sys/class/devfreq/gpu-gpc-0"
@@ -86,9 +88,9 @@ def nvml_process_table() -> Tuple[int, List]:
     by PID with max() so a process that appears in both lists (common on Thor)
     is counted once at its peak allocation.
 
-    Row format: [pid_str, 'user', process_name, gpu_mem_kb]
-    This matches read_process_table() so ProcessService can consume it
-    without changes.
+    Row format: [pid_str, 'user', process_name, gpu_mem_kb, type_str]
+    type_str is "Compute" or "Graphic"; a PID in both lists is classified
+    as "Compute" (compute getter is queried first).
 
     pynvml is a declared jetson-stats dependency and is available in the jtop
     venv.  NVML does not create a CUDA context — no host1x/DRM side-effects.
@@ -103,15 +105,16 @@ def nvml_process_table() -> Tuple[int, List]:
         return 0, []
     pid_mem: Dict[int, int] = {}
     pid_name: Dict[int, str] = {}
+    pid_type: Dict[int, str] = {}
     for idx in range(count):
         try:
             h = _pynvml.nvmlDeviceGetHandleByIndex(idx)
         except _pynvml.NVMLError as e:
             logger.debug("nvmlDeviceGetHandleByIndex(%d) failed: %s", idx, e)
             continue
-        for getter in (
-            _pynvml.nvmlDeviceGetComputeRunningProcesses,
-            _pynvml.nvmlDeviceGetGraphicsRunningProcesses,
+        for getter, type_str in (
+            (_pynvml.nvmlDeviceGetComputeRunningProcesses, PROCESS_TYPE_COMPUTE),
+            (_pynvml.nvmlDeviceGetGraphicsRunningProcesses, PROCESS_TYPE_GRAPHIC),
         ):
             try:
                 procs = getter(h)
@@ -121,13 +124,16 @@ def nvml_process_table() -> Tuple[int, List]:
                 mem_kb = (p.usedGpuMemory or 0) // 1024
                 # max() — same PID in both lists means same allocation
                 pid_mem[p.pid] = max(pid_mem.get(p.pid, 0), mem_kb)
+                # Compute wins: first-seen type is kept (Compute iterated first)
+                if p.pid not in pid_type:
+                    pid_type[p.pid] = type_str
                 if p.pid not in pid_name:
                     try:
                         pid_name[p.pid] = _pynvml.nvmlSystemGetProcessName(p.pid).split('/')[-1]
                     except _pynvml.NVMLError:
                         pid_name[p.pid] = str(p.pid)
     total_kb = sum(pid_mem.values())
-    rows = [[str(pid), 'user', pid_name[pid], pid_mem[pid]] for pid in pid_mem]
+    rows = [[str(pid), 'user', pid_name[pid], pid_mem[pid], pid_type[pid]] for pid in pid_mem]
     return total_kb, rows
 
 
