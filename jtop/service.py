@@ -668,14 +668,14 @@ class JtopServer(Process):
         self.broadcaster.shutdown()
         # If process is alive wait to quit
         # logger.debug("Status subprocess {status}".format(status=self.is_alive()))
-        while self.is_alive():
-            # If process is in timeout manually terminate
-            if self.interval.value == -1.0:
-                logger.info("Terminate subprocess")
-                self.terminate()
-            logger.info("Wait shutdown subprocess")
+        if self.is_alive():
+            logger.info("Terminate subprocess")
+            self.terminate()
             self.join(timeout=TIMEOUT_SWITCHOFF)
-            self.interval.value = -1.0
+        if self.is_alive():
+            logger.warning("Process did not terminate cleanly, sending SIGKILL")
+            self.kill()
+            self.join(timeout=TIMEOUT_SWITCHOFF)
         # Close tegrastats
         try:
             error = self._error.get(timeout=0.5)
