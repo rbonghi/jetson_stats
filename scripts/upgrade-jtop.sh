@@ -116,30 +116,15 @@ remove_legacy_jtop() {
   fi
 }
 
+sudo -v
 remove_legacy_jtop
-
-# In order to prevent uv from interactively prompting "replace existing venv?" and script error we must
-# remove uv venv where root owned __pycache__/* are written when "sudo jtop" has been run.
-
-clean_stale_venv() {
-  [[ -d "$VENV_DIR" ]] || return 0
-
-  if [[ ! -O "$VENV_DIR" ]] || [[ ! -w "$VENV_DIR" ]]; then
-    echo "Removing stale venv (not owned/writable by $(id -un)): $VENV_DIR"
-    sudo rm -rf "$VENV_DIR"
-    echo "Stale venv removed."
-  fi
-}
-
-clean_stale_venv
 
 # ── Ensure uv and venv exist ───────────────────────────────────────────────
 export PATH="$HOME/.local/bin:$PATH"
 
 if ! command -v uv >/dev/null 2>&1 || [[ ! -d "$VENV_DIR" ]]; then
   echo "uv or jtop venv not found — running full installer..."
-  sudo -v
-  curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash
+  curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash || exit 1
   exit 0
 fi
 
@@ -147,8 +132,7 @@ if [[ ! -x "$JTOP_PYTHON" ]]; then
   echo "Broken jtop venv (Python not found): $JTOP_PYTHON"
   echo "Removing and re-running full installer..."
   sudo rm -rf "$VENV_DIR"
-  sudo -v
-  curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash
+  curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash || exit 1
   exit 0
 fi
 
@@ -164,7 +148,7 @@ else
   echo "$SYSTEMD_SERVICE not found; continuing without stopping service."
 fi
 
-echo "Removing root-owned __pycache__ directories in $VENV_DIR..."
+echo "Removing stale __pycache__ directories in $VENV_DIR..."
 sudo find "$VENV_DIR" \
   -type d -name "__pycache__" -prune \
   -exec rm -rf -- {} + 2>/dev/null || true
