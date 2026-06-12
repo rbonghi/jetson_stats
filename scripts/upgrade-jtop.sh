@@ -33,7 +33,7 @@ if [[ $EUID -eq 0 ]]; then
   exit 1
 fi
 
-# ── Remove legacy system-wide jtop installs ────────────────────────────────
+# Remove legacy system-wide jtop installs
 remove_legacy_jtop() {
   echo "Checking for legacy system jtop installs outside the uv venv..."
 
@@ -116,6 +116,7 @@ remove_legacy_jtop() {
   fi
 }
 
+sudo -v
 remove_legacy_jtop
 
 # ── Ensure uv and venv exist ───────────────────────────────────────────────
@@ -123,23 +124,16 @@ export PATH="$HOME/.local/bin:$PATH"
 
 if ! command -v uv >/dev/null 2>&1 || [[ ! -d "$VENV_DIR" ]]; then
   echo "uv or jtop venv not found — running full installer..."
-  sudo -v
-  curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash
+  curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash || exit 1
   exit 0
 fi
 
 if [[ ! -x "$JTOP_PYTHON" ]]; then
-  echo "Existing jtop venv Python not found:"
-  echo "  $JTOP_PYTHON"
-  echo "Run the full installer first."
-  exit 1
-fi
-
-# ── Resolve site-packages path dynamically ────────────────────────────────
-SITE_PACKAGES="$("$JTOP_PYTHON" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
-if [[ -z "$SITE_PACKAGES" ]]; then
-  echo "Cannot locate site-packages for $JTOP_PYTHON"
-  exit 1
+  echo "Broken jtop venv (Python not found): $JTOP_PYTHON"
+  echo "Removing and re-running full installer..."
+  sudo rm -rf "$VENV_DIR"
+  curl -LsSf https://raw.githubusercontent.com/rbonghi/jetson_stats/master/scripts/install_jtop_torun_without_sudo.sh | bash || exit 1
+  exit 0
 fi
 
 # ── Stop service, clean pycache, upgrade ──────────────────────────────────
@@ -154,19 +148,10 @@ else
   echo "$SYSTEMD_SERVICE not found; continuing without stopping service."
 fi
 
-if [[ -d "$SITE_PACKAGES" ]]; then
-  echo "Removing stale __pycache__ directories under:"
-  echo "  $SITE_PACKAGES"
-  sudo find "$SITE_PACKAGES" \
-    -type d \
-    -name '__pycache__' \
-    -prune \
-    -exec rm -rf {} +
-else
-  echo "site-packages directory not found:"
-  echo "  $SITE_PACKAGES"
-  exit 1
-fi
+echo "Removing stale __pycache__ directories in $VENV_DIR..."
+sudo find "$VENV_DIR" \
+  -type d -name "__pycache__" -prune \
+  -exec rm -rf -- {} + 2>/dev/null || true
 
 echo "Upgrading $PKG_NAME from:"
 echo "  $JTOP_REF"
