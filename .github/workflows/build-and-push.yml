@@ -15,7 +15,7 @@ jobs:
     name: Auto style code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -52,7 +52,7 @@ jobs:
 
     steps:
       - run: echo "Branch $GITHUB_REF"
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -83,7 +83,7 @@ jobs:
       version: ${{ steps.get_version.outputs.version }}
       created: ${{ steps.push_tag.outcome == 'success' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.ACCESS_TOKEN }}
@@ -163,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Build sphinx
@@ -202,7 +202,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Docker Hub Description # https://github.com/peter-evans/dockerhub-description
         uses: peter-evans/dockerhub-description@v5
         with:
