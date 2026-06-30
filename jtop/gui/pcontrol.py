@@ -88,6 +88,11 @@ SENSOR_COL_W = SENSOR_NAME_W + SENSOR_VALUE_W + SENSOR_COL_GAP
 SENSOR_HEADER_ROWS = 2    # [Sensor] title row + Name/Temp header row
 SENSOR_TITLE = " [Sensor] "
 
+# Cap each fan's chart height so the gauge can't eat the whole upper third
+# of a short SSH terminal — otherwise the Sensor block at the bottom is
+# left with too few rows to wrap into and most sensors fall off the screen.
+FAN_HEIGHT_MAX = 8
+
 
 def draw_sensor_block_ctrl(stdscr, pos_y: int, pos_x: int, width: int, height: int, jetson) -> int:
     """Draw a compact Sensors block similar to Jetson Power GUI.
@@ -494,11 +499,8 @@ class CTRL(Page):
     def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
-        # Measure height. Cap each fan's chart so the gauge can't eat the
-        # whole upper third of a short SSH terminal — otherwise the Sensor
-        # block at the bottom is left with too few rows to wrap into and
-        # most sensors fall off the screen.
-        FAN_HEIGHT_MAX = 8
+        # Measure height (FAN_HEIGHT_MAX caps the chart on short terminals;
+        # see the module-level constant for rationale).
         fan_height = (height * 1 // 3 + 2) // len(self.jetson.fan) if len(self.jetson.fan) > 0 else 0
         fan_height = min(fan_height, FAN_HEIGHT_MAX) if fan_height else 0
         # Draw all GPU
