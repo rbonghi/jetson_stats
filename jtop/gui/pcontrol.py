@@ -143,14 +143,15 @@ def compact_temperatures(stdscr, pos_y, pos_x, width, height, jetson):
     counter = 0
     center_x = pos_x + width // 2 + 1
     offset = 2
-    # Plot title
+    # Plot title (extra padding before [Temp] so the two headers don't butt together)
     stdscr.addstr(pos_y, center_x - offset - 10, " [Sensor] ", curses.A_BOLD)
-    stdscr.addstr(pos_y, center_x + offset, " [Temp] ", curses.A_BOLD)
+    stdscr.addstr(pos_y, center_x + offset + 2, " [Temp] ", curses.A_BOLD)
     # Plot name and temperatures
     for idx, (name, sensor) in enumerate(jetson.temperature.items()):
         # Plot temperature
         try:
-            color_temperature(stdscr, pos_y + idx + 1, center_x - 5 * offset, name, sensor, offset=4 * offset)
+            # offset=4*offset + 2 shifts the value column to sit flush under the [Temp] header
+            color_temperature(stdscr, pos_y + idx + 1, center_x - 5 * offset, name, sensor, offset=4 * offset + 2)
         except curses.error:
             break
         counter = idx
