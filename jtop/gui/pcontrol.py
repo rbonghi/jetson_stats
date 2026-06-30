@@ -86,6 +86,7 @@ SENSOR_VALUE_W = 10       # width of the "  NN.NC" temperature column
 SENSOR_COL_GAP = 2        # blank columns between adjacent sensor columns
 SENSOR_COL_W = SENSOR_NAME_W + SENSOR_VALUE_W + SENSOR_COL_GAP
 SENSOR_HEADER_ROWS = 2    # [Sensor] title row + Name/Temp header row
+SENSOR_TITLE = " [Sensor] "
 
 
 def draw_sensor_block_ctrl(stdscr, pos_y: int, pos_x: int, width: int, height: int, jetson) -> int:
@@ -110,8 +111,9 @@ def draw_sensor_block_ctrl(stdscr, pos_y: int, pos_x: int, width: int, height: i
 
     # Centre the [Sensor] title over the actually-used width.
     used_w = n_cols * SENSOR_COL_W - SENSOR_COL_GAP
+    title_x = pos_x + max(0, (used_w - len(SENSOR_TITLE)) // 2)
     try:
-        stdscr.addstr(pos_y, pos_x + max(0, used_w // 2 - 4), " [Sensor] ", curses.A_BOLD)
+        stdscr.addstr(pos_y, title_x, SENSOR_TITLE, curses.A_BOLD)
     except curses.error:
         pass
 
@@ -141,7 +143,9 @@ def draw_sensor_block_ctrl(stdscr, pos_y: int, pos_x: int, width: int, height: i
         except curses.error:
             pass
 
-    rows_used = min(rows_per_col, (len(temps) + n_cols - 1) // n_cols) if n_cols else 0
+    # Top-to-bottom fill means column 0 always holds the most rows, so the
+    # tallest column's row count is simply min(rows_per_col, len(temps)).
+    rows_used = min(rows_per_col, len(temps))
     return SENSOR_HEADER_ROWS + rows_used
 
 
