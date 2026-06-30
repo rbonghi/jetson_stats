@@ -523,6 +523,8 @@ class JetsonClocksService(object):
             list_engines = decode_show_message(lines)
         except Command.TimeoutException as e:
             logger.warning("Timeout {}".format(e))
+        except Command.CommandException as e:
+            logger.warning("jetson_clocks --show failed: {}".format(e))
         return list_engines
 
     def store(self):
