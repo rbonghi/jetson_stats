@@ -39,7 +39,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 # default ipgu path for Jetson devices
 DEFAULT_IGPU_PATH = "/sys/class/devfreq/"
-KNOWN_GPU_DEVICE_NAMES = {'gv11b', 'gp10b', 'ga10b', 'gb10b', 'gpu'}
+KNOWN_GPU_DEVICE_NAMES = {'gv11b', 'gp10b', 'ga10b', 'gb10b', 'gpu', 'gpu-gpc-0'}
 
 # Constants for NVML
 WATTS_TO_MILLIWATTS = 1000.0
@@ -155,6 +155,9 @@ def igpu_read_status(path):
         with open(path + "/load", 'r') as f:
             # Read current GPU load
             gpu['load'] = float(f.read()) / 10.0
+    elif is_thor():
+        nvml_status = nvml_read_gpu_status() if NVML_AVAILABLE else {}
+        gpu['load'] = next(iter(nvml_status.values()))['status']['load'] if nvml_status else DEFAULT_LOAD
     return gpu
 
 
@@ -189,12 +192,15 @@ def find_igpu(igpu_path):
             continue
 
         name_path = os.path.join(item_path, "device", "of_node", "name")
-        if not os.path.isfile(name_path):
+        if os.path.isfile(name_path):
+            name = cat(name_path).strip()
+            normalized_name = name.lower()
+        elif item in KNOWN_GPU_DEVICE_NAMES:
+            name = item
+            normalized_name = item.lower()
+        else:
             logger.debug(f"Missing of_node name for {item_path}")
             continue
-
-        name = cat(name_path).strip()
-        normalized_name = name.lower()
 
         if normalized_name not in KNOWN_GPU_DEVICE_NAMES and 'gpu' not in normalized_name:
             logger.debug(f"Skipped {name}")
