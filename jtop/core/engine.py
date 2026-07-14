@@ -34,8 +34,12 @@ def read_engine(path):
     # Check if access to this file
     if os.access(path + "/clk_rate", os.R_OK):
         with open(path + "/clk_rate", 'r') as f:
-            # Write current engine
-            engine['cur'] = int(f.read()) // 1000
+            rate = int(f.read())
+            engine['cur'] = rate // 1000
+            # Some clocks (e.g. pva0_cpu_axi, pva0_vps on Orin) report
+            # enable_count=0 but still run at a non-zero rate — treat as online.
+            if rate > 0 and not engine.get('online', False):
+                engine['online'] = True
     # Decode clock rate
     max_value = False
     if os.access(path + "/clk_max_rate", os.R_OK):
@@ -55,7 +59,7 @@ def read_engine(path):
 
 class EngineService(object):
 
-    ENGINES = ['ape', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc', 'ofa']
+    ENGINES = ['ape.', 'dla', 'pva', 'vic', 'nvjpg', 'nvenc', 'nvdec', 'se.', 'cvnas', 'msenc', 'ofa']
 
     def __init__(self):
         # Sort list before start
