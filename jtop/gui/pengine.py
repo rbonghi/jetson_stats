@@ -288,10 +288,10 @@ def pass_thor(engine):
 def pass_orin(engine):
     return [
         add_engine_in_list('APE', engine, 'APE', 'APE') + add_engine_in_list('PVA0a', engine, 'PVA0', 'PVA0_CPU_AXI'),
-        add_engine_in_list('DLA0c', engine, 'DLA0', 'DLA0_CORE') + add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE'),
-        add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC') + add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC'),
-        add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG') + add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1'),
-        add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
+        add_engine_in_list('PVA0v', engine, 'PVA0', 'PVA0_VPS') + add_engine_in_list('DLA0c', engine, 'DLA0', 'DLA0_CORE'),
+        add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE') + add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC'),
+        add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC') + add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG'),
+        add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1') + add_engine_in_list('SE', engine, 'SE', 'SE') + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
     ]
 
 
