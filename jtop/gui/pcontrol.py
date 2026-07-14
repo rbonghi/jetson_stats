@@ -78,44 +78,80 @@ def _collect_temps_for_ctrl(jetson) -> list:
     return sorted(temps, key=lambda t: t[0].lower())
 
 
+# Sensor-block layout constants (single source of truth for column geometry).
+# Multi-column wrapping uses these to compute every x/y offset, so spacing
+# changes only require editing the constants below.
+SENSOR_NAME_W = 18        # width of the name column
+SENSOR_VALUE_W = 10       # width of the "  NN.NC" temperature column
+SENSOR_COL_GAP = 2        # blank columns between adjacent sensor columns
+SENSOR_COL_W = SENSOR_NAME_W + SENSOR_VALUE_W + SENSOR_COL_GAP
+SENSOR_HEADER_ROWS = 2    # [Sensor] title row + Name/Temp header row
+SENSOR_TITLE = " [Sensor] "
+
+# Cap each fan's chart height so the gauge can't eat the whole upper third
+# of a short SSH terminal — otherwise the Sensor block at the bottom is
+# left with too few rows to wrap into and most sensors fall off the screen.
+FAN_HEIGHT_MAX = 8
+
+
 def draw_sensor_block_ctrl(stdscr, pos_y: int, pos_x: int, width: int, height: int, jetson) -> int:
-    """Draw a compact Sensors block similar to Jetson Power GUI."""
+    """Draw a compact Sensors block similar to Jetson Power GUI.
+
+    When the available height is too small to list every sensor in a single
+    column, the list wraps into additional columns to the right (top-to-bottom,
+    then left-to-right) so users on short SSH terminals still see all sensors.
+    """
     temps = _collect_temps_for_ctrl(jetson)
     if not temps:
         return 0
 
-    # Keep inside available height
-    max_rows = max(0, height - 3)
-    temps = temps[:max_rows] if max_rows else temps[:8]
+    rows_per_col = max(1, height - SENSOR_HEADER_ROWS)
+    max_cols = max(1, (width + SENSOR_COL_GAP) // SENSOR_COL_W)
+    cols_needed = (len(temps) + rows_per_col - 1) // rows_per_col
+    n_cols = max(1, min(max_cols, cols_needed))
 
+    # Truncate only if even the multi-column layout cannot fit every sensor.
+    capacity = rows_per_col * n_cols
+    temps = temps[:capacity]
+
+    # Centre the [Sensor] title over the actually-used width.
+    used_w = n_cols * SENSOR_COL_W - SENSOR_COL_GAP
+    title_x = pos_x + max(0, (used_w - len(SENSOR_TITLE)) // 2)
     try:
-        stdscr.addstr(pos_y, pos_x + width // 2 - 6, " [Sensor] ", curses.A_BOLD)
+        stdscr.addstr(pos_y, title_x, SENSOR_TITLE, curses.A_BOLD)
     except curses.error:
         pass
-    pos_y += 1
 
-    # Header
-    try:
-        stdscr.addstr(pos_y, pos_x, f"{'Name':<18} {'Temp (C)':>10}", curses.A_BOLD)
-    except curses.error:
-        pass
-    pos_y += 1
+    header_y = pos_y + 1
+    header_fmt = f"{{:<{SENSOR_NAME_W}}} {{:>{SENSOR_VALUE_W - 1}}}"
+    for col in range(n_cols):
+        cx = pos_x + col * SENSOR_COL_W
+        try:
+            stdscr.addstr(header_y, cx, header_fmt.format("Name", "Temp (C)"), curses.A_BOLD)
+        except curses.error:
+            pass
 
-    for name, c in temps:
-        # Color by thresholds (reuse existing constants)
+    data_y = pos_y + SENSOR_HEADER_ROWS
+    for idx, (name, c) in enumerate(temps):
+        col, row = divmod(idx, rows_per_col)
+        cx = pos_x + col * SENSOR_COL_W
+        cy = data_y + row
+
         color = curses.A_NORMAL
         if c >= TEMPERATURE_CRIT:
             color = NColors.red()
         elif c >= TEMPERATURE_MAX:
             color = NColors.yellow()
         try:
-            stdscr.addstr(pos_y, pos_x, f"{name:<18}", curses.A_NORMAL)
-            stdscr.addstr(pos_y, pos_x + 18, f"{c:>9.1f}C", color)
+            stdscr.addstr(cy, cx, f"{name:<{SENSOR_NAME_W}}", curses.A_NORMAL)
+            stdscr.addstr(cy, cx + SENSOR_NAME_W, f"{c:>{SENSOR_VALUE_W - 1}.1f}C", color)
         except curses.error:
             pass
-        pos_y += 1
 
-    return 2 + len(temps)
+    # Top-to-bottom fill means column 0 always holds the most rows, so the
+    # tallest column's row count is simply min(rows_per_col, len(temps)).
+    rows_used = min(rows_per_col, len(temps))
+    return SENSOR_HEADER_ROWS + rows_used
 
 
 def color_temperature(stdscr, pos_y, pos_x, name, sensor, offset=0):
@@ -463,8 +499,10 @@ class CTRL(Page):
     def draw(self, key, mouse):
         # Screen size
         height, width, first = self.size_page()
-        # Measure height
+        # Measure height (FAN_HEIGHT_MAX caps the chart on short terminals;
+        # see the module-level constant for rationale).
         fan_height = (height * 1 // 3 + 2) // len(self.jetson.fan) if len(self.jetson.fan) > 0 else 0
+        fan_height = min(fan_height, FAN_HEIGHT_MAX) if fan_height else 0
         # Draw all GPU
         for fan_idx, (fan_gui, fan_name) in enumerate(zip(self._fan_gui, self.jetson.fan)):
             gui_chart = self._fan_gui[fan_gui]
@@ -537,10 +575,19 @@ class CTRL(Page):
             power_rows = 6
 
         sensors_y = first + 1 + line_counter + power_rows + 1
-        sensors_x = width_spacing
-        sensors_w = 30 if sensors_x + 30 < width - 1 else max(20, width - sensors_x - 2)
-        sensors_h = max(6, height - sensors_y - 1)
+        # Start at the left margin (sensor block sits below both the NVP
+        # modes panel and the Power table, so there's no horizontal
+        # collision) — this gives multi-column wrap the full screen width
+        # to work with on narrow SSH terminals.
+        sensors_x = 1
+        sensors_w = max(SENSOR_COL_W, width - sensors_x - 2)
+        # Pass the true remaining height (no artificial floor). Inflating
+        # this would make the function lay out rows that fall off the
+        # terminal and get silently clipped, instead of wrapping into more
+        # columns where the data is actually visible.
+        sensors_h = max(0, height - sensors_y - 1)
 
-        draw_sensor_block_ctrl(self.stdscr, sensors_y, sensors_x, sensors_w, sensors_h, self.jetson)
+        if sensors_h >= SENSOR_HEADER_ROWS + 1:
+            draw_sensor_block_ctrl(self.stdscr, sensors_y, sensors_x, sensors_w, sensors_h, self.jetson)
 
 # EOF
