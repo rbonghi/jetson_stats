@@ -532,6 +532,9 @@ class GPUService(object):
     def __init__(self):
         self._gpu_list = {}
         self._nvml_device_count = 0
+        # When True, get_status() keeps re-probing sysfs to recover from an
+        # early-boot fallback to NVML (see _initialize_gpu_method).
+        self._sysfs_retry = False
         self._use_nvml = self._initialize_gpu_method()
 
         if not self._use_nvml and not self._gpu_list:
@@ -550,6 +553,15 @@ class GPUService(object):
             if self._gpu_list:
                 logger.info("Using sysfs (devfreq) GPU monitoring")
                 return False
+            # Non-Thor board, but no sysfs iGPU found yet. This is the classic
+            # early-boot race: jtop.service starts before the nvgpu devfreq node
+            # (/sys/class/devfreq/<id>.gpu) is populated. On these boards sysfs
+            # is authoritative -- NVML reports NVMLError_NotSupported for
+            # utilization on Orin, so latching NVML would pin GPU load at 0 for
+            # the whole session. Fall back to NVML only as a stop-gap and keep
+            # re-probing sysfs on every get_status() (see below).
+            self._sysfs_retry = True
+            logger.warning("No sysfs iGPU detected yet; will keep probing sysfs (NVML used meanwhile)")
 
         # Fall back to NVML on JetPack 7.0+ (Thor, or boards without a sysfs iGPU)
         if check_jetpack_version() and NVML_AVAILABLE:
@@ -585,14 +597,18 @@ class GPUService(object):
             logger.warning(f"NVML check failed: {e}")
             return False
 
-    def _initialize_traditional_gpus(self):
-        """Initialize GPU list using traditional sysfs method"""
-        # Detect integrated GPU using traditional method
+    def _probe_sysfs_igpu(self):
+        """Detect integrated GPU via sysfs (devfreq). Returns a dict (empty if none)."""
         igpu_path = DEFAULT_IGPU_PATH
         if os.getenv('JTOP_TESTING', False):
             igpu_path = "/fake_sys/class/devfreq/"
             logger.warning(f"Running in JTOP_TESTING folder={igpu_path}")
-        self._gpu_list = find_igpu(igpu_path)
+        return find_igpu(igpu_path)
+
+    def _initialize_traditional_gpus(self):
+        """Initialize GPU list using traditional sysfs method"""
+        # Detect integrated GPU using traditional method
+        self._gpu_list = self._probe_sysfs_igpu()
         # Find discrete GPU
         self._gpu_list.update(find_dgpu())
 
@@ -658,6 +674,22 @@ class GPUService(object):
             logger.error(f"I cannot set Railgate {e}")
 
     def get_status(self):
+        # Recover from an early-boot fallback to NVML: on non-Thor boards sysfs
+        # is authoritative, so upgrade to it as soon as the (late-appearing)
+        # nvgpu devfreq node shows up. Without this, a service that started
+        # before the node was populated would report GPU load as 0 forever.
+        if self._sysfs_retry:
+            igpu_path = "/fake_sys/class/devfreq/" if os.getenv('JTOP_TESTING', False) else DEFAULT_IGPU_PATH
+            # Probe only when the devfreq class dir exists, to avoid logging an
+            # error every tick on hosts that legitimately have no devfreq.
+            if os.path.isdir(igpu_path):
+                igpu = self._probe_sysfs_igpu()
+                if igpu:
+                    self._gpu_list = igpu
+                    self._use_nvml = False
+                    self._sysfs_retry = False
+                    logger.info("sysfs iGPU now available; switching from NVML to sysfs GPU monitoring")
+
         if self._use_nvml:
             # Use NVML for Jetpack 7.0+
             return nvml_read_gpu_status()
