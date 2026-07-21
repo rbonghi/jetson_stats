@@ -291,7 +291,7 @@ def get_variables_from_dtsfilename():
         else:
             print("jetson model and board not available")
             print(parts)
-    # Decode CUDA architecure
+    # Decode CUDA architecture
     hardware['CUDA_ARCH_BIN'] = CUDA_TABLE.get(hardware['SOC'], '')
     return hardware
 
