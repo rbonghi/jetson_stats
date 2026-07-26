@@ -37,7 +37,7 @@ from typing import Optional, Dict, Any
 # jetson_stats imports
 from .core.exceptions import JtopException
 from .core.common import get_key, get_var, get_uptime
-from .core.hardware import get_hardware, get_platform_variables
+from .core.hardware import get_hardware, get_platform_variables, get_cpu_static_info
 from .core.command import Command
 from .core.config import Config
 from .core.timer_reader import TimerReader
@@ -417,7 +417,7 @@ class JtopServer(Process):
         # Load board and platform variables
         data_platform = get_platform_variables()
         logger.info("Running on Python: {python_version}".format(python_version=data_platform['Python']))
-        self.board = {'hardware': get_hardware()}
+        self.board = {'hardware': get_hardware(), 'cpu': get_cpu_static_info()}
         # From this point are initialized or hardware services
         # Setup cpu service
         self.cpu = CPUService()
