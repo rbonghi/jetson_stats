@@ -105,28 +105,28 @@ class CPU(Page):
         }
 
     def print_cpu(self, stdscr, idx, cpu, pos_y, pos_x, size_h, size_w):
-        # Print status CPU
+        # Slot layout — last row (pos_y + size_h) is left blank as a separator:
+        #   pos_y .. row_chart  chart
+        #   row_model           model name
+        #   row_freq            freq gauge
+        row_chart = pos_y + size_h - 3
+        row_model = pos_y + size_h - 2
+        row_freq  = pos_y + size_h - 1
         governor = cpu.get('governor', '').capitalize()
         label_chart_cpu = "{percent: >3.0f}% {governor}".format(percent=100 - cpu.get('idle', 100), governor=governor)
-        # Print chart — stop 3 rows before the slot boundary so model and Frq
-        # each get a row, leaving a blank separator row before the next CPU.
         chart = self._chart_cpus[idx]
-        chart.draw(stdscr, [pos_x, pos_x + size_w], [pos_y, pos_y + size_h - 3], label=label_chart_cpu, y_label=False)
-        # Print model
-        model = cpu['model'] if 'model' in cpu else ''
-        model = model[:size_w]
+        chart.draw(stdscr, [pos_x, pos_x + size_w], [pos_y, row_chart], label=label_chart_cpu, y_label=False)
+        model = (cpu.get('model', '') or '')[:size_w]
         try:
-            stdscr.addstr(pos_y + size_h - 2, pos_x, model, curses.A_NORMAL)
+            stdscr.addstr(row_model, pos_x, model, curses.A_NORMAL)
         except curses.error:
             pass
-        # Print info — one row above the slot boundary so the blank boundary
-        # row acts as visual separation from the next CPU block.
         if 'freq' in cpu:
             freq = cpu['freq']
             freq['online'] = cpu['online']
             freq['name'] = "Frq"
             try:
-                freq_gauge(stdscr, pos_y + size_h - 1, pos_x, size_w, cpu['freq'])
+                freq_gauge(stdscr, row_freq, pos_x, size_w, cpu['freq'])
             except curses.error:
                 pass
 
