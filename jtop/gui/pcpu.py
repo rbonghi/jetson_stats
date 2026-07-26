@@ -158,7 +158,7 @@ class CPU(Page):
         #   row_chart            time axis   (L -6s  L -4s  L -2s  0)
         #   row_freq             freq gauge
         row_chart = pos_y + size_h - 2
-        row_freq  = pos_y + size_h - 1
+        row_freq = pos_y + size_h - 1
         governor = cpu.get('governor', '').capitalize()
         label_chart_cpu = "{percent: >3.0f}% {governor}".format(percent=100 - cpu.get('idle', 100), governor=governor)
         chart = self._chart_cpus[idx]
