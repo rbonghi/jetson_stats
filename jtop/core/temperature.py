@@ -96,9 +96,9 @@ def get_hwmon_thermal_system(root_dir):
             number_port = int(parsed_name['num'])
             # Read name
             raw_name = cat(name_label_path).strip()
-            # Prefix with the hwmon device name (e.g. "nvme" + "Sensor 1" -> "nvmeSensor1")
+            # Prefix with the hwmon device name (e.g. "nvme" + "Composite" -> "nvme Composite")
             if device_name:
-                raw_name = "{dev}{label}".format(dev=device_name, label=re.sub(r'\s+', '', raw_name))
+                raw_name = "{dev} {label}".format(dev=device_name, label=raw_name.strip())
             logger.info("Found temperature sensor: {name}".format(name=raw_name))
             # Build list of path
             path_crit_alarm = os.path.join(path, "temp{num}_crit_alarm".format(num=number_port))
