@@ -32,6 +32,24 @@ COPYRIGHT_RE = re.compile(r""".*__copyright__ = ["'](.*?)['"]""", re.S)
 EMAIL_RE = re.compile(r""".*__email__ = ["'](.*?)['"]""", re.S)
 
 
+def plot_cpu_info(stdscr, pos_y, pos_x, cpu_info):
+    KEY_W = 22
+    try:
+        stdscr.addstr(pos_y, pos_x, 'CPU', curses.A_BOLD)
+    except curses.error:
+        pass
+    for idx, (name, value) in enumerate(cpu_info.items()):
+        try:
+            stdscr.addstr(pos_y + idx + 1, pos_x + 1, name + ':', curses.A_BOLD)
+        except curses.error:
+            pass
+        try:
+            stdscr.addstr(pos_y + idx + 1, pos_x + 1 + KEY_W, value, curses.A_NORMAL)
+        except curses.error:
+            pass
+    return len(cpu_info) + 1
+
+
 def plot_libraries(stdscr, pos_y, pos_x, libraries):
     libraries = deepcopy(libraries)
     opencv = libraries['OpenCV']
@@ -99,27 +117,31 @@ class INFO(Page):
         platform_size_y, platform_size_x = plot_dictionary(self.stdscr, start_pos, 1, 'Platform', self.jetson.board['platform'])
         # Plot libraries
         libraries_size_y, libraries_size_x = plot_libraries(self.stdscr, start_pos + platform_size_y + 1, 1, self.jetson.board['libraries'])
+        # Plot CPU static info
+        cpu_info = self.jetson.board.get('cpu', {})
+        if cpu_info:
+            plot_cpu_info(self.stdscr, start_pos + platform_size_y + 1 + libraries_size_y + 1, 1, cpu_info)
         # Plot hardware
-        size_hardware_x = width - platform_size_x - 2
+        right_col_x = 1 + platform_size_x + 7
+        size_hardware_x = width - right_col_x - 1
         # Plot serial number
         offset_y_sn = 0
         if 'Serial Number' in self.jetson.board['hardware']:
             if self.jetson.board['hardware']['Serial Number']:
                 try:
-                    self.stdscr.addstr(start_pos, 1 + platform_size_x + 1, "Serial Number:", curses.A_BOLD)
+                    self.stdscr.addstr(start_pos, right_col_x, "Serial Number:", curses.A_BOLD)
                 except curses.error:
                     pass
-                self._hide_serial_number.update(start_pos, 1 + platform_size_x + 16, key=key, mouse=mouse)
+                self._hide_serial_number.update(start_pos, right_col_x + 15, key=key, mouse=mouse)
                 offset_y_sn = 1
         hardware_size_y, hardware_size_x = plot_hardware(self.stdscr,
                                                          start_pos + offset_y_sn,
-                                                         1 + platform_size_x + 1,
+                                                         right_col_x,
                                                          self.jetson.board['hardware'], size_hardware_x)
         hardware_size_y += offset_y_sn
         # Plot interfaces
         interfaces = self.jetson.local_interfaces["interfaces"]
         hostname = self.jetson.local_interfaces["hostname"]
-        max_size_x = max(platform_size_x, libraries_size_x)
-        plot_name_info(self.stdscr, start_pos + hardware_size_y + 1, 2 + max_size_x, "Hostname", hostname)
-        interfaces_size_y, interfaces_size_x = plot_dictionary(self.stdscr, start_pos + hardware_size_y + 2, 2 + max_size_x, 'Interfaces', interfaces)
+        plot_name_info(self.stdscr, start_pos + hardware_size_y + 1, right_col_x, "Hostname", hostname)
+        interfaces_size_y, interfaces_size_x = plot_dictionary(self.stdscr, start_pos + hardware_size_y + 2, right_col_x, 'Interfaces', interfaces)
 # EOF

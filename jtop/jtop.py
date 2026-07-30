@@ -1152,6 +1152,8 @@ sudo jtop --install-service""".format(
         self._server_interval = init['interval']
         # Load board information
         self._board['hardware'] = init['board']['hardware']
+        if 'cpu' in init['board']:
+            self._board['cpu'] = init['board']['cpu']
         # Initialize gpu controller
         self._gpu._initialize(self._controller)
         # Initialize memory controller
