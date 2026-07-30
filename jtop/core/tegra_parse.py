@@ -23,8 +23,14 @@ SWAP_RE = re.compile(r'SWAP (\d+)\/(\d+)(\w)B( ?)\(cached (\d+)(\w)B\)')
 IRAM_RE = re.compile(r'IRAM (\d+)\/(\d+)(\w)B( ?)\(lfb (\d+)(\w)B\)')
 RAM_RE = re.compile(r'RAM (\d+)\/(\d+)(\w)B( ?)\(lfb (\d+)x(\d+)(\w)B\)')
 MTS_RE = re.compile(r'MTS fg (\d+)% bg (\d+)%')
-VALS_PLAIN_RE = re.compile(r'\b([A-Z0-9_]+) ([0-9%@]+)(?=[^/])\b')
-VALS_ARRAY_RE = re.compile(r'\b([A-Z0-9_]+) @\[([0-9,]+)\]')
+# The "(?!%?@\[)" guard makes this regex refuse the array forms outright, so it
+# cannot half-match "GR3D_FREQ 0%@[1300,1300]" as "GR3D_FREQ 0" and silently drop
+# the frequency. VALS_ARRAY_RE owns those; the two regexes are mutually exclusive.
+VALS_PLAIN_RE = re.compile(r'\b([A-Z0-9_]+) ([0-9%@]+)(?!%?@\[)(?=[^/])\b')
+# Matches both array forms:
+#   - Thor          "GR3D_FREQ @[1000,1000,1000]"   (no utilization)
+#   - JetPack 7 Orin "GR3D_FREQ 0%@[1300,1300]"     (utilization + per-GPC array)
+VALS_ARRAY_RE = re.compile(r'\b([A-Z0-9_]+) (?:(\d+)%)?@\[([0-9,]+)\]')
 VAL_FRE_ONLY_RE = re.compile(r'@(\d+)$')
 VAL_FRE_UTIL_RE = re.compile(r'\b(\d+)%@(\d+)')
 CPU_RE = re.compile(r'CPU \[(.*?)\]')
@@ -157,6 +163,12 @@ def VALS(text):
           GR3D is the GPU engine.
           On Thor and Orin, GR3D reports per-GPC frequencies as an array without utilization.
           Y = GR3D frequency in megahertz
+        - GR3D X%@[Y,Y]
+          GR3D is the GPU engine.
+          On JetPack 7 Orin, GR3D reports the utilization together with the per-GPC
+          frequency array.
+          X = Percent of the GR3D that is being used, relative to the current running frequency.
+          Y = GR3D frequency in megahertz
         - MSENC Y
           Y = MSENC frequency in megahertz.
           MSENC is the video hardware encoding engine.
@@ -169,12 +181,18 @@ def VALS(text):
           It is shown only when hardware decoder/encoder engine is used.
     """
     vals = {}
-    # Parse array values (Thor: GR3D_FREQ @[1000,1000,1000])
-    for name, val in re.findall(VALS_ARRAY_RE, text):
+    # Parse array values (Thor: GR3D_FREQ @[1000,1000,1000],
+    # JetPack 7 Orin: GR3D_FREQ 0%@[1300,1300]). VALS_PLAIN_RE is guarded so it
+    # cannot match these, so the two passes are independent of each other.
+    for name, util, val in re.findall(VALS_ARRAY_RE, text):
         # Remove "FREQ" from name and export max if unset
         name = name.split('_')[0] if "FREQ" in name else name
         freqs = [int(v) * 1000 for v in val.split(',')]
-        vals.setdefault(name, {'frq': max(freqs)})
+        status = {'frq': max(freqs)}
+        # JetPack 7 reports the utilization before the per-GPC array
+        if util:
+            status['val'] = int(util)
+        vals.setdefault(name, status)
     # Parse plain values (Orin: GR3D_FREQ 10%@1000)
     for name, val in re.findall(VALS_PLAIN_RE, text):
         # Remove "FREQ" from name and export if unset
