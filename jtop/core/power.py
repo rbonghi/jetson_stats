@@ -36,8 +36,11 @@ def total_power(power):
     # https://forums.developer.nvidia.com/t/tegrastats-monitoring/217088/4?u=user62045
     # https://forums.developer.nvidia.com/t/orin-nx-power-data-from-jtop/242804/5
     total_name = ""
-    for val in power:
-        if val in ["POM_5V_IN", "VDD_IN"]:
+    # Prefer the Thor carrier-board INA238 VIN rail when present. It is the
+    # complete system-input measurement, so it must replace (not be added to)
+    # the individual module rails.
+    for val in ["VIN", "POM_5V_IN", "VDD_IN"]:
+        if val in power:
             total_name = val
             break
     # Extract the total from list
@@ -89,16 +92,23 @@ def find_all_i2c_power_monitor(i2c_path):
         name_path = "{path}/name".format(path=path)
         if os.path.isfile(name_path):
             raw_name = cat(name_path).strip()
-            # Find all shunt and bus voltage monitor mounted on board
-            # https://www.ti.com/product/INA3221
-            if 'ina3221' in raw_name:
-                # Check which type of driver is working
-                power_i2c_sensors[item] = find_driver_power_folders(path)
+            # Find all shunt and bus voltage monitors mounted on board.
+            # Thor uses both an INA3221 for module rails and an INA238 for
+            # carrier-board system input power.
+            driver_name = raw_name.lower()
+            if 'ina3221' in driver_name or 'ina238' in driver_name:
+                power_i2c_sensors[item] = {
+                    'driver': driver_name,
+                    'paths': find_driver_power_folders(path),
+                }
     # Build list of all power folder outputs
     # Find all voltage and current monitor
-    for name, paths in power_i2c_sensors.items():
-        for path in paths:
-            sensors = list_all_i2c_ports(path)
+    for monitor in power_i2c_sensors.values():
+        for path in monitor['paths']:
+            if 'ina238' in monitor['driver']:
+                sensors = list_all_ina238_ports(path)
+            else:
+                sensors = list_all_i2c_ports(path)
             power_sensor.update(sensors)
     if power_sensor:
         logger.info("Found I2C power monitor")
@@ -121,10 +131,38 @@ def read_power_status(data):
             # Fix from values with "ma" in the end, like
             # warn 32760 ma
             raw_value = int(cat(path).split(" ")[0])
-            values[name] = raw_value // 1000 if power_type != 'INA3221' else raw_value
+            if power_type == 'INA3221':
+                # INA3221 hwmon voltage/current values are already mV/mA.
+                values[name] = raw_value
+            elif power_type == 'INA238':
+                # INA238 exposes power in uW, but voltage/current in mV/mA.
+                values[name] = raw_value // 1000 if name == 'power' else raw_value
+            else:
+                # power_supply values are normally reported in micro-units.
+                values[name] = raw_value // 1000
     except OSError:
         values = {}
     return values
+
+
+def list_all_ina238_ports(path):
+    """Return the Thor carrier-board INA238 system-input rail."""
+    sensor = {'type': 'INA238'}
+
+    if check_file("{path}/in1_input".format(path=path)):
+        sensor['volt'] = "{path}/in1_input".format(path=path)  # Voltage in mV
+    if check_file("{path}/curr1_input".format(path=path)):
+        sensor['curr'] = "{path}/curr1_input".format(path=path)  # Current in mA
+    if check_file("{path}/power1_input".format(path=path)):
+        sensor['power'] = "{path}/power1_input".format(path=path)  # Power in uW
+
+    # A usable INA238 entry needs either a direct power reading or both
+    # voltage and current so get_status() can calculate power.
+    if 'power' in sensor or ('volt' in sensor and 'curr' in sensor):
+        return {'VIN': sensor}
+
+    logger.warning("Skipped INA238 power monitor in {path}".format(path=path))
+    return {}
 
 
 def list_all_i2c_ports(path):
@@ -195,38 +233,87 @@ def list_all_i2c_ports(path):
 def find_all_system_monitor(system_monitor):
     sensor_name = {}
     if not os.path.isdir(system_monitor):
-        logger.error("Folder {root_dir} doesn't exist".format(root_dir=system_monitor))
+        logger.error(
+            "Folder {root_dir} doesn't exist".format(
+                root_dir=system_monitor
+            )
+        )
         return sensor_name
-    # Find all system power monitor
+    # Find all system power monitors.
     for folder in os.listdir(system_monitor):
-        local_path = "{path}/{folder}".format(path=system_monitor, folder=folder)
-        name = folder.replace("ucsi-source-psy-", "")
-        # Read type
+        # UCSI entries describe USB-C Power Delivery status and negotiated
+        # limits. They are not physical power-monitor rails and should not
+        # be included in the jtop power display or total.
+        if folder.startswith("ucsi-source-psy-"):
+            logger.info(
+                "Skipped UCSI power supply {name}".format(
+                    name=folder
+                )
+            )
+            continue
+        local_path = "{path}/{folder}".format(
+            path=system_monitor,
+            folder=folder
+        )
+        name = folder
+        # Read type.
         path_type = "{path}/type".format(path=local_path)
-        type_supply = cat(path_type).strip() if check_file(path_type) else "SYSTEM"
-        # Read model name
+        type_supply = (
+            cat(path_type).strip()
+            if check_file(path_type)
+            else "SYSTEM"
+        )
+        # Read model name.
         path_name = "{path}/model_name".format(path=local_path)
-        model_name = cat(path_name).strip() if check_file(path_name) else "<EMPTY>"
-        # Find power, current and voltage
+        model_name = (
+            cat(path_name).strip()
+            if check_file(path_name)
+            else "<EMPTY>"
+        )
+        # Find power, current, and voltage.
         sensor = {'type': type_supply}
-        # Status power
         if check_file("{path}/online".format(path=local_path)):
-            sensor['online'] = "{path}/online".format(path=local_path)
+            sensor['online'] = "{path}/online".format(
+                path=local_path
+            )
         if check_file("{path}/status".format(path=local_path)):
-            sensor['status'] = "{path}/status".format(path=local_path)
+            sensor['status'] = "{path}/status".format(
+                path=local_path
+            )
         if check_file("{path}/voltage_now".format(path=local_path)):
-            sensor['volt'] = "{path}/voltage_now".format(path=local_path)  # Voltage in mV
+            # power_supply voltage_now is normally in microvolts.
+            sensor['volt'] = "{path}/voltage_now".format(
+                path=local_path
+            )
         if check_file("{path}/current_now".format(path=local_path)):
-            sensor['curr'] = "{path}/current_now".format(path=local_path)  # Current in mA
+            # power_supply current_now is normally in microamps.
+            sensor['curr'] = "{path}/current_now".format(
+                path=local_path
+            )
         if check_file("{path}/current_max".format(path=local_path)):
-            sensor['warn'] = "{path}/current_max".format(path=local_path)  # in mA
-        # If there is an file is added in list
+            sensor['warn'] = "{path}/current_max".format(
+                path=local_path
+            )
+        # Add only supplies that provide both voltage and current.
         if 'volt' in sensor and 'curr' in sensor:
             sensor_name[name] = sensor
-            logger.info("Found name={name} type={type} model={model} in {path}".format(
-                name=name, type=type_supply, model=model_name, path=folder))
+            logger.info(
+                "Found name={name} type={type} model={model} "
+                "in {path}".format(
+                    name=name,
+                    type=type_supply,
+                    model=model_name,
+                    path=folder
+                )
+            )
         else:
-            logger.warning("Skipped {name} type={type} in={path}".format(name=name, type=type_supply, path=folder))
+            logger.warning(
+                "Skipped {name} type={type} in={path}".format(
+                    name=name,
+                    type=type_supply,
+                    path=folder
+                )
+            )
     if sensor_name:
         logger.info("Found SYSTEM power monitor")
     return sensor_name
