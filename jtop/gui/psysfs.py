@@ -427,8 +427,8 @@ class SYSFS(Page):
                 # pair a tach with a PWM. We don't attempt matching by path
                 # (on Thor PWM and tach live in different hwmons), so restrict
                 # the check to the 1-PWM / 1-tach case common on Jetson devkits.
-                warn = (rpm == 0 and len(self._pwms) == 1 and len(self._tachs) == 1
-                        and (_read_int(self._pwms[0][1]) or 0) > 0)
+                warn = (rpm == 0 and len(self._pwms) == 1 and len(self._tachs) == 1 and
+                        (_read_int(self._pwms[0][1]) or 0) > 0)
                 attr = NColors.red() | curses.A_BOLD if warn else NColors.green()
                 suffix = "  (PWM>0 but no rotation)" if warn else ""
                 self._safe_addstr(y, 3, "{:<23} {:>6d} RPM{}".format(label[:23], rpm, suffix), attr)
