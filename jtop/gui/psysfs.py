@@ -186,7 +186,7 @@ class SYSFS(Page):
                 en = pwm + "_enable"
                 self._pwms.append((hname, pwm, en if os.path.exists(en) else None))
             for tach in sorted(glob(os.path.join(h, "fan[0-9]_input"))) + \
-                       ([os.path.join(h, "rpm")] if os.path.exists(os.path.join(h, "rpm")) else []):
+                    ([os.path.join(h, "rpm")] if os.path.exists(os.path.join(h, "rpm")) else []):
                 self._tachs.append((hname, tach))
         # Panel 5 — nvpmodel conf (one-time parse)
         self._nvp_conf_path = _find_nvpmodel_conf()
@@ -397,7 +397,7 @@ class SYSFS(Page):
                 self._safe_addstr(y, 3 + 24 + 14, stats)
                 # 0=disabled (nothing driving fan), 1=userspace (nvfancontrol on Thor), 2=kernel driver
                 mode_attr = NColors.red() | curses.A_BOLD if en == 0 else \
-                            (NColors.green() if en == 1 else NColors.yellow())
+                    (NColors.green() if en == 1 else NColors.yellow())
                 self._safe_addstr(y, 3 + 24 + 14 + len(stats), en_txt, mode_attr)
             y += 1
 
