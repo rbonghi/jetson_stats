@@ -1,5 +1,6 @@
 # Compiled python modules.
 *.pyc
+*.png
 
 # Setuptools distribution folder.
 _build/
@@ -28,4 +29,5 @@ jtop_test.*
 .vscode/
 .venv*/
 .idea/
-__pycache__/scripts/install_jtop_from_sdist.sh
+__pycache__/
+scripts/install_jtop_from_sdist.sh

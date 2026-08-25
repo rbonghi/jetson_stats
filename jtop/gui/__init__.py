@@ -24,6 +24,7 @@ from .pcpu import CPU
 from .pengine import ENGINE, engine_model
 from .pmem import MEM
 from .pcontrol import CTRL
+from .psysfs import SYSFS
 from .pinfo import INFO
 
 try:

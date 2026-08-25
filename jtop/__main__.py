@@ -34,7 +34,7 @@ from .core.exceptions import JtopException
 from .core.common import get_var
 # GUI jtop interface
 from .jetson_config import jtop_config
-from .gui import JTOPGUI, ALL, GPU, CPU, ENGINE, MEM, CTRL, INFO, engine_model
+from .gui import JTOPGUI, ALL, GPU, CPU, ENGINE, MEM, CTRL, SYSFS, INFO, engine_model
 # Load colors
 from .terminal_colors import bcolors
 from .github import jetpack_missing, hardware_missing, engine_gui, get_hardware_log
@@ -259,6 +259,7 @@ def main():
                 pages += [ENGINE]
             if jetson.fan or jetson.jetson_clocks is not None or jetson.nvpmodel is not None:
                 pages += [CTRL]
+            pages += [SYSFS]
             pages += [INFO]
             curses.wrapper(JTOPGUI, jetson, pages, init_page=args.page,
                            loop=args.loop, seconds=LOOP_SECONDS, color_filter=color_filter)
