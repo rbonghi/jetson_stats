@@ -153,6 +153,9 @@ def _parse_nvpmodel_conf(path):
     return params, modes
 
 
+_UNCAPPED_SENTINEL = 2147483647  # INT_MAX; some nvpmodel.conf variants emit this literally
+
+
 def _cap_from_mode(mode, param, arg):
     for pname, aname, val in mode["settings"]:
         if pname == param and aname == arg:
@@ -160,7 +163,8 @@ def _cap_from_mode(mode, param, arg):
                 v = int(val)
             except ValueError:
                 return None
-            return None if v < 0 else v  # -1 = INT_MAX (uncapped)
+            # -1 (documented) and INT_MAX (some variants) both mean uncapped
+            return None if v < 0 or v == _UNCAPPED_SENTINEL else v
     return None
 
 
@@ -168,9 +172,12 @@ class SYSFS(Page):
 
     def __init__(self, stdscr, jetson):
         super(SYSFS, self).__init__("SYSFS", stdscr, jetson)
-        # Panel 1 — soctherm_oc baseline
+        # Panel 1 — soctherm_oc: baseline is captured at jtop start; last is
+        # updated each draw so we can tell "fired since jtop start" (history)
+        # apart from "fired since last refresh" (live event).
         self._oc_hwmon = _hwmon_by_name("soctherm_oc")
         self._oc_baseline = self._read_oc_counters()
+        self._oc_last = dict(self._oc_baseline)
         # Panel 2 — devfreq nodes
         self._devfreq_nodes = sorted(glob(os.path.join(_DEVFREQ, "*")))
         # Panel 3 — INA rails + thermal zones
@@ -233,17 +240,22 @@ class SYSFS(Page):
         x = 5
         for k in sorted(cur.keys()):
             base = self._oc_baseline.get(k, 0)
-            delta = cur[k] - base
+            last = self._oc_last.get(k, base)
+            since_start = cur[k] - base
+            since_last = cur[k] - last
             label = k.replace("_event_cnt", "")
-            text = "{}={} (+{})".format(label, cur[k], delta)
-            if delta > 0:
-                attr = NColors.red() | curses.A_BOLD  # firing NOW
+            text = "{}={} (+{})".format(label, cur[k], since_start)
+            if since_last > 0:
+                attr = NColors.red() | curses.A_BOLD  # actually firing right now
+            elif since_start > 0:
+                attr = NColors.yellow()               # fired since jtop start
             elif cur[k] > 0:
-                attr = NColors.yellow()               # fired since boot
+                attr = NColors.cyan()                 # fired earlier (before jtop)
             else:
-                attr = NColors.green()                # clean
+                attr = NColors.green()                # clean since boot
             self._safe_addstr(y, x, text, attr)
             x += len(text) + 3
+        self._oc_last = cur
         y += 1
 
         # Currently-active throttle indicators (throt_en)
@@ -268,7 +280,9 @@ class SYSFS(Page):
                 x += len(text) + 3
             y += 1
 
-        # Thermal trip crossings
+        # Thermal trip zones currently above threshold. We report only the
+        # instantaneous state — this is not a history counter, so a zone that
+        # crossed and then cooled off will not appear here.
         alarm_zones = []
         for tz in self._thermal_zones:
             zname = _read_str(os.path.join(tz, "type")) or "?"
@@ -281,10 +295,10 @@ class SYSFS(Page):
                     alarm_zones.append("{}({}:{}m°C)".format(zname, trip_type, cur_t))
                     break
         if alarm_zones:
-            self._safe_addstr(y, 3, "Thermal trips crossed: " + ", ".join(alarm_zones),
+            self._safe_addstr(y, 3, "Zones currently above trip point: " + ", ".join(alarm_zones),
                               NColors.red() | curses.A_BOLD)
         else:
-            self._safe_addstr(y, 3, "No thermal trips crossed", curses.A_DIM)
+            self._safe_addstr(y, 3, "No zones above trip point right now", curses.A_DIM)
         y += 1
         return y + 1
 
@@ -409,8 +423,12 @@ class SYSFS(Page):
             if rpm is None:
                 self._safe_addstr(y, 3, "{:<23} n/a".format(label[:23]))
             else:
-                # Warn if all PWMs report >0 duty but this tach reads 0 (possible stuck fan)
-                warn = rpm == 0 and any((_read_int(p[1]) or 0) > 0 for p in self._pwms)
+                # Stuck-fan warning: only meaningful when we can unambiguously
+                # pair a tach with a PWM. We don't attempt matching by path
+                # (on Thor PWM and tach live in different hwmons), so restrict
+                # the check to the 1-PWM / 1-tach case common on Jetson devkits.
+                warn = (rpm == 0 and len(self._pwms) == 1 and len(self._tachs) == 1
+                        and (_read_int(self._pwms[0][1]) or 0) > 0)
                 attr = NColors.red() | curses.A_BOLD if warn else NColors.green()
                 suffix = "  (PWM>0 but no rotation)" if warn else ""
                 self._safe_addstr(y, 3, "{:<23} {:>6d} RPM{}".format(label[:23], rpm, suffix), attr)
