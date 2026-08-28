@@ -330,7 +330,7 @@
 </pre></div>
 </div>
 <p>You can get the <code class="docutils literal notranslate"><span class="pre">JTOP_GID</span></code> by running:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>getent<span class="w"> </span>group<span class="w"> </span>jtop<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-F:<span class="w"> </span><span class="s1">&#39;{print $3}&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>getent<span class="w"> </span>group<span class="w"> </span>jtop<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-F:<span class="w"> </span><span class="s1">'{print $3}'</span>
 </pre></div>
 </div>
 <p>Issue reference <a class="reference external" href="https://github.com/rbonghi/jetson_stats/issues/391">#391</a></p>

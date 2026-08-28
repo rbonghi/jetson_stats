@@ -306,7 +306,7 @@
 please read the documentation on <a class="reference internal" href="jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a> but is also usable to enable, disable 3d scaling on your device.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
-        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">&quot;gpu&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">"gpu"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Below all methods available using the <a class="reference internal" href="jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a> attribute</p>
@@ -339,7 +339,7 @@ please read the documentation on <a class="reference internal" href="jtop.html#j
         <span class="c1"># Set new 3D scaling</span>
         <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="c1"># same of</span>
-        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">&quot;ga10b&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">"ga10b"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -362,7 +362,7 @@ please read the documentation on <a class="reference internal" href="jtop.html#j
 <p>Set 3D scaling on your board, like the command below. To know the GPU name use <a class="reference internal" href="jtop.html#jtop.jtop.gpu" title="jtop.jtop.gpu"><code class="xref py py-attr docutils literal notranslate"><span class="pre">gpu</span></code></a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
-        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">&quot;ga10b&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">gpu</span><span class="o">.</span><span class="n">set_scaling_3D</span><span class="p">(</span><span class="s2">"ga10b"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>is equivalent to:</p>

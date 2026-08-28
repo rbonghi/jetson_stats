@@ -370,7 +370,7 @@ For each power budget, several configurations are possible with various CPU freq
 </pre></div>
 </div>
 <p>output</p>
-<div class="no-copybutton highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># {&#39;name&#39;: &#39;15W&#39;, &#39;id&#39;: 0}</span>
+<div class="no-copybutton highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># {'name': '15W', 'id': 0}</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -544,9 +544,9 @@ For each power budget, several configurations are possible with various CPU freq
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">jtop</span><span class="p">()</span> <span class="k">as</span> <span class="n">jetson</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">jetson</span><span class="o">.</span><span class="n">ok</span><span class="p">():</span>
         <span class="c1"># Set a new NVP Model by name</span>
-        <span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span><span class="o">.</span><span class="n">set_nvpmodel_name</span><span class="p">(</span><span class="s2">&quot;15W&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span><span class="o">.</span><span class="n">set_nvpmodel_name</span><span class="p">(</span><span class="s2">"15W"</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="c1"># same of</span>
-        <span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span> <span class="o">=</span> <span class="s2">&quot;15W&quot;</span>
+        <span class="n">jetson</span><span class="o">.</span><span class="n">nvpmodel</span> <span class="o">=</span> <span class="s2">"15W"</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
