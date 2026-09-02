@@ -107,10 +107,9 @@ def _read_vic_actmon_load():
     Requires debugfs read access (jtop service runs as root). Silent on failure
     so non-Thor systems and kernels without the node are unaffected.
 
-    Unit note: on the shipping Thor kernel the `usage` node reports permille
-    (0..1000), matching the default `tegra_wmark/load_target=100` == 10%.
-    Some older Tegra actmon drivers report percent (0..100). Values > 100 are
-    treated as permille and divided by 10 to normalize to percent.
+    Unit note: the shipping Thor kernel reports `usage` in permille (0..1000),
+    matching the default `tegra_wmark/load_target=100` == 10%. Always divided
+    by 10 to normalize to percent.
     """
     for path in _VIC_ACTMON_USAGE_CANDIDATES:
         try:
@@ -122,8 +121,8 @@ def _read_vic_actmon_load():
         try:
             v = int(raw)
         except ValueError:
-            return None
-        pct = v / 10.0 if v > 100 else float(v)
+            continue
+        pct = v / 10.0
         if pct < 0.0:
             pct = 0.0
         elif pct > 100.0:
