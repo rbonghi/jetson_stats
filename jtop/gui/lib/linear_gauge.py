@@ -88,8 +88,13 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
 def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data, unit='k'):
     # Name gauge
     name = freq_data['name'] if 'name' in freq_data else ""
-    # Current value in string
-    curr_string = unit_to_string(freq_data['cur'], unit, 'Hz')
+    # Current value in string (may be missing on some Jetson variants)
+    cur_val = freq_data.get('cur')
+    try:
+        curr_string = unit_to_string(int(cur_val), unit, 'Hz') if cur_val is not None else "N/A"
+    except (TypeError, ValueError):
+        curr_string = "N/A"
+    online = freq_data.get('online', cur_val is not None)
     # Draw name engine
     stdscr.addstr(pos_y, pos_x, name, NColors.cyan())
     # Write online bar
@@ -97,8 +102,8 @@ def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data, unit='k'):
     start_bar = pos_x + len(name) + 1 if len(name) > 0 else pos_x
     end_bar = start_bar + size_bar
     # Check if there is a limit
-    color_bar = NColors.green() if freq_data['online'] else NColors.red()
-    if freq_data['online']:
+    color_bar = NColors.green() if online else NColors.red()
+    if online:
         stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
         stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
         if size_bar > 7:

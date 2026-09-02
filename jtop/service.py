@@ -91,6 +91,45 @@ JTOP_SERVICE_NAME = 'jtop.service'
 TIMEOUT_GAIN = 3
 TIMEOUT_SWITCHOFF = 3.0
 
+# VIC actmon load node (Thor). Documented at
+# https://docs.nvidia.com/jetson/archives/r39.2.1/DeveloperGuide/SD/PlatformPowerAndPerformance/JetsonThor.html#multimedia-engine-power-management
+# The doc names "tegra-host1x.0" but the shipping Thor kernel exposes it under
+# "tegra-host1x" (no .0). Try both — first hit wins.
+_VIC_ACTMON_USAGE_CANDIDATES = (
+    "/sys/kernel/debug/tegra-host1x.0/actmon/vic/module0/usage",
+    "/sys/kernel/debug/tegra-host1x/actmon/vic/module0/usage",
+)
+
+
+def _read_vic_actmon_load():
+    """Return VIC actmon load as a float percent (0..100), or None if unavailable.
+
+    Requires debugfs read access (jtop service runs as root). Silent on failure
+    so non-Thor systems and kernels without the node are unaffected.
+
+    Unit note: the shipping Thor kernel reports `usage` in permille (0..1000),
+    matching the default `tegra_wmark/load_target=100` == 10%. Always divided
+    by 10 to normalize to percent.
+    """
+    for path in _VIC_ACTMON_USAGE_CANDIDATES:
+        try:
+            with open(path) as fh:
+                raw = fh.read().strip()
+        except OSError:
+            continue
+        raw = raw.rstrip("%").strip()
+        try:
+            v = int(raw)
+        except ValueError:
+            continue
+        pct = v / 10.0
+        if pct < 0.0:
+            pct = 0.0
+        elif pct > 100.0:
+            pct = 100.0
+        return pct
+    return None
+
 
 def overlay_jetsonpower_flat(
     data: Dict[str, Any],
@@ -765,6 +804,16 @@ class JtopServer(Process):
                         cur = eng_data.get("cur")
                         if cur is not None:
                             flat[eng_name] = cur
+
+            # VIC actmon load — Thor exposes real-time VIC utilization via
+            # debugfs. tegrastats reports "VIC off" so this is the only source.
+            vic_load = _read_vic_actmon_load()
+            if vic_load is not None:
+                flat["VIC_LOAD"] = vic_load
+                if isinstance(jp_group, dict):
+                    vic_entry = jp_group.setdefault("VIC", {})
+                    if isinstance(vic_entry, dict):
+                        vic_entry["load"] = vic_load
 
             # Canary marker (namespaced; never top-level)
             flat["JP_OVERLAY"] = 1

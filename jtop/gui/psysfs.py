@@ -19,6 +19,7 @@ import curses
 import logging
 import os
 import re
+import time
 from glob import glob
 
 from .jtopgui import Page
@@ -39,6 +40,12 @@ _RE_MODE = re.compile(r"<\s*POWER_MODEL\s+ID=(\d+)\s+NAME=(\w+)\s*>")
 # Codecs on Thor (tegra264) share this devfreq clock domain
 _SHARED_CODEC_DEVFREQ = "gpu-nvd-0"
 _SHARED_CODEC_NOTE = "shared: nvdec/nvenc/nvjpg"
+
+# GUI draws at 20 Hz; without throttling, panels that read multiple sysfs files
+# per draw cost 100+ syscalls/s each. Cache reads so slow-changing values like
+# fan tach (kernel-averaged over ~1s) and rail current don't get re-read every
+# 50 ms. 250 ms → 4 Hz effective refresh.
+_SLOW_CACHE_TTL = 0.25
 
 # Prettier display names for common nvpmodel PARAM identifiers.
 # Unknown params fall through to their raw name from the conf.
@@ -93,6 +100,10 @@ def _bar(fraction, width=10):
         return "[" + " " * width + "]"
     f = max(0.0, min(1.0, fraction))
     filled = int(round(f * width))
+    # Sub-cell activity: show a dot when there's any load but not enough to fill
+    # half a cell (i.e. would otherwise round to 0). Half-cell+ rounds to a full |.
+    if filled == 0 and f > 0:
+        return "[." + " " * (width - 1) + "]"
     return "[" + "|" * filled + " " * (width - filled) + "]"
 
 
@@ -172,6 +183,11 @@ class SYSFS(Page):
 
     def __init__(self, stdscr, jetson):
         super(SYSFS, self).__init__("SYSFS", stdscr, jetson)
+        # Throttled read cache: path -> (value, monotonic_timestamp).
+        # Used by _cached_int/_cached_str in panels where sub-second updates
+        # aren't meaningful (rails, fans). OC counters and devfreq still read
+        # live because their deltas / cur values are interesting frame-to-frame.
+        self._cache = {}
         # Panel 1 — soctherm_oc: baseline is captured at jtop start; last is
         # updated each draw so we can tell "fired since jtop start" (history)
         # apart from "fired since last refresh" (live event).
@@ -214,6 +230,24 @@ class SYSFS(Page):
             if v is not None:
                 out[os.path.basename(p)] = v
         return out
+
+    def _cached_int(self, path):
+        now = time.monotonic()
+        entry = self._cache.get(path)
+        if entry is not None and (now - entry[1]) < _SLOW_CACHE_TTL:
+            return entry[0]
+        v = _read_int(path)
+        self._cache[path] = (v, now)
+        return v
+
+    def _cached_str(self, path):
+        now = time.monotonic()
+        entry = self._cache.get(path)
+        if entry is not None and (now - entry[1]) < _SLOW_CACHE_TTL:
+            return entry[0]
+        v = _read_str(path)
+        self._cache[path] = (v, now)
+        return v
 
     def _safe_addstr(self, y, x, text, attr=0):
         try:
@@ -308,14 +342,18 @@ class SYSFS(Page):
             self._safe_addstr(y, 3, "no /sys/class/devfreq entries", curses.A_DIM)
             return y + 1
 
-        self._safe_addstr(y, 3, "{:<22} {:>10} {:>10} {:>10}   note".format(
-            "NODE", "cur", "min", "max"), curses.A_DIM)
+        has_notes = any(os.path.basename(n) == _SHARED_CODEC_DEVFREQ for n in self._devfreq_nodes)
+        header = "{:<22} {:>10} {:>10} {:>10}  {:<16}".format("NODE", "cur", "min", "max", "gov")
+        if has_notes:
+            header += "  note"
+        self._safe_addstr(y, 3, header, curses.A_DIM)
         y += 1
         for node in self._devfreq_nodes:
             name = os.path.basename(node)
             cur = _read_int(os.path.join(node, "cur_freq"))
             mn = _read_int(os.path.join(node, "min_freq"))
             mx = _read_int(os.path.join(node, "max_freq"))
+            gov = _read_str(os.path.join(node, "governor")) or "?"
 
             # Color cur based on where it sits between min and max
             cur_attr = 0
@@ -324,16 +362,32 @@ class SYSFS(Page):
             elif cur is not None and mn is not None and cur <= mn:
                 cur_attr = NColors.cyan()                            # idle/floor
 
-            # Emit prefix, then cur with color, then rest
+            # Governor color: performance = forced max (yellow),
+            # tegra_wmark = actmon-driven DVFS (cyan), others dim.
+            if gov == "performance":
+                gov_attr = NColors.yellow() | curses.A_BOLD
+            elif gov == "tegra_wmark":
+                gov_attr = NColors.cyan()
+            else:
+                gov_attr = curses.A_DIM
+
+            # Emit prefix, then cur with color, then rest, then governor colored
             prefix = "{:<22} ".format(name[:22])
             cur_str = "{:>10}".format(_fmt_freq(cur))
-            rest = " {:>10} {:>10}   ".format(_fmt_freq(mn), _fmt_freq(mx))
+            mid = " {:>10} {:>10}  ".format(_fmt_freq(mn), _fmt_freq(mx))
+            gov_str = "{:<16}".format(gov[:16])
             note = _SHARED_CODEC_NOTE if name == _SHARED_CODEC_DEVFREQ else ""
-            self._safe_addstr(y, 3, prefix)
-            self._safe_addstr(y, 3 + len(prefix), cur_str, cur_attr)
-            self._safe_addstr(y, 3 + len(prefix) + len(cur_str), rest)
+            x = 3
+            self._safe_addstr(y, x, prefix)
+            x += len(prefix)
+            self._safe_addstr(y, x, cur_str, cur_attr)
+            x += len(cur_str)
+            self._safe_addstr(y, x, mid)
+            x += len(mid)
+            self._safe_addstr(y, x, gov_str, gov_attr)
+            x += len(gov_str) + 2
             if note:
-                self._safe_addstr(y, 3 + len(prefix) + len(cur_str) + len(rest), note, NColors.cyan())
+                self._safe_addstr(y, x, note, NColors.cyan())
             y += 1
         return y + 1
 
@@ -355,21 +409,21 @@ class SYSFS(Page):
 
         if self._ina3221:
             for ch in (1, 2, 3):
-                label = _read_str(os.path.join(self._ina3221, "in{}_label".format(ch)))
+                label = self._cached_str(os.path.join(self._ina3221, "in{}_label".format(ch)))
                 if not label:
                     continue
-                cur = _read_int(os.path.join(self._ina3221, "curr{}_input".format(ch)))
-                mx = _read_int(os.path.join(self._ina3221, "curr{}_max".format(ch)))
+                cur = self._cached_int(os.path.join(self._ina3221, "curr{}_input".format(ch)))
+                mx = self._cached_int(os.path.join(self._ina3221, "curr{}_max".format(ch)))
                 y = self._draw_rail_ma(y, label, cur, mx)
         else:
             self._safe_addstr(y, 3, "ina3221 not present", curses.A_DIM)
             y += 1
 
         if self._ina238:
-            p_uw = _read_int(os.path.join(self._ina238, "power1_input"))
-            p_max_uw = _read_int(os.path.join(self._ina238, "power1_max"))
-            v_mv = _read_int(os.path.join(self._ina238, "in1_input"))
-            t_mc = _read_int(os.path.join(self._ina238, "temp1_input"))
+            p_uw = self._cached_int(os.path.join(self._ina238, "power1_input"))
+            p_max_uw = self._cached_int(os.path.join(self._ina238, "power1_max"))
+            v_mv = self._cached_int(os.path.join(self._ina238, "in1_input"))
+            t_mc = self._cached_int(os.path.join(self._ina238, "temp1_input"))
             extra = ""
             if v_mv is not None:
                 extra = "bus {:.1f} V".format(v_mv / 1000.0)
@@ -394,44 +448,64 @@ class SYSFS(Page):
             self._safe_addstr(y, 3, "no PWM controllers or tachometers found", curses.A_DIM)
             return y + 1
 
+        # Compute shared column widths so PWM and TACH rows align.
+        # Frame: "<TYPE:4> <name:name_w>  (<hname>)"
+        type_w = 4  # "TACH" is 4
+        name_w = 3
+        hn_w = 0
+        for hname, pwm_path, _ in self._pwms:
+            name_w = max(name_w, len(os.path.basename(pwm_path)))
+            hn_w = max(hn_w, len(hname))
+        for hname, tach_path in self._tachs:
+            name_w = max(name_w, len(os.path.basename(tach_path)))
+            hn_w = max(hn_w, len(hname))
+        label_w = type_w + 1 + name_w + 2 + hn_w + 2  # +2 for the "()"
+        bar_col = 3 + label_w + 1
+        stats_col = bar_col + 14  # bar renders as "[" + 12 + "]" = 14 chars
+
+        def _fmt_label(kind, name, hname):
+            return "{:<{tw}} {:<{nw}}  ({})".format(kind, name, hname, tw=type_w, nw=name_w)
+
         # PWMs
         for hname, pwm_path, en_path in self._pwms:
-            raw = _read_int(pwm_path)
-            en = _read_int(en_path) if en_path else None
+            raw = self._cached_int(pwm_path)
+            en = self._cached_int(en_path) if en_path else None
             en_map = {0: "disabled", 1: "userspace", 2: "kernel-auto"}
             en_txt = en_map.get(en, "en={}".format(en)) if en is not None else "n/a"
             pct = (raw / 255.0 * 100.0) if raw is not None else None
-            label = "PWM {} ({})".format(os.path.basename(pwm_path), hname)
+            self._safe_addstr(y, 3, "{:<{w}}".format(_fmt_label("PWM", os.path.basename(pwm_path), hname), w=label_w))
             if raw is None:
-                self._safe_addstr(y, 3, "{:<23} n/a".format(label[:23]))
+                self._safe_addstr(y, bar_col, "n/a")
             else:
+                self._safe_addstr(y, bar_col, _bar(pct / 100.0 if pct else 0, 12), _bar_color(pct / 100.0 if pct else 0))
                 stats = " {:>3d}/255  ({:>5.1f}%)  mode: ".format(raw, pct or 0.0)
-                self._safe_addstr(y, 3, "{:<23} ".format(label[:23]))
-                self._safe_addstr(y, 3 + 24, _bar(pct / 100.0 if pct else 0, 12), _bar_color(pct / 100.0 if pct else 0))
-                self._safe_addstr(y, 3 + 24 + 14, stats)
+                self._safe_addstr(y, stats_col, stats)
                 # 0=disabled (nothing driving fan), 1=userspace (nvfancontrol on Thor), 2=kernel driver
                 mode_attr = NColors.red() | curses.A_BOLD if en == 0 else \
                     (NColors.green() if en == 1 else NColors.yellow())
-                self._safe_addstr(y, 3 + 24 + 14 + len(stats), en_txt, mode_attr)
+                self._safe_addstr(y, stats_col + len(stats), en_txt, mode_attr)
             y += 1
 
         # Tachometers
         for hname, tach_path in self._tachs:
-            rpm = _read_int(tach_path)
+            rpm = self._cached_int(tach_path)
             fname = os.path.basename(tach_path)
-            label = "TACH {} ({})".format(fname, hname)
+            self._safe_addstr(y, 3, "{:<{w}}".format(_fmt_label("TACH", fname, hname), w=label_w))
             if rpm is None:
-                self._safe_addstr(y, 3, "{:<23} n/a".format(label[:23]))
+                self._safe_addstr(y, stats_col, "n/a")
             else:
                 # Stuck-fan warning: only meaningful when we can unambiguously
                 # pair a tach with a PWM. We don't attempt matching by path
                 # (on Thor PWM and tach live in different hwmons), so restrict
                 # the check to the 1-PWM / 1-tach case common on Jetson devkits.
                 warn = (rpm == 0 and len(self._pwms) == 1 and len(self._tachs) == 1 and
-                        (_read_int(self._pwms[0][1]) or 0) > 0)
+                        (self._cached_int(self._pwms[0][1]) or 0) > 0)
                 attr = NColors.red() | curses.A_BOLD if warn else NColors.green()
                 suffix = "  (PWM>0 but no rotation)" if warn else ""
-                self._safe_addstr(y, 3, "{:<23} {:>6d} RPM{}".format(label[:23], rpm, suffix), attr)
+                # {:>7d} aligns the number's last digit under the last '5' of
+                # "N/255" in the PWM row (leading space + {:>3d}/255 = 8 chars).
+                # 3 spaces before "RPM" places it under the "(30.2%)" column.
+                self._safe_addstr(y, stats_col, " {:>7d}   RPM{}".format(rpm, suffix), attr)
             y += 1
         return y + 1
 
@@ -492,8 +566,16 @@ class SYSFS(Page):
         y += 1
         for pname in ordered:
             conf_v = _cap_from_mode(active, pname, "MAX_FREQ")
-            live_path = self._nvp_params[pname].get("MAX_FREQ")
-            live_v = _read_int(live_path) if live_path else None
+            # Newer Orin kernels (K-next) only wire the _KNEXT paths; the plain
+            # MAX_FREQ paths in nvpmodel.conf point at legacy locations that
+            # don't exist. Prefer KNEXT when readable, fall back to legacy.
+            live_v = None
+            for key in ("MAX_FREQ_KNEXT", "MAX_FREQ"):
+                p = self._nvp_params[pname].get(key)
+                if p:
+                    live_v = _read_int(p)
+                    if live_v is not None:
+                        break
             if conf_v is None and live_v is None:
                 continue  # nothing to say about this domain in this mode
             mark = ""
