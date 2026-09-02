@@ -566,8 +566,16 @@ class SYSFS(Page):
         y += 1
         for pname in ordered:
             conf_v = _cap_from_mode(active, pname, "MAX_FREQ")
-            live_path = self._nvp_params[pname].get("MAX_FREQ")
-            live_v = _read_int(live_path) if live_path else None
+            # Newer Orin kernels (K-next) only wire the _KNEXT paths; the plain
+            # MAX_FREQ paths in nvpmodel.conf point at legacy locations that
+            # don't exist. Prefer KNEXT when readable, fall back to legacy.
+            live_v = None
+            for key in ("MAX_FREQ_KNEXT", "MAX_FREQ"):
+                p = self._nvp_params[pname].get(key)
+                if p:
+                    live_v = _read_int(p)
+                    if live_v is not None:
+                        break
             if conf_v is None and live_v is None:
                 continue  # nothing to say about this domain in this mode
             mark = ""
