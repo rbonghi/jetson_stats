@@ -159,8 +159,15 @@ def draw_thor_engines_from_stats(stdscr, pos_y, pos_x, width, jetson, stats: dic
         try:
             vi = int(v)
         except (TypeError, ValueError):
-            return "IDLE"
-        return unit_to_string(vi, 'k', 'Hz') if vi > 0 else "IDLE"
+            vi = 0
+        base = unit_to_string(vi, 'k', 'Hz') if vi > 0 else "IDLE"
+        # VIC has an actmon-derived load% (Thor). Show it alongside the freq
+        # so idle-vs-busy is visible even when the clock is parked.
+        if key == "VIC" and isinstance(flat, dict):
+            load = flat.get("VIC_LOAD")
+            if isinstance(load, (int, float)):
+                return "{}  ({:.1f}% load)".format(base, float(load))
+        return base
 
     def _print_safe(row_y: int, col_x: int, text: str, attr=0):
         try:
