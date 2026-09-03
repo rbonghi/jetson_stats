@@ -24,6 +24,13 @@ from glob import glob
 from .jtopgui import Page
 from .lib.colors import NColors
 
+# Optional: per-block codec utilization via NVML (Thor + Orin w/ nvidia-ml-py).
+# Panel simply hides if unavailable.
+try:
+    from ..core.thor_gpu import nvml_codec_utilization
+except Exception:
+    nvml_codec_utilization = None
+
 logger = logging.getLogger(__name__)
 
 _HWMON = "/sys/class/hwmon"
@@ -337,6 +344,44 @@ class SYSFS(Page):
             y += 1
         return y + 1
 
+    def _draw_codec(self, y, _width):
+        if nvml_codec_utilization is None:
+            return y
+        util = nvml_codec_utilization()
+        if not util:
+            return y
+        y = self._panel_header(y, "CODEC UTILIZATION (NVML)")
+        # Single row inline: NVENC 0%   NVDEC 0%   NVJPG 0%   OFA 0%   (window 1.0 ms)
+        # Compact because SYSFS already has 5 panels — vertical space is at a premium.
+        x = 3
+        period_us = None
+        for key, label in (("encoder", "NVENC"), ("decoder", "NVDEC"),
+                           ("jpg", "NVJPG"), ("ofa", "OFA")):
+            if key not in util:
+                continue
+            pct, p = util[key]
+            if period_us is None:
+                period_us = p
+            # 0% is dim; above that, escalate green→cyan→yellow-bold
+            if pct <= 0:
+                attr = curses.A_DIM
+            elif pct < 50:
+                attr = NColors.green()
+            elif pct < 80:
+                attr = NColors.cyan()
+            else:
+                attr = NColors.yellow() | curses.A_BOLD
+            self._safe_addstr(y, x, "{} ".format(label))
+            x += len(label) + 1
+            val = "{:d}%".format(pct)
+            self._safe_addstr(y, x, val, attr)
+            x += len(val) + 3
+        if period_us is not None:
+            window = "(window {:.1f} ms)".format(period_us / 1000.0) if period_us >= 1000 \
+                else "(window {:d} us)".format(period_us)
+            self._safe_addstr(y, x, window, curses.A_DIM)
+        return y + 2
+
     def _draw_rail_ma(self, y, label, curr_ma, max_ma):
         if curr_ma is None:
             self._safe_addstr(y, 3, "{:<18} n/a".format(label))
@@ -516,6 +561,7 @@ class SYSFS(Page):
         y = first + 2  # blank line under Model header
         y = self._draw_throttle(y, width)
         y = self._draw_devfreq(y, width)
+        y = self._draw_codec(y, width)
         y = self._draw_rails(y, width)
         y = self._draw_fans(y, width)
         y = self._draw_nvpmodel(y, width)
