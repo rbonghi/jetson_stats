@@ -137,6 +137,59 @@ def nvml_process_table() -> Tuple[int, List]:
     return total_kb, rows
 
 
+# 1-second TTL cache for the codec-utilization probe. SYSFS tab redraws
+# frequently; NVML per-tick would be wasteful and racy against the process
+# table calls that also grab an NVML handle.
+_CODEC_UTIL_CACHE: Dict[str, Any] = {"ts": 0.0, "data": None}
+
+
+def nvml_codec_utilization() -> Optional[Dict[str, Tuple[int, int]]]:
+    """
+    Per-block codec utilization from NVML on Jetson.
+
+    Returns {'encoder': (util%, sample_period_us), 'decoder': (...), 'jpg': (...), 'ofa': (...)}
+    or None if NVML isn't available / init fails.  Individual blocks that
+    report NotSupported are omitted from the dict.
+
+    Disambiguates the Thor shared codec clock (`gpu-nvd-0` gates NVDEC/NVENC/NVJPG
+    together) — the clock alone can't tell you which block is active, but these
+    per-block util % can.
+    """
+    global _CODEC_UTIL_CACHE
+    now = time.monotonic()
+    if now - _CODEC_UTIL_CACHE["ts"] < 1.0:
+        return _CODEC_UTIL_CACHE["data"]
+
+    if not _NVML:
+        _CODEC_UTIL_CACHE = {"ts": now, "data": None}
+        return None
+
+    try:
+        _pynvml.nvmlInit()
+        h = _pynvml.nvmlDeviceGetHandleByIndex(0)
+    except _pynvml.NVMLError as e:
+        logger.debug("NVML init/handle failed for codec util: %s", e)
+        _CODEC_UTIL_CACHE = {"ts": now, "data": None}
+        return None
+
+    result: Dict[str, Tuple[int, int]] = {}
+    for key, getter in (
+        ("encoder", _pynvml.nvmlDeviceGetEncoderUtilization),
+        ("decoder", _pynvml.nvmlDeviceGetDecoderUtilization),
+        ("jpg", _pynvml.nvmlDeviceGetJpgUtilization),
+        ("ofa", _pynvml.nvmlDeviceGetOfaUtilization),
+    ):
+        try:
+            util, period = getter(h)
+            result[key] = (int(util), int(period))
+        except _pynvml.NVMLError:
+            pass
+
+    data = result if result else None
+    _CODEC_UTIL_CACHE = {"ts": now, "data": data}
+    return data
+
+
 def nvml_gpu_used_kb() -> Optional[int]:
     """
     Cached (1-second TTL) sum of GPU process memory from NVML (in kB).
