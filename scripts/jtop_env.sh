@@ -31,11 +31,14 @@ for PYTHON in \
 do
     # For absolute paths, make sure the interpreter exists and is executable.
     # For command names, make sure they are in PATH.
-    if [[ "$PYTHON" == /* ]]; then
-        [ -x "$PYTHON" ] || continue
-    else
-        type -P "$PYTHON" >/dev/null 2>&1 || continue
-    fi
+    case "$PYTHON" in
+        /*)
+            [ -x "$PYTHON" ] || continue
+            ;;
+        *)
+            command -v "$PYTHON" >/dev/null 2>&1 || continue
+            ;;
+    esac
 
     JETSON_VARIABLE=$("$PYTHON" -c \
         "import jtop; print(jtop.__path__[0])" 2>/dev/null)
@@ -47,8 +50,8 @@ do
 done
 
 # Load variables only if not empty the variable
- if [ ! -z $JETSON_VARIABLE ] ; then
-     eval $($JETSON_PYTHON_NAME -m jtop.core.jetson_variables)
- fi
+if [ -n "$JETSON_VARIABLE" ]; then
+    eval "$("$JETSON_PYTHON_NAME" -m jtop.core.jetson_variables)"
+fi
 
 # EOF
