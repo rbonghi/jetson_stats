@@ -21,17 +21,37 @@
 # https://blog.tintoy.io/2017/06/exporting-environment-variables-from-python-to-bash/
 JETSON_VARIABLE=""
 JETSON_PYTHON_NAME=""
-if type -P python3 >/dev/null 2>&1 ; then
-    JETSON_VARIABLE=$(python3 -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-    JETSON_PYTHON_NAME="python3"
-fi
-if type -P python >/dev/null 2>&1 && [ -z $JETSON_VARIABLE ] ; then
-    JETSON_VARIABLE=$(python -c "import jtop; print(jtop.__path__[0])" 2> /dev/null)
-    JETSON_PYTHON_NAME="python"
-fi
+
+# Prefer uv jtop venv's Python installation
+for PYTHON in \
+    "$HOME/.local/share/jtop/bin/python" \
+    "$HOME/.local/share/jtop/bin/python3" \
+    python3 \
+    python
+do
+    # For absolute paths, make sure the interpreter exists and is executable.
+    # For command names, make sure they are in PATH.
+    case "$PYTHON" in
+        /*)
+            [ -x "$PYTHON" ] || continue
+            ;;
+        *)
+            command -v "$PYTHON" >/dev/null 2>&1 || continue
+            ;;
+    esac
+
+    JETSON_VARIABLE=$("$PYTHON" -c \
+        "import jtop; print(jtop.__path__[0])" 2>/dev/null)
+
+    if [ -n "$JETSON_VARIABLE" ]; then
+        JETSON_PYTHON_NAME="$PYTHON"
+        break
+    fi
+done
 
 # Load variables only if not empty the variable
- if [ ! -z $JETSON_VARIABLE ] ; then
-     eval $($JETSON_PYTHON_NAME -m jtop.core.jetson_variables)
- fi
+if [ -n "$JETSON_VARIABLE" ]; then
+    eval "$("$JETSON_PYTHON_NAME" -m jtop.core.jetson_variables)"
+fi
+
 # EOF
