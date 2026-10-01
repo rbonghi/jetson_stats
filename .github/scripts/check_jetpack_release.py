@@ -47,7 +47,10 @@ def version_at(revision):
         raise ValueError(message) from error
     values = [node.value for node in tree.body if isinstance(node, ast.Assign)
               if any(isinstance(target, ast.Name) and target.id == '__version__' for target in node.targets)]
-    if len(values) != 1 or not isinstance(values[0], ast.Constant):
+    # Reject additional bindings or deletions rather than approving stale metadata.
+    targets = [node for node in ast.walk(tree) if isinstance(node, ast.Name)
+               if node.id == '__version__' and isinstance(node.ctx, (ast.Store, ast.Del))]
+    if len(values) != 1 or len(targets) != 1 or not isinstance(values[0], ast.Constant):
         raise ValueError(message)
     version = values[0].value
     if not isinstance(version, str) or not re.fullmatch(VERSION, version):

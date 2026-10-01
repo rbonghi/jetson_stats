@@ -149,6 +149,11 @@ def test_mapping_check_uses_pr_changes_when_base_has_advanced(tmp_path, changes_
     '# no version\n', '__version__ = 723\n', '__version__ = "07.2.3"\n',
     '__version__ = "7.2.3"\n__version__ = "7.2.4"\n',
     '__version__ = "7.2.3', '__version__ = str("7.2.3")\n',
+    '__version__ = "7.2.3"\n__version__ += ".1"\n',
+    '__version__ = "7.2.3"\ndel __version__\n',
+    '__version__ = "7.2.3"\n__version__: str = "7.2.4"\n',
+    '__version__ = "7.2.3"\nif True:\n    __version__ = "7.2.4"\n',
+    '__version__ = "7.2.3"\n__version__, unused = "7.2.4", None\n',
 ])
 def test_invalid_version_metadata_fails_with_summary(tmp_path, source):
     repo, base, _head = release_repo(tmp_path)
