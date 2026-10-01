@@ -58,7 +58,13 @@ exclude_patterns = ["_build"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "friendly"
 
-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+# Keep cross-references available even when docs.python.org is unreachable.
+intersphinx_mapping = {
+    "python": (
+        "https://docs.python.org/3.14",
+        os.path.join(os.path.dirname(__file__), "_intersphinx", "python-3.14.7.inv"),
+    ),
+}
 
 # Show typehints as content of the function or method
 autodoc_typehints = "description"

@@ -177,9 +177,9 @@ jobs:
           sudo -H env "PATH=$PATH" pip install -v -e .
           # Install sphinx requirements
           sudo -H env "PATH=$PATH" pip install --ignore-installed -r docs/requirements.txt
-          # Run sphinx
+          # Build offline to catch accidental network dependencies; keep warnings fatal.
           cd docs
-          sphinx-build -b html -W . _build/html
+          sudo env "PATH=$PATH" unshare --net -- sphinx-build -b html -W . _build/html
       - name: Export website
         id: export_website
         if: ${{ !startsWith(github.ref, 'refs/heads/master') }}
