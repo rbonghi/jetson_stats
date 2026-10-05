@@ -807,11 +807,17 @@ class JtopServer(Process):
 
             # VIC actmon load — Thor exposes real-time VIC utilization via
             # debugfs. tegrastats reports "VIC off" so this is the only source.
+            # Only decorate a VIC entry that JetsonPowerProvider already reported:
+            # creating one here would leave a bare {"load": x} dict without the
+            # "online"/"cur" keys every other engine entry has, which breaks
+            # consumers that iterate jtop.engine (e.g. isaac_ros_jetson_stats on
+            # Orin, where the actmon node exists but the provider lists no VIC).
+            # The GUI reads the load from flat["VIC_LOAD"] in any case.
             vic_load = _read_vic_actmon_load()
             if vic_load is not None:
                 flat["VIC_LOAD"] = vic_load
                 if isinstance(jp_group, dict):
-                    vic_entry = jp_group.setdefault("VIC", {})
+                    vic_entry = jp_group.get("VIC")
                     if isinstance(vic_entry, dict):
                         vic_entry["load"] = vic_load
 
