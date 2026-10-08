@@ -65,11 +65,13 @@ _PARAM_DISPLAY = {
 _PARAM_PREFERRED_ORDER = ("GPU", "VIDEO", "EMC", "PVA0_VPS", "PVA0_AXI")
 
 
+# A sensor that is not ready can fail the read with EAGAIN. Python's raw read then returns None,
+# and the text decoder raises "TypeError: can't concat NoneType to bytes" (#919).
 def _read_int(path):
     try:
         with open(path) as fh:
             return int(fh.read().strip())
-    except (OSError, ValueError):
+    except (OSError, ValueError, TypeError):
         return None
 
 
@@ -77,7 +79,7 @@ def _read_str(path):
     try:
         with open(path) as fh:
             return fh.read().strip()
-    except OSError:
+    except (OSError, TypeError):
         return None
 
 
