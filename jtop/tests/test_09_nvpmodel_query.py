@@ -44,4 +44,11 @@ def test_get_status_keeps_last_mode_when_query_fails(monkeypatch):
     assert service.get_status()['model'] == MAXN
     # The next successful query updates the mode again
     assert service.get_status()['model'] == LOW_POWER
+
+
+def test_startup_query_failure_disables_nvpmodel(monkeypatch):
+    # A failing nvpmodel command at startup marks nvpmodel as not available instead of
+    # stopping the service from starting.
+    service = make_service(monkeypatch, [JtopException("nvpmodel command unavailable")])
+    assert not service.exists()
 # EOF

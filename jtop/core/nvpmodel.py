@@ -460,7 +460,8 @@ class NVPModelService(object):
             current_mask = self._nvp_masks[self._nvpmodel_now['id']]
             # list of all nvpmodel status that can be changed from the current
             self._nvp_status = [current_mask == mask for idx, mask in enumerate(self._nvp_masks)]
-        except (OSError, Command.CommandException):
+        except (OSError, Command.CommandException, JtopException):
+            # nvpmodel_query() reports a failing command as JtopException
             self._is_nvpmodel = False
             logger.warning("nvpmodel not available")
 
