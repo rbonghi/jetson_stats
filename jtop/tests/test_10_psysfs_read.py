@@ -1,0 +1,38 @@
+# -*- coding: UTF-8 -*-
+# This file is part of the jetson_stats package (https://github.com/rbonghi/jetson_stats or http://rnext.it).
+# Copyright (c) 2019-2026 Raffaello Bonghi.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+import io
+import pytest
+from ..gui import psysfs
+
+
+class EagainRaw(io.RawIOBase):
+    """Raw file whose read fails with EAGAIN: like FileIO, readinto() returns None."""
+
+    def readable(self):
+        return True
+
+    def readinto(self, b):
+        return None
+
+
+@pytest.mark.parametrize("reader", [psysfs._read_int, psysfs._read_str])
+def test_read_sensor_not_ready(monkeypatch, reader):
+    # A thermal zone whose sensor is not ready fails the read with EAGAIN (#919)
+    monkeypatch.setattr(psysfs, "open", lambda path: io.TextIOWrapper(io.BufferedReader(EagainRaw())), raising=False)
+    assert reader("/sys/class/thermal/thermal_zone0/temp") is None
+# EOF
