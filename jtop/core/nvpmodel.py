@@ -460,7 +460,8 @@ class NVPModelService(object):
             current_mask = self._nvp_masks[self._nvpmodel_now['id']]
             # list of all nvpmodel status that can be changed from the current
             self._nvp_status = [current_mask == mask for idx, mask in enumerate(self._nvp_masks)]
-        except (OSError, Command.CommandException):
+        except (OSError, Command.CommandException, JtopException):
+            # nvpmodel_query() reports a failing command as JtopException
             self._is_nvpmodel = False
             logger.warning("nvpmodel not available")
 
@@ -584,7 +585,12 @@ class NVPModelService(object):
         running = self.is_running()
         # If thread is not running update status
         if not running:
-            self._nvpmodel_now = nvpmodel_query()
+            try:
+                self._nvpmodel_now = nvpmodel_query()
+            except JtopException as e:
+                # Under full load nvpmodel can exceed its timeout. This runs on every stats tick,
+                # so keep the last known mode instead of stopping the timer thread.
+                logger.warning("Keep last NV Power Mode: {error}".format(error=e))
         return {
             'status': self._nvp_status,
             'thread': running,
