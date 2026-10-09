@@ -98,24 +98,28 @@ class ProcessService(object):
         if not os.path.isdir(os.path.join('/proc', pid)):
             return []
         # https://man7.org/linux/man-pages/man5/proc.5.html
-        stat = cat(os.path.join('/proc', pid, 'stat')).split()
-        # Decode uid and find username
         try:
-            uid = int(cat(os.path.join('/proc', pid, 'loginuid')))
-        except (FileNotFoundError, ValueError, TypeError):
-            # This might happen if kernel CONFIG_AUDIT is not set
-            # Fall back to avoid crashing on those systems.
-            uid = -1
-        if uid not in self.usernames:
+            stat = cat(os.path.join('/proc', pid, 'stat')).split()
+            # Decode uid and find username
             try:
-                self.usernames[uid] = pwd.getpwuid(uid).pw_name
-            except KeyError:
-                self.usernames[uid] = "-"
-        # Read memory process
-        # Extract resident set size (VmRSS) (Second field)
-        # VmRSS is the resident set size of the process, which is the portion of the process's memory
-        # that is held in RAM and is not swapped out to disk. This is the amount of memory that the process is currently using.
-        mem_raw = cat(os.path.join('/proc', pid, 'statm')).split()
+                uid = int(cat(os.path.join('/proc', pid, 'loginuid')))
+            except (FileNotFoundError, ValueError, TypeError):
+                # This might happen if kernel CONFIG_AUDIT is not set
+                # Fall back to avoid crashing on those systems.
+                uid = -1
+            if uid not in self.usernames:
+                try:
+                    self.usernames[uid] = pwd.getpwuid(uid).pw_name
+                except KeyError:
+                    self.usernames[uid] = "-"
+            # Read memory process
+            # Extract resident set size (VmRSS) (Second field)
+            # VmRSS is the resident set size of the process, which is the portion of the process's memory
+            # that is held in RAM and is not swapped out to disk. This is the amount of memory that the process is currently using.
+            mem_raw = cat(os.path.join('/proc', pid, 'statm')).split()
+        except (FileNotFoundError, ProcessLookupError):
+            # The process can exit after the directory check or between reads.
+            return []
         vm_rss = int(mem_raw[1]) * 4
         # CPU percent
         # https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat
