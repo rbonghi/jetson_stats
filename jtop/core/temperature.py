@@ -110,9 +110,9 @@ def get_hwmon_thermal_system(root_dir):
             sensor = {}
             if check_file(os.path.join(path, "temp{num}_input".format(num=number_port))):
                 sensor['temp'] = os.path.join(path, "temp{num}_input".format(num=number_port))  # Temperature in deg
-            if check_file(os.path.join(path, "temp{num}_input".format(num=number_port))):
+            if check_file(os.path.join(path, "temp{num}_max".format(num=number_port))):
                 sensor['max'] = os.path.join(path, "temp{num}_max".format(num=number_port))  # Temperature in deg
-            if check_file(os.path.join(path, "temp{num}_input".format(num=number_port))):
+            if check_file(os.path.join(path, "temp{num}_crit".format(num=number_port))):
                 sensor['crit'] = os.path.join(path, "temp{num}_crit".format(num=number_port))  # Temperature in deg
             # If there is an file is added in list
             if sensor:
