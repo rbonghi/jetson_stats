@@ -47,4 +47,18 @@ def test_unique_name():
     assert fan._unique_name('pwmfan', {}) == 'pwmfan'
     assert fan._unique_name('pwmfan', {'pwmfan': {}}) == 'pwmfan1'
     assert fan._unique_name('pwmfan', {'pwmfan': {}, 'pwmfan1': {}}) == 'pwmfan2'
+    assert fan._unique_name('pwmfan', {'pwmfan': {}}, {'pwmfan', 'pwmfan1'}) == 'pwmfan2'
+
+
+def test_duplicate_does_not_take_another_node_name(monkeypatch, tmp_path):
+    # A node really named "pwmfan1" keeps its name even if it sorts after two "pwmfan" nodes
+    monkeypatch.setattr(fan, "is_thor", lambda: False)
+    root = str(tmp_path)
+    write_hwmon(root, "hwmon0", {"name": "pwmfan", "pwm1": "100"})
+    fan1 = write_hwmon(root, "hwmon1", {"name": "pwmfan", "pwm1": "150"})
+    fan2 = write_hwmon(root, "hwmon2", {"name": "pwmfan1", "pwm1": "200"})
+    fans = fan.get_all_cooling_system(root)
+    assert sorted(fans) == ['pwmfan', 'pwmfan1', 'pwmfan2']
+    assert fans['pwmfan1']['path'] == fan2
+    assert fans['pwmfan2']['path'] == fan1
 # EOF

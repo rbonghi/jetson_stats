@@ -69,12 +69,13 @@ def _readlink_safe(path):
     return ''
 
 
-def _unique_name(name, names):
-    # hwmon names come from the driver and can repeat, e.g. two "pwmfan" nodes (#907)
+def _unique_name(name, names, reserved=()):
+    # hwmon names come from the driver and can repeat, e.g. two "pwmfan" nodes (#907).
+    # Skip the names of other hwmon nodes, so a node really named "pwmfan1" keeps its name.
     if name not in names:
         return name
     idx = 1
-    while "{name}{idx}".format(name=name, idx=idx) in names:
+    while "{name}{idx}".format(name=name, idx=idx) in names or "{name}{idx}".format(name=name, idx=idx) in reserved:
         idx += 1
     return "{name}{idx}".format(name=name, idx=idx)
 
@@ -88,6 +89,9 @@ def _collect_hwmon_fans(root_dir):
     except OSError as e:
         logger.warning("Unable to read hwmon root %s: %s", root_dir, e)
         return {}, {}
+
+    hwmon_names = {_read_name(os.path.join(root_dir, entry), entry) for entry in entries
+                   if os.path.isdir(os.path.join(root_dir, entry))}
 
     for entry in entries:
         full_path = os.path.join(root_dir, entry)
@@ -117,7 +121,7 @@ def _collect_hwmon_fans(root_dir):
                 fan_rpm_path.append(file_path)
 
         if fan_device_paths:
-            fan_name = _unique_name(name, pwm_files)
+            fan_name = _unique_name(name, pwm_files, hwmon_names)
             pwm_files[fan_name] = {
                 'path': full_path,
                 'pwm': fan_device_paths,
@@ -135,7 +139,7 @@ def _collect_hwmon_fans(root_dir):
                 logger.info("RPM %s(%d) found in %s", fan_name, len(fan_rpm_path), full_path)
 
         elif fan_rpm_path:
-            rpm_name = _unique_name(name, rpm_only)
+            rpm_name = _unique_name(name, rpm_only, hwmon_names)
             rpm_only[rpm_name] = {
                 'path': full_path,
                 'rpm': fan_rpm_path,
