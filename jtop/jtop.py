@@ -641,10 +641,11 @@ class jtop(Thread):
         Name       Type                Description
         ========== =================== ====================================================
         tot        :py:class:`int`     Total RAM in **KB**
-        used       :py:class:`int`     Total used RAM in **KB**
+        used       :py:class:`int`     Total used RAM in **KB** (MemTotal - MemAvailable)
+        available  :py:class:`int`     Available RAM in **KB** (MemAvailable)
         free       :py:class:`int`     Free RAM in **KB**
         buffers    :py:class:`int`     Buffered RAM in **KB**
-        cached     :py:class:`int`     Cached RAM in **KB**
+        cached     :py:class:`int`     Cached and reclaimable RAM in **KB**
         shared     :py:class:`int`     Shared RAM in **KB**, for NVIDIA Jetson the RAM used from GPU
         lfb        :py:class:`int`     Large Free Block in **4MB**
         ========== =================== ====================================================

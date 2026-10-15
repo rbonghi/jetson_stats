@@ -434,17 +434,27 @@ class MemoryService(object):
         # Extract memory info
         ram_total = status_mem.get('MemTotal', 0)
         ram_free = status_mem.get('MemFree', 0)
-        # ram_available = status_mem.get('MemAvailable', 0)
+        ram_available = status_mem.get('MemAvailable')
         ram_buffer = status_mem.get('Buffers', 0)
         ram_cached = status_mem.get('Cached', 0)
         ram_SReclaimable = status_mem.get('SReclaimable', 0)
-        # ram_Shmem = status_mem.get('Shmem', 0)
-        total_used_memory = ram_total - ram_free
-        cached_memory = ram_cached + ram_SReclaimable  # + ram_Shmem
+        if ram_available is not None:
+            # Use the kernel estimate (Linux >= 3.14). It also covers reclaimable
+            # slab and driver page pools (KReclaimable, e.g. nvidia.ko on Thor)
+            # that the classic formula would report as used.
+            used_memory = ram_total - ram_available
+            # Everything reclaimable except free and buffers: page cache, slab, driver pools
+            cached_memory = max(0, ram_available - ram_free - ram_buffer)
+        else:
+            # Very old kernels without MemAvailable
+            cached_memory = ram_cached + ram_SReclaimable
+            used_memory = ram_total - ram_free - ram_buffer - cached_memory
+            ram_available = ram_free + ram_buffer + cached_memory
         # Add fields for RAM
         memory['RAM'] = {
             'tot': ram_total,
-            'used': total_used_memory - (ram_buffer + ram_cached),
+            'used': used_memory,
+            'available': ram_available,
             'free': ram_free,
             'buffers': ram_buffer,
             'cached': cached_memory,
