@@ -69,6 +69,17 @@ def _readlink_safe(path):
     return ''
 
 
+def _unique_name(name, names, reserved=()):
+    # hwmon names come from the driver and can repeat, e.g. two "pwmfan" nodes (#907).
+    # Skip the names of other hwmon nodes, so a node really named "pwmfan1" keeps its name.
+    if name not in names:
+        return name
+    idx = 1
+    while "{name}{idx}".format(name=name, idx=idx) in names or "{name}{idx}".format(name=name, idx=idx) in reserved:
+        idx += 1
+    return "{name}{idx}".format(name=name, idx=idx)
+
+
 def _collect_hwmon_fans(root_dir):
     pwm_files = {}
     rpm_only = {}
@@ -78,6 +89,9 @@ def _collect_hwmon_fans(root_dir):
     except OSError as e:
         logger.warning("Unable to read hwmon root %s: %s", root_dir, e)
         return {}, {}
+
+    hwmon_names = {_read_name(os.path.join(root_dir, entry), entry) for entry in entries
+                   if os.path.isdir(os.path.join(root_dir, entry))}
 
     for entry in entries:
         full_path = os.path.join(root_dir, entry)
@@ -107,7 +121,8 @@ def _collect_hwmon_fans(root_dir):
                 fan_rpm_path.append(file_path)
 
         if fan_device_paths:
-            pwm_files[name] = {
+            fan_name = _unique_name(name, pwm_files, hwmon_names)
+            pwm_files[fan_name] = {
                 'path': full_path,
                 'pwm': fan_device_paths,
                 'hwmon_name': name,
@@ -115,23 +130,24 @@ def _collect_hwmon_fans(root_dir):
                 'device': _readlink_safe(os.path.join(full_path, 'device')),
             }
             if fan_enable_paths:
-                pwm_files[name]['pwm_enable'] = fan_enable_paths
+                pwm_files[fan_name]['pwm_enable'] = fan_enable_paths
             if fan_rpm_path:
-                pwm_files[name]['rpm'] = fan_rpm_path
+                pwm_files[fan_name]['rpm'] = fan_rpm_path
 
-            logger.info("Fan %s(%d) found in %s", name, len(fan_device_paths), full_path)
+            logger.info("Fan %s(%d) found in %s", fan_name, len(fan_device_paths), full_path)
             if fan_rpm_path:
-                logger.info("RPM %s(%d) found in %s", name, len(fan_rpm_path), full_path)
+                logger.info("RPM %s(%d) found in %s", fan_name, len(fan_rpm_path), full_path)
 
         elif fan_rpm_path:
-            rpm_only[name] = {
+            rpm_name = _unique_name(name, rpm_only, hwmon_names)
+            rpm_only[rpm_name] = {
                 'path': full_path,
                 'rpm': fan_rpm_path,
                 'hwmon_name': name,
                 'of_node': _readlink_safe(os.path.join(full_path, 'of_node')),
                 'device': _readlink_safe(os.path.join(full_path, 'device')),
             }
-            logger.info("Standalone RPM %s(%d) found in %s", name, len(fan_rpm_path), full_path)
+            logger.info("Standalone RPM %s(%d) found in %s", rpm_name, len(fan_rpm_path), full_path)
 
     return pwm_files, rpm_only
 
