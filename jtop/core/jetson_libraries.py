@@ -32,6 +32,23 @@ except NameError:
 MODULES = ['cuDNN', 'TensorRT.', 'VPI']  # 'Visionworks'
 CUDA_FILE_RE = re.compile(r'CUDA Version (.*)')
 CUDA_NVCC_RE = re.compile(r'V([0-9]+.[0-9]+.[0-9]+)')
+VULKAN_API_RE = re.compile(r'apiVersion\s*=.*?([0-9]+\.[0-9]+\.[0-9]+)')
+VULKAN_INSTANCE_RE = re.compile(r'Vulkan Instance Version:\s*([0-9]+\.[0-9]+\.[0-9]+)')
+
+
+def get_vulkan_version(lines):
+    # Vulkan API version supported by the first GPU. The instance version is the version
+    # of the loader, which comes from the distro and can be newer than the driver (#509).
+    instance_version = None
+    for line in lines:
+        match = VULKAN_API_RE.search(line)
+        if match:
+            return match.group(1)
+        match = VULKAN_INSTANCE_RE.search(line)
+        if match and instance_version is None:
+            instance_version = match.group(1)
+    # No GPU listed, fall back to the loader version
+    return instance_version
 
 
 def get_cudnn():
@@ -179,10 +196,9 @@ def get_libraries():
             raise Command.CommandException("Missing command", -3)
         cmd_vulkan = Command(lines)
         lines = cmd_vulkan()
-        for line in lines:
-            if "Vulkan Instance Version" in line:
-                os_variables['Vulkan'] = line.lstrip("Vulkan Instance Version: ")
-                break
+        vulkan_version = get_vulkan_version(lines)
+        if vulkan_version:
+            os_variables['Vulkan'] = vulkan_version
     except (OSError, Command.CommandException):
         pass
     return os_variables
