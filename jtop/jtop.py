@@ -641,12 +641,12 @@ class jtop(Thread):
         Name       Type                Description
         ========== =================== ====================================================
         tot        :py:class:`int`     Total RAM in **KB**
-        used       :py:class:`int`     Total used RAM in **KB** (MemTotal - MemAvailable)
-        available  :py:class:`int`     Available RAM in **KB** (MemAvailable)
+        used       :py:class:`int`     Total used RAM in **KB**
+        available  :py:class:`int`     Available RAM in **KB**
         free       :py:class:`int`     Free RAM in **KB**
         buffers    :py:class:`int`     Buffered RAM in **KB**
         cached     :py:class:`int`     Cached and reclaimable RAM in **KB**
-        shared     :py:class:`int`     Shared RAM in **KB**, for NVIDIA Jetson the RAM used from GPU
+        shared     :py:class:`int`     Shared RAM in **KB**, for NVIDIA Jetson the RAM used from GPU (part of used)
         lfb        :py:class:`int`     Large Free Block in **4MB**
         ========== =================== ====================================================
 
@@ -686,17 +686,26 @@ class jtop(Thread):
         .. note::
 
             Note **A**
-                The RAM is measured reading the file :code:`/proc/meminfo` for each field is read:
+                The RAM is measured reading the file :code:`/proc/meminfo` for each field is read,
+                with :code:`R = max(MemAvailable, MemFree + Buffers)`:
 
                 ========== ====================================================
                 Name       Description
                 ========== ====================================================
                 tot        :code:`MemTotal`
-                used       :code:`MemTotal - (Buffers + Cached)`
+                used       :code:`MemTotal - R`
+                available  :code:`MemAvailable`
                 free       :code:`MemFree`
                 buffers    :code:`Buffers`
-                cached     :code:`Cached + SReclaimable`
+                cached     :code:`R - MemFree - Buffers`
                 ========== ====================================================
+
+                :code:`used + free + buffers + cached` is always :code:`tot`.
+                :code:`cached` covers page cache, reclaimable slab and driver page pools
+                (:code:`KReclaimable`). On kernels without :code:`MemAvailable`,
+                :code:`cached` is :code:`Cached + SReclaimable`, :code:`used` is
+                :code:`MemTotal - MemFree - Buffers - cached` and :code:`available` is
+                :code:`MemTotal - used`.
 
             Note **B**
                 The swap table is a list of dictionary with this data

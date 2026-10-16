@@ -442,14 +442,21 @@ class MemoryService(object):
             # Use the kernel estimate (Linux >= 3.14). It also covers reclaimable
             # slab and driver page pools (KReclaimable, e.g. nvidia.ko on Thor)
             # that the classic formula would report as used.
-            used_memory = ram_total - ram_available
+            # MemAvailable leaves out the kernel low memory reserve, so it can be
+            # below MemFree + Buffers when there is little cache: never count free
+            # or buffers as used, so that used + free + buffers + cached == tot
+            reclaimable = max(ram_available, ram_free + ram_buffer)
+            used_memory = ram_total - reclaimable
             # Everything reclaimable except free and buffers: page cache, slab, driver pools
-            cached_memory = max(0, ram_available - ram_free - ram_buffer)
+            cached_memory = reclaimable - ram_free - ram_buffer
         else:
             # Very old kernels without MemAvailable
             cached_memory = ram_cached + ram_SReclaimable
             used_memory = ram_total - ram_free - ram_buffer - cached_memory
             ram_available = ram_free + ram_buffer + cached_memory
+        # Shared memory is part of used memory. GPU process memory is sampled before
+        # /proc/meminfo, so an allocation freed in between could exceed used
+        ram_shared = min(ram_shared, max(used_memory, 0))
         # Add fields for RAM
         memory['RAM'] = {
             'tot': ram_total,
