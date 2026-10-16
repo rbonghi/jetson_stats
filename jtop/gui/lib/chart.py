@@ -18,6 +18,7 @@
 # Math functions
 import itertools
 from math import ceil
+from functools import lru_cache
 import curses
 from collections import deque
 from .common import check_curses
@@ -199,36 +200,92 @@ class Chart(object):
             points += [n] * int(val)
         # Draw all chart
         color_step = len(self.color_chart)
+        color_offset = Chart.OFFSET_COLOR_CHART + self._color_obj_counter
         for idx, values in enumerate(reversed(points)):
-            for chart_idx, value in enumerate(values):
-                color_base = Chart.OFFSET_COLOR_CHART + self._color_obj_counter + chart_idx * color_step
-                color_next = 1 if chart_idx != 0 else 0
-                cell_val = value * size_y / self.max_val
-                cell_val_int = int(cell_val)
-                cell_val_mant = cell_val - cell_val_int
-                if cell_val > 0 and size_plot_x[1] - idx >= size_plot_x[0]:
-                    # Fill chart if request
-                    # https://www.htmlsymbols.xyz/box-drawing
-                    # Full block: \u2588 - 3/4 block \u2586 - Lower block: \u2584 - Small lower block: \u2581
-                    if self.fill:
-                        for n in range(cell_val_int - 1):
-                            stdscr.addstr(size_plot_y[1] - n, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'),
-                                          curses.color_pair(color_base))
-                        # Add head chart
-                        if cell_val < 1.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581'.encode('utf-8'),
-                                          curses.color_pair(color_base + color_next))
-                        elif cell_val_mant == 0.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2584'.encode('utf-8'),
-                                          curses.color_pair(color_base))
-                        elif cell_val_mant <= 0.5:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2586'.encode('utf-8'),
-                                          curses.color_pair(color_base + color_next))
-                        elif cell_val_mant < 1.0:
-                            stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, u'\u2581'.encode('utf-8'),
-                                          curses.color_pair(color_base + color_next))
-                            stdscr.addstr(size_plot_y[1] - cell_val_int + 1, size_plot_x[1] - idx, u'\u2588'.encode('utf-8'),
-                                          curses.color_pair(color_base))
+            pos_x = size_plot_x[1] - idx
+            if pos_x < size_plot_x[0]:
+                continue
+            if self.fill:
+                # Height of each series in 1/8 of a row
+                targets = [min(max(value, 0) * size_y * 8 / self.max_val, size_y * 8) for value in values]
+                if all(x >= y for x, y in zip(targets, targets[1:])):
+                    # Stacked chart: fit the boundaries so every cell has at most two colors
+                    tops = Chart._stacked_tops(tuple(round(x, 2) for x in targets), size_y * 8)
+                else:
+                    tops = tuple(max(1, int(round(x))) if x > 0 else 0 for x in targets)
+                for n, (fg, fg_h, bg) in enumerate(Chart._column_cells(tops)):
+                    if fg_h == 8:
+                        # Full block: \u2588
+                        glyph, pair = u'\u2588', color_offset + fg * color_step
                     else:
-                        stdscr.addstr(size_plot_y[1] - cell_val_int, size_plot_x[1] - idx, self.line, curses.color_pair(Chart.OFFSET_COLOR_TEXT))
+                        # Lower 1/8 (\u2581) to 7/8 (\u2587) block, background for the rest of the cell
+                        # Color pair index: 0 = black background, k = background of series fg - k
+                        glyph, pair = chr(0x2580 + fg_h), color_offset + fg * color_step + (fg - bg if bg is not None else 0)
+                    stdscr.addstr(size_plot_y[1] - n, pos_x, glyph.encode('utf-8'), curses.color_pair(pair))
+            else:
+                for value in values:
+                    cell_val = min(value * size_y / self.max_val, size_y)
+                    if cell_val > 0:
+                        stdscr.addstr(size_plot_y[1] - int(cell_val), pos_x, self.line, curses.color_pair(Chart.OFFSET_COLOR_TEXT))
+
+    @staticmethod
+    @lru_cache(maxsize=256)
+    def _stacked_tops(targets, limit):
+        """
+        Fit the tops (in eighths) of a stacked chart, largest series first.
+
+        A terminal cell can show only two colors, so at most one top may end
+        inside each cell (tops on a cell border are free). Search the tops
+        within one row of their target that respect this, and keep the one
+        closest to the real chart: each non-zero segment as thick as its value
+        but at least 1/8 (thin values show as a line), and the same total height.
+        Dynamic programming from the innermost series outward.
+        """
+        inner = targets[::-1]
+        # best[top] = (cost, tops so far) for the series processed so far
+        best = {0: (0.0, ())}
+        previous = 0.0
+        for target in inner:
+            length = target - previous
+            goal = max(length, 1.0) if length > 0 else 0.0
+            center = int(round(target))
+            following = {}
+            for low, (cost, path) in best.items():
+                for top in range(max(low, center - 8), min(limit, center + 8) + 1):
+                    size = top - low
+                    if (goal > 0 and size < 1) or (goal == 0 and size != 0):
+                        continue
+                    # Two tops inside the same cell would need three colors
+                    if low % 8 and top % 8 and low // 8 == top // 8:
+                        continue
+                    new_cost = cost + abs(size - goal)
+                    if top not in following or new_cost < following[top][0]:
+                        following[top] = (new_cost, path + (top,))
+            best = following
+            previous = target
+        # Add the error on the total height (outermost top)
+        _, path = min(best.values(), key=lambda item: item[0] + abs(item[1][-1] - targets[0]))
+        return path[::-1]
+
+    @staticmethod
+    @lru_cache(maxsize=256)
+    def _column_cells(tops):
+        """
+        Return (foreground, height in eighths, background) for each row of a column.
+
+        Series drawn later are on top, so the color at any height (in eighths)
+        is the highest series index whose top is above it. Each cell is drawn as
+        a lower block in the color at its bottom, and the color just above as
+        background (None = empty).
+        """
+        column = [max([i for i, top in enumerate(tops) if top > pos] or [None]) for pos in range(max(tops + (0,)))]
+        cells = []
+        for low in range(0, len(column), 8):
+            cell = column[low:low + 8]
+            cell += [None] * (8 - len(cell))
+            fg_h = 1
+            while fg_h < 8 and cell[fg_h] == cell[0]:
+                fg_h += 1
+            cells.append((cell[0], fg_h, cell[fg_h] if fg_h < 8 else None))
+        return cells
 # EOF
