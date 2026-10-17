@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import pytest
 from ..core import nvpmodel
 from ..core.exceptions import JtopException
 
@@ -50,5 +52,38 @@ def test_startup_query_failure_disables_nvpmodel(monkeypatch):
     # A failing nvpmodel command at startup marks nvpmodel as not available instead of
     # stopping the service from starting.
     service = make_service(monkeypatch, [JtopException("nvpmodel command unavailable")])
+    assert not service.exists()
+
+
+def fake_nvpmodel(monkeypatch, tmp_path, query_output):
+    """Put first on PATH an nvpmodel with two modes, which prints ``query_output`` for ``nvpmodel -q`` and exits 0."""
+    (tmp_path / "modes").write_text(
+        "NVPM VERB: PM_CONFIG: DEFAULT=MAXN(0)\n"
+        "NVPM VERB: POWER_MODEL: ID=0 NAME=MAXN\n"
+        "NVPM VERB: POWER_MODEL: ID=1 NAME=120W\n")
+    (tmp_path / "query").write_text(query_output)
+    script = tmp_path / "nvpmodel"
+    script.write_text('#!/bin/sh\nif [ "$1" = "-p" ]; then cat {dir}/modes; else cat {dir}/query; fi\n'.format(dir=tmp_path))
+    script.chmod(0o755)
+    monkeypatch.setenv("PATH", str(tmp_path) + os.pathsep + os.environ["PATH"])
+
+
+def test_query_reads_power_mode(monkeypatch, tmp_path):
+    fake_nvpmodel(monkeypatch, tmp_path, "NV Power Mode: MAXN\n0\n")
+    assert nvpmodel.nvpmodel_query() == MAXN
+
+
+@pytest.mark.parametrize("query_output", ["", "NV Power Mode: MAXN\n", "NV Power Mode: MAXN\nNVPM ERROR\n"])
+def test_query_without_power_mode_raises(monkeypatch, tmp_path, query_output):
+    # With no power mode configured nvpmodel -q can exit 0 without the mode (#567)
+    fake_nvpmodel(monkeypatch, tmp_path, query_output)
+    with pytest.raises(JtopException):
+        nvpmodel.nvpmodel_query()
+
+
+def test_startup_without_power_mode_disables_nvpmodel(monkeypatch, tmp_path):
+    # The service used to stop with TypeError: 'NoneType' object is not subscriptable (#567)
+    fake_nvpmodel(monkeypatch, tmp_path, "")
+    service = nvpmodel.NVPModelService(jetson_clocks=None)
     assert not service.exists()
 # EOF
