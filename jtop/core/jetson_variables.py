@@ -231,7 +231,11 @@ def get_jetson_raw_output():
 
 def check_dpkg_nvidia_l4t_core():
     dpkg = Command(['dpkg', '--get-selections'])
-    lines = dpkg()
+    try:
+        lines = dpkg()
+    except (OSError, Command.CommandException):
+        # No dpkg, e.g. a Yocto image built with meta-tegra
+        return False
     for line in lines:
         if re.match(DPKG_L4T_CORE_RE, line):
             return True
