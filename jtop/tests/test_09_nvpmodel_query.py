@@ -69,8 +69,8 @@ def fake_nvpmodel(monkeypatch, tmp_path, query_output):
 
 
 def test_query_reads_power_mode(monkeypatch, tmp_path):
-    fake_nvpmodel(monkeypatch, tmp_path, "NV Power Mode: MAXN\n0\n")
-    assert nvpmodel.nvpmodel_query() == MAXN
+    fake_nvpmodel(monkeypatch, tmp_path, "NV Power Mode: 120W\n1\n")
+    assert nvpmodel.nvpmodel_query() == LOW_POWER
 
 
 @pytest.mark.parametrize("query_output", ["", "NV Power Mode: MAXN\n", "NV Power Mode: MAXN\nNVPM ERROR\n"])
