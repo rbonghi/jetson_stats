@@ -50,7 +50,8 @@ class Chart(object):
         self.time = time
         self.tik = tik
         # Initialization chart
-        max_record = int(self.time * (float(1.0 / float(self.refresh)) * 1000.0))
+        # Keep at least one value when the interval is longer than the chart time
+        max_record = max(1, int(self.time * (float(1.0 / float(self.refresh)) * 1000.0)))
         self.values = deque(max_record * [(len(self.color_chart) * [0])], maxlen=max_record)
         # Initialize default values and unit
         self.unit = "%"
@@ -163,6 +164,11 @@ class Chart(object):
         val = float(displayX - 2) / float(len(self.values))
         # Draw ticks and labels
         ten_sec = int(self.tik * 1000 / self.refresh)
+        tik = self.tik
+        if ten_sec == 0:
+            # The interval is longer than a tik: put a tick on every value
+            ten_sec = 1
+            tik = self.refresh / 1000.0
         counter = 0
         label_y = size_x[1] - 5 if label else size_x[1]
         # Draw line
@@ -176,7 +182,7 @@ class Chart(object):
                         stdscr.addch(size_y[1], x_val, curses.ACS_LLCORNER)
                     # Draw label
                     if counter > 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
-                        stdscr.addstr(size_y[1], x_val + 3, "-{time}s".format(time=self.tik * counter))
+                        stdscr.addstr(size_y[1], x_val + 3, "-{time:g}s".format(time=tik * counter))
                     elif counter == 0 and ((point - 1) / ceil(val)) % ten_sec == 0:
                         if label:
                             stdscr.addstr(size_y[1], x_val + 3, "time")
