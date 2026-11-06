@@ -236,8 +236,12 @@ def check_dpkg_nvidia_l4t_core():
     dpkg = Command(['dpkg', '--get-selections'])
     try:
         lines = dpkg()
-    except (OSError, Command.CommandException):
+    except OSError:
         # No dpkg (e.g. Yocto / meta-tegra images): L4T cannot be read from packages (#521)
+        return False
+    except Command.CommandException as e:
+        # dpkg is there but failed: report it, but do not stop the service over it
+        logger.warning("dpkg --get-selections failed, L4T not read from packages: %s", e)
         return False
     for line in lines:
         if re.match(DPKG_L4T_CORE_RE, line):
@@ -266,7 +270,10 @@ def get_nvidia_l4t():
         dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
         try:
             l4t = dpkg()[0]
-        except (OSError, IndexError, Command.CommandException):
+        except (OSError, IndexError):
+            return ''
+        except Command.CommandException as e:
+            logger.warning("dpkg-query nvidia-l4t-core failed: %s", e)
             return ''
         return l4t.split('-')[0].lstrip('\'')
     # If not find any L4T return empty string

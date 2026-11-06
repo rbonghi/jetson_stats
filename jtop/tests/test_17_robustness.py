@@ -70,6 +70,15 @@ def test_check_dpkg_without_dpkg(monkeypatch):
     assert jetson_variables.check_dpkg_nvidia_l4t_core() is False
 
 
+def test_check_dpkg_failure_is_logged(monkeypatch, caplog):
+    # dpkg exists but exits non-zero: no crash, but the failure is reported
+    error = jetson_variables.Command.CommandException("Error process:", 2)
+    monkeypatch.setattr(jetson_variables, "Command", fake_command(error=error))
+    with caplog.at_level("WARNING"):
+        assert jetson_variables.check_dpkg_nvidia_l4t_core() is False
+    assert "dpkg --get-selections failed" in caplog.text
+
+
 def test_get_nvidia_l4t_without_dpkg_or_release_file(monkeypatch):
     monkeypatch.setattr(jetson_variables, "Command", fake_command(error=FileNotFoundError("dpkg")))
     real_isfile = jetson_variables.os.path.isfile
