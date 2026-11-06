@@ -359,7 +359,10 @@ def map_engines(jetson, engine_data=None):
     return list_engines
 
 
-def pack_engine_rows(map_eng, size_table):
+ENGINE_COMPACT_COLUMNS = 2  # columns the main-page box is sized for
+
+
+def pack_engine_rows(map_eng, size_table, max_rows=None):
     """
     Re-pack the (name, value) pairs of an engine map into evenly sized rows.
 
@@ -367,13 +370,26 @@ def pack_engine_rows(map_eng, size_table):
     (e.g. Orin Nano: no PVA/DLA/NVENC) rows end up empty or with three entries,
     which overlap in the narrow main-page box ("NVJPG1: 499MSE: 307MHz").
     Keep the map order, drop empty rows and use as many columns as fit.
+    With ``max_rows``, never return more rows than that (add columns instead),
+    so the list cannot draw below the box.
     """
     pairs = [pair for row in map_eng for pair in row]
     if not pairs:
         return []
     widest = max(len(name) + len(value) + 2 for name, value in pairs)
     cols = max(1, min(len(pairs), (size_table + 1) // (widest + 2)))
+    if max_rows is not None and max_rows > 0:
+        cols = max(cols, -(-len(pairs) // max_rows))
     return [pairs[i:i + cols] for i in range(0, len(pairs), cols)]
+
+
+def compact_engines_rows(jetson):
+    """Rows the main page must reserve to show every engine in two columns."""
+    try:
+        n_pairs = sum(len(row) for row in map_engines(jetson))
+    except Exception:
+        return 0
+    return -(-n_pairs // ENGINE_COMPACT_COLUMNS)
 
 
 def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
@@ -473,7 +489,8 @@ def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
         return size_map
 
     # Legacy path (Orin / non-overlay): use existing engine mapping
-    map_eng = pack_engine_rows(map_engines(jetson), size_table)
+    # Rows between the header line and the bottom border of the box
+    map_eng = pack_engine_rows(map_engines(jetson), size_table, max_rows=height - 3)
     size_map = len(map_eng)
     if size_map > 0:
         stdscr.addstr(pos_y, center_x - 7, " [HW engines] ", curses.A_BOLD)

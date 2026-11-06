@@ -254,13 +254,57 @@ def get_fan_thermal_zones(fan, root_dir=THERMAL_ROOT):
         if not os.path.isfile(policy):
             continue
         cdev_types = set()
-        for item in os.listdir(zone):
-            type_file = os.path.join(zone, item, 'type')
-            if re.match(r'^cdev\d+$', item) and os.path.isfile(type_file):
-                cdev_types.add(cat(type_file).strip())
+        try:
+            for item in os.listdir(zone):
+                type_file = os.path.join(zone, item, 'type')
+                if re.match(r'^cdev\d+$', item) and os.path.isfile(type_file):
+                    cdev_types.add(cat(type_file).strip())
+        except OSError as e:
+            # A zone can disappear or be unreadable: skip it, never stop the fan service
+            logger.debug("Skip thermal zone %s: %s", zone, e)
+            continue
         if cdev_types and cdev_types <= fan_types:
             zones.append(zone)
     return zones
+
+
+def assign_fan_thermal_zones(fan_list, fan_config, root_dir=THERMAL_ROOT):
+    """
+    Map each fan to the thermal zones that drive it: {fan: {zone: governor to restore}}.
+
+    - A zone matched by more than one fan (same "pwm-fan" type) is ambiguous and left
+      to the kernel for all of them.
+    - The governor in use is saved in ``fan_config[fan]['thermal_policy']``, so a zone
+      found in user_space later (left by jtop or nvfancontrol) is restored to it.
+
+    Return the mapping and whether ``fan_config`` was changed.
+    """
+    claimed = {}
+    for name, fan in fan_list.items():
+        for zone in get_fan_thermal_zones(fan, root_dir):
+            claimed.setdefault(zone, []).append(name)
+    zones = {}
+    changed = False
+    for zone, names in claimed.items():
+        if len(names) > 1:
+            logger.warning("Thermal zone %s matches fans %s, leave it to the kernel", zone, names)
+            continue
+        name = names[0]
+        try:
+            policy = cat(os.path.join(zone, 'policy')).strip()
+        except OSError as e:
+            logger.debug("Skip thermal zone %s: %s", zone, e)
+            continue
+        saved = fan_config.get(name, {}).get('thermal_policy', {})
+        if policy == THERMAL_USER_SPACE:
+            policy = saved.get(zone, THERMAL_DEFAULT_POLICY)
+        elif saved.get(zone) != policy:
+            saved[zone] = policy
+            fan_config.setdefault(name, {})['thermal_policy'] = saved
+            changed = True
+        zones.setdefault(name, {})[zone] = policy
+        logger.info("Fan %s driven by thermal zone %s (%s)", name, zone, policy)
+    return zones, changed
 
 
 def get_all_cooling_system(root_dir):
@@ -552,16 +596,10 @@ class FanService(object):
         if os.getenv('JTOP_TESTING', False):
             thermal_root = "/fake_sys/class/thermal"
         # Thermal zones driving each fan, with the governor to restore on auto profiles
-        self._thermal_zones = {}
-        for name, fan in self._fan_list.items():
-            zones = {}
-            for zone in get_fan_thermal_zones(fan, thermal_root):
-                policy = cat(os.path.join(zone, 'policy')).strip()
-                # If a previous jtop left the zone in user_space, restore the default
-                zones[zone] = policy if policy != THERMAL_USER_SPACE else THERMAL_DEFAULT_POLICY
-                logger.info("Fan %s driven by thermal zone %s (%s)", name, zone, policy)
-            if zones:
-                self._thermal_zones[name] = zones
+        fan_config = self._config.get('fan', {})
+        self._thermal_zones, changed = assign_fan_thermal_zones(self._fan_list, fan_config, thermal_root)
+        if changed:
+            self._config.set('fan', fan_config)
 
         if not self._fan_list:
             logger.warning("No fan found")
@@ -579,8 +617,15 @@ class FanService(object):
                     logger.info("Initialization %s %s speed %s%%", name, index, speed)
 
     def _set_kernel_control(self, name, enable):
-        # enable=False: switch the fan thermal zones to user_space so a manual speed sticks
-        # enable=True: restore the original governor (automatic kernel fan control)
+        """
+        enable=False: switch the fan thermal zones to user_space so a manual speed sticks.
+        enable=True: restore the original governor (automatic kernel fan control).
+
+        Return True when every zone is in the requested state. If taking control fails
+        on any zone, the zones already switched are restored, so the fan is never left
+        half manual / half automatic.
+        """
+        ok = True
         for zone, original in self._thermal_zones.get(name, {}).items():
             policy_path = os.path.join(zone, 'policy')
             target = original if enable else THERMAL_USER_SPACE
@@ -592,6 +637,20 @@ class FanService(object):
                 logger.info("Thermal zone %s policy set to %s", zone, target)
             except OSError as e:
                 logger.error("I cannot set policy %s on %s - error %s", target, zone, e)
+                ok = False
+                if not enable:
+                    break
+        if not ok and not enable:
+            self._set_kernel_control(name, True)
+        return ok
+
+    def _is_manual(self, name):
+        # The saved profile decides: restore() and jetson_clocks write speeds right after
+        # selecting an automatic profile, and those must not take control of the fan
+        profile = self._config.get('fan', {}).get(name, {}).get('profile')
+        if profile is None:
+            profile = self.get_profile(name)
+        return profile == FAN_MANUAL_NAME
 
     def get_configs(self):
         governors = {}
@@ -626,6 +685,11 @@ class FanService(object):
             self._set_kernel_control(name, profile != FAN_MANUAL_NAME)
         if profile == self.get_profile(name):
             logger.warning("Fan %s profile %s already active", name, profile)
+            # Still record it: set_speed() decides from the saved profile
+            fan_config = self._config.get('fan', {})
+            if fan_config.get(name, {}).get('profile') != profile:
+                fan_config.setdefault(name, {})['profile'] = profile
+                self._config.set('fan', fan_config)
             return True
         if self._nvfancontrol:
             is_active = nvfancontrol_is_active()
@@ -676,26 +740,37 @@ class FanService(object):
             logger.error("Wrong index %s for %s", index, name)
             return
 
-        # Stop nvfancontrol so it does not override a manual speed
-        if self._nvfancontrol and nvfancontrol_is_active():
-            os.system('systemctl stop nvfancontrol')
-        # Stop the kernel thermal governor from overriding a manual speed
-        self._set_kernel_control(name, False)
+        pwm = ValueToPWM(speed)
+        pwm_path = self._fan_list[name]['pwm'][index]
+        if not os.access(pwm_path, os.W_OK):
+            # Do not touch the automatic controllers if the speed cannot be applied
+            logger.error("I cannot set fan speed: %s is not writable", pwm_path)
+            return
+
+        # In the manual profile, stop the automatic controllers overriding the speed.
+        # In an automatic profile (e.g. restore() setting speed 0) leave them running.
+        take_control = self._is_manual(name)
+        if take_control:
+            if self._nvfancontrol and nvfancontrol_is_active():
+                os.system('systemctl stop nvfancontrol')
+            if not self._set_kernel_control(name, False):
+                logger.error("Fan %s: kernel thermal control still active, speed not set", name)
+                return
+
+        try:
+            with open(pwm_path, 'w') as f:
+                f.write(str(pwm))
+        except OSError as e:
+            logger.error("I cannot set fan speed: %s - error %s", speed, e)
+            if take_control:
+                self._set_kernel_control(name, True)
+            return
 
         fan_config = self._config.get('fan', {})
         if name not in fan_config:
             fan_config[name] = {}
         fan_config[name]['speed'] = (speed, index)
         self._config.set('fan', fan_config)
-
-        pwm = ValueToPWM(speed)
-        pwm_path = self._fan_list[name]['pwm'][index]
-        try:
-            if os.access(pwm_path, os.W_OK):
-                with open(pwm_path, 'w') as f:
-                    f.write(str(pwm))
-        except OSError as e:
-            logger.error("I cannot set fan speed: %s - error %s", speed, e)
 
     def get_status(self):
         fan_status = {}

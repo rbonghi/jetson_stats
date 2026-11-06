@@ -46,4 +46,10 @@ def test_r39_real_sample_is_not_zero():
 def test_small_kernel_falls_back_to_biggest_order():
     # Fewer columns than the 4MB order: report the biggest available order
     assert large_free_blocks(zones([1, 2, 3]), PAGE_4K) == 3
+
+
+def test_64k_pages_use_order_6():
+    # 64KB pages: 4MB is order 6 (64 pages), not order 0
+    mem = zones([100, 100, 100, 100, 100, 100, 3, 1])
+    assert large_free_blocks(mem, 64 * 1024) == 3 + 1 * 2
 # EOF

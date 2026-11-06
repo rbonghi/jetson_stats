@@ -62,4 +62,12 @@ def test_fmt_cap():
     assert _fmt_cap(None, True) == "uncapped"
     assert _fmt_cap(None, False) == "n/a"
     assert _fmt_cap(612000000, False) == "612 MHz"
+
+
+def test_pack_rows_respect_max_rows():
+    # AGX Orin has ~12 engines; the box may only have 5 rows: never draw below it
+    pairs = [[("E%d" % i, "100MHz")] for i in range(12)]
+    rows = pack_engine_rows(pairs, 38, max_rows=5)
+    assert len(rows) <= 5
+    assert sum(len(r) for r in rows) == 12
 # EOF
