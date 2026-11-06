@@ -234,7 +234,11 @@ def get_jetson_raw_output():
 
 def check_dpkg_nvidia_l4t_core():
     dpkg = Command(['dpkg', '--get-selections'])
-    lines = dpkg()
+    try:
+        lines = dpkg()
+    except (OSError, Command.CommandException):
+        # No dpkg (e.g. Yocto / meta-tegra images): L4T cannot be read from packages (#521)
+        return False
     for line in lines:
         if re.match(DPKG_L4T_CORE_RE, line):
             return True
@@ -260,7 +264,10 @@ def get_nvidia_l4t():
         # os_variables['SOC'] = "tegra{number}".format(number=number)
     elif check_dpkg_nvidia_l4t_core():
         dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
-        l4t = dpkg()[0]
+        try:
+            l4t = dpkg()[0]
+        except (OSError, IndexError, Command.CommandException):
+            return ''
         return l4t.split('-')[0].lstrip('\'')
     # If not find any L4T return empty string
     return ''
