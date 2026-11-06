@@ -214,6 +214,55 @@ def _merge_split_fans(pwm_files, rpm_only):
     return pwm_files
 
 
+THERMAL_ROOT = "/sys/class/thermal"
+THERMAL_USER_SPACE = 'user_space'
+THERMAL_DEFAULT_POLICY = 'step_wise'
+
+
+def _fan_cooling_types(fan):
+    # The pwm-fan driver registers its cooling device as "pwm-fan" and does not
+    # expose a "device" link, so match by type against the fan's device / DT node names.
+    types = {'pwm-fan'}
+    for key in ('device', 'of_node'):
+        if fan.get(key):
+            types.add(os.path.basename(fan[key]))
+    return types
+
+
+def get_fan_thermal_zones(fan, root_dir=THERMAL_ROOT):
+    """
+    Return the thermal zones whose governor drives this fan.
+
+    On recent L4T (e.g. R39) the kernel binds pwm-fan as a cooling device of a
+    thermal zone (tj-thermal) and the step_wise governor keeps rewriting pwm1,
+    overriding any manual speed. Only zones whose cooling devices are all this
+    fan are returned, so CPU/GPU throttling zones are never touched.
+    """
+    zones = []
+    if not os.path.isdir(root_dir):
+        return zones
+    fan_types = _fan_cooling_types(fan)
+    try:
+        entries = sorted(os.listdir(root_dir))
+    except OSError:
+        return zones
+    for entry in entries:
+        if not entry.startswith('thermal_zone'):
+            continue
+        zone = os.path.join(root_dir, entry)
+        policy = os.path.join(zone, 'policy')
+        if not os.path.isfile(policy):
+            continue
+        cdev_types = set()
+        for item in os.listdir(zone):
+            type_file = os.path.join(zone, item, 'type')
+            if re.match(r'^cdev\d+$', item) and os.path.isfile(type_file):
+                cdev_types.add(cat(type_file).strip())
+        if cdev_types and cdev_types <= fan_types:
+            zones.append(zone)
+    return zones
+
+
 def get_all_cooling_system(root_dir):
     if not os.path.isdir(root_dir):
         logger.error("Folder %s doesn't exist", root_dir)
@@ -499,6 +548,21 @@ class FanService(object):
                     logger.info("Fan temp controller %s found in %s", name, control)
                 self._fan_list[name]['profile'] += [FAN_MANUAL_NAME]
 
+        thermal_root = THERMAL_ROOT
+        if os.getenv('JTOP_TESTING', False):
+            thermal_root = "/fake_sys/class/thermal"
+        # Thermal zones driving each fan, with the governor to restore on auto profiles
+        self._thermal_zones = {}
+        for name, fan in self._fan_list.items():
+            zones = {}
+            for zone in get_fan_thermal_zones(fan, thermal_root):
+                policy = cat(os.path.join(zone, 'policy')).strip()
+                # If a previous jtop left the zone in user_space, restore the default
+                zones[zone] = policy if policy != THERMAL_USER_SPACE else THERMAL_DEFAULT_POLICY
+                logger.info("Fan %s driven by thermal zone %s (%s)", name, zone, policy)
+            if zones:
+                self._thermal_zones[name] = zones
+
         if not self._fan_list:
             logger.warning("No fan found")
 
@@ -513,6 +577,21 @@ class FanService(object):
                     speed, index = fan['speed']
                     self.set_speed(name, speed, index)
                     logger.info("Initialization %s %s speed %s%%", name, index, speed)
+
+    def _set_kernel_control(self, name, enable):
+        # enable=False: switch the fan thermal zones to user_space so a manual speed sticks
+        # enable=True: restore the original governor (automatic kernel fan control)
+        for zone, original in self._thermal_zones.get(name, {}).items():
+            policy_path = os.path.join(zone, 'policy')
+            target = original if enable else THERMAL_USER_SPACE
+            try:
+                if cat(policy_path).strip() == target:
+                    continue
+                with open(policy_path, 'w') as f:
+                    f.write(target)
+                logger.info("Thermal zone %s policy set to %s", zone, target)
+            except OSError as e:
+                logger.error("I cannot set policy %s on %s - error %s", target, zone, e)
 
     def get_configs(self):
         governors = {}
@@ -543,6 +622,8 @@ class FanService(object):
         if name not in self._fan_list:
             logger.error("Fan \"%s\" does not exist", name)
             return False
+        if profile in self._fan_list[name]['profile']:
+            self._set_kernel_control(name, profile != FAN_MANUAL_NAME)
         if profile == self.get_profile(name):
             logger.warning("Fan %s profile %s already active", name, profile)
             return True
@@ -598,6 +679,8 @@ class FanService(object):
         # Stop nvfancontrol so it does not override a manual speed
         if self._nvfancontrol and nvfancontrol_is_active():
             os.system('systemctl stop nvfancontrol')
+        # Stop the kernel thermal governor from overriding a manual speed
+        self._set_kernel_control(name, False)
 
         fan_config = self._config.get('fan', {})
         if name not in fan_config:
