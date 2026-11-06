@@ -65,6 +65,7 @@ NVIDIA_JETPACK = {
     "36.2.0": "6.0 DP",
     "36.0.0": "6.0 EA",
     # -------- JP5 --------
+    "35.7.0": "5.1.8",
     "35.6.5": "5.1.7",
     "35.6.4": "5.1.6",
     "35.6.3": "5.1.5",
@@ -156,9 +157,11 @@ MODULE_NAME_TABLE = {
     'p3767-0003': 'NVIDIA Jetson Orin Nano (8GB ram)',
     'p3767-0001': 'NVIDIA Jetson Orin NX (8GB ram)',
     'p3767-0000': 'NVIDIA Jetson Orin NX (16GB ram)',
+    'p3701-0008': 'NVIDIA Jetson AGX Orin Industrial',
     'p3701-0005': 'NVIDIA Jetson AGX Orin (64GB ram)',
     'p3701-0004': 'NVIDIA Jetson AGX Orin (32GB ram)',
     'p3701-0002': 'NVIDIA Jetson IGX Orin (Developer kit)',
+    'p3701-0001': 'NVIDIA Jetson AGX Orin (Developer kit)',
     'p3701-0000': 'NVIDIA Jetson AGX Orin',
     'p3668-0003': 'NVIDIA Jetson Xavier NX (16GB ram)',
     'p3668-0001': 'NVIDIA Jetson Xavier NX',
@@ -231,7 +234,15 @@ def get_jetson_raw_output():
 
 def check_dpkg_nvidia_l4t_core():
     dpkg = Command(['dpkg', '--get-selections'])
-    lines = dpkg()
+    try:
+        lines = dpkg()
+    except OSError:
+        # No dpkg (e.g. Yocto / meta-tegra images): L4T cannot be read from packages (#521)
+        return False
+    except Command.CommandException as e:
+        # dpkg is there but failed: report it, but do not stop the service over it
+        logger.warning("dpkg --get-selections failed, L4T not read from packages: %s", e)
+        return False
     for line in lines:
         if re.match(DPKG_L4T_CORE_RE, line):
             return True
@@ -257,7 +268,13 @@ def get_nvidia_l4t():
         # os_variables['SOC'] = "tegra{number}".format(number=number)
     elif check_dpkg_nvidia_l4t_core():
         dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
-        l4t = dpkg()[0]
+        try:
+            l4t = dpkg()[0]
+        except (OSError, IndexError):
+            return ''
+        except Command.CommandException as e:
+            logger.warning("dpkg-query nvidia-l4t-core failed: %s", e)
+            return ''
         return l4t.split('-')[0].lstrip('\'')
     # If not find any L4T return empty string
     return ''

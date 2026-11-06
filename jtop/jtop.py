@@ -48,6 +48,9 @@ if sys.version_info[0] == 2:
 logger = logging.getLogger(__name__)
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+# Smallest supported refresh interval (seconds). Below this the service cannot
+# finish a stats read per tick and jetson.ok() keeps returning False (#414, #482)
+MIN_INTERVAL = 0.5
 # Version match
 VERSION_RE = re.compile(r""".*__version__ = ["'](.*?)['"]""", re.S)
 
@@ -88,6 +91,10 @@ class jtop(Thread):
         self._running = False
         # Load interval
         self._interval = float(interval)
+        if self._interval < MIN_INTERVAL:
+            logger.warning("interval {interval}s is below the minimum, using {min}s".format(
+                interval=self._interval, min=MIN_INTERVAL))
+            self._interval = MIN_INTERVAL
         # Initialize observer
         self._observers = set()
         # Stats read from service

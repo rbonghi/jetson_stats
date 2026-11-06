@@ -94,6 +94,9 @@ def nvpmodel_query():
             parsed_line = match.groupdict()
             # Extract NV Power Mode
             return {'name': parsed_line['name'], 'id': int(lines[idx + 1])}
+    # No power mode in the output (e.g. nvpmodel not configured on this board):
+    # report it like the other nvpmodel failures instead of returning None (#567)
+    raise JtopException("nvpmodel has no NV Power Mode configured")
 
 
 def set_nvpmodel_level(level, force):

@@ -89,6 +89,8 @@ JTOP_USER = 'jtop'
 JTOP_SERVICE_NAME = 'jtop.service'
 # Gain timeout lost connection
 TIMEOUT_GAIN = 3
+# Same floor as jtop.MIN_INTERVAL, enforced again for any client
+MIN_INTERVAL = 0.5
 TIMEOUT_SWITCHOFF = 3.0
 
 # VIC actmon load node (Thor). Documented at
@@ -596,7 +598,8 @@ class JtopServer(Process):
                         self.nvpmodel.set_nvpmodel_id(nvpmodel_id, nvpmodel_force)
                     # Initialize tegrastats speed
                     if 'interval' in control:
-                        interval = control['interval']
+                        # Clients older than the MIN_INTERVAL check can still ask for less (#482)
+                        interval = max(float(control['interval']), MIN_INTERVAL)
                         # Run stats
                         if self._timer_reader.open(interval=interval):
                             # Set interval value
