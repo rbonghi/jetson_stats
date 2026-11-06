@@ -188,6 +188,25 @@ def _cap_from_mode(mode, param, arg):
     return None
 
 
+def _is_uncapped(mode, param, arg):
+    """True when the mode sets this cap to -1 / INT_MAX, i.e. no limit (e.g. MAXN modes)."""
+    for pname, aname, val in mode["settings"]:
+        if pname == param and aname == arg:
+            try:
+                v = int(val)
+            except ValueError:
+                return False
+            return v < 0 or v == _UNCAPPED_SENTINEL
+    return False
+
+
+def _fmt_cap(value, uncapped):
+    """Format a configured cap; an explicit 'no limit' is not the same as missing data."""
+    if value is None and uncapped:
+        return "uncapped"
+    return _fmt_freq(value)
+
+
 class SYSFS(Page):
 
     def __init__(self, stdscr, jetson):
@@ -587,15 +606,17 @@ class SYSFS(Page):
         cpu_total = sum(1 for p, _, _ in active["settings"] if p == "CPU_ONLINE")
         cpu_min = None
         cpu_max = None
-        for pname in sorted(n for n in self._nvp_params if n.startswith("CPU_") and "MAX_FREQ" in self._nvp_params[n]):
+        cpu_params = sorted(n for n in self._nvp_params if n.startswith("CPU_") and "MAX_FREQ" in self._nvp_params[n])
+        for pname in cpu_params:
             if cpu_min is None:
                 cpu_min = _cap_from_mode(active, pname, "MIN_FREQ")
             if cpu_max is None:
                 cpu_max = _cap_from_mode(active, pname, "MAX_FREQ")
             if cpu_min is not None and cpu_max is not None:
                 break
+        cpu_max_uncapped = any(_is_uncapped(active, pname, "MAX_FREQ") for pname in cpu_params)
         self._safe_addstr(y, 3, "CPU     {}/{} online   min {}   max {}".format(
-            cpu_online, cpu_total, _fmt_freq(cpu_min), _fmt_freq(cpu_max)))
+            cpu_online, cpu_total, _fmt_freq(cpu_min), _fmt_cap(cpu_max, cpu_max_uncapped)))
         y += 2  # blank row before DOMAIN header
 
         # Auto-discover domain clock params: any non-CPU param with MAX_FREQ declared
@@ -635,7 +656,7 @@ class SYSFS(Page):
                     attr = NColors.yellow() | curses.A_BOLD
             label = _PARAM_DISPLAY.get(pname, pname)
             self._safe_addstr(y, 3, "{:<12} {:>12}   {:>12}{}".format(
-                label[:12], _fmt_freq(conf_v), _fmt_freq(live_v), mark), attr)
+                label[:12], _fmt_cap(conf_v, _is_uncapped(active, pname, "MAX_FREQ")), _fmt_freq(live_v), mark), attr)
             y += 1
         return y + 1
 
