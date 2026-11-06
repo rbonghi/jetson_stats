@@ -82,4 +82,56 @@ def test_no_vic_load(monkeypatch):
     data = run_overlay(monkeypatch, engines, None)
     assert "VIC_LOAD" not in data["flat"]
     assert "VIC" not in data["engines"]["JP"]
+
+
+def test_orin_drops_absent_and_duplicate_engines(monkeypatch):
+    # JetPack 7.2 Orin Nano: the provider lists the whole tegra234 engine set.
+    # Absent engines (no frequency) and engines EngineService already shows are dropped.
+    monkeypatch.setattr(service, "is_thor", lambda: False)
+    monkeypatch.setattr(service, "_read_vic_actmon_load", lambda: None)
+    data = {"engines": {
+        "APE": {"APE": {"online": False, "cur": 200000}},
+        "NVDEC": {"NVDEC": {"online": False, "cur": 524800}},
+        "NVJPG": {"NVJPG": {"online": False, "cur": 499200}, "NVJPG1": {"online": False, "cur": 499200}},
+        "SE": {"SE": {"online": False, "cur": 307200}},
+    }}
+    absent = {"online": False, "cur": None, "min": None, "max": None}
+    engines = {
+        "DLA0": dict(absent), "DLA1": dict(absent), "PVA": dict(absent), "NVENC": dict(absent),
+        "NVDEC": {"online": False, "cur": 524800, "min": 0, "max": None},
+        "NVJPG0": {"online": False, "cur": 499200, "min": 0, "max": None},
+        "NVJPG1": {"online": False, "cur": 499200, "min": 0, "max": None},
+        "SE": {"online": False, "cur": 307200, "min": 0, "max": None},
+        "APE": {"online": False, "cur": 200000, "min": 0, "max": None},
+    }
+    JtopServer.apply_jetsonpower_overlay(FakeServer(engines), data)
+    assert "JP" not in data["engines"]
+    for name in ("DLA0", "DLA1", "PVA", "NVENC", "NVJPG0"):
+        assert name not in data["flat"]
+
+
+def test_orin_keeps_extra_engine(monkeypatch):
+    # An engine EngineService does not expose, with a real frequency, stays in JP.
+    monkeypatch.setattr(service, "is_thor", lambda: False)
+    monkeypatch.setattr(service, "_read_vic_actmon_load", lambda: None)
+    data = {"engines": {"NVDEC": {"NVDEC": {"online": False, "cur": 524800}}}}
+    engines = {
+        "NVDEC": {"online": False, "cur": 524800, "min": 0, "max": None},
+        "PVA": {"online": True, "cur": 115200, "min": 0, "max": 1152000},
+    }
+    JtopServer.apply_jetsonpower_overlay(FakeServer(engines), data)
+    assert list(data["engines"]["JP"]) == ["PVA"]
+
+
+def test_thor_keeps_all_engines(monkeypatch):
+    # Thor is untouched: JP is its only engine source, absent entries included.
+    monkeypatch.setattr(service, "is_thor", lambda: True)
+    monkeypatch.setattr(service, "_read_vic_actmon_load", lambda: None)
+    data = {"engines": {}}
+    engines = {
+        "NVDEC0": {"online": True, "cur": 800000, "min": 0, "max": 1000000},
+        "DLA0": {"online": False, "cur": None, "min": None, "max": None},
+    }
+    JtopServer.apply_jetsonpower_overlay(FakeServer(engines), data)
+    assert set(data["engines"]["JP"]) == {"NVDEC0", "DLA0"}
 # EOF

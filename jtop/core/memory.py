@@ -78,6 +78,31 @@ def buddyinfo(page_size):
     return buddyhash
 
 
+LFB_BLOCK_SIZE = 4 * 1024 * 1024  # lfb is reported in 4MB blocks
+
+
+def large_free_blocks(mem_size, page_size, block_size=LFB_BLOCK_SIZE):
+    """
+    Count the free blocks of ``block_size`` available in /proc/buddyinfo.
+
+    The last buddyinfo column is not always 4MB: kernels built with a larger
+    MAX_PAGE_ORDER (e.g. JetPack 7.2 / L4T R39, 14 columns -> 32MB) would make
+    the old "last column" count almost always 0. Use the 4MB order and add the
+    larger orders, each of them holding 2**(order - block_order) 4MB blocks.
+    """
+    block_order = max(0, (block_size // page_size).bit_length() - 1)
+    total = 0
+    for zones in mem_size.values():
+        for zone in zones:
+            nr_free = zone['nr_free']
+            if block_order >= len(nr_free):
+                # Kernel cannot hold a whole block: keep the biggest available order
+                total += nr_free[-1]
+                continue
+            total += sum(free << (order - block_order) for order, free in enumerate(nr_free) if order >= block_order)
+    return total
+
+
 def read_swapon():
     """
     This method list all processes working with GPU
@@ -416,10 +441,8 @@ class MemoryService(object):
         memory = {}
         # Measure the largest free bank for 4MB
         mem_size = buddyinfo(self._page_size)
-        # Count only the biggest Large free bank (lfb)
-        large_free_bank = 0
-        for _, data in mem_size.items():
-            large_free_bank += sum([zone['nr_free'][-1] for zone in data])
+        # Large free blocks (lfb) in 4MB
+        large_free_bank = large_free_blocks(mem_size, self._page_size)
         # Status Memory
         status_mem = meminfo()
         # Read memory use
