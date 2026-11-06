@@ -300,6 +300,7 @@ def pass_orin(engine):
         add_engine_in_list('DLA1c', engine, 'DLA1', 'DLA1_CORE') + add_engine_in_list('NVENC', engine, 'NVENC', 'NVENC'),
         add_engine_in_list('NVDEC', engine, 'NVDEC', 'NVDEC') + add_engine_in_list('NVJPG', engine, 'NVJPG', 'NVJPG'),
         add_engine_in_list('NVJPG1', engine, 'NVJPG', 'NVJPG1') + se + add_engine_in_list('VIC', engine, 'VIC', 'VIC'),
+        add_engine_in_list('OFA', engine, 'OFA', 'OFA'),
     ]
 
 
@@ -356,6 +357,23 @@ def map_engines(jetson, engine_data=None):
     for group in engine_data:
         list_engines += [[(name, get_value_engine(engine)) for name, engine in engine_data[group].items()]]
     return list_engines
+
+
+def pack_engine_rows(map_eng, size_table):
+    """
+    Re-pack the (name, value) pairs of an engine map into evenly sized rows.
+
+    The per-model maps pair engines by hand; on modules that miss some of them
+    (e.g. Orin Nano: no PVA/DLA/NVENC) rows end up empty or with three entries,
+    which overlap in the narrow main-page box ("NVJPG1: 499MSE: 307MHz").
+    Keep the map order, drop empty rows and use as many columns as fit.
+    """
+    pairs = [pair for row in map_eng for pair in row]
+    if not pairs:
+        return []
+    widest = max(len(name) + len(value) + 2 for name, value in pairs)
+    cols = max(1, min(len(pairs), (size_table + 1) // (widest + 2)))
+    return [pairs[i:i + cols] for i in range(0, len(pairs), cols)]
 
 
 def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
@@ -455,7 +473,7 @@ def compact_engines(stdscr, pos_y, pos_x, width, height, jetson):
         return size_map
 
     # Legacy path (Orin / non-overlay): use existing engine mapping
-    map_eng = map_engines(jetson)
+    map_eng = pack_engine_rows(map_engines(jetson), size_table)
     size_map = len(map_eng)
     if size_map > 0:
         stdscr.addstr(pos_y, center_x - 7, " [HW engines] ", curses.A_BOLD)
