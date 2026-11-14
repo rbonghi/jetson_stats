@@ -1076,23 +1076,27 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 <td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Total used RAM in <strong>KB</strong></p></td>
 </tr>
-<tr class="row-even"><td><p>free</p></td>
+<tr class="row-even"><td><p>available</p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
+<td><p>Available RAM in <strong>KB</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p>free</p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Free RAM in <strong>KB</strong></p></td>
 </tr>
-<tr class="row-odd"><td><p>buffers</p></td>
+<tr class="row-even"><td><p>buffers</p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Buffered RAM in <strong>KB</strong></p></td>
 </tr>
-<tr class="row-even"><td><p>cached</p></td>
+<tr class="row-odd"><td><p>cached</p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
-<td><p>Cached RAM in <strong>KB</strong></p></td>
+<td><p>Cached and reclaimable RAM in <strong>KB</strong></p></td>
 </tr>
-<tr class="row-odd"><td><p>shared</p></td>
+<tr class="row-even"><td><p>shared</p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
-<td><p>Shared RAM in <strong>KB</strong>, for NVIDIA Jetson the RAM used from GPU</p></td>
+<td><p>Shared RAM in <strong>KB</strong>, for NVIDIA Jetson the RAM used from GPU (part of used)</p></td>
 </tr>
-<tr class="row-even"><td><p>lfb</p></td>
+<tr class="row-odd"><td><p>lfb</p></td>
 <td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Large Free Block in <strong>4MB</strong></p></td>
 </tr>
@@ -1189,7 +1193,8 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <dl>
-<dt>Note <strong>A</strong></dt><dd><p>The RAM is measured reading the file <code class="code docutils literal notranslate"><span class="pre">/proc/meminfo</span></code> for each field is read:</p>
+<dt>Note <strong>A</strong></dt><dd><p>The RAM is measured reading the file <code class="code docutils literal notranslate"><span class="pre">/proc/meminfo</span></code> for each field is read,
+with <code class="code docutils literal notranslate"><span class="pre">R</span> <span class="pre">=</span> <span class="pre">max(MemAvailable,</span> <span class="pre">MemFree</span> <span class="pre">+</span> <span class="pre">Buffers)</span></code>:</p>
 <div class="table-wrapper docutils container">
 <table class="docutils align-default">
 <thead>
@@ -1202,20 +1207,29 @@ read all methods available <a class="reference internal" href="memory.html#jtop.
 <td><p><code class="code docutils literal notranslate"><span class="pre">MemTotal</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>used</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">MemTotal</span> <span class="pre">-</span> <span class="pre">(Buffers</span> <span class="pre">+</span> <span class="pre">Cached)</span></code></p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">MemTotal</span> <span class="pre">-</span> <span class="pre">R</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>free</p></td>
+<tr class="row-even"><td><p>available</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">MemAvailable</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>free</p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">MemFree</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>buffers</p></td>
+<tr class="row-even"><td><p>buffers</p></td>
 <td><p><code class="code docutils literal notranslate"><span class="pre">Buffers</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>cached</p></td>
-<td><p><code class="code docutils literal notranslate"><span class="pre">Cached</span> <span class="pre">+</span> <span class="pre">SReclaimable</span></code></p></td>
+<tr class="row-odd"><td><p>cached</p></td>
+<td><p><code class="code docutils literal notranslate"><span class="pre">R</span> <span class="pre">-</span> <span class="pre">MemFree</span> <span class="pre">-</span> <span class="pre">Buffers</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p><code class="code docutils literal notranslate"><span class="pre">used</span> <span class="pre">+</span> <span class="pre">free</span> <span class="pre">+</span> <span class="pre">buffers</span> <span class="pre">+</span> <span class="pre">cached</span></code> is always <code class="code docutils literal notranslate"><span class="pre">tot</span></code>.
+<code class="code docutils literal notranslate"><span class="pre">cached</span></code> covers page cache, reclaimable slab and driver page pools
+(<code class="code docutils literal notranslate"><span class="pre">KReclaimable</span></code>). On kernels without <code class="code docutils literal notranslate"><span class="pre">MemAvailable</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">cached</span></code> is <code class="code docutils literal notranslate"><span class="pre">Cached</span> <span class="pre">+</span> <span class="pre">SReclaimable</span></code>, <code class="code docutils literal notranslate"><span class="pre">used</span></code> is
+<code class="code docutils literal notranslate"><span class="pre">MemTotal</span> <span class="pre">-</span> <span class="pre">MemFree</span> <span class="pre">-</span> <span class="pre">Buffers</span> <span class="pre">-</span> <span class="pre">cached</span></code> and <code class="code docutils literal notranslate"><span class="pre">available</span></code> is
+<code class="code docutils literal notranslate"><span class="pre">MemTotal</span> <span class="pre">-</span> <span class="pre">used</span></code>.</p>
 </dd>
 <dt>Note <strong>B</strong></dt><dd><p>The swap table is a list of dictionary with this data</p>
 <div class="table-wrapper docutils container">
