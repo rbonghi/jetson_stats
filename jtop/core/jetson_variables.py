@@ -161,6 +161,7 @@ MODULE_NAME_TABLE = {
     'p3701-0005': 'NVIDIA Jetson AGX Orin (64GB ram)',
     'p3701-0004': 'NVIDIA Jetson AGX Orin (32GB ram)',
     'p3701-0002': 'NVIDIA Jetson IGX Orin (Developer kit)',
+    'p3701-0001': 'NVIDIA Jetson AGX Orin (Developer kit)',
     'p3701-0000': 'NVIDIA Jetson AGX Orin',
     'p3668-0003': 'NVIDIA Jetson Xavier NX (16GB ram)',
     'p3668-0001': 'NVIDIA Jetson Xavier NX',
@@ -235,8 +236,12 @@ def check_dpkg_nvidia_l4t_core():
     dpkg = Command(['dpkg', '--get-selections'])
     try:
         lines = dpkg()
-    except (OSError, Command.CommandException):
-        # No dpkg, e.g. a Yocto image built with meta-tegra
+    except OSError:
+        # No dpkg (e.g. Yocto / meta-tegra images): L4T cannot be read from packages (#521)
+        return False
+    except Command.CommandException as e:
+        # dpkg is there but failed: report it, but do not stop the service over it
+        logger.warning("dpkg --get-selections failed, L4T not read from packages: %s", e)
         return False
     for line in lines:
         if re.match(DPKG_L4T_CORE_RE, line):
@@ -263,7 +268,13 @@ def get_nvidia_l4t():
         # os_variables['SOC'] = "tegra{number}".format(number=number)
     elif check_dpkg_nvidia_l4t_core():
         dpkg = Command(['dpkg-query', '--showformat=\'${Version}\'', '--show', 'nvidia-l4t-core'])
-        l4t = dpkg()[0]
+        try:
+            l4t = dpkg()[0]
+        except (OSError, IndexError):
+            return ''
+        except Command.CommandException as e:
+            logger.warning("dpkg-query nvidia-l4t-core failed: %s", e)
+            return ''
         return l4t.split('-')[0].lstrip('\'')
     # If not find any L4T return empty string
     return ''
