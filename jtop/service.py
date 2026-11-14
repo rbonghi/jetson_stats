@@ -51,6 +51,7 @@ from .core.power import PowerService
 from .core.fan import FanService
 from .core.jetson_clocks import JetsonClocksService
 from .core.nvpmodel import NVPModelService
+from .core.hw_detect import is_thor
 
 # Python 3.14 changed the default start method to "forkserver" which requires
 # all objects to be picklable. Force "fork" to avoid pickle errors with lambdas.
@@ -99,6 +100,37 @@ _VIC_ACTMON_USAGE_CANDIDATES = (
     "/sys/kernel/debug/tegra-host1x.0/actmon/vic/module0/usage",
     "/sys/kernel/debug/tegra-host1x/actmon/vic/module0/usage",
 )
+
+
+def _filter_jp_engines_non_thor(jp_group, engines):
+    """
+    Keep only the JetsonPowerProvider engines that add information on non-Thor boards.
+
+    On JetPack 7.2 Orin, pylibjetsonpower is installed too and reports the whole
+    tegra234 engine list (DLA0/DLA1/PVA/NVENC...) even on modules that do not have
+    those engines (e.g. Orin Nano), plus engines EngineService already exposes
+    under their own groups (NVDEC, NVJPG0 == NVJPG, SE, APE). Drop both kinds.
+    """
+    known = set()
+    for group, group_engines in engines.items():
+        if group == "JP":
+            continue
+        known.add(str(group).upper())
+        if isinstance(group_engines, dict):
+            known.update(str(name).upper() for name in group_engines)
+
+    filtered = {}
+    for name, status in jp_group.items():
+        key = str(name).upper()
+        if key in known or (key.endswith("0") and key[:-1] in known):
+            continue
+        if not isinstance(status, dict):
+            continue
+        # No frequency at all: the engine is not present on this module
+        if all(status.get(k) is None for k in ("cur", "min", "max")):
+            continue
+        filtered[name] = status
+    return filtered
 
 
 def _read_vic_actmon_load():
@@ -793,6 +825,14 @@ class JtopServer(Process):
                         status = self.jetsonpower.read_engine_status(name)
                         jp_group[name.upper()] = status
                     data["engines"]["JP"] = jp_group
+
+            # Non-Thor (JetPack 7.2 Orin): EngineService is authoritative, keep only extras
+            if not is_thor() and isinstance(data["engines"].get("JP"), dict):
+                extra = _filter_jp_engines_non_thor(data["engines"]["JP"], data["engines"])
+                if extra:
+                    data["engines"]["JP"] = extra
+                else:
+                    del data["engines"]["JP"]
 
             # Flatten engine cur frequencies into data["flat"] so the Thor GUI
             # renderer (draw_thor_engines_from_stats / compact_engines) can find
