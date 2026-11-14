@@ -93,7 +93,12 @@ def nvpmodel_query():
         if match:
             parsed_line = match.groupdict()
             # Extract NV Power Mode
-            return {'name': parsed_line['name'], 'id': int(lines[idx + 1])}
+            try:
+                return {'name': parsed_line['name'], 'id': int(lines[idx + 1])}
+            except (IndexError, ValueError):
+                break
+    # nvpmodel can exit without error and without a power mode, e.g. when no power mode is configured
+    raise JtopException("nvpmodel did not report the NV Power Mode")
 
 
 def set_nvpmodel_level(level, force):
@@ -461,7 +466,7 @@ class NVPModelService(object):
             # list of all nvpmodel status that can be changed from the current
             self._nvp_status = [current_mask == mask for idx, mask in enumerate(self._nvp_masks)]
         except (OSError, Command.CommandException, JtopException):
-            # nvpmodel_query() reports a failing command as JtopException
+            # nvpmodel_query() reports a failing command or a missing power mode as JtopException
             self._is_nvpmodel = False
             logger.warning("nvpmodel not available")
 
