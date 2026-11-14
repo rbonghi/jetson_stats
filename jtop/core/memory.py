@@ -78,6 +78,31 @@ def buddyinfo(page_size):
     return buddyhash
 
 
+LFB_BLOCK_SIZE = 4 * 1024 * 1024  # lfb is reported in 4MB blocks
+
+
+def large_free_blocks(mem_size, page_size, block_size=LFB_BLOCK_SIZE):
+    """
+    Count the free blocks of ``block_size`` available in /proc/buddyinfo.
+
+    The last buddyinfo column is not always 4MB: kernels built with a larger
+    MAX_PAGE_ORDER (e.g. JetPack 7.2 / L4T R39, 14 columns -> 32MB) would make
+    the old "last column" count almost always 0. Use the 4MB order and add the
+    larger orders, each of them holding 2**(order - block_order) 4MB blocks.
+    """
+    block_order = max(0, (block_size // page_size).bit_length() - 1)
+    total = 0
+    for zones in mem_size.values():
+        for zone in zones:
+            nr_free = zone['nr_free']
+            if block_order >= len(nr_free):
+                # Kernel cannot hold a whole block: keep the biggest available order
+                total += nr_free[-1]
+                continue
+            total += sum(free << (order - block_order) for order, free in enumerate(nr_free) if order >= block_order)
+    return total
+
+
 def read_swapon():
     """
     This method list all processes working with GPU
@@ -416,10 +441,8 @@ class MemoryService(object):
         memory = {}
         # Measure the largest free bank for 4MB
         mem_size = buddyinfo(self._page_size)
-        # Count only the biggest Large free bank (lfb)
-        large_free_bank = 0
-        for _, data in mem_size.items():
-            large_free_bank += sum([zone['nr_free'][-1] for zone in data])
+        # Large free blocks (lfb) in 4MB
+        large_free_bank = large_free_blocks(mem_size, self._page_size)
         # Status Memory
         status_mem = meminfo()
         # Read memory use
@@ -434,17 +457,34 @@ class MemoryService(object):
         # Extract memory info
         ram_total = status_mem.get('MemTotal', 0)
         ram_free = status_mem.get('MemFree', 0)
-        # ram_available = status_mem.get('MemAvailable', 0)
+        ram_available = status_mem.get('MemAvailable')
         ram_buffer = status_mem.get('Buffers', 0)
         ram_cached = status_mem.get('Cached', 0)
         ram_SReclaimable = status_mem.get('SReclaimable', 0)
-        # ram_Shmem = status_mem.get('Shmem', 0)
-        total_used_memory = ram_total - ram_free
-        cached_memory = ram_cached + ram_SReclaimable  # + ram_Shmem
+        if ram_available is not None:
+            # Use the kernel estimate (Linux >= 3.14). It also covers reclaimable
+            # slab and driver page pools (KReclaimable, e.g. nvidia.ko on Thor)
+            # that the classic formula would report as used.
+            # MemAvailable leaves out the kernel low memory reserve, so it can be
+            # below MemFree + Buffers when there is little cache: never count free
+            # or buffers as used, so that used + free + buffers + cached == tot
+            reclaimable = max(ram_available, ram_free + ram_buffer)
+            used_memory = ram_total - reclaimable
+            # Everything reclaimable except free and buffers: page cache, slab, driver pools
+            cached_memory = reclaimable - ram_free - ram_buffer
+        else:
+            # Very old kernels without MemAvailable
+            cached_memory = ram_cached + ram_SReclaimable
+            used_memory = ram_total - ram_free - ram_buffer - cached_memory
+            ram_available = ram_free + ram_buffer + cached_memory
+        # Shared memory is part of used memory. GPU process memory is sampled before
+        # /proc/meminfo, so an allocation freed in between could exceed used
+        ram_shared = min(ram_shared, max(used_memory, 0))
         # Add fields for RAM
         memory['RAM'] = {
             'tot': ram_total,
-            'used': total_used_memory - (ram_buffer + ram_cached),
+            'used': used_memory,
+            'available': ram_available,
             'free': ram_free,
             'buffers': ram_buffer,
             'cached': cached_memory,

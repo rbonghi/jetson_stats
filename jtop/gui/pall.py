@@ -29,7 +29,7 @@ from .lib.process_table import ProcessTable
 from .pcpu import compact_cpus
 from .pgpu import compact_gpu
 from .pmem import compact_memory
-from .pengine import compact_engines
+from .pengine import compact_engines, compact_engines_rows
 from .pcontrol import compact_temperatures, compact_power
 
 
@@ -108,7 +108,7 @@ class ALL(Page):
         self._columns = []
         if jetson.engine:
             self._columns += [compact_engines]
-            self._max_height_menu = max(self._max_height_menu, 5)
+            self._max_height_menu = max(self._max_height_menu, 5, compact_engines_rows(jetson))
         if jetson.temperature:
             self._columns += [compact_temperatures]
             self._max_height_menu = max(self._max_height_menu, len(jetson.temperature))
