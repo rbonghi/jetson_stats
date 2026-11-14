@@ -22,6 +22,7 @@ import json
 # from warnings import warn
 from datetime import datetime, timedelta
 from multiprocessing import Event, AuthenticationError
+from multiprocessing.managers import BaseProxy
 from threading import Thread
 from .service import JtopManager
 from .core.hardware import get_platform_variables
@@ -1134,6 +1135,10 @@ class jtop(Thread):
             raise JtopException("Mismatch of Python versions between library and service")
         except AuthenticationError:
             raise JtopException("Authentication with jetson-stats server failed")
+        # Proxies share one connection for each server address and thread. After a restart of
+        # jtop.service, proxies of an older jtop object would make the new ones write to the
+        # closed connection with BrokenPipeError: open a new connection for this object.
+        BaseProxy._address_to_local.pop(self._broadcaster.address, None)
         # Initialize synchronized data and condition
         self._controller = self._broadcaster.get_queue()
         self._sync_data = self._broadcaster.sync_data()
