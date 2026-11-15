@@ -711,6 +711,10 @@ if there is another jtop running this speed will be not used.</p>
 <td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></td>
 <td><p>Current frequency of the core in <strong>kHz</strong></p></td>
 </tr>
+<tr class="row-even"><td><p>load</p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3.14/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></td>
+<td><p>Load of the engine in <strong>%</strong> <sup>B</sup></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -718,6 +722,8 @@ if there is another jtop running this speed will be not used.</p>
 <p class="admonition-title">Note</p>
 <dl class="simple">
 <dt>Note <strong>A</strong></dt><dd><p>Some engines doesn’t have a <em>min</em> and <em>max</em> frequency</p>
+</dd>
+<dt>Note <strong>B</strong></dt><dd><p>Only on VIC, when the host1x actmon debugfs node is available</p>
 </dd>
 </dl>
 </div>
