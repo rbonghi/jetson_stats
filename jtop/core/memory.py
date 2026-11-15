@@ -36,6 +36,7 @@ BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(
 SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>-?\d+)')
 # Swap configuration
 PATH_FSTAB = '/etc/fstab'
+SWAP_SIGNATURES = (b'SWAPSPACE2', b'SWAP-SPACE')
 CONFIG_DEFAULT_SWAP_DIRECTORY = ''
 CONFIG_DEFAULT_SWAP_NAME = 'swfile'
 
@@ -134,6 +135,27 @@ def read_swapon():
             }
             table[name] = data
     return table
+
+
+def is_swap_file(path, page_size=None):
+    """
+    Check the swap signature that mkswap writes at the end of the first page.
+
+    :param path: Path of the file to check
+    :type path: str
+    :param page_size: Page size used by mkswap, defaults to the system page size
+    :type page_size: int, optional
+    :return: True if the file is a swap area
+    :rtype: bool
+    """
+    if page_size is None:
+        page_size = os.sysconf('SC_PAGE_SIZE')
+    try:
+        with open(path, 'rb') as f:
+            f.seek(page_size - 10)
+            return f.read(10) in SWAP_SIGNATURES
+    except OSError:
+        return False
 
 
 def read_fstab():
@@ -381,8 +403,22 @@ class MemoryService(object):
     @staticmethod
     def swap_set(size, path_swap, on_boot):
         if os.path.isfile(path_swap):
-            logger.error("{path_swap} already exist".format(path_swap=path_swap))
-            return
+            # A swap file left from a previous session (e.g. created without
+            # "on boot" and then a reboot) is not active anymore. Re-create it
+            # with the requested size instead of failing forever.
+            try:
+                active = path_swap in read_swapon()
+            except Exception as e:
+                logger.error("Cannot read active swaps: {error}".format(error=e))
+                return
+            if active:
+                logger.error("{path_swap} is already an active swap".format(path_swap=path_swap))
+                return
+            if not is_swap_file(path_swap):
+                logger.error("{path_swap} already exist and is not a swap file".format(path_swap=path_swap))
+                return
+            logger.info("{path_swap} exist but is not active, re-create it".format(path_swap=path_swap))
+            os.remove(path_swap)
         # Load swap configuration
         logger.info("Activate {path_swap} auto={on_boot}".format(path_swap=path_swap, on_boot=on_boot))
         # Create a swapfile for Ubuntu at the current directory location
