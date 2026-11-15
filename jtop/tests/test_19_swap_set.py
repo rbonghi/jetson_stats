@@ -32,17 +32,23 @@ def _write_swap(path, signature=b'SWAPSPACE2'):
 
 @pytest.fixture
 def calls(monkeypatch):
-    """Record the swap commands instead of running them."""
-    recorded = []
+    """Record the swap commands instead of running them. Set calls.fail to a command name to make it fail."""
+    class Recorder(list):
+        fail = None
+
+    recorded = Recorder()
 
     def fake_call(cmd):
-        recorded.append(cmd[0])
+        recorded.append(cmd)
+        if cmd[0] == recorded.fail:
+            return 1
         if cmd[0] == 'fallocate':
             open(cmd[-1], 'wb').close()
         return 0
 
     monkeypatch.setattr(memory.sp, 'call', fake_call)
     monkeypatch.setattr(memory.os, 'sysconf', lambda name: PAGE)
+    monkeypatch.setattr(memory, 'read_swapon', lambda: {})
     return recorded
 
 
@@ -58,20 +64,45 @@ def test_is_swap_file(tmp_path):
     assert not is_swap_file(str(tmp_path / 'missing'), PAGE)
 
 
-def test_new_swap_is_created(tmp_path, calls, monkeypatch):
-    monkeypatch.setattr(memory, 'read_swapon', lambda: {})
-    path = tmp_path / 'swfile'
-    MemoryService.swap_set(2, str(path), False)
-    assert calls == ['fallocate', 'mkswap', 'swapon']
+def test_new_swap_is_created(tmp_path, calls):
+    path = str(tmp_path / 'swfile')
+    MemoryService.swap_set(2, path, False)
+    assert calls == [['fallocate', '-l', '2G', path], ['mkswap', path], ['swapon', path]]
+    assert (tmp_path / 'swfile').exists()
 
 
-def test_inactive_leftover_swap_is_recreated(tmp_path, calls, monkeypatch):
+def test_inactive_leftover_swap_is_recreated(tmp_path, calls):
     # Issue #430: a swap file left after a reboot made "create" fail forever
-    monkeypatch.setattr(memory, 'read_swapon', lambda: {})
-    path = tmp_path / 'swfile'
-    _write_swap(path)
-    MemoryService.swap_set(2, str(path), False)
-    assert calls == ['fallocate', 'mkswap', 'swapon']
+    path = str(tmp_path / 'swfile')
+    _write_swap(tmp_path / 'swfile')
+    MemoryService.swap_set(4, path, False)
+    new = path + '.new'
+    assert calls == [['fallocate', '-l', '4G', new], ['mkswap', new], ['swapon', path]]
+    assert (tmp_path / 'swfile').exists()
+    assert not (tmp_path / 'swfile.new').exists()
+
+
+@pytest.mark.parametrize('failing', ['fallocate', 'mkswap'])
+def test_failed_recreation_keeps_old_swap(tmp_path, calls, failing, caplog):
+    path = str(tmp_path / 'swfile')
+    _write_swap(tmp_path / 'swfile')
+    before = (tmp_path / 'swfile').read_bytes()
+    calls.fail = failing
+    with caplog.at_level(logging.ERROR):
+        MemoryService.swap_set(4, path, False)
+    assert (tmp_path / 'swfile').read_bytes() == before
+    assert not (tmp_path / 'swfile.new').exists()
+    assert 'swapon' not in [cmd[0] for cmd in calls]
+    assert 'Cannot create swap' in caplog.text
+
+
+@pytest.mark.parametrize('failing', ['fallocate', 'mkswap'])
+def test_failed_creation_does_not_raise(tmp_path, calls, failing):
+    path = str(tmp_path / 'swfile')
+    calls.fail = failing
+    MemoryService.swap_set(2, path, False)
+    assert not (tmp_path / 'swfile').exists()
+    assert 'swapon' not in [cmd[0] for cmd in calls]
 
 
 def test_active_swap_is_not_touched(tmp_path, calls, monkeypatch, caplog):
@@ -85,8 +116,19 @@ def test_active_swap_is_not_touched(tmp_path, calls, monkeypatch, caplog):
     assert 'already an active swap' in caplog.text
 
 
-def test_other_file_is_not_overwritten(tmp_path, calls, monkeypatch, caplog):
-    monkeypatch.setattr(memory, 'read_swapon', lambda: {})
+def test_active_swap_through_symlink_is_not_touched(tmp_path, calls, monkeypatch, caplog):
+    real = tmp_path / 'swfile'
+    _write_swap(real)
+    alias = tmp_path / 'alias'
+    alias.symlink_to(real)
+    monkeypatch.setattr(memory, 'read_swapon', lambda: {str(real): {}})
+    with caplog.at_level(logging.ERROR):
+        MemoryService.swap_set(2, str(alias), False)
+    assert calls == []
+    assert 'already an active swap' in caplog.text
+
+
+def test_other_file_is_not_overwritten(tmp_path, calls, caplog):
     path = tmp_path / 'swfile'
     path.write_bytes(b'important data' * 1000)
     with caplog.at_level(logging.ERROR):

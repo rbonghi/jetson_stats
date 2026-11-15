@@ -164,6 +164,11 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
     else:
         value = ((cur_i - mn_i) / (mx_i - mn_i)) * 100
 
+    # Show the engine load (e.g. VIC actmon) next to the name: the bar is the clock
+    load = freq_data.get('load')
+    if isinstance(load, (int, float)) and not isinstance(load, bool):
+        name = "{name} {load:.0f}%".format(name=name, load=load)
+
     data = {
         'name': name,
         'color': NColors.cyan(),
