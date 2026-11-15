@@ -36,6 +36,7 @@ BUDDYINFO_REG = re.compile(r'Node\s+(?P<numa_node>\d+).*zone\s+(?P<zone>\w+)\s+(
 SWAP_REG = re.compile(r'(?P<name>[^ ]+)\s+(?P<type>[^ ]+)\s+(?P<size>\d+)\s+(?P<used>\d+)\s+(?P<prio>-?\d+)')
 # Swap configuration
 PATH_FSTAB = '/etc/fstab'
+SWAP_SIGNATURES = (b'SWAPSPACE2', b'SWAP-SPACE')
 CONFIG_DEFAULT_SWAP_DIRECTORY = ''
 CONFIG_DEFAULT_SWAP_NAME = 'swfile'
 
@@ -134,6 +135,27 @@ def read_swapon():
             }
             table[name] = data
     return table
+
+
+def is_swap_file(path, page_size=None):
+    """
+    Check the swap signature that mkswap writes at the end of the first page.
+
+    :param path: Path of the file to check
+    :type path: str
+    :param page_size: Page size used by mkswap, defaults to the system page size
+    :type page_size: int, optional
+    :return: True if the file is a swap area
+    :rtype: bool
+    """
+    if page_size is None:
+        page_size = os.sysconf('SC_PAGE_SIZE')
+    try:
+        with open(path, 'rb') as f:
+            f.seek(page_size - 10)
+            return f.read(10) in SWAP_SIGNATURES
+    except OSError:
+        return False
 
 
 def read_fstab():
@@ -379,22 +401,60 @@ class MemoryService(object):
         return True if out else False
 
     @staticmethod
+    def _make_swap_file(size, path_swap):
+        """
+        Create a swap area of size **G** in path_swap, without activating it.
+
+        :return: True on success. On failure the partial file is removed.
+        :rtype: bool
+        """
+        try:
+            # Create a swapfile for Ubuntu at the current directory location
+            if sp.call(shlex.split('fallocate -l {size}G {path_swap}'.format(size=size, path_swap=path_swap))) != 0:
+                raise OSError("fallocate failed")
+            # Only root can use it (600 srw-------)
+            os.chmod(path_swap, stat.S_IREAD | stat.S_IWRITE)
+            # Set up the Linux swap area
+            if sp.call(shlex.split('mkswap {path_swap}'.format(path_swap=path_swap))) != 0:
+                raise OSError("mkswap failed")
+        except OSError as e:
+            logger.error("Cannot create swap {path_swap}: {error}".format(path_swap=path_swap, error=e))
+            if os.path.isfile(path_swap):
+                os.remove(path_swap)
+            return False
+        return True
+
+    @staticmethod
     def swap_set(size, path_swap, on_boot):
         if os.path.isfile(path_swap):
-            logger.error("{path_swap} already exist".format(path_swap=path_swap))
-            return
-        # Load swap configuration
-        logger.info("Activate {path_swap} auto={on_boot}".format(path_swap=path_swap, on_boot=on_boot))
-        # Create a swapfile for Ubuntu at the current directory location
-        sp.call(shlex.split('fallocate -l {size}G {path_swap}'.format(size=size, path_swap=path_swap)))
-        # Change permissions so that only root can use it
-        # https://www.tutorialspoint.com/python/os_chmod.htm
-        # Equivalent permission 600 srw-------
-        os.chmod(path_swap, stat.S_IREAD | stat.S_IWRITE)
-        # Set up the Linux swap area
-        sp.call(shlex.split('mkswap {path_swap}'.format(path_swap=path_swap)))
+            # A swap file left from a previous session (e.g. created without
+            # "on boot" and then a reboot) is not active anymore. Re-create it
+            # with the requested size instead of failing forever.
+            try:
+                active = {os.path.realpath(name) for name in read_swapon()}
+            except Exception as e:
+                logger.error("Cannot read active swaps: {error}".format(error=e))
+                return
+            if os.path.realpath(path_swap) in active:
+                logger.error("{path_swap} is already an active swap".format(path_swap=path_swap))
+                return
+            if not is_swap_file(path_swap):
+                logger.error("{path_swap} already exist and is not a swap file".format(path_swap=path_swap))
+                return
+            logger.info("{path_swap} exist but is not active, re-create it".format(path_swap=path_swap))
+            # Build the new swap next to the old one, so the old file is kept if this fails
+            path_new = path_swap + ".new"
+            if not MemoryService._make_swap_file(size, path_new):
+                return
+            os.replace(path_new, path_swap)
+        else:
+            logger.info("Activate {path_swap} auto={on_boot}".format(path_swap=path_swap, on_boot=on_boot))
+            if not MemoryService._make_swap_file(size, path_swap):
+                return
         # Now start using the swapfile
-        sp.call(shlex.split('swapon {path_swap}'.format(path_swap=path_swap)))
+        if sp.call(shlex.split('swapon {path_swap}'.format(path_swap=path_swap))) != 0:
+            logger.error("Cannot activate swap {path_swap}".format(path_swap=path_swap))
+            return
         # Add not on boot return
         if not on_boot:
             return

@@ -139,9 +139,9 @@ def _read_vic_actmon_load():
     """Return VIC actmon load as a float percent (0..100), or None if unavailable.
 
     Requires debugfs read access (jtop service runs as root). Silent on failure
-    so non-Thor systems and kernels without the node are unaffected.
+    so kernels without the node are unaffected.
 
-    Unit note: the shipping Thor kernel reports `usage` in permille (0..1000),
+    Unit note: the Thor and Orin (L4T R39) kernels report `usage` in permille (0..1000),
     matching the default `tegra_wmark/load_target=100` == 10%. Always divided
     by 10 to normalize to percent.
     """
@@ -163,6 +163,21 @@ def _read_vic_actmon_load():
             pct = 100.0
         return pct
     return None
+
+
+def add_vic_load(engines):
+    """Add the actmon VIC load (percent) to the VIC engine entry, if there is one.
+
+    Only an existing entry is decorated, so the engine schema stays the same
+    when VIC is not exposed or the actmon node is missing.
+    """
+    group = engines.get("VIC") if isinstance(engines, dict) else None
+    vic = group.get("VIC") if isinstance(group, dict) else None
+    if not isinstance(vic, dict):
+        return
+    load = _read_vic_actmon_load()
+    if load is not None:
+        vic["load"] = load
 
 
 def overlay_jetsonpower_flat(
@@ -886,6 +901,7 @@ class JtopServer(Process):
         data['mem'] = self.memory.get_status(total)
         # -- Engines --
         data['engines'] = self.engine.get_status()
+        add_vic_load(data['engines'])
         # -- Temperature --
         data['temperature'] = self.temperature.get_status()
         # -- Power --

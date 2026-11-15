@@ -282,19 +282,23 @@ class jtop(Thread):
 
         For each engine the dictionary is defined like the table below:
 
-        ========== ================ ==============================================
-        Name       Type             Description
-        ========== ================ ==============================================
-        online     :py:class:`bool` Status of the engine
-        min        :py:class:`int`  Minimum frequency of the core in **kHz** :sup:`A`
-        max        :py:class:`int`  Maximum frequency of the core in **kHz** :sup:`A`
-        cur        :py:class:`int`  Current frequency of the core in **kHz**
-        ========== ================ ==============================================
+        ========== ================= ==============================================
+        Name       Type              Description
+        ========== ================= ==============================================
+        online     :py:class:`bool`  Status of the engine
+        min        :py:class:`int`   Minimum frequency of the core in **kHz** :sup:`A`
+        max        :py:class:`int`   Maximum frequency of the core in **kHz** :sup:`A`
+        cur        :py:class:`int`   Current frequency of the core in **kHz**
+        load       :py:class:`float` Load of the engine in **%** :sup:`B`
+        ========== ================= ==============================================
 
         .. note::
 
                 Note **A**
                     Some engines doesn't have a *min* and *max* frequency
+
+                Note **B**
+                    Only on VIC, when the host1x actmon debugfs node is available
 
         :return: Dictionary of all active engines
         :rtype: dict

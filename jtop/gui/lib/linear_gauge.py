@@ -85,6 +85,14 @@ def basic_gauge(stdscr, pos_y, pos_x, size_w, data, bar='|'):
             pass
 
 
+def running_label(freq_data):
+    """Label inside a running engine bar: its load when known (e.g. VIC), else RUNNING."""
+    load = freq_data.get('load')
+    if isinstance(load, (int, float)) and not isinstance(load, bool):
+        return " {load:3.0f}% ".format(load=load)
+    return " RUNNING "
+
+
 def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data, unit='k'):
     # Name gauge
     name = freq_data['name'] if 'name' in freq_data else ""
@@ -107,7 +115,7 @@ def basic_gauge_simple(stdscr, pos_y, pos_x, size, freq_data, unit='k'):
         stdscr.hline(pos_y, start_bar + 1, curses.ACS_HLINE, size_bar)
         stdscr.addch(pos_y, start_bar + size_bar, curses.ACS_DIAMOND, curses.A_BOLD)
         if size_bar > 7:
-            stdscr.addstr(pos_y, end_bar - (size) // 2, " RUNNING ", color_bar | curses.A_BOLD)
+            stdscr.addstr(pos_y, end_bar - (size) // 2, running_label(freq_data), color_bar | curses.A_BOLD)
     else:
         stdscr.hline(pos_y, start_bar + 1, curses.ACS_BULLET, size_bar)
         if size_bar > 7:
@@ -155,6 +163,11 @@ def freq_gauge(stdscr, pos_y, pos_x, size, freq_data):
         value = 100
     else:
         value = ((cur_i - mn_i) / (mx_i - mn_i)) * 100
+
+    # Show the engine load (e.g. VIC actmon) next to the name: the bar is the clock
+    load = freq_data.get('load')
+    if isinstance(load, (int, float)) and not isinstance(load, bool):
+        name = "{name} {load:.0f}%".format(name=name, load=load)
 
     data = {
         'name': name,
